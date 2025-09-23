@@ -1,3 +1,22 @@
+# Projekt panel (Next.js 15 + Drizzle + SQLite + shadcn)
+
+Stack: Next.js (App Router), Tailwind v4 (minimal, pod shadcn), Drizzle ORM + SQLite (better-sqlite3), Auth.js (Credentials + Drizzle), Argon2id (@node-rs/argon2).
+
+## Szybki start (dev)
+1. Skopiuj `.env.example` do `.env.local` i uzupełnij `NEXTAUTH_SECRET`.
+2. Uruchom dev: `npm run dev`.
+3. Ekran setup admina jest pod `/setup` (działa tylko po dodaniu logiki tworzenia konta).
+
+## Migracje Drizzle
+- Konfiguracja: `drizzle.config.ts`.
+- Generowanie: `npx drizzle-kit generate` (po dodaniu definicji w `src/db/schema.ts`).
+- Migracja: `npx drizzle-kit migrate`.
+
+## Notatki
+- Baza w pliku `./data/app.db` (tworzony automatycznie). Tryb WAL i `busy_timeout=5000` ustawione.
+- Hashing: Argon2id (@node-rs/argon2). Wrapper w `src/lib/hash.ts`.
+- Auth: route `app/api/auth/[...nextauth]/route.ts` (Credentials + DrizzleAdapter).
+- Tailwind: konfiguracja w `postcss.config.mjs`, tokeny w `src/app/globals.css`.
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
