@@ -1,7 +1,6 @@
 "use client"
 import { useState } from 'react'
 import { z } from 'zod'
-import { createAdmin } from './server'
 
 const schema = z.object({
   email: z.string().email(),
@@ -17,17 +16,29 @@ export default function SetupPage() {
     <div className="mx-auto max-w-md p-6">
       <h1 className="text-2xl font-semibold mb-4">Ustaw administratora</h1>
       <p className="text-sm text-gray-600 mb-6">Formularz zadziała tylko, jeśli w bazie nie ma żadnych użytkowników.</p>
-      <form action={async (formData) => {
-        const email = String(formData.get('email') || '')
-        const password = String(formData.get('password') || '')
+      <form onSubmit={async (e) => {
+        e.preventDefault()
         const parsed = schema.safeParse({ email, password })
         if (!parsed.success) {
           const first = parsed.error.issues?.[0]
           setMessage(first?.message || 'Błędne dane')
           return
         }
-        const res = await createAdmin(parsed.data)
-        setMessage(res.message)
+        try {
+          const resp = await fetch('/api/setup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(parsed.data),
+          })
+          const data = await resp.json()
+          setMessage(data.message || (resp.ok ? 'Utworzono admina' : 'Błąd'))
+          if (resp.ok) {
+            // Opcjonalnie przekieruj do logowania
+            // location.assign('/login')
+          }
+        } catch (err) {
+          setMessage('Wystąpił problem z połączeniem')
+        }
       }} className="space-y-4">
         <div className="space-y-2">
           <label className="block text-sm font-medium">Email</label>

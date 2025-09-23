@@ -1,10 +1,13 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core'
+import { sqliteTable, text, integer, primaryKey } from 'drizzle-orm/sqlite-core'
 import { sql } from 'drizzle-orm'
 
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(), // uuid (string)
-  email: text('email').notNull().unique(),
   name: text('name'),
+  email: text('email').notNull().unique(),
+  emailVerified: integer('email_verified', { mode: 'timestamp_ms' }),
+  image: text('image'),
+  // Custom fields
   role: text('role').notNull().default('admin'), // 'admin' | 'installer' | 'office' | 'manager'
   passwordHash: text('password_hash').notNull(),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
@@ -21,10 +24,11 @@ export const verificationTokens = sqliteTable('verification_tokens', {
   identifier: text('identifier').notNull(),
   token: text('token').notNull(),
   expires: integer('expires', { mode: 'timestamp_ms' }).notNull(),
-})
+}, (table) => ({
+  compositePk: primaryKey({ columns: [table.identifier, table.token] }),
+}))
 
 export const accounts = sqliteTable('accounts', {
-  id: text('id').primaryKey(),
   userId: text('user_id').notNull(),
   type: text('type').notNull(),
   provider: text('provider').notNull(),
@@ -36,6 +40,8 @@ export const accounts = sqliteTable('accounts', {
   scope: text('scope'),
   id_token: text('id_token'),
   session_state: text('session_state'),
-})
+}, (table) => ({
+  compoundKey: primaryKey({ columns: [table.provider, table.providerAccountId] }),
+}))
 
 export type User = typeof users.$inferSelect
