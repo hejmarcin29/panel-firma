@@ -9,7 +9,10 @@ export function Topbar() {
   return (
     <header className="w-full border-b border-black/10 dark:border-white/10 bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto max-w-6xl px-4 h-12 flex items-center justify-between">
-        <div className="text-sm font-medium">Panel</div>
+        <nav className="flex items-center gap-4 text-sm">
+          <a href="/" className="font-medium">Panel</a>
+          <a href="/clients" className="opacity-80 hover:opacity-100">Klienci</a>
+        </nav>
         <nav className="flex items-center gap-3 text-sm">
           {isAuthed ? (
             <>

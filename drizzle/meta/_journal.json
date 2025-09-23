@@ -8,6 +8,13 @@
       "when": 1758652884055,
       "tag": "0000_strange_whizzer",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1758656424070,
+      "tag": "0001_tearful_sphinx",
+      "breakpoints": true
     }
   ]
 }

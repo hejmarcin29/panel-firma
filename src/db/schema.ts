@@ -45,3 +45,28 @@ export const accounts = sqliteTable('accounts', {
 }))
 
 export type User = typeof users.$inferSelect
+
+// Clients
+export const clients = sqliteTable('clients', {
+  id: text('id').primaryKey(), // uuid text
+  name: text('name').notNull(), // Imię i nazwisko
+  phone: text('phone'), // numer tel.
+  email: text('email'), // email (niekoniecznie unikalny na start)
+  invoiceCity: text('invoice_city'), // miasto (faktura)
+  invoiceAddress: text('invoice_address'), // adres (faktura)
+  deliveryCity: text('delivery_city'), // miasto (dostawa)
+  deliveryAddress: text('delivery_address'), // adres (dostawa)
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+})
+
+export type Client = typeof clients.$inferSelect
+
+export const clientNotes = sqliteTable('client_notes', {
+  id: text('id').primaryKey(), // uuid text
+  clientId: text('client_id').notNull(),
+  content: text('content').notNull(), // notatka Primepodloga
+  createdBy: text('created_by'), // users.id (opcjonalnie)
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+})
+
+export type ClientNote = typeof clientNotes.$inferSelect

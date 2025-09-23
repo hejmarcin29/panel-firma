@@ -2,6 +2,10 @@
 
 Stack: Next.js (App Router), Tailwind v4 (minimal, pod shadcn), Drizzle ORM + SQLite (better-sqlite3), Auth.js (Credentials + Drizzle), Argon2id (@node-rs/argon2).
 
+## UX decisions
+
+Primary forms remain full pages (no modals/intercepting routes for now). See `docs/UX_DECISIONS.md` for context and future considerations.
+
 ## Szybki start (dev)
 1. Skopiuj `.env.example` do `.env.local` i uzupełnij `NEXTAUTH_SECRET`.
 2. Uruchom dev: `npm run dev`.
