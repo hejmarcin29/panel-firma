@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { BackButton } from "@/components/back-button";
 
 const schema = z.object({
   name: z.string().min(1, 'Imię i nazwisko jest wymagane'),
@@ -34,7 +35,10 @@ export default function NewClientPage() {
 
   return (
     <div className="mx-auto max-w-2xl p-6">
-      <h1 className="text-2xl font-semibold mb-4">Nowy klient</h1>
+      <div className="mb-4 flex items-center gap-2">
+        <BackButton fallbackHref="/clients" />
+        <h1 className="text-2xl font-semibold">Nowy klient</h1>
+      </div>
       <form className="space-y-4" onSubmit={handleSubmit(async (data) => {
         // Autofill: jeśli sameAsInvoice, przepisz dane faktury
         const payload = {

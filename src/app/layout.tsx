@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 import { Topbar } from "@/components/topbar";
 import { ThemeProvider } from "next-themes";
+import { ToastProvider } from "@/components/ui/toaster";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,10 +30,12 @@ export default function RootLayout({
     <html lang="pl" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <Providers>
-            <Topbar />
-            {children}
-          </Providers>
+          <ToastProvider>
+            <Providers>
+              <Topbar />
+              {children}
+            </Providers>
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>

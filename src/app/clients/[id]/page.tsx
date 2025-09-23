@@ -1,6 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { BackButton } from "@/components/back-button";
+import { AlertDialog } from "@/components/ui/alert-dialog";
+import { useToast } from "@/components/ui/toaster";
 
 type Client = {
   id: string;
@@ -24,11 +27,13 @@ type Note = {
 export default function ClientPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { toast } = useToast();
   const [client, setClient] = useState<Client | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [newNote, setNewNote] = useState("");
+  const [openDelete, setOpenDelete] = useState(false);
 
   const load = async () => {
     try {
@@ -61,9 +66,13 @@ export default function ClientPage() {
   };
 
   const del = async () => {
-    if (!confirm('Usunąć klienta? Operacja nieodwracalna.')) return;
     const r = await fetch(`/api/clients/${id}`, { method: 'DELETE' });
-    if (r.ok) router.push('/clients');
+    if (r.ok) {
+      toast({ title: "Usunięto", description: "Klient został usunięty", variant: "success" });
+      router.push('/clients');
+    } else {
+      toast({ title: "Błąd", description: "Nie udało się usunąć klienta", variant: "destructive" });
+    }
   }
 
   if (loading) return <div className="p-6">Wczytywanie…</div>;
@@ -73,8 +82,11 @@ export default function ClientPage() {
   return (
     <div className="mx-auto max-w-4xl p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">{client.name}</h1>
-        <button onClick={del} className="rounded border px-3 py-1.5 text-sm">Usuń klienta</button>
+        <div className="flex items-center gap-2">
+          <BackButton fallbackHref="/clients" />
+          <h1 className="text-2xl font-semibold">{client.name}</h1>
+        </div>
+        <button onClick={() => setOpenDelete(true)} className="rounded border px-3 py-1.5 text-sm">Usuń klienta</button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -115,6 +127,17 @@ export default function ClientPage() {
           <button onClick={addNote} className="rounded bg-black px-4 py-2 text-white">Dodaj</button>
         </div>
       </div>
+
+      <AlertDialog
+        open={openDelete}
+        onOpenChange={setOpenDelete}
+        title="Usunąć klienta?"
+        description="Tej operacji nie można cofnąć. Zostaną usunięte także powiązane notatki."
+        cancelText="Anuluj"
+        confirmText="Usuń"
+        confirmVariant="destructive"
+        onConfirm={del}
+      />
     </div>
   );
 }
