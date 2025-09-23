@@ -1,6 +1,11 @@
 "use client"
-import { useState } from 'react'
 import { z } from 'zod'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import { useToast } from '@/components/ui/toaster'
 
 const schema = z.object({
   email: z.string().email(),
@@ -8,50 +13,45 @@ const schema = z.object({
 })
 
 export default function SetupPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [message, setMessage] = useState<string | null>(null)
+  const { toast } = useToast();
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<z.infer<typeof schema>>({
+    resolver: zodResolver(schema),
+    defaultValues: { email: '', password: '' },
+  });
 
   return (
     <div className="mx-auto max-w-md p-6">
-      <h1 className="text-2xl font-semibold mb-4">Ustaw administratora</h1>
-      <p className="text-sm text-gray-600 mb-6">Formularz zadziała tylko, jeśli w bazie nie ma żadnych użytkowników.</p>
-      <form onSubmit={async (e) => {
-        e.preventDefault()
-        const parsed = schema.safeParse({ email, password })
-        if (!parsed.success) {
-          const first = parsed.error.issues?.[0]
-          setMessage(first?.message || 'Błędne dane')
-          return
-        }
+      <h1 className="mb-2 text-2xl font-semibold">Ustaw administratora</h1>
+      <p className="mb-6 text-sm opacity-70">Formularz zadziała tylko, jeśli w bazie nie ma żadnych użytkowników.</p>
+      <form className="space-y-4" onSubmit={handleSubmit(async ({ email, password }) => {
         try {
           const resp = await fetch('/api/setup', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(parsed.data),
+            body: JSON.stringify({ email, password }),
           })
-          const data = await resp.json()
-          setMessage(data.message || (resp.ok ? 'Utworzono admina' : 'Błąd'))
-          if (resp.ok) {
-            // Opcjonalnie przekieruj do logowania
-            // location.assign('/login')
-          }
-        } catch (err) {
-          setMessage('Wystąpił problem z połączeniem')
+          const data = await resp.json().catch(() => ({}));
+          if (!resp.ok) throw new Error(data?.message || 'Błąd');
+          toast({ title: 'Utworzono admina', variant: 'success' });
+          // Opcjonalnie: przekierowanie do logowania
+          // router.push('/login')
+        } catch (err: any) {
+          toast({ title: 'Błąd', description: err?.message || 'Wystąpił problem z połączeniem', variant: 'destructive' });
         }
-      }} className="space-y-4">
+      })}>
         <div className="space-y-2">
-          <label className="block text-sm font-medium">Email</label>
-          <input name="email" className="w-full rounded border px-3 py-2" value={email} onChange={(e) => setEmail(e.target.value)} type="email" required />
+          <Label>Email</Label>
+          <Input type="email" {...register('email')} />
+          {errors.email && <p className="text-sm text-red-600">{errors.email.message}</p>}
         </div>
         <div className="space-y-2">
-          <label className="block text-sm font-medium">Hasło</label>
-          <input name="password" className="w-full rounded border px-3 py-2" value={password} onChange={(e) => setPassword(e.target.value)} type="password" required />
-          <p className="text-xs text-gray-500">Minimum 12 znaków. Hasło zostanie zhashowane (Argon2id).</p>
+          <Label>Hasło</Label>
+          <Input type="password" {...register('password')} />
+          {errors.password && <p className="text-sm text-red-600">{errors.password.message}</p>}
+          <p className="text-xs opacity-70">Minimum 12 znaków. Hasło zostanie zhashowane (Argon2id).</p>
         </div>
-        <button type="submit" className="rounded bg-black px-4 py-2 text-white">Utwórz admina</button>
+        <Button type="submit" disabled={isSubmitting}>Utwórz admina</Button>
       </form>
-      {message && <p className="mt-4 text-sm">{message}</p>}
     </div>
   )
 }

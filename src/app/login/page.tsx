@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { pl } from '@/i18n/pl'
 
 const schema = z.object({
   email: z.string().email('Podaj poprawny email'),
@@ -20,7 +21,8 @@ export default function LoginPage() {
 
   return (
     <div className="mx-auto max-w-sm p-6">
-      <h1 className="text-2xl font-semibold mb-4">Logowanie</h1>
+  <h1 className="mb-2 text-2xl font-semibold">Logowanie</h1>
+  <p className="mb-6 text-sm opacity-70">Podaj swoje dane, aby zalogować się do panelu.</p>
       <form className="space-y-4" onSubmit={handleSubmit(async ({ email, password }) => {
         const res = await signIn('credentials', { email, password, redirect: true, callbackUrl: '/' })
         if (res && (res as any).error) {
@@ -28,7 +30,7 @@ export default function LoginPage() {
         }
       })}>
         <div className="space-y-2">
-          <Label>Email</Label>
+          <Label>{pl.clients.email}</Label>
           <Input type="email" {...register('email')} />
           {errors.email && <p className="text-sm text-red-600">{errors.email.message}</p>}
         </div>
@@ -37,7 +39,7 @@ export default function LoginPage() {
           <Input type="password" {...register('password')} />
           {errors.password && <p className="text-sm text-red-600">{errors.password.message}</p>}
         </div>
-        <Button type="submit" disabled={isSubmitting}>Zaloguj</Button>
+  <Button type="submit" disabled={isSubmitting}>{pl.nav.login}</Button>
       </form>
     </div>
   )
