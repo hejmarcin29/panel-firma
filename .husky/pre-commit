@@ -1,5 +1,6 @@
 #!/usr/bin/env sh
 set -euo pipefail
-echo "[husky pre-commit] Quick lint (fast)"
+echo "[husky pre-commit] Quick lint + migration check"
 npm run lint --silent
+node scripts/check-migrations.mjs
 echo "[husky pre-commit] OK"
