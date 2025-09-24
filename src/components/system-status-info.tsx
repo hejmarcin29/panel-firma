@@ -77,7 +77,15 @@ export function SystemStatusInfo() {
                           <span className="text-xs text-muted-foreground">{ev.entityType}:{ev.entityId.slice(0,8)}</span>
                         )}
                       </div>
-                      {ev.payload && ev.payload.changedFields && (
+                      {ev.payload?.changes?.length ? (
+                        <div className="mt-0.5 space-y-0.5 text-xs text-muted-foreground">
+                          {ev.payload.changes.map((c: any, idx: number) => (
+                            <div key={idx}>
+                              {c.field}: {c.before === null || c.before === undefined || c.before === '' ? '∅' : String(c.before)} → {c.after === null || c.after === undefined || c.after === '' ? '∅' : String(c.after)}
+                            </div>
+                          ))}
+                        </div>
+                      ) : ev.payload && ev.payload.changedFields && (
                         <div className="text-xs mt-0.5 text-muted-foreground">changed: {ev.payload.changedFields.join(', ')}</div>
                       )}
                     </li>

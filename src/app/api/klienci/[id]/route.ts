@@ -26,8 +26,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json().catch(() => ({}));
-  const updates: any = {};
-  for (const k of [
+  const fields = [
     "name",
     "phone",
     "email",
@@ -35,10 +34,30 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     "invoiceAddress",
     "deliveryCity",
     "deliveryAddress",
-  ]) {
-    if (k in body) updates[k] = (body[k] ?? null) === "" ? null : body[k];
+  ] as const;
+
+  // Fetch previous state for diff.
+  const [before] = await db.select().from(clients).where(eq(clients.id, id)).limit(1);
+  if (!before) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+  const updates: Record<string, any> = {};
+  const changes: { field: string; before: any; after: any }[] = [];
+
+  for (const f of fields) {
+    if (f in body) {
+      const incoming = (body as any)[f];
+      const normalized = (incoming ?? null) === '' ? null : incoming;
+      const prev = (before as any)[f];
+      // Only treat as changed if different (strict inequality, but normalize undefined→null)
+      if ((prev ?? null) !== (normalized ?? null)) {
+        updates[f] = normalized;
+        changes.push({ field: f, before: prev ?? null, after: normalized ?? null });
+      }
+    }
   }
+
   if (Object.keys(updates).length === 0) return NextResponse.json({ ok: true });
+
   await db.update(clients).set(updates).where(eq(clients.id, id));
   const actor = (session as any)?.user?.email ?? null;
   const changedFields = Object.keys(updates);
@@ -46,7 +65,8 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     type: DomainEventTypes.clientUpdated,
     actor,
     entity: { type: 'client', id },
-    payload: { id, changedFields },
+    payload: { id, changedFields, changes },
+    schemaVersion: 2,
   });
   return NextResponse.json({ ok: true });
 }

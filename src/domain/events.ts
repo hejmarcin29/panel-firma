@@ -19,9 +19,20 @@ export const clientCreatedPayloadSchema = z.object({
   name: z.string(),
 });
 
+// For client.updated we allow an optional detailed changes array for richer diff visualization.
+// Each change: { field, before, after }
 export const clientUpdatedPayloadSchema = z.object({
   id: z.string().uuid(),
   changedFields: z.array(z.string()).min(1),
+  changes: z
+    .array(
+      z.object({
+        field: z.string(),
+        before: z.any().optional(),
+        after: z.any().optional(),
+      })
+    )
+    .optional(),
 });
 
 export const clientDeletedPayloadSchema = z.object({

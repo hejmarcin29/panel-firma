@@ -56,6 +56,7 @@ export const pl = {
       'Notatki klientów: zapis w tabeli client_notes, widoczne w sekcji Ostatnie zmiany.',
       'Iteracje: zawsze dopisuj ważną informację przy kolejnych zmianach.',
       '2025-09-24 – [ZMIANA] Wdrożono podstawowy Event Store (tabela domain_events + emisja dla klient/nota).',
+      '2025-09-24 – [ZMIANA] client.updated: szczegółowy diff (changes[]: field, before, after) + schemaVersion=2.',
     ],
     recentChanges: 'Ostatnie zmiany',
     jobsTitle: 'Zlecenia (montaż/dostawa)',
