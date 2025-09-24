@@ -2,10 +2,14 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { clients, type Client } from "@/db/schema";
 import { randomUUID } from "crypto";
-import { getServerSession } from "next-auth";
+import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { desc } from "drizzle-orm";
 import { emitDomainEvent, DomainEventTypes } from "@/domain/events";
+
+interface SessionUser {
+  user?: { email?: string | null; role?: string | null } | null;
+}
 
 interface ClientCreateBody {
   name: string;
@@ -15,6 +19,7 @@ interface ClientCreateBody {
   invoiceAddress?: string | null;
   deliveryCity?: string | null;
   deliveryAddress?: string | null;
+  // serviceType usunięte z formularza – pozostawiamy pole na przyszłość (ignorowane przy create)
   // Allow unknown extra keys (ignored)
   [key: string]: unknown;
 }
@@ -51,15 +56,19 @@ export async function POST(req: Request) {
     invoiceAddress: trimOrNull(body?.invoiceAddress) ?? null,
     deliveryCity: trimOrNull(body?.deliveryCity) ?? null,
     deliveryAddress: trimOrNull(body?.deliveryAddress) ?? null,
+    // W tym etapie nie wybieramy typu usługi – domyślna wartość 'with_installation' (pozostawiona dla kompatybilności, może być zrefaktoryzowana)
+    serviceType: 'with_installation',
   };
 
   await db.insert(clients).values(data);
 
+  const userEmail = (session as SessionUser | null)?.user?.email ?? null;
   await emitDomainEvent({
     type: DomainEventTypes.clientCreated,
-    actor: session.user?.email ?? null,
+    actor: userEmail,
     entity: { type: 'client', id: data.id },
-    payload: { id: data.id, name: data.name },
+    payload: { id: data.id, name: data.name, serviceType: data.serviceType },
+    schemaVersion: 2,
   });
 
   return NextResponse.json({ id: data.id });

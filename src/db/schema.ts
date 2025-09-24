@@ -8,7 +8,7 @@ export const users = sqliteTable('users', {
   emailVerified: integer('email_verified', { mode: 'timestamp_ms' }),
   image: text('image'),
   // Custom fields
-  role: text('role').notNull().default('admin'), // 'admin' | 'installer' | 'office' | 'manager'
+  role: text('role').notNull().default('admin'), // 'admin' | 'installer' | 'architect' | 'manager'
   passwordHash: text('password_hash').notNull(),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
@@ -56,6 +56,8 @@ export const clients = sqliteTable('clients', {
   invoiceAddress: text('invoice_address'), // adres (faktura)
   deliveryCity: text('delivery_city'), // miasto (dostawa)
   deliveryAddress: text('delivery_address'), // adres (dostawa)
+  // Typ usługi: tylko dostawa czy z montażem
+  serviceType: text('service_type').notNull().default('with_installation'), // 'delivery_only' | 'with_installation'
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
 })
 
@@ -85,3 +87,23 @@ export const domainEvents = sqliteTable('domain_events', {
 });
 
 export type DomainEvent = typeof domainEvents.$inferSelect
+
+// Orders (Zlecenia) – iteracja 1
+// type: 'delivery' | 'installation'
+// status lifecycle (minimal):
+//  - awaiting_measurement (tylko dla installation)
+//  - ready_to_schedule (delivery od razu; installation po pomiarze)
+//  - scheduled
+//  - completed
+//  - cancelled
+export const orders = sqliteTable('orders', {
+  id: text('id').primaryKey(), // uuid
+  clientId: text('client_id').notNull(),
+  type: text('type').notNull(), // 'delivery' | 'installation'
+  status: text('status').notNull(), // patrz komentarz wyżej
+  requiresMeasurement: integer('requires_measurement', { mode: 'boolean' }).notNull().default(false),
+  scheduledDate: integer('scheduled_date', { mode: 'timestamp_ms' }), // planowana data dostawy/montażu (opc.)
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+});
+
+export type Order = typeof orders.$inferSelect

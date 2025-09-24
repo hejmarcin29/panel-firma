@@ -18,6 +18,17 @@ type Klient = {
   invoiceAddress?: string | null;
   deliveryCity?: string | null;
   deliveryAddress?: string | null;
+  serviceType?: string | null;
+  createdAt: number;
+};
+
+type Order = {
+  id: string;
+  clientId: string;
+  type: string;
+  status: string;
+  requiresMeasurement: number | boolean;
+  scheduledDate?: number | null;
   createdAt: number;
 };
 
@@ -38,6 +49,7 @@ export default function KlientPage() {
   const [error, setError] = useState<string | null>(null);
   const [newNote, setNewNote] = useState("");
   const [openDelete, setOpenDelete] = useState(false);
+  const [orders, setOrders] = useState<Order[]>([]);
 
   const load = useCallback(async () => {
     try {
@@ -46,6 +58,11 @@ export default function KlientPage() {
       const j = await r.json();
       setClient(j.client);
       setNotes(j.notes);
+      const ro = await fetch(`/api/zlecenia?clientId=${id}`);
+      if (ro.ok) {
+        const jo = await ro.json();
+        setOrders(jo.orders || []);
+      }
     } catch {
       setError('Błąd ładowania');
     } finally {
@@ -91,7 +108,14 @@ export default function KlientPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <BackButton fallbackHref="/klienci" />
-          <h1 className="text-2xl font-semibold">{client.name}</h1>
+          <h1 className="text-2xl font-semibold flex items-center gap-3">
+            <span>{client.name}</span>
+            {client.serviceType && (
+              <span className="inline-flex items-center rounded-full border border-black/15 bg-black/5 px-2 py-0.5 text-xs font-medium dark:border-white/15 dark:bg-white/10">
+                {client.serviceType === 'delivery_only' ? 'Tylko dostawa' : 'Z montażem'}
+              </span>
+            )}
+          </h1>
         </div>
         <div className="flex items-center gap-2">
           <Link
@@ -135,6 +159,32 @@ export default function KlientPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader className="pb-2"><CardTitle>Zlecenia</CardTitle></CardHeader>
+        <CardContent>
+          {orders.length === 0 ? (
+            <div className="text-sm opacity-70">Brak zleceń</div>
+          ) : (
+            <div className="space-y-2">
+              {orders.map(o => (
+                <div key={o.id} className="rounded border border-black/10 p-2 text-sm dark:border-white/10">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">{o.type === 'installation' ? 'Montaż' : 'Dostawa'}</span>
+                    <span className="text-xs rounded bg-black/5 dark:bg-white/10 px-2 py-0.5">{o.status}</span>
+                  </div>
+                  <div className="text-xs opacity-60 mt-0.5">{new Date(o.createdAt).toLocaleString()}</div>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="mt-3">
+            <Link href={`/klienci/${id}/zlecenia/nowe`} className="inline-flex h-8 items-center gap-1.5 rounded-md border border-black/15 px-2 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">
+              <Plus className="h-4 w-4" /> Nowe zlecenie
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
   <CardHeader className="pb-2"><CardTitle>{pl.clients.notesTitle}</CardTitle></CardHeader>

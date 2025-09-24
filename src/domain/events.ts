@@ -9,6 +9,11 @@ export const DomainEventTypes = {
   clientUpdated: 'client.updated',
   clientDeleted: 'client.deleted',
   clientNoteAdded: 'client.note.added',
+  clientServiceTypeChanged: 'client.serviceType.changed',
+  orderCreated: 'order.created',
+  orderStatusChanged: 'order.status.changed',
+  userRoleChanged: 'user.role.changed',
+  userPasswordChanged: 'user.password.changed',
 } as const;
 
 export type DomainEventType = typeof DomainEventTypes[keyof typeof DomainEventTypes];
@@ -17,6 +22,7 @@ export type DomainEventType = typeof DomainEventTypes[keyof typeof DomainEventTy
 export const clientCreatedPayloadSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
+  serviceType: z.string().optional(),
 });
 
 // For client.updated we allow an optional detailed changes array for richer diff visualization.
@@ -44,16 +50,57 @@ export const clientNoteAddedPayloadSchema = z.object({
   clientId: z.string().uuid(),
 });
 
+export const clientServiceTypeChangedPayloadSchema = z.object({
+  id: z.string().uuid(), // client id
+  before: z.string(),
+  after: z.string(),
+});
+
+// Orders
+export const orderCreatedPayloadSchema = z.object({
+  id: z.string().uuid(),
+  clientId: z.string().uuid(),
+  type: z.enum(['delivery','installation']),
+  status: z.string(),
+});
+
+export const orderStatusChangedPayloadSchema = z.object({
+  id: z.string().uuid(),
+  from: z.string(),
+  to: z.string(),
+});
+
+// Users
+export const userRoleChangedPayloadSchema = z.object({
+  id: z.string().uuid(),
+  before: z.string(),
+  after: z.string(),
+});
+
+export const userPasswordChangedPayloadSchema = z.object({
+  id: z.string().uuid(),
+});
+
 export type ClientCreatedPayload = z.infer<typeof clientCreatedPayloadSchema>;
 export type ClientUpdatedPayload = z.infer<typeof clientUpdatedPayloadSchema>;
 export type ClientDeletedPayload = z.infer<typeof clientDeletedPayloadSchema>;
 export type ClientNoteAddedPayload = z.infer<typeof clientNoteAddedPayloadSchema>;
+export type ClientServiceTypeChangedPayload = z.infer<typeof clientServiceTypeChangedPayloadSchema>;
+export type OrderCreatedPayload = z.infer<typeof orderCreatedPayloadSchema>;
+export type OrderStatusChangedPayload = z.infer<typeof orderStatusChangedPayloadSchema>;
+export type UserRoleChangedPayload = z.infer<typeof userRoleChangedPayloadSchema>;
+export type UserPasswordChangedPayload = z.infer<typeof userPasswordChangedPayloadSchema>;
 
 const payloadSchemaByType: Record<DomainEventType, z.ZodTypeAny> = {
   [DomainEventTypes.clientCreated]: clientCreatedPayloadSchema,
   [DomainEventTypes.clientUpdated]: clientUpdatedPayloadSchema,
   [DomainEventTypes.clientDeleted]: clientDeletedPayloadSchema,
   [DomainEventTypes.clientNoteAdded]: clientNoteAddedPayloadSchema,
+  [DomainEventTypes.clientServiceTypeChanged]: clientServiceTypeChangedPayloadSchema,
+  [DomainEventTypes.orderCreated]: orderCreatedPayloadSchema,
+  [DomainEventTypes.orderStatusChanged]: orderStatusChangedPayloadSchema,
+  [DomainEventTypes.userRoleChanged]: userRoleChangedPayloadSchema,
+  [DomainEventTypes.userPasswordChanged]: userPasswordChangedPayloadSchema,
 };
 
 interface EmitBase<T extends DomainEventType> {

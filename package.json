@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "check:iteration": "node scripts/check-system-info.mjs",
+    "check:migrations": "node scripts/check-migrations.mjs",
     "prepare": "husky"
   },
   "dependencies": {

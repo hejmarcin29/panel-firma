@@ -2,11 +2,18 @@ import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/db";
 import { clients, clientNotes, type Client } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
-import { getServerSession } from "next-auth";
+import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import { emitDomainEvent, DomainEventTypes } from "@/domain/events";
 
-type UpdatableClientField = 'name' | 'phone' | 'email' | 'invoiceCity' | 'invoiceAddress' | 'deliveryCity' | 'deliveryAddress';
+interface SessionUser {
+  user?: {
+    email?: string | null;
+    role?: string | null;
+  } | null;
+}
+
+type UpdatableClientField = 'name' | 'phone' | 'email' | 'invoiceCity' | 'invoiceAddress' | 'deliveryCity' | 'deliveryAddress' | 'serviceType';
 type ClientUpdateBody = Partial<Record<UpdatableClientField, unknown>> & { [k: string]: unknown };
 interface FieldChange { field: UpdatableClientField; before: string | null; after: string | null }
 
@@ -26,15 +33,16 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
 // PATCH /api/klienci/[id] - aktualizacja danych klienta
 export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptions as any);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const raw = await req.json().catch(() => null) as unknown;
   const body: ClientUpdateBody = raw && typeof raw === 'object' ? (raw as ClientUpdateBody) : {};
-  const fields: UpdatableClientField[] = ['name','phone','email','invoiceCity','invoiceAddress','deliveryCity','deliveryAddress'];
+  const fields: UpdatableClientField[] = ['name','phone','email','invoiceCity','invoiceAddress','deliveryCity','deliveryAddress','serviceType'];
 
   const [before] = await db.select().from(clients).where(eq(clients.id, id)).limit(1);
   if (!before) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  const userEmail = (session as SessionUser | null)?.user?.email ?? null;
 
   const updates: Partial<Record<UpdatableClientField, string | null>> = {};
   const changes: FieldChange[] = [];
@@ -44,6 +52,10 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     if (typeof v !== 'string') return null;
     const t = v.trim();
     if (t === '') return null;
+    if (field === 'serviceType') {
+      if (t === 'delivery_only' || t === 'with_installation') return t;
+      return null;
+    }
     return t;
   };
 
@@ -67,35 +79,57 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
 
   // Build set object with only provided keys. Drizzle's columns accept null for nullable fields.
   const setObject: Partial<Client> = {};
-  for (const [k, v] of Object.entries(updates) as [UpdatableClientField, string | null][]) {
-    if (k === 'name') {
-      if (typeof v === 'string') setObject[k] = v; // name cannot be null
-    } else {
-      setObject[k] = v; // nullable columns allow null
+  (Object.entries(updates) as [UpdatableClientField, string | null][]).forEach(([k, v]) => {
+    if (v === undefined) return;
+    switch (k) {
+      case 'name':
+        if (typeof v === 'string') setObject.name = v; break;
+      case 'serviceType':
+        if (typeof v === 'string') setObject.serviceType = v; break;
+      case 'phone': setObject.phone = v; break;
+      case 'email': setObject.email = v; break;
+      case 'invoiceCity': setObject.invoiceCity = v; break;
+      case 'invoiceAddress': setObject.invoiceAddress = v; break;
+      case 'deliveryCity': setObject.deliveryCity = v; break;
+      case 'deliveryAddress': setObject.deliveryAddress = v; break;
     }
-  }
+  });
   await db.update(clients).set(setObject).where(eq(clients.id, id));
   await emitDomainEvent({
     type: DomainEventTypes.clientUpdated,
-    actor: session.user?.email ?? null,
+    actor: userEmail,
     entity: { type: 'client', id },
     payload: { id, changedFields: Object.keys(updates), changes },
     schemaVersion: 2,
   });
+  // Emit dodatkowy event dla zmiany serviceType (jeśli była wśród zmian)
+  if (changes.some(c => c.field === 'serviceType')) {
+    const svcChange = changes.find(c => c.field === 'serviceType');
+    if (svcChange && svcChange.before && svcChange.after && svcChange.before !== svcChange.after) {
+      await emitDomainEvent({
+        type: DomainEventTypes.clientServiceTypeChanged,
+        actor: userEmail,
+        entity: { type: 'client', id },
+        payload: { id, before: svcChange.before, after: svcChange.after },
+        schemaVersion: 1,
+      });
+    }
+  }
   return NextResponse.json({ ok: true });
 }
 
 // DELETE /api/klienci/[id]
 export async function DELETE(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptions as any);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const userEmail = (session as SessionUser | null)?.user?.email ?? null;
 
   await db.delete(clientNotes).where(eq(clientNotes.clientId, id));
   await db.delete(clients).where(eq(clients.id, id));
   await emitDomainEvent({
     type: DomainEventTypes.clientDeleted,
-    actor: session.user?.email ?? null,
+    actor: userEmail,
     entity: { type: 'client', id },
     payload: { id },
   });

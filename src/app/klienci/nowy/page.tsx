@@ -21,6 +21,7 @@ const schema = z.object({
   deliveryAddress: z.string().optional(),
   sameAsInvoice: z.boolean().default(false),
   note: z.string().optional(),
+  // Usunięto wybór serviceType z formularza – decyzja: domyślnie 'with_installation' pozostaje w backendzie (lub zostanie zrefaktoryzowane później)
 });
 
 export default function NowyKlientPage() {
@@ -52,6 +53,7 @@ export default function NowyKlientPage() {
             invoiceAddress: data.invoiceAddress || '',
             deliveryCity: (data.sameAsInvoice ? data.invoiceCity : data.deliveryCity) || '',
             deliveryAddress: (data.sameAsInvoice ? data.invoiceAddress : data.deliveryAddress) || '',
+            // serviceType pomijamy – backend nada domyślność / zostanie uproszczone
           };
           const r = await fetch('/api/klienci', {
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
@@ -115,6 +117,8 @@ export default function NowyKlientPage() {
             <Input {...register('deliveryAddress')} />
           </div>
         </div>
+
+        {/* Pole wyboru typu usługi usunięte – placeholder do ewentualnego powrotu */}
 
         <div>
           <Label>{pl.clients.notesTitle}</Label>

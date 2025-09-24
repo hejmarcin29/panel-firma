@@ -1,6 +1,7 @@
 #!/usr/bin/env sh
 set -euo pipefail
-echo "[husky pre-push] Lint + iteration check"
+echo "[husky pre-push] Lint + iteration + migrations"
 npm run lint
 npm run check:iteration
+node scripts/check-migrations.mjs
 echo "[husky pre-push] OK"

@@ -1,0 +1,160 @@
+Pytanie:
+Jak zaprojektować i krokowo wdrożyć wysoki poziom automatyzacji procesu biznesowego firmy instalacyjnej: od momentu pozyskania leada (od architekta), przez konfigurację paneli przez klienta, generowanie zamówień do producenta, planowanie i logistyczną dostawę przed montażem, aż po montaż, fakturowanie, umowy i powiadomienia – tak aby system był skalowalny, audytowalny i możliwy do ewolucji bez "big bang refactor"?
+
+Odpowiedź (wersja ekspercka):
+
+== 1. Cele i zasady nadrzędne ==
+- Minimalizacja pracy ręcznej poprzez jasno zdefiniowane stany i zdarzenia.
+- Audytowalność: każdy istotny krok = event domenowy w Event Store.
+- Ewolucyjność: start prosty (orchestrator), potem przejście do choreografii event-driven.
+- Idempotencja: automaty nie dublują akcji przy powtórnym przetworzeniu eventu.
+- "Human in the loop" tylko tam, gdzie realnie konieczna decyzja.
+
+== 2. Bounded Contexts (podział domeny) ==
+1) Leads & Pre-Sales
+2) Konfiguracja / Panel Selection (self-service klienta)
+3) Projects / Installation Scheduling
+4) Procurement / Supplier Orders
+5) Logistics & Warehouse
+6) Finance & Billing (Faktury / Płatności)
+7) Contracts & Documents
+8) Notifications & SLA
+9) Event Store & Audit
+10) Integrations (producent, e‑podpis, płatności)
+
+== 3. Kluczowe encje i ich cykle życia ==
+Lead: NEW -> QUALIFIED -> WON (-> Project) / LOST
+Project: DRAFT -> CONFIRMED -> SCHEDULED -> IN_PROGRESS -> DONE -> CLOSED
+PanelSelection: DRAFT -> LOCKED -> PRODUCED -> DELIVERED -> INSTALLED
+SupplierOrder: CREATED -> SENT -> ACCEPTED -> IN_PRODUCTION -> SHIPPED -> RECEIVED
+Invoice: DRAFT -> ISSUED -> SENT -> PAID_PARTIAL / PAID / OVERDUE / CANCELLED
+Contract: GENERATED -> SENT -> SIGNING -> SIGNED -> ARCHIVED
+
+== 4. Zdarzenia domenowe (przykłady) ==
+lead.created
+lead.converted
+project.created
+project.scheduled
+project.rescheduled
+panel.selection.locked
+panel.production.started
+panel.delivered
+supplier.order.created
+supplier.order.shipped
+supplier.order.delayed
+logistics.delivery.dueSoon
+invoice.issued
+invoice.paid
+invoice.overdue
+contract.generated
+contract.signed
+notification.sent
+
+Struktura eventu (polecana):
+{id, type, occurredAt, actor, entity{type,id}, payload, schemaVersion, meta{traceId?}}
+
+== 5. Orkiestracja vs. choreografia ==
+Faza 1: Orchestrator (seria kroków sterowana centralnie) dla krytycznych przepływów.
+Faza 2+: Rozproszone listenery (choreografia) reagujące na eventy (luźne sprzężenie).
+Krytyczne sekwencje finansowe utrzymuj spójne w transakcjach + emituj event po commit.
+
+== 6. Przepływ E2E (szkic) ==
+1. lead.created -> automatyczna kwalifikacja/reguła -> (opcjonalnie) lead.converted -> project.created
+2. Wygenerowanie linku konfiguratora -> klient wprowadza dane (panel.selection.updated [throttled]) -> panel.selection.locked
+3. panel.selection.locked -> supplier.order.created (1..N) + tentative project.scheduled (propozycja daty)
+4. supplier.order.shipped -> panel.delivered -> automatyczna walidacja gotowości
+5. X dni przed montażem -> logistics.delivery.dueSoon -> przypomnienie + checklist
+6. Rozpoczęcie prac -> project.in_progress -> zakończenie -> project.done
+7. project.done -> invoice.final.issued (jeśli warunki płatności spełnione)
+8. invoice.dueSoon / invoice.overdue -> powiadomienia / eskalacje
+9. contract.signed może poprzedzać scheduling (zależnie od modelu biznesowego)
+
+== 7. Self-service konfiguracja klienta ==
+- Tokenizowany link (krótka ważność + odświeżenie przy logowaniu)
+- Draft autosave (panel.selection.updated co X sekund – debouncing)
+- Po LOCKED brak edycji, zmiany tylko przez ścieżkę request change -> event panel.selection.change.requested
+
+== 8. Integracja z producentem (etapy) ==
+Stage 0: Manualny eksport PDF/CSV (supplier.order.exported)
+Stage 1: REST API (wysłanie zamówienia + polling statusu)
+Stage 2: Webhooki producenta -> supplier.order.status.updated
+Stage 3: Outbox + gwarantowane dostarczenie (retry, DLQ)
+
+== 9. Dokumenty i umowy ==
+- Szablony (Handlebars/templating) + dane z domeny
+- Versioning: contract.v1.generated -> contract.v1.signed
+- E‑podpis integracja (callback -> contract.signed)
+- Archiwizacja: fingerprint (hash SHA256) w payload meta
+
+== 10. Faktury i płatności ==
+- Zaliczka (advance) po contract.signed lub panel.selection.locked
+- Końcowa po project.done
+- Event invoice.overdue generuje kolekcję (np. email + task w CRM)
+- Idempotencja generowania: klucz (projectId, invoiceType)
+
+== 11. Powiadomienia & SLA ==
+Mechanizm rules engine:
+rule: trigger(event.type) + predicate(payload) -> actions[] (email, task, webhook)
+Idempotency key: ruleId + entityId + day
+Throttle: global + per channel
+
+== 12. Fazy wdrożenia ==
+Faza 1 (MVP): Manualne zamówienia, podstawowy Event Store, ręczne przypomnienia.
+Faza 2: Auto generacja supplier.order, przypomnienia logistic, invoice advance automation.
+Faza 3: Webhook producenta, rules engine, change requests.
+Faza 4: Analityka (KPI lead->cash), predykcja opóźnień, dynamiczne capacity instalatorów.
+
+== 13. Bezpieczeństwo i zgodność ==
+- RBAC (architekt, instalator, koordynator, finance, admin)
+- Audyt: wszystkie mutacje -> event + userId
+- Rate limiting krytycznych akcji (np. ponowne generowanie dokumentów)
+- Szyfrowanie danych wrażliwych (np. dane klienta w spoczynku – kolumnowo lub cała DB)
+
+== 14. Obserwowalność ==
+- traceId w meta wszystkich eventów tworzonych w jednym łańcuchu
+- Structured logging (JSON) + korelacja eventId <-> log lines
+- Dashboard: liczba eventów / typ / czas przejścia między statusami (Lead->LOCKED, LOCKED->SCHEDULED, SCHEDULED->DONE)
+
+== 15. Idempotencja i spójność ==
+- Outbox table dla integracji zewnętrznych
+- Dedup: unikalny constraint (eventType, entityType, entityId, hash(payloadSubset)) dla krytycznych generacji
+- Retry strategia z backoff (exponential + jitter)
+
+== 16. Miejsca "human in the loop" ==
+- Approve/Reject configuration change request
+- Resolve supplier.order.delayed
+- Manual override scheduling conflicts
+- Finance exception (manual invoice adjustment)
+
+== 17. Ryzyka i mitigacje ==
+| Ryzyko | Mitigacja |
+| API producenta niestabilne | Adapter + fallback manual |
+| Nadmiar eventów / szum | Konsolidacja diff + agregaty dzienne |
+| Dead letter integracji | DLQ + alert + manual replay UI |
+| Eskalacja opóźnień nie działa | SLA testy syntetyczne + monitoring |
+| Zmiana modeli danych | schemaVersion + migratory listener |
+
+== 18. Minimalny zestaw startowy (konkret) ==
+- Tabele: leads, projects, panel_selections, supplier_orders, invoices, contracts, domain_events
+- endpoint POST /api/leads (emit lead.created)
+- Akcja convertLead -> project.created
+- Panel selection UI (draft + lock)
+- Emisja: panel.selection.locked -> job scheduling stub + supplier.order.created (placeholder)
+- Cron daily: generuj logistics.delivery.dueSoon dla projektów z montażem < N dni
+
+== 19. KPI do mierzenia skuteczności automatyzacji ==
+- Lead→Lock (średni czas)
+- Lock→Scheduled
+- Scheduled→Done
+- On-time delivery %
+- Invoice overdue rate
+- First pass config acceptance rate
+
+== 20. Strategia rozszerzeń ==
+- Nowy proces = nowe eventy + listener; rdzeń (encje) pozostaje stabilny.
+- Rewizja event taxonomy co kwartał: konsolidacja/renaming z alias mapą jeśli trzeba.
+
+== 21. TL;DR ==
+Modeluj stany i eventy, zaczynaj od orkiestratora, emituj każdy krok do Event Store, stopniowo zastępuj kroki ręczne automatyzacjami reagującymi na eventy. Pilnuj idempotencji i audytu – reszta to iteracyjne dokładanie kolejnych listenerów.
+
+Koniec.

@@ -3,7 +3,16 @@ import { Plus } from "lucide-react";
 import { pl } from "@/i18n/pl";
 import { SystemStatusInfo } from "@/components/system-status-info";
 import Link from "next/link";
-export default function Home() {
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "./api/auth/[...nextauth]/route";
+import { redirect } from "next/navigation";
+
+export default async function Home() {
+  const session = await getServerSession(authOptions as any);
+  const role = (session as any)?.user?.role as string | undefined;
+  if (role !== 'admin') {
+    redirect('/panel/montazysta');
+  }
   return (
     <div className="mx-auto max-w-6xl p-6">
       <div className="flex items-center justify-between mb-6">
@@ -22,11 +31,32 @@ export default function Home() {
             <CardTitle>{pl.dashboard.quickActions}</CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-1 text-sm">
-              <li><Link className="underline" href="/klienci/nowy">{pl.clients.add}</Link></li>
-              <li><span className="opacity-60">Dodaj montaż (wkrótce)</span></li>
-              <li><span className="opacity-60">Dodaj dostawę (wkrótce)</span></li>
-            </ul>
+            <div className="flex flex-col gap-2">
+              <Link
+                href="/klienci/nowy"
+                className="inline-flex h-9 items-center justify-center rounded-md bg-black px-3 text-sm font-medium text-white hover:bg-black/85 dark:bg-white dark:text-black dark:hover:bg-white/90"
+              >
+                + {pl.clients.add}
+              </Link>
+              <Link
+                href="/zlecenia/nowe"
+                className="inline-flex h-9 items-center justify-center rounded-md border border-black/15 bg-black/5 px-3 text-sm hover:bg-black/10 dark:border-white/15 dark:bg-white/10 dark:hover:bg-white/20"
+              >
+                Nowe zlecenie (wybór klienta)
+              </Link>
+              <button
+                disabled
+                className="inline-flex h-9 cursor-not-allowed items-center justify-center rounded-md border border-black/10 bg-black/5 px-3 text-sm opacity-60 dark:border-white/10 dark:bg-white/10"
+              >
+                Dodaj montaż (wkrótce)
+              </button>
+              <button
+                disabled
+                className="inline-flex h-9 cursor-not-allowed items-center justify-center rounded-md border border-black/10 bg-black/5 px-3 text-sm opacity-60 dark:border-white/10 dark:bg-white/10"
+              >
+                Dodaj dostawę (wkrótce)
+              </button>
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -39,12 +69,13 @@ export default function Home() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>{pl.dashboard.systemStatus}</CardTitle>
+            <CardTitle>{pl.nav?.settings || 'Ustawienia'}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm opacity-70">Wersja: 0.1.0 • Baza: SQLite</p>
-            <div className="mt-3">
-              <SystemStatusInfo />
+            <p className="text-sm opacity-70">Zarządzanie aplikacją i ustawienia systemowe.</p>
+            <div className="mt-3 flex flex-col gap-2">
+              <Link href="/ustawienia" className="underline">Przejdź do ustawień</Link>
+              <Link href="/ustawienia/uzytkownicy" className="underline">Użytkownicy</Link>
             </div>
           </CardContent>
         </Card>

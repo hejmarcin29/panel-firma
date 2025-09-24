@@ -22,6 +22,20 @@
       "when": 1758697106692,
       "tag": "0002_empty_machine_man",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1758738168367,
+      "tag": "0003_cuddly_blue_shield",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1758739869373,
+      "tag": "0004_cuddly_loki",
+      "breakpoints": true
     }
   ]
 }

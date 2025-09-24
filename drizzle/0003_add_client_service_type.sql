@@ -1,0 +1,1 @@
+ALTER TABLE clients ADD COLUMN service_type text NOT NULL DEFAULT 'with_installation';

@@ -19,6 +19,7 @@ const schema = z.object({
   invoiceAddress: z.string().optional().or(z.literal('')),
   deliveryCity: z.string().optional().or(z.literal('')),
   deliveryAddress: z.string().optional().or(z.literal('')),
+  serviceType: z.enum(['delivery_only','with_installation']).optional().or(z.literal('')),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -47,7 +48,8 @@ export default function EdytujKlientaPage() {
           invoiceCity: j.client.invoiceCity || '',
           invoiceAddress: j.client.invoiceAddress || '',
           deliveryCity: j.client.deliveryCity || '',
-          deliveryAddress: j.client.deliveryAddress || ''
+          deliveryAddress: j.client.deliveryAddress || '',
+            serviceType: j.client.serviceType || 'with_installation'
         });
       } catch {
         setError('Błąd ładowania');
@@ -115,6 +117,17 @@ export default function EdytujKlientaPage() {
             <div>
               <Label>{pl.clients.deliveryAddress}</Label>
               <Input {...register('deliveryAddress')} />
+            </div>
+          </div>
+          <div>
+            <Label className="block mb-1">Typ usługi</Label>
+            <div className="flex gap-4 text-sm">
+              <label className="inline-flex items-center gap-1">
+                <input type="radio" value="with_installation" {...register('serviceType')} /> Z montażem
+              </label>
+              <label className="inline-flex items-center gap-1">
+                <input type="radio" value="delivery_only" {...register('serviceType')} /> Tylko dostawa
+              </label>
             </div>
           </div>
           <div className="flex items-center gap-2">

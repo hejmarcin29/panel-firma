@@ -2,14 +2,14 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { clientNotes } from "@/db/schema";
 import { randomUUID } from "crypto";
-import { getServerSession } from "next-auth";
+import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../../auth/[...nextauth]/route";
 
 interface NoteBody { content?: string; [k: string]: unknown }
 
 // POST /api/clients/[id]/notes
-export async function POST(req: Request, { params }: { params: { id: string } }) {
-  const session = await getServerSession(authOptions);
+export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
+  const session = await getServerSession(authOptions as any);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const raw = await req.json().catch(() => null) as unknown;
@@ -20,9 +20,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   const id = randomUUID();
   await db.insert(clientNotes).values({
     id,
-    clientId: params.id,
+    clientId: (await ctx.params).id,
     content,
-    createdBy: session.user?.email ?? null,
+  createdBy: (session as any).user?.email ?? null,
   });
   return NextResponse.json({ id });
 }
