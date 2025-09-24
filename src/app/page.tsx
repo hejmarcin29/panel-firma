@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus } from "lucide-react";
 import { pl } from "@/i18n/pl";
-
+import { SystemStatusInfo } from "@/components/system-status-info";
 export default function Home() {
   return (
     <div className="mx-auto max-w-6xl p-6">
@@ -42,6 +42,9 @@ export default function Home() {
           </CardHeader>
           <CardContent>
             <p className="text-sm opacity-70">Wersja: 0.1.0 • Baza: SQLite</p>
+            <div className="mt-3">
+              <SystemStatusInfo />
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -126,3 +129,4 @@ async function RecentChanges() {
     </ul>
   );
 }
+

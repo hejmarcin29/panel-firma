@@ -5,11 +5,13 @@ type AlertDialogProps = {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   title?: string;
-  description?: string;
+  description?: React.ReactNode;
   cancelText?: string;
   confirmText?: string;
   confirmVariant?: "default" | "destructive";
   onConfirm?: () => void | Promise<void>;
+  showCancelButton?: boolean;
+  showConfirmButton?: boolean;
 };
 
 export function AlertDialog({
@@ -21,15 +23,23 @@ export function AlertDialog({
   confirmText = "Potwierdź",
   confirmVariant = "default",
   onConfirm,
+  showCancelButton = true,
+  showConfirmButton = true,
 }: AlertDialogProps) {
   const dialogRef = React.useRef<HTMLDivElement>(null);
   const cancelRef = React.useRef<HTMLButtonElement>(null);
+  const confirmRef = React.useRef<HTMLButtonElement>(null);
   const prevActive = React.useRef<HTMLElement | null>(null);
 
   React.useEffect(() => {
     if (open) {
       prevActive.current = document.activeElement as HTMLElement | null;
-      setTimeout(() => cancelRef.current?.focus(), 0);
+      const focusTarget = showCancelButton
+        ? cancelRef.current
+        : showConfirmButton
+        ? confirmRef.current
+        : null;
+      setTimeout(() => focusTarget?.focus(), 0);
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
@@ -38,7 +48,7 @@ export function AlertDialog({
     return () => {
       document.body.style.overflow = "";
     };
-  }, [open]);
+  }, [open, showCancelButton, showConfirmButton]);
 
   React.useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -50,6 +60,8 @@ export function AlertDialog({
   }, [open, onOpenChange]);
 
   if (!open) return null;
+
+  const hasActions = showCancelButton || showConfirmButton;
 
   return (
     <div
@@ -71,33 +83,40 @@ export function AlertDialog({
           {title}
         </h2>
         {description && (
-          <p id="alert-desc" className="mt-1 text-sm opacity-80">
+          <div id="alert-desc" className="mt-1 text-sm opacity-80 space-y-2">
             {description}
-          </p>
+          </div>
         )}
-        <div className="mt-4 flex justify-end gap-2">
-          <button
-            ref={cancelRef}
-            className="h-9 rounded-md border border-black/15 px-3 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
-            onClick={() => onOpenChange(false)}
-          >
-            {cancelText}
-          </button>
-          <button
-            className={[
-              "h-9 rounded-md px-3 text-sm text-white",
-              confirmVariant === "destructive"
-                ? "bg-red-600 hover:bg-red-700"
-                : "bg-black hover:bg-black/85 dark:bg-white dark:text-black dark:hover:bg-white/90",
-            ].join(" ")}
-            onClick={async () => {
-              await onConfirm?.();
-              onOpenChange(false);
-            }}
-          >
-            {confirmText}
-          </button>
-        </div>
+        {hasActions && (
+          <div className="mt-4 flex justify-end gap-2">
+            {showCancelButton && (
+              <button
+                ref={cancelRef}
+                className="h-9 rounded-md border border-black/15 px-3 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+                onClick={() => onOpenChange(false)}
+              >
+                {cancelText}
+              </button>
+            )}
+            {showConfirmButton && (
+              <button
+                ref={confirmRef}
+                className={[
+                  "h-9 rounded-md px-3 text-sm text-white",
+                  confirmVariant === "destructive"
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-black hover:bg-black/85 dark:bg-white dark:text-black dark:hover:bg-white/90",
+                ].join(" ")}
+                onClick={async () => {
+                  await onConfirm?.();
+                  onOpenChange(false);
+                }}
+              >
+                {confirmText}
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

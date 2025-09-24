@@ -2,6 +2,25 @@
 
 Stack: Next.js (App Router), Tailwind v4 (minimal, pod shadcn), Drizzle ORM + SQLite (better-sqlite3), Auth.js (Credentials + Drizzle), Argon2id (@node-rs/argon2).
 
+## Stan systemu / Event store / Automatyzacje
+
+Na dashboardzie znajduje się sekcja „Stan systemu” z trzema przyciskami:
+
+- "Jak działa projekt" – lista kluczowych informacji (`systemInfoPoints` w `src/i18n/pl.ts`).
+- "Event store" – (placeholder) przyszła lista zdarzeń domenowych emitowanych do outboxa (typ, czas, użytkownik, status). Obecnie puste – zostanie uzupełnione po wdrożeniu outbox/domain events.
+- "Automatyzacje" – (placeholder) przyszły przegląd workflow / integracji (np. e-mail/SMS, generowanie dokumentów). Aktualnie wyświetla pusty stan.
+
+Zasada iteracyjna (Definition of Done): każda merytoryczna iteracja dodaje przynajmniej jeden nowy wpis do `systemInfoPoints` (kluczowa zmiana / decyzja / ryzyko / TODO). Jeśli brak zmian – w opisie PR wpis "Brak nowego wpisu do Stanu systemu (no-op)".
+
+Jeżeli w iteracji powstaje nowa automatyzacja lub nowy typ zdarzenia domenowego, należy:
+1. Dodać/zmodyfikować wpis w `systemInfoPoints` (TAG `[ZMIANA]`, `[DECYZJA]` lub `[TODO]`).
+2. Uzupełnić tłumaczenia / placeholdery paneli (jeżeli pojawiają się nowe kategorie).
+3. W przyszłości (po wdrożeniu outboxa) – dopisać event do centralnej definicji (np. `src/domain/events.ts`) i upewnić się, że panel Event store go poprawnie prezentuje.
+
+Format sugerowany wpisów: `YYYY-MM-DD – [TAG] Krótki opis`.
+
+Najświeższe wpisy trzymamy na górze listy.
+
 ## UX decisions
 
 Primary forms remain full pages (no modals/intercepting routes for now). See `docs/UX_DECISIONS.md` for context and future considerations.
