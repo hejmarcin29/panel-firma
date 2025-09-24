@@ -103,7 +103,22 @@ export const orders = sqliteTable('orders', {
   status: text('status').notNull(), // patrz komentarz wyżej
   requiresMeasurement: integer('requires_measurement', { mode: 'boolean' }).notNull().default(false),
   scheduledDate: integer('scheduled_date', { mode: 'timestamp_ms' }), // planowana data dostawy/montażu (opc.)
+  installerId: text('installer_id'), // users.id (rola: installer)
+  preMeasurementSqm: integer('pre_measurement_sqm'), // szacunkowe m2 przed pomiarem
+  internalNote: text('internal_note'), // notatka Primepodloga (aktualny stan)
+  internalNoteUpdatedAt: integer('internal_note_updated_at', { mode: 'timestamp_ms' }),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
 });
 
 export type Order = typeof orders.$inferSelect
+
+// Historia edycji notatki zamówienia (append-only)
+export const orderNoteHistory = sqliteTable('order_note_history', {
+  id: text('id').primaryKey(), // uuid
+  orderId: text('order_id').notNull(),
+  content: text('content').notNull(),
+  editedBy: text('edited_by'), // email
+  editedAt: integer('edited_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+});
+
+export type OrderNoteHistory = typeof orderNoteHistory.$inferSelect

@@ -2,18 +2,17 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../../auth/[...nextauth]/route';
+import { getSession } from '@/lib/auth-session';
 import { z } from 'zod';
 import { emitDomainEvent, DomainEventTypes } from '@/domain/events';
 
 const bodySchema = z.object({ role: z.enum(['admin','installer','architect','manager']) });
 
-interface SessionLike { user?: { role?: string | null } | null }
+interface SessionLike { user?: { role?: string | null; email?: string | null } | null }
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-  const session = await getServerSession(authOptions as any);
+  const session = await getSession();
     const sessionRole = (session as SessionLike | null)?.user?.role;
     if (!session || sessionRole !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -41,7 +40,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     // Emit domain event for auditing
     await emitDomainEvent({
       type: DomainEventTypes.userRoleChanged,
-      actor: (session as any)?.user?.email ?? 'system',
+      actor: (session as SessionLike | null)?.user?.email ?? 'system',
       entity: { type: 'user', id: userId },
       payload: { id: userId, before: beforeUser.role ?? 'unknown', after: newRole },
       schemaVersion: 1,

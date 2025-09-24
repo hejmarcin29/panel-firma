@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { clients, clientNotes } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "../../auth/[...nextauth]/route";
+import { getSession } from "@/lib/auth-session";
 
 // GET /api/clients/[id]
 export async function GET(_: Request, ctx: { params: Promise<{ id: string }> }) {
@@ -21,7 +20,7 @@ export async function GET(_: Request, ctx: { params: Promise<{ id: string }> }) 
 // DELETE /api/clients/[id]
 export async function DELETE(_: Request, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
-  const session = await getServerSession(authOptions as any);
+  const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   await db.delete(clientNotes).where(eq(clientNotes.clientId, id));

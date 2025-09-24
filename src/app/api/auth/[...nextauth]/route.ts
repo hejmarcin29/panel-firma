@@ -1,16 +1,17 @@
-import NextAuth from "next-auth"
+import NextAuth from "next-auth/next"
 import Credentials from "next-auth/providers/credentials"
 import { DrizzleAdapter } from "@auth/drizzle-adapter"
 import { db } from "@/db"
 import { users } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { verify } from "@/lib/hash"
+import type { Adapter } from "next-auth/adapters"
+import type { JWT } from "next-auth/jwt"
+import type { Session } from "next-auth"
 
-// Note: keep types loose here to avoid TS issues across NextAuth versions.
 export const authOptions = {
-  // Cast adapter to silence structural mismatch (role field handled separately in callbacks)
-  adapter: DrizzleAdapter(db) as any,
-  session: { strategy: "jwt" as const },
+  adapter: DrizzleAdapter(db) as unknown as Adapter,
+  session: { strategy: "jwt" },
   providers: [
     Credentials({
       name: "Credentials",
@@ -34,17 +35,21 @@ export const authOptions = {
     signIn: "/login",
   },
   callbacks: {
-    async jwt({ token, user }: any) {
-      const hasRole = (u: unknown): u is { role: string } => typeof u === 'object' && u !== null && 'role' in u && typeof (u as { role?: unknown }).role === 'string';
-      if (user && hasRole(user)) token.role = user.role;
+    async jwt({ token, user }: { token: JWT; user?: unknown }) {
+      if (user && typeof (user as { role?: unknown }).role === 'string') {
+        (token as Record<string, unknown>).role = (user as { role: string }).role
+      }
       return token
     },
-    async session({ session, token }: any) {
-      if (session.user && typeof token.role === 'string') session.user.role = token.role
+    async session({ session, token }: { session: Session; token: JWT }) {
+      const role = (token as Record<string, unknown>).role
+      if (session.user && typeof role === 'string') {
+        (session.user as { role?: string }).role = role
+      }
       return session
     },
   },
-} as const
+}
 
-const handler = (NextAuth as any)(authOptions)
+const handler = NextAuth(authOptions)
 export { handler as GET, handler as POST }

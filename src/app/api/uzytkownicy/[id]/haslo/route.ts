@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../../auth/[...nextauth]/route';
+import { getSession } from '@/lib/auth-session';
 import { z } from 'zod';
 import { hash } from '@/lib/hash';
 import { emitDomainEvent, DomainEventTypes } from '@/domain/events';
@@ -12,8 +11,8 @@ const bodySchema = z.object({ password: z.string().min(12, 'Minimum 12 znaków')
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions as any);
-    const role = (session as any)?.user?.role;
+  const session = await getSession();
+  const role = session?.user?.role;
     if (!session || role !== 'admin') {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
@@ -27,7 +26,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     await db.update(users).set({ passwordHash }).where(eq(users.id, userId));
     await emitDomainEvent({
       type: DomainEventTypes.userPasswordChanged,
-      actor: (session as any)?.user?.email ?? 'system',
+  actor: session?.user?.email ?? 'system',
       entity: { type: 'user', id: userId },
       payload: { id: userId },
       schemaVersion: 1,

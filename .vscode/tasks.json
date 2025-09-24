@@ -10,6 +10,23 @@
 				"$tsc"
 			],
 			"group": "build"
+		},
+		{
+			"label": "Generate Drizzle migration",
+			"type": "shell",
+			"command": "npx drizzle-kit generate",
+			"args": [],
+			"problemMatcher": [
+				"$eslint-stylish"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Apply Drizzle migration",
+			"type": "shell",
+			"command": "npx drizzle-kit migrate",
+			"args": [],
+			"group": "build"
 		}
 	]
 }

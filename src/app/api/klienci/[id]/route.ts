@@ -2,8 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/db";
 import { clients, clientNotes, type Client } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "../../auth/[...nextauth]/route";
+import { getSession } from "@/lib/auth-session";
 import { emitDomainEvent, DomainEventTypes } from "@/domain/events";
 
 interface SessionUser {
@@ -33,7 +32,7 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
 // PATCH /api/klienci/[id] - aktualizacja danych klienta
 export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
-  const session = await getServerSession(authOptions as any);
+  const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const raw = await req.json().catch(() => null) as unknown;
@@ -121,7 +120,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
 // DELETE /api/klienci/[id]
 export async function DELETE(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
-  const session = await getServerSession(authOptions as any);
+  const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const userEmail = (session as SessionUser | null)?.user?.email ?? null;
 

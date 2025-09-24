@@ -83,3 +83,17 @@ Tabela: `domain_events` (walidacja Zod w `emitDomainEvent`). Każdy nowy typ eve
 
 ---
 Ten dokument ma być krótki i praktyczny – dopisuj kolejne sekcje, gdy pojawią się nowe automatyzacje lub zasady.
+
+## Typy i lint – unikanie `any` (NOWE)
+
+- Używaj helpera `getSession()` z `src/lib/auth-session.ts` zamiast bezpośrednich rzutowań `getServerSession(authOptions as any)`. Helper zwraca prosty `SessionLike` i izoluje różnice typów NextAuth.
+- `catch`: stosuj `catch (e: unknown)` i zawężaj do `Error` (`e instanceof Error ? e.message : 'Błąd'`).
+- `req.json()` / `fetch().json()`: traktuj jako `unknown` i waliduj Zod-em (`safeParse`), zamiast rzutowań `as any`.
+- Filtry po roli (SQL): zamiast `role as any` użyj strażnika `isUserRole()` z helpera.
+- Jeśli wyjątkowo musisz zderzyć się z typami NextAuth, dopuszczalny jest pojedynczy `// eslint-disable-next-line @typescript-eslint/no-explicit-any` TYLKO w helperze sesji (z datowanym TODO). W pozostałym kodzie `any` jest zakazany.
+
+Checklist w PR:
+- [ ] Brak `as any` poza helperem sesji.
+- [ ] Wszystkie `catch` używają `unknown` + zawężenie.
+- [ ] Parsy JSON z Zod.
+- [ ] Brak `role as any`.

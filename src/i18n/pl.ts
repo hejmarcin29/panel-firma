@@ -62,6 +62,8 @@ export const pl = {
     systemInfoTitle: 'Jak działa ten projekt',
     systemInfoDescription: 'Najważniejsze elementy konfiguracji i utrzymania.',
     systemInfoPoints: [
+      '2025-09-25 – [DECYZJA] Ujednolicone zasady zapisu danych (Zod walidacja, transakcje, eventy po commit, rewalidacja, RBAC, brak any poza helperem sesji).',
+      '2025-09-24 – [ZMIANA] Użytkownicy: zmiana roli przeniesiona do Dropdown (spójne UI shadcn) + drobne porządki.',
       'Frontend: Next.js 15 (App Router) + Tailwind + komponenty shadcn/ui.',
       'Baza danych: SQLite z ORM Drizzle (definicje tabel w src/db/schema.ts).',
       'Migracje: drizzle-kit - konfiguracja w drizzle.config.ts, plik bazy w data/app.db.',

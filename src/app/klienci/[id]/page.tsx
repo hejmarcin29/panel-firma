@@ -6,6 +6,7 @@ import { BackButton } from "@/components/back-button";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import { useToast } from "@/components/ui/toaster";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Trash2, Plus, Pencil } from "lucide-react";
 import { pl } from "@/i18n/pl";
 
@@ -99,7 +100,28 @@ export default function KlientPage() {
     }
   };
 
-  if (loading) return <div className="p-6">{pl.common.loading}</div>;
+  if (loading) return (
+    <div className="mx-auto max-w-4xl p-6 space-y-4">
+      <div className="flex items-center gap-2">
+        <Skeleton className="h-6 w-6 rounded-full" />
+        <Skeleton className="h-6 w-64" />
+      </div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="p-3 border border-black/10 dark:border-white/10 rounded">
+            <Skeleton className="h-4 w-40 mb-2" />
+            <Skeleton className="h-3 w-56 mb-2" />
+            <Skeleton className="h-3 w-24" />
+          </div>
+        ))}
+      </div>
+      <div className="p-3 border border-black/10 dark:border-white/10 rounded">
+        <Skeleton className="h-4 w-40 mb-2" />
+        <Skeleton className="h-3 w-full" />
+        <Skeleton className="h-3 w-1/2 mt-2" />
+      </div>
+    </div>
+  );
   if (error) return <div className="p-6">{error}</div>;
   if (!client) return <div className="p-6">{pl.clients.notFound}</div>;
 

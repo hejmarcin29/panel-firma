@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui/toaster';
+import { DropdownMenu, DropdownItem } from '@/components/ui/dropdown-menu'
 
 type UserRow = { id: string; name: string | null; email: string; role: string };
 
@@ -13,7 +14,7 @@ export function UsersListClient({ initial }: { initial: UserRow[] }) {
   const router = useRouter();
   const { toast } = useToast();
 
-  const changeRole = async (id: string, role: 'admin' | 'installer') => {
+  const changeRole = async (id: string, role: 'admin' | 'installer' | 'architect' | 'manager') => {
     setLoadingId(id);
     try {
       const r = await fetch(`/api/uzytkownicy/${id}/rola`, {
@@ -77,18 +78,12 @@ export function UsersListClient({ initial }: { initial: UserRow[] }) {
               {u.email.toLowerCase() === 'admin@primepodloga.pl' ? (
                 <span className="text-xs rounded bg-black/5 dark:bg-white/10 px-2 py-0.5 opacity-70">Niezmienny Admin</span>
               ) : (
-                <>
-                  <button
-                    onClick={() => changeRole(u.id, 'admin')}
-                    disabled={loadingId === u.id}
-                    className="inline-flex h-8 items-center rounded-md border border-black/15 px-2 text-xs dark:border-white/15 hover:bg-black/5 disabled:opacity-50 dark:hover:bg-white/10"
-                  >Ustaw Admin</button>
-                  <button
-                    onClick={() => changeRole(u.id, 'installer')}
-                    disabled={loadingId === u.id}
-                    className="inline-flex h-8 items-center rounded-md border border-black/15 px-2 text-xs dark:border-white/15 hover:bg-black/5 disabled:opacity-50 dark:hover:bg-white/10"
-                  >Ustaw Montażystę</button>
-                </>
+                <DropdownMenu trigger={<span>Rola…</span>} align="end">
+                  <DropdownItem onSelect={() => changeRole(u.id, 'admin')}>Ustaw Admin</DropdownItem>
+                  <DropdownItem onSelect={() => changeRole(u.id, 'installer')}>Ustaw Montażystę</DropdownItem>
+                  <DropdownItem onSelect={() => changeRole(u.id, 'architect')}>Ustaw Architekt</DropdownItem>
+                  <DropdownItem onSelect={() => changeRole(u.id, 'manager')}>Ustaw Manager</DropdownItem>
+                </DropdownMenu>
               )}
               <button
                 onClick={() => { setPwdEditId(pwdEditId === u.id ? null : u.id); setPwdValue(''); }}

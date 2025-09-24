@@ -1,15 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus } from "lucide-react";
 import { pl } from "@/i18n/pl";
-import { SystemStatusInfo } from "@/components/system-status-info";
 import Link from "next/link";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "./api/auth/[...nextauth]/route";
+import { getSession } from "@/lib/auth-session";
 import { redirect } from "next/navigation";
 
 export default async function Home() {
-  const session = await getServerSession(authOptions as any);
-  const role = (session as any)?.user?.role as string | undefined;
+  const session = await getSession();
+  const role = session?.user?.role as string | undefined;
   if (role !== 'admin') {
     redirect('/panel/montazysta');
   }
@@ -44,18 +42,6 @@ export default async function Home() {
               >
                 Nowe zlecenie (wybór klienta)
               </Link>
-              <button
-                disabled
-                className="inline-flex h-9 cursor-not-allowed items-center justify-center rounded-md border border-black/10 bg-black/5 px-3 text-sm opacity-60 dark:border-white/10 dark:bg-white/10"
-              >
-                Dodaj montaż (wkrótce)
-              </button>
-              <button
-                disabled
-                className="inline-flex h-9 cursor-not-allowed items-center justify-center rounded-md border border-black/10 bg-black/5 px-3 text-sm opacity-60 dark:border-white/10 dark:bg-white/10"
-              >
-                Dodaj dostawę (wkrótce)
-              </button>
             </div>
           </CardContent>
         </Card>

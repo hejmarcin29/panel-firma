@@ -86,10 +86,10 @@ export default function NoweZlecenieSelectPage() {
                 <div className="text-xs opacity-70">Wybrano klienta:</div>
                 <div className="rounded border border-black/10 dark:border-white/10 p-2 text-sm">{selectedClient.name}</div>
                 <div className="space-y-2">
-                  <button disabled className="w-full inline-flex h-10 items-center justify-center rounded-md border border-black/15 bg-black/5 text-sm opacity-60 dark:border-white/15 dark:bg-white/10">Dodaj montaż (wkrótce)</button>
+                  <Link href={`/zlecenia/montaz/nowy?clientId=${selectedClient.id}`} className="block w-full text-center inline-flex h-10 items-center justify-center rounded-md border border-black/15 hover:bg-black/5 text-sm dark:border-white/15 dark:hover:bg-white/10">Dodaj montaż</Link>
                   <button disabled className="w-full inline-flex h-10 items-center justify-center rounded-md border border-black/15 bg-black/5 text-sm opacity-60 dark:border-white/15 dark:bg-white/10">Dodaj dostawę (wkrótce)</button>
                 </div>
-                <p className="text-[11px] opacity-60">Logika tworzenia zostanie dodana w kolejnej iteracji (status początkowy zależny od typu).</p>
+                <p className="text-[11px] opacity-60">Montaż: start od statusu „oczekuje na pomiar”.</p>
               </div>
             ) : (
               <div className="text-xs opacity-60">Najpierw wybierz klienta z listy obok.</div>

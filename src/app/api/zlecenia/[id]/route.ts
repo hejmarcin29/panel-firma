@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { orders, type Order } from '@/db/schema';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { orders } from '@/db/schema';
+import { getSession } from '@/lib/auth-session';
 import { emitDomainEvent, DomainEventTypes } from '@/domain/events';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
@@ -36,7 +35,7 @@ const patchSchema = z.object({ status: z.string() });
 // PATCH /api/zlecenia/:id  body { status }
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions as any);
+    const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 });
     const userEmail = (session as SessionUser | null)?.user?.email ?? null;
     const json = await req.json().catch(() => null);

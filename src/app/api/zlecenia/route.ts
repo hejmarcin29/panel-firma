@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { orders, clients, type Order } from '@/db/schema';
 import { randomUUID } from 'crypto';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { getSession } from '@/lib/auth-session';
 import { emitDomainEvent, DomainEventTypes } from '@/domain/events';
 import { desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
@@ -50,7 +49,7 @@ const createOrderSchema = z.object({
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+  const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 });
     const userEmail = (session as SessionUser | null)?.user?.email ?? null;
     const json = await req.json().catch(() => null);
