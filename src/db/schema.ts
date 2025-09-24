@@ -70,3 +70,18 @@ export const clientNotes = sqliteTable('client_notes', {
 })
 
 export type ClientNote = typeof clientNotes.$inferSelect
+ 
+// Domain Events (Event Store Phase 1)
+export const domainEvents = sqliteTable('domain_events', {
+  id: text('id').primaryKey(), // uuid
+  type: text('type').notNull(),
+  occurredAt: integer('occurred_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+  actor: text('actor'), // email / system
+  entityType: text('entity_type'),
+  entityId: text('entity_id'),
+  payload: text('payload'), // JSON string (minimal fields)
+  schemaVersion: integer('schema_version').notNull().default(1),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+});
+
+export type DomainEvent = typeof domainEvents.$inferSelect

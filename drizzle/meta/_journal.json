@@ -15,6 +15,13 @@
       "when": 1758656424070,
       "tag": "0001_tearful_sphinx",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1758697106692,
+      "tag": "0002_empty_machine_man",
+      "breakpoints": true
     }
   ]
 }

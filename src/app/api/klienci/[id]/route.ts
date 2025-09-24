@@ -4,6 +4,7 @@ import { clients, clientNotes } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
+import { emitDomainEvent, DomainEventTypes } from "@/domain/events";
 
 // GET /api/klienci/[id]
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
@@ -39,6 +40,14 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   }
   if (Object.keys(updates).length === 0) return NextResponse.json({ ok: true });
   await db.update(clients).set(updates).where(eq(clients.id, id));
+  const actor = (session as any)?.user?.email ?? null;
+  const changedFields = Object.keys(updates);
+  await emitDomainEvent({
+    type: DomainEventTypes.clientUpdated,
+    actor,
+    entity: { type: 'client', id },
+    payload: { id, changedFields },
+  });
   return NextResponse.json({ ok: true });
 }
 
@@ -50,5 +59,12 @@ export async function DELETE(_req: NextRequest, ctx: { params: Promise<{ id: str
 
   await db.delete(clientNotes).where(eq(clientNotes.clientId, id));
   await db.delete(clients).where(eq(clients.id, id));
+  const actor = (session as any)?.user?.email ?? null;
+  await emitDomainEvent({
+    type: DomainEventTypes.clientDeleted,
+    actor,
+    entity: { type: 'client', id },
+    payload: { id },
+  });
   return NextResponse.json({ ok: true });
 }

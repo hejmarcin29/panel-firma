@@ -5,6 +5,7 @@ import { randomUUID } from "crypto";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { desc } from "drizzle-orm";
+import { emitDomainEvent, DomainEventTypes } from "@/domain/events";
 
 // GET /api/klienci - lista klientów (ostatnie najpierw)
 export async function GET() {
@@ -38,6 +39,14 @@ export async function POST(req: Request) {
     invoiceAddress: invoiceAddress || null,
     deliveryCity: deliveryCity || null,
     deliveryAddress: deliveryAddress || null,
+  });
+
+  const actor = (session as any)?.user?.email ?? null;
+  await emitDomainEvent({
+    type: DomainEventTypes.clientCreated,
+    actor,
+    entity: { type: 'client', id },
+    payload: { id, name },
   });
 
   return NextResponse.json({ id });

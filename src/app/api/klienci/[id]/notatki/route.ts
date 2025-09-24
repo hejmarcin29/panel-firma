@@ -4,6 +4,7 @@ import { clientNotes } from "@/db/schema";
 import { randomUUID } from "crypto";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../../auth/[...nextauth]/route";
+import { emitDomainEvent, DomainEventTypes } from "@/domain/events";
 
 // POST /api/klienci/[id]/notatki
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
@@ -18,5 +19,12 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   const id = randomUUID();
   const s: any = session as any;
   await db.insert(clientNotes).values({ id, clientId, content, createdBy: s?.user?.email ?? null });
+  const actor = s?.user?.email ?? null;
+  await emitDomainEvent({
+    type: DomainEventTypes.clientNoteAdded,
+    actor,
+    entity: { type: 'client', id: clientId },
+    payload: { id, clientId },
+  });
   return NextResponse.json({ id });
 }

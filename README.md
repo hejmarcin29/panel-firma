@@ -19,6 +19,13 @@ Jeżeli w iteracji powstaje nowa automatyzacja lub nowy typ zdarzenia domenowego
 
 Format sugerowany wpisów: `YYYY-MM-DD – [TAG] Krótki opis`.
 
+### Event Store (faza podstawowa wdrożona)
+Zaimplementowano tabelę `domain_events` oraz emisję zdarzeń dla operacji na kliencie i notatkach:
+- `client.created`, `client.updated` (lista `changedFields`), `client.deleted`, `client.note.added`.
+Helper: `emitDomainEvent` w `src/domain/events.ts` (walidacja payloadu Zod + zapis). Endpoint podglądu: `GET /api/events` (ostatnie 100). Dialog „Event store” w dashboardzie pobiera teraz realne dane.
+
+Kolejne kroki (przyszłość): outbox worker (forward), kategorie/filtry w UI, integracje (e-mail/SMS), alerty anomalii.
+
 Najświeższe wpisy trzymamy na górze listy.
 
 ## UX decisions
