@@ -6,23 +6,24 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../../../auth/[...nextauth]/route";
 import { emitDomainEvent, DomainEventTypes } from "@/domain/events";
 
+interface NoteCreateBody { content?: string; [k: string]: unknown }
+
 // POST /api/klienci/[id]/notatki
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id: clientId } = await ctx.params;
-  const session = await getServerSession(authOptions as any);
+  const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = await req.json().catch(() => ({}));
-  const content = (body.content || "").trim();
+  const raw = await req.json().catch(() => null) as unknown;
+  const body: NoteCreateBody | null = raw && typeof raw === 'object' ? raw as NoteCreateBody : null;
+  const content = typeof body?.content === 'string' ? body.content.trim() : '';
   if (!content) return NextResponse.json({ error: "Treść wymagana" }, { status: 400 });
 
   const id = randomUUID();
-  const s: any = session as any;
-  await db.insert(clientNotes).values({ id, clientId, content, createdBy: s?.user?.email ?? null });
-  const actor = s?.user?.email ?? null;
+  await db.insert(clientNotes).values({ id, clientId, content, createdBy: session.user?.email ?? null });
   await emitDomainEvent({
     type: DomainEventTypes.clientNoteAdded,
-    actor,
+    actor: session.user?.email ?? null,
     entity: { type: 'client', id: clientId },
     payload: { id, clientId },
   });

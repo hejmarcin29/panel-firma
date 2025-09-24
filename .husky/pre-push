@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "[husky pre-push] Lint + iteration check"
+npm run lint || exit 1
+npm run check:iteration || exit 1
+echo "[husky pre-push] OK"

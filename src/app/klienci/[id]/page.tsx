@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { BackButton } from "@/components/back-button";
 import { AlertDialog } from "@/components/ui/alert-dialog";
@@ -38,21 +39,21 @@ export default function KlientPage() {
   const [newNote, setNewNote] = useState("");
   const [openDelete, setOpenDelete] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       const r = await fetch(`/api/klienci/${id}`);
       if (!r.ok) throw new Error('Błąd');
       const j = await r.json();
       setClient(j.client);
       setNotes(j.notes);
-    } catch (e) {
+    } catch {
       setError('Błąd ładowania');
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
-  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [id]);
+  useEffect(() => { load(); }, [load]);
 
   const addNote = async () => {
     const content = newNote.trim();
@@ -93,13 +94,13 @@ export default function KlientPage() {
           <h1 className="text-2xl font-semibold">{client.name}</h1>
         </div>
         <div className="flex items-center gap-2">
-          <a
+          <Link
             href={`/klienci/${id}/edytuj`}
             className="inline-flex h-9 items-center gap-1.5 rounded-md border border-black/15 px-3 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
           >
             <Pencil className="h-4 w-4" />
             {pl.clients.edit}
-          </a>
+          </Link>
         <button
           onClick={() => setOpenDelete(true)}
           className="inline-flex h-9 items-center gap-1.5 rounded-md border border-red-300/40 px-3 text-sm text-red-700 hover:bg-red-50 dark:border-red-800/40 dark:text-red-300 dark:hover:bg-red-900/30"

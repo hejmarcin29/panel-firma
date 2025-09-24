@@ -1,7 +1,7 @@
 "use server"
 import { db } from '@/db'
 import { users } from '@/db/schema'
-import { count, eq } from 'drizzle-orm'
+import { count } from 'drizzle-orm'
 import { hash } from '@/lib/hash'
 import { randomUUID } from 'node:crypto'
 import { redirect } from 'next/navigation'

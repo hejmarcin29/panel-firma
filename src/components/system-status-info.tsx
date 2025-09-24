@@ -5,11 +5,23 @@ import { Button } from "@/components/ui/button";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import { pl } from "@/i18n/pl";
 
+interface ClientFieldChange { field: string; before: string | null; after: string | null }
+interface EventPayloadBase { id?: string; changedFields?: string[]; changes?: ClientFieldChange[]; [k: string]: unknown }
+interface UiDomainEvent {
+  id: string;
+  type: string;
+  occurredAt: number;
+  actor: string | null;
+  entityType: string | null;
+  entityId: string | null;
+  payload: EventPayloadBase | null;
+}
+
 export function SystemStatusInfo() {
   const [infoOpen, setInfoOpen] = useState(false);
   const [eventOpen, setEventOpen] = useState(false);
   const [autoOpen, setAutoOpen] = useState(false);
-  const [events, setEvents] = useState<any[] | null>(null);
+  const [events, setEvents] = useState<UiDomainEvent[] | null>(null);
   const [eventsLoading, setEventsLoading] = useState(false);
   const [eventsError, setEventsError] = useState<string | null>(null);
 
@@ -19,7 +31,7 @@ export function SystemStatusInfo() {
       setEventsError(null);
       fetch('/api/events')
         .then(r => r.json())
-        .then(data => { setEvents(data.events || []); })
+        .then((data: { events?: UiDomainEvent[] }) => { setEvents(data.events || []); })
         .catch(() => setEventsError('Błąd pobierania zdarzeń'))
         .finally(() => setEventsLoading(false));
     }
@@ -79,11 +91,15 @@ export function SystemStatusInfo() {
                       </div>
                       {ev.payload?.changes?.length ? (
                         <div className="mt-0.5 space-y-0.5 text-xs text-muted-foreground">
-                          {ev.payload.changes.map((c: any, idx: number) => (
-                            <div key={idx}>
-                              {c.field}: {c.before === null || c.before === undefined || c.before === '' ? '∅' : String(c.before)} → {c.after === null || c.after === undefined || c.after === '' ? '∅' : String(c.after)}
-                            </div>
-                          ))}
+                          {ev.payload.changes.map((c, idx) => {
+                            const beforeVal = c.before === null || c.before === '' ? '∅' : String(c.before);
+                            const afterVal = c.after === null || c.after === '' ? '∅' : String(c.after);
+                            return (
+                              <div key={idx}>
+                                {c.field}: {beforeVal} → {afterVal}
+                              </div>
+                            );
+                          })}
                         </div>
                       ) : ev.payload && ev.payload.changedFields && (
                         <div className="text-xs mt-0.5 text-muted-foreground">changed: {ev.payload.changedFields.join(', ')}</div>

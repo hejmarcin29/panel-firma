@@ -24,9 +24,22 @@ export default function LoginPage() {
   <h1 className="mb-2 text-2xl font-semibold">Logowanie</h1>
   <p className="mb-6 text-sm opacity-70">Podaj swoje dane, aby zalogować się do panelu.</p>
       <form className="space-y-4" onSubmit={handleSubmit(async ({ email, password }) => {
-        const res = await signIn('credentials', { email, password, redirect: true, callbackUrl: '/' })
-        if (res && (res as any).error) {
+        const res = await signIn('credentials', { email, password, redirect: false })
+        if (!res) {
+          setError('password', { type: 'manual', message: 'Błąd logowania' })
+          return;
+        }
+        if (typeof res === 'object' && 'error' in res && res.error) {
           setError('password', { type: 'manual', message: 'Błędny email lub hasło' })
+          return;
+        }
+        if (typeof res === 'object' && 'ok' in res && !res.ok) {
+          setError('password', { type: 'manual', message: 'Błąd logowania' })
+          return;
+        }
+        if (typeof res === 'object' && 'url' in res && res.url) {
+          // manual redirect to root to avoid relying on callbackUrl w/ redirect: true
+          window.location.href = '/'
         }
       })}>
         <div className="space-y-2">

@@ -49,7 +49,7 @@ export default function EdytujKlientaPage() {
           deliveryCity: j.client.deliveryCity || '',
           deliveryAddress: j.client.deliveryAddress || ''
         });
-      } catch (e) {
+      } catch {
         setError('Błąd ładowania');
       } finally {
         setLoading(false);
@@ -76,8 +76,9 @@ export default function EdytujKlientaPage() {
             if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'Błąd zapisu');
             toast({ title: pl.clients.updateSuccess, variant: 'success' });
             router.push(`/klienci/${id}`);
-          } catch (e: any) {
-            toast({ title: pl.common.error, description: e?.message || 'Nie udało się zapisać', variant: 'destructive' });
+          } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : 'Nie udało się zapisać';
+            toast({ title: pl.common.error, description: msg, variant: 'destructive' });
           }
         })}>
           <div>

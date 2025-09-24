@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "[husky pre-commit] Quick lint (fast)"
+npm run lint --silent || exit 1
+echo "[husky pre-commit] OK"

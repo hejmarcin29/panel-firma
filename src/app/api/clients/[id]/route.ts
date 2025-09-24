@@ -19,10 +19,10 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
 
 // DELETE /api/clients/[id]
 export async function DELETE(_: Request, { params }: { params: { id: string } }) {
-  const session = await getServerSession(authOptions as any);
+  const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   await db.delete(clientNotes).where(eq(clientNotes.clientId, params.id));
-  const res = await db.delete(clients).where(eq(clients.id, params.id));
-  return NextResponse.json({ ok: true, deleted: (res as any).rowsAffected ?? undefined });
+  await db.delete(clients).where(eq(clients.id, params.id));
+  return NextResponse.json({ ok: true });
 }

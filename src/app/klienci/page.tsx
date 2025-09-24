@@ -25,7 +25,7 @@ export default function KlienciPage() {
         const r = await fetch('/api/klienci');
         const json = await r.json();
         if (mounted) setData(json);
-      } catch (e) {
+      } catch {
         if (mounted) setError('Błąd ładowania');
       } finally {
         if (mounted) setLoading(false);

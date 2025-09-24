@@ -35,8 +35,9 @@ export default function SetupPage() {
           toast({ title: 'Utworzono admina', variant: 'success' });
           // Opcjonalnie: przekierowanie do logowania
           // router.push('/login')
-        } catch (err: any) {
-          toast({ title: 'Błąd', description: err?.message || 'Wystąpił problem z połączeniem', variant: 'destructive' });
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : 'Wystąpił problem z połączeniem';
+          toast({ title: 'Błąd', description: message, variant: 'destructive' });
         }
       })}>
         <div className="space-y-2">

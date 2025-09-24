@@ -11,8 +11,8 @@ export function Topbar() {
     <header className="w-full border-b border-black/10 dark:border-white/10 bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto max-w-6xl px-4 h-12 flex items-center justify-between">
         <nav className="flex items-center gap-4 text-sm">
-          <a href="/" className="font-medium hover:opacity-90">{pl.nav.dashboard}</a>
-          <a href="/klienci" className="opacity-80 hover:opacity-100">{pl.nav.clients}</a>
+          <Link href="/" className="font-medium hover:opacity-90">{pl.nav.dashboard}</Link>
+          <Link href="/klienci" className="opacity-80 hover:opacity-100">{pl.nav.clients}</Link>
         </nav>
         <nav className="flex items-center gap-3 text-sm">
           {isAuthed ? (

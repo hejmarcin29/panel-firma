@@ -1,4 +1,4 @@
-import NextAuth from "next-auth"
+import NextAuth, { type NextAuthOptions } from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 import { DrizzleAdapter } from "@auth/drizzle-adapter"
 import { db } from "@/db"
@@ -6,8 +6,15 @@ import { users } from "@/db/schema"
 import { eq } from "drizzle-orm"
 import { verify } from "@/lib/hash"
 
-export const authOptions = {
-  adapter: DrizzleAdapter(db),
+// Lightweight augmentation: only add optional role to JWT & Session user without redefining adapter user shape.
+declare module 'next-auth' {
+  interface Session { user: { id?: string; email?: string; name?: string | null; role?: string } }
+  interface JWT { role?: string }
+}
+
+export const authOptions: NextAuthOptions = {
+  // Cast adapter to silence structural mismatch (role field handled separately in callbacks)
+  adapter: DrizzleAdapter(db) as unknown as NextAuthOptions['adapter'],
   session: { strategy: "jwt" as const },
   providers: [
     Credentials({
@@ -32,18 +39,17 @@ export const authOptions = {
     signIn: "/login",
   },
   callbacks: {
-    async jwt({ token, user }: any) {
-      if (user) {
-        token.role = (user as any).role
-      }
+    async jwt({ token, user }) {
+      const hasRole = (u: unknown): u is { role: string } => typeof u === 'object' && u !== null && 'role' in u && typeof (u as { role?: unknown }).role === 'string';
+      if (user && hasRole(user)) token.role = user.role;
       return token
     },
-    async session({ session, token }: any) {
-      (session as any).user.role = token.role
+    async session({ session, token }) {
+      if (session.user && typeof token.role === 'string') session.user.role = token.role
       return session
     },
   },
 }
 
-const handler = NextAuth(authOptions as any)
+const handler = NextAuth(authOptions)
 export { handler as GET, handler as POST }

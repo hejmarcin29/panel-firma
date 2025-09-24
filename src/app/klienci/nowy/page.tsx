@@ -67,8 +67,9 @@ export default function NowyKlientPage() {
           }
           toast({ title: pl.clients.createSuccess, variant: 'success' });
           router.push(`/klienci/${id}`);
-        } catch (e: any) {
-          toast({ title: pl.common.error, description: e?.message || 'Nie udało się zapisać', variant: 'destructive' });
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : 'Nie udało się zapisać';
+          toast({ title: pl.common.error, description: msg, variant: 'destructive' });
         }
       })}>
         <div>

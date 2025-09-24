@@ -22,6 +22,18 @@ npm run check:iteration
 ```
 Kod wyjścia != 0 blokuje pipeline (brak wpisu).
 
+## Husky (hooki git)
+Dodane hooki:
+- `pre-commit`: szybki lint.
+- `pre-push`: `lint` + `check:iteration`.
+
+Jeśli wyjątkowo trzeba ominąć (niezalecane) – można użyć `--no-verify`, np.: `git push --no-verify` (powinno być rzadko i z komentarzem w PR, dlaczego).
+
+W przypadku błędu w hooku:
+1. Sprawdź komunikat (najczęściej brak wpisu w `systemInfoPoints`).
+2. Dodaj wpis / popraw linta.
+3. Ponów commit/push.
+
 ## Szablon pliku iteracji
 `docs/iterations/YYYY-MM-DD-slug.md`
 ```

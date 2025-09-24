@@ -2,18 +2,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus } from "lucide-react";
 import { pl } from "@/i18n/pl";
 import { SystemStatusInfo } from "@/components/system-status-info";
+import Link from "next/link";
 export default function Home() {
   return (
     <div className="mx-auto max-w-6xl p-6">
       <div className="flex items-center justify-between mb-6">
   <h1 className="text-2xl font-semibold">{pl.dashboard.title}</h1>
-        <a
+        <Link
           href="/klienci/nowy"
           className="inline-flex h-9 items-center gap-2 rounded-md border border-black/15 px-4 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
         >
           <Plus className="h-4 w-4" />
           {pl.clients.add}
-        </a>
+        </Link>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
@@ -22,7 +23,7 @@ export default function Home() {
           </CardHeader>
           <CardContent>
             <ul className="space-y-1 text-sm">
-              <li><a className="underline" href="/klienci/nowy">{pl.clients.add}</a></li>
+              <li><Link className="underline" href="/klienci/nowy">{pl.clients.add}</Link></li>
               <li><span className="opacity-60">Dodaj montaż (wkrótce)</span></li>
               <li><span className="opacity-60">Dodaj dostawę (wkrótce)</span></li>
             </ul>
@@ -81,16 +82,16 @@ async function RecentClients() {
     .from(clientsTable)
     .orderBy(desc(clientsTable.createdAt))
     .limit(5);
-  if (list.length === 0) return <p className="text-sm opacity-70">{pl.dashboard.noneClients} <a className="underline" href="/klienci/nowy">{pl.dashboard.addFirst}</a>.</p>;
+  if (list.length === 0) return <p className="text-sm opacity-70">{pl.dashboard.noneClients} <Link className="underline" href="/klienci/nowy">{pl.dashboard.addFirst}</Link>.</p>;
   return (
   <ul className="space-y-1 text-sm">
       {list.map((c) => (
         <li key={c.id} className="flex items-center justify-between">
-          <a className="underline" href={`/klienci/${c.id}`}>{c.name}</a>
+          <Link className="underline" href={`/klienci/${c.id}`}>{c.name}</Link>
           <span className="opacity-60">{new Date(c.createdAt).toLocaleDateString()}</span>
         </li>
       ))}
-  <li className="mt-2"><a className="underline" href="/klienci">{pl.dashboard.seeAll}</a></li>
+  <li className="mt-2"><Link className="underline" href="/klienci">{pl.dashboard.seeAll}</Link></li>
     </ul>
   );
 }

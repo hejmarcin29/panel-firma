@@ -57,6 +57,7 @@ export const pl = {
       'Iteracje: zawsze dopisuj ważną informację przy kolejnych zmianach.',
       '2025-09-24 – [ZMIANA] Wdrożono podstawowy Event Store (tabela domain_events + emisja dla klient/nota).',
       '2025-09-24 – [ZMIANA] client.updated: szczegółowy diff (changes[]: field, before, after) + schemaVersion=2.',
+  '2025-09-24 – [ZMIANA] Usunięto wszystkie any, uporządkowano zależności useEffect i czyste lint (0 błędów).',
     ],
     recentChanges: 'Ostatnie zmiany',
     jobsTitle: 'Zlecenia (montaż/dostawa)',
