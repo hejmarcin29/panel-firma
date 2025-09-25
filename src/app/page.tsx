@@ -4,6 +4,8 @@ import { pl } from "@/i18n/pl";
 import Link from "next/link";
 import { getSession } from "@/lib/auth-session";
 import { redirect } from "next/navigation";
+import { orders as ordersTable, clients as clientsTbl } from "@/db/schema";
+import { and, gte, lte, eq as deq, asc, desc, ne, eq, isNull } from "drizzle-orm";
 
 export default async function Home() {
   const session = await getSession();
@@ -81,7 +83,16 @@ export default async function Home() {
             <CardTitle>{pl.dashboard.jobsTitle}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-gray-600">{pl.dashboard.jobsPlaceholder}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <div className="mb-2 text-sm font-medium">Najbliższe</div>
+                <UpcomingOrders />
+              </div>
+              <div>
+                <div className="mb-2 text-sm font-medium">Ostatnio zakończone</div>
+                <RecentCompletedOrders />
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -91,7 +102,6 @@ export default async function Home() {
 
 import { db } from "@/db";
 import { clients as clientsTable, clientNotes as clientNotesTable } from "@/db/schema";
-import { desc, eq } from "drizzle-orm";
 
 async function RecentClients() {
   const list = await db
@@ -146,5 +156,63 @@ async function RecentChanges() {
       ))}
     </ul>
   );
+}
+
+async function UpcomingOrders() {
+  // Normalize today to local midnight
+  const now = new Date()
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0)
+  const rows = await db
+    .select({ id: ordersTable.id, clientId: ordersTable.clientId, scheduledDate: ordersTable.scheduledDate, status: ordersTable.status, clientName: clientsTbl.name })
+    .from(ordersTable)
+    .leftJoin(clientsTbl, deq(ordersTable.clientId, clientsTbl.id))
+    .where(and(
+      gte(ordersTable.scheduledDate, todayStart),
+      ne(ordersTable.status, 'completed'),
+      ne(ordersTable.status, 'cancelled'),
+      isNull(ordersTable.archivedAt)
+    ))
+    .orderBy(asc(ordersTable.scheduledDate))
+    .limit(5)
+
+  if (!rows || rows.length === 0) return <p className="text-sm text-gray-600">{pl.dashboard.jobsPlaceholder}</p>
+  return (
+    <ul className="space-y-1 text-sm">
+      {rows.map(r => (
+        <li key={r.id} className="flex items-center justify-between">
+          <Link className="underline" href={`/zlecenia/${r.id}`}>{r.clientName || r.clientId}</Link>
+          <span className="opacity-60">{r.scheduledDate ? new Date(r.scheduledDate).toLocaleDateString() : '-'}</span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+async function RecentCompletedOrders() {
+  const now = new Date()
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0)
+  const rows = await db
+    .select({ id: ordersTable.id, clientId: ordersTable.clientId, scheduledDate: ordersTable.scheduledDate, status: ordersTable.status, clientName: clientsTbl.name })
+    .from(ordersTable)
+    .leftJoin(clientsTbl, deq(ordersTable.clientId, clientsTbl.id))
+    .where(and(
+      deq(ordersTable.status, 'completed'),
+      lte(ordersTable.scheduledDate, todayStart),
+      isNull(ordersTable.archivedAt)
+    ))
+    .orderBy(desc(ordersTable.scheduledDate))
+    .limit(5)
+
+  if (!rows || rows.length === 0) return <p className="text-sm text-gray-600">Brak zakończonych.</p>
+  return (
+    <ul className="space-y-1 text-sm">
+      {rows.map(r => (
+        <li key={r.id} className="flex items-center justify-between">
+          <Link className="underline" href={`/zlecenia/${r.id}`}>{r.clientName || r.clientId}</Link>
+          <span className="opacity-60">{r.scheduledDate ? new Date(r.scheduledDate).toLocaleDateString() : '-'}</span>
+        </li>
+      ))}
+    </ul>
+  )
 }
 

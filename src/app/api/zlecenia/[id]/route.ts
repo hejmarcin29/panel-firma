@@ -38,6 +38,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 });
     const userEmail = (session as SessionUser | null)?.user?.email ?? null;
+    const userRole = (session as SessionUser & { user?: { role?: string|null } })?.user?.role ?? null;
+    const userId = (session as { user?: { id?: string|null } })?.user?.id ?? null;
     const json = await req.json().catch(() => null);
     const parsed = patchSchema.safeParse(json);
     if (!parsed.success) return NextResponse.json({ error: 'Błąd walidacji', issues: parsed.error.issues }, { status: 400 });
@@ -47,7 +49,23 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (!order) return NextResponse.json({ error: 'Nie znaleziono' }, { status: 404 });
     if (order.status === newStatus) return NextResponse.json({ ok: true });
     const allowed = ALLOWED[order.status] || [];
-    if (!allowed.includes(newStatus)) return NextResponse.json({ error: 'Niedozwolona zmiana statusu' }, { status: 400 });
+    // Role-aware constraints: admin -> full allowed; installer -> limited on own orders only
+    const isAdmin = userRole === 'admin';
+    const isInstaller = userRole === 'installer' && userId && order.installerId === userId;
+    let roleAllowed = false;
+    if (isAdmin) {
+      roleAllowed = true;
+    } else if (isInstaller) {
+      // Installer can mark measurement done and completion
+      const okInstaller = (
+        (order.status === 'awaiting_measurement' && newStatus === 'ready_to_schedule') ||
+        (order.status === 'scheduled' && newStatus === 'completed')
+      );
+      roleAllowed = okInstaller;
+    }
+    if (!allowed.includes(newStatus) || !roleAllowed) {
+      return NextResponse.json({ error: 'Niedozwolona zmiana statusu' }, { status: 403 });
+    }
     await db.update(orders).set({ status: newStatus }).where(eq(orders.id, id));
     await emitDomainEvent({
       type: DomainEventTypes.orderStatusChanged,

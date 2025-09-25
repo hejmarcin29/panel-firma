@@ -12,7 +12,7 @@ interface SessionUser {
   } | null;
 }
 
-type UpdatableClientField = 'name' | 'phone' | 'email' | 'invoiceCity' | 'invoiceAddress' | 'deliveryCity' | 'deliveryAddress' | 'serviceType';
+type UpdatableClientField = 'name' | 'phone' | 'email' | 'invoiceCity' | 'invoiceAddress' | 'deliveryCity' | 'deliveryAddress';
 type ClientUpdateBody = Partial<Record<UpdatableClientField, unknown>> & { [k: string]: unknown };
 interface FieldChange { field: UpdatableClientField; before: string | null; after: string | null }
 
@@ -37,7 +37,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
 
   const raw = await req.json().catch(() => null) as unknown;
   const body: ClientUpdateBody = raw && typeof raw === 'object' ? (raw as ClientUpdateBody) : {};
-  const fields: UpdatableClientField[] = ['name','phone','email','invoiceCity','invoiceAddress','deliveryCity','deliveryAddress','serviceType'];
+  const fields: UpdatableClientField[] = ['name','phone','email','invoiceCity','invoiceAddress','deliveryCity','deliveryAddress'];
 
   const [before] = await db.select().from(clients).where(eq(clients.id, id)).limit(1);
   if (!before) return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -51,10 +51,6 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     if (typeof v !== 'string') return null;
     const t = v.trim();
     if (t === '') return null;
-    if (field === 'serviceType') {
-      if (t === 'delivery_only' || t === 'with_installation') return t;
-      return null;
-    }
     return t;
   };
 
@@ -83,8 +79,6 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     switch (k) {
       case 'name':
         if (typeof v === 'string') setObject.name = v; break;
-      case 'serviceType':
-        if (typeof v === 'string') setObject.serviceType = v; break;
       case 'phone': setObject.phone = v; break;
       case 'email': setObject.email = v; break;
       case 'invoiceCity': setObject.invoiceCity = v; break;
@@ -101,19 +95,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     payload: { id, changedFields: Object.keys(updates), changes },
     schemaVersion: 2,
   });
-  // Emit dodatkowy event dla zmiany serviceType (jeśli była wśród zmian)
-  if (changes.some(c => c.field === 'serviceType')) {
-    const svcChange = changes.find(c => c.field === 'serviceType');
-    if (svcChange && svcChange.before && svcChange.after && svcChange.before !== svcChange.after) {
-      await emitDomainEvent({
-        type: DomainEventTypes.clientServiceTypeChanged,
-        actor: userEmail,
-        entity: { type: 'client', id },
-        payload: { id, before: svcChange.before, after: svcChange.after },
-        schemaVersion: 1,
-      });
-    }
-  }
+  // Zmiana serviceType usunięta z logiki — brak dodatkowego eventu
   return NextResponse.json({ ok: true });
 }
 

@@ -19,7 +19,6 @@ const schema = z.object({
   invoiceAddress: z.string().optional().or(z.literal('')),
   deliveryCity: z.string().optional().or(z.literal('')),
   deliveryAddress: z.string().optional().or(z.literal('')),
-  serviceType: z.enum(['delivery_only','with_installation']).optional().or(z.literal('')),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -30,7 +29,7 @@ export default function EdytujKlientaPage() {
   const { toast } = useToast();
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { name: '', phone: '', email: '', invoiceCity: '', invoiceAddress: '', deliveryCity: '', deliveryAddress: '' }
+  defaultValues: { name: '', phone: '', email: '', invoiceCity: '', invoiceAddress: '', deliveryCity: '', deliveryAddress: '' }
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +48,6 @@ export default function EdytujKlientaPage() {
           invoiceAddress: j.client.invoiceAddress || '',
           deliveryCity: j.client.deliveryCity || '',
           deliveryAddress: j.client.deliveryAddress || '',
-            serviceType: j.client.serviceType || 'with_installation'
         });
       } catch {
         setError('Błąd ładowania');
@@ -119,17 +117,7 @@ export default function EdytujKlientaPage() {
               <Input {...register('deliveryAddress')} />
             </div>
           </div>
-          <div>
-            <Label className="block mb-1">Typ usługi</Label>
-            <div className="flex gap-4 text-sm">
-              <label className="inline-flex items-center gap-1">
-                <input type="radio" value="with_installation" {...register('serviceType')} /> Z montażem
-              </label>
-              <label className="inline-flex items-center gap-1">
-                <input type="radio" value="delivery_only" {...register('serviceType')} /> Tylko dostawa
-              </label>
-            </div>
-          </div>
+          {/* Pole Typ usługi usunięte */}
           <div className="flex items-center gap-2">
             <Button type="submit" disabled={isSubmitting}>{pl.common.save}</Button>
           </div>

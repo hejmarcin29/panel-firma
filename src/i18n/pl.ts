@@ -40,9 +40,6 @@ export const pl = {
     cancel: 'Anuluj',
     addNote: 'Dodaj',
     notFound: 'Nie znaleziono',
-    serviceType: 'Typ usługi',
-    serviceTypeDeliveryOnly: 'Tylko dostawa',
-    serviceTypeWithInstallation: 'Z montażem',
   },
   settings: {
     title: 'Ustawienia',
@@ -62,6 +59,7 @@ export const pl = {
     systemInfoTitle: 'Jak działa ten projekt',
     systemInfoDescription: 'Najważniejsze elementy konfiguracji i utrzymania.',
     systemInfoPoints: [
+      '2025-09-25 – [ZMIANA] Zlecenia: ujednolicone tworzenie (POST /api/zlecenia), wzmocniony RBAC i przejścia statusów, API montażysty z nazwą klienta, filtracja listy.',
       '2025-09-25 – [DECYZJA] Ujednolicone zasady zapisu danych (Zod walidacja, transakcje, eventy po commit, rewalidacja, RBAC, brak any poza helperem sesji).',
       '2025-09-24 – [ZMIANA] Użytkownicy: zmiana roli przeniesiona do Dropdown (spójne UI shadcn) + drobne porządki.',
       'Frontend: Next.js 15 (App Router) + Tailwind + komponenty shadcn/ui.',

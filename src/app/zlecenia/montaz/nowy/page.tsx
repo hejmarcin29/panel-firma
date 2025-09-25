@@ -98,14 +98,24 @@ export default function NewInstallationPage() {
       </div>
       {loadError && <div className="text-sm text-red-600">{loadError}</div>}
       <form className="grid gap-4" onSubmit={handleSubmit(onSubmit)}>
-        <div>
-          <Label htmlFor="client">Klient</Label>
-          <select id="client" aria-invalid={!!errors.clientId} aria-describedby={errors.clientId ? 'client-error' : undefined} {...register('clientId')} className="mt-1 h-9 w-full rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15">
-            <option value="">-- wybierz klienta --</option>
-            {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-          {errors.clientId && <p id="client-error" className="text-xs text-red-600 mt-1">{errors.clientId.message as string}</p>}
-        </div>
+        {preselectedClientId ? (
+          <div>
+            <Label>Klient</Label>
+            <div className="mt-1 h-9 w-full rounded-md border border-black/15 px-3 text-sm flex items-center dark:border-white/15">
+              {clients.find(c => c.id === preselectedClientId)?.name || 'Wybrany klient'}
+            </div>
+            {/* Pole ukryte nie jest wymagane, bo RHF ma setValue; zostawiamy tylko podgląd */}
+          </div>
+        ) : (
+          <div>
+            <Label htmlFor="client">Klient</Label>
+            <select id="client" aria-invalid={!!errors.clientId} aria-describedby={errors.clientId ? 'client-error' : undefined} {...register('clientId')} className="mt-1 h-9 w-full rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15">
+              <option value="">-- wybierz klienta --</option>
+              {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+            {errors.clientId && <p id="client-error" className="text-xs text-red-600 mt-1">{errors.clientId.message as string}</p>}
+          </div>
+        )}
         <div>
           <Label htmlFor="note">Notatka Primepodloga</Label>
           <Textarea id="note" placeholder="Uwagi wewnętrzne..." className="mt-1" {...register('note')} />

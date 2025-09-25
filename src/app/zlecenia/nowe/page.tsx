@@ -8,7 +8,6 @@ type Klient = {
   id: string;
   name: string;
   createdAt: number;
-  serviceType?: string | null;
 };
 
 export default function NoweZlecenieSelectPage() {

@@ -107,6 +107,7 @@ export const orders = sqliteTable('orders', {
   preMeasurementSqm: integer('pre_measurement_sqm'), // szacunkowe m2 przed pomiarem
   internalNote: text('internal_note'), // notatka Primepodloga (aktualny stan)
   internalNoteUpdatedAt: integer('internal_note_updated_at', { mode: 'timestamp_ms' }),
+  archivedAt: integer('archived_at', { mode: 'timestamp_ms' }), // data archiwizacji (opc.)
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
 });
 

@@ -13,6 +13,7 @@ export function Topbar() {
         <nav className="flex items-center gap-4 text-sm">
           <Link href="/" className="font-medium hover:opacity-90">{pl.nav.dashboard}</Link>
           <Link href="/klienci" className="opacity-80 hover:opacity-100">{pl.nav.clients}</Link>
+          <Link href="/zlecenia" className="opacity-80 hover:opacity-100">{pl.orders.title}</Link>
         </nav>
         <nav className="flex items-center gap-3 text-sm">
           {isAuthed ? (

@@ -51,5 +51,7 @@ export const authOptions = {
   },
 }
 
-const handler = NextAuth(authOptions)
+// Pragmatic cast due to NextAuth types variance across versions
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const handler = NextAuth(authOptions as any)
 export { handler as GET, handler as POST }

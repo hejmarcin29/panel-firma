@@ -55,8 +55,8 @@ export async function POST(req: Request) {
     invoiceAddress: trimOrNull(body?.invoiceAddress) ?? null,
     deliveryCity: trimOrNull(body?.deliveryCity) ?? null,
     deliveryAddress: trimOrNull(body?.deliveryAddress) ?? null,
-    // W tym etapie nie wybieramy typu usługi – domyślna wartość 'with_installation' (pozostawiona dla kompatybilności, może być zrefaktoryzowana)
-    serviceType: 'with_installation',
+    // W tym etapie nie wybieramy typu usługi – ignorowane
+    serviceType: null as unknown as Client['serviceType'],
   };
 
   await db.insert(clients).values(data);
@@ -66,7 +66,7 @@ export async function POST(req: Request) {
     type: DomainEventTypes.clientCreated,
     actor: userEmail,
     entity: { type: 'client', id: data.id },
-    payload: { id: data.id, name: data.name, serviceType: data.serviceType },
+    payload: { id: data.id, name: data.name },
     schemaVersion: 2,
   });
 

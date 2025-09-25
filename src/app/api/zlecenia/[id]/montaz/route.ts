@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { db } from '@/db'
 import { orders, orderNoteHistory, users } from '@/db/schema'
@@ -10,6 +11,7 @@ const bodySchema = z.object({
   note: z.string().max(2000).optional(),
   preMeasurementSqm: z.number().int().positive().optional(),
   installerId: z.string().uuid().nullable().optional(),
+  scheduledDate: z.number().int().positive().nullable().optional(),
 })
 
 export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }> }) {
@@ -51,9 +53,22 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
         editedAt: now,
       })
     }
+    if (parsed.data.scheduledDate !== undefined) {
+      if (parsed.data.scheduledDate === null) {
+        update.scheduledDate = null
+      } else {
+        // Drizzle column (timestamp_ms) expects a Date object in data layer
+        const dt = new Date(parsed.data.scheduledDate)
+        const normalizedDate = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 0, 0, 0, 0)
+        update.scheduledDate = normalizedDate
+      }
+    }
     if (Object.keys(update).length === 0) return NextResponse.json({ ok: true })
-    await db.update(orders).set(update).where(eq(orders.id, id))
-    return NextResponse.json({ ok: true })
+  await db.update(orders).set(update).where(eq(orders.id, id))
+  // Revalidate details page and dashboard (upcoming orders)
+  revalidatePath(`/zlecenia/${id}`)
+  revalidatePath('/')
+  return NextResponse.json({ ok: true })
   } catch (err) {
     console.error('[PATCH /api/zlecenia/:id/montaz] Error', err)
     return NextResponse.json({ error: 'Błąd serwera' }, { status: 500 })

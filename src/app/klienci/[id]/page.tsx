@@ -132,11 +132,6 @@ export default function KlientPage() {
           <BackButton fallbackHref="/klienci" />
           <h1 className="text-2xl font-semibold flex items-center gap-3">
             <span>{client.name}</span>
-            {client.serviceType && (
-              <span className="inline-flex items-center rounded-full border border-black/15 bg-black/5 px-2 py-0.5 text-xs font-medium dark:border-white/15 dark:bg-white/10">
-                {client.serviceType === 'delivery_only' ? 'Tylko dostawa' : 'Z montażem'}
-              </span>
-            )}
           </h1>
         </div>
         <div className="flex items-center gap-2">
@@ -189,15 +184,18 @@ export default function KlientPage() {
             <div className="text-sm opacity-70">Brak zleceń</div>
           ) : (
             <div className="space-y-2">
-              {orders.map(o => (
-                <div key={o.id} className="rounded border border-black/10 p-2 text-sm dark:border-white/10">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">{o.type === 'installation' ? 'Montaż' : 'Dostawa'}</span>
-                    <span className="text-xs rounded bg-black/5 dark:bg-white/10 px-2 py-0.5">{o.status}</span>
-                  </div>
-                  <div className="text-xs opacity-60 mt-0.5">{new Date(o.createdAt).toLocaleString()}</div>
-                </div>
-              ))}
+              {orders.map(o => {
+                const statusLabel = (pl.orders.statuses as Record<string,string>)[o.status] || o.status
+                return (
+                  <Link key={o.id} href={`/zlecenia/${o.id}`} className="block rounded border border-black/10 p-2 text-sm hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">{o.type === 'installation' ? 'Montaż' : 'Dostawa'}</span>
+                      <span className="text-xs rounded bg-black/5 dark:bg-white/10 px-2 py-0.5">{statusLabel}</span>
+                    </div>
+                    <div className="text-xs opacity-60 mt-0.5">{new Date(o.createdAt).toLocaleString()}</div>
+                  </Link>
+                )
+              })}
             </div>
           )}
           <div className="mt-3">
