@@ -38,7 +38,7 @@ export function Sidebar() {
   const pathname = usePathname();
   return (
     <aside
-      className="fixed left-0 top-0 z-30 h-screen w-64 border-r bg-[var(--pp-panel)]"
+      className="fixed left-0 top-0 z-30 h-screen w-64 border-r bg-[var(--pp-panel)] hidden md:block data-[open=true]:block"
       style={{ borderColor: "var(--pp-border)" }}
     >
       <div className="h-16 px-4 flex items-center gap-3 border-b" style={{ borderColor: "var(--pp-border)" }}>

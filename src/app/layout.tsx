@@ -28,7 +28,7 @@ export default function RootLayout({
             <Providers>
               <div className="flex">
                 <Sidebar />
-                <div className="flex-1 min-h-screen pl-64">
+                <div className="flex-1 min-h-screen md:pl-64">
                   <Topbar />
                   <main className="px-6 py-6">
                     {children}

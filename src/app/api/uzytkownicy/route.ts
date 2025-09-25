@@ -3,7 +3,7 @@ import { db } from '@/db';
 import { users } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
-import { getSession, isUserRole } from '@/lib/auth-session';
+import { getSession } from '@/lib/auth-session';
 import { randomUUID } from 'node:crypto';
 import { hash } from '@/lib/hash';
 
@@ -48,9 +48,11 @@ export async function GET(req: Request) {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const url = new URL(req.url);
-    const role = url.searchParams.get('role');
-    const list = role && isUserRole(role)
-      ? await db.select().from(users).where(eq(users.role, role)).limit(500)
+    const roleParam = url.searchParams.get('role');
+    const RoleEnum = z.enum(['admin','installer','architect','manager']);
+    const parsed = roleParam ? RoleEnum.safeParse(roleParam) : null;
+    const list = parsed?.success
+      ? await db.select().from(users).where(eq(users.role, parsed.data)).limit(500)
       : await db.select().from(users).limit(500);
     return NextResponse.json({ users: list });
   } catch (err) {

@@ -1,6 +1,6 @@
 "use client";
 import { useSession, signOut } from "next-auth/react";
-import { Search, Bell, Sun, Moon, Settings } from "lucide-react";
+import { Search, Bell, Sun, Moon, Settings, Menu } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useMemo } from "react";
 
@@ -14,6 +14,20 @@ export function Topbar() {
     <header className="sticky top-0 z-20 border-b bg-[var(--pp-panel)]/80 backdrop-blur" style={{ borderColor: "var(--pp-border)" }}>
       <div className="h-16 px-6 flex items-center justify-between">
         <div className="flex items-center gap-3 min-w-0">
+          <button
+            className="md:hidden h-9 w-9 inline-flex items-center justify-center rounded-md border"
+            style={{ borderColor: 'var(--pp-border)' }}
+            aria-label="Menu"
+            onClick={() => {
+              const el = document.querySelector('aside');
+              if (el) {
+                const open = el.getAttribute('data-open') === 'true';
+                el.setAttribute('data-open', (!open).toString());
+              }
+            }}
+          >
+            <Menu className="h-4 w-4" />
+          </button>
           <div className="relative w-[360px] max-w-[50vw]">
             <input
               type="search"
@@ -28,6 +42,9 @@ export function Topbar() {
           <button className="h-9 w-9 inline-flex items-center justify-center rounded-md border" style={{ borderColor: "var(--pp-border)" }} aria-label="Powiadomienia">
             <Bell className="h-4 w-4" />
           </button>
+          <button className="h-9 w-9 inline-flex items-center justify-center rounded-md border" style={{ borderColor: "var(--pp-border)" }} aria-label="Ustawienia">
+            <Settings className="h-4 w-4" />
+          </button>
           <button
             onClick={() => setTheme(isDark ? "light" : "dark")}
             className="h-9 w-9 inline-flex items-center justify-center rounded-md border"
@@ -35,9 +52,6 @@ export function Topbar() {
             aria-label="Przełącz motyw"
           >
             {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </button>
-          <button className="h-9 w-9 inline-flex items-center justify-center rounded-md border" style={{ borderColor: "var(--pp-border)" }} aria-label="Ustawienia">
-            <Settings className="h-4 w-4" />
           </button>
           {isAuthed && (
             <button
