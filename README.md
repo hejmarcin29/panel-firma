@@ -83,3 +83,30 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Produkcja (self-host / Docker)
+
+Wymagane zmienne środowiskowe (patrz `.env.example`):
+
+- NEXTAUTH_URL – publiczny adres aplikacji (np. https://panel.twojadomena.pl)
+- NEXTAUTH_SECRET – silny losowy sekret (min. 32 znaki)
+- DATABASE_URL – dla SQLite: `file:./data/app.db`
+
+Budowa obrazu i uruchomienie:
+
+1) Zbuduj obraz multi-stage (Next.js standalone):
+	 - Dockerfile już dodany (Node 20 alpine, standalone output).
+2) Uruchom docker-compose z wolumenem na `./data`:
+
+```
+docker compose up --build -d
+```
+
+Aktualizacje/migracje:
+- Po zmianach w `src/db/schema.ts` wygeneruj migracje i zastosuj je przed buildem:
+	- `npx drizzle-kit generate; npx drizzle-kit migrate`
+- Przed większą zmianą zrób snapshot bazy: skopiuj `data/app.db` do `backups/`.
+
+Uwagi:
+- Obraz wykorzystuje `output=standalone`. Serwowanie odbywa się przez `node server.js` wewnątrz kontenera.
+- SQLite jest OK dla małego zespołu. Dla produkcji z wieloma równoległymi zapisami rozważ migrację do Postgresa.

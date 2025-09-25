@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 import { Topbar } from "@/components/topbar";
 import { Sidebar } from "@/components/sidebar";
+import { MobileSidebarOverlay } from "@/components/mobile-sidebar-overlay";
 import { ThemeProvider } from "next-themes";
 import { ToastProvider } from "@/components/ui/toaster";
 
@@ -35,6 +36,7 @@ export default function RootLayout({
                   </main>
                 </div>
               </div>
+              <MobileSidebarOverlay />
             </Providers>
           </ToastProvider>
         </ThemeProvider>

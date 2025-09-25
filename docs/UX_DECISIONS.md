@@ -23,3 +23,8 @@ Status: Accepted
   - Use library-provided components (focus trap, aria, escape-close, backdrop click) to minimize risk.
   - Keep server reads SSR; client-side forms submit to API routes or server actions.
   - Provide fallback to a full page for long or linkable flows.
+
+## Micro-animations (guideline)
+- Prefer subtle, fast transitions (180–250ms, ease-out) for navigation (sidebar open/close, overlay fade) and theme switching (colors/backgrounds/borders).
+- Respect prefers-reduced-motion and disable animations in that case.
+- Avoid heavy motion; use transform/opacity for performance.

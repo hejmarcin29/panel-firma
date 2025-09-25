@@ -1,6 +1,6 @@
 "use client"
 import { z } from 'zod'
-import { useForm } from 'react-hook-form'
+import { useForm, type SubmitHandler, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -11,10 +11,10 @@ import { useRouter } from 'next/navigation'
 const schema = z.object({
   title: z.string().min(1, 'Wymagane'),
   contentMd: z.string().min(1, 'Wymagane'),
-  version: z.coerce.number().int().positive('> 0'),
-  isActive: z.enum(['true','false']).default('true'),
-  requiresAck: z.enum(['true','false']).default('true'),
-  audience: z.array(z.enum(['admin','installer','architect','manager'])).default(['installer']),
+  version: z.number().int().positive('> 0'),
+  isActive: z.enum(['true','false']),
+  requiresAck: z.enum(['true','false']),
+  audience: z.array(z.enum(['admin','installer','architect','manager'])),
   effectiveFrom: z.string().optional(),
 })
 
@@ -24,11 +24,11 @@ export default function NewRuleForm() {
   const { toast } = useToast()
   const router = useRouter()
   const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as unknown as Resolver<FormValues>,
     defaultValues: { title: '', contentMd: '', version: 1, isActive: 'true', requiresAck: 'true', audience: ['installer'], effectiveFrom: '' },
   })
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit: SubmitHandler<FormValues> = async (values) => {
     try {
       const body = {
         title: values.title,

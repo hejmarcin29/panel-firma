@@ -38,15 +38,33 @@ export function Sidebar() {
   const pathname = usePathname();
   return (
     <aside
-      className="fixed left-0 top-0 z-30 h-screen w-64 border-r bg-[var(--pp-panel)] hidden md:block data-[open=true]:block"
+      className="fixed left-0 top-0 z-30 h-screen w-64 border-r bg-[var(--pp-panel)] block md:block -translate-x-full data-[open=true]:translate-x-0 md:translate-x-0 transition-transform duration-200 ease-out pointer-events-none data-[open=true]:pointer-events-auto md:pointer-events-auto"
       style={{ borderColor: "var(--pp-border)" }}
     >
-      <div className="h-16 px-4 flex items-center gap-3 border-b" style={{ borderColor: "var(--pp-border)" }}>
-        <UserCircle2 className="h-9 w-9 opacity-80" />
-        <div className="leading-tight">
-          <div className="font-medium text-sm">{session?.user?.email || "Użytkownik"}</div>
-          <div className="text-xs opacity-70">{session?.user ? "Zalogowany" : "Gość"}</div>
+      <div className="h-16 px-4 flex items-center justify-between gap-3 border-b" style={{ borderColor: "var(--pp-border)" }}>
+        <div className="flex items-center gap-3">
+          <UserCircle2 className="h-9 w-9 opacity-80" />
+          <div className="leading-tight">
+            <div className="font-medium text-sm">{session?.user?.email || "Użytkownik"}</div>
+            <div className="text-xs opacity-70">{session?.user ? "Zalogowany" : "Gość"}</div>
+          </div>
         </div>
+        <button
+          className="md:hidden h-8 w-8 inline-flex items-center justify-center rounded-md border"
+          style={{ borderColor: 'var(--pp-border)' }}
+          aria-label="Zamknij menu"
+          onClick={() => {
+            const aside = document.querySelector('aside');
+            if (aside) aside.setAttribute('data-open', 'false');
+            const overlay = document.getElementById('sidebar-overlay');
+            if (overlay) {
+              overlay.classList.add('opacity-0');
+              overlay.classList.add('pointer-events-none');
+            }
+          }}
+        >
+          <span aria-hidden>×</span>
+        </button>
       </div>
       <nav className="px-2 py-3 space-y-6 text-sm">
         {sections.map((section) => (
@@ -56,10 +74,22 @@ export function Sidebar() {
               {section.items.map((item) => {
                 const active = pathname === item.href;
                 const Icon = item.icon;
+                const handleClick = () => {
+                  // Auto-close only on small screens
+                  if (window.matchMedia && window.matchMedia('(min-width: 768px)').matches) return;
+                  const aside = document.querySelector('aside');
+                  if (aside) aside.setAttribute('data-open', 'false');
+                  const overlay = document.getElementById('sidebar-overlay');
+                  if (overlay) {
+                    overlay.classList.add('opacity-0');
+                    overlay.classList.add('pointer-events-none');
+                  }
+                };
                 return (
                   <li key={`${section.title}:${item.label}`}>
                     <Link
                       href={item.href}
+                      onClick={handleClick}
                       className={[
                         "flex items-center gap-3 rounded-md px-3 py-2",
                         active

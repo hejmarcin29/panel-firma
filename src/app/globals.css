@@ -28,6 +28,21 @@
   }
 }
 
+/* Explicit dark-mode overrides controlled by next-themes (.dark on <html>) */
+.dark {
+  --background: #0B1220;
+  --foreground: #E6EAF2;
+  --pp-panel: #0E1626;
+  --pp-text: #E6EAF2;
+  --pp-text-muted: #9AA4B2;
+  --pp-border: #1E2A41;
+  /* Primary keeps brand red; ring a bit stronger on dark */
+  --pp-primary: #C64536;
+  --pp-primary-600: #A83A2E;
+  --pp-primary-ring: rgba(198, 69, 54, 0.5);
+  --pp-primary-subtle-bg: color-mix(in oklab, var(--pp-primary) 12%, transparent);
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -57,4 +72,14 @@ body::before {
 .brand-border { border-color: var(--pp-border) !important; }
 .brand-bg-panel { background: var(--pp-panel) !important; }
 .brand-text-muted { color: var(--pp-text-muted) !important; }
+
+/* Smooth theme switch transition (enabled temporarily via .theme-transition on <html>) */
+.theme-transition, .theme-transition * {
+  transition: background-color 220ms ease, color 220ms ease, border-color 220ms ease,
+              fill 220ms ease, stroke 220ms ease, box-shadow 220ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-transition, .theme-transition * { transition: none !important; }
+}
 

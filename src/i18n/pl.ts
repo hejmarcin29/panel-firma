@@ -59,6 +59,7 @@ export const pl = {
     systemInfoTitle: 'Jak działa ten projekt',
     systemInfoDescription: 'Najważniejsze elementy konfiguracji i utrzymania.',
     systemInfoPoints: [
+  '2025-09-25 – [DECYZJA] Subtelne animacje: stosujemy krótkie przejścia (180–250 ms, ease-out) przy otwieraniu/zamykaniu nawigacji i przełączaniu motywu (transition na kolor/tło/obramowanie).',
   '2025-09-25 – [ZMIANA] Sesje trwałe: JWT + cookie do 2 lat; dodano checkbox „Zapamiętaj to urządzenie” na logowaniu.',
   '2025-09-25 – [ZMIANA] Zlecenia: dodano „Wynik” (Wygrane/Przegrane). Endpoint POST /api/zlecenia/:id/wynik (admin), eventy order.won/order.lost, filtry i UI w listach/szczegółach.',
   '2025-09-25 – [ZMIANA] Friendly URL dla zleceń akceptuje sufiks typu: /zlecenia/nr/<Nr>_m (montaż) lub _d (dostawa); wyszukiwanie ignoruje sufiks. UI wyświetla Nr zlecenia z sufiksem.',

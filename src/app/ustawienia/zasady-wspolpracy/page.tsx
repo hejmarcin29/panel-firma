@@ -5,7 +5,8 @@ import { desc } from 'drizzle-orm'
 import { getSession } from '@/lib/auth-session'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import NewRuleForm from './rule-form.client'
+import dynamic from 'next/dynamic'
+const NewRuleForm = dynamic(() => import('./rule-form.client'), { ssr: false })
 
 export default async function CooperationRulesAdminPage() {
   const session = await getSession()
