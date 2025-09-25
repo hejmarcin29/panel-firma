@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { orders } from '@/db/schema';
+import { orders, clients } from '@/db/schema';
 import { getSession } from '@/lib/auth-session';
 import { emitDomainEvent, DomainEventTypes } from '@/domain/events';
 import { eq } from 'drizzle-orm';
@@ -67,11 +67,19 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       return NextResponse.json({ error: 'Niedozwolona zmiana statusu' }, { status: 403 });
     }
     await db.update(orders).set({ status: newStatus }).where(eq(orders.id, id));
+    // fetch numbers for enriched payload
+    const rows = await db
+      .select({ clientNo: clients.clientNo, orderNo: orders.orderNo })
+      .from(orders)
+      .leftJoin(clients, eq(orders.clientId, clients.id))
+      .where(eq(orders.id, id))
+      .limit(1)
+    const withNo = rows[0]
     await emitDomainEvent({
       type: DomainEventTypes.orderStatusChanged,
       actor: userEmail,
       entity: { type: 'order', id },
-      payload: { id, from: order.status, to: newStatus },
+      payload: { id, from: order.status, to: newStatus, clientNo: withNo?.clientNo ?? null, orderNo: withNo?.orderNo ?? null },
     });
     return NextResponse.json({ ok: true });
   } catch (err) {

@@ -59,6 +59,9 @@ export const pl = {
     systemInfoTitle: 'Jak działa ten projekt',
     systemInfoDescription: 'Najważniejsze elementy konfiguracji i utrzymania.',
     systemInfoPoints: [
+  '2025-09-25 – [ZMIANA] Friendly URL dla zleceń akceptuje sufiks typu: /zlecenia/nr/<Nr>_m (montaż) lub _d (dostawa); wyszukiwanie ignoruje sufiks. UI wyświetla Nr zlecenia z sufiksem.',
+      '2025-09-25 – [ZMIANA] Wprowadzono numerację: Klient ma Nr klienta (od 10), zlecenia mają Nr zlecenia w formacie <Nr klienta>_<kolejny> (np. 10_1).',
+      '2025-09-25 – [ZMIANA] Przyjazne adresy: /klienci/nr/[clientNo] oraz /zlecenia/nr/[orderNo] przekierowują do widoków szczegółów.',
       '2025-09-25 – [ZMIANA] Zlecenia: ujednolicone tworzenie (POST /api/zlecenia), wzmocniony RBAC i przejścia statusów, API montażysty z nazwą klienta, filtracja listy.',
       '2025-09-25 – [DECYZJA] Ujednolicone zasady zapisu danych (Zod walidacja, transakcje, eventy po commit, rewalidacja, RBAC, brak any poza helperem sesji).',
       '2025-09-24 – [ZMIANA] Użytkownicy: zmiana roli przeniesiona do Dropdown (spójne UI shadcn) + drobne porządki.',

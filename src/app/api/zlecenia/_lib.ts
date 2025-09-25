@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { db } from '@/db'
 import { clients, orders, orderNoteHistory, type Order, users } from '@/db/schema'
-import { eq } from 'drizzle-orm'
+import { eq, and, desc } from 'drizzle-orm'
 import { randomUUID } from 'crypto'
 import { emitDomainEvent, DomainEventTypes } from '@/domain/events'
 import type { SessionLike } from '@/lib/auth-session'
@@ -43,16 +43,34 @@ export async function createOrderFromBody(session: SessionLike | null, raw: unkn
   const status = START_STATUS[type]
   const now = new Date()
 
-  await db.insert(orders).values({
-    id,
-    clientId,
-    type,
-    status,
-    requiresMeasurement: type === 'installation',
-    installerId: installerId ?? null,
-    preMeasurementSqm: preMeasurementSqm ?? null,
-    internalNote: note ? note : null,
-    internalNoteUpdatedAt: note ? now : null,
+  // transactional seq + orderNo assignment
+  await db.transaction(async (tx) => {
+    // get clientNo
+    const [c] = await tx.select({ clientNo: clients.clientNo }).from(clients).where(eq(clients.id, clientId)).limit(1)
+    const clientNo = c?.clientNo ?? null
+    // find next seq for this client
+    const last = await tx
+      .select({ s: orders.seq })
+      .from(orders)
+      .where(eq(orders.clientId, clientId))
+      .orderBy(desc(orders.seq))
+      .limit(1)
+    const maxSeq = last[0]?.s ?? null
+    const nextSeq = (maxSeq ?? 0) + 1
+    const orderNo = clientNo != null ? `${clientNo}_${nextSeq}` : null
+    await tx.insert(orders).values({
+      id,
+      clientId,
+      type,
+      status,
+      requiresMeasurement: type === 'installation',
+      installerId: installerId ?? null,
+      preMeasurementSqm: preMeasurementSqm ?? null,
+      internalNote: note ? note : null,
+      internalNoteUpdatedAt: note ? now : null,
+      seq: nextSeq,
+      orderNo,
+    })
   })
 
   if (note) {
@@ -65,11 +83,15 @@ export async function createOrderFromBody(session: SessionLike | null, raw: unkn
     })
   }
 
+  // fetch numbers for enriched payload
+  const [created] = await db.select({ orderNo: orders.orderNo, clientNo: clients.clientNo }).from(orders)
+    .leftJoin(clients, eq(orders.clientId, clients.id))
+    .where(eq(orders.id, id)).limit(1)
   await emitDomainEvent({
     type: DomainEventTypes.orderCreated,
     actor: session.user?.email ?? 'system',
     entity: { type: 'order', id },
-    payload: { id, clientId, type, status },
+    payload: { id, clientId, type, status, clientNo: created?.clientNo ?? null, orderNo: created?.orderNo ?? null },
   })
 
   return NextResponse.json({ id })

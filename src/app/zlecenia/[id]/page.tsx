@@ -21,6 +21,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
       preMeasurementSqm: orders.preMeasurementSqm,
       scheduledDate: orders.scheduledDate,
       createdAt: orders.createdAt,
+      orderNo: orders.orderNo,
     })
     .from(orders)
     .leftJoin(clients, eq(orders.clientId, clients.id))
@@ -43,7 +44,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
   return (
     <div className="mx-auto max-w-3xl p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Zlecenie #{row.id.slice(0,8)}</h1>
+  <h1 className="text-2xl font-semibold">Zlecenie #{row.orderNo ? `${row.orderNo}_${row.type === 'installation' ? 'm' : 'd'}` : row.id.slice(0,8)}</h1>
         <Link href="/" className="inline-flex h-8 items-center rounded-md border border-black/15 px-3 text-sm dark:border-white/15">Wróć</Link>
       </div>
       <div className="rounded border border-black/10 dark:border-white/10 p-4 space-y-2 text-sm">
@@ -58,6 +59,14 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
       <div className="rounded border border-black/10 dark:border-white/10 p-4">
         <h2 className="text-sm font-medium mb-3">Edycja</h2>
         <OrderEditor orderId={row.id} defaults={{ note: null, preMeasurementSqm: row.preMeasurementSqm, installerId: row.installerId ?? null, scheduledDate: row.scheduledDate ? (row.scheduledDate as unknown as Date).getTime?.() ?? Number(row.scheduledDate) : null }} />
+      </div>
+      <div className="rounded border border-black/10 dark:border-white/10 p-4">
+        <h2 className="text-sm font-medium mb-3">Szczegóły typu</h2>
+        {row.type === 'installation' ? (
+          <div className="text-sm opacity-70">Sekcja Montaż (szczegóły pojawią się w kolejnej iteracji).</div>
+        ) : (
+          <div className="text-sm opacity-70">Sekcja Dostawa (szczegóły pojawią się w kolejnej iteracji).</div>
+        )}
       </div>
       <div className="rounded border border-black/10 dark:border-white/10 p-4">
         <h2 className="text-sm font-medium mb-3">Zmiana statusu</h2>

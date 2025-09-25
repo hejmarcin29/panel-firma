@@ -30,6 +30,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
       clientName: clients.name,
       scheduledDate: orders.scheduledDate,
       installerName: users.name,
+      orderNo: orders.orderNo,
     })
     .from(orders)
     .leftJoin(clients, eq(orders.clientId, clients.id))
@@ -55,7 +56,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
         <table className="w-full text-sm">
           <thead className="text-left bg-black/5 dark:bg-white/10">
             <tr>
-              <th className="px-3 py-2">ID</th>
+              <th className="px-3 py-2">Nr zlecenia</th>
               <th className="px-3 py-2">Klient</th>
               <th className="px-3 py-2">Typ</th>
               <th className="px-3 py-2">Status</th>
@@ -73,7 +74,9 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
             ) : rows.map((r) => (
               <tr key={r.id} className="border-t border-black/10 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10">
                 <td className="px-3 py-2">
-                  <Link className="underline" href={`/zlecenia/${r.id}`}>{r.id.slice(0,8)}</Link>
+                  <Link className="underline" href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : `/zlecenia/${r.id}`}>
+                    {r.orderNo ? `${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : r.id.slice(0,8)}
+                  </Link>
                 </td>
                 <td className="px-3 py-2">{r.clientName || r.clientId}</td>
                 <td className="px-3 py-2">{r.type === 'installation' ? pl.orders.typeInstallation : pl.orders.typeDelivery}</td>

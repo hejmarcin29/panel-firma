@@ -62,12 +62,17 @@ export const orderCreatedPayloadSchema = z.object({
   clientId: z.string().uuid(),
   type: z.enum(['delivery','installation']),
   status: z.string(),
+  // human-friendly numbers (optional when not yet assigned)
+  clientNo: z.number().int().positive().optional().nullable(),
+  orderNo: z.string().optional().nullable(),
 });
 
 export const orderStatusChangedPayloadSchema = z.object({
   id: z.string().uuid(),
   from: z.string(),
   to: z.string(),
+  clientNo: z.number().int().positive().optional().nullable(),
+  orderNo: z.string().optional().nullable(),
 });
 
 // Users

@@ -12,6 +12,7 @@ export default async function OrdersArchivePage() {
       type: orders.type,
       status: orders.status,
       clientId: orders.clientId,
+      orderNo: orders.orderNo,
       clientName: clients.name,
       scheduledDate: orders.scheduledDate,
       installerName: users.name,
@@ -52,7 +53,16 @@ export default async function OrdersArchivePage() {
             ) : rows.map((r) => (
               <tr key={r.id} className="border-t border-black/10 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10">
                 <td className="px-3 py-2">
-                  <Link className="underline" href={`/zlecenia/${r.id}`}>{r.id.slice(0,8)}</Link>
+                  <Link className="underline" href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : `/zlecenia/${r.id}`}>
+                    {r.orderNo ? (
+                      <span>
+                        <span className="font-mono">{`${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}`}</span>
+                        <span className="opacity-60"> ({r.id.slice(0,8)})</span>
+                      </span>
+                    ) : (
+                      r.id.slice(0,8)
+                    )}
+                  </Link>
                 </td>
                 <td className="px-3 py-2">{r.clientName || r.clientId}</td>
                 <td className="px-3 py-2">{r.type === 'installation' ? pl.orders.typeInstallation : pl.orders.typeDelivery}</td>

@@ -10,6 +10,7 @@
     "check:iteration": "node scripts/check-system-info.mjs",
     "check:migrations": "node scripts/check-migrations.mjs",
   "fix:migrations": "node scripts/fix-migrations.mjs",
+    "backfill:numbers": "node scripts/backfill-clientno-orderno.mjs",
     "prepare": "husky"
   },
   "dependencies": {

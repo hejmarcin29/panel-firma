@@ -3,7 +3,7 @@ import { db } from "@/db";
 import { clients, type Client } from "@/db/schema";
 import { randomUUID } from "crypto";
 import { getSession } from "@/lib/auth-session";
-import { desc } from "drizzle-orm";
+import { desc, isNotNull } from "drizzle-orm";
 import { emitDomainEvent, DomainEventTypes } from "@/domain/events";
 
 interface SessionUser {
@@ -46,7 +46,8 @@ export async function POST(req: Request) {
   const name = typeof body?.name === 'string' ? body.name.trim() : '';
   if (!name) return NextResponse.json({ error: "Imię i nazwisko wymagane" }, { status: 400 });
 
-  const data: Omit<Client, 'createdAt'> = {
+  // Prepare base insert data (clientNo will be assigned in transaction)
+  const base: Omit<typeof clients.$inferInsert, 'clientNo'> = {
     id: randomUUID(),
     name,
     phone: trimOrNull(body?.phone) ?? null,
@@ -59,16 +60,27 @@ export async function POST(req: Request) {
     serviceType: null as unknown as Client['serviceType'],
   };
 
-  await db.insert(clients).values(data);
+  // Assign incremental clientNo starting at 10 (single-writer SQLite; wrap in tx for safety)
+  await db.transaction(async (tx) => {
+    const last = await tx
+      .select({ no: clients.clientNo })
+      .from(clients)
+      .where(isNotNull(clients.clientNo))
+      .orderBy(desc(clients.clientNo))
+      .limit(1)
+    const maxNo = last[0]?.no ?? null
+    const nextNo = (maxNo ?? 9) + 1
+    await tx.insert(clients).values({ ...base, clientNo: nextNo })
+  })
 
   const userEmail = (session as SessionUser | null)?.user?.email ?? null;
   await emitDomainEvent({
     type: DomainEventTypes.clientCreated,
     actor: userEmail,
-    entity: { type: 'client', id: data.id },
-    payload: { id: data.id, name: data.name },
+    entity: { type: 'client', id: base.id },
+    payload: { id: base.id, name: base.name },
     schemaVersion: 2,
   });
 
-  return NextResponse.json({ id: data.id });
+  return NextResponse.json({ id: base.id });
 }

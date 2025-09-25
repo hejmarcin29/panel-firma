@@ -163,7 +163,7 @@ async function UpcomingOrders() {
   const now = new Date()
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0)
   const rows = await db
-    .select({ id: ordersTable.id, clientId: ordersTable.clientId, scheduledDate: ordersTable.scheduledDate, status: ordersTable.status, clientName: clientsTbl.name })
+    .select({ id: ordersTable.id, clientId: ordersTable.clientId, scheduledDate: ordersTable.scheduledDate, status: ordersTable.status, clientName: clientsTbl.name, type: ordersTable.type, orderNo: ordersTable.orderNo })
     .from(ordersTable)
     .leftJoin(clientsTbl, deq(ordersTable.clientId, clientsTbl.id))
     .where(and(
@@ -180,7 +180,10 @@ async function UpcomingOrders() {
     <ul className="space-y-1 text-sm">
       {rows.map(r => (
         <li key={r.id} className="flex items-center justify-between">
-          <Link className="underline" href={`/zlecenia/${r.id}`}>{r.clientName || r.clientId}</Link>
+          <div className="flex items-center gap-2">
+            <Link className="underline" href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : `/zlecenia/${r.id}`}>{r.clientName || r.clientId}</Link>
+            <span className="text-xs rounded bg-black/5 px-1.5 py-0.5 dark:bg-white/10">{r.type === 'installation' ? 'Montaż' : 'Dostawa'}</span>
+          </div>
           <span className="opacity-60">{r.scheduledDate ? new Date(r.scheduledDate).toLocaleDateString() : '-'}</span>
         </li>
       ))}
@@ -192,7 +195,7 @@ async function RecentCompletedOrders() {
   const now = new Date()
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0)
   const rows = await db
-    .select({ id: ordersTable.id, clientId: ordersTable.clientId, scheduledDate: ordersTable.scheduledDate, status: ordersTable.status, clientName: clientsTbl.name })
+    .select({ id: ordersTable.id, clientId: ordersTable.clientId, scheduledDate: ordersTable.scheduledDate, status: ordersTable.status, clientName: clientsTbl.name, type: ordersTable.type, orderNo: ordersTable.orderNo })
     .from(ordersTable)
     .leftJoin(clientsTbl, deq(ordersTable.clientId, clientsTbl.id))
     .where(and(
@@ -208,7 +211,10 @@ async function RecentCompletedOrders() {
     <ul className="space-y-1 text-sm">
       {rows.map(r => (
         <li key={r.id} className="flex items-center justify-between">
-          <Link className="underline" href={`/zlecenia/${r.id}`}>{r.clientName || r.clientId}</Link>
+          <div className="flex items-center gap-2">
+            <Link className="underline" href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : `/zlecenia/${r.id}`}>{r.clientName || r.clientId}</Link>
+            <span className="text-xs rounded bg-black/5 px-1.5 py-0.5 dark:bg-white/10">{r.type === 'installation' ? 'Montaż' : 'Dostawa'}</span>
+          </div>
           <span className="opacity-60">{r.scheduledDate ? new Date(r.scheduledDate).toLocaleDateString() : '-'}</span>
         </li>
       ))}

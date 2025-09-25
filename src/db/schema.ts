@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, primaryKey } from 'drizzle-orm/sqlite-core'
+import { sqliteTable, text, integer, primaryKey, uniqueIndex } from 'drizzle-orm/sqlite-core'
 import { sql } from 'drizzle-orm'
 
 export const users = sqliteTable('users', {
@@ -58,6 +58,8 @@ export const clients = sqliteTable('clients', {
   deliveryAddress: text('delivery_address'), // adres (dostawa)
   // Typ usługi: tylko dostawa czy z montażem
   serviceType: text('service_type').notNull().default('with_installation'), // 'delivery_only' | 'with_installation'
+  // Publiczny numer klienta do wyświetlania ("Nr klienta"), rosnący od 10
+  clientNo: integer('client_no').unique(),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
 })
 
@@ -107,9 +109,18 @@ export const orders = sqliteTable('orders', {
   preMeasurementSqm: integer('pre_measurement_sqm'), // szacunkowe m2 przed pomiarem
   internalNote: text('internal_note'), // notatka Primepodloga (aktualny stan)
   internalNoteUpdatedAt: integer('internal_note_updated_at', { mode: 'timestamp_ms' }),
+  // Numer porządkowy zlecenia w ramach klienta (1,2,3,...)
+  seq: integer('seq'),
+  // Publiczny numer zlecenia w formacie "<Nr klienta>_<seq>", np. "10_1"
+  orderNo: text('order_no'),
   archivedAt: integer('archived_at', { mode: 'timestamp_ms' }), // data archiwizacji (opc.)
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
-});
+}, (table) => ({
+  // unikalność numeru zlecenia jako tekstu (jeśli utrwalamy)
+  orderNoUnique: uniqueIndex('orders_order_no_unique').on(table.orderNo),
+  // unikalność (client_id, seq) w ramach klienta
+  orderSeqPerClientUnique: uniqueIndex('orders_client_seq_unique').on(table.clientId, table.seq),
+}));
 
 export type Order = typeof orders.$inferSelect
 

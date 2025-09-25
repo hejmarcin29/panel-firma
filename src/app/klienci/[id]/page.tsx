@@ -13,6 +13,7 @@ import { pl } from "@/i18n/pl";
 type Klient = {
   id: string;
   name: string;
+  clientNo?: number | null;
   phone?: string | null;
   email?: string | null;
   invoiceCity?: string | null;
@@ -30,6 +31,8 @@ type Order = {
   status: string;
   requiresMeasurement: number | boolean;
   scheduledDate?: number | null;
+  archivedAt?: number | null;
+  orderNo?: string | null;
   createdAt: number;
 };
 
@@ -51,6 +54,7 @@ export default function KlientPage() {
   const [newNote, setNewNote] = useState("");
   const [openDelete, setOpenDelete] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [tab, setTab] = useState<'active'|'archived'>('active')
 
   const load = useCallback(async () => {
     try {
@@ -132,6 +136,9 @@ export default function KlientPage() {
           <BackButton fallbackHref="/klienci" />
           <h1 className="text-2xl font-semibold flex items-center gap-3">
             <span>{client.name}</span>
+            {typeof client.clientNo === 'number' && (
+              <Link className="text-sm underline opacity-80" href={`/klienci/nr/${client.clientNo}`}>Nr klienta: {client.clientNo}</Link>
+            )}
           </h1>
         </div>
         <div className="flex items-center gap-2">
@@ -178,21 +185,50 @@ export default function KlientPage() {
       </div>
 
       <Card>
-        <CardHeader className="pb-2"><CardTitle>Zlecenia</CardTitle></CardHeader>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle>Zlecenia</CardTitle>
+            <div className="inline-flex rounded-md border border-black/10 p-0.5 text-xs dark:border-white/10" role="tablist" aria-label="Filtr zleceń">
+              <button
+                role="tab"
+                aria-selected={tab === 'active'}
+                className={`px-2 py-1 rounded ${tab === 'active' ? 'bg-black text-white dark:bg-white dark:text-black' : 'hover:bg-black/5 dark:hover:bg-white/10'}`}
+                onClick={() => setTab('active')}
+              >
+                Aktywne <span className="opacity-70">({orders.filter(o => !o.archivedAt).length})</span>
+              </button>
+              <button
+                role="tab"
+                aria-selected={tab === 'archived'}
+                className={`px-2 py-1 rounded ${tab === 'archived' ? 'bg-black text-white dark:bg-white dark:text-black' : 'hover:bg-black/5 dark:hover:bg-white/10'}`}
+                onClick={() => setTab('archived')}
+              >
+                Archiwum <span className="opacity-70">({orders.filter(o => !!o.archivedAt).length})</span>
+              </button>
+            </div>
+          </div>
+        </CardHeader>
         <CardContent>
           {orders.length === 0 ? (
             <div className="text-sm opacity-70">Brak zleceń</div>
           ) : (
             <div className="space-y-2">
-              {orders.map(o => {
+              {orders.filter(o => (tab === 'active' ? !o.archivedAt : !!o.archivedAt)).map(o => {
                 const statusLabel = (pl.orders.statuses as Record<string,string>)[o.status] || o.status
+                const archived = !!o.archivedAt
                 return (
-                  <Link key={o.id} href={`/zlecenia/${o.id}`} className="block rounded border border-black/10 p-2 text-sm hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10">
+                  <Link key={o.id} href={o.orderNo ? `/zlecenia/nr/${o.orderNo}_${o.type === 'installation' ? 'm' : 'd'}` : `/zlecenia/${o.id}`} className="block rounded border border-black/10 p-2 text-sm hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10">
                     <div className="flex items-center justify-between">
                       <span className="font-medium">{o.type === 'installation' ? 'Montaż' : 'Dostawa'}</span>
-                      <span className="text-xs rounded bg-black/5 dark:bg-white/10 px-2 py-0.5">{statusLabel}</span>
+                      <span className="flex items-center gap-2">
+                        {archived && <span className="text-[10px] rounded bg-amber-100 text-amber-900 px-1.5 py-0.5 dark:bg-amber-900/40 dark:text-amber-100">Archiwum</span>}
+                        <span className="text-xs rounded bg-black/5 dark:bg-white/10 px-2 py-0.5">{statusLabel}</span>
+                      </span>
                     </div>
-                    <div className="text-xs opacity-60 mt-0.5">{new Date(o.createdAt).toLocaleString()}</div>
+                    <div className="flex items-center justify-between text-xs opacity-60 mt-0.5">
+                      <span>{new Date(o.createdAt).toLocaleString()}</span>
+                      {o.orderNo && <span>Nr zlecenia: <span className="font-mono">{`${o.orderNo}_${o.type === 'installation' ? 'm' : 'd'}`}</span></span>}
+                    </div>
                   </Link>
                 )
               })}
