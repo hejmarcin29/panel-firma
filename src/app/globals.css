@@ -2,14 +2,29 @@
 
 /* Simplified base variables (no Tailwind @plugin/@theme to avoid editor errors) */
 :root {
+  /* Neutral base */
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #1B1B1B;
+
+  /* Prime brand tokens (light theme) */
+  --pp-primary: #C64536; /* CTA / akcent */
+  --pp-primary-600: #A83A2E; /* hover/active */
+  --pp-primary-ring: rgba(198, 69, 54, 0.35); /* focus outline */
+  --pp-primary-subtle-bg: #FBEAE8; /* delikatne tło akcentu */
+  --pp-primary-subtle-border: #E9B5B0; /* obrys delikatny */
+
+  --pp-bg: #FFFFFF; /* tło stron/paneli */
+  --pp-panel: #FFFFFF; /* karty/panele */
+  --pp-text: #1B1B1B; /* tekst główny */
+  --pp-text-muted: #6B7280; /* tekst pomocniczy */
+  --pp-border: #E5E7EB; /* obrysy / separatory */
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    /* Wersje dark mogą zostać dopracowane później; zostawiamy neutralne */
   }
 }
 
@@ -37,3 +52,9 @@ body::before {
 .card-shadow {
   box-shadow: 0 1px 2px rgba(0,0,0,0.06);
 }
+
+/* Utility helpers using brand tokens (optional) */
+.brand-border { border-color: var(--pp-border) !important; }
+.brand-bg-panel { background: var(--pp-panel) !important; }
+.brand-text-muted { color: var(--pp-text-muted) !important; }
+

@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { Topbar } from "@/components/topbar";
+import { Sidebar } from "@/components/sidebar";
 import { ThemeProvider } from "next-themes";
 import { ToastProvider } from "@/components/ui/toaster";
 
@@ -25,8 +26,15 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <ToastProvider>
             <Providers>
-              <Topbar />
-              {children}
+              <div className="flex">
+                <Sidebar />
+                <div className="flex-1 min-h-screen pl-64">
+                  <Topbar />
+                  <main className="px-6 py-6">
+                    {children}
+                  </main>
+                </div>
+              </div>
             </Providers>
           </ToastProvider>
         </ThemeProvider>

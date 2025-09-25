@@ -77,15 +77,19 @@ export default function PanelMontazysty() {
       <div className="flex items-center gap-2">
         <button
           className={[
-            'h-8 rounded-md border px-3 text-sm',
-            scope === 'active' ? 'bg-black text-white dark:bg-white dark:text-black border-black/15 dark:border-white/15' : 'border-black/15 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10',
+            'h-8 rounded-full border px-3 text-sm transition-colors',
+            scope === 'active'
+              ? 'bg-[var(--pp-primary)] text-white border-transparent'
+              : 'bg-[var(--pp-panel)] text-[var(--pp-text)] border-[var(--pp-border)] hover:bg-[var(--pp-primary-subtle-bg)]',
           ].join(' ')}
           onClick={() => setScope('active')}
         >Aktywne</button>
         <button
           className={[
-            'h-8 rounded-md border px-3 text-sm',
-            scope === 'all' ? 'bg-black text-white dark:bg-white dark:text-black border-black/15 dark:border-white/15' : 'border-black/15 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10',
+            'h-8 rounded-full border px-3 text-sm transition-colors',
+            scope === 'all'
+              ? 'bg-[var(--pp-primary)] text-white border-transparent'
+              : 'bg-[var(--pp-panel)] text-[var(--pp-text)] border-[var(--pp-border)] hover:bg-[var(--pp-primary-subtle-bg)]',
           ].join(' ')}
           onClick={() => setScope('all')}
         >Wszystkie</button>
@@ -132,7 +136,7 @@ export default function PanelMontazysty() {
             {orders.length === 0 ? (
               <div className="text-sm opacity-70">Brak przypisanych montaży.</div>
             ) : (
-              <div className="divide-y divide-black/10 dark:divide-white/10 rounded border border-black/10 dark:border-white/10">
+              <div className="divide-y rounded border brand-border" style={{ borderColor: 'var(--pp-border)' }}>
                 {orders.map(o => {
                   const statusLabel = (pl.orders.statuses as Record<string,string>)[o.status] || o.status
                   return (

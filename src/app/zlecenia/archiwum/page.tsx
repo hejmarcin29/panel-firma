@@ -28,14 +28,14 @@ export default async function OrdersArchivePage() {
     .limit(50)
 
   return (
-    <div className="mx-auto max-w-6xl p-6">
+    <div className="mx-auto max-w-none p-6">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-semibold">Archiwum zleceń</h1>
         <Link href="/zlecenia" className="underline">Powrót do listy</Link>
       </div>
 
       {/* Table for md+ */}
-      <div className="mt-4 overflow-x-auto rounded-md border border-black/10 dark:border-white/10 hidden md:block">
+      <div className="mt-4 rounded-md border border-black/10 dark:border-white/10 hidden md:block">
         <table className="w-full text-sm">
           <thead className="text-left bg-black/5 dark:bg-white/10">
             <tr>

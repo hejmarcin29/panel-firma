@@ -8,11 +8,11 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "default", size = "md", ...props }, ref) => {
-    const base = "inline-flex items-center justify-center rounded-md font-medium transition-colors disabled:opacity-60 disabled:pointer-events-none";
+    const base = "inline-flex items-center justify-center rounded-[12px] font-medium transition-colors disabled:opacity-60 disabled:pointer-events-none focus:outline-none focus:ring-2";
     const variants = {
-      default: "bg-black text-white hover:bg-black/85 dark:bg-white dark:text-black dark:hover:bg-white/90",
-      outline: "border border-black/15 dark:border-white/15 hover:bg-black/5 dark:hover:bg-white/10",
-      ghost: "hover:bg-black/5 dark:hover:bg-white/10",
+      default: "bg-[var(--pp-primary)] text-white hover:bg-[var(--pp-primary-600)] focus:ring-[var(--pp-primary-ring)]",
+      outline: "border border-[var(--pp-primary)] text-[var(--pp-primary)] hover:bg-[var(--pp-primary-subtle-bg)] focus:ring-[var(--pp-primary-ring)]",
+      ghost: "hover:bg-black/5 dark:hover:bg-white/10 focus:ring-[var(--pp-primary-ring)]",
     } as const;
     const sizes = {
       sm: "h-8 px-3 text-sm",

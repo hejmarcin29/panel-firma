@@ -56,7 +56,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
     .offset(offset)
 
   return (
-    <div className="mx-auto max-w-6xl p-4 md:p-6">
+    <div className="mx-auto max-w-none p-4 md:p-6">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-semibold">{pl.orders.title}</h1>
         <div className="flex gap-2">
@@ -95,7 +95,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
       </div>
 
       {/* Table for md+ */}
-      <div className="mt-4 overflow-x-auto rounded-md border border-black/10 dark:border-white/10 hidden md:block">
+      <div className="mt-4 rounded-md border border-black/10 dark:border-white/10 hidden md:block">
         <table className="w-full text-sm">
           <thead className="text-left bg-black/5 dark:bg-white/10">
             <tr>
@@ -130,7 +130,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                 <td className="px-3 py-2">{r.installerName || '-'}</td>
                 <td className="px-3 py-2">{new Date(r.createdAt).toLocaleString()}</td>
                 <td className="px-3 py-2 text-right">
-                  <div className="flex items-center gap-2 justify-end">
+                  <div className="flex items-center gap-2 justify-end flex-wrap">
                     <Link
                       className="inline-flex h-7 items-center gap-1.5 rounded-md border border-black/15 px-2 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
                       href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : `/zlecenia/${r.id}`}
