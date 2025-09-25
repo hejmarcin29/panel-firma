@@ -59,6 +59,8 @@ export const pl = {
     systemInfoTitle: 'Jak działa ten projekt',
     systemInfoDescription: 'Najważniejsze elementy konfiguracji i utrzymania.',
     systemInfoPoints: [
+  '2025-09-25 – [ZMIANA] Sesje trwałe: JWT + cookie do 2 lat; dodano checkbox „Zapamiętaj to urządzenie” na logowaniu.',
+  '2025-09-25 – [ZMIANA] Zlecenia: dodano „Wynik” (Wygrane/Przegrane). Endpoint POST /api/zlecenia/:id/wynik (admin), eventy order.won/order.lost, filtry i UI w listach/szczegółach.',
   '2025-09-25 – [ZMIANA] Friendly URL dla zleceń akceptuje sufiks typu: /zlecenia/nr/<Nr>_m (montaż) lub _d (dostawa); wyszukiwanie ignoruje sufiks. UI wyświetla Nr zlecenia z sufiksem.',
       '2025-09-25 – [ZMIANA] Wprowadzono numerację: Klient ma Nr klienta (od 10), zlecenia mają Nr zlecenia w formacie <Nr klienta>_<kolejny> (np. 10_1).',
       '2025-09-25 – [ZMIANA] Przyjazne adresy: /klienci/nr/[clientNo] oraz /zlecenia/nr/[orderNo] przekierowują do widoków szczegółów.',
@@ -110,6 +112,8 @@ export const pl = {
     type: 'Typ',
     typeDelivery: 'Dostawa',
     typeInstallation: 'Montaż',
+    outcome: 'Wynik',
+    outcomes: { active: 'Aktywne', won: 'Wygrane', lost: 'Przegrane', all: 'Wszystkie' },
     status: 'Status',
     statuses: {
       awaiting_measurement: 'Oczekuje na pomiar',
@@ -124,6 +128,11 @@ export const pl = {
     notFound: 'Nie znaleziono zlecenia',
     listEmpty: 'Brak zleceń',
     searchPlaceholder: 'Szukaj klienta…',
+    quick: {
+      info: 'Dane',
+      details: 'Szczegóły',
+      client: 'Klient',
+    },
   },
   common: {
     loading: 'Wczytywanie…',

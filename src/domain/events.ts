@@ -12,6 +12,8 @@ export const DomainEventTypes = {
   clientServiceTypeChanged: 'client.serviceType.changed',
   orderCreated: 'order.created',
   orderStatusChanged: 'order.status.changed',
+  orderWon: 'order.won',
+  orderLost: 'order.lost',
   userRoleChanged: 'user.role.changed',
   userPasswordChanged: 'user.password.changed',
 } as const;
@@ -75,6 +77,15 @@ export const orderStatusChangedPayloadSchema = z.object({
   orderNo: z.string().optional().nullable(),
 });
 
+export const orderOutcomePayloadSchema = z.object({
+  id: z.string().uuid(),
+  outcome: z.enum(['won','lost']),
+  clientNo: z.number().int().positive().optional().nullable(),
+  orderNo: z.string().optional().nullable(),
+  reasonCode: z.string().optional().nullable(),
+  reasonNote: z.string().optional().nullable(),
+});
+
 // Users
 export const userRoleChangedPayloadSchema = z.object({
   id: z.string().uuid(),
@@ -93,6 +104,7 @@ export type ClientNoteAddedPayload = z.infer<typeof clientNoteAddedPayloadSchema
 export type ClientServiceTypeChangedPayload = z.infer<typeof clientServiceTypeChangedPayloadSchema>;
 export type OrderCreatedPayload = z.infer<typeof orderCreatedPayloadSchema>;
 export type OrderStatusChangedPayload = z.infer<typeof orderStatusChangedPayloadSchema>;
+export type OrderOutcomePayload = z.infer<typeof orderOutcomePayloadSchema>;
 export type UserRoleChangedPayload = z.infer<typeof userRoleChangedPayloadSchema>;
 export type UserPasswordChangedPayload = z.infer<typeof userPasswordChangedPayloadSchema>;
 
@@ -104,6 +116,8 @@ const payloadSchemaByType: Record<DomainEventType, z.ZodTypeAny> = {
   [DomainEventTypes.clientServiceTypeChanged]: clientServiceTypeChangedPayloadSchema,
   [DomainEventTypes.orderCreated]: orderCreatedPayloadSchema,
   [DomainEventTypes.orderStatusChanged]: orderStatusChangedPayloadSchema,
+  [DomainEventTypes.orderWon]: orderOutcomePayloadSchema,
+  [DomainEventTypes.orderLost]: orderOutcomePayloadSchema,
   [DomainEventTypes.userRoleChanged]: userRoleChangedPayloadSchema,
   [DomainEventTypes.userPasswordChanged]: userPasswordChangedPayloadSchema,
 };

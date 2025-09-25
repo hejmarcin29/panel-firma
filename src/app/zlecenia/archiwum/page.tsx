@@ -3,6 +3,8 @@ import { clients, orders, users } from '@/db/schema'
 import { desc, eq, isNotNull } from 'drizzle-orm'
 import Link from 'next/link'
 import { pl } from '@/i18n/pl'
+import { Badge } from '@/components/ui/badge'
+import { StatusBadge } from '@/components/badges'
 
 export default async function OrdersArchivePage() {
   const rows = await db
@@ -32,7 +34,8 @@ export default async function OrdersArchivePage() {
         <Link href="/zlecenia" className="underline">Powrót do listy</Link>
       </div>
 
-      <div className="mt-4 overflow-x-auto rounded-md border border-black/10 dark:border-white/10">
+      {/* Table for md+ */}
+      <div className="mt-4 overflow-x-auto rounded-md border border-black/10 dark:border-white/10 hidden md:block">
         <table className="w-full text-sm">
           <thead className="text-left bg-black/5 dark:bg-white/10">
             <tr>
@@ -65,8 +68,8 @@ export default async function OrdersArchivePage() {
                   </Link>
                 </td>
                 <td className="px-3 py-2">{r.clientName || r.clientId}</td>
-                <td className="px-3 py-2">{r.type === 'installation' ? pl.orders.typeInstallation : pl.orders.typeDelivery}</td>
-                <td className="px-3 py-2">{(pl.orders.statuses as Record<string,string>)[r.status] || r.status}</td>
+                <td className="px-3 py-2"><Badge size="xs" variant="neutral">{r.type === 'installation' ? pl.orders.typeInstallation : pl.orders.typeDelivery}</Badge></td>
+                <td className="px-3 py-2"><StatusBadge status={r.status} label={(pl.orders.statuses as Record<string,string>)[r.status] || r.status} /></td>
                 <td className="px-3 py-2">{r.scheduledDate ? new Date(r.scheduledDate).toLocaleDateString() : '-'}</td>
                 <td className="px-3 py-2">{r.installerName || '-'}</td>
                 <td className="px-3 py-2">{r.archivedAt ? new Date(r.archivedAt).toLocaleString() : '-'}</td>
@@ -74,6 +77,31 @@ export default async function OrdersArchivePage() {
             ))}
           </tbody>
         </table>
+      </div>
+      {/* Mobile cards */}
+      <div className="mt-4 space-y-2 md:hidden">
+        {rows.length === 0 ? (
+          <div className="px-3 py-6 text-center opacity-70">Brak pozycji w archiwum</div>
+        ) : (
+          rows.map((r) => (
+            <div key={r.id} className="rounded-md border border-black/10 dark:border-white/10 p-3">
+              <div className="flex items-center justify-between">
+                <Link className="font-medium underline" href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : `/zlecenia/${r.id}`}>
+                  {r.orderNo ? `${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : r.id.slice(0,8)}
+                </Link>
+                <div className="flex items-center gap-2">
+                  <Badge size="xs" variant="neutral">{r.type === 'installation' ? pl.orders.typeInstallation : pl.orders.typeDelivery}</Badge>
+                  <StatusBadge status={r.status} label={(pl.orders.statuses as Record<string,string>)[r.status] || r.status} />
+                </div>
+              </div>
+              <div className="mt-1 text-sm">{r.clientName || r.clientId}</div>
+              <div className="mt-1 flex items-center justify-between text-xs opacity-70">
+                <span>{r.scheduledDate ? new Date(r.scheduledDate).toLocaleDateString() : '-'}</span>
+                <span>{r.archivedAt ? new Date(r.archivedAt).toLocaleString() : '-'}</span>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   )

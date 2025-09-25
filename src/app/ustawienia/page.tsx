@@ -31,6 +31,15 @@ export default function SettingsPage() {
             <Link href="/ustawienia/uzytkownicy" className="underline text-sm">{pl.settings.usersLink}</Link>
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Zasady współpracy</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm opacity-70 mb-3">Publikuj i zarządzaj wersjami zasad (admin).</p>
+            <Link href="/ustawienia/zasady-wspolpracy" className="underline text-sm">Przejdź do Zasad współpracy</Link>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

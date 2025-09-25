@@ -40,7 +40,7 @@ export function OrderStatusButtons({ id, status }: Props) {
       }
       toast({ title: 'Status zaktualizowany', variant: 'success' })
       router.refresh()
-    } catch (e) {
+    } catch {
       toast({ title: 'Błąd sieci/klienta', variant: 'destructive' })
     } finally {
       setLoading(null)

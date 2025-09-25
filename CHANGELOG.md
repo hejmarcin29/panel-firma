@@ -6,6 +6,16 @@ Format inspirowany "Keep a Changelog". Daty w UTC.
 - (dodawaj nowe wpisy tutaj przed wydaniem)
 
 ## 2025-09-25
+### Added
+- „Wynik” zlecenia: możliwość oznaczenia jako Wygrane/Przegrane (outcome: won/lost). Dodano pola w bazie (`orders.outcome`, `outcome_at`, `outcome_reason_code`, `outcome_reason_note`). Nowy endpoint `POST /api/zlecenia/:id/wynik` (tylko admin) i zdarzenia domenowe `order.won` / `order.lost`.
+### Changed
+- Blokada zmian statusu po ustawieniu wyniku.
+### UI
+- Zlecenia (lista): filtr Wynik (Aktywne | Wygrane | Przegrane | Wszystkie) + kolumna „Wynik”.
+- Zlecenie (szczegóły): sekcja „Wynik” z przyciskami; po ustawieniu wyniku sekcja zmiany statusu niewidoczna.
+- Klient (zlecenia): zakładki Aktywne/Wygrane/Przegrane.
+
+## 2025-09-25
 ### Changed
 - Numeracja klient/zlecenie: dodano `clientNo` (od 10) oraz `orderNo` w formacie `<clientNo>_<seq>` (np. `10_1`).
 - Przyjazne URL-e: `/klienci/nr/[clientNo]` oraz `/zlecenia/nr/[orderNo]` (z przekierowaniem do kanonicznych widoków). Dodatkowo `/zlecenia/nr/[orderNo]` akceptuje sufiks typu: `_m` (montaż) lub `_d` (dostawa); wyszukiwanie ignoruje sufiks.

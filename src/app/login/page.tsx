@@ -11,12 +11,13 @@ import { pl } from '@/i18n/pl'
 const schema = z.object({
   email: z.string().email('Podaj poprawny email'),
   password: z.string().min(1, 'Hasło jest wymagane'),
+  remember: z.boolean().optional(),
 })
 
 export default function LoginPage() {
   const { register, handleSubmit, formState: { errors, isSubmitting }, setError } = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
-    defaultValues: { email: '', password: '' },
+  defaultValues: { email: '', password: '', remember: true },
   })
 
   return (
@@ -52,6 +53,10 @@ export default function LoginPage() {
           <Input type="password" {...register('password')} />
           {errors.password && <p className="text-sm text-red-600">{errors.password.message}</p>}
         </div>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" defaultChecked {...register('remember')} />
+          <span>Zapamiętaj to urządzenie</span>
+        </label>
   <Button type="submit" disabled={isSubmitting}>{pl.nav.login}</Button>
       </form>
     </div>

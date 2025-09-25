@@ -17,7 +17,6 @@ type Klient = {
 export default function KlienciPage() {
   const [data, setData] = useState<{ clients: Klient[] } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [_filterDeliveryOnly, _setFilterDeliveryOnly] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {

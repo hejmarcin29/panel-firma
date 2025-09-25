@@ -45,8 +45,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (!parsed.success) return NextResponse.json({ error: 'Błąd walidacji', issues: parsed.error.issues }, { status: 400 });
     const newStatus = parsed.data.status;
     const { id } = await params;
-    const [order] = await db.select().from(orders).where(eq(orders.id, id)).limit(1);
+  const [order] = await db.select().from(orders).where(eq(orders.id, id)).limit(1);
     if (!order) return NextResponse.json({ error: 'Nie znaleziono' }, { status: 404 });
+  if (order.outcome) return NextResponse.json({ error: 'Nie można zmienić statusu po ustawieniu wyniku' }, { status: 409 });
     if (order.status === newStatus) return NextResponse.json({ ok: true });
     const allowed = ALLOWED[order.status] || [];
     // Role-aware constraints: admin -> full allowed; installer -> limited on own orders only

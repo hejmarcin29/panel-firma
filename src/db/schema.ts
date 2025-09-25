@@ -113,6 +113,11 @@ export const orders = sqliteTable('orders', {
   seq: integer('seq'),
   // Publiczny numer zlecenia w formacie "<Nr klienta>_<seq>", np. "10_1"
   orderNo: text('order_no'),
+  // Wynik biznesowy (pipeline): 'won' | 'lost' | null
+  outcome: text('outcome'),
+  outcomeAt: integer('outcome_at', { mode: 'timestamp_ms' }),
+  outcomeReasonCode: text('outcome_reason_code'),
+  outcomeReasonNote: text('outcome_reason_note'),
   archivedAt: integer('archived_at', { mode: 'timestamp_ms' }), // data archiwizacji (opc.)
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
 }, (table) => ({
@@ -134,3 +139,33 @@ export const orderNoteHistory = sqliteTable('order_note_history', {
 });
 
 export type OrderNoteHistory = typeof orderNoteHistory.$inferSelect
+
+// Cooperation Rules (Zasady współpracy)
+export const cooperationRules = sqliteTable('cooperation_rules', {
+  id: text('id').primaryKey(), // uuid
+  title: text('title').notNull(),
+  contentMd: text('content_md').notNull(),
+  version: integer('version').notNull(),
+  isActive: integer('is_active', { mode: 'boolean' }).notNull().default(false),
+  requiresAck: integer('requires_ack', { mode: 'boolean' }).notNull().default(true),
+  audienceJson: text('audience_json').notNull().default('["installer"]'), // JSON array ról
+  effectiveFrom: integer('effective_from', { mode: 'timestamp_ms' }),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+}, (table) => ({
+  uniqueActiveVersion: uniqueIndex('cooperation_rules_active_version').on(table.version),
+}))
+
+export type CooperationRule = typeof cooperationRules.$inferSelect
+
+export const cooperationRuleAcks = sqliteTable('cooperation_rule_acks', {
+  id: text('id').primaryKey(), // uuid
+  ruleId: text('rule_id').notNull(),
+  userId: text('user_id').notNull(),
+  version: integer('version').notNull(),
+  acknowledgedAt: integer('acknowledged_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+}, (table) => ({
+  uniqAckPerUserVersion: uniqueIndex('cooperation_rule_ack_user_version').on(table.userId, table.version),
+}))
+
+export type CooperationRuleAck = typeof cooperationRuleAcks.$inferSelect

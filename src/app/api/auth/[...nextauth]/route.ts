@@ -11,7 +11,17 @@ import type { Session } from "next-auth"
 
 export const authOptions = {
   adapter: DrizzleAdapter(db) as unknown as Adapter,
-  session: { strategy: "jwt" },
+  session: {
+    strategy: "jwt",
+    // Keep users signed in for a long time (2 years)
+    maxAge: 60 * 60 * 24 * 365 * 2,
+    // Refresh the session token cookie at most once per day
+    updateAge: 60 * 60 * 24,
+  },
+  jwt: {
+    // Match session longevity for JWT strategy
+    maxAge: 60 * 60 * 24 * 365 * 2,
+  },
   providers: [
     Credentials({
       name: "Credentials",
@@ -45,6 +55,10 @@ export const authOptions = {
       const role = (token as Record<string, unknown>).role
       if (session.user && typeof role === 'string') {
         (session.user as { role?: string }).role = role
+      }
+      // Dodaj id użytkownika do session.user, aby API mogło filtrować po installerId
+      if (session.user && typeof token.sub === 'string') {
+        (session.user as { id?: string }).id = token.sub
       }
       return session
     },

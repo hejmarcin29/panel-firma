@@ -2,7 +2,7 @@ import * as React from "react";
 import { twMerge } from "tailwind-merge";
 
 export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={twMerge("rounded-lg border border-black/10 dark:border-white/10 bg-background", className)} {...props} />;
+  return <div className={twMerge("rounded-lg border border-black/10 dark:border-white/10 bg-background card-shadow", className)} {...props} />;
 }
 
 export function CardHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {

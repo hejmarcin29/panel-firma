@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/toaster";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trash2, Plus, Pencil } from "lucide-react";
+import { TypeBadge, StatusBadge, OutcomeBadge } from "@/components/badges";
 import { pl } from "@/i18n/pl";
 
 type Klient = {
@@ -29,6 +30,7 @@ type Order = {
   clientId: string;
   type: string;
   status: string;
+  outcome?: 'won'|'lost'|null;
   requiresMeasurement: number | boolean;
   scheduledDate?: number | null;
   archivedAt?: number | null;
@@ -54,7 +56,7 @@ export default function KlientPage() {
   const [newNote, setNewNote] = useState("");
   const [openDelete, setOpenDelete] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [tab, setTab] = useState<'active'|'archived'>('active')
+  const [tab, setTab] = useState<'active'|'won'|'lost'>('active')
 
   const load = useCallback(async () => {
     try {
@@ -195,15 +197,23 @@ export default function KlientPage() {
                 className={`px-2 py-1 rounded ${tab === 'active' ? 'bg-black text-white dark:bg-white dark:text-black' : 'hover:bg-black/5 dark:hover:bg-white/10'}`}
                 onClick={() => setTab('active')}
               >
-                Aktywne <span className="opacity-70">({orders.filter(o => !o.archivedAt).length})</span>
+                Aktywne <span className="opacity-70">({orders.filter(o => !o.outcome).length})</span>
               </button>
               <button
                 role="tab"
-                aria-selected={tab === 'archived'}
-                className={`px-2 py-1 rounded ${tab === 'archived' ? 'bg-black text-white dark:bg-white dark:text-black' : 'hover:bg-black/5 dark:hover:bg-white/10'}`}
-                onClick={() => setTab('archived')}
+                aria-selected={tab === 'won'}
+                className={`px-2 py-1 rounded ${tab === 'won' ? 'bg-black text-white dark:bg-white dark:text-black' : 'hover:bg-black/5 dark:hover:bg-white/10'}`}
+                onClick={() => setTab('won')}
               >
-                Archiwum <span className="opacity-70">({orders.filter(o => !!o.archivedAt).length})</span>
+                Wygrane <span className="opacity-70">({orders.filter(o => o.outcome === 'won').length})</span>
+              </button>
+              <button
+                role="tab"
+                aria-selected={tab === 'lost'}
+                className={`px-2 py-1 rounded ${tab === 'lost' ? 'bg-black text-white dark:bg-white dark:text-black' : 'hover:bg-black/5 dark:hover:bg-white/10'}`}
+                onClick={() => setTab('lost')}
+              >
+                Przegrane <span className="opacity-70">({orders.filter(o => o.outcome === 'lost').length})</span>
               </button>
             </div>
           </div>
@@ -213,16 +223,15 @@ export default function KlientPage() {
             <div className="text-sm opacity-70">Brak zleceń</div>
           ) : (
             <div className="space-y-2">
-              {orders.filter(o => (tab === 'active' ? !o.archivedAt : !!o.archivedAt)).map(o => {
+              {orders.filter(o => (tab === 'active' ? !o.outcome : tab === 'won' ? o.outcome === 'won' : o.outcome === 'lost')).map(o => {
                 const statusLabel = (pl.orders.statuses as Record<string,string>)[o.status] || o.status
-                const archived = !!o.archivedAt
                 return (
                   <Link key={o.id} href={o.orderNo ? `/zlecenia/nr/${o.orderNo}_${o.type === 'installation' ? 'm' : 'd'}` : `/zlecenia/${o.id}`} className="block rounded border border-black/10 p-2 text-sm hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10">
                     <div className="flex items-center justify-between">
-                      <span className="font-medium">{o.type === 'installation' ? 'Montaż' : 'Dostawa'}</span>
+                      <span className="font-medium inline-flex items-center gap-1.5"><TypeBadge type={o.type} /></span>
                       <span className="flex items-center gap-2">
-                        {archived && <span className="text-[10px] rounded bg-amber-100 text-amber-900 px-1.5 py-0.5 dark:bg-amber-900/40 dark:text-amber-100">Archiwum</span>}
-                        <span className="text-xs rounded bg-black/5 dark:bg-white/10 px-2 py-0.5">{statusLabel}</span>
+                        <OutcomeBadge outcome={o.outcome} />
+                        <StatusBadge status={o.status} label={statusLabel} />
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-xs opacity-60 mt-0.5">

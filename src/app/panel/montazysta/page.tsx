@@ -3,7 +3,9 @@ import { useEffect, useState } from 'react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { pl } from '@/i18n/pl'
+import { StatusBadge } from '@/components/badges'
 import { z } from 'zod'
+import { Button } from '@/components/ui/button'
 
 type MyOrder = {
   id: string
@@ -19,11 +21,14 @@ export default function PanelMontazysty() {
   const [orders, setOrders] = useState<MyOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [scope, setScope] = useState<'active'|'all'>('active')
+  const [rules, setRules] = useState<{ id: string; title: string; contentMd: string; version: number; requiresAck: boolean } | null>(null)
+  const [ack, setAck] = useState<boolean>(true)
 
   useEffect(() => {
     (async () => {
       try {
-        const r = await fetch('/api/montazysta/moje')
+        const r = await fetch(`/api/montazysta/moje?scope=${scope}`)
         const j = await r.json().catch(() => ({}))
         const RespSchema = z.object({ orders: z.array(z.object({
           id: z.string(),
@@ -44,11 +49,47 @@ export default function PanelMontazysty() {
         setLoading(false)
       }
     })()
+  }, [scope])
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await fetch('/api/zasady-wspolpracy?active=1&includeAck=1')
+        const j = await r.json().catch(() => ({}))
+        const RuleSchema = z.object({
+          rule: z.object({ id: z.string(), title: z.string(), contentMd: z.string(), version: z.number(), requiresAck: z.boolean() }).nullable(),
+          ack: z.object({ acknowledged: z.boolean() }).optional(),
+        })
+        const parsed = RuleSchema.safeParse(j)
+        if (parsed.success) {
+          setRules(parsed.data.rule)
+          setAck(parsed.data.ack?.acknowledged ?? true)
+        }
+      } catch {
+        // ignore banner on failure
+      }
+    })()
   }, [])
 
   return (
     <div className="mx-auto max-w-4xl p-6 space-y-4">
       <h1 className="text-2xl font-semibold">Moje montaże</h1>
+      <div className="flex items-center gap-2">
+        <button
+          className={[
+            'h-8 rounded-md border px-3 text-sm',
+            scope === 'active' ? 'bg-black text-white dark:bg-white dark:text-black border-black/15 dark:border-white/15' : 'border-black/15 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10',
+          ].join(' ')}
+          onClick={() => setScope('active')}
+        >Aktywne</button>
+        <button
+          className={[
+            'h-8 rounded-md border px-3 text-sm',
+            scope === 'all' ? 'bg-black text-white dark:bg-white dark:text-black border-black/15 dark:border-white/15' : 'border-black/15 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10',
+          ].join(' ')}
+          onClick={() => setScope('all')}
+        >Wszystkie</button>
+      </div>
       {loading && (
         <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -68,6 +109,26 @@ export default function PanelMontazysty() {
         <Card>
           <CardHeader className="pb-2"><CardTitle>Przypisane zlecenia montażu</CardTitle></CardHeader>
           <CardContent>
+            {rules && rules.requiresAck && !ack && (
+              <div className="mb-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-amber-900 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-100">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="font-medium">Zasady współpracy – wersja {rules.version}</div>
+                    <div className="text-xs opacity-80">Prosimy o zapoznanie się i potwierdzenie.</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <a href="#zasady" className="text-xs underline">Otwórz</a>
+                    <Button size="sm" onClick={async () => {
+                      try {
+                        const res = await fetch(`/api/zasady-wspolpracy/${rules.id}/akceptuj`, { method: 'POST' })
+                        if (!res.ok) throw new Error('Błąd')
+                        setAck(true)
+                      } catch {}
+                    }}>Potwierdzam</Button>
+                  </div>
+                </div>
+              </div>
+            )}
             {orders.length === 0 ? (
               <div className="text-sm opacity-70">Brak przypisanych montaży.</div>
             ) : (
@@ -78,20 +139,33 @@ export default function PanelMontazysty() {
                     <div key={o.id} className="p-3 text-sm flex items-center justify-between">
                       <div>
                         <div className="font-medium">{o.clientName || 'Klient'}</div>
-                        <div className="text-xs opacity-70 mt-0.5">
-                          Status: <span className="inline-flex items-center rounded bg-black/5 px-1.5 py-0.5 dark:bg-white/10">{statusLabel}</span>
+                        <div className="text-xs opacity-70 mt-0.5 flex items-center gap-1.5">
+                          <span className="opacity-80">Status:</span> <StatusBadge status={o.status} label={statusLabel} />
                           <span className="mx-1.5">•</span>
                           m2: {o.preMeasurementSqm ?? '-'}
                           <span className="mx-1.5">•</span>
                           Utworzono: {new Date(o.createdAt).toLocaleDateString()}
                         </div>
                       </div>
-                      {/* TODO: w przyszłości link do szczegółów zlecenia */}
+                      <div>
+                        <a href={`/zlecenia/${o.id}`} className="text-xs underline">Szczegóły</a>
+                      </div>
                     </div>
                   )
                 })}
               </div>
             )}
+          </CardContent>
+        </Card>
+      )}
+      {rules && (
+        <Card id="zasady" className="scroll-mt-16">
+          <CardHeader className="pb-1">
+            <CardTitle>Zasady współpracy</CardTitle>
+            <div className="text-xs opacity-70">Wersja {rules.version}</div>
+          </CardHeader>
+          <CardContent>
+            <pre className="whitespace-pre-wrap text-sm">{rules.contentMd}</pre>
           </CardContent>
         </Card>
       )}
