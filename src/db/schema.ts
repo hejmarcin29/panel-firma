@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, primaryKey, uniqueIndex } from 'drizzle-orm/sqlite-core'
+import { sqliteTable, text, integer, primaryKey, uniqueIndex, index } from 'drizzle-orm/sqlite-core'
 import { sql } from 'drizzle-orm'
 
 export const users = sqliteTable('users', {
@@ -118,6 +118,9 @@ export const orders = sqliteTable('orders', {
   outcomeAt: integer('outcome_at', { mode: 'timestamp_ms' }),
   outcomeReasonCode: text('outcome_reason_code'),
   outcomeReasonNote: text('outcome_reason_note'),
+  // Biznesowy etap (pipeline) – zależny od type
+  pipelineStage: text('pipeline_stage'),
+  pipelineStageUpdatedAt: integer('pipeline_stage_updated_at', { mode: 'timestamp_ms' }),
   archivedAt: integer('archived_at', { mode: 'timestamp_ms' }), // data archiwizacji (opc.)
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
 }, (table) => ({
@@ -169,6 +172,47 @@ export const cooperationRuleAcks = sqliteTable('cooperation_rule_acks', {
 }))
 
 export type CooperationRuleAck = typeof cooperationRuleAcks.$inferSelect
+
+// Delivery schedule entries (1:N per order)
+export const deliverySlots = sqliteTable('delivery_slots', {
+  id: text('id').primaryKey(), // uuid
+  orderId: text('order_id').notNull(),
+  plannedAt: integer('planned_at', { mode: 'timestamp_ms' }),
+  windowStart: integer('window_start', { mode: 'timestamp_ms' }),
+  windowEnd: integer('window_end', { mode: 'timestamp_ms' }),
+  status: text('status').notNull().default('planned'), // 'planned' | 'confirmed' | 'completed' | 'canceled'
+  carrier: text('carrier'),
+  trackingNo: text('tracking_no'),
+  note: text('note'),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+}, (table) => ({
+  idxOrder: index('delivery_slots_order_id_idx').on(table.orderId),
+  idxStatusPlanned: index('delivery_slots_status_planned_idx').on(table.status, table.plannedAt),
+}))
+
+export type DeliverySlot = typeof deliverySlots.$inferSelect
+
+// Installation schedule entries (1:N per order)
+export const installationSlots = sqliteTable('installation_slots', {
+  id: text('id').primaryKey(), // uuid
+  orderId: text('order_id').notNull(),
+  plannedAt: integer('planned_at', { mode: 'timestamp_ms' }),
+  windowStart: integer('window_start', { mode: 'timestamp_ms' }),
+  windowEnd: integer('window_end', { mode: 'timestamp_ms' }),
+  status: text('status').notNull().default('planned'), // 'planned' | 'confirmed' | 'completed' | 'canceled'
+  installerId: text('installer_id'),
+  durationMinutes: integer('duration_minutes'),
+  note: text('note'),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+}, (table) => ({
+  idxOrder: index('installation_slots_order_id_idx').on(table.orderId),
+  idxInstallerPlanned: index('installation_slots_installer_planned_idx').on(table.installerId, table.plannedAt),
+  idxStatusPlanned: index('installation_slots_status_planned_idx').on(table.status, table.plannedAt),
+}))
+
+export type InstallationSlot = typeof installationSlots.$inferSelect
 
 // Google Calendar preferences per installer
 export const installerGooglePrefs = sqliteTable('installer_google_prefs', {
@@ -227,3 +271,22 @@ export const installerPrivatePrefs = sqliteTable('installer_private_prefs', {
 })
 
 export type InstallerPrivatePrefs = typeof installerPrivatePrefs.$inferSelect
+
+// Checklisty zleceń (pojedyncze pozycje)
+export const orderChecklistItems = sqliteTable('order_checklist_items', {
+  id: text('id').primaryKey(), // uuid
+  orderId: text('order_id').notNull(),
+  kind: text('kind').notNull(), // 'delivery' | 'installation'
+  key: text('key').notNull(), // np. 'proforma', 'measurement', 'final_invoice'
+  label: text('label'), // opcjonalnie (UI korzysta z i18n dla spójności)
+  done: integer('done', { mode: 'boolean' }).notNull().default(false),
+  doneAt: integer('done_at', { mode: 'timestamp_ms' }),
+  doneBy: text('done_by'), // users.id
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+}, (table) => ({
+  idxOrder: index('order_checklist_order_id_idx').on(table.orderId),
+  uniqPerOrder: uniqueIndex('order_checklist_order_key_unique').on(table.orderId, table.key),
+}))
+
+export type OrderChecklistItem = typeof orderChecklistItems.$inferSelect

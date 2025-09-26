@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import { z } from 'zod'
 import { db } from '@/db'
 import { and, desc, eq } from 'drizzle-orm'
 import { getSession } from '@/lib/auth-session'

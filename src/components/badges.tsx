@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, XCircle, Wrench, Truck, Clock, CalendarDays } from "lucide-react";
+import { CheckCircle2, XCircle, Wrench, Truck, Clock, CalendarDays, Trophy } from "lucide-react";
 
 export function TypeBadge({ type }: { type: string }) {
   const isInstall = type === "installation";
@@ -51,9 +51,24 @@ export function StatusBadge({ status, label }: { status: string; label: string }
   );
 }
 
-export function OutcomeBadge({ outcome }: { outcome: "won" | "lost" | null | undefined }) {
+export function OutcomeBadge({ outcome, iconOnly = true }: { outcome: "won" | "lost" | null | undefined; iconOnly?: boolean }) {
   if (!outcome) return <span className="opacity-40">—</span>;
   const isWon = outcome === "won";
+
+  if (iconOnly) {
+    // Ikona + kolor, bez tekstu, z a11y i tooltipem
+    const label = isWon ? "Wygrane" : "Przegrane";
+    return (
+      <span
+        className={isWon ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}
+        aria-label={label}
+        title={label}
+      >
+        {isWon ? <Trophy className="h-4 w-4" aria-hidden /> : <XCircle className="h-4 w-4" aria-hidden />}
+      </span>
+    );
+  }
+
   return (
     <Badge size="xs" variant={isWon ? "success" : "destructive"}>
       <span className="inline-flex items-center gap-1.5">

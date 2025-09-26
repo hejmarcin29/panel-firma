@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,7 +14,7 @@ export function OrderPrivateActions({ orderId }: { orderId: string }) {
   const [tasks, setTasks] = useState<Task[]>([])
   const [notes, setNotes] = useState<Note[]>([])
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true)
     try {
       const r = await fetch(`/api/montazysta/prywatne?orderId=${orderId}`)
@@ -33,9 +33,9 @@ export function OrderPrivateActions({ orderId }: { orderId: string }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [orderId])
 
-  useEffect(() => { load() }, [orderId])
+  useEffect(() => { load() }, [load])
 
   return (
     <div className="space-y-3">

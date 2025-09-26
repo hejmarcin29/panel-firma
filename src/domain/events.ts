@@ -14,6 +14,9 @@ export const DomainEventTypes = {
   orderStatusChanged: 'order.status.changed',
   orderWon: 'order.won',
   orderLost: 'order.lost',
+  orderOutcomeCleared: 'order.outcome.cleared',
+  orderPipelineChanged: 'order.pipeline.changed',
+  orderChecklistToggled: 'order.checklist.toggled',
   userRoleChanged: 'user.role.changed',
   userPasswordChanged: 'user.password.changed',
 } as const;
@@ -86,6 +89,28 @@ export const orderOutcomePayloadSchema = z.object({
   reasonNote: z.string().optional().nullable(),
 });
 
+export const orderOutcomeClearedPayloadSchema = z.object({
+  id: z.string().uuid(),
+  clientNo: z.number().int().positive().optional().nullable(),
+  orderNo: z.string().optional().nullable(),
+});
+
+export const orderPipelineChangedPayloadSchema = z.object({
+  id: z.string().uuid(),
+  from: z.string().nullable(),
+  to: z.string(),
+  type: z.enum(['delivery','installation']),
+  clientNo: z.number().int().positive().optional().nullable(),
+  orderNo: z.string().optional().nullable(),
+});
+
+export const orderChecklistToggledPayloadSchema = z.object({
+  id: z.string().uuid(), // order id
+  key: z.string(),
+  done: z.boolean(),
+  actorId: z.string().uuid().optional().nullable(),
+});
+
 // Users
 export const userRoleChangedPayloadSchema = z.object({
   id: z.string().uuid(),
@@ -105,6 +130,8 @@ export type ClientServiceTypeChangedPayload = z.infer<typeof clientServiceTypeCh
 export type OrderCreatedPayload = z.infer<typeof orderCreatedPayloadSchema>;
 export type OrderStatusChangedPayload = z.infer<typeof orderStatusChangedPayloadSchema>;
 export type OrderOutcomePayload = z.infer<typeof orderOutcomePayloadSchema>;
+export type OrderPipelineChangedPayload = z.infer<typeof orderPipelineChangedPayloadSchema>;
+export type OrderChecklistToggledPayload = z.infer<typeof orderChecklistToggledPayloadSchema>;
 export type UserRoleChangedPayload = z.infer<typeof userRoleChangedPayloadSchema>;
 export type UserPasswordChangedPayload = z.infer<typeof userPasswordChangedPayloadSchema>;
 
@@ -118,6 +145,9 @@ const payloadSchemaByType: Record<DomainEventType, z.ZodTypeAny> = {
   [DomainEventTypes.orderStatusChanged]: orderStatusChangedPayloadSchema,
   [DomainEventTypes.orderWon]: orderOutcomePayloadSchema,
   [DomainEventTypes.orderLost]: orderOutcomePayloadSchema,
+  [DomainEventTypes.orderPipelineChanged]: orderPipelineChangedPayloadSchema,
+  [DomainEventTypes.orderChecklistToggled]: orderChecklistToggledPayloadSchema,
+  [DomainEventTypes.orderOutcomeCleared]: orderOutcomeClearedPayloadSchema,
   [DomainEventTypes.userRoleChanged]: userRoleChangedPayloadSchema,
   [DomainEventTypes.userPasswordChanged]: userPasswordChangedPayloadSchema,
 };

@@ -12,6 +12,8 @@ const sections: { title: string; items: NavItem[] }[] = [
     items: [
       { href: "/klienci", label: "Klienci", icon: Users },
       { href: "/zlecenia", label: "Zlecenia", icon: ClipboardList },
+      { href: "/montaze", label: "Montaże — checklisty", icon: Wrench },
+      { href: "/dostawy", label: "Dostawy — checklisty", icon: Wrench },
   { href: "/panel/zlecone-montaze", label: "Montaże — podgląd (admin)", icon: Wrench },
     ],
   },
@@ -59,6 +61,8 @@ export function Sidebar() {
         if (
           item.href === '/klienci' ||
           item.href === '/zlecenia' ||
+          item.href === '/montaze' ||
+          item.href === '/dostawy' ||
           item.href.startsWith('/panel/zlecone-montaze') ||
           item.href.startsWith('/ustawienia') ||
           item.href.startsWith('/raporty')

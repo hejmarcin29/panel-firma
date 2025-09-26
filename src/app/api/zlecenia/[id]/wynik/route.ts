@@ -68,3 +68,41 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: 'Błąd serwera' }, { status: 500 })
   }
 }
+
+// DELETE /api/zlecenia/:id/wynik  → cofnięcie wyniku (ustawienie na brak)
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const session = await getSession();
+    if (!session) return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 });
+    const role = (session as SessionUser)?.user?.role ?? null
+    const actor = (session as SessionUser)?.user?.email ?? null
+    if (role !== 'admin') return NextResponse.json({ error: 'Tylko admin' }, { status: 403 })
+
+    const { id } = await params
+    const [order] = await db.select().from(orders).where(eq(orders.id, id)).limit(1)
+    if (!order) return NextResponse.json({ error: 'Nie znaleziono' }, { status: 404 })
+    if (!order.outcome) return NextResponse.json({ ok: true })
+
+    await db.update(orders).set({ outcome: null, outcomeAt: null, outcomeReasonCode: null, outcomeReasonNote: null }).where(eq(orders.id, id))
+
+    const rows = await db
+      .select({ clientNo: clients.clientNo, orderNo: orders.orderNo })
+      .from(orders)
+      .leftJoin(clients, eq(orders.clientId, clients.id))
+      .where(eq(orders.id, id))
+      .limit(1)
+    const withNo = rows[0]
+
+    await emitDomainEvent({
+      type: DomainEventTypes.orderOutcomeCleared,
+      actor,
+      entity: { type: 'order', id },
+      payload: { id, clientNo: withNo?.clientNo ?? null, orderNo: withNo?.orderNo ?? null },
+    })
+
+    return NextResponse.json({ ok: true })
+  } catch (err) {
+    console.error('[DELETE /api/zlecenia/:id/wynik] Error', err)
+    return NextResponse.json({ error: 'Błąd serwera' }, { status: 500 })
+  }
+}

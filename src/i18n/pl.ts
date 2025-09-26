@@ -59,6 +59,9 @@ export const pl = {
     systemInfoTitle: 'Jak działa ten projekt',
     systemInfoDescription: 'Najważniejsze elementy konfiguracji i utrzymania.',
     systemInfoPoints: [
+  '2025-09-26 – [ZMIANA] Zlecenia: wynik jako kompaktowe ikony (trofeum/przekreślone kółko) z tooltipem; dodano szybkie filtry: Aktywne/Wszystkie/Archiwalne oraz Tylko wygrane/tylko przegrane.',
+  '2025-09-26 – [NOWE] Widoki zbiorcze checklist: osobne tabele dla Montaży (/montaze) i Dostaw (/dostawy) z przełączalnymi polami dla wszystkich zleceń.',
+  '2025-09-26 – [ZMIANA] Zlecenia: lista zleceń ma szybkie filtry typu z przełączaniem, filtr po montażysty, sortowanie (klient/montażysta/dostawa/montaż/utworzono). Szczegóły zlecenia pokazują listę terminów (dostawy/montaże) z akcjami: Potwierdź/Przełóż/Zakończ/Anuluj.',
   '2025-09-26 – [ZMIANA] Panel montażysty: dodano zakładkę Prywatne (osobiste zadania i notatki + przypięcie zlecenia; możliwość dodawania z poziomu zlecenia).',
   '2025-09-26 – [ZMIANA] Integracja Kalendarza Google: account-linking (OAuth) obok Credentials; UI: Ustawienia montażysty → Integracje + baner w panelu; admin: Ustawienia → Integracje (status).',
   '2025-09-25 – [DECYZJA] Subtelne animacje: stosujemy krótkie przejścia (180–250 ms, ease-out) przy otwieraniu/zamykaniu nawigacji i przełączaniu motywu (transition na kolor/tło/obramowanie).',

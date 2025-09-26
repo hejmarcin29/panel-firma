@@ -29,7 +29,7 @@ export default function PrywatneMontazysty() {
   const [notes, setNotes] = useState<Note[]>([])
   const [pinnedOrderId, setPinnedOrderId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  // const [error, setError] = useState<string | null>(null)
 
   async function reload() {
     setLoading(true)
@@ -48,8 +48,8 @@ export default function PrywatneMontazysty() {
         setNotes(parsed.data.notes as Note[])
         setPinnedOrderId(parsed.data.prefs.pinnedOrderId)
       }
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Błąd')
+    } catch {
+      // noop; optionally show toast
     } finally {
       setLoading(false)
     }

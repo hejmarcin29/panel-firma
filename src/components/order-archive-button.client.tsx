@@ -2,11 +2,13 @@
 import { useState, startTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/toaster'
+import { AlertDialog } from '@/components/ui/alert-dialog'
 
 export function OrderArchiveButton({ id }: { id: string }) {
   const { toast } = useToast()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
   async function archive() {
     try {
       setLoading(true)
@@ -22,6 +24,22 @@ export function OrderArchiveButton({ id }: { id: string }) {
     }
   }
   return (
-    <button onClick={archive} disabled={loading} className="inline-flex h-8 items-center rounded-md border border-black/15 px-2 text-xs hover:bg-black/5 disabled:opacity-60 dark:border-white/15 dark:hover:bg-white/10">Do archiwum</button>
+    <>
+      <button onClick={() => setConfirmOpen(true)} disabled={loading} className="inline-flex h-8 items-center rounded-md border border-black/15 px-2 text-xs hover:bg-black/5 disabled:opacity-60 dark:border-white/15 dark:hover:bg-white/10">Do archiwum</button>
+      <AlertDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Przenieść do archiwum?"
+        description={
+          <>
+            <p>Zlecenie zostanie oznaczone jako zarchiwizowane.</p>
+            <p className="text-xs opacity-70">Możesz cofnąć to działanie w każdej chwili.</p>
+          </>
+        }
+        cancelText="Anuluj"
+        confirmText={loading ? 'Przenoszę…' : 'Archiwizuj'}
+        onConfirm={archive}
+      />
+    </>
   )
 }

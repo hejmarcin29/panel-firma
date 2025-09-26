@@ -1,19 +1,49 @@
 import { db } from '@/db'
 import { clients, orders, users } from '@/db/schema'
-import { and, desc, eq, like, isNull } from 'drizzle-orm'
+import { and, asc, desc, eq, like, isNull, isNotNull, sql } from 'drizzle-orm'
 import type { SQL } from 'drizzle-orm'
 import Link from 'next/link'
 import { pl } from '@/i18n/pl'
 import { OrderOutcomeButtons } from '../../components/order-outcome-buttons.client'
 import { Wrench, Truck, Info } from 'lucide-react'
 import { TypeBadge, StatusBadge, OutcomeBadge } from '@/components/badges'
+import { QuickChecklistBar } from '@/components/quick-checklist-bar.client'
+import { FiltersDropdown } from '@/components/filters-dropdown.client'
 
 export const dynamic = 'force-dynamic'
 
-type SearchParams = Promise<{ q?: string; status?: string; type?: string; outcome?: string; page?: string }>
+type SearchParams = Promise<{ q?: string; status?: string; type?: string; outcome?: string; page?: string; installer?: string; sort?: string; dir?: string; scope?: string }>
+
+type Row = {
+  id: string
+  createdAt: number | Date
+  type: string
+  status: string
+  outcome: 'won' | 'lost' | null | string | null
+  clientId: string
+  clientName: string | null
+  nextDeliveryAt: number | null
+  nextDeliveryStatus: string | null
+  nextInstallationAt: number | null
+  nextInstallationStatus: string | null
+  installerName: string | null
+  orderNo: string | null
+  // checklist flags (0/1 or boolean, depending on driver)
+  proforma?: number | boolean
+  advance_invoice?: number | boolean
+  final_invoice?: number | boolean
+  post_delivery_invoice?: number | boolean
+  quote?: number | boolean
+  done?: number | boolean
+  measurement?: number | boolean
+  contract?: number | boolean
+  advance_payment?: number | boolean
+  installation?: number | boolean
+  handover_protocol?: number | boolean
+}
 
 export default async function OrdersPage({ searchParams }: { searchParams: SearchParams }) {
-  const { q = '', status = 'all', type = 'all', outcome = 'active', page = '1' } = await searchParams
+  const { q = '', status = 'all', type = 'all', outcome = 'all', page = '1', installer = '', sort = 'created', dir = 'desc', scope = 'active' } = await searchParams
   const pageNum = Math.max(1, parseInt(page || '1', 10) || 1)
   const limit = 20
   const offset = (pageNum - 1) * limit
@@ -22,13 +52,14 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
   if (q) clauses.push(like(clients.name, `%${q}%`) as unknown as SQL)
   if (status !== 'all') clauses.push(eq(orders.status, status) as unknown as SQL)
   if (type !== 'all') clauses.push(eq(orders.type, type) as unknown as SQL)
+  if (installer) clauses.push(eq(orders.installerId, installer) as unknown as SQL)
   // outcome filter: active (no outcome), won, lost, all
   let outcomeExpr: SQL | null = null
   if (outcome === 'active') outcomeExpr = isNull(orders.outcome) as unknown as SQL
   else if (outcome === 'won') outcomeExpr = eq(orders.outcome, 'won') as unknown as SQL
   else if (outcome === 'lost') outcomeExpr = eq(orders.outcome, 'lost') as unknown as SQL
 
-  const rows = await db
+  const rows: Row[] = await db
     .select({
       id: orders.id,
       createdAt: orders.createdAt,
@@ -37,7 +68,47 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
       outcome: orders.outcome,
       clientId: orders.clientId,
       clientName: clients.name,
-      scheduledDate: orders.scheduledDate,
+      // Checklist flags via EXISTS
+      proforma: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'proforma' AND oci.done = 1)`,
+      advance_invoice: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'advance_invoice' AND oci.done = 1)`,
+      final_invoice: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'final_invoice' AND oci.done = 1)`,
+      post_delivery_invoice: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'post_delivery_invoice' AND oci.done = 1)`,
+      quote: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'quote' AND oci.done = 1)`,
+      done: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'done' AND oci.done = 1)`,
+      measurement: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'measurement' AND oci.done = 1)`,
+      contract: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'contract' AND oci.done = 1)`,
+      advance_payment: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'advance_payment' AND oci.done = 1)`,
+      installation: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'installation' AND oci.done = 1)`,
+      handover_protocol: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'handover_protocol' AND oci.done = 1)`,
+      // Correlated subqueries for the nearest active delivery/installation
+      nextDeliveryAt: sql<number>`(
+        SELECT ds.planned_at
+        FROM delivery_slots ds
+        WHERE ds.order_id = ${orders.id} AND ds.status IN ('planned','confirmed')
+        ORDER BY ds.planned_at ASC
+        LIMIT 1
+      )`,
+      nextDeliveryStatus: sql<string>`(
+        SELECT ds2.status
+        FROM delivery_slots ds2
+        WHERE ds2.order_id = ${orders.id} AND ds2.status IN ('planned','confirmed')
+        ORDER BY ds2.planned_at ASC
+        LIMIT 1
+      )`,
+      nextInstallationAt: sql<number>`(
+        SELECT islots.planned_at
+        FROM installation_slots islots
+        WHERE islots.order_id = ${orders.id} AND islots.status IN ('planned','confirmed')
+        ORDER BY islots.planned_at ASC
+        LIMIT 1
+      )`,
+      nextInstallationStatus: sql<string>`(
+        SELECT is2.status
+        FROM installation_slots is2
+        WHERE is2.order_id = ${orders.id} AND is2.status IN ('planned','confirmed')
+        ORDER BY is2.planned_at ASC
+        LIMIT 1
+      )`,
       installerName: users.name,
       orderNo: orders.orderNo,
     })
@@ -46,14 +117,43 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
     .leftJoin(users, eq(orders.installerId, users.id))
   .where(
     and(
-      isNull(orders.archivedAt),
+      // scope: active (default) → archivedAt IS NULL; archived → archivedAt IS NOT NULL; all → no constraint
+      ...(scope === 'archived' ? [isNotNull(orders.archivedAt) as unknown as SQL] : scope === 'all' ? [] : [isNull(orders.archivedAt) as unknown as SQL]),
       ...(clauses.length ? [clauses.length === 1 ? clauses[0] : and(...clauses)] : []),
       ...(outcomeExpr ? [outcomeExpr] : [])
     )
   )
-    .orderBy(desc(orders.createdAt))
+    .orderBy(
+      // Sorting rules
+      ...(sort === 'client' ? [dir === 'asc' ? asc(clients.name) : desc(clients.name)] : []),
+      ...(sort === 'installer' ? [dir === 'asc' ? asc(users.name) : desc(users.name)] : []),
+      ...(sort === 'delivery' ? [
+        asc(sql`CASE WHEN nextDeliveryAt IS NULL THEN 1 ELSE 0 END`),
+        dir === 'asc' ? asc(sql`nextDeliveryAt`) : desc(sql`nextDeliveryAt`)
+      ] : []),
+      ...(sort === 'installation' ? [
+        asc(sql`CASE WHEN nextInstallationAt IS NULL THEN 1 ELSE 0 END`),
+        dir === 'asc' ? asc(sql`nextInstallationAt`) : desc(sql`nextInstallationAt`)
+      ] : []),
+      ...(sort === 'created' || !sort ? [dir === 'asc' ? asc(orders.createdAt) : desc(orders.createdAt)] : [])
+    )
     .limit(limit)
     .offset(offset)
+
+  // Installer list for filter
+  const installers = await db
+    .select({ id: users.id, name: users.name })
+    .from(users)
+    .where(eq(users.role, 'installer'))
+
+  // Krótsze etykiety statusów do listy (węższa kolumna)
+  const statusShort: Record<string, string> = {
+    awaiting_measurement: 'Pomiar',
+    ready_to_schedule: 'Gotowe',
+    scheduled: 'Zaplan.',
+    completed: 'Zakończ.',
+    cancelled: 'Anul.'
+  }
 
   return (
     <div className="mx-auto max-w-none p-4 md:p-6">
@@ -70,50 +170,59 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
         <details className="rounded-md border border-black/10 dark:border-white/10 p-2">
           <summary className="cursor-pointer text-sm">Filtry</summary>
           <div className="mt-2">
-            <Filters q={q} status={status} type={type} outcome={outcome} />
+            <Filters q={q} status={status} type={type} outcome={outcome} installer={installer} sort={sort} dir={dir} scope={scope} installers={installers} />
           </div>
         </details>
       </div>
       <div className="hidden md:block">
-        <Filters q={q} status={status} type={type} outcome={outcome} />
+        <Filters q={q} status={status} type={type} outcome={outcome} installer={installer} sort={sort} dir={dir} scope={scope} installers={installers} />
       </div>
 
       <div className="mt-2 flex flex-wrap gap-2">
         {/* Szybkie filtrowanie typu */}
         <Link
-          href={`/zlecenia?${new URLSearchParams({ q, status, outcome, type: 'installation' }).toString()}`}
+          href={`/zlecenia?${new URLSearchParams({ q, status, outcome, installer, sort, dir, scope, type: type==='installation' ? 'all' : 'installation' }).toString()}`}
           className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-2 text-xs ${type==='installation' ? 'bg-black text-white dark:bg-white dark:text-black border-black/15 dark:border-white/15' : 'border-black/15 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10'}`}
         >
           <Wrench className="h-3.5 w-3.5" /> Pokaż tylko montaż
         </Link>
         <Link
-          href={`/zlecenia?${new URLSearchParams({ q, status, outcome, type: 'delivery' }).toString()}`}
+          href={`/zlecenia?${new URLSearchParams({ q, status, outcome, installer, sort, dir, scope, type: type==='delivery' ? 'all' : 'delivery' }).toString()}`}
           className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-2 text-xs ${type==='delivery' ? 'bg-black text-white dark:bg-white dark:text-black border-black/15 dark:border-white/15' : 'border-black/15 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10'}`}
         >
           <Truck className="h-3.5 w-3.5" /> Pokaż tylko dostawa
         </Link>
+        <Link
+          href={`/zlecenia?${new URLSearchParams({ q, status, outcome, installer, sort, dir, scope, type: 'all' }).toString()}`}
+          className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-2 text-xs ${type==='all' ? 'bg-black text-white dark:bg-white dark:text-black border-black/15 dark:border-white/15' : 'border-black/15 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10'}`}
+        >
+          Wszystkie
+        </Link>
+        <FiltersDropdown q={q} status={status} type={type} outcome={outcome} installer={installer} sort={sort} dir={dir} scope={scope} />
       </div>
 
       {/* Table for md+ */}
-      <div className="mt-4 rounded-md border border-black/10 dark:border-white/10 hidden md:block">
-        <table className="w-full text-sm">
+      <div className="mt-4 rounded-md border border-black/10 dark:border-white/10 hidden md:block overflow-x-auto">
+        <table className="w-full text-sm min-w-[1120px]">
           <thead className="text-left bg-black/5 dark:bg-white/10">
             <tr>
-              <th className="px-3 py-2">Nr zlecenia</th>
-              <th className="px-3 py-2">Klient</th>
-              <th className="px-3 py-2">Typ</th>
-              <th className="px-3 py-2">Status</th>
-              <th className="px-3 py-2">Wynik</th>
-              <th className="px-3 py-2">Planowana data</th>
-              <th className="px-3 py-2">Montażysta</th>
-              <th className="px-3 py-2">Utworzono</th>
-              <th className="px-3 py-2 text-right">Akcje</th>
+              <th className="px-3 py-2 w-[120px]">Nr</th>
+              <th className="px-3 py-2 w-[220px]">Klient</th>
+              <th className="px-3 py-2 w-[90px]">Typ</th>
+              <th className="px-3 py-2 w-[120px]">Status</th>
+              <th className="px-3 py-2 w-[90px]">Wynik</th>
+              <th className="px-3 py-2 w-[170px]">Checklist</th>
+              <th className="px-3 py-2 w-[120px]">Dostawa</th>
+              <th className="px-3 py-2 w-[120px]">Montaż</th>
+              <th className="px-3 py-2 w-[140px]">Montażysta</th>
+              <th className="px-3 py-2 w-[90px]">Utw.</th>
+              <th className="px-3 py-2 text-right w-[160px]">Akcje</th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-3 py-6 text-center opacity-70">{pl.orders.listEmpty}</td>
+                <td colSpan={10} className="px-3 py-6 text-center opacity-70">{pl.orders.listEmpty}</td>
               </tr>
           ) : rows.map((r) => (
               <tr key={r.id} className="border-t border-black/10 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10">
@@ -122,20 +231,50 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                     {r.orderNo ? `${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : r.id.slice(0,8)}
                   </Link>
                 </td>
-                <td className="px-3 py-2">{r.clientName || r.clientId}</td>
+                <td className="px-3 py-2 max-w-[220px] truncate" title={r.clientName || r.clientId}>{r.clientName || r.clientId}</td>
                 <td className="px-3 py-2"><TypeBadge type={r.type} /></td>
-                <td className="px-3 py-2"><StatusBadge status={r.status} label={(pl.orders.statuses as Record<string,string>)[r.status] || r.status} /></td>
-                <td className="px-3 py-2"><OutcomeBadge outcome={r.outcome as 'won'|'lost'|null|undefined} /></td>
-                <td className="px-3 py-2">{r.scheduledDate ? new Date(r.scheduledDate).toLocaleDateString() : '-'}</td>
-                <td className="px-3 py-2">{r.installerName || '-'}</td>
-                <td className="px-3 py-2">{new Date(r.createdAt).toLocaleString()}</td>
+                <td className="px-3 py-2"><StatusBadge status={r.status} label={statusShort[r.status] || (pl.orders.statuses as Record<string,string>)[r.status] || r.status} /></td>
+                <td className="px-3 py-2">
+                  <OutcomeBadge outcome={r.outcome as 'won'|'lost'|null|undefined} iconOnly />
+                </td>
+                <td className="px-3 py-2">
+                  <QuickChecklistBar
+                    orderId={r.id}
+                    type={r.type as 'delivery'|'installation'}
+                    items={(r.type === 'installation'
+                      ? ['measurement','quote','contract','advance_payment','installation','handover_protocol','final_invoice','done']
+                      : ['proforma','advance_invoice','final_invoice','post_delivery_invoice','quote','done']
+                    ).map(k => ({ key: k, label: k, done: ((r as any)[k] === 1 || (r as any)[k] === true) }))}
+                  />
+                </td>
+                <td className="px-3 py-2">
+                  {r.nextDeliveryAt ? (
+                    <span className="inline-flex items-center gap-1">
+                      <span>{new Date(r.nextDeliveryAt).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' })}</span>
+                      {r.nextDeliveryStatus ? (
+                        <span className="rounded bg-black/10 px-1.5 py-0.5 text-[10px] uppercase tracking-wide dark:bg-white/10">{r.nextDeliveryStatus}</span>
+                      ) : null}
+                    </span>
+                  ) : '—'}
+                </td>
+                <td className="px-3 py-2">
+                  {r.nextInstallationAt ? (
+                    <span className="inline-flex items-center gap-1">
+                      <span>{new Date(r.nextInstallationAt).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' })}</span>
+                      {r.nextInstallationStatus ? (
+                        <span className="rounded bg-black/10 px-1.5 py-0.5 text-[10px] uppercase tracking-wide dark:bg-white/10">{r.nextInstallationStatus}</span>
+                      ) : null}
+                    </span>
+                  ) : '—'}
+                </td>
+                <td className="px-3 py-2 max-w-[140px] truncate" title={r.installerName || '-'}>{r.installerName || '-'}</td>
+                <td className="px-3 py-2">{new Date(r.createdAt).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' })}</td>
                 <td className="px-3 py-2 text-right">
                   <div className="flex items-center gap-2 justify-end flex-wrap">
-                    <Link
-                      className="inline-flex h-7 items-center gap-1.5 rounded-md border border-black/15 px-2 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+                    <Link className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-black/15 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
                       href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : `/zlecenia/${r.id}`}
-                    >
-                      <Info className="h-3.5 w-3.5" /> Szczegóły
+                      aria-label="Szczegóły" title="Szczegóły">
+                      <Info className="h-3.5 w-3.5" />
                     </Link>
                     <OrderOutcomeButtons id={r.id} outcome={r.outcome as 'won'|'lost'|null} />
                   </div>
@@ -164,13 +303,31 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                     <StatusBadge status={r.status} label={statusLabel} />
                   </div>
                 </div>
-                <div className="mt-1 text-sm">{r.clientName || r.clientId}</div>
-                <div className="mt-1 flex items-center justify-between text-xs opacity-70">
-                  <span>{r.scheduledDate ? new Date(r.scheduledDate).toLocaleDateString() : '-'}</span>
-                  <span>{new Date(r.createdAt).toLocaleString()}</span>
+                {/* Mini-kafelki checklisty na mobile */}
+                <div className="mt-2">
+                  <QuickChecklistBar
+                    orderId={r.id}
+                    type={r.type as 'delivery'|'installation'}
+                    items={(r.type === 'installation'
+                      ? ['measurement','quote','contract','advance_payment','installation','handover_protocol','final_invoice','done']
+                      : ['proforma','advance_invoice','final_invoice','post_delivery_invoice','quote','done']
+                    ).map(k => ({ key: k, label: k, done: ((r as any)[k] === 1 || (r as any)[k] === true) }))}
+                  />
                 </div>
+                <div className="mt-1 text-sm">{r.clientName || r.clientId}</div>
+                <div className="mt-1 grid grid-cols-2 gap-2 text-xs opacity-70">
+                  <div>
+                    <div className="opacity-70">Dostawa</div>
+                    <div>{r.nextDeliveryAt ? new Date(r.nextDeliveryAt).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' }) : '—'}</div>
+                  </div>
+                  <div>
+                    <div className="opacity-70">Montaż</div>
+                    <div>{r.nextInstallationAt ? new Date(r.nextInstallationAt).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' }) : '—'}</div>
+                  </div>
+                </div>
+                <div className="mt-1 text-xs opacity-70 flex justify-end">{new Date(r.createdAt).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' })}</div>
                 <div className="mt-2 flex items-center justify-between">
-                  <OutcomeBadge outcome={r.outcome as 'won'|'lost'|null|undefined} />
+                  <OutcomeBadge outcome={r.outcome as 'won'|'lost'|null|undefined} iconOnly />
                   <div className="flex items-center gap-2">
                     <Link className="inline-flex h-9 items-center gap-1.5 rounded-md border border-black/15 px-3 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10" href={href}>Szczegóły</Link>
                     <OrderOutcomeButtons id={r.id} outcome={r.outcome as 'won'|'lost'|null} size="md" />
@@ -186,9 +343,10 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
   )
 }
 
-function Filters({ q, status, type, outcome }: { q: string; status: string; type: string; outcome: string }) {
+function Filters({ q, status, type, outcome, installer, sort, dir, scope, installers }: { q: string; status: string; type: string; outcome: string; installer: string; sort: string; dir: string; scope: string; installers: { id: string; name: string | null }[] }) {
   return (
     <form className="flex flex-wrap gap-2 items-end">
+      <input type="hidden" name="scope" value={scope} />
       <div className="flex flex-col">
         <label className="text-xs opacity-70">Szukaj klienta</label>
         <input name="q" defaultValue={q} placeholder={pl.orders.searchPlaceholder} className="h-9 rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15" />
@@ -205,10 +363,9 @@ function Filters({ q, status, type, outcome }: { q: string; status: string; type
       <div className="flex flex-col">
         <label className="text-xs opacity-70">Wynik</label>
         <select name="outcome" defaultValue={outcome} className="h-9 rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15">
-          <option value="active">Aktywne</option>
+          <option value="all">Wszystkie</option>
           <option value="won">Wygrane</option>
           <option value="lost">Przegrane</option>
-          <option value="all">Wszystkie</option>
         </select>
       </div>
       <div className="flex flex-col">
@@ -217,6 +374,32 @@ function Filters({ q, status, type, outcome }: { q: string; status: string; type
           <option value="all">Wszystkie</option>
           <option value="installation">{pl.orders.typeInstallation}</option>
           <option value="delivery">{pl.orders.typeDelivery}</option>
+        </select>
+      </div>
+      <div className="flex flex-col">
+        <label className="text-xs opacity-70">Montażysta</label>
+        <select name="installer" defaultValue={installer} className="h-9 rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15">
+          <option value="">Wszyscy</option>
+          {installers.map(i => (
+            <option key={i.id} value={i.id}>{i.name || i.id.slice(0,8)}</option>
+          ))}
+        </select>
+      </div>
+      <div className="flex flex-col">
+        <label className="text-xs opacity-70">Sortuj według</label>
+        <select name="sort" defaultValue={sort} className="h-9 rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15">
+          <option value="created">Utworzono</option>
+          <option value="client">Klient</option>
+          <option value="installer">Montażysta</option>
+          <option value="delivery">Dostawa</option>
+          <option value="installation">Montaż</option>
+        </select>
+      </div>
+      <div className="flex flex-col">
+        <label className="text-xs opacity-70">Kierunek</label>
+        <select name="dir" defaultValue={dir} className="h-9 rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15">
+          <option value="asc">Rosnąco</option>
+          <option value="desc">Malejąco</option>
         </select>
       </div>
       <button type="submit" className="h-9 px-3 rounded-md border border-black/15 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Filtruj</button>

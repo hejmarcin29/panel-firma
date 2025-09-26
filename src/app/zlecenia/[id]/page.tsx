@@ -1,6 +1,6 @@
 import { db } from '@/db'
-import { clients, orders, users } from '@/db/schema'
-import { eq } from 'drizzle-orm'
+import { clients, orders, users, deliverySlots, installationSlots, orderChecklistItems } from '@/db/schema'
+import { eq, desc } from 'drizzle-orm'
 import Link from 'next/link'
 import { pl } from '@/i18n/pl'
 import { OrderEditor } from '@/components/order-editor.client'
@@ -10,11 +10,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { BackButton } from '@/components/back-button'
 import { OrderPrivateActions } from '@/components/order-private-actions.client'
 import { TypeBadge, StatusBadge, OutcomeBadge } from '@/components/badges'
+import { ScheduleDeliveryForm } from '@/components/schedule-delivery-form.client'
+import { ScheduleInstallationForm } from '@/components/schedule-installation-form.client'
 import { getSession } from '@/lib/auth-session'
+import { DeliverySlotsList, InstallationSlotsList } from '../../../components/slots-list.client'
+import { OrderPipeline } from '@/components/order-pipeline.client'
+import { OrderChecklist } from '@/components/order-checklist.client'
+import { QuickChecklistBar } from '@/components/quick-checklist-bar.client'
+import { OrderArchiveButton } from '@/components/order-archive-button.client'
+import { OrderUnarchiveButton } from '@/components/order-unarchive-button.client'
+import { OrderOutcomeRevertButton } from '@/components/order-outcome-revert-button.client'
 
 export default async function OrderDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const session = await getSession()
+  const isAdmin = (session?.user?.role === 'admin')
   const isInstaller = (session?.user?.role === 'installer')
   const [row] = await db
     .select({
@@ -23,6 +33,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
       status: orders.status,
       outcome: orders.outcome,
       outcomeAt: orders.outcomeAt,
+      archivedAt: orders.archivedAt,
       clientId: orders.clientId,
       clientName: clients.name,
       clientPhone: clients.phone,
@@ -56,6 +67,25 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
 
   const statusLabel = (pl.orders.statuses as Record<string,string>)[row.status] || row.status
 
+  // Load existing slots for this order
+  const deliveries = await db
+    .select({ id: deliverySlots.id, plannedAt: deliverySlots.plannedAt, windowStart: deliverySlots.windowStart, windowEnd: deliverySlots.windowEnd, status: deliverySlots.status, carrier: deliverySlots.carrier, trackingNo: deliverySlots.trackingNo, note: deliverySlots.note })
+    .from(deliverySlots)
+    .where(eq(deliverySlots.orderId, row.id))
+    .orderBy(desc(deliverySlots.plannedAt))
+
+  const installations = await db
+    .select({ id: installationSlots.id, plannedAt: installationSlots.plannedAt, windowStart: installationSlots.windowStart, windowEnd: installationSlots.windowEnd, status: installationSlots.status, installerId: installationSlots.installerId, durationMinutes: installationSlots.durationMinutes, note: installationSlots.note, installerName: users.name })
+    .from(installationSlots)
+    .leftJoin(users, eq(installationSlots.installerId, users.id))
+    .where(eq(installationSlots.orderId, row.id))
+    .orderBy(desc(installationSlots.plannedAt))
+
+  const checklist = await db
+    .select({ key: orderChecklistItems.key, done: orderChecklistItems.done })
+    .from(orderChecklistItems)
+    .where(eq(orderChecklistItems.orderId, row.id))
+
   return (
     <div className="mx-auto max-w-6xl p-6 space-y-6">
       {/* Header */}
@@ -66,10 +96,26 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
             Zlecenie #{row.orderNo ? `${row.orderNo}_${row.type === 'installation' ? 'm' : 'd'}` : row.id.slice(0,8)}
           </h1>
         </div>
-        <div className="flex items-center gap-2">
-          <TypeBadge type={row.type} />
-          <StatusBadge status={row.status} label={statusLabel} />
-          <OutcomeBadge outcome={row.outcome as 'won'|'lost'|null|undefined} />
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <TypeBadge type={row.type} />
+            <StatusBadge status={row.status} label={statusLabel} />
+            <OutcomeBadge outcome={row.outcome as 'won'|'lost'|null|undefined} />
+          </div>
+          {isAdmin ? (
+            <>
+              <div className="h-6 w-px bg-black/10 dark:bg-white/10" />
+              <div className="flex items-center gap-2">
+                {row.outcome ? <OrderOutcomeRevertButton id={row.id} /> : null}
+                {/* Archiwum: jeśli zarchiwizowane → cofnięcie; w przeciwnym razie → archiwizuj */}
+                {row.archivedAt ? (
+                  <OrderUnarchiveButton id={row.id} />
+                ) : (
+                  <OrderArchiveButton id={row.id} />
+                )}
+              </div>
+            </>
+          ) : null}
         </div>
       </div>
 
@@ -119,14 +165,30 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
 
         {/* Right column */}
         <div className="space-y-4">
-          <Card id="order-details" className="scroll-mt-16">
+          <Card className="scroll-mt-16">
             <CardHeader className="pb-2"><CardTitle>Szczegóły typu</CardTitle></CardHeader>
             <CardContent>
               {row.type === 'installation' ? (
-                <div className="text-sm opacity-70">Sekcja Montaż (szczegóły pojawią się w kolejnej iteracji).</div>
+                <div className="space-y-3">
+                  <InstallationSlotsList orderId={row.id} slots={installations} />
+                  <ScheduleInstallationForm orderId={row.id} />
+                </div>
               ) : (
-                <div className="text-sm opacity-70">Sekcja Dostawa (szczegóły pojawią się w kolejnej iteracji).</div>
+                <div className="space-y-3">
+                  <DeliverySlotsList orderId={row.id} slots={deliveries} />
+                  <ScheduleDeliveryForm orderId={row.id} />
+                </div>
               )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2"><CardTitle>Etap i checklist</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              {/* Mini-kafelki (pasek) dla szybkiego podglądu */}
+              <QuickChecklistBar orderId={row.id} type={row.type as 'delivery'|'installation'} items={checklist as any} />
+              <OrderPipeline orderId={row.id} type={row.type as 'delivery'|'installation'} stage={(row as any).pipelineStage ?? null} />
+              <OrderChecklist orderId={row.id} type={row.type as 'delivery'|'installation'} items={checklist} />
             </CardContent>
           </Card>
 

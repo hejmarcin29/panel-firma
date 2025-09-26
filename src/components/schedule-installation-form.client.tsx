@@ -1,0 +1,51 @@
+"use client"
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+
+export function ScheduleInstallationForm({ orderId }: { orderId: string }) {
+  const [plannedAt, setPlannedAt] = useState<string>("")
+  const [duration, setDuration] = useState<string>("")
+  const [note, setNote] = useState<string>("")
+  const [loading, setLoading] = useState(false)
+  const router = useRouter()
+
+  return (
+    <form className="space-y-2" onSubmit={async (e) => {
+      e.preventDefault()
+      setLoading(true)
+      try {
+        const body: Record<string, unknown> = {
+          status: 'planned',
+          plannedAt: plannedAt ? new Date(plannedAt).getTime() : null,
+          durationMinutes: duration ? parseInt(duration, 10) : null,
+          note: note || null,
+        }
+        await fetch(`/api/zlecenia/${orderId}/montaze`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        setPlannedAt("")
+        setDuration("")
+        setNote("")
+        router.refresh()
+      } finally {
+        setLoading(false)
+      }
+    }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div>
+          <label className="text-xs opacity-70">Data montażu</label>
+          <Input type="datetime-local" value={plannedAt} onChange={(e) => setPlannedAt(e.currentTarget.value)} />
+        </div>
+        <div>
+          <label className="text-xs opacity-70">Czas (minuty)</label>
+          <Input type="number" min={0} value={duration} onChange={(e) => setDuration(e.currentTarget.value)} />
+        </div>
+        <div className="md:col-span-2">
+          <label className="text-xs opacity-70">Notatka</label>
+          <Input value={note} onChange={(e) => setNote(e.currentTarget.value)} placeholder="opcjonalnie" />
+        </div>
+      </div>
+      <Button type="submit" size="sm" disabled={loading}>{loading ? 'Zapisywanie…' : 'Zaplanuj montaż'}</Button>
+    </form>
+  )
+}
