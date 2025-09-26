@@ -110,3 +110,11 @@ Aktualizacje/migracje:
 Uwagi:
 - Obraz wykorzystuje `output=standalone`. Serwowanie odbywa się przez `node server.js` wewnątrz kontenera.
 - SQLite jest OK dla małego zespołu. Dla produkcji z wieloma równoległymi zapisami rozważ migrację do Postgresa.
+
+## Integracja: Kalendarz Google (plan)
+
+- Logowanie pozostaje Credentials. Dodamy account-linking (OAuth) tylko do kalendarza.
+- Wymagane w `.env`: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (projekt GCP, włączone Google Calendar API).
+- Redirect URI (dev): `http://localhost:3000/api/auth/callback/google` (prod: `https://twojadomena.pl/api/auth/callback/google`).
+- UI: Ustawienia montażysty → Integracje → Kalendarz Google (Połącz/Odłącz, wybór kalendarza, włącz/wyłącz sync).
+- Admin: Ustawienia → Integracje (opis i statusy — read-only).

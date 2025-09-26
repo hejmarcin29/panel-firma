@@ -5,6 +5,7 @@ import { Providers } from "@/components/providers";
 import { Topbar } from "@/components/topbar";
 import { Sidebar } from "@/components/sidebar";
 import { MobileSidebarOverlay } from "@/components/mobile-sidebar-overlay";
+import AppShell from "@/components/app-shell";
 import { ThemeProvider } from "next-themes";
 import { ToastProvider } from "@/components/ui/toaster";
 
@@ -27,16 +28,19 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <ToastProvider>
             <Providers>
-              <div className="flex">
-                <Sidebar />
-                <div className="flex-1 min-h-screen md:pl-64">
-                  <Topbar />
-                  <main className="px-6 py-6">
-                    {children}
-                  </main>
+              <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-[var(--pp-panel)] focus:border focus:px-3 focus:py-2 rounded-md">Pomiń do treści</a>
+              <AppShell>
+                <div className="flex">
+                  <Sidebar />
+                  <div className="flex-1 min-h-screen md:pl-64">
+                    <Topbar />
+                    <main id="main-content" className="px-6 py-6">
+                      {children}
+                    </main>
+                  </div>
                 </div>
-              </div>
-              <MobileSidebarOverlay />
+                <MobileSidebarOverlay />
+              </AppShell>
             </Providers>
           </ToastProvider>
         </ThemeProvider>

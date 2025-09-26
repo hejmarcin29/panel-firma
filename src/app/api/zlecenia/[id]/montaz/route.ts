@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { upsertOrderEvent, deleteOrderEvent } from '@/lib/google-calendar'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { db } from '@/db'
@@ -65,6 +66,12 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
     }
     if (Object.keys(update).length === 0) return NextResponse.json({ ok: true })
   await db.update(orders).set(update).where(eq(orders.id, id))
+  // Google Calendar sync hooks
+  if (update.scheduledDate === null || update.installerId === null) {
+    await deleteOrderEvent({ orderId: id })
+  } else if (update.scheduledDate !== undefined || update.installerId !== undefined || update.preMeasurementSqm !== undefined || update.internalNote !== undefined) {
+    await upsertOrderEvent({ orderId: id })
+  }
   // Revalidate details page and dashboard (upcoming orders)
   revalidatePath(`/zlecenia/${id}`)
   revalidatePath('/')

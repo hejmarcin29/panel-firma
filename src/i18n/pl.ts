@@ -59,6 +59,8 @@ export const pl = {
     systemInfoTitle: 'Jak działa ten projekt',
     systemInfoDescription: 'Najważniejsze elementy konfiguracji i utrzymania.',
     systemInfoPoints: [
+  '2025-09-26 – [ZMIANA] Panel montażysty: dodano zakładkę Prywatne (osobiste zadania i notatki + przypięcie zlecenia; możliwość dodawania z poziomu zlecenia).',
+  '2025-09-26 – [ZMIANA] Integracja Kalendarza Google: account-linking (OAuth) obok Credentials; UI: Ustawienia montażysty → Integracje + baner w panelu; admin: Ustawienia → Integracje (status).',
   '2025-09-25 – [DECYZJA] Subtelne animacje: stosujemy krótkie przejścia (180–250 ms, ease-out) przy otwieraniu/zamykaniu nawigacji i przełączaniu motywu (transition na kolor/tło/obramowanie).',
   '2025-09-25 – [ZMIANA] Sesje trwałe: JWT + cookie do 2 lat; dodano checkbox „Zapamiętaj to urządzenie” na logowaniu.',
   '2025-09-25 – [ZMIANA] Zlecenia: dodano „Wynik” (Wygrane/Przegrane). Endpoint POST /api/zlecenia/:id/wynik (admin), eventy order.won/order.lost, filtry i UI w listach/szczegółach.',
@@ -106,6 +108,15 @@ export const pl = {
     automationsTitle: 'Dashboard automatyzacji',
     automationsDescription: 'Przegląd definicji automatyzacji (workflow). Tu pojawią się statusy, ostatnie uruchomienia i nowe integracje.',
     automationsEmpty: 'Brak zdefiniowanych automatyzacji.',
+  },
+  installer: {
+    private: {
+      title: 'Prywatne',
+      tasks: 'Moje zadania',
+      notes: 'Moje notatki',
+      pinned: 'Przypięte zlecenie',
+      nonePinned: 'Brak przypiętego zlecenia',
+    }
   },
   orders: {
     title: 'Zlecenia',

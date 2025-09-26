@@ -5,7 +5,7 @@ import { useTheme } from "next-themes";
 import { useMemo } from "react";
 
 export function Topbar() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const isAuthed = status === "authenticated";
   const { theme, setTheme } = useTheme();
   const isDark = useMemo(() => theme === "dark", [theme]);
@@ -28,9 +28,11 @@ export function Topbar() {
                   if (!open) {
                     overlay.classList.remove('opacity-0');
                     overlay.classList.remove('pointer-events-none');
+                    document.body.classList.add('no-scroll');
                   } else {
                     overlay.classList.add('opacity-0');
                     overlay.classList.add('pointer-events-none');
+                    document.body.classList.remove('no-scroll');
                   }
                 }
               }

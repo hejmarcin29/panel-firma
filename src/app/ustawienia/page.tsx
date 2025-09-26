@@ -8,7 +8,7 @@ export default function SettingsPage() {
       <div className="text-sm opacity-70"><Link className="underline" href="/">{pl.nav.dashboard}</Link> &rsaquo; <span>{pl.nav.settings}</span></div>
       <h1 className="text-2xl font-semibold">{pl.settings.title}</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <CardHeader>
             <CardTitle>{pl.settings.systemSection}</CardTitle>
@@ -38,6 +38,15 @@ export default function SettingsPage() {
           <CardContent>
             <p className="text-sm opacity-70 mb-3">Publikuj i zarządzaj wersjami zasad (admin).</p>
             <Link href="/ustawienia/zasady-wspolpracy" className="underline text-sm">Przejdź do Zasad współpracy</Link>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Integracje</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm opacity-70 mb-3">Konfiguruj integracje systemowe (np. Kalendarz Google).</p>
+            <Link href="/ustawienia/integracje" className="underline text-sm">Przejdź do Integracji</Link>
           </CardContent>
         </Card>
       </div>

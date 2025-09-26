@@ -169,3 +169,61 @@ export const cooperationRuleAcks = sqliteTable('cooperation_rule_acks', {
 }))
 
 export type CooperationRuleAck = typeof cooperationRuleAcks.$inferSelect
+
+// Google Calendar preferences per installer
+export const installerGooglePrefs = sqliteTable('installer_google_prefs', {
+  userId: text('user_id').primaryKey(),
+  calendarId: text('calendar_id'),
+  timeZone: text('time_zone').notNull().default('Europe/Warsaw'),
+  defaultReminderMinutes: integer('default_reminder_minutes').notNull().default(60),
+  autoSync: integer('auto_sync', { mode: 'boolean' }).notNull().default(true),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+})
+
+export type InstallerGooglePrefs = typeof installerGooglePrefs.$inferSelect
+
+// Mapping of local orders to Google Calendar event IDs
+export const orderGoogleEvents = sqliteTable('order_google_events', {
+  orderId: text('order_id').primaryKey(),
+  installerId: text('installer_id').notNull(),
+  calendarId: text('calendar_id').notNull(),
+  googleEventId: text('google_event_id').notNull(),
+  lastSyncedAt: integer('last_synced_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+})
+
+export type OrderGoogleEvent = typeof orderGoogleEvents.$inferSelect
+
+// Installer private tasks (personal to-do list)
+export const installerPrivateTasks = sqliteTable('installer_private_tasks', {
+  id: text('id').primaryKey(), // uuid
+  userId: text('user_id').notNull(), // owner (installer)
+  title: text('title').notNull(),
+  description: text('description'),
+  dueAt: integer('due_at', { mode: 'timestamp_ms' }),
+  done: integer('done', { mode: 'boolean' }).notNull().default(false),
+  relatedOrderId: text('related_order_id'), // optional link to an order assigned to installer
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+})
+
+export type InstallerPrivateTask = typeof installerPrivateTasks.$inferSelect
+
+// Installer private notes (personal notes; optional link to an order)
+export const installerPrivateNotes = sqliteTable('installer_private_notes', {
+  id: text('id').primaryKey(), // uuid
+  userId: text('user_id').notNull(),
+  content: text('content').notNull(),
+  relatedOrderId: text('related_order_id'),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+})
+
+export type InstallerPrivateNote = typeof installerPrivateNotes.$inferSelect
+
+// Installer private preferences (e.g., pinned order)
+export const installerPrivatePrefs = sqliteTable('installer_private_prefs', {
+  userId: text('user_id').primaryKey(),
+  pinnedOrderId: text('pinned_order_id'),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+})
+
+export type InstallerPrivatePrefs = typeof installerPrivatePrefs.$inferSelect

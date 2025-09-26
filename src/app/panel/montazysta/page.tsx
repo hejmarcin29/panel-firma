@@ -121,7 +121,7 @@ export default function PanelMontazysty() {
                     <div className="text-xs opacity-80">Prosimy o zapoznanie się i potwierdzenie.</div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <a href="#zasady" className="text-xs underline">Otwórz</a>
+                    <a href="#zasady" className="text-xs hover:underline focus:underline focus:outline-none">Otwórz</a>
                     <Button size="sm" onClick={async () => {
                       try {
                         const res = await fetch(`/api/zasady-wspolpracy/${rules.id}/akceptuj`, { method: 'POST' })
@@ -152,7 +152,7 @@ export default function PanelMontazysty() {
                         </div>
                       </div>
                       <div>
-                        <a href={`/zlecenia/${o.id}`} className="text-xs underline">Szczegóły</a>
+                        <a href={`/zlecenia/${o.id}`} className="text-xs hover:underline focus:underline focus:outline-none">Szczegóły</a>
                       </div>
                     </div>
                   )

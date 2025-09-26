@@ -5,6 +5,7 @@ import { getSession } from '@/lib/auth-session';
 import { emitDomainEvent, DomainEventTypes } from '@/domain/events';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
+import { upsertOrderEvent, deleteOrderEvent } from '@/lib/google-calendar'
 
 interface SessionUser { user?: { email?: string | null } | null }
 
@@ -68,6 +69,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       return NextResponse.json({ error: 'Niedozwolona zmiana statusu' }, { status: 403 });
     }
     await db.update(orders).set({ status: newStatus }).where(eq(orders.id, id));
+    // Sync calendar on status change
+    if (newStatus === 'completed' || newStatus === 'cancelled') {
+      await deleteOrderEvent({ orderId: id })
+    } else if (newStatus === 'scheduled') {
+      await upsertOrderEvent({ orderId: id })
+    }
     // fetch numbers for enriched payload
     const rows = await db
       .select({ clientNo: clients.clientNo, orderNo: orders.orderNo })

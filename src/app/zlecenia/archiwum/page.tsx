@@ -31,7 +31,7 @@ export default async function OrdersArchivePage() {
     <div className="mx-auto max-w-none p-6">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-semibold">Archiwum zleceń</h1>
-        <Link href="/zlecenia" className="underline">Powrót do listy</Link>
+        <Link href="/zlecenia" className="hover:underline focus:underline focus:outline-none">Powrót do listy</Link>
       </div>
 
       {/* Table for md+ */}
@@ -56,7 +56,7 @@ export default async function OrdersArchivePage() {
             ) : rows.map((r) => (
               <tr key={r.id} className="border-t border-black/10 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10">
                 <td className="px-3 py-2">
-                  <Link className="underline" href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : `/zlecenia/${r.id}`}>
+                  <Link className="hover:underline focus:underline focus:outline-none" href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : `/zlecenia/${r.id}`}>
                     {r.orderNo ? (
                       <span>
                         <span className="font-mono">{`${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}`}</span>
@@ -86,7 +86,7 @@ export default async function OrdersArchivePage() {
           rows.map((r) => (
             <div key={r.id} className="rounded-md border border-black/10 dark:border-white/10 p-3">
               <div className="flex items-center justify-between">
-                <Link className="font-medium underline" href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : `/zlecenia/${r.id}`}>
+                <Link className="font-medium hover:underline focus:underline focus:outline-none" href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : `/zlecenia/${r.id}`}>
                   {r.orderNo ? `${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : r.id.slice(0,8)}
                 </Link>
                 <div className="flex items-center gap-2">

@@ -8,10 +8,14 @@ import { OrderStatusButtons } from '@/components/order-status-buttons.client'
 import { OrderOutcomeButtons } from '@/components/order-outcome-buttons.client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { BackButton } from '@/components/back-button'
+import { OrderPrivateActions } from '@/components/order-private-actions.client'
 import { TypeBadge, StatusBadge, OutcomeBadge } from '@/components/badges'
+import { getSession } from '@/lib/auth-session'
 
 export default async function OrderDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  const session = await getSession()
+  const isInstaller = (session?.user?.role === 'installer')
   const [row] = await db
     .select({
       id: orders.id,
@@ -45,7 +49,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
     return (
       <div className="mx-auto max-w-3xl p-6">
         <div className="text-sm text-red-600">{pl.orders.notFound}</div>
-        <div className="mt-4"><Link href="/" className="underline">Powrót</Link></div>
+  <div className="mt-4"><Link href="/" className="hover:underline focus:underline focus:outline-none">Powrót</Link></div>
       </div>
     )
   }
@@ -126,6 +130,15 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
             </CardContent>
           </Card>
 
+          {isInstaller ? (
+            <Card>
+              <CardHeader className="pb-2"><CardTitle>Prywatne (montażysta)</CardTitle></CardHeader>
+              <CardContent>
+                <OrderPrivateActions orderId={row.id} />
+              </CardContent>
+            </Card>
+          ) : null}
+
           <Card>
             <CardHeader className="pb-2"><CardTitle>Podstawowe dane klienta</CardTitle></CardHeader>
             <CardContent className="grid grid-cols-1 gap-1 text-sm">
@@ -135,7 +148,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
               <div><span className="opacity-60">Faktura:</span> {row.clientInvoiceCity ? `${row.clientInvoiceCity}, ${row.clientInvoiceAddress || ''}` : '—'}</div>
               <div><span className="opacity-60">Dostawa:</span> {row.clientDeliveryCity ? `${row.clientDeliveryCity}, ${row.clientDeliveryAddress || ''}` : '—'}</div>
               <div>
-                <Link href={`/klienci/${row.clientId}`} className="text-xs underline">Wejdź do klienta</Link>
+                <Link href={`/klienci/${row.clientId}`} className="text-xs hover:underline focus:underline focus:outline-none">Wejdź do klienta</Link>
               </div>
             </CardContent>
           </Card>

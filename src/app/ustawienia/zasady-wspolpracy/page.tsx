@@ -6,7 +6,7 @@ import { getSession } from '@/lib/auth-session'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import dynamic from 'next/dynamic'
-const NewRuleForm = dynamic(() => import('./rule-form.client'), { ssr: false })
+const NewRuleForm = dynamic(() => import('./rule-form.client'))
 
 export default async function CooperationRulesAdminPage() {
   const session = await getSession()

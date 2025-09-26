@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react'
 import { z } from 'zod'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/badges'
 
 type AssignedOrder = {

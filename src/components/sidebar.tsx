@@ -12,7 +12,15 @@ const sections: { title: string; items: NavItem[] }[] = [
     items: [
       { href: "/klienci", label: "Klienci", icon: Users },
       { href: "/zlecenia", label: "Zlecenia", icon: ClipboardList },
-  { href: "/panel/zlecone-montaze", label: "Zlecone montaże", icon: Wrench },
+  { href: "/panel/zlecone-montaze", label: "Montaże — podgląd (admin)", icon: Wrench },
+    ],
+  },
+  {
+    title: "Montażysta",
+    items: [
+      { href: "/panel/montazysta", label: "Panel montażysty", icon: Wrench },
+      { href: "/panel/montazysta/prywatne", label: "Prywatne", icon: UserCircle2 },
+      { href: "/panel/montazysta/ustawienia", label: "Ustawienia montażysty", icon: Settings },
     ],
   },
   {
@@ -34,8 +42,37 @@ const sections: { title: string; items: NavItem[] }[] = [
 ];
 
 export function Sidebar() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const pathname = usePathname();
+
+  const role = (session?.user && (session.user as { role?: string }).role) || undefined;
+  const isAuthed = status === 'authenticated';
+  // Build sections based on role
+  const filteredSections = sections
+    .map((section) => {
+      const items = section.items.filter((item) => {
+        // Installer-only items
+        if (item.href.startsWith('/panel/montazysta')) {
+          return role === 'installer';
+        }
+        // Admin/manager-only data/reporting pages
+        if (
+          item.href === '/klienci' ||
+          item.href === '/zlecenia' ||
+          item.href.startsWith('/panel/zlecone-montaze') ||
+          item.href.startsWith('/ustawienia') ||
+          item.href.startsWith('/raporty')
+        ) {
+          return role === 'admin' || role === 'manager' || role === 'architect';
+        }
+        // Dashboard is for everyone logged-in
+        if (item.href === '/') return isAuthed;
+        return true;
+      });
+      return { ...section, items };
+    })
+    .filter((section) => section.items.length > 0);
+
   return (
     <aside
       className="fixed left-0 top-0 z-30 h-screen w-64 border-r bg-[var(--pp-panel)] block md:block -translate-x-full data-[open=true]:translate-x-0 md:translate-x-0 transition-transform duration-200 ease-out pointer-events-none data-[open=true]:pointer-events-auto md:pointer-events-auto"
@@ -45,8 +82,8 @@ export function Sidebar() {
         <div className="flex items-center gap-3">
           <UserCircle2 className="h-9 w-9 opacity-80" />
           <div className="leading-tight">
-            <div className="font-medium text-sm">{session?.user?.email || "Użytkownik"}</div>
-            <div className="text-xs opacity-70">{session?.user ? "Zalogowany" : "Gość"}</div>
+            <div className="font-medium text-sm">{isAuthed ? (session?.user?.email || "Użytkownik") : "Gość"}</div>
+            <div className="text-xs opacity-70">{isAuthed ? "Zalogowany" : "Niezalogowany"}</div>
           </div>
         </div>
         <button
@@ -61,13 +98,14 @@ export function Sidebar() {
               overlay.classList.add('opacity-0');
               overlay.classList.add('pointer-events-none');
             }
+            document.body.classList.remove('no-scroll');
           }}
         >
           <span aria-hidden>×</span>
         </button>
       </div>
       <nav className="px-2 py-3 space-y-6 text-sm">
-        {sections.map((section) => (
+        {filteredSections.map((section) => (
           <div key={section.title}>
             <div className="px-2 text-[11px] uppercase tracking-wider opacity-60 mb-2">{section.title}</div>
             <ul className="space-y-1">
@@ -84,6 +122,7 @@ export function Sidebar() {
                     overlay.classList.add('opacity-0');
                     overlay.classList.add('pointer-events-none');
                   }
+                  document.body.classList.remove('no-scroll');
                 };
                 return (
                   <li key={`${section.title}:${item.label}`}>

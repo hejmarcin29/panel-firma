@@ -118,7 +118,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
           ) : rows.map((r) => (
               <tr key={r.id} className="border-t border-black/10 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10">
                 <td className="px-3 py-2">
-                  <Link className="underline" href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : `/zlecenia/${r.id}`}>
+                  <Link className="hover:underline focus:underline focus:outline-none" href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : `/zlecenia/${r.id}`}>
                     {r.orderNo ? `${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : r.id.slice(0,8)}
                   </Link>
                 </td>
@@ -156,7 +156,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
             return (
               <div key={r.id} className="rounded-md border border-black/10 dark:border-white/10 p-3">
                 <div className="flex items-center justify-between">
-                  <Link className="font-medium underline" href={href}>
+                  <Link className="font-medium hover:underline focus:underline focus:outline-none" href={href}>
                     {r.orderNo ? `${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : r.id.slice(0,8)}
                   </Link>
                   <div className="flex items-center gap-2">

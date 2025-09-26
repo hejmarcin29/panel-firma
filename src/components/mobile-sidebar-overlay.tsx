@@ -9,6 +9,7 @@ export function MobileSidebarOverlay() {
       overlay.classList.add('opacity-0');
       overlay.classList.add('pointer-events-none');
     }
+    document.body.classList.remove('no-scroll');
   };
 
   return (

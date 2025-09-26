@@ -62,8 +62,8 @@ export default async function Home() {
           <CardContent>
             <p className="text-sm opacity-70">Zarządzanie aplikacją i ustawienia systemowe.</p>
             <div className="mt-3 flex flex-col gap-2">
-              <Link href="/ustawienia" className="underline">Przejdź do ustawień</Link>
-              <Link href="/ustawienia/uzytkownicy" className="underline">Użytkownicy</Link>
+              <Link href="/ustawienia" className="hover:underline focus:underline focus:outline-none">Przejdź do ustawień</Link>
+              <Link href="/ustawienia/uzytkownicy" className="hover:underline focus:underline focus:outline-none">Użytkownicy</Link>
             </div>
           </CardContent>
         </Card>
@@ -109,16 +109,16 @@ async function RecentClients() {
     .from(clientsTable)
     .orderBy(desc(clientsTable.createdAt))
     .limit(5);
-  if (list.length === 0) return <p className="text-sm opacity-70">{pl.dashboard.noneClients} <Link className="underline" href="/klienci/nowy">{pl.dashboard.addFirst}</Link>.</p>;
+  if (list.length === 0) return <p className="text-sm opacity-70">{pl.dashboard.noneClients} <Link className="hover:underline focus:underline focus:outline-none" href="/klienci/nowy">{pl.dashboard.addFirst}</Link>.</p>;
   return (
   <ul className="space-y-1 text-sm">
       {list.map((c) => (
         <li key={c.id} className="flex items-center justify-between">
-          <Link className="underline" href={`/klienci/${c.id}`}>{c.name}</Link>
+          <Link className="hover:underline focus:underline focus:outline-none" href={`/klienci/${c.id}`}>{c.name}</Link>
           <span className="opacity-60">{new Date(c.createdAt).toLocaleDateString()}</span>
         </li>
       ))}
-  <li className="mt-2"><Link className="underline" href="/klienci">{pl.dashboard.seeAll}</Link></li>
+  <li className="mt-2"><Link className="hover:underline focus:underline focus:outline-none" href="/klienci">{pl.dashboard.seeAll}</Link></li>
     </ul>
   );
 }
@@ -181,7 +181,7 @@ async function UpcomingOrders() {
       {rows.map(r => (
         <li key={r.id} className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Link className="underline" href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : `/zlecenia/${r.id}`}>{r.clientName || r.clientId}</Link>
+            <Link className="hover:underline focus:underline focus:outline-none" href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : `/zlecenia/${r.id}`}>{r.clientName || r.clientId}</Link>
             <span className="text-xs rounded bg-black/5 px-1.5 py-0.5 dark:bg-white/10">{r.type === 'installation' ? 'Montaż' : 'Dostawa'}</span>
           </div>
           <span className="opacity-60">{r.scheduledDate ? new Date(r.scheduledDate).toLocaleDateString() : '-'}</span>
@@ -212,7 +212,7 @@ async function RecentCompletedOrders() {
       {rows.map(r => (
         <li key={r.id} className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Link className="underline" href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : `/zlecenia/${r.id}`}>{r.clientName || r.clientId}</Link>
+            <Link className="hover:underline focus:underline focus:outline-none" href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : `/zlecenia/${r.id}`}>{r.clientName || r.clientId}</Link>
             <span className="text-xs rounded bg-black/5 px-1.5 py-0.5 dark:bg-white/10">{r.type === 'installation' ? 'Montaż' : 'Dostawa'}</span>
           </div>
           <span className="opacity-60">{r.scheduledDate ? new Date(r.scheduledDate).toLocaleDateString() : '-'}</span>
