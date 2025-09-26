@@ -8,7 +8,7 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "default", size = "md", ...props }, ref) => {
-    const base = "inline-flex items-center justify-center rounded-[12px] font-medium transition-colors disabled:opacity-60 disabled:pointer-events-none focus:outline-none focus:ring-2";
+  const base = "inline-flex items-center justify-center rounded-[12px] font-medium transition-colors disabled:opacity-60 disabled:pointer-events-none focus:outline-none focus:ring-2 btn-tap";
     const variants = {
       default: "bg-[var(--pp-primary)] text-white hover:bg-[var(--pp-primary-600)] focus:ring-[var(--pp-primary-ring)]",
       outline: "border border-[var(--pp-primary)] text-[var(--pp-primary)] hover:bg-[var(--pp-primary-subtle-bg)] focus:ring-[var(--pp-primary-ring)]",
