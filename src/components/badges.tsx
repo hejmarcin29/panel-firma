@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, XCircle, Wrench, Truck, Clock, CalendarDays, Trophy } from "lucide-react";
+import { CheckCircle2, XCircle, Wrench, Truck, Clock, CalendarDays, Trophy, Loader2 } from "lucide-react";
 
 export function TypeBadge({ type }: { type: string }) {
   const isInstall = type === "installation";
@@ -52,28 +52,46 @@ export function StatusBadge({ status, label }: { status: string; label: string }
 }
 
 export function OutcomeBadge({ outcome, iconOnly = true }: { outcome: "won" | "lost" | null | undefined; iconOnly?: boolean }) {
-  if (!outcome) return <span className="opacity-40">—</span>;
   const isWon = outcome === "won";
+  const isLost = outcome === "lost";
 
   if (iconOnly) {
-    // Ikona + kolor, bez tekstu, z a11y i tooltipem
-    const label = isWon ? "Wygrane" : "Przegrane";
+    // Ikona + kolor, bez tekstu, z a11y i tooltipem (również dla braku wyniku)
+    const label = isWon ? "Wygrane" : isLost ? "Przegrane" : "W trakcie";
+    const colorClass = isWon
+      ? "text-emerald-600 dark:text-emerald-400"
+      : isLost
+        ? "text-rose-600 dark:text-rose-400"
+        : "text-black/45 dark:text-white/45";
     return (
-      <span
-        className={isWon ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}
-        aria-label={label}
-        title={label}
-      >
-        {isWon ? <Trophy className="h-4 w-4" aria-hidden /> : <XCircle className="h-4 w-4" aria-hidden />}
+      <span className={colorClass} aria-label={label} title={label}>
+        {isWon ? (
+          <Trophy className="h-4 w-4" aria-hidden />
+        ) : isLost ? (
+          <XCircle className="h-4 w-4" aria-hidden />
+        ) : (
+          <Loader2 className="h-4 w-4" aria-hidden />
+        )}
       </span>
     );
   }
 
+  // Wariant z etykietą (rzadziej używany), z neutralnym stanem dla braku wyniku
+  if (isWon || isLost) {
+    return (
+      <Badge size="xs" variant={isWon ? "success" : "destructive"}>
+        <span className="inline-flex items-center gap-1.5">
+          {isWon ? <CheckCircle2 className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
+          {isWon ? "Wygrane" : "Przegrane"}
+        </span>
+      </Badge>
+    );
+  }
   return (
-    <Badge size="xs" variant={isWon ? "success" : "destructive"}>
+    <Badge size="xs" variant="neutral">
       <span className="inline-flex items-center gap-1.5">
-        {isWon ? <CheckCircle2 className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
-        {isWon ? "Wygrane" : "Przegrane"}
+        <Loader2 className="h-3.5 w-3.5" />
+        W trakcie
       </span>
     </Badge>
   );

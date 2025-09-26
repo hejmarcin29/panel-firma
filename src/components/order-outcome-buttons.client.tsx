@@ -14,9 +14,7 @@ export function OrderOutcomeButtons({ id, outcome, size = 'sm' }: { id: string; 
   const router = useRouter()
   const { toast } = useToast()
 
-  if (outcome) {
-    return <span className="text-xs opacity-70">{outcome === 'won' ? 'Wygrane' : 'Przegrane'}</span>
-  }
+  if (outcome) return null
 
   const setOutcome = async (o: 'won'|'lost', extra?: { reasonCode?: string|null, reasonNote?: string|null }) => {
     try {
@@ -49,11 +47,27 @@ export function OrderOutcomeButtons({ id, outcome, size = 'sm' }: { id: string; 
 
   return (
     <div className="flex items-center justify-end gap-2">
-      <Button variant="outline" size={size} disabled={pending !== null} onClick={() => setOutcome('won')}>
-        <CheckCircle2 className="mr-1 h-4 w-4 text-emerald-600" /> Wygrane
+      <Button
+        variant="outline"
+        size={size}
+        disabled={pending !== null}
+        onClick={() => setOutcome('won')}
+        aria-label="Oznacz jako wygrane"
+        title="Oznacz jako wygrane"
+        className={size === 'sm' ? 'h-7 w-7 p-0' : 'h-9 w-9 p-0'}
+      >
+        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
       </Button>
-      <Button variant="outline" size={size} disabled={pending !== null} onClick={() => setOpenLost(true)}>
-        <XCircle className="mr-1 h-4 w-4 text-red-600" /> Przegrane
+      <Button
+        variant="outline"
+        size={size}
+        disabled={pending !== null}
+        onClick={() => setOpenLost(true)}
+        aria-label="Oznacz jako przegrane"
+        title="Oznacz jako przegrane"
+        className={size === 'sm' ? 'h-7 w-7 p-0' : 'h-9 w-9 p-0'}
+      >
+        <XCircle className="h-4 w-4 text-red-600" />
       </Button>
 
       <AlertDialog

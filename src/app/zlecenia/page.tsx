@@ -210,12 +210,12 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
               <th className="px-3 py-2 w-[220px]">Klient</th>
               <th className="px-3 py-2 w-[90px]">Typ</th>
               <th className="px-3 py-2 w-[120px]">Status</th>
-              <th className="px-3 py-2 w-[90px]">Wynik</th>
               <th className="px-3 py-2 w-[170px]">Checklist</th>
               <th className="px-3 py-2 w-[120px]">Dostawa</th>
               <th className="px-3 py-2 w-[120px]">Montaż</th>
               <th className="px-3 py-2 w-[140px]">Montażysta</th>
               <th className="px-3 py-2 w-[90px]">Utw.</th>
+              <th className="px-3 py-2 w-[90px]">Wynik</th>
               <th className="px-3 py-2 text-right w-[160px]">Akcje</th>
             </tr>
           </thead>
@@ -234,9 +234,6 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                 <td className="px-3 py-2 max-w-[220px] truncate" title={r.clientName || r.clientId}>{r.clientName || r.clientId}</td>
                 <td className="px-3 py-2"><TypeBadge type={r.type} /></td>
                 <td className="px-3 py-2"><StatusBadge status={r.status} label={statusShort[r.status] || (pl.orders.statuses as Record<string,string>)[r.status] || r.status} /></td>
-                <td className="px-3 py-2">
-                  <OutcomeBadge outcome={r.outcome as 'won'|'lost'|null|undefined} iconOnly />
-                </td>
                 <td className="px-3 py-2">
                   <QuickChecklistBar
                     orderId={r.id}
@@ -269,14 +266,19 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                 </td>
                 <td className="px-3 py-2 max-w-[140px] truncate" title={r.installerName || '-'}>{r.installerName || '-'}</td>
                 <td className="px-3 py-2">{new Date(r.createdAt).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' })}</td>
+                <td className="px-3 py-2">
+                  <OutcomeBadge outcome={r.outcome as 'won'|'lost'|null|undefined} iconOnly />
+                </td>
                 <td className="px-3 py-2 text-right">
                   <div className="flex items-center gap-2 justify-end flex-wrap">
+                    {/* Najpierw akcje wyniku */}
+                    <OrderOutcomeButtons id={r.id} outcome={r.outcome as 'won'|'lost'|null} />
+                    {/* Szczegóły na końcu */}
                     <Link className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-black/15 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
                       href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : `/zlecenia/${r.id}`}
                       aria-label="Szczegóły" title="Szczegóły">
                       <Info className="h-3.5 w-3.5" />
                     </Link>
-                    <OrderOutcomeButtons id={r.id} outcome={r.outcome as 'won'|'lost'|null} />
                   </div>
                 </td>
               </tr>
@@ -329,8 +331,8 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                 <div className="mt-2 flex items-center justify-between">
                   <OutcomeBadge outcome={r.outcome as 'won'|'lost'|null|undefined} iconOnly />
                   <div className="flex items-center gap-2">
-                    <Link className="inline-flex h-9 items-center gap-1.5 rounded-md border border-black/15 px-3 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10" href={href}>Szczegóły</Link>
                     <OrderOutcomeButtons id={r.id} outcome={r.outcome as 'won'|'lost'|null} size="md" />
+                    <Link className="inline-flex h-9 items-center gap-1.5 rounded-md border border-black/15 px-3 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10" href={href}>Szczegóły</Link>
                   </div>
                 </div>
               </div>
