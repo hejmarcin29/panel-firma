@@ -22,6 +22,8 @@ RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/drizzle ./drizzle
+COPY --from=builder /app/migrate.js ./migrate.js
 
 # SQLite data directory (mounted as volume at runtime)
 RUN mkdir -p /app/data && chown -R nextjs:nodejs /app
@@ -30,4 +32,5 @@ VOLUME ["/app/data"]
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000
-CMD ["node", "server.js"]
+# Run migrations before starting the server
+CMD node migrate.js && node server.js
