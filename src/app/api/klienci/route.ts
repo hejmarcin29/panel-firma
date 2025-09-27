@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { clients } from "@/db/schema";
+import { clients, orders } from "@/db/schema";
 import { randomUUID } from "crypto";
 import { getSession } from "@/lib/auth-session";
-import { desc, isNotNull } from "drizzle-orm";
+import { desc, isNotNull, and, isNull, eq, sql } from "drizzle-orm";
 import { emitDomainEvent, DomainEventTypes } from "@/domain/events";
 
 interface SessionUser {
@@ -14,10 +14,11 @@ interface ClientCreateBody {
   name: string;
   phone?: string | null;
   email?: string | null;
+  taxId?: string | null; // NIP (opcjonalnie)
+  companyName?: string | null;
   invoiceCity?: string | null;
+  invoicePostalCode?: string | null;
   invoiceAddress?: string | null;
-  deliveryCity?: string | null;
-  deliveryAddress?: string | null;
   // serviceType usunięte z formularza – pozostawiamy pole na przyszłość (ignorowane przy create)
   // Allow unknown extra keys (ignored)
   [key: string]: unknown;
@@ -25,8 +26,48 @@ interface ClientCreateBody {
 
 // GET /api/klienci - lista klientów (ostatnie najpierw)
 export async function GET() {
-  const list = await db.select().from(clients).orderBy(desc(clients.createdAt)).limit(200);
-  return NextResponse.json({ clients: list });
+  // Base clients
+  const list = await db
+    .select({
+      id: clients.id,
+      name: clients.name,
+      email: clients.email,
+      phone: clients.phone,
+      deliveryCity: clients.deliveryCity,
+      invoiceCity: clients.invoiceCity,
+      clientNo: clients.clientNo,
+      createdAt: clients.createdAt,
+    })
+    .from(clients)
+    .orderBy(desc(clients.createdAt))
+    .limit(200);
+
+  // For each client gather: activeOrders, latest pipeline per type
+  const out = [] as Array<any>;
+  for (const c of list) {
+    const [activeOrdersRow] = await db
+      .select({ c: sql<number>`count(*)` })
+      .from(orders)
+      .where(and(eq(orders.clientId, c.id), isNull(orders.archivedAt), isNull(orders.outcome)));
+
+    const [inst] = await db
+      .select({ s: orders.pipelineStage })
+      .from(orders)
+      .where(and(eq(orders.clientId, c.id), eq(orders.type, 'installation'), isNull(orders.archivedAt)))
+      .orderBy(desc(orders.pipelineStageUpdatedAt))
+      .limit(1);
+
+    const [deliv] = await db
+      .select({ s: orders.pipelineStage })
+      .from(orders)
+      .where(and(eq(orders.clientId, c.id), eq(orders.type, 'delivery'), isNull(orders.archivedAt)))
+      .orderBy(desc(orders.pipelineStageUpdatedAt))
+      .limit(1);
+
+    out.push({ ...c, _activeOrders: activeOrdersRow?.c ?? 0, _installationStage: inst?.s ?? null, _deliveryStage: deliv?.s ?? null });
+  }
+
+  return NextResponse.json({ clients: out });
 }
 
 // POST /api/klienci - utwórz klienta
@@ -53,10 +94,11 @@ export async function POST(req: Request) {
       name,
       phone: trimOrNull(body?.phone) ?? null,
       email: trimOrNull(body?.email) ?? null,
+      taxId: trimOrNull(body?.taxId) ?? null,
+      companyName: trimOrNull(body?.companyName) ?? null,
       invoiceCity: trimOrNull(body?.invoiceCity) ?? null,
+      invoicePostalCode: trimOrNull(body?.invoicePostalCode) ?? null,
       invoiceAddress: trimOrNull(body?.invoiceAddress) ?? null,
-      deliveryCity: trimOrNull(body?.deliveryCity) ?? null,
-      deliveryAddress: trimOrNull(body?.deliveryAddress) ?? null,
       // Ustaw jawnie, aby nie łapać NOT NULL przy create
       serviceType: 'with_installation',
     };

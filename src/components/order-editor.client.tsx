@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/ui/toaster'
+import { DatePicker } from '@/components/ui/date-picker'
 
 const schema = z.object({
   note: z.string().max(2000).optional(),
@@ -96,7 +97,9 @@ export function OrderEditor({ orderId, defaults }: { orderId: string; defaults: 
       </div>
       <div>
         <Label>Planowana data</Label>
-        <Input type="date" value={values.scheduledDate || ''} onChange={(e) => setValues(v => ({ ...v, scheduledDate: e.target.value }))} className="w-52" />
+        <div className="mt-1">
+          <DatePicker value={values.scheduledDate || ''} onChange={(next) => setValues(v => ({ ...v, scheduledDate: next }))} />
+        </div>
       </div>
       <div>
         <button type="button" disabled={saving} onClick={save} className="inline-flex h-9 items-center rounded-md border border-black/15 px-3 text-sm hover:bg-black/5 disabled:opacity-50 dark:border-white/15 dark:hover:bg-white/10">Zapisz</button>

@@ -50,9 +50,13 @@ export type User = typeof users.$inferSelect
 export const clients = sqliteTable('clients', {
   id: text('id').primaryKey(), // uuid text
   name: text('name').notNull(), // Imię i nazwisko
+  companyName: text('company_name'), // nazwa firmy (opcjonalnie)
   phone: text('phone'), // numer tel.
   email: text('email'), // email (niekoniecznie unikalny na start)
+  // Dane firmy (opcjonalnie)
+  taxId: text('tax_id'), // NIP (opcjonalnie, gdy firma)
   invoiceCity: text('invoice_city'), // miasto (faktura)
+  invoicePostalCode: text('invoice_postal_code'), // kod pocztowy (faktura)
   invoiceAddress: text('invoice_address'), // adres (faktura)
   deliveryCity: text('delivery_city'), // miasto (dostawa)
   deliveryAddress: text('delivery_address'), // adres (dostawa)
@@ -105,6 +109,10 @@ export const orders = sqliteTable('orders', {
   status: text('status').notNull(), // patrz komentarz wyżej
   requiresMeasurement: integer('requires_measurement', { mode: 'boolean' }).notNull().default(false),
   scheduledDate: integer('scheduled_date', { mode: 'timestamp_ms' }), // planowana data dostawy/montażu (opc.)
+  // Lokalizacja zlecenia (opcjonalnie; docelowo zamiast pól dostawy u klienta)
+  locationCity: text('location_city'),
+  locationPostalCode: text('location_postal_code'),
+  locationAddress: text('location_address'),
   installerId: text('installer_id'), // users.id (rola: installer)
   preMeasurementSqm: integer('pre_measurement_sqm'), // szacunkowe m2 przed pomiarem
   internalNote: text('internal_note'), // notatka Primepodloga (aktualny stan)

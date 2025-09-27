@@ -97,3 +97,36 @@ Checklist w PR:
 - [ ] Wszystkie `catch` używają `unknown` + zawężenie.
 - [ ] Parsy JSON z Zod.
 - [ ] Brak `role as any`.
+
+## UI – pełna adopcja shadcn/ui (NOWE)
+
+Cel: maksymalnie wykorzystać shadcn/ui + Radix dla spójnego i pięknego UI.
+
+### Zależności (wymagane)
+- `@radix-ui/react-slot`
+- `@radix-ui/react-dialog`
+- `@radix-ui/react-dropdown-menu`
+- `@radix-ui/react-popover`
+- `@radix-ui/react-tooltip`
+- `sonner` (Toaster)
+
+Te paczki są już dodane. Przy nowych komponentach korzystaj z odpowiedników shadcn (na bazie Radix) zamiast własnych implementacji.
+
+### Zasady migracji komponentów
+1. Dialogi/Alerty: zamień lokalny `AlertDialog` na shadcn `Dialog` + wariant destrukcyjny wg dokumentacji. Zapewnia pełną dostępność, focus trap i animacje.
+2. Menu/kontekst: zamień lokalny `DropdownMenu` na shadcn `DropdownMenu` (Radix) z poprawną a11y i klawiaturą.
+3. Toaster: przełącz `ToastProvider` na `sonner` i używaj `toast()` z wariantami (success/destructive). Zachowaj jednolity styling z tokenami (primary #b02417).
+4. Slot/asChild: używaj `Slot` do przekazywania styli i semantyki bez zagnieżdżania zbędnych elementów.
+5. Nowe UI: preferuj gotowe komponenty shadcn (Button/Input/Label/Textarea/Card już mamy – można dostosować styl), a dla złożonych (Sheet, Command, Breadcrumbs, DataTable) – wdrażaj iteracyjnie.
+
+### Definition of Done (UI)
+- [ ] Nowe elementy interaktywne bazują na shadcn/ui + Radix.
+- [ ] Dialogi mają a11y (ESC, focus trap, role) – automatycznie przez Radix.
+- [ ] Toastery używają `sonner` i są globalnie osadzone w `app/layout.tsx`.
+- [ ] Styl zgodny z tokenami brandu (#b02417, antracyt) + przejścia 180–250ms.
+- [ ] Usunięto duplikujące lokalne prymitywy po migracji (cleanup martwego kodu).
+
+### Najbliższe migracje (kroki)
+- Zamień `src/components/ui/alert-dialog.tsx` na shadcn `Dialog` + confirm variant.
+- Zamień `src/components/ui/dropdown-menu.tsx` na shadcn `DropdownMenu`.
+- Podmień `ToastProvider` w `app/layout.tsx` na `sonner` (`<Toaster />`) i przepnij `useToast()` na proxy do sonner (lub użyj bezpośrednio `toast`).

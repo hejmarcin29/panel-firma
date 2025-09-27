@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/components/ui/toaster'
+import { DatePicker } from '@/components/ui/date-picker'
 
 type Client = { id: string; name: string }
 type Installer = { id: string; name: string | null; email: string; role: string }
@@ -22,6 +23,7 @@ const schema = z.object({
     .refine((v) => v === '' || /^[0-9]+$/.test(v), { message: 'Tylko liczby' }),
   note: z.string().max(2000),
   installerId: z.union([z.string().uuid(), z.literal('')]),
+  scheduledDate: z.string().optional(),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -45,7 +47,7 @@ export default function NewInstallationPage() {
     watch,
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { clientId: preselectedClientId || '', preMeasurementSqm: '', note: '', installerId: '' },
+    defaultValues: { clientId: preselectedClientId || '', preMeasurementSqm: '', note: '', installerId: '', scheduledDate: '' },
   })
 
   useEffect(() => {
@@ -76,6 +78,10 @@ export default function NewInstallationPage() {
       if (values.preMeasurementSqm && values.preMeasurementSqm.trim() !== '') body.preMeasurementSqm = parseInt(values.preMeasurementSqm, 10)
       if (values.note && values.note.trim() !== '') body.note = values.note.trim()
       if (values.installerId && values.installerId !== '') body.installerId = values.installerId
+      if (values.scheduledDate && values.scheduledDate.trim() !== '') {
+        const [y, m, d] = values.scheduledDate.split('-').map((x) => parseInt(x, 10))
+        body.scheduledDate = new Date(y, (m || 1) - 1, d || 1, 0, 0, 0, 0).getTime()
+      }
       const resp = await fetch('/api/zlecenia/montaz', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const data = (await resp.json().catch(() => ({}))) as { id?: string; error?: string }
       if (!resp.ok) throw new Error(data?.error || 'Błąd')
@@ -120,6 +126,13 @@ export default function NewInstallationPage() {
           <Label htmlFor="note">Notatka Primepodloga</Label>
           <Textarea id="note" placeholder="Uwagi wewnętrzne..." className="mt-1" {...register('note')} />
           <p className="text-xs opacity-60 mt-1">Historia notatki będzie zapisywana automatycznie.</p>
+        </div>
+        <div>
+          <Label htmlFor="scheduledDate">Planowana data montażu</Label>
+          <div className="mt-1">
+            <DatePicker value={watch('scheduledDate') || ''} onChange={(v) => setValue('scheduledDate', v)} />
+          </div>
+          <p className="text-xs opacity-60 mt-1">Opcjonalnie — bez godziny (dzień montażu).</p>
         </div>
         <div>
           <Label htmlFor="sqm">m2 przed pomiarem</Label>

@@ -3,6 +3,7 @@ import { useSession, signOut } from "next-auth/react";
 import { Search, Bell, Sun, Moon, Settings, Menu } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useMemo } from "react";
+import { Tooltip } from "@/components/ui/tooltip";
 
 export function Topbar() {
   const { status } = useSession();
@@ -51,26 +52,32 @@ export function Topbar() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button className="h-9 w-9 inline-flex items-center justify-center rounded-md border" style={{ borderColor: "var(--pp-border)" }} aria-label="Powiadomienia">
-            <Bell className="h-4 w-4" />
-          </button>
-          <button className="h-9 w-9 inline-flex items-center justify-center rounded-md border" style={{ borderColor: "var(--pp-border)" }} aria-label="Ustawienia">
-            <Settings className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => {
-              // Enable smooth theme transition for a brief moment
-              const html = document.documentElement;
-              html.classList.add('theme-transition');
-              setTimeout(() => html.classList.remove('theme-transition'), 250);
-              setTheme(isDark ? "light" : "dark");
-            }}
-            className="h-9 w-9 inline-flex items-center justify-center rounded-md border"
-            style={{ borderColor: "var(--pp-border)" }}
-            aria-label="Przełącz motyw"
-          >
-            {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </button>
+          <Tooltip content="Powiadomienia">
+            <button className="h-9 w-9 inline-flex items-center justify-center rounded-md border" style={{ borderColor: "var(--pp-border)" }} aria-label="Powiadomienia">
+              <Bell className="h-4 w-4" />
+            </button>
+          </Tooltip>
+          <Tooltip content="Ustawienia">
+            <button className="h-9 w-9 inline-flex items-center justify-center rounded-md border" style={{ borderColor: "var(--pp-border)" }} aria-label="Ustawienia">
+              <Settings className="h-4 w-4" />
+            </button>
+          </Tooltip>
+          <Tooltip content={isDark ? "Motyw: ciemny (kliknij aby jasny)" : "Motyw: jasny (kliknij aby ciemny)"}>
+            <button
+              onClick={() => {
+                // Enable smooth theme transition for a brief moment
+                const html = document.documentElement;
+                html.classList.add('theme-transition');
+                setTimeout(() => html.classList.remove('theme-transition'), 250);
+                setTheme(isDark ? "light" : "dark");
+              }}
+              className="h-9 w-9 inline-flex items-center justify-center rounded-md border"
+              style={{ borderColor: "var(--pp-border)" }}
+              aria-label="Przełącz motyw"
+            >
+              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+          </Tooltip>
           {isAuthed && (
             <button
               onClick={() => signOut({ callbackUrl: "/login" })}

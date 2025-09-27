@@ -1,17 +1,24 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { Card } from "@/components/ui/card";
+import React, { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus } from "lucide-react";
+import { Plus, Truck, FileText } from "lucide-react";
 import { pl } from "@/i18n/pl";
+import { DataTable } from "@/components/ui/datatable";
+import { ColumnDef, SortingState, getSortedRowModel, getFilteredRowModel, getCoreRowModel, useReactTable, flexRender } from "@tanstack/react-table";
 
 type Klient = {
   id: string;
   name: string;
   email?: string | null;
   phone?: string | null;
+  deliveryCity?: string | null;
+  invoiceCity?: string | null;
   createdAt: number;
+  clientNo?: number | null;
+  _activeOrders?: number;
+  _installationStage?: string | null;
+  _deliveryStage?: string | null;
 };
 
 export default function KlienciPage() {
@@ -35,44 +42,187 @@ export default function KlienciPage() {
     return () => { mounted = false };
   }, []);
 
+  // Sortowanie + szybki filtr (musi być poza JSX, nie w IIFE — zasady Hooks)
+  const [q, setQ] = React.useState("");
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [pageSize, setPageSize] = React.useState(20);
+  const [page, setPage] = React.useState(1);
+  const filteredClients = React.useMemo(() => {
+    const src = data?.clients ?? [];
+    if (!q) return src;
+    const qq = q.toLowerCase();
+    return src.filter((c) => {
+      const city = (c.deliveryCity || c.invoiceCity || "").toLowerCase();
+      return c.name.toLowerCase().includes(qq) || city.includes(qq);
+    });
+  }, [data, q]);
+
+  // Reset page when filters change
+  React.useEffect(() => { setPage(1); }, [q]);
+
+  const columns: ColumnDef<Klient>[] = [
+    { header: "Nr", accessorKey: "clientNo", cell: ({ getValue }) => <span className="text-muted-foreground">{getValue<number | null>() ?? "—"}</span> },
+    { header: "Klient", accessorKey: "name", cell: ({ row }) => <Link href={`/klienci/${row.original.id}`} className="font-medium hover:underline">{row.original.name}</Link> },
+    { header: "Miasto", accessorFn: (row) => row.deliveryCity || row.invoiceCity || "", cell: ({ row }) => {
+      const c = row.original; const city = c.deliveryCity || c.invoiceCity;
+      return (
+        <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+          {c.deliveryCity ? (
+            <span className="inline-flex items-center" title="Miasto dostawy"><Truck className="h-4 w-4 opacity-70" aria-hidden="true" /><span className="sr-only">Dostawa</span></span>
+          ) : c.invoiceCity ? (
+            <span className="inline-flex items-center" title="Miasto faktury"><FileText className="h-4 w-4 opacity-70" aria-hidden="true" /><span className="sr-only">Faktura</span></span>
+          ) : null}
+          <span>{city ?? <span className="opacity-60">—</span>}</span>
+        </span>
+      );
+    } },
+    { header: "Aktywne zlecenia", accessorFn: (row) => row._activeOrders ?? 0, cell: ({ row }) => row.original._activeOrders ?? 0 },
+    { header: "Etap montażu", accessorFn: (row) => row._installationStage ?? "", cell: ({ row }) => row.original._installationStage ? <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs" style={{ borderColor: 'var(--pp-border)' }}>{row.original._installationStage}</span> : <span className="opacity-60">—</span> },
+    { header: "Etap dostawy", accessorFn: (row) => row._deliveryStage ?? "", cell: ({ row }) => row.original._deliveryStage ? <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs" style={{ borderColor: 'var(--pp-border)' }}>{row.original._deliveryStage}</span> : <span className="opacity-60">—</span> },
+    { header: pl.clients.createdAt, accessorKey: "createdAt", cell: ({ row }) => <span className="text-muted-foreground">{new Date(row.original.createdAt).toLocaleDateString()}</span> },
+  ];
+
+  const table = useReactTable({
+    data: filteredClients,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
+  const total = filteredClients.length;
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const start = (page - 1) * pageSize;
+  const pagedRows = table.getRowModel().rows.slice(start, start + pageSize);
+  const rowsToRender = pagedRows.length === 0 && total > 0
+    ? table.getRowModel().rows.slice(0, Math.min(pageSize, total))
+    : pagedRows;
+
   return (
     <div className="mx-auto max-w-6xl p-6">
-      <div className="flex items-center justify-between mb-4">
-  <h1 className="text-2xl font-semibold">{pl.clients.listTitle}</h1>
-        <div className="flex items-center gap-3">
-          {/* Filtrowanie po typie usługi usunięte */}
-          <Link
-          href="/klienci/nowy"
-          className="inline-flex h-9 items-center gap-2 rounded-md border border-black/15 px-4 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
-        >
-          <Plus className="h-4 w-4" />
-          {pl.clients.new}
-        </Link>
+      <section className="relative overflow-hidden rounded-2xl border bg-[var(--pp-panel)] mb-4" style={{ borderColor: 'var(--pp-border)' }}>
+        <div className="pointer-events-none absolute inset-0 opacity-80" aria-hidden
+             style={{ background: 'radial-gradient(1000px 360px at -10% -20%, color-mix(in oklab, var(--pp-primary) 14%, transparent), transparent 42%), linear-gradient(120deg, color-mix(in oklab, var(--pp-primary) 8%, transparent), transparent 65%)' }} />
+        <div className="relative z-10 p-4 md:p-6 flex items-center justify-between gap-3">
+          <h1 className="text-2xl md:text-3xl font-semibold">{pl.clients.listTitle}</h1>
+          <Link href="/klienci/nowy" className="inline-flex h-9 items-center gap-2 rounded-md border px-4 text-sm hover:bg-[var(--pp-primary-subtle-bg)]" style={{ borderColor: 'var(--pp-border)' }}>
+            <Plus className="h-4 w-4" /> {pl.clients.new}
+          </Link>
         </div>
-      </div>
+      </section>
+
       {loading ? (
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+        <div className="space-y-2">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="p-3 border border-black/10 dark:border-white/10 rounded">
               <Skeleton className="h-4 w-40 mb-2" />
-              <Skeleton className="h-3 w-56 mb-2" />
-              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-3 w-full" />
             </div>
           ))}
         </div>
       ) : error ? (
-  <p>{pl.common.loadError}</p>
+        <p>{pl.common.loadError}</p>
       ) : (
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {(data?.clients ?? []).map((c: Klient) => (
-            <Link key={c.id} href={`/klienci/${c.id}`} className="block">
-              <Card className="p-3 hover:bg-black/5 dark:hover:bg-white/5">
-                <div className="font-medium">{c.name}</div>
-                <div className="text-sm opacity-70">{c.email || "—"} • {c.phone || "—"}</div>
-                <div className="mt-1 text-xs opacity-60">{pl.clients.createdAt}: {new Date(c.createdAt).toLocaleString()}</div>
-              </Card>
-            </Link>
-          ))}
+        <div className="overflow-x-auto rounded-lg border" style={{ borderColor: 'var(--pp-border)' }}>
+          <div className="p-2 border-b flex flex-col gap-2 md:flex-row md:items-center md:justify-between" style={{ borderColor: 'var(--pp-border)' }}>
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Szukaj po nazwie/miastach…"
+              className="h-9 w-full md:w-80 rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15"
+            />
+            <div className="flex items-center gap-2 text-sm">
+              <span className="opacity-70">Wyniki:</span>
+              <span className="font-medium">{total}</span>
+              <span className="mx-1 opacity-40">•</span>
+              <label className="opacity-70" htmlFor="pageSize">Na stronę:</label>
+              <select
+                id="pageSize"
+                className="h-9 rounded-md border border-black/15 bg-transparent px-2 text-sm outline-none dark:border-white/15"
+                value={pageSize}
+                onChange={(e) => { setPageSize(parseInt(e.target.value, 10)); setPage(1); }}
+              >
+                {[10,20,50,100].map(sz => <option key={sz} value={sz}>{sz}</option>)}
+              </select>
+            </div>
+          </div>
+          <table className="w-full text-sm">
+            <thead className="bg-[var(--pp-table-header-bg)]">
+              {table.getHeaderGroups().map(hg => (
+                <tr key={hg.id} className="text-left">
+                  {hg.headers.map(h => (
+                    <th key={h.id} className="px-3 py-2 font-medium select-none">
+                      {h.isPlaceholder ? null : (
+                        <button
+                          type="button"
+                          onClick={h.column.getToggleSortingHandler()}
+                          className="inline-flex items-center gap-1 hover:underline"
+                        >
+                          {flexRender(h.column.columnDef.header, h.getContext())}
+                          {{ asc: '▲', desc: '▼' }[h.column.getIsSorted() as string] ?? ''}
+                        </button>
+                      )}
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody>
+              {total === 0 ? (
+                <tr>
+                  <td colSpan={columns.length} className="px-3 py-6 text-center opacity-70">Brak wyników</td>
+                </tr>
+              ) : rowsToRender.map(row => (
+                <tr key={row.id} className="border-t hover:bg-[var(--pp-table-row-hover)]" style={{ borderColor: 'var(--pp-border)' }}>
+                  {row.getVisibleCells().map(cell => (
+                    <td key={cell.id} className="px-3 py-2">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="flex items-center justify-between gap-2 border-t p-2 text-sm" style={{ borderColor: 'var(--pp-border)' }}>
+            <div>
+              Strona {page} z {pageCount}
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className="inline-flex h-8 items-center rounded-md border border-black/15 px-2 text-xs disabled:opacity-50 dark:border-white/15"
+                onClick={() => setPage(1)}
+                disabled={page === 1}
+              >
+                « Pierwsza
+              </button>
+              <button
+                type="button"
+                className="inline-flex h-8 items-center rounded-md border border-black/15 px-2 text-xs disabled:opacity-50 dark:border-white/15"
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+              >
+                ‹ Poprzednia
+              </button>
+              <button
+                type="button"
+                className="inline-flex h-8 items-center rounded-md border border-black/15 px-2 text-xs disabled:opacity-50 dark:border-white/15"
+                onClick={() => setPage(p => Math.min(pageCount, p + 1))}
+                disabled={page >= pageCount}
+              >
+                Następna ›
+              </button>
+              <button
+                type="button"
+                className="inline-flex h-8 items-center rounded-md border border-black/15 px-2 text-xs disabled:opacity-50 dark:border-white/15"
+                onClick={() => setPage(pageCount)}
+                disabled={page >= pageCount}
+              >
+                Ostatnia »
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

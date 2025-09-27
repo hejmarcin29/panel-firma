@@ -12,7 +12,7 @@ interface SessionUser {
   } | null;
 }
 
-type UpdatableClientField = 'name' | 'phone' | 'email' | 'invoiceCity' | 'invoiceAddress' | 'deliveryCity' | 'deliveryAddress';
+type UpdatableClientField = 'name' | 'phone' | 'email' | 'taxId' | 'companyName' | 'invoiceCity' | 'invoicePostalCode' | 'invoiceAddress';
 type ClientUpdateBody = Partial<Record<UpdatableClientField, unknown>> & { [k: string]: unknown };
 interface FieldChange { field: UpdatableClientField; before: string | null; after: string | null }
 
@@ -37,7 +37,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
 
   const raw = await req.json().catch(() => null) as unknown;
   const body: ClientUpdateBody = raw && typeof raw === 'object' ? (raw as ClientUpdateBody) : {};
-  const fields: UpdatableClientField[] = ['name','phone','email','invoiceCity','invoiceAddress','deliveryCity','deliveryAddress'];
+  const fields: UpdatableClientField[] = ['name','phone','email','taxId','companyName','invoiceCity','invoicePostalCode','invoiceAddress'];
 
   const [before] = await db.select().from(clients).where(eq(clients.id, id)).limit(1);
   if (!before) return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -81,10 +81,11 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
         if (typeof v === 'string') setObject.name = v; break;
       case 'phone': setObject.phone = v; break;
       case 'email': setObject.email = v; break;
+      case 'taxId': setObject.taxId = v; break;
+  case 'companyName': setObject.companyName = v; break;
       case 'invoiceCity': setObject.invoiceCity = v; break;
+  case 'invoicePostalCode': setObject.invoicePostalCode = v; break;
       case 'invoiceAddress': setObject.invoiceAddress = v; break;
-      case 'deliveryCity': setObject.deliveryCity = v; break;
-      case 'deliveryAddress': setObject.deliveryAddress = v; break;
     }
   });
   await db.update(clients).set(setObject).where(eq(clients.id, id));

@@ -8,6 +8,7 @@ import { MobileSidebarOverlay } from "@/components/mobile-sidebar-overlay";
 import AppShell from "@/components/app-shell";
 import { ThemeProvider } from "next-themes";
 import { ToastProvider } from "@/components/ui/toaster";
+import { NProgressProvider } from "@/components/nprogress.client";
 
 const inter = Inter({ variable: "--font-sans", subsets: ["latin"] });
 const jetbrains = JetBrains_Mono({ variable: "--font-mono", subsets: ["latin"] });
@@ -28,6 +29,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="pp-theme-v2">
           <ToastProvider>
             <Providers>
+              <NProgressProvider />
               <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-[var(--pp-panel)] focus:border focus:px-3 focus:py-2 rounded-md">Pomiń do treści</a>
               <AppShell>
                 <div className="flex">

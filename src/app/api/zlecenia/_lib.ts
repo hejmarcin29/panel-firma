@@ -18,6 +18,7 @@ export const createOrderBodySchema = z.object({
   note: z.string().max(2000).optional(),
   preMeasurementSqm: z.number().int().positive().optional(),
   installerId: z.string().uuid().optional(),
+  scheduledDate: z.number().int().positive().optional(),
 })
 
 export async function createOrderFromBody(session: SessionLike | null, raw: unknown) {
@@ -28,9 +29,13 @@ export async function createOrderFromBody(session: SessionLike | null, raw: unkn
   if (!parsed.success) {
     return NextResponse.json({ error: 'Błąd walidacji', issues: parsed.error.issues }, { status: 400 })
   }
-  const { clientId, type, note, preMeasurementSqm, installerId } = parsed.data
+  const { clientId, type, note, preMeasurementSqm, installerId, scheduledDate } = parsed.data
 
-  const [client] = await db.select({ id: clients.id }).from(clients).where(eq(clients.id, clientId)).limit(1)
+  const [client] = await db
+  .select({ id: clients.id, invoiceCity: clients.invoiceCity, invoicePostalCode: clients.invoicePostalCode, invoiceAddress: clients.invoiceAddress })
+    .from(clients)
+    .where(eq(clients.id, clientId))
+    .limit(1)
   if (!client) return NextResponse.json({ error: 'Klient nie istnieje' }, { status: 400 })
 
   if (installerId) {
@@ -74,6 +79,11 @@ export async function createOrderFromBody(session: SessionLike | null, raw: unkn
         internalNoteUpdatedAt: note ? now : null,
         seq: nextSeq,
         orderNo,
+        scheduledDate: scheduledDate ? new Date(scheduledDate) : null,
+        // Prefill location from client's invoice address (can be edited later on order)
+        locationCity: client?.invoiceCity ?? null,
+        locationPostalCode: (client as { invoicePostalCode?: string|null })?.invoicePostalCode ?? null,
+        locationAddress: client?.invoiceAddress ?? null,
       })
       inserted = true
     } catch (err) {

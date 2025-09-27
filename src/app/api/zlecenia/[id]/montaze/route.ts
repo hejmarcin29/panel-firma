@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
 import { db } from '@/db'
 import { installationSlots, users } from '@/db/schema'
-import { eq } from 'drizzle-orm'
+import { desc, eq } from 'drizzle-orm'
 import { getSession } from '@/lib/auth-session'
 
 const createSchema = z.object({
@@ -56,6 +56,33 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     return NextResponse.json({ ok: true })
   } catch (err) {
     console.error('[POST /api/zlecenia/:id/montaze] Error', err)
+    return NextResponse.json({ error: 'Błąd serwera' }, { status: 500 })
+  }
+}
+
+// GET /api/zlecenia/:id/montaze — lista slotów montażowych dla zlecenia
+export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await ctx.params
+    const rows = await db
+      .select({
+        id: installationSlots.id,
+        plannedAt: installationSlots.plannedAt,
+        windowStart: installationSlots.windowStart,
+        windowEnd: installationSlots.windowEnd,
+        status: installationSlots.status,
+        installerId: installationSlots.installerId,
+        durationMinutes: installationSlots.durationMinutes,
+        note: installationSlots.note,
+        installerName: users.name,
+      })
+      .from(installationSlots)
+      .leftJoin(users, eq(installationSlots.installerId, users.id))
+      .where(eq(installationSlots.orderId, id))
+      .orderBy(desc(installationSlots.plannedAt))
+    return NextResponse.json({ slots: rows })
+  } catch (err) {
+    console.error('[GET /api/zlecenia/:id/montaze] Error', err)
     return NextResponse.json({ error: 'Błąd serwera' }, { status: 500 })
   }
 }

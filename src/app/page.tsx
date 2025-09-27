@@ -1,11 +1,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus } from "lucide-react";
+import { Plus, Users, ClipboardList, CheckCircle2, Calendar } from "lucide-react";
 import { pl } from "@/i18n/pl";
 import Link from "next/link";
 import { getSession } from "@/lib/auth-session";
 import { redirect } from "next/navigation";
 import { orders as ordersTable, clients as clientsTbl } from "@/db/schema";
-import { and, gte, lte, eq as deq, asc, desc, ne, eq, isNull } from "drizzle-orm";
+import { and, gte, lte, eq as deq, asc, desc, ne, eq, isNull, sql } from "drizzle-orm";
+import { db } from "@/db";
+import { KpiCard } from "@/components/kpi-card";
+import { MiniSparkline } from "@/components/mini-sparkline";
+import { CircularGauge } from "@/components/circular-gauge";
 
 export const dynamic = 'force-dynamic'
 
@@ -18,75 +22,92 @@ export default async function Home() {
   if (role !== 'admin') {
     redirect('/panel/montazysta');
   }
+  // Fetch small analytics for KPIs
+  const [clientsCount] = await db.select({ c: sql<number>`count(*)` }).from(clientsTbl);
+  const [activeOrdersCount] = await db
+    .select({ c: sql<number>`count(*)` })
+    .from(ordersTable)
+    .where(and(ne(ordersTable.status, 'completed'), ne(ordersTable.status, 'cancelled'), isNull(ordersTable.archivedAt)));
+
+  const now = new Date();
+  const weekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+  const [completedWeek] = await db
+    .select({ c: sql<number>`count(*)` })
+    .from(ordersTable)
+    .where(and(deq(ordersTable.status, 'completed'), gte(ordersTable.scheduledDate, weekAgo)));
+
+  const weekAhead = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7);
+  const [upcomingWeek] = await db
+    .select({ c: sql<number>`count(*)` })
+    .from(ordersTable)
+    .where(and(gte(ordersTable.scheduledDate, now), lte(ordersTable.scheduledDate, weekAhead), isNull(ordersTable.archivedAt)));
+
+  // rudimentary trend: last 14 days number of scheduled orders per day
+  const trendDays = 14;
+  const startTrend = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (trendDays - 1));
+  const rows = await db
+    .select({ d: ordersTable.scheduledDate })
+    .from(ordersTable)
+    .where(and(gte(ordersTable.scheduledDate, startTrend), isNull(ordersTable.archivedAt)));
+  const counts = Array.from({ length: trendDays }, () => 0);
+  for (const r of rows) {
+    if (!r.d) continue;
+    const idx = Math.floor((new Date(r.d).getTime() - startTrend.getTime()) / (24 * 3600 * 1000));
+    if (idx >= 0 && idx < trendDays) counts[idx]++;
+  }
+
   return (
-    <div className="mx-auto max-w-6xl p-6">
-      <div className="flex items-center justify-between mb-6">
-  <h1 className="text-2xl font-semibold">{pl.dashboard.title}</h1>
-        <Link
-          href="/klienci/nowy"
-          className="inline-flex h-9 items-center gap-2 rounded-md border border-black/15 px-4 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
-        >
-          <Plus className="h-4 w-4" />
-          {pl.clients.add}
-        </Link>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>{pl.dashboard.quickActions}</CardTitle>
-          </CardHeader>
+    <div className="mx-auto max-w-7xl p-6 space-y-6">
+      <section className="relative overflow-hidden rounded-2xl border bg-[var(--pp-panel)]" style={{ borderColor: 'var(--pp-border)' }}>
+        <div className="pointer-events-none absolute inset-0 opacity-80" aria-hidden
+             style={{ background: 'radial-gradient(1000px 360px at -10% -20%, color-mix(in oklab, var(--pp-primary) 14%, transparent), transparent 42%), linear-gradient(120deg, color-mix(in oklab, var(--pp-primary) 8%, transparent), transparent 65%)' }} />
+        <div className="relative z-10 p-4 md:p-6 flex items-center justify-between gap-3">
+          <h1 className="text-2xl md:text-3xl font-semibold">{pl.dashboard.title}</h1>
+          <div className="flex items-center gap-2">
+            <Link href="/klienci/nowy" className="inline-flex h-9 items-center gap-2 rounded-md border px-4 text-sm hover:bg-[var(--pp-primary-subtle-bg)]" style={{ borderColor: 'var(--pp-border)' }}>
+              <Plus className="h-4 w-4" /> {pl.clients.add}
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <KpiCard title="Klienci" value={clientsCount?.c ?? 0} delta={{ value: 4 }} icon={<Users className="h-5 w-5" />} />
+        <KpiCard title="Aktywne zlecenia" value={activeOrdersCount?.c ?? 0} delta={{ value: 2 }} icon={<ClipboardList className="h-5 w-5" />} />
+        <KpiCard title="Zakończone (7 dni)" value={completedWeek?.c ?? 0} icon={<CheckCircle2 className="h-5 w-5" />} />
+        <KpiCard title="Najbliższy tydzień" value={upcomingWeek?.c ?? 0} icon={<Calendar className="h-5 w-5" />} />
+      </section>
+
+      <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Card className="lg:col-span-2">
+          <CardHeader className="pb-2"><CardTitle>Trendy (14 dni)</CardTitle></CardHeader>
           <CardContent>
-            <div className="flex flex-col gap-2">
-              <Link
-                href="/klienci/nowy"
-                className="inline-flex h-9 items-center justify-center rounded-md bg-black px-3 text-sm font-medium text-white hover:bg-black/85 dark:bg-white dark:text-black dark:hover:bg-white/90"
-              >
-                + {pl.clients.add}
-              </Link>
-              <Link
-                href="/zlecenia/nowe"
-                className="inline-flex h-9 items-center justify-center rounded-md border border-black/15 bg-black/5 px-3 text-sm hover:bg-black/10 dark:border-white/15 dark:bg-white/10 dark:hover:bg-white/20"
-              >
-                Nowe zlecenie (wybór klienta)
-              </Link>
+            <div className="flex items-end justify-between">
+              <MiniSparkline points={counts} width={520} height={96} stroke="var(--pp-primary)" />
+              <div className="rounded-xl border p-3" style={{ borderColor: 'var(--pp-border)' }}>
+                <div className="text-xs opacity-70 mb-1">Wykonanie celu</div>
+                <CircularGauge value={Math.min(100, Math.round(((counts.reduce((a,b)=>a+b,0))/ (trendDays*2)) * 100))} />
+              </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>{pl.dashboard.recentClients}</CardTitle>
-          </CardHeader>
+          <CardHeader className="pb-2"><CardTitle>{pl.dashboard.recentClients}</CardTitle></CardHeader>
           <CardContent>
             <RecentClients />
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>{pl.nav?.settings || 'Ustawienia'}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm opacity-70">Zarządzanie aplikacją i ustawienia systemowe.</p>
-            <div className="mt-3 flex flex-col gap-2">
-              <Link href="/ustawienia" className="hover:underline focus:underline focus:outline-none">Przejdź do ustawień</Link>
-              <Link href="/ustawienia/uzytkownicy" className="hover:underline focus:underline focus:outline-none">Użytkownicy</Link>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      </section>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
-          <CardHeader>
-            <CardTitle>{pl.dashboard.recentChanges}</CardTitle>
-          </CardHeader>
+          <CardHeader className="pb-2"><CardTitle>{pl.dashboard.recentChanges}</CardTitle></CardHeader>
           <CardContent>
             <RecentChanges />
           </CardContent>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>{pl.dashboard.jobsTitle}</CardTitle>
-          </CardHeader>
+          <CardHeader className="pb-2"><CardTitle>{pl.dashboard.jobsTitle}</CardTitle></CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -100,12 +121,11 @@ export default async function Home() {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </section>
     </div>
   );
 }
 
-import { db } from "@/db";
 import { clients as clientsTable, clientNotes as clientNotesTable } from "@/db/schema";
 
 async function RecentClients() {

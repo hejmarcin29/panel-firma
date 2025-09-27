@@ -1,54 +1,44 @@
-"use client"
-import React, { useEffect, useRef, useState, useContext, createContext } from 'react'
+"use client";
+import * as React from "react";
+import * as RD from "@radix-ui/react-dropdown-menu";
 
 type DropdownMenuProps = {
-  trigger: React.ReactNode
-  children: React.ReactNode
-  align?: 'start' | 'end'
-}
+  trigger: React.ReactNode;
+  children: React.ReactNode;
+  align?: "start" | "end";
+};
 
-const DropdownContext = createContext<{ close: () => void } | null>(null)
-
-export function DropdownMenu({ trigger, children, align = 'start' }: DropdownMenuProps) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    function onDoc(e: MouseEvent) {
-      if (!ref.current) return
-      if (!ref.current.contains(e.target as Node)) setOpen(false)
-    }
-    document.addEventListener('mousedown', onDoc)
-    return () => document.removeEventListener('mousedown', onDoc)
-  }, [])
+export function DropdownMenu({ trigger, children, align = "start" }: DropdownMenuProps) {
   return (
-    <div className="relative inline-block" ref={ref}>
-      <button type="button" onClick={() => setOpen((v) => !v)} className="inline-flex h-8 items-center rounded-md border border-black/15 px-2 text-xs dark:border-white/15 hover:bg-black/5 dark:hover:bg-white/10">
-        {trigger}
-      </button>
-      {open && (
-        <div className={`absolute z-50 mt-1 min-w-36 rounded border border-black/15 bg-white p-1 text-sm shadow-lg dark:border-white/15 dark:bg-neutral-900 ${align === 'end' ? 'right-0' : 'left-0'}`} role="menu">
-          <DropdownContext.Provider value={{ close: () => setOpen(false) }}>
-            {children}
-          </DropdownContext.Provider>
-        </div>
-      )}
-    </div>
-  )
+    <RD.Root>
+      <RD.Trigger asChild>
+        <button type="button" className="inline-flex h-8 items-center rounded-md border border-black/15 px-2 text-xs dark:border-white/15 hover:bg-black/5 dark:hover:bg-white/10">
+          {trigger}
+        </button>
+      </RD.Trigger>
+      <RD.Portal>
+        <RD.Content
+          sideOffset={6}
+          align={align === "end" ? "end" : "start"}
+          className="z-50 min-w-36 rounded border border-black/15 bg-white p-1 text-sm shadow-lg outline-none dark:border-white/15 dark:bg-neutral-900 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2"
+        >
+          {children}
+        </RD.Content>
+      </RD.Portal>
+    </RD.Root>
+  );
 }
 
 export function DropdownItem({ onSelect, children }: { onSelect?: () => void; children: React.ReactNode }) {
-  const ctx = useContext(DropdownContext)
   return (
-    <button
-      type="button"
-      role="menuitem"
-      onClick={() => {
-        onSelect?.()
-        ctx?.close()
+    <RD.Item
+      onSelect={(e) => {
+        e.preventDefault();
+        onSelect?.();
       }}
-      className="block w-full rounded px-2 py-1 text-left hover:bg-black/5 dark:hover:bg-white/10"
+      className="relative flex w-full cursor-pointer select-none items-center rounded px-2 py-1 text-left outline-none hover:bg-black/5 focus:bg-black/5 dark:hover:bg-white/10 dark:focus:bg-white/10"
     >
       {children}
-    </button>
-  )
+    </RD.Item>
+  );
 }

@@ -16,10 +16,11 @@ const schema = z.object({
   phone: z.string().optional(),
   email: z.string().email('Podaj poprawny email').optional().or(z.literal('')),
   invoiceCity: z.string().optional(),
+  invoicePostalCode: z.string().optional(),
   invoiceAddress: z.string().optional(),
-  deliveryCity: z.string().optional(),
-  deliveryAddress: z.string().optional(),
-  sameAsInvoice: z.boolean().default(false),
+  taxId: z.string().optional(),
+  isCompany: z.boolean().default(false),
+  companyName: z.string().optional(),
   note: z.string().optional(),
   // Usunięto wybór serviceType z formularza – decyzja: domyślnie 'with_installation' pozostaje w backendzie (lub zostanie zrefaktoryzowane później)
 });
@@ -29,13 +30,9 @@ export default function NowyKlientPage() {
   const { toast } = useToast();
   const { register, handleSubmit, setValue, watch, formState: { errors, isSubmitting } } = useForm<z.input<typeof schema>>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      name: '', phone: '', email: '', invoiceCity: '', invoiceAddress: '', deliveryCity: '', deliveryAddress: '', sameAsInvoice: false, note: ''
-    }
+  defaultValues: { name: '', phone: '', email: '', invoiceCity: '', invoicePostalCode: '', invoiceAddress: '', taxId: '', companyName: '', isCompany: false, note: '' }
   });
-  const sameAsInvoice = watch('sameAsInvoice');
-  const invoiceCity = watch('invoiceCity');
-  const invoiceAddress = watch('invoiceAddress');
+  const isCompany = watch('isCompany');
 
   return (
     <div className="mx-auto max-w-2xl p-6">
@@ -45,16 +42,19 @@ export default function NowyKlientPage() {
       </div>
       <form className="space-y-4" onSubmit={handleSubmit(async (data) => {
         try {
-          const payload = {
+          const payload: Record<string, unknown> = {
             name: data.name,
             phone: data.phone || '',
             email: data.email || '',
             invoiceCity: data.invoiceCity || '',
+            invoicePostalCode: data.invoicePostalCode || '',
             invoiceAddress: data.invoiceAddress || '',
-            deliveryCity: (data.sameAsInvoice ? data.invoiceCity : data.deliveryCity) || '',
-            deliveryAddress: (data.sameAsInvoice ? data.invoiceAddress : data.deliveryAddress) || '',
-            // serviceType pomijamy – backend nada domyślność / zostanie uproszczone
           };
+          if (data.isCompany) {
+            if (data.taxId) payload.taxId = data.taxId;
+            if (data.companyName) payload.companyName = data.companyName;
+            // serviceType pomijamy – backend nada domyślność / zostanie uproszczone
+          }
           const r = await fetch('/api/klienci', {
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
           });
@@ -91,32 +91,37 @@ export default function NowyKlientPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <Label>{pl.clients.invoiceCity}</Label>
-            <Input {...register('invoiceCity')} onChange={(e) => { setValue('invoiceCity', e.target.value); if (sameAsInvoice) setValue('deliveryCity', e.target.value); }} />
+            <Input {...register('invoiceCity')} onChange={(e) => { setValue('invoiceCity', e.target.value); }} />
           </div>
           <div>
             <Label>{pl.clients.invoiceAddress}</Label>
-            <Input {...register('invoiceAddress')} onChange={(e) => { setValue('invoiceAddress', e.target.value); if (sameAsInvoice) setValue('deliveryAddress', e.target.value); }} />
+            <Input {...register('invoiceAddress')} onChange={(e) => { setValue('invoiceAddress', e.target.value); }} />
+          </div>
+          <div>
+            <Label>Kod pocztowy</Label>
+            <Input {...register('invoicePostalCode')} />
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <input id="same" type="checkbox" {...register('sameAsInvoice')} onChange={(e) => { setValue('sameAsInvoice', e.target.checked); if (e.target.checked) { setValue('deliveryCity', invoiceCity); setValue('deliveryAddress', invoiceAddress); } }} />
-          <label htmlFor="same" className="text-sm">{pl.clients.sameAsInvoice}</label>
+          <input id="isCompany" type="checkbox" {...register('isCompany')} />
+          <label htmlFor="isCompany" className="text-sm">Na firmę</label>
         </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <Label>{pl.clients.deliveryCity}</Label>
-            <Input {...register('deliveryCity')} />
+        {isCompany && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <Label>Nazwa firmy</Label>
+              <Input {...register('companyName')} />
+            </div>
+            <div>
+              <Label>NIP</Label>
+              <Input {...register('taxId')} placeholder="np. 1234567890" />
+            </div>
           </div>
-          <div>
-            <Label>{pl.clients.deliveryAddress}</Label>
-            <Input {...register('deliveryAddress')} />
-          </div>
-        </div>
+        )}
 
         {/* Pole wyboru typu usługi usunięte – placeholder do ewentualnego powrotu */}
 

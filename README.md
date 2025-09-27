@@ -2,6 +2,8 @@
 
 Stack: Next.js (App Router), Tailwind v4 (minimal, pod shadcn), Drizzle ORM + SQLite (better-sqlite3), Auth.js (Credentials + Drizzle), Argon2id (@node-rs/argon2).
 
+Nowe biblioteki (UI/UX): @tanstack/react-table, nprogress, @fullcalendar/react (+ daygrid, interaction), uploadthing (+ @uploadthing/react), yet-another-react-lightbox, pdfjs-dist.
+
 ## Stan systemu / Event store / Automatyzacje
 
 Na dashboardzie znajduje się sekcja „Stan systemu” z trzema przyciskami:
@@ -91,6 +93,7 @@ Wymagane zmienne środowiskowe (patrz `.env.example`):
 - NEXTAUTH_URL – publiczny adres aplikacji (np. https://panel.twojadomena.pl)
 - NEXTAUTH_SECRET – silny losowy sekret (min. 32 znaki)
 - DATABASE_URL – dla SQLite: `file:./data/app.db`
+ - UPLOADTHING_SECRET, UPLOADTHING_APP_ID – wymagane do wysyłek plików (uploadthing)
 
 Budowa obrazu i uruchomienie:
 

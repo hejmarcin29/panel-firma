@@ -2,22 +2,22 @@
 
 /* Simplified base variables (no Tailwind @plugin/@theme to avoid editor errors) */
 :root {
-  /* Neutral base */
-  --background: #ffffff;
-  --foreground: #1B1B1B;
+  /* Neutral base (light) */
+  --background: #FAFAFA;
+  --foreground: #0E0F11;
 
-  /* Prime brand tokens (light theme) */
-  --pp-primary: #C64536; /* CTA / akcent */
-  --pp-primary-600: #A83A2E; /* hover/active */
-  --pp-primary-ring: rgba(198, 69, 54, 0.35); /* focus outline */
-  --pp-primary-subtle-bg: #FBEAE8; /* delikatne tło akcentu */
-  --pp-primary-subtle-border: #E9B5B0; /* obrys delikatny */
+  /* Brand (light) – czerwony #b02417 */
+  --pp-primary: #b02417; /* CTA / akcent */
+  --pp-primary-600: #981f14; /* hover/active */
+  --pp-primary-ring: rgba(176, 36, 23, 0.45); /* focus outline */
+  --pp-primary-subtle-bg: #fbe6e2; /* delikatne tło akcentu */
+  --pp-primary-subtle-border: #f1b9b1; /* obrys delikatny */
 
   --pp-bg: #FFFFFF; /* tło stron/paneli */
   --pp-panel: #FFFFFF; /* karty/panele */
-  --pp-text: #1B1B1B; /* tekst główny */
-  --pp-text-muted: #6B7280; /* tekst pomocniczy */
-  --pp-border: #E5E7EB; /* obrysy / separatory */
+  --pp-text: #0E0F11; /* tekst główny */
+  --pp-text-muted: #5E6673; /* tekst pomocniczy */
+  --pp-border: #E6E8EC; /* obrysy / separatory */
 }
 
 /* Usuwamy automatyczne przełączanie na dark na podstawie systemu.
@@ -26,17 +26,18 @@
 
 /* Explicit dark-mode overrides controlled by next-themes (.dark on <html>) */
 .dark {
-  --background: #0B1220;
-  --foreground: #E6EAF2;
-  --pp-panel: #0E1626;
-  --pp-text: #E6EAF2;
-  --pp-text-muted: #9AA4B2;
-  --pp-border: #1E2A41;
-  /* Primary keeps brand red; ring a bit stronger on dark */
-  --pp-primary: #C64536;
-  --pp-primary-600: #A83A2E;
-  --pp-primary-ring: rgba(198, 69, 54, 0.5);
-  --pp-primary-subtle-bg: color-mix(in oklab, var(--pp-primary) 12%, transparent);
+  /* Anthracite theme */
+  --background: #0F1114;
+  --foreground: #E9EDF3;
+  --pp-panel: #121418; /* antracyt */
+  --pp-text: #E9EDF3;
+  --pp-text-muted: #A3ADBA;
+  --pp-border: #232833;
+  /* Primary stays red; ring nieco mocniejszy w dark */
+  --pp-primary: #b02417;
+  --pp-primary-600: #981f14;
+  --pp-primary-ring: rgba(176, 36, 23, 0.55);
+  --pp-primary-subtle-bg: color-mix(in oklab, var(--pp-primary) 14%, transparent);
 }
 
 body {

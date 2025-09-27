@@ -96,3 +96,44 @@ export function OutcomeBadge({ outcome, iconOnly = true }: { outcome: "won" | "l
     </Badge>
   );
 }
+
+export function PipelineStageBadge({ stage }: { stage: string | null | undefined }) {
+  if (!stage) {
+    return (
+      <Badge size="xs" variant="neutral">
+        <span className="inline-flex items-center gap-1.5">
+          <Loader2 className="h-3.5 w-3.5" />
+          Etap
+        </span>
+      </Badge>
+    );
+  }
+  const labels: Record<string, string> = {
+    // delivery
+    offer_sent: 'Wysłana oferta',
+    awaiting_payment: 'Czeka na wpłatę',
+    delivery: 'Dostawa',
+    final_invoice_issued: 'Wystawiona faktura końcowa',
+    // installation
+    awaiting_measurement: 'Czeka na pomiar',
+    awaiting_quote: 'Czeka na wycenę',
+    before_contract: 'Przed umową',
+    before_advance: 'Przed zaliczką',
+    before_installation: 'Przed montażem',
+    before_final_invoice: 'Przed fakturą końcową',
+    done: 'Koniec',
+  };
+  // Prosty dobór ikon wg prefiksu
+  let icon: React.ReactNode = <Clock className="h-3.5 w-3.5" />;
+  if (stage === 'delivery') icon = <Truck className="h-3.5 w-3.5" />;
+  if (stage === 'done') icon = <CheckCircle2 className="h-3.5 w-3.5" />;
+  if (stage === 'before_installation' || stage === 'awaiting_measurement') icon = <Wrench className="h-3.5 w-3.5" />;
+  return (
+    <Badge size="xs" variant="neutral">
+      <span className="inline-flex items-center gap-1.5">
+        {icon}
+        {labels[stage] || stage}
+      </span>
+    </Badge>
+  );
+}

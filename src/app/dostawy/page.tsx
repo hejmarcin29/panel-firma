@@ -70,10 +70,14 @@ export default async function DeliveriesBoard() {
 
   return (
     <div className="mx-auto max-w-none p-4 md:p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-semibold">Dostawy — checklisty</h1>
-        <Link href="/montaze" className="inline-flex h-9 items-center rounded-md border border-black/15 px-3 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Przejdź do Montaży</Link>
-      </div>
+      <section className="relative overflow-hidden rounded-2xl border bg-[var(--pp-panel)] mb-4" style={{ borderColor: 'var(--pp-border)' }}>
+        <div className="pointer-events-none absolute inset-0 opacity-80" aria-hidden
+             style={{ background: 'radial-gradient(1000px 360px at -10% -20%, color-mix(in oklab, var(--pp-primary) 14%, transparent), transparent 42%), linear-gradient(120deg, color-mix(in oklab, var(--pp-primary) 8%, transparent), transparent 65%)' }} />
+        <div className="relative z-10 p-4 md:p-6 flex items-center justify-between gap-3">
+          <h1 className="text-2xl md:text-3xl font-semibold">Dostawy — checklisty</h1>
+          <Link href="/montaze" className="inline-flex h-9 items-center rounded-md border px-3 text-sm hover:bg-[var(--pp-primary-subtle-bg)]" style={{ borderColor: 'var(--pp-border)' }}>Przejdź do Montaży</Link>
+        </div>
+      </section>
       <div className="rounded-md border border-black/10 dark:border-white/10 overflow-x-auto">
         <table className="w-full text-sm min-w-[920px]">
           <thead className="text-left bg-black/5 dark:bg-white/10">

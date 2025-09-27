@@ -6,13 +6,13 @@ import Link from 'next/link'
 import { pl } from '@/i18n/pl'
 import { OrderOutcomeButtons } from '../../components/order-outcome-buttons.client'
 import { Wrench, Truck, Info } from 'lucide-react'
-import { TypeBadge, StatusBadge, OutcomeBadge } from '@/components/badges'
+import { TypeBadge, OutcomeBadge, PipelineStageBadge } from '@/components/badges'
 import { QuickChecklistBar } from '@/components/quick-checklist-bar.client'
 import { FiltersDropdown } from '@/components/filters-dropdown.client'
 
 export const dynamic = 'force-dynamic'
 
-type SearchParams = Promise<{ q?: string; status?: string; type?: string; outcome?: string; page?: string; installer?: string; sort?: string; dir?: string; scope?: string }>
+type SearchParams = Promise<{ q?: string; type?: string; outcome?: string; page?: string; installer?: string; sort?: string; dir?: string; scope?: string }>
 
 type Row = {
   id: string
@@ -43,14 +43,13 @@ type Row = {
 }
 
 export default async function OrdersPage({ searchParams }: { searchParams: SearchParams }) {
-  const { q = '', status = 'all', type = 'all', outcome = 'all', page = '1', installer = '', sort = 'created', dir = 'desc', scope = 'active' } = await searchParams
+  const { q = '', type = 'all', outcome = 'all', page = '1', installer = '', sort = 'created', dir = 'desc', scope = 'active' } = await searchParams
   const pageNum = Math.max(1, parseInt(page || '1', 10) || 1)
   const limit = 20
   const offset = (pageNum - 1) * limit
 
   const clauses: SQL[] = []
   if (q) clauses.push(like(clients.name, `%${q}%`) as unknown as SQL)
-  if (status !== 'all') clauses.push(eq(orders.status, status) as unknown as SQL)
   if (type !== 'all') clauses.push(eq(orders.type, type) as unknown as SQL)
   if (installer) clauses.push(eq(orders.installerId, installer) as unknown as SQL)
   // outcome filter: active (no outcome), won, lost, all
@@ -65,6 +64,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
       createdAt: orders.createdAt,
       type: orders.type,
       status: orders.status,
+  pipelineStage: orders.pipelineStage,
       outcome: orders.outcome,
       clientId: orders.clientId,
       clientName: clients.name,
@@ -147,58 +147,61 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
     .where(eq(users.role, 'installer'))
 
   // Krótsze etykiety statusów do listy (węższa kolumna)
-  const statusShort: Record<string, string> = {
-    awaiting_measurement: 'Pomiar',
-    ready_to_schedule: 'Gotowe',
-    scheduled: 'Zaplan.',
-    completed: 'Zakończ.',
-    cancelled: 'Anul.'
-  }
+  // status usunięty z UI – pokazujemy etap (pipelineStage)
 
   return (
     <div className="mx-auto max-w-none p-4 md:p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-semibold">{pl.orders.title}</h1>
-        <div className="flex gap-2">
-          <Link href="/zlecenia/nowe" className="inline-flex h-9 items-center rounded-md border border-black/15 px-3 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">{pl.orders.new}</Link>
-          <Link href="/zlecenia/archiwum" className="inline-flex h-9 items-center rounded-md border border-black/15 px-3 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Archiwum</Link>
+      <section className="relative overflow-hidden rounded-2xl border bg-[var(--pp-panel)] mb-4" style={{ borderColor: 'var(--pp-border)' }}>
+        <div className="pointer-events-none absolute inset-0 opacity-80" aria-hidden
+             style={{ background: 'radial-gradient(1000px 360px at -10% -20%, color-mix(in oklab, var(--pp-primary) 14%, transparent), transparent 42%), linear-gradient(120deg, color-mix(in oklab, var(--pp-primary) 8%, transparent), transparent 65%)' }} />
+        <div className="relative z-10 p-4 md:p-6 flex items-center justify-between gap-3">
+          <h1 className="text-2xl md:text-3xl font-semibold">{pl.orders.title}</h1>
+          <div className="flex gap-2 flex-wrap">
+            <Link href="/zlecenia/nowe" className="inline-flex h-9 items-center rounded-md border px-3 text-sm hover:bg-[var(--pp-primary-subtle-bg)]" style={{ borderColor: 'var(--pp-border)' }}>{pl.orders.new}</Link>
+            <Link href="/zlecenia/kalendarz" className="inline-flex h-9 items-center rounded-md border px-3 text-sm hover:bg-[var(--pp-primary-subtle-bg)]" style={{ borderColor: 'var(--pp-border)' }}>Kalendarz</Link>
+            <Link href={`/zlecenia/kalendarz?date=${encodeURIComponent(new Date().toISOString().slice(0,10))}&view=dayGridMonth`}
+              className="inline-flex h-9 items-center rounded-md border px-3 text-sm hover:bg-[var(--pp-primary-subtle-bg)]" style={{ borderColor: 'var(--pp-border)' }}>Dziś</Link>
+            <Link href={`/zlecenia/kalendarz?range=week&date=${encodeURIComponent(new Date().toISOString().slice(0,10))}&view=dayGridWeek`}
+              className="inline-flex h-9 items-center rounded-md border px-3 text-sm hover:bg-[var(--pp-primary-subtle-bg)]" style={{ borderColor: 'var(--pp-border)' }}>Tydzień</Link>
+            <Link href="/zlecenia/archiwum" className="inline-flex h-9 items-center rounded-md border px-3 text-sm hover:bg-[var(--pp-primary-subtle-bg)]" style={{ borderColor: 'var(--pp-border)' }}>Archiwum</Link>
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* Filters: collapsible on mobile */}
       <div className="md:hidden">
         <details className="rounded-md border border-black/10 dark:border-white/10 p-2">
           <summary className="cursor-pointer text-sm">Filtry</summary>
           <div className="mt-2">
-            <Filters q={q} status={status} type={type} outcome={outcome} installer={installer} sort={sort} dir={dir} scope={scope} installers={installers} />
+            <Filters q={q} type={type} outcome={outcome} installer={installer} sort={sort} dir={dir} scope={scope} installers={installers} />
           </div>
         </details>
       </div>
       <div className="hidden md:block">
-        <Filters q={q} status={status} type={type} outcome={outcome} installer={installer} sort={sort} dir={dir} scope={scope} installers={installers} />
+  <Filters q={q} type={type} outcome={outcome} installer={installer} sort={sort} dir={dir} scope={scope} installers={installers} />
       </div>
 
       <div className="mt-2 flex flex-wrap gap-2">
         {/* Szybkie filtrowanie typu */}
         <Link
-          href={`/zlecenia?${new URLSearchParams({ q, status, outcome, installer, sort, dir, scope, type: type==='installation' ? 'all' : 'installation' }).toString()}`}
+          href={`/zlecenia?${new URLSearchParams({ q, outcome, installer, sort, dir, scope, type: type==='installation' ? 'all' : 'installation' }).toString()}`}
           className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-2 text-xs ${type==='installation' ? 'bg-black text-white dark:bg-white dark:text-black border-black/15 dark:border-white/15' : 'border-black/15 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10'}`}
         >
           <Wrench className="h-3.5 w-3.5" /> Pokaż tylko montaż
         </Link>
         <Link
-          href={`/zlecenia?${new URLSearchParams({ q, status, outcome, installer, sort, dir, scope, type: type==='delivery' ? 'all' : 'delivery' }).toString()}`}
+          href={`/zlecenia?${new URLSearchParams({ q, outcome, installer, sort, dir, scope, type: type==='delivery' ? 'all' : 'delivery' }).toString()}`}
           className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-2 text-xs ${type==='delivery' ? 'bg-black text-white dark:bg-white dark:text-black border-black/15 dark:border-white/15' : 'border-black/15 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10'}`}
         >
           <Truck className="h-3.5 w-3.5" /> Pokaż tylko dostawa
         </Link>
         <Link
-          href={`/zlecenia?${new URLSearchParams({ q, status, outcome, installer, sort, dir, scope, type: 'all' }).toString()}`}
+          href={`/zlecenia?${new URLSearchParams({ q, outcome, installer, sort, dir, scope, type: 'all' }).toString()}`}
           className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-2 text-xs ${type==='all' ? 'bg-black text-white dark:bg-white dark:text-black border-black/15 dark:border-white/15' : 'border-black/15 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10'}`}
         >
           Wszystkie
         </Link>
-        <FiltersDropdown q={q} status={status} type={type} outcome={outcome} installer={installer} sort={sort} dir={dir} scope={scope} />
+  <FiltersDropdown q={q} type={type} outcome={outcome} installer={installer} sort={sort} dir={dir} scope={scope} />
       </div>
 
       {/* Table for md+ */}
@@ -209,7 +212,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
               <th className="px-3 py-2 w-[120px]">Nr</th>
               <th className="px-3 py-2 w-[220px]">Klient</th>
               <th className="px-3 py-2 w-[90px]">Typ</th>
-              <th className="px-3 py-2 w-[120px]">Status</th>
+              <th className="px-3 py-2 w-[140px]">Etap</th>
               <th className="px-3 py-2 w-[170px]">Checklist</th>
               <th className="px-3 py-2 w-[120px]">Dostawa</th>
               <th className="px-3 py-2 w-[120px]">Montaż</th>
@@ -233,7 +236,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                 </td>
                 <td className="px-3 py-2 max-w-[220px] truncate" title={r.clientName || r.clientId}>{r.clientName || r.clientId}</td>
                 <td className="px-3 py-2"><TypeBadge type={r.type} /></td>
-                <td className="px-3 py-2"><StatusBadge status={r.status} label={statusShort[r.status] || (pl.orders.statuses as Record<string,string>)[r.status] || r.status} /></td>
+                <td className="px-3 py-2"><PipelineStageBadge stage={(r as any).pipelineStage} /></td>
                 <td className="px-3 py-2">
                   <QuickChecklistBar
                     orderId={r.id}
@@ -302,7 +305,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                   </Link>
                   <div className="flex items-center gap-2">
                     <TypeBadge type={r.type} />
-                    <StatusBadge status={r.status} label={statusLabel} />
+                    <PipelineStageBadge stage={(r as any).pipelineStage} />
                   </div>
                 </div>
                 {/* Mini-kafelki checklisty na mobile */}
@@ -345,22 +348,13 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
   )
 }
 
-function Filters({ q, status, type, outcome, installer, sort, dir, scope, installers }: { q: string; status: string; type: string; outcome: string; installer: string; sort: string; dir: string; scope: string; installers: { id: string; name: string | null }[] }) {
+function Filters({ q, type, outcome, installer, sort, dir, scope, installers }: { q: string; type: string; outcome: string; installer: string; sort: string; dir: string; scope: string; installers: { id: string; name: string | null }[] }) {
   return (
     <form className="flex flex-wrap gap-2 items-end">
       <input type="hidden" name="scope" value={scope} />
       <div className="flex flex-col">
         <label className="text-xs opacity-70">Szukaj klienta</label>
         <input name="q" defaultValue={q} placeholder={pl.orders.searchPlaceholder} className="h-9 rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15" />
-      </div>
-      <div className="flex flex-col">
-        <label className="text-xs opacity-70">Status</label>
-        <select name="status" defaultValue={status} className="h-9 rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15">
-          <option value="all">Wszystkie</option>
-          {Object.entries(pl.orders.statuses).map(([k, v]) => (
-            <option key={k} value={k}>{v}</option>
-          ))}
-        </select>
       </div>
       <div className="flex flex-col">
         <label className="text-xs opacity-70">Wynik</label>

@@ -30,9 +30,9 @@ export async function GET(req: Request) {
     if (status) clauses.push(eq(orders.status, status) as unknown as SQL)
     if (installerId) clauses.push(eq(orders.installerId, installerId) as unknown as SQL)
     const whereExpr: SQL | undefined = clauses.length === 0 ? undefined : (clauses.length === 1 ? clauses[0] : and(...clauses))
-    const base = db.select().from(orders)
+  const base = db.select().from(orders)
     const query = whereExpr ? base.where(whereExpr) : base
-    const list: Order[] = await query.orderBy(desc(orders.createdAt)).limit(limit ?? 200)
+  const list: Order[] = await query.orderBy(desc(orders.createdAt)).limit(limit ?? 200)
 
     if (withFlags) {
       const ids = list.map(o => o.id)
