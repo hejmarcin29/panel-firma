@@ -7,8 +7,13 @@ import { redirect } from "next/navigation";
 import { orders as ordersTable, clients as clientsTbl } from "@/db/schema";
 import { and, gte, lte, eq as deq, asc, desc, ne, eq, isNull } from "drizzle-orm";
 
+export const dynamic = 'force-dynamic'
+
 export default async function Home() {
   const session = await getSession();
+  if (!session) {
+    redirect('/login')
+  }
   const role = session?.user?.role as string | undefined;
   if (role !== 'admin') {
     redirect('/panel/montazysta');

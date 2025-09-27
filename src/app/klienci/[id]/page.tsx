@@ -243,11 +243,6 @@ export default function KlientPage() {
               })}
             </div>
           )}
-          <div className="mt-3">
-            <Link href={`/klienci/${id}/zlecenia/nowe`} className="inline-flex h-8 items-center gap-1.5 rounded-md border border-black/15 px-2 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">
-              <Plus className="h-4 w-4" /> Nowe zlecenie
-            </Link>
-          </div>
         </CardContent>
       </Card>
 

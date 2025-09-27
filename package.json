@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+  "dev": "node migrate.mjs && next dev --turbopack",
     "build": "next build --turbopack",
+    "migrate": "node migrate.mjs",
     "start": "next start",
     "lint": "eslint",
     "check:iteration": "node scripts/check-system-info.mjs",

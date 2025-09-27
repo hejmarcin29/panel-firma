@@ -43,13 +43,16 @@ export async function createOrderFromBody(session: SessionLike | null, raw: unkn
   const status = START_STATUS[type]
   const now = new Date()
 
-  // transactional seq + orderNo assignment
-  await db.transaction(async (tx) => {
-    // get clientNo
-    const [c] = await tx.select({ clientNo: clients.clientNo }).from(clients).where(eq(clients.id, clientId)).limit(1)
-    const clientNo = c?.clientNo ?? null
-    // find next seq for this client
-    const last = await tx
+  // Pobierz clientNo (może być null, wtedy orderNo też null)
+  const [c] = await db.select({ clientNo: clients.clientNo }).from(clients).where(eq(clients.id, clientId)).limit(1)
+  const clientNo = c?.clientNo ?? null
+
+  // Bez transakcji: policz seq i spróbuj wstawić; na konflikt spróbuj ponownie (do 3 razy)
+  let attempts = 0
+  let inserted = false
+  while (!inserted && attempts < 3) {
+    attempts++
+    const last = await db
       .select({ s: orders.seq })
       .from(orders)
       .where(eq(orders.clientId, clientId))
@@ -58,20 +61,33 @@ export async function createOrderFromBody(session: SessionLike | null, raw: unkn
     const maxSeq = last[0]?.s ?? null
     const nextSeq = (maxSeq ?? 0) + 1
     const orderNo = clientNo != null ? `${clientNo}_${nextSeq}` : null
-    await tx.insert(orders).values({
-      id,
-      clientId,
-      type,
-      status,
-      requiresMeasurement: type === 'installation',
-      installerId: installerId ?? null,
-      preMeasurementSqm: preMeasurementSqm ?? null,
-      internalNote: note ? note : null,
-      internalNoteUpdatedAt: note ? now : null,
-      seq: nextSeq,
-      orderNo,
-    })
-  })
+    try {
+      await db.insert(orders).values({
+        id,
+        clientId,
+        type,
+        status,
+        requiresMeasurement: type === 'installation',
+        installerId: installerId ?? null,
+        preMeasurementSqm: preMeasurementSqm ?? null,
+        internalNote: note ? note : null,
+        internalNoteUpdatedAt: note ? now : null,
+        seq: nextSeq,
+        orderNo,
+      })
+      inserted = true
+    } catch (err) {
+      const msg = (err as Error).message || ''
+      if (/UNIQUE\s+constraint/i.test(msg)) {
+        // wyścig – spróbuj ponownie z kolejnym seq
+        continue
+      }
+      throw err
+    }
+  }
+  if (!inserted) {
+    return NextResponse.json({ error: 'Nie udało się wygenerować numeru zlecenia' }, { status: 409 })
+  }
 
   if (note) {
     await db.insert(orderNoteHistory).values({
@@ -83,16 +99,30 @@ export async function createOrderFromBody(session: SessionLike | null, raw: unkn
     })
   }
 
-  // fetch numbers for enriched payload
-  const [created] = await db.select({ orderNo: orders.orderNo, clientNo: clients.clientNo }).from(orders)
-    .leftJoin(clients, eq(orders.clientId, clients.id))
-    .where(eq(orders.id, id)).limit(1)
-  await emitDomainEvent({
-    type: DomainEventTypes.orderCreated,
-    actor: session.user?.email ?? 'system',
-    entity: { type: 'order', id },
-    payload: { id, clientId, type, status, clientNo: created?.clientNo ?? null, orderNo: created?.orderNo ?? null },
-  })
+  // fetch numbers for enriched payload + emit event (nie blokuj odpowiedzi jeśli event padnie)
+  try {
+    const [created] = await db
+      .select({ orderNo: orders.orderNo, clientNo: clients.clientNo })
+      .from(orders)
+      .leftJoin(clients, eq(orders.clientId, clients.id))
+      .where(eq(orders.id, id))
+      .limit(1)
+    await emitDomainEvent({
+      type: DomainEventTypes.orderCreated,
+      actor: session.user?.email ?? 'system',
+      entity: { type: 'order', id },
+      payload: {
+        id,
+        clientId,
+        type,
+        status,
+        clientNo: created?.clientNo ?? null,
+        orderNo: created?.orderNo ?? null,
+      },
+    })
+  } catch (e) {
+    console.error('[event order.created] emit failed (non-blocking)', e)
+  }
 
-  return NextResponse.json({ id })
+  return NextResponse.json({ ok: true, id }, { status: 201 })
 }

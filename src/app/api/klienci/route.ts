@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { clients, type Client } from "@/db/schema";
+import { clients } from "@/db/schema";
 import { randomUUID } from "crypto";
 import { getSession } from "@/lib/auth-session";
 import { desc, isNotNull } from "drizzle-orm";
@@ -31,56 +31,85 @@ export async function GET() {
 
 // POST /api/klienci - utwórz klienta
 export async function POST(req: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const session = await getSession();
+    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const raw = (await req.json().catch(() => null)) as unknown;
-  const body: Partial<ClientCreateBody> | null = (raw && typeof raw === 'object') ? raw as Partial<ClientCreateBody> : null;
+    const raw = (await req.json().catch(() => null)) as unknown;
+    const body: Partial<ClientCreateBody> | null = (raw && typeof raw === 'object') ? raw as Partial<ClientCreateBody> : null;
 
-  const trimOrNull = (v: unknown) => {
-    if (typeof v !== 'string') return null;
-    const t = v.trim();
-    return t === '' ? null : t;
-  };
+    const trimOrNull = (v: unknown) => {
+      if (typeof v !== 'string') return null;
+      const t = v.trim();
+      return t === '' ? null : t;
+    };
 
-  const name = typeof body?.name === 'string' ? body.name.trim() : '';
-  if (!name) return NextResponse.json({ error: "Imię i nazwisko wymagane" }, { status: 400 });
+    const name = typeof body?.name === 'string' ? body.name.trim() : '';
+    if (!name) return NextResponse.json({ error: "Imię i nazwisko wymagane" }, { status: 400 });
 
-  // Prepare base insert data (clientNo will be assigned in transaction)
-  const base: Omit<typeof clients.$inferInsert, 'clientNo'> = {
-    id: randomUUID(),
-    name,
-    phone: trimOrNull(body?.phone) ?? null,
-    email: trimOrNull(body?.email) ?? null,
-    invoiceCity: trimOrNull(body?.invoiceCity) ?? null,
-    invoiceAddress: trimOrNull(body?.invoiceAddress) ?? null,
-    deliveryCity: trimOrNull(body?.deliveryCity) ?? null,
-    deliveryAddress: trimOrNull(body?.deliveryAddress) ?? null,
-    // W tym etapie nie wybieramy typu usługi – ignorowane
-    serviceType: null as unknown as Client['serviceType'],
-  };
+    // Dane bazowe (clientNo wyliczymy poniżej)
+    const base: Omit<typeof clients.$inferInsert, 'clientNo'> = {
+      id: randomUUID(),
+      name,
+      phone: trimOrNull(body?.phone) ?? null,
+      email: trimOrNull(body?.email) ?? null,
+      invoiceCity: trimOrNull(body?.invoiceCity) ?? null,
+      invoiceAddress: trimOrNull(body?.invoiceAddress) ?? null,
+      deliveryCity: trimOrNull(body?.deliveryCity) ?? null,
+      deliveryAddress: trimOrNull(body?.deliveryAddress) ?? null,
+      // Ustaw jawnie, aby nie łapać NOT NULL przy create
+      serviceType: 'with_installation',
+    };
 
-  // Assign incremental clientNo starting at 10 (single-writer SQLite; wrap in tx for safety)
-  await db.transaction(async (tx) => {
-    const last = await tx
-      .select({ no: clients.clientNo })
-      .from(clients)
-      .where(isNotNull(clients.clientNo))
-      .orderBy(desc(clients.clientNo))
-      .limit(1)
-    const maxNo = last[0]?.no ?? null
-    const nextNo = (maxNo ?? 9) + 1
-    await tx.insert(clients).values({ ...base, clientNo: nextNo })
-  })
+    // Wylicz next clientNo bez transakcji (retry przy konflikcie unikalności)
+    const computeNextNo = async () => {
+      const last = await db
+        .select({ no: clients.clientNo })
+        .from(clients)
+        .where(isNotNull(clients.clientNo))
+        .orderBy(desc(clients.clientNo))
+        .limit(1);
+      const maxNo = last[0]?.no ?? null;
+      return (maxNo ?? 9) + 1;
+    };
 
-  const userEmail = (session as SessionUser | null)?.user?.email ?? null;
-  await emitDomainEvent({
-    type: DomainEventTypes.clientCreated,
-    actor: userEmail,
-    entity: { type: 'client', id: base.id },
-    payload: { id: base.id, name: base.name },
-    schemaVersion: 2,
-  });
+    let attempts = 0;
+    const maxAttempts = 3;
+    let created = false;
+    let clientNoAssigned: number | null = null;
+    while (!created && attempts < maxAttempts) {
+      attempts++;
+      const nextNo = await computeNextNo();
+      try {
+        await db.insert(clients).values({ ...base, clientNo: nextNo });
+        clientNoAssigned = nextNo;
+        created = true;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (/unique|UNIQUE|constraint/i.test(msg)) {
+          // Kolizja numeru – spróbuj ponownie
+          continue;
+        }
+        console.error('[POST /api/klienci] Insert failed', e);
+        return NextResponse.json({ error: 'Błąd serwera (insert)' }, { status: 500 });
+      }
+    }
+    if (!created) {
+      return NextResponse.json({ error: 'Konflikt numeracji klienta, spróbuj ponownie' }, { status: 409 });
+    }
 
-  return NextResponse.json({ id: base.id });
+    const userEmail = (session as SessionUser | null)?.user?.email ?? null;
+    await emitDomainEvent({
+      type: DomainEventTypes.clientCreated,
+      actor: userEmail,
+      entity: { type: 'client', id: base.id },
+      payload: { id: base.id, name: base.name, clientNo: clientNoAssigned },
+      schemaVersion: 2,
+    });
+
+    return NextResponse.json({ id: base.id });
+  } catch (err) {
+    console.error('[POST /api/klienci] Error', err);
+    return NextResponse.json({ error: 'Błąd serwera' }, { status: 500 });
+  }
 }
