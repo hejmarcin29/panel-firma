@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { orders, type Order } from '@/db/schema';
+import { orders, type Order, orderChecklistItems } from '@/db/schema';
 import { getSession } from '@/lib/auth-session';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, inArray } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm'
 import { createOrderFromBody } from './_lib';
 import { z } from 'zod'
@@ -14,6 +14,7 @@ const listQuerySchema = z.object({
   status: z.enum(['awaiting_measurement','ready_to_schedule','scheduled','completed','cancelled']).optional(),
   installerId: z.string().uuid().optional(),
   limit: z.coerce.number().int().positive().max(200).optional(),
+  withFlags: z.union([z.literal('1'), z.literal('true')]).optional(),
 })
 
 export async function GET(req: Request) {
@@ -22,7 +23,7 @@ export async function GET(req: Request) {
     const raw = Object.fromEntries(url.searchParams.entries())
     const parsed = listQuerySchema.safeParse(raw)
     if (!parsed.success) return NextResponse.json({ error: 'Błędne parametry', issues: parsed.error.issues }, { status: 400 })
-    const { clientId, type, status, installerId, limit } = parsed.data
+    const { clientId, type, status, installerId, limit, withFlags } = parsed.data
     const clauses: SQL[] = []
     if (clientId) clauses.push(eq(orders.clientId, clientId) as unknown as SQL)
     if (type) clauses.push(eq(orders.type, type) as unknown as SQL)
@@ -32,6 +33,24 @@ export async function GET(req: Request) {
     const base = db.select().from(orders)
     const query = whereExpr ? base.where(whereExpr) : base
     const list: Order[] = await query.orderBy(desc(orders.createdAt)).limit(limit ?? 200)
+
+    if (withFlags) {
+      const ids = list.map(o => o.id)
+      if (ids.length === 0) return NextResponse.json({ orders: [] })
+      const items = await db
+        .select({ orderId: orderChecklistItems.orderId, key: orderChecklistItems.key, done: orderChecklistItems.done })
+        .from(orderChecklistItems)
+        .where(inArray(orderChecklistItems.orderId, ids))
+      const byOrder = new Map<string, Record<string, boolean>>()
+      for (const it of items) {
+        const m = byOrder.get(it.orderId) ?? {}
+        m[it.key] = Boolean(it.done)
+        byOrder.set(it.orderId, m)
+      }
+      const withF = list.map(o => ({ ...o, flags: byOrder.get(o.id) ?? {} }))
+      return NextResponse.json({ orders: withF });
+    }
+
     return NextResponse.json({ orders: list });
   } catch (err) {
     console.error('[GET /api/zlecenia] Error', err);

@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth-session'
 import { ChecklistCell } from '@/components/checklist-cell.client'
+import { OrderPipeline } from '@/components/order-pipeline.client'
+import { Info } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,6 +23,8 @@ type Row = {
   id: string
   orderNo: string | null
   clientName: string | null
+  status: string
+  pipelineStage: string | null
   flags: Record<string, boolean>
 }
 
@@ -34,6 +38,8 @@ export default async function DeliveriesBoard() {
       id: orders.id,
       orderNo: orders.orderNo,
       clientName: clients.name,
+      status: orders.status,
+      pipelineStage: orders.pipelineStage,
       // SQLite EXISTS zwraca 0/1 – typujemy jako number i rzutujemy na boolean
       proforma: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'proforma' AND oci.done = 1)`,
       advance_invoice: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'advance_invoice' AND oci.done = 1)`,
@@ -50,6 +56,8 @@ export default async function DeliveriesBoard() {
     id: r.id,
     orderNo: r.orderNo,
     clientName: r.clientName,
+    status: r.status,
+    pipelineStage: r.pipelineStage ?? null,
     flags: {
       proforma: Boolean(r.proforma),
       advance_invoice: Boolean(r.advance_invoice),
@@ -67,21 +75,34 @@ export default async function DeliveriesBoard() {
         <Link href="/montaze" className="inline-flex h-9 items-center rounded-md border border-black/15 px-3 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Przejdź do Montaży</Link>
       </div>
       <div className="rounded-md border border-black/10 dark:border-white/10 overflow-x-auto">
-        <table className="w-full text-sm min-w-[720px]">
+        <table className="w-full text-sm min-w-[920px]">
           <thead className="text-left bg-black/5 dark:bg-white/10">
             <tr>
               <th className="px-3 py-2">Nr zlecenia</th>
               <th className="px-3 py-2">Klient</th>
+              <th className="px-3 py-2">Etap</th>
               {cols.map(c => <th key={c.key} className="px-3 py-2 text-center">{c.label}</th>)}
             </tr>
           </thead>
           <tbody>
             {data.length === 0 ? (
-              <tr><td colSpan={2+cols.length} className="px-3 py-6 text-center opacity-70">Brak zleceń</td></tr>
+              <tr><td colSpan={3+cols.length} className="px-3 py-6 text-center opacity-70">Brak zleceń</td></tr>
             ) : data.map(r => (
               <tr key={r.id} className="border-t border-black/10 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10">
-                <td className="px-3 py-2"><Link className="hover:underline focus:underline focus:outline-none" href={`/zlecenia/${r.id}`}>{r.orderNo || r.id.slice(0,8)}</Link></td>
+                <td className="px-3 py-2">
+                  <div className="inline-flex items-center gap-2">
+                    <Link className="hover:underline focus:underline focus:outline-none" href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_d` : `/zlecenia/${r.id}`}>
+                      {r.orderNo ? `${r.orderNo}_d` : r.id.slice(0,8)}
+                    </Link>
+                    <Link href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_d` : `/zlecenia/${r.id}`} aria-label="Szczegóły" title="Szczegóły" className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-black/15 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">
+                      <Info className="h-3.5 w-3.5" />
+                    </Link>
+                  </div>
+                </td>
                 <td className="px-3 py-2">{r.clientName || '-'}</td>
+                <td className="px-3 py-2">
+                  <OrderPipeline orderId={r.id} type={'delivery'} stage={r.pipelineStage} />
+                </td>
                 {cols.map(c => (
                   <td key={c.key} className="px-3 py-2 text-center">
                     <ChecklistCell orderId={r.id} keyName={c.key} initial={r.flags[c.key]} />
