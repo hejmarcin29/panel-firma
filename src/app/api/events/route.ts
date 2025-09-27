@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db';
 import { domainEvents } from '@/db/schema';
 import { desc } from 'drizzle-orm';
 
+// Ten endpoint korzysta z DB – wyłącz statyczne cachowanie/prerender
+export const dynamic = 'force-dynamic'
+
 // GET /api/events - latest domain events (limit 100)
 export async function GET() {
+  // Lazy import DB, aby nie otwierać połączenia podczas build-time analizy modułów
+  const { db } = await import('@/db');
   const rows = await db.select().from(domainEvents).orderBy(desc(domainEvents.occurredAt)).limit(100);
   // Parse payload JSON lazily (client can stringify)
   const events = rows.map(r => ({

@@ -5,6 +5,9 @@ import { pl } from '@/i18n/pl';
 import Link from 'next/link';
 import { UsersListClient } from '@/components/users-list.client';
 
+// Ta strona czyta z DB – wymuszamy SSR i wyłączamy prerender przy buildzie
+export const dynamic = 'force-dynamic'
+
 export default async function UsersPage() {
   const users = await db
     .select({ id: usersTable.id, name: usersTable.name, email: usersTable.email, role: usersTable.role, createdAt: usersTable.createdAt })

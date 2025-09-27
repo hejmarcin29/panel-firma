@@ -6,6 +6,9 @@ import { pl } from '@/i18n/pl'
 import { Badge } from '@/components/ui/badge'
 import { StatusBadge } from '@/components/badges'
 
+// Ta strona korzysta z bazy w czasie żądania – wyłączamy prerender przy buildzie
+export const dynamic = 'force-dynamic'
+
 export default async function OrdersArchivePage() {
   const rows = await db
     .select({

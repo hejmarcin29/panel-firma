@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server'
-import { db } from '@/db'
 import { orders, clients } from '@/db/schema'
 import { getSession } from '@/lib/auth-session'
 import { eq, desc, and, isNull } from 'drizzle-orm'
+
+// Endpoint dynamiczny – bez prerenderu i bez otwierania DB w czasie builda
+export const dynamic = 'force-dynamic'
 
 export async function GET(req: Request) {
   try {
@@ -14,6 +16,8 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
     if (!user?.id) return NextResponse.json({ orders: [] })
+    // Lazy import DB, aby uniknąć otwierania połączenia w czasie build-time
+    const { db } = await import('@/db')
     const ordersList = await db
       .select({
         id: orders.id,
