@@ -59,6 +59,7 @@ export const pl = {
     systemInfoTitle: 'Jak działa ten projekt',
     systemInfoDescription: 'Najważniejsze elementy konfiguracji i utrzymania.',
     systemInfoPoints: [
+  '2025-09-27 – [ZMIANA] Porządki typów i lint: usunięto any w API (checklist/pipeline) i listach (zlecenia/montaże/dostawy), poprawiono zależności efektów; linter 0 błędów. Dopracowano pasek checklisty (portal + flip + animacja) i cofanie wyniku/archiwum w szczegółach.',
   '2025-09-26 – [ZMIANA] Zlecenia: wynik jako kompaktowe ikony (trofeum/przekreślone kółko) z tooltipem; dodano szybkie filtry: Aktywne/Wszystkie/Archiwalne oraz Tylko wygrane/tylko przegrane.',
   '2025-09-26 – [NOWE] Widoki zbiorcze checklist: osobne tabele dla Montaży (/montaze) i Dostaw (/dostawy) z przełączalnymi polami dla wszystkich zleceń.',
   '2025-09-26 – [ZMIANA] Zlecenia: lista zleceń ma szybkie filtry typu z przełączaniem, filtr po montażysty, sortowanie (klient/montażysta/dostawa/montaż/utworzono). Szczegóły zlecenia pokazują listę terminów (dostawy/montaże) z akcjami: Potwierdź/Przełóż/Zakończ/Anuluj.',
