@@ -31,7 +31,6 @@ COPY --from=builder /app/migrate.mjs ./migrate.mjs
 RUN mkdir -p /app/data && chown -R nextjs:nodejs /app
 VOLUME ["/app/data"]
 
-USER nextjs
 EXPOSE 3000
 ENV PORT=3000
 # Run migrations before starting the server (ESM)
