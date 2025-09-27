@@ -9,17 +9,18 @@ import { revalidatePath } from 'next/cache'
 
 const stagesDelivery = ['offer_sent','awaiting_payment','delivery','final_invoice_issued','done'] as const
 const stagesInstallation = ['awaiting_measurement','awaiting_quote','before_contract','before_advance','before_installation','before_final_invoice','done'] as const
+const allStages = [...stagesDelivery, ...stagesInstallation] as const
 
 export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }> }) {
   try {
     const session = await getSession()
-    const role = (session as any)?.user?.role as string | undefined
-    const actor = (session as any)?.user?.email ?? null
+    const role = session?.user?.role ?? null
+    const actor = session?.user?.email ?? null
     if (!session || (role !== 'admin' && role !== 'manager')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const { id } = await ctx.params
-    const json = await req.json().catch(() => null)
-    const bodySchema = z.object({ stage: z.string() })
+  const json = await req.json().catch(() => null)
+  const bodySchema = z.object({ stage: z.enum(allStages) })
     const parsed = bodySchema.safeParse(json)
     if (!parsed.success) return NextResponse.json({ error: 'Błąd walidacji', issues: parsed.error.issues }, { status: 400 })
 
@@ -27,9 +28,9 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
     if (!order) return NextResponse.json({ error: 'Nie znaleziono' }, { status: 404 })
     if (order.outcome) return NextResponse.json({ error: 'Zamknięte zlecenie' }, { status: 409 })
 
-    const allowedStages = order.type === 'delivery' ? stagesDelivery : stagesInstallation
-    const to = parsed.data.stage
-    if (!allowedStages.includes(to as any)) return NextResponse.json({ error: 'Nieprawidłowy etap' }, { status: 400 })
+  const allowedStages: readonly string[] = order.type === 'delivery' ? [...stagesDelivery] : [...stagesInstallation]
+  const to = parsed.data.stage
+  if (!allowedStages.includes(to)) return NextResponse.json({ error: 'Nieprawidłowy etap' }, { status: 400 })
 
     await db.update(orders).set({ pipelineStage: to, pipelineStageUpdatedAt: new Date() }).where(eq(orders.id, id))
 
@@ -44,7 +45,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
       type: DomainEventTypes.orderPipelineChanged,
       actor,
       entity: { type: 'order', id },
-      payload: { id, from: (order as any).pipelineStage ?? null, to, type: order.type as 'delivery'|'installation', clientNo: nums?.clientNo ?? null, orderNo: nums?.orderNo ?? null },
+      payload: { id, from: (order as { pipelineStage?: string | null }).pipelineStage ?? null, to, type: order.type as 'delivery'|'installation', clientNo: nums?.clientNo ?? null, orderNo: nums?.orderNo ?? null },
     })
 
     revalidatePath(`/zlecenia/${id}`)

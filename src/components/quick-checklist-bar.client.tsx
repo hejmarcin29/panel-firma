@@ -56,7 +56,7 @@ export function QuickChecklistBar({ orderId, type, items }: Props) {
     const next: Record<string, boolean> = {}
     for (const k of orderForType[type]) next[k] = map.get(k) || false
     setLocal(next)
-  }, [items, type])
+  }, [items, type, map])
 
   const popoverWidth = 288 // w-72
 
@@ -85,8 +85,8 @@ export function QuickChecklistBar({ orderId, type, items }: Props) {
 
   // Aktualizuj pozycję przy resize/scroll (zamykanie robimy wyłącznie przyciskiem Zamknij)
   useEffect(() => {
-    function onPointerDown(_e: PointerEvent) { /* noop: nie zamykamy kliknięciem poza */ }
-    function onKey(_e: KeyboardEvent) { /* noop: nie zamykamy ESC */ }
+  function onPointerDown() { /* noop: nie zamykamy kliknięciem poza */ }
+  function onKey() { /* noop: nie zamykamy ESC */ }
     function onScroll() {
       if (open) updatePosition()
     }
@@ -100,7 +100,8 @@ export function QuickChecklistBar({ orderId, type, items }: Props) {
     return () => {
       document.removeEventListener('pointerdown', onPointerDown)
       document.removeEventListener('keydown', onKey)
-      window.removeEventListener('scroll', onScroll, { capture: true } as any)
+  // Używamy capture: true przy rejestracji – usuń z capture=true (boolean)
+  window.removeEventListener('scroll', onScroll, true)
       window.removeEventListener('resize', onResize)
     }
   }, [open])

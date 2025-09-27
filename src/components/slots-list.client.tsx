@@ -49,7 +49,10 @@ function ActionButtons({ onConfirm, onComplete, onCancel, onReschedule, disabled
 
 export function DeliverySlotsList({ orderId, slots }: { orderId: string; slots: DeliverySlot[] }) {
   const [busy, setBusy] = useState<string | null>(null)
-  const patch = async (slotId: string, payload: any) => {
+  type DeliveryPatch =
+    | { status: 'planned' | 'confirmed' | 'completed' | 'canceled' }
+    | { plannedAt: number }
+  const patch = async (slotId: string, payload: DeliveryPatch) => {
     setBusy(slotId)
     try {
       const res = await fetch(`/api/zlecenia/${orderId}/dostawy/${slotId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
@@ -98,7 +101,10 @@ export function DeliverySlotsList({ orderId, slots }: { orderId: string; slots: 
 
 export function InstallationSlotsList({ orderId, slots }: { orderId: string; slots: InstallationSlot[] }) {
   const [busy, setBusy] = useState<string | null>(null)
-  const patch = async (slotId: string, payload: any) => {
+  type InstallationPatch =
+    | { status: 'planned' | 'confirmed' | 'completed' | 'canceled' }
+    | { plannedAt: number }
+  const patch = async (slotId: string, payload: InstallationPatch) => {
     setBusy(slotId)
     try {
       const res = await fetch(`/api/zlecenia/${orderId}/montaze/${slotId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })

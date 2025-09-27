@@ -12,9 +12,9 @@ const bodySchema = z.object({ key: z.string().min(1), done: z.boolean() })
 export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
   try {
     const session = await getSession()
-    const role = (session as any)?.user?.role as string | undefined
-    const actorEmail = (session as any)?.user?.email ?? null
-    const actorId = (session as any)?.user?.id ?? null
+    const role = session?.user?.role ?? null
+    const actorEmail = session?.user?.email ?? null
+    const actorId = session?.user?.id ?? null
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { id } = await ctx.params

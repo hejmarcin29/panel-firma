@@ -68,18 +68,18 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
       outcome: orders.outcome,
       clientId: orders.clientId,
       clientName: clients.name,
-      // Checklist flags via EXISTS
-      proforma: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'proforma' AND oci.done = 1)`,
-      advance_invoice: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'advance_invoice' AND oci.done = 1)`,
-      final_invoice: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'final_invoice' AND oci.done = 1)`,
-      post_delivery_invoice: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'post_delivery_invoice' AND oci.done = 1)`,
-      quote: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'quote' AND oci.done = 1)`,
-      done: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'done' AND oci.done = 1)`,
-      measurement: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'measurement' AND oci.done = 1)`,
-      contract: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'contract' AND oci.done = 1)`,
-      advance_payment: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'advance_payment' AND oci.done = 1)`,
-      installation: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'installation' AND oci.done = 1)`,
-      handover_protocol: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'handover_protocol' AND oci.done = 1)`,
+  // Checklist flags via EXISTS (SQLite returns 0/1)
+  proforma: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'proforma' AND oci.done = 1)`,
+  advance_invoice: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'advance_invoice' AND oci.done = 1)`,
+  final_invoice: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'final_invoice' AND oci.done = 1)`,
+  post_delivery_invoice: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'post_delivery_invoice' AND oci.done = 1)`,
+  quote: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'quote' AND oci.done = 1)`,
+  done: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'done' AND oci.done = 1)`,
+  measurement: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'measurement' AND oci.done = 1)`,
+  contract: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'contract' AND oci.done = 1)`,
+  advance_payment: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'advance_payment' AND oci.done = 1)`,
+  installation: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'installation' AND oci.done = 1)`,
+  handover_protocol: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'handover_protocol' AND oci.done = 1)`,
       // Correlated subqueries for the nearest active delivery/installation
       nextDeliveryAt: sql<number>`(
         SELECT ds.planned_at
@@ -241,7 +241,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                     items={(r.type === 'installation'
                       ? ['measurement','quote','contract','advance_payment','installation','handover_protocol','final_invoice','done']
                       : ['proforma','advance_invoice','final_invoice','post_delivery_invoice','quote','done']
-                    ).map(k => ({ key: k, label: k, done: ((r as any)[k] === 1 || (r as any)[k] === true) }))}
+                    ).map(k => ({ key: k, label: k, done: Boolean((r as Record<string, unknown>)[k]) }))}
                   />
                 </td>
                 <td className="px-3 py-2">
@@ -313,7 +313,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                     items={(r.type === 'installation'
                       ? ['measurement','quote','contract','advance_payment','installation','handover_protocol','final_invoice','done']
                       : ['proforma','advance_invoice','final_invoice','post_delivery_invoice','quote','done']
-                    ).map(k => ({ key: k, label: k, done: ((r as any)[k] === 1 || (r as any)[k] === true) }))}
+                    ).map(k => ({ key: k, label: k, done: Boolean((r as Record<string, unknown>)[k]) }))}
                   />
                 </div>
                 <div className="mt-1 text-sm">{r.clientName || r.clientId}</div>

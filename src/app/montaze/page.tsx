@@ -37,14 +37,14 @@ export default async function InstallationsBoard() {
       orderNo: orders.orderNo,
       clientName: clients.name,
       // boolean per key using EXISTS
-      measurement: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'measurement' AND oci.done = 1)`,
-      quote: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'quote' AND oci.done = 1)`,
-      contract: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'contract' AND oci.done = 1)`,
-      advance_payment: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'advance_payment' AND oci.done = 1)`,
-      installation: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'installation' AND oci.done = 1)`,
-      handover_protocol: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'handover_protocol' AND oci.done = 1)`,
-      final_invoice: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'final_invoice' AND oci.done = 1)`,
-      done: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'done' AND oci.done = 1)`,
+      measurement: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'measurement' AND oci.done = 1)`,
+      quote: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'quote' AND oci.done = 1)`,
+      contract: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'contract' AND oci.done = 1)`,
+      advance_payment: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'advance_payment' AND oci.done = 1)`,
+      installation: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'installation' AND oci.done = 1)`,
+      handover_protocol: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'handover_protocol' AND oci.done = 1)`,
+      final_invoice: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'final_invoice' AND oci.done = 1)`,
+      done: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'done' AND oci.done = 1)`,
     })
     .from(orders)
     .leftJoin(clients, eq(orders.clientId, clients.id))
@@ -55,14 +55,14 @@ export default async function InstallationsBoard() {
     orderNo: r.orderNo,
     clientName: r.clientName,
     flags: {
-      measurement: (r as any).measurement === 1 || (r as any).measurement === true,
-      quote: (r as any).quote === 1 || (r as any).quote === true,
-      contract: (r as any).contract === 1 || (r as any).contract === true,
-      advance_payment: (r as any).advance_payment === 1 || (r as any).advance_payment === true,
-      installation: (r as any).installation === 1 || (r as any).installation === true,
-      handover_protocol: (r as any).handover_protocol === 1 || (r as any).handover_protocol === true,
-      final_invoice: (r as any).final_invoice === 1 || (r as any).final_invoice === true,
-      done: (r as any).done === 1 || (r as any).done === true,
+      measurement: Boolean(r.measurement),
+      quote: Boolean(r.quote),
+      contract: Boolean(r.contract),
+      advance_payment: Boolean(r.advance_payment),
+      installation: Boolean(r.installation),
+      handover_protocol: Boolean(r.handover_protocol),
+      final_invoice: Boolean(r.final_invoice),
+      done: Boolean(r.done),
     }
   }))
 

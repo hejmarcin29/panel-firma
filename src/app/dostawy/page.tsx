@@ -34,12 +34,13 @@ export default async function DeliveriesBoard() {
       id: orders.id,
       orderNo: orders.orderNo,
       clientName: clients.name,
-      proforma: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'proforma' AND oci.done = 1)`,
-      advance_invoice: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'advance_invoice' AND oci.done = 1)`,
-      final_invoice: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'final_invoice' AND oci.done = 1)`,
-      post_delivery_invoice: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'post_delivery_invoice' AND oci.done = 1)`,
-      quote: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'quote' AND oci.done = 1)`,
-      done: sql<boolean>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'done' AND oci.done = 1)`,
+      // SQLite EXISTS zwraca 0/1 – typujemy jako number i rzutujemy na boolean
+      proforma: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'proforma' AND oci.done = 1)`,
+      advance_invoice: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'advance_invoice' AND oci.done = 1)`,
+      final_invoice: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'final_invoice' AND oci.done = 1)`,
+      post_delivery_invoice: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'post_delivery_invoice' AND oci.done = 1)`,
+      quote: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'quote' AND oci.done = 1)`,
+      done: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'done' AND oci.done = 1)`,
     })
     .from(orders)
     .leftJoin(clients, eq(orders.clientId, clients.id))
@@ -50,12 +51,12 @@ export default async function DeliveriesBoard() {
     orderNo: r.orderNo,
     clientName: r.clientName,
     flags: {
-      proforma: (r as any).proforma === 1 || (r as any).proforma === true,
-      advance_invoice: (r as any).advance_invoice === 1 || (r as any).advance_invoice === true,
-      final_invoice: (r as any).final_invoice === 1 || (r as any).final_invoice === true,
-      post_delivery_invoice: (r as any).post_delivery_invoice === 1 || (r as any).post_delivery_invoice === true,
-      quote: (r as any).quote === 1 || (r as any).quote === true,
-      done: (r as any).done === 1 || (r as any).done === true,
+      proforma: Boolean(r.proforma),
+      advance_invoice: Boolean(r.advance_invoice),
+      final_invoice: Boolean(r.final_invoice),
+      post_delivery_invoice: Boolean(r.post_delivery_invoice),
+      quote: Boolean(r.quote),
+      done: Boolean(r.done),
     }
   }))
 

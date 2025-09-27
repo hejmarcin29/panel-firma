@@ -31,6 +31,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
       id: orders.id,
       type: orders.type,
       status: orders.status,
+      pipelineStage: orders.pipelineStage,
       outcome: orders.outcome,
       outcomeAt: orders.outcomeAt,
       archivedAt: orders.archivedAt,
@@ -186,8 +187,8 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
             <CardHeader className="pb-2"><CardTitle>Etap i checklist</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               {/* Mini-kafelki (pasek) dla szybkiego podglądu */}
-              <QuickChecklistBar orderId={row.id} type={row.type as 'delivery'|'installation'} items={checklist as any} />
-              <OrderPipeline orderId={row.id} type={row.type as 'delivery'|'installation'} stage={(row as any).pipelineStage ?? null} />
+              <QuickChecklistBar orderId={row.id} type={row.type as 'delivery'|'installation'} items={checklist.map(i => ({ ...i, label: i.key }))} />
+              <OrderPipeline orderId={row.id} type={row.type as 'delivery'|'installation'} stage={row.pipelineStage ?? null} />
               <OrderChecklist orderId={row.id} type={row.type as 'delivery'|'installation'} items={checklist} />
             </CardContent>
           </Card>
