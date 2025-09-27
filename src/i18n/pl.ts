@@ -59,6 +59,7 @@ export const pl = {
     systemInfoTitle: 'Jak działa ten projekt',
     systemInfoDescription: 'Najważniejsze elementy konfiguracji i utrzymania.',
     systemInfoPoints: [
+  '2025-09-27 – [ZMIANA] Domyślny motyw ustawiony na jasny; wyłączono automatyczne wykrywanie motywu systemowego. Tryb ciemny tylko po ręcznym przełączeniu.',
   '2025-09-27 – [DECYZJA] Strony/endpointy czytające DB oznaczamy dynamic (force-dynamic) i lazy-import DB w handlerach API – unikamy błędów builda (prerender) i locków SQLite.',
   '2025-09-27 – [ZMIANA] Centralizacja sesji: API korzysta z helpera getSession() zamiast bezpośredniego getServerSession; naprawiono build na VPS. /zlecenia/montaz/nowy opakowano w Suspense (useSearchParams).',
   '2025-09-27 – [ZMIANA] Porządki typów i lint: usunięto any w API (checklist/pipeline) i listach (zlecenia/montaże/dostawy), poprawiono zależności efektów; linter 0 błędów. Dopracowano pasek checklisty (portal + flip + animacja) i cofanie wyniku/archiwum w szczegółach.',

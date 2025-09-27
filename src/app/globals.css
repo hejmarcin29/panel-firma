@@ -20,13 +20,9 @@
   --pp-border: #E5E7EB; /* obrysy / separatory */
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    /* Wersje dark mogą zostać dopracowane później; zostawiamy neutralne */
-  }
-}
+/* Usuwamy automatyczne przełączanie na dark na podstawie systemu.
+   Tryb dark będzie aktywowany wyłącznie przez klasę .dark na <html>
+   (steruje tym next-themes). */
 
 /* Explicit dark-mode overrides controlled by next-themes (.dark on <html>) */
 .dark {
