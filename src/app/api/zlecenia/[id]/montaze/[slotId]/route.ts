@@ -37,12 +37,19 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string; s
     if ('note' in parsed.data) update.note = parsed.data.note ?? null
 
     if ('installerId' in parsed.data) {
-      if (parsed.data.installerId === null) update.installerId = null
-      else {
-        const [inst] = await db.select({ id: users.id, role: users.role }).from(users).where(eq(users.id, parsed.data.installerId)).limit(1)
+      if (parsed.data.installerId === null) {
+        update.installerId = null
+      } else if (typeof parsed.data.installerId === 'string') {
+        const [inst] = await db
+          .select({ id: users.id, role: users.role })
+          .from(users)
+          .where(eq(users.id, parsed.data.installerId))
+          .limit(1)
         if (!inst) return NextResponse.json({ error: 'Montażysta nie istnieje' }, { status: 400 })
         if (inst.role !== 'installer') return NextResponse.json({ error: 'Użytkownik nie jest montażystą' }, { status: 400 })
         update.installerId = parsed.data.installerId
+      } else {
+        // if undefined was explicitly provided, ignore (no change)
       }
     }
 

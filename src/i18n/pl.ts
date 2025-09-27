@@ -59,6 +59,7 @@ export const pl = {
     systemInfoTitle: 'Jak działa ten projekt',
     systemInfoDescription: 'Najważniejsze elementy konfiguracji i utrzymania.',
     systemInfoPoints: [
+  '2025-09-27 – [ZMIANA] Centralizacja sesji: API korzysta z helpera getSession() zamiast bezpośredniego getServerSession; naprawiono build na VPS. /zlecenia/montaz/nowy opakowano w Suspense (useSearchParams).',
   '2025-09-27 – [ZMIANA] Porządki typów i lint: usunięto any w API (checklist/pipeline) i listach (zlecenia/montaże/dostawy), poprawiono zależności efektów; linter 0 błędów. Dopracowano pasek checklisty (portal + flip + animacja) i cofanie wyniku/archiwum w szczegółach.',
   '2025-09-26 – [ZMIANA] Zlecenia: wynik jako kompaktowe ikony (trofeum/przekreślone kółko) z tooltipem; dodano szybkie filtry: Aktywne/Wszystkie/Archiwalne oraz Tylko wygrane/tylko przegrane.',
   '2025-09-26 – [NOWE] Widoki zbiorcze checklist: osobne tabele dla Montaży (/montaze) i Dostaw (/dostawy) z przełączalnymi polami dla wszystkich zleceń.',

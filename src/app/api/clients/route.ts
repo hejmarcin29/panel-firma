@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { clients } from "@/db/schema";
 import { randomUUID } from "crypto";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/route";
+import { getSession } from "@/lib/auth-session";
 import { desc } from "drizzle-orm";
 
 interface LegacyClientCreateBody {
@@ -25,7 +24,7 @@ export async function GET() {
 
 // POST /api/clients - create client
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const raw = await req.json().catch(() => null) as unknown;
