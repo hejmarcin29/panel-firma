@@ -26,6 +26,7 @@ COPY --from=builder /app/public ./public
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=builder /app/drizzle ./drizzle
 COPY --from=builder /app/migrate.mjs ./migrate.mjs
+COPY --from=builder /app/scripts ./scripts
 
 # SQLite data directory (mounted as volume at runtime)
 RUN mkdir -p /app/data && chown -R nextjs:nodejs /app
@@ -34,4 +35,5 @@ VOLUME ["/app/data"]
 EXPOSE 3000
 ENV PORT=3000
 # Run migrations before starting the server (ESM)
+# Default command: run migrations, then start server
 CMD node migrate.mjs && node server.js
