@@ -301,3 +301,22 @@ export const orderChecklistItems = sqliteTable('order_checklist_items', {
 }))
 
 export type OrderChecklistItem = typeof orderChecklistItems.$inferSelect
+
+// Order attachments (files in R2)
+export const orderAttachments = sqliteTable('order_attachments', {
+  id: text('id').primaryKey(), // uuid
+  orderId: text('order_id').notNull(),
+  category: text('category').notNull(), // invoices|installs|contracts|protocols|other
+  title: text('title'), // opcjonalny tytuł (na razie niewykorzystywany)
+  version: integer('version').notNull().default(1),
+  mime: text('mime'),
+  size: integer('size'), // bytes
+  key: text('key').notNull(), // R2 key
+  publicUrl: text('public_url').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+}, (table) => ({
+  idxOrder: index('order_attachments_order_id_idx').on(table.orderId),
+  idxOrderCategory: index('order_attachments_order_category_idx').on(table.orderId, table.category),
+}))
+
+export type OrderAttachment = typeof orderAttachments.$inferSelect

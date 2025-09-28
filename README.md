@@ -255,3 +255,36 @@ Ważne:
 - Nie ustawiaj zmiennej `CADDY_ADMIN=off` – użyj `admin off` w Caddyfile (blok globalny).
 - `JWT_SESSION_ERROR` (Auth.js): ustaw prawidłowe `NEXTAUTH_URL` i `NEXTAUTH_SECRET`; restart + wyczyść cookies.
 - „database is locked”: SQLite ma pojedynczego writera; aplikacja ustawia `busy_timeout`, ogranicz równoległe zapisy i używaj transakcji.
+
+## Przechowywanie plików: Cloudflare R2
+
+System korzysta z Cloudflare R2 (S3‑compatible) do przechowywania załączników do zleceń.
+
+Wymagane zmienne środowiskowe:
+- R2_ENDPOINT – adres endpointu (np. https://<accountid>.r2.cloudflarestorage.com lub własna domena CDN)
+- R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY – klucze dostępu
+- R2_BUCKET – nazwa bucketa
+- R2_PUBLIC_BASE_URL – publiczny prefix URL do serwowania plików (np. https://cdn.twojadomena.pl lub https://<accountid>.r2.cloudflarestorage.com/<bucket>)
+
+Uprawnienia i CORS w R2:
+- W konsoli Cloudflare ustaw CORS dla bucketa, np. (dostosuj hosty):
+  {
+    "AllowedOrigins": ["http://localhost:3000", "https://primepodloga.pl", "https://www.primepodloga.pl"],
+    "AllowedMethods": ["PUT", "GET", "HEAD"],
+    "AllowedHeaders": ["*"],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3000
+  }
+
+Przepływ uploadu (presigned PUT):
+1) Front prosi backend o URL: POST /api/zlecenia/:id/zalaczniki/presign z { filename, mime, size, category }.
+2) Dostaje { url, key, publicUrl } i wykonuje PUT bezpośrednio do R2.
+3) Po sukcesie zgłasza metadane: POST /api/zlecenia/:id/zalaczniki z { key, publicUrl, category, mime?, size? }.
+4) Lista: GET /api/zlecenia/:id/zalaczniki. Usuwanie: DELETE /api/zlecenia/:id/zalaczniki/:attId (twarde usunięcie z R2 i DB).
+
+Konwencja kluczy (ścieżek) w R2:
+- clients/<NrKlienta-Slug>/YYYY/MM/<kategoria>/<YYYYMMDD__v01__nazwa_pliku.ext>
+- Przykład: clients/10-jan-kowalski/2025/09/photos/20250928__v01__jan-kowalski.jpg
+
+UI:
+- Sekcja „Załączniki” w szczegółach zlecenia: drag&drop multi‑upload, lista z podglądem (obraz/PDF), pobraniem i usuwaniem, galeria zdjęć.

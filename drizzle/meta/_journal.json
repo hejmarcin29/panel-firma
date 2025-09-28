@@ -141,6 +141,13 @@
       "when": 1759051054910,
       "tag": "0019_slim_shiva",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1759087509813,
+      "tag": "0020_sour_abomination",
+      "breakpoints": true
     }
   ]
 }
