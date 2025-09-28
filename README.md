@@ -121,3 +121,137 @@ Uwagi:
 - Redirect URI (dev): `http://localhost:3000/api/auth/callback/google` (prod: `https://twojadomena.pl/api/auth/callback/google`).
 - UI: Ustawienia montażysty → Integracje → Kalendarz Google (Połącz/Odłącz, wybór kalendarza, włącz/wyłącz sync).
 - Admin: Ustawienia → Integracje (opis i statusy — read-only).
+
+## Produkcyjny deploy na VPS (Docker + Caddy + SQLite)
+
+Poniżej sprawdzona, prosta procedura uruchomienia produkcyjnego na własnym serwerze (HTTPS przez Caddy, baza SQLite w bind‑mouncie). Ten wariant jest lekki i bezobsługowy dla małego zespołu.
+
+### Założenia
+- VPS z Ubuntu 22.04+ i zainstalowanym Dockerem + Docker Compose.
+- Domeny skierowane na serwer (rekord A/AAAA). Certyfikaty wystawi automatycznie Caddy (Let’s Encrypt).
+- Trwałe dane w katalogu hosta: `/srv/prime/data` zmapowane do katalogu kontenera: `/data`.
+- URL aplikacji: np. `https://b2b.primepodloga.pl`.
+
+### Wymagane zmienne środowiskowe
+- `NEXTAUTH_URL` – publiczny adres aplikacji (np. `https://b2b.primepodloga.pl`).
+- `NEXTAUTH_SECRET` – silny, stabilny sekret (min. 32 losowe znaki) – nie zmieniaj między deployami.
+- `DATABASE_URL` – plik w bind‑mouncie: `file:/data/panel.db`.
+
+### docker-compose.yml (przykład)
+Zapisz na serwerze obok repo:
+
+```yaml
+services:
+  app:
+    build: .
+    environment:
+      NEXTAUTH_URL: https://b2b.primepodloga.pl
+      NEXTAUTH_SECRET: "wstaw-tu-silny-sekret"
+      DATABASE_URL: file:/data/panel.db
+    volumes:
+      - /srv/prime/data:/data
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /srv/prime/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+
+volumes:
+  caddy_data: {}
+  caddy_config: {}
+```
+
+### Caddyfile (przykład)
+Upewnij się, że montujesz plik→plik (nie katalog). Zapisz jako `/srv/prime/caddy/Caddyfile`:
+
+```caddyfile
+{
+  admin off
+}
+
+b2b.primepodloga.pl {
+  encode zstd gzip
+  reverse_proxy app:3000
+
+  header {
+    Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+  }
+}
+```
+
+### Pierwsze uruchomienie
+1) Przygotuj katalogi:
+```bash
+sudo mkdir -p /srv/prime/data /srv/prime/caddy
+```
+2) Build i start:
+```bash
+docker compose build --progress=plain app
+docker compose up -d app caddy
+docker compose logs -f --tail=100 app caddy
+```
+3) Wejdź na `https://b2b.primepodloga.pl/`. Pierwszy raz: przekierowanie do `/login` (lub `/setup` jeśli brak użytkowników).
+4) Jeśli zmieniałeś `NEXTAUTH_SECRET`, wyczyść cookies domeny (lub użyj trybu prywatnego).
+
+Notatki techniczne:
+- Migracje Drizzle uruchamia skrypt startowy (`migrate.mjs`) – bez ręcznej ingerencji.
+- Baza działa w WAL, `busy_timeout=5000`, włączone `foreign_keys`.
+
+### Backup/Snapshot bazy SQLite
+Zalecane przed aktualizacją i cyklicznie:
+
+```bash
+sudo apt-get update && sudo apt-get install -y sqlite3
+sudo mkdir -p /srv/prime/backups
+sqlite3 /srv/prime/data/panel.db \
+  ".backup '/srv/prime/backups/panel-$(date +%F-%H%M).db'"
+```
+
+Przywracanie (zatrzymaj aplikację):
+```bash
+docker compose down app
+sqlite3 /srv/prime/data/panel.db \
+  ".restore '/srv/prime/backups/panel-YYYY-MM-DD-HHMM.db'"
+docker compose up -d app
+```
+
+Cron – nocny backup + retencja 14 dni (`/etc/cron.d/panel-db-backup`):
+```cron
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+0 2 * * * root mkdir -p /srv/prime/backups && sqlite3 /srv/prime/data/panel.db \
+  ".backup '/srv/prime/backups/panel-$(date +\%F-\%H\%M).db'" && \
+  find /srv/prime/backups -type f -name 'panel-*.db' -mtime +14 -delete
+```
+
+### Bezpieczna aktualizacja (git pull → build → restart)
+1) Zrób snapshot bazy (jak wyżej).
+2) W katalogu repo na serwerze:
+```bash
+git fetch --all
+git checkout beta  # jeśli używasz gałęzi beta
+git pull --ff-only
+docker compose build app
+docker compose up -d app
+docker compose logs -f --tail=100 app
+```
+3) Sanity check: strona główna ładuje się przez HTTPS; niezalogowany dostaje 302/307 do `/login`.
+
+Ważne:
+- Nie generuj migracji na serwerze – dodawaj je w repo i buduj obraz z migracjami.
+- Nie zmieniaj mapowania `/srv/prime/data:/data` – to trwała baza.
+- `NEXTAUTH_SECRET` musi być stabilny między deployami (zmiana unieważnia sesje).
+
+### Rozwiązywanie problemów
+- Caddy błąd „not a directory” dla Caddyfile: montuj PLiK → `/etc/caddy/Caddyfile:ro`.
+- Nie ustawiaj zmiennej `CADDY_ADMIN=off` – użyj `admin off` w Caddyfile (blok globalny).
+- `JWT_SESSION_ERROR` (Auth.js): ustaw prawidłowe `NEXTAUTH_URL` i `NEXTAUTH_SECRET`; restart + wyczyść cookies.
+- „database is locked”: SQLite ma pojedynczego writera; aplikacja ustawia `busy_timeout`, ogranicz równoległe zapisy i używaj transakcji.
