@@ -98,7 +98,7 @@ export default async function InstallationsBoard() {
             {data.length === 0 ? (
               <tr><td colSpan={3+cols.length} className="px-3 py-6 text-center opacity-70">Brak zleceń</td></tr>
             ) : data.map(r => (
-              <tr key={r.id} className="border-t border-black/10 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10">
+              <tr key={r.id} className="border-t border-black/10 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10 anim-enter">
                 <td className="px-3 py-2">
                   <div className="inline-flex items-center gap-2">
                     <Link className="hover:underline focus:underline focus:outline-none" href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_m` : `/zlecenia/${r.id}`}>

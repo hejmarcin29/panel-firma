@@ -127,6 +127,20 @@
       "when": 1759006177659,
       "tag": "0017_optimal_power_man",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1759048239253,
+      "tag": "0018_strange_dormammu",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "6",
+      "when": 1759051054910,
+      "tag": "0019_slim_shiva",
+      "breakpoints": true
     }
   ]
 }

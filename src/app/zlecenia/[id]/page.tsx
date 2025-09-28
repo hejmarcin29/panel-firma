@@ -10,8 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { BackButton } from '@/components/back-button'
 import { OrderPrivateActions } from '@/components/order-private-actions.client'
 import { TypeBadge, OutcomeBadge, PipelineStageBadge } from '@/components/badges'
-import { ScheduleDeliveryForm } from '@/components/schedule-delivery-form.client'
-import { ScheduleInstallationForm } from '@/components/schedule-installation-form.client'
+// import { ScheduleDeliveryForm } from '@/components/schedule-delivery-form.client'
+// import { ScheduleInstallationForm } from '@/components/schedule-installation-form.client'
 import { getSession } from '@/lib/auth-session'
 // Usunięto sekcję planowania (sloty) — plan przy tworzeniu zlecenia
 import { OrderPipeline } from '@/components/order-pipeline.client'
@@ -20,6 +20,7 @@ import { QuickChecklistBar } from '@/components/quick-checklist-bar.client'
 import { OrderArchiveButton } from '@/components/order-archive-button.client'
 import { OrderUnarchiveButton } from '@/components/order-unarchive-button.client'
 import { OrderOutcomeRevertButton } from '@/components/order-outcome-revert-button.client'
+import { formatDate } from '@/lib/date'
 
 export default async function OrderDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -108,7 +109,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
                 <Link className="hover:underline focus:underline focus:outline-none" href={`/klienci/${row.clientId}`}>{row.clientName || row.clientId}</Link>
                 <div className="h-4 w-px bg-black/10 dark:bg-white/10" />
                 <span className="opacity-70">Utworzono:</span>
-                <span>{new Date(row.createdAt).toLocaleDateString()}</span>
+                <span>{formatDate(row.createdAt)}</span>
               </div>
             </div>
             <div className="flex flex-col items-stretch gap-2 md:items-end">
@@ -141,11 +142,11 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
             <CardContent className="space-y-3 text-sm">
               <div><span className="opacity-60">Klient:</span> {row.clientName || row.clientId}</div>
               <div><span className="opacity-60">m2 przed pomiarem:</span> {row.preMeasurementSqm ?? '-'}</div>
-              <div><span className="opacity-60">Planowana data:</span> {row.scheduledDate ? new Date(row.scheduledDate).toLocaleDateString() : '-'}</div>
+              <div><span className="opacity-60">Planowana data:</span> {row.scheduledDate ? formatDate(row.scheduledDate) : '-'}</div>
               <div><span className="opacity-60">Montażysta:</span> {row.installerName || row.installerEmail || '-'}</div>
-              <div><span className="opacity-60">Utworzono:</span> {new Date(row.createdAt).toLocaleString()}</div>
+              <div><span className="opacity-60">Utworzono:</span> {formatDate(row.createdAt)}</div>
               {row.outcome && (
-                <div><span className="opacity-60">Wynik:</span> {row.outcome === 'won' ? 'Wygrane' : 'Przegrane'} {row.outcomeAt ? `(${new Date(row.outcomeAt).toLocaleString()})` : ''}</div>
+                <div><span className="opacity-60">Wynik:</span> {row.outcome === 'won' ? 'Wygrane' : 'Przegrane'} {row.outcomeAt ? `(${formatDate(row.outcomeAt)})` : ''}</div>
               )}
               {/* Edycja zlecenia (połączona z informacjami) */}
               <div className="pt-2 border-t" style={{ borderColor: 'var(--pp-border)' }}>
@@ -206,7 +207,7 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
                   {notes.map(n => (
                     <div key={n.id} className="rounded border border-black/10 p-2 dark:border-white/10">
                       <div className="text-sm whitespace-pre-wrap">{n.content}</div>
-                      <div className="text-xs opacity-60 mt-1">{new Date(n.createdAt).toLocaleString()} {n.createdBy ? `• ${n.createdBy}` : ''}</div>
+                      <div className="text-xs opacity-60 mt-1">{formatDate(n.createdAt)} {n.createdBy ? `• ${n.createdBy}` : ''}</div>
                     </div>
                   ))}
                 </div>

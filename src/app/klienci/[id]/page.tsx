@@ -1,13 +1,13 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { BackButton } from "@/components/back-button";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import { useToast } from "@/components/ui/toaster";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Trash2, Plus, Pencil } from "lucide-react";
+import { Plus, Pencil, Archive, ArchiveRestore } from "lucide-react";
 import { TypeBadge, OutcomeBadge, PipelineStageBadge } from "@/components/badges";
 import { OrderPipeline } from "@/components/order-pipeline.client";
 // status UI usunięty – używamy pipeline stage + archiwum
@@ -19,8 +19,9 @@ import { QuickChecklistBar } from "@/components/quick-checklist-bar.client";
 import { OrderChecklist } from "@/components/order-checklist.client";
 import { OrderEditor } from "@/components/order-editor.client";
 // Usunięto karty planowania (montaż/dostawa) na życzenie — planujemy przy tworzeniu zlecenia
-import { OrderSummaryCard } from "@/components/order-summary-card.client";
+// import { OrderSummaryCard } from "@/components/order-summary-card.client";
 import { pl } from "@/i18n/pl";
+import { formatDate } from "@/lib/date";
 
 type Klient = {
   id: string;
@@ -34,6 +35,10 @@ type Klient = {
   invoiceAddress?: string | null;
   serviceType?: string | null;
   createdAt: number;
+  archivedAt?: number | null;
+  _nextInstallationAt?: number | null;
+  _nextDeliveryAt?: number | null;
+  source?: string | null;
 };
 
 type Order = {
@@ -67,28 +72,30 @@ type Note = {
 
 export default function KlientPage() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
+  // const router = useRouter();
   const { toast } = useToast();
   const [client, setClient] = useState<Klient | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [newNote, setNewNote] = useState("");
-  const [openDelete, setOpenDelete] = useState(false);
+  // const [openDelete, setOpenDelete] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [openArchive, setOpenArchive] = useState(false);
+  const [openUnarchive, setOpenUnarchive] = useState(false);
   // Sloty montażu/dostawy niewyświetlane na stronie klienta (upraszczamy widok)
 
   const load = useCallback(async () => {
     try {
       const r = await fetch(`/api/klienci/${id}`);
       if (!r.ok) throw new Error('Błąd');
-      const j = await r.json();
-      setClient(j.client);
+    const j = await r.json();
+    setClient(j.client as Klient);
       setNotes(j.notes);
       const ro = await fetch(`/api/zlecenia?clientId=${id}&withFlags=1`);
       if (ro.ok) {
-        const jo = await ro.json();
-        const list: Order[] = jo.orders || []
+  const jo = await ro.json();
+  const list: Order[] = (jo.orders || []) as Order[]
         setOrders(list);
         // brak dodatkowego pobierania slotów — karty planu usunięte
       }
@@ -118,13 +125,45 @@ export default function KlientPage() {
     }
   };
 
-  const del = async () => {
-    const r = await fetch(`/api/klienci/${id}`, { method: 'DELETE' });
+  const archiveClient = async () => {
+    const r = await fetch(`/api/klienci/${id}/archiwum`, { method: 'POST' });
     if (r.ok) {
-  toast({ title: "Usunięto", description: "Klient został usunięty", variant: "success" });
-      router.push('/klienci');
+      toast({ title: 'Zarchiwizowano', description: 'Klient i jego zlecenia zostały zarchiwizowane', variant: 'success' });
+      await load();
     } else {
-      toast({ title: "Błąd", description: "Nie udało się usunąć klienta", variant: "destructive" });
+      // Fallback: sprawdź realny stan po stronie serwera
+      try {
+        const check = await fetch(`/api/klienci/${id}`);
+        const j = await check.json().catch(() => ({}));
+        const archivedAt = (j?.client?.archivedAt ?? null);
+        if (typeof archivedAt === 'number') {
+          toast({ title: 'Zarchiwizowano', description: 'Operacja powiodła się mimo nieoczekiwanej odpowiedzi', variant: 'success' });
+          await load();
+          return;
+        }
+      } catch { /* ignore */ }
+      toast({ title: 'Błąd', description: 'Nie udało się zarchiwizować klienta', variant: 'destructive' });
+    }
+  };
+
+  const unarchiveClient = async () => {
+    const r = await fetch(`/api/klienci/${id}/archiwum`, { method: 'DELETE' });
+    if (r.ok) {
+      toast({ title: 'Przywrócono', description: 'Klient został przywrócony wraz ze zleceniami', variant: 'success' });
+      await load();
+    } else {
+      // Fallback: sprawdź realny stan po stronie serwera
+      try {
+        const check = await fetch(`/api/klienci/${id}`);
+        const j = await check.json().catch(() => ({}));
+        const archivedAt = (j?.client?.archivedAt ?? null);
+        if (archivedAt == null) {
+          toast({ title: 'Przywrócono', description: 'Operacja powiodła się mimo nieoczekiwanej odpowiedzi', variant: 'success' });
+          await load();
+          return;
+        }
+      } catch { /* ignore */ }
+      toast({ title: 'Błąd', description: 'Nie udało się przywrócić klienta', variant: 'destructive' });
     }
   };
 
@@ -153,21 +192,7 @@ export default function KlientPage() {
   if (error) return <div className="p-6">{error}</div>;
   if (!client) return <div className="p-6">{pl.clients.notFound}</div>;
 
-  const stageLabels: Record<string, string> = {
-    // delivery
-    offer_sent: 'Wysłana oferta',
-    awaiting_payment: 'Czeka na wpłatę',
-    delivery: 'Dostawa',
-    final_invoice_issued: 'Wystawiona faktura końcowa',
-    // installation
-    awaiting_measurement: 'Czeka na pomiar',
-    awaiting_quote: 'Czeka na wycenę',
-    before_contract: 'Przed umową',
-    before_advance: 'Przed zaliczką',
-    before_installation: 'Przed montażem',
-    before_final_invoice: 'Przed fakturą końcową',
-    done: 'Koniec',
-  }
+  // Etykiety etapów wyświetlamy spójnie z UI przez PipelineStageBadge (PL)
 
   return (
     <div className="mx-auto max-w-5xl p-6 space-y-6">
@@ -186,7 +211,19 @@ export default function KlientPage() {
                   <Link className="hover:underline focus:underline focus:outline-none" href={`/klienci/nr/${client.clientNo}`}>Nr klienta: {client.clientNo}</Link>
                 )}
                 <div className="h-4 w-px bg-black/10 dark:bg-white/10" />
-                <span>Utworzono: {new Date(client.createdAt).toLocaleString()}</span>
+                <span>Utworzono: {formatDate(client.createdAt)}</span>
+                {typeof client._nextInstallationAt === 'number' && (
+                  <>
+                    <div className="h-4 w-px bg-black/10 dark:bg-white/10" />
+                    <span>Najbliższy montaż: {formatDate(client._nextInstallationAt)}</span>
+                  </>
+                )}
+                {typeof client._nextDeliveryAt === 'number' && (
+                  <>
+                    <div className="h-4 w-px bg-black/10 dark:bg-white/10" />
+                    <span>Najbliższa dostawa: {formatDate(client._nextDeliveryAt)}</span>
+                  </>
+                )}
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -198,10 +235,17 @@ export default function KlientPage() {
                 <Plus className="h-4 w-4" />
                 Nowe zlecenie
               </Link>
-              <button onClick={() => setOpenDelete(true)} className="inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-sm text-[var(--pp-primary)] hover:bg-[var(--pp-primary-subtle-bg)]" style={{ borderColor: 'var(--pp-primary-subtle-border)' }}>
-                <Trash2 className="h-4 w-4" />
-                {pl.clients.delete}
-              </button>
+              {client.archivedAt ? (
+                <button onClick={() => setOpenUnarchive(true)} className="inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-sm hover:bg-[var(--pp-primary-subtle-bg)]" style={{ borderColor: 'var(--pp-border)' }}>
+                  <ArchiveRestore className="h-4 w-4" />
+                  {pl.clients.unarchive}
+                </button>
+              ) : (
+                <button onClick={() => setOpenArchive(true)} className="inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-sm text-[var(--pp-primary)] hover:bg-[var(--pp-primary-subtle-bg)]" style={{ borderColor: 'var(--pp-primary-subtle-border)' }}>
+                  <Archive className="h-4 w-4" />
+                  {pl.clients.archive}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -222,7 +266,8 @@ export default function KlientPage() {
           <CardContent>
             <div className="text-sm">Telefon: {client.phone || '—'}</div>
             <div className="text-sm">Email: {client.email || '—'}</div>
-            <div className="mt-2 text-xs opacity-60">Dodano: {new Date(client.createdAt).toLocaleString()}</div>
+            <div className="text-sm">Źródło: {client.source || '—'}</div>
+            <div className="mt-2 text-xs opacity-60">Dodano: {formatDate(client.createdAt)}</div>
           </CardContent>
         </Card>
       </div>
@@ -238,7 +283,7 @@ export default function KlientPage() {
               notes.map((n) => (
                 <div key={n.id} className="rounded border border-black/10 p-2 dark:border-white/10">
                   <div className="text-sm whitespace-pre-wrap">{n.content}</div>
-                  <div className="text-xs opacity-60 mt-1">{new Date(n.createdAt).toLocaleString()} {n.createdBy ? `• ${n.createdBy}` : ''}</div>
+                  <div className="text-xs opacity-60 mt-1">{formatDate(n.createdAt)} {n.createdBy ? `• ${n.createdBy}` : ''}</div>
                 </div>
               ))
             )}
@@ -284,7 +329,7 @@ export default function KlientPage() {
                         <OutcomeBadge outcome={o.outcome as 'won'|'lost'|null|undefined} />
                         <div className="h-4 w-px bg-black/10 dark:bg-white/10" />
                         <span className="opacity-70">Utworzono:</span>
-                        <span>{new Date(o.createdAt).toLocaleDateString()}</span>
+                        <span>{formatDate(o.createdAt)}</span>
                         <div className="h-4 w-px bg-black/10 dark:bg-white/10" />
                         <span className="opacity-70">Miejsce realizacji:</span>
                         <span>{o.locationCity ? `${o.locationCity}${o.locationPostalCode ? ` ${o.locationPostalCode}` : ''}${o.locationAddress ? `, ${o.locationAddress}` : ''}` : '—'}</span>
@@ -312,7 +357,7 @@ export default function KlientPage() {
                     <CardHeader className="pb-2"><CardTitle>Podstawowe informacje</CardTitle></CardHeader>
                     <CardContent className="space-y-3 text-sm">
                       <div><span className="opacity-60">m2 przed pomiarem:</span> {o.preMeasurementSqm ?? '-'}</div>
-                      <div><span className="opacity-60">Planowana data:</span> {o.scheduledDate ? new Date(o.scheduledDate).toLocaleDateString() : '-'}</div>
+                      <div><span className="opacity-60">Planowana data:</span> {formatDate(o.scheduledDate, '-')}</div>
                       {/* Edycja zlecenia (połączone z informacjami) */}
                       <div className="pt-2 border-t" style={{ borderColor: 'var(--pp-border)' }}>
                         <OrderEditor orderId={o.id} defaults={{ note: null, preMeasurementSqm: o.preMeasurementSqm ?? null, installerId: (o.installerId as string | null) ?? null, scheduledDate: o.scheduledDate ?? null }} />
@@ -356,8 +401,8 @@ export default function KlientPage() {
                   {orders.map((o) => (
                     <tr key={o.id} className="border-t" style={{ borderColor: 'var(--pp-border)' }}>
                       <td className="px-3 py-2">{o.type === 'installation' ? 'Montaż' : 'Dostawa'}</td>
-                      <td className="px-3 py-2">{o.pipelineStage ? (stageLabels[o.pipelineStage] || o.pipelineStage) : '-'}</td>
-                      <td className="px-3 py-2">{o.scheduledDate ? new Date(o.scheduledDate).toLocaleString() : '-'}</td>
+                      <td className="px-3 py-2">{o.pipelineStage ? <PipelineStageBadge stage={o.pipelineStage} /> : '-'}</td>
+                      <td className="px-3 py-2">{formatDate(o.scheduledDate, '-')}</td>
                       <td className="px-3 py-2">{o.locationCity || '-'}</td>
                       <td className="px-3 py-2">
                         <Link href={o.orderNo ? `/zlecenia/nr/${o.orderNo}_${o.type === 'installation' ? 'm' : 'd'}` : `/zlecenia/${o.id}`} className="inline-flex h-8 items-center rounded-md border px-2 text-xs hover:bg-[var(--pp-primary-subtle-bg)]" style={{ borderColor: 'var(--pp-border)' }}>Szczegóły</Link>
@@ -374,14 +419,24 @@ export default function KlientPage() {
       
 
       <AlertDialog
-        open={openDelete}
-        onOpenChange={setOpenDelete}
-        title={pl.clients.deleteConfirmTitle}
-        description={pl.clients.deleteConfirmDesc}
+        open={openArchive}
+        onOpenChange={setOpenArchive}
+        title={pl.clients.archiveConfirmTitle}
+        description={pl.clients.archiveConfirmDesc}
         cancelText={pl.clients.cancel}
-        confirmText={pl.clients.deleteConfirm}
+        confirmText={pl.clients.archiveConfirm}
         confirmVariant="destructive"
-        onConfirm={del}
+        onConfirm={archiveClient}
+      />
+      <AlertDialog
+        open={openUnarchive}
+        onOpenChange={setOpenUnarchive}
+        title={pl.clients.unarchiveConfirmTitle}
+        description={pl.clients.unarchiveConfirmDesc}
+        cancelText={pl.clients.cancel}
+        confirmText={pl.clients.unarchiveConfirm}
+        confirmVariant="default"
+        onConfirm={unarchiveClient}
       />
     </div>
   );

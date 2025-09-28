@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { useForm, type SubmitHandler, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Input } from '@/components/ui/input'
+import { DatePicker } from '@/components/ui/date-picker'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/toaster'
@@ -23,7 +24,7 @@ type FormValues = z.infer<typeof schema>
 export default function NewRuleForm() {
   const { toast } = useToast()
   const router = useRouter()
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<FormValues>({
+  const { register, handleSubmit, formState: { errors, isSubmitting }, reset, watch, setValue } = useForm<FormValues>({
     resolver: zodResolver(schema) as unknown as Resolver<FormValues>,
     defaultValues: { title: '', contentMd: '', version: 1, isActive: 'true', requiresAck: 'true', audience: ['installer'], effectiveFrom: '' },
   })
@@ -37,7 +38,7 @@ export default function NewRuleForm() {
         isActive: values.isActive === 'true',
         requiresAck: values.requiresAck === 'true',
         audience: values.audience,
-        effectiveFrom: values.effectiveFrom && values.effectiveFrom.trim() ? new Date(values.effectiveFrom).getTime() : undefined,
+  effectiveFrom: values.effectiveFrom && values.effectiveFrom.trim() ? new Date(values.effectiveFrom + 'T00:00:00').getTime() : undefined,
       }
       const resp = await fetch('/api/zasady-wspolpracy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const data = await resp.json().catch(() => ({}))
@@ -98,7 +99,8 @@ export default function NewRuleForm() {
         </div>
         <div className="space-y-2">
           <Label>Obowiązuje od (opcjonalnie)</Label>
-          <Input type="datetime-local" {...register('effectiveFrom')} />
+          <DatePicker value={watch('effectiveFrom') || ''} onChange={(next) => setValue('effectiveFrom', next, { shouldDirty: true, shouldValidate: true })} />
+          <input type="hidden" {...register('effectiveFrom')} />
           <p className="text-xs opacity-70">Pozostaw puste, aby obowiązywało od razu.</p>
         </div>
       </div>

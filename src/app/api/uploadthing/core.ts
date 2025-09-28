@@ -1,5 +1,4 @@
 import { createUploadthing, type FileRouter } from 'uploadthing/server';
-import { NextRequest } from 'next/server';
 
 const f = createUploadthing();
 

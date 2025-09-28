@@ -62,9 +62,12 @@ export const clients = sqliteTable('clients', {
   deliveryAddress: text('delivery_address'), // adres (dostawa)
   // Typ usługi: tylko dostawa czy z montażem
   serviceType: text('service_type').notNull().default('with_installation'), // 'delivery_only' | 'with_installation'
+  // Źródło pozyskania klienta (opcjonalne): np. "Polecenie", "Strona WWW", "Facebook", "Google", itp.
+  source: text('source'),
   // Publiczny numer klienta do wyświetlania ("Nr klienta"), rosnący od 10
   clientNo: integer('client_no').unique(),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+  archivedAt: integer('archived_at', { mode: 'timestamp_ms' }),
 })
 
 export type Client = typeof clients.$inferSelect

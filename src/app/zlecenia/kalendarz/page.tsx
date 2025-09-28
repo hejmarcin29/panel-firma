@@ -59,7 +59,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
     .from(deliverySlots)
     .leftJoin(orders, eq(deliverySlots.orderId, orders.id))
     .leftJoin(clients, eq(orders.clientId, clients.id))
-    .where(inArray(deliverySlots.status, statusesArr as unknown as string[]))
+  .where(inArray(deliverySlots.status, statusesArr as readonly string[]))
     .orderBy(asc(deliverySlots.plannedAt));
 
   const iRows = await db
@@ -83,8 +83,8 @@ export default async function CalendarPage({ searchParams }: { searchParams: Sea
     .leftJoin(clients, eq(orders.clientId, clients.id))
     .where(
       and(
-        inArray(installationSlots.status, statusesArr as unknown as string[]),
-        ...(effectiveInstaller ? [eq(installationSlots.installerId, effectiveInstaller) as unknown as any] : [])
+        inArray(installationSlots.status, statusesArr as readonly string[]),
+        ...(effectiveInstaller ? [eq(installationSlots.installerId, effectiveInstaller)] : [])
       )
     )
     .orderBy(asc(installationSlots.plannedAt));

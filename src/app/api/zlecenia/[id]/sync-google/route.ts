@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/db'
-import { orders, orderGoogleEvents } from '@/db/schema'
+import { orders } from '@/db/schema'
 import { eq } from 'drizzle-orm'
 
-export async function POST(_req: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = params
+export async function POST(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+  const { id } = await ctx.params
   try {
     // Minimal stub: check if order exists and pretend to trigger a sync
     const row = (await db.select({ id: orders.id }).from(orders).where(eq(orders.id, id)).limit(1))[0]

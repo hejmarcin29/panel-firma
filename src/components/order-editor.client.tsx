@@ -29,7 +29,13 @@ export function OrderEditor({ orderId, defaults }: { orderId: string; defaults: 
     preMeasurementSqm: defaults.preMeasurementSqm ? String(defaults.preMeasurementSqm) : '',
     installerId: defaults.installerId ?? '',
     // default as date-only string in local TZ
-    scheduledDate: defaults.scheduledDate ? new Date(defaults.scheduledDate).toISOString().slice(0,10) : '',
+    scheduledDate: defaults.scheduledDate ? (() => {
+      const dt = new Date(defaults.scheduledDate!);
+      const y = dt.getFullYear();
+      const m = String(dt.getMonth() + 1).padStart(2, '0');
+      const d = String(dt.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    })() : '',
   })
   const [saving, setSaving] = useState(false)
 

@@ -21,6 +21,7 @@ const schema = z.object({
   taxId: z.string().optional().or(z.literal('')),
   isCompany: z.boolean().default(false).optional(),
   companyName: z.string().optional().or(z.literal('')),
+  source: z.string().optional().or(z.literal('')),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -31,7 +32,7 @@ export default function EdytujKlientaPage() {
   const { toast } = useToast();
   const { register, handleSubmit, reset, watch, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(schema),
-  defaultValues: { name: '', phone: '', email: '', invoiceCity: '', invoicePostalCode: '', invoiceAddress: '', taxId: '', companyName: '', isCompany: false }
+  defaultValues: { name: '', phone: '', email: '', invoiceCity: '', invoicePostalCode: '', invoiceAddress: '', taxId: '', companyName: '', isCompany: false, source: '' }
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +53,7 @@ export default function EdytujKlientaPage() {
           taxId: j.client.taxId || '',
           companyName: j.client.companyName || '',
           isCompany: Boolean(j.client.taxId || j.client.companyName),
+          source: j.client.source || '',
         });
       } catch {
         setError('Błąd ładowania');
@@ -130,6 +132,10 @@ export default function EdytujKlientaPage() {
               <Label>{pl.clients.invoiceAddress}</Label>
               <Input {...register('invoiceAddress')} />
             </div>
+          </div>
+          <div>
+            <Label>Źródło (skąd klient?)</Label>
+            <Input {...register('source')} placeholder="np. Polecenie, Google, Facebook" />
           </div>
           {/* Firma */}
           <div className="flex items-center gap-2">

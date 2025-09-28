@@ -8,6 +8,8 @@ export const DomainEventTypes = {
   clientCreated: 'client.created',
   clientUpdated: 'client.updated',
   clientDeleted: 'client.deleted',
+  clientArchived: 'client.archived',
+  clientUnarchived: 'client.unarchived',
   clientNoteAdded: 'client.note.added',
   clientServiceTypeChanged: 'client.serviceType.changed',
   orderCreated: 'order.created',
@@ -17,6 +19,7 @@ export const DomainEventTypes = {
   orderOutcomeCleared: 'order.outcome.cleared',
   orderPipelineChanged: 'order.pipeline.changed',
   orderChecklistToggled: 'order.checklist.toggled',
+  ordersArchivedForClient: 'order.archived.bulkForClient',
   userRoleChanged: 'user.role.changed',
   userPasswordChanged: 'user.password.changed',
 } as const;
@@ -47,6 +50,14 @@ export const clientUpdatedPayloadSchema = z.object({
 });
 
 export const clientDeletedPayloadSchema = z.object({
+  id: z.string().uuid(),
+});
+
+export const clientArchivedPayloadSchema = z.object({
+  id: z.string().uuid(),
+});
+
+export const clientUnarchivedPayloadSchema = z.object({
   id: z.string().uuid(),
 });
 
@@ -111,6 +122,11 @@ export const orderChecklistToggledPayloadSchema = z.object({
   actorId: z.string().uuid().optional().nullable(),
 });
 
+export const ordersArchivedForClientPayloadSchema = z.object({
+  clientId: z.string().uuid(),
+  count: z.number().int().nonnegative(),
+});
+
 // Users
 export const userRoleChangedPayloadSchema = z.object({
   id: z.string().uuid(),
@@ -125,6 +141,8 @@ export const userPasswordChangedPayloadSchema = z.object({
 export type ClientCreatedPayload = z.infer<typeof clientCreatedPayloadSchema>;
 export type ClientUpdatedPayload = z.infer<typeof clientUpdatedPayloadSchema>;
 export type ClientDeletedPayload = z.infer<typeof clientDeletedPayloadSchema>;
+export type ClientArchivedPayload = z.infer<typeof clientArchivedPayloadSchema>;
+export type ClientUnarchivedPayload = z.infer<typeof clientUnarchivedPayloadSchema>;
 export type ClientNoteAddedPayload = z.infer<typeof clientNoteAddedPayloadSchema>;
 export type ClientServiceTypeChangedPayload = z.infer<typeof clientServiceTypeChangedPayloadSchema>;
 export type OrderCreatedPayload = z.infer<typeof orderCreatedPayloadSchema>;
@@ -132,6 +150,7 @@ export type OrderStatusChangedPayload = z.infer<typeof orderStatusChangedPayload
 export type OrderOutcomePayload = z.infer<typeof orderOutcomePayloadSchema>;
 export type OrderPipelineChangedPayload = z.infer<typeof orderPipelineChangedPayloadSchema>;
 export type OrderChecklistToggledPayload = z.infer<typeof orderChecklistToggledPayloadSchema>;
+export type OrdersArchivedForClientPayload = z.infer<typeof ordersArchivedForClientPayloadSchema>;
 export type UserRoleChangedPayload = z.infer<typeof userRoleChangedPayloadSchema>;
 export type UserPasswordChangedPayload = z.infer<typeof userPasswordChangedPayloadSchema>;
 
@@ -139,6 +158,8 @@ const payloadSchemaByType: Record<DomainEventType, z.ZodTypeAny> = {
   [DomainEventTypes.clientCreated]: clientCreatedPayloadSchema,
   [DomainEventTypes.clientUpdated]: clientUpdatedPayloadSchema,
   [DomainEventTypes.clientDeleted]: clientDeletedPayloadSchema,
+  [DomainEventTypes.clientArchived]: clientArchivedPayloadSchema,
+  [DomainEventTypes.clientUnarchived]: clientUnarchivedPayloadSchema,
   [DomainEventTypes.clientNoteAdded]: clientNoteAddedPayloadSchema,
   [DomainEventTypes.clientServiceTypeChanged]: clientServiceTypeChangedPayloadSchema,
   [DomainEventTypes.orderCreated]: orderCreatedPayloadSchema,
@@ -147,6 +168,7 @@ const payloadSchemaByType: Record<DomainEventType, z.ZodTypeAny> = {
   [DomainEventTypes.orderLost]: orderOutcomePayloadSchema,
   [DomainEventTypes.orderPipelineChanged]: orderPipelineChangedPayloadSchema,
   [DomainEventTypes.orderChecklistToggled]: orderChecklistToggledPayloadSchema,
+  [DomainEventTypes.ordersArchivedForClient]: ordersArchivedForClientPayloadSchema,
   [DomainEventTypes.orderOutcomeCleared]: orderOutcomeClearedPayloadSchema,
   [DomainEventTypes.userRoleChanged]: userRoleChangedPayloadSchema,
   [DomainEventTypes.userPasswordChanged]: userPasswordChangedPayloadSchema,

@@ -4,8 +4,8 @@ import React, { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Truck, FileText } from "lucide-react";
 import { pl } from "@/i18n/pl";
-import { DataTable } from "@/components/ui/datatable";
-import { ColumnDef, SortingState, getSortedRowModel, getFilteredRowModel, getCoreRowModel, useReactTable, flexRender } from "@tanstack/react-table";
+import { ColumnDef, SortingState, getSortedRowModel, getCoreRowModel, useReactTable, flexRender } from "@tanstack/react-table";
+import { formatDate } from "@/lib/date";
 
 type Klient = {
   id: string;
@@ -17,20 +17,21 @@ type Klient = {
   createdAt: number;
   clientNo?: number | null;
   _activeOrders?: number;
-  _installationStage?: string | null;
-  _deliveryStage?: string | null;
+  _nextInstallationAt?: number | null;
+  _nextDeliveryAt?: number | null;
 };
 
 export default function KlienciPage() {
   const [data, setData] = useState<{ clients: Klient[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
-        const r = await fetch('/api/klienci');
+        const r = await fetch(`/api/klienci${showArchived ? '?archived=1' : ''}`);
         const json = await r.json();
         if (mounted) setData(json);
       } catch {
@@ -40,7 +41,7 @@ export default function KlienciPage() {
       }
     })();
     return () => { mounted = false };
-  }, []);
+  }, [showArchived]);
 
   // Sortowanie + szybki filtr (musi być poza JSX, nie w IIFE — zasady Hooks)
   const [q, setQ] = React.useState("");
@@ -76,10 +77,10 @@ export default function KlienciPage() {
         </span>
       );
     } },
-    { header: "Aktywne zlecenia", accessorFn: (row) => row._activeOrders ?? 0, cell: ({ row }) => row.original._activeOrders ?? 0 },
-    { header: "Etap montażu", accessorFn: (row) => row._installationStage ?? "", cell: ({ row }) => row.original._installationStage ? <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs" style={{ borderColor: 'var(--pp-border)' }}>{row.original._installationStage}</span> : <span className="opacity-60">—</span> },
-    { header: "Etap dostawy", accessorFn: (row) => row._deliveryStage ?? "", cell: ({ row }) => row.original._deliveryStage ? <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs" style={{ borderColor: 'var(--pp-border)' }}>{row.original._deliveryStage}</span> : <span className="opacity-60">—</span> },
-    { header: pl.clients.createdAt, accessorKey: "createdAt", cell: ({ row }) => <span className="text-muted-foreground">{new Date(row.original.createdAt).toLocaleDateString()}</span> },
+  { header: "Aktywne zlecenia", accessorFn: (row) => row._activeOrders ?? 0, cell: ({ row }) => row.original._activeOrders ?? 0 },
+  { header: "Najbliższy montaż", accessorFn: (row) => row._nextInstallationAt ?? 0, cell: ({ row }) => row.original._nextInstallationAt ? formatDate(row.original._nextInstallationAt) : <span className="opacity-60">—</span> },
+  { header: "Najbliższa dostawa", accessorFn: (row) => row._nextDeliveryAt ?? 0, cell: ({ row }) => row.original._nextDeliveryAt ? formatDate(row.original._nextDeliveryAt) : <span className="opacity-60">—</span> },
+    { header: pl.clients.createdAt, accessorKey: "createdAt", cell: ({ row }) => <span className="text-muted-foreground">{formatDate(row.original.createdAt)}</span> },
   ];
 
   const table = useReactTable({
@@ -106,9 +107,15 @@ export default function KlienciPage() {
              style={{ background: 'radial-gradient(1000px 360px at -10% -20%, color-mix(in oklab, var(--pp-primary) 14%, transparent), transparent 42%), linear-gradient(120deg, color-mix(in oklab, var(--pp-primary) 8%, transparent), transparent 65%)' }} />
         <div className="relative z-10 p-4 md:p-6 flex items-center justify-between gap-3">
           <h1 className="text-2xl md:text-3xl font-semibold">{pl.clients.listTitle}</h1>
-          <Link href="/klienci/nowy" className="inline-flex h-9 items-center gap-2 rounded-md border px-4 text-sm hover:bg-[var(--pp-primary-subtle-bg)]" style={{ borderColor: 'var(--pp-border)' }}>
-            <Plus className="h-4 w-4" /> {pl.clients.new}
-          </Link>
+          <div className="flex items-center gap-3">
+            <label className="inline-flex items-center gap-1 select-none cursor-pointer opacity-90">
+              <input type="checkbox" checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} />
+              <span>Pokaż archiwalne</span>
+            </label>
+            <Link href="/klienci/nowy" className="inline-flex h-9 items-center gap-2 rounded-md border px-4 text-sm hover:bg-[var(--pp-primary-subtle-bg)]" style={{ borderColor: 'var(--pp-border)' }}>
+              <Plus className="h-4 w-4" /> {pl.clients.new}
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -174,7 +181,7 @@ export default function KlienciPage() {
                   <td colSpan={columns.length} className="px-3 py-6 text-center opacity-70">Brak wyników</td>
                 </tr>
               ) : rowsToRender.map(row => (
-                <tr key={row.id} className="border-t hover:bg-[var(--pp-table-row-hover)]" style={{ borderColor: 'var(--pp-border)' }}>
+                <tr key={row.id} className="border-t hover:bg-[var(--pp-table-row-hover)] anim-enter" style={{ borderColor: 'var(--pp-border)' }}>
                   {row.getVisibleCells().map(cell => (
                     <td key={cell.id} className="px-3 py-2">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}

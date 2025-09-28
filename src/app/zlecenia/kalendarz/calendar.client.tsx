@@ -3,6 +3,8 @@ import React, { useMemo } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import plLocale from '@fullcalendar/core/locales/pl';
+import type { EventInput } from '@fullcalendar/core';
 import { useRouter } from 'next/navigation';
 
 // Keep per-event tooltip and handlers to ensure proper cleanup
@@ -20,7 +22,7 @@ export default function CalendarClient({ events, initialView = 'dayGridMonth', i
   const router = useRouter();
   const evts = useMemo(() => events, [events]);
   // Simple PL public holidays generator for a given year (fixed dates; without moveable feasts beyond Easter)
-  const holidays = useMemo(() => {
+  const holidays = useMemo<EventInput[]>(() => {
     const year = initialDate ? new Date(initialDate).getFullYear() : new Date().getFullYear();
     const fixed = [
       `${year}-01-01`, // Nowy Rok
@@ -54,7 +56,7 @@ export default function CalendarClient({ events, initialView = 'dayGridMonth', i
       return d0.toISOString().slice(0, 10);
     })();
     fixed.push(easterMonday);
-    return fixed.map(d => ({ start: d, display: 'background', title: 'Święto', color: 'rgba(176,36,23,0.06)' }));
+    return fixed.map(d => ({ start: d, display: 'background', title: 'Święto', color: 'rgba(176,36,23,0.06)' } satisfies EventInput));
   }, [initialDate]);
 
   return (
@@ -63,16 +65,16 @@ export default function CalendarClient({ events, initialView = 'dayGridMonth', i
         plugins={[dayGridPlugin, interactionPlugin]}
         initialView={initialView}
         initialDate={initialDate}
-        height={720}
+        height="auto"
         events={evts}
-        eventSources={[
-          { events: holidays as any }
-        ]}
+        eventSources={[{ events: holidays }]}
         headerToolbar={{ start: 'title', center: '', end: 'prev,next today' }}
+        locales={[plLocale]}
         locale="pl"
+        dayMaxEventRows={true}
+        dayMaxEvents={3}
         eventClick={(info) => {
-          // @ts-ignore our extra fields
-          const href: string | undefined = info.event.extendedProps?.href;
+          const href = (info.event.extendedProps as { href?: string }).href;
           if (href) {
             info.jsEvent.preventDefault();
             router.push(href);
@@ -80,8 +82,7 @@ export default function CalendarClient({ events, initialView = 'dayGridMonth', i
         }}
         eventDidMount={(arg) => {
           // Kolor wg typu + delikatna animacja wejścia
-          // @ts-ignore
-          const kind = arg.event.extendedProps?.kind;
+          const kind = (arg.event.extendedProps as { kind?: CalEvent['kind'] }).kind;
           const el = arg.el as HTMLElement;
           el.style.transition = 'transform 160ms ease, background-color 160ms ease';
           el.classList.add('anim-enter');

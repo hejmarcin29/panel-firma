@@ -6,6 +6,7 @@ import { pl } from '@/i18n/pl'
 import { StatusBadge } from '@/components/badges'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
+import { formatDate } from '@/lib/date'
 
 type MyOrder = {
   id: string
@@ -148,7 +149,7 @@ export default function PanelMontazysty() {
                           <span className="mx-1.5">•</span>
                           m2: {o.preMeasurementSqm ?? '-'}
                           <span className="mx-1.5">•</span>
-                          Utworzono: {new Date(o.createdAt).toLocaleDateString()}
+                          Utworzono: {formatDate(o.createdAt)}
                         </div>
                       </div>
                       <div>

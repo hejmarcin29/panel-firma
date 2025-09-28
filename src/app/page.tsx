@@ -10,6 +10,7 @@ import { db } from "@/db";
 import { KpiCard } from "@/components/kpi-card";
 import { MiniSparkline } from "@/components/mini-sparkline";
 import { CircularGauge } from "@/components/circular-gauge";
+import { formatDate } from "@/lib/date";
 
 export const dynamic = 'force-dynamic'
 
@@ -140,7 +141,7 @@ async function RecentClients() {
       {list.map((c) => (
         <li key={c.id} className="flex items-center justify-between">
           <Link className="hover:underline focus:underline focus:outline-none" href={`/klienci/${c.id}`}>{c.name}</Link>
-          <span className="opacity-60">{new Date(c.createdAt).toLocaleDateString()}</span>
+          <span className="opacity-60">{formatDate(c.createdAt)}</span>
         </li>
       ))}
   <li className="mt-2"><Link className="hover:underline focus:underline focus:outline-none" href="/klienci">{pl.dashboard.seeAll}</Link></li>
@@ -176,7 +177,7 @@ async function RecentChanges() {
             <span className="opacity-50"> • </span>
             <span className="">{n.content}</span>
           </span>
-          <span className="opacity-60">{new Date(n.createdAt).toLocaleDateString()}</span>
+          <span className="opacity-60">{formatDate(n.createdAt)}</span>
         </li>
       ))}
     </ul>
@@ -209,7 +210,7 @@ async function UpcomingOrders() {
             <Link className="hover:underline focus:underline focus:outline-none" href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : `/zlecenia/${r.id}`}>{r.clientName || r.clientId}</Link>
             <span className="text-xs rounded bg-black/5 px-1.5 py-0.5 dark:bg-white/10">{r.type === 'installation' ? 'Montaż' : 'Dostawa'}</span>
           </div>
-          <span className="opacity-60">{r.scheduledDate ? new Date(r.scheduledDate).toLocaleDateString() : '-'}</span>
+          <span className="opacity-60">{formatDate(r.scheduledDate, '-')}</span>
         </li>
       ))}
     </ul>
@@ -240,7 +241,7 @@ async function RecentCompletedOrders() {
             <Link className="hover:underline focus:underline focus:outline-none" href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : `/zlecenia/${r.id}`}>{r.clientName || r.clientId}</Link>
             <span className="text-xs rounded bg-black/5 px-1.5 py-0.5 dark:bg-white/10">{r.type === 'installation' ? 'Montaż' : 'Dostawa'}</span>
           </div>
-          <span className="opacity-60">{r.scheduledDate ? new Date(r.scheduledDate).toLocaleDateString() : '-'}</span>
+          <span className="opacity-60">{formatDate(r.scheduledDate, '-')}</span>
         </li>
       ))}
     </ul>

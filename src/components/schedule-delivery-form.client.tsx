@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { DatePicker } from '@/components/ui/date-picker'
 
 export function ScheduleDeliveryForm({ orderId }: { orderId: string }) {
   const [plannedAt, setPlannedAt] = useState<string>("")
@@ -19,7 +20,7 @@ export function ScheduleDeliveryForm({ orderId }: { orderId: string }) {
       try {
         const body: Record<string, unknown> = {
           status: 'planned',
-          plannedAt: plannedAt ? new Date(plannedAt).getTime() : null,
+          plannedAt: plannedAt ? new Date(plannedAt + 'T00:00:00').getTime() : null,
           carrier: carrier || null,
           trackingNo: trackingNo || null,
           note: note || null,
@@ -37,7 +38,9 @@ export function ScheduleDeliveryForm({ orderId }: { orderId: string }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         <div>
           <label className="text-xs opacity-70">Data dostawy</label>
-          <Input type="datetime-local" value={plannedAt} onChange={(e) => setPlannedAt(e.currentTarget.value)} />
+          <div className="mt-1">
+            <DatePicker value={plannedAt} onChange={setPlannedAt} />
+          </div>
         </div>
         <div>
           <label className="text-xs opacity-70">Przewoźnik</label>

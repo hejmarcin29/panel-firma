@@ -14,6 +14,11 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith("/public") ||
     /\.[a-zA-Z0-9]+$/.test(pathname);
 
+  // Always skip middleware for API routes. API auth/autz odbywa się w samych handlerach.
+  if (pathname.startsWith("/api")) {
+    return NextResponse.next();
+  }
+
   // Public paths that should not require auth
   const isPublic =
     pathname === "/login" ||
@@ -42,6 +47,7 @@ export async function middleware(req: NextRequest) {
 // Apply middleware to all routes except the listed ones (negative lookahead)
 export const config = {
   matcher: [
-    "/((?!api/auth|api/setup|login|setup|_next/static|_next/image|favicon.ico|assets|images|public).*)",
+    // Wyklucz wszystkie ścieżki /api/** – middleware stosujemy wyłącznie do stron aplikacji
+    "/((?!api|login|setup|_next/static|_next/image|favicon.ico|assets|images|public).*)",
   ],
 };

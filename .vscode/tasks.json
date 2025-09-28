@@ -33,6 +33,18 @@
 			"type": "shell",
 			"command": "npx drizzle-kit generate && npx drizzle-kit migrate",
 			"group": "build"
+		},
+		{
+			"label": "Drizzle: generate and migrate",
+			"type": "shell",
+			"command": "npx drizzle-kit generate && npx drizzle-kit migrate",
+			"group": "build"
+		},
+		{
+			"label": "Drizzle: generate and migrate",
+			"type": "shell",
+			"command": "npx drizzle-kit generate && npx drizzle-kit migrate",
+			"group": "build"
 		}
 	]
 }

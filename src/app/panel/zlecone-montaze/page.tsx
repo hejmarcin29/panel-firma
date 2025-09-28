@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { z } from 'zod'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatusBadge } from '@/components/badges'
+import { formatDate } from '@/lib/date'
 
 type AssignedOrder = {
   id: string
@@ -125,7 +126,7 @@ export default function ZleconeMontazePage() {
                         <span className="mx-1.5">•</span>
                         m2: {o.preMeasurementSqm ?? '-'}
                         <span className="mx-1.5">•</span>
-                        Utworzono: {new Date(o.createdAt).toLocaleDateString()}
+                        Utworzono: {formatDate(o.createdAt, '—')}
                       </div>
                     </div>
                     <div>

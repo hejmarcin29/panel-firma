@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import { pl } from "@/i18n/pl";
+import { formatDate } from "@/lib/date";
 
 interface ClientFieldChange { field: string; before: string | null; after: string | null }
 interface EventPayloadBase { id?: string; changedFields?: string[]; changes?: ClientFieldChange[]; [k: string]: unknown }
@@ -82,7 +83,7 @@ export function SystemStatusInfo() {
                   {events.map(ev => (
                     <li key={ev.id} className="rounded border bg-background/60 px-2 py-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-mono text-xs opacity-60">{new Date(ev.occurredAt).toLocaleString()}</span>
+                        <span className="font-mono text-xs opacity-60">{formatDate(ev.occurredAt)}</span>
                         <span className="font-semibold">{ev.type}</span>
                         {ev.actor && <span className="text-xs text-muted-foreground">{ev.actor}</span>}
                         {ev.entityType && ev.entityId && (

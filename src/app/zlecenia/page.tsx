@@ -9,6 +9,7 @@ import { Wrench, Truck, Info } from 'lucide-react'
 import { TypeBadge, OutcomeBadge, PipelineStageBadge } from '@/components/badges'
 import { QuickChecklistBar } from '@/components/quick-checklist-bar.client'
 import { FiltersDropdown } from '@/components/filters-dropdown.client'
+import { formatDate, formatDayMonth } from '@/lib/date'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,6 +20,7 @@ type Row = {
   createdAt: number | Date
   type: string
   status: string
+  pipelineStage: string | null
   outcome: 'won' | 'lost' | null | string | null
   clientId: string
   clientName: string | null
@@ -228,7 +230,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                 <td colSpan={10} className="px-3 py-6 text-center opacity-70">{pl.orders.listEmpty}</td>
               </tr>
           ) : rows.map((r) => (
-              <tr key={r.id} className="border-t border-black/10 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10">
+              <tr key={r.id} className="border-t border-black/10 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10 anim-enter">
                 <td className="px-3 py-2">
                   <Link className="hover:underline focus:underline focus:outline-none" href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : `/zlecenia/${r.id}`}>
                     {r.orderNo ? `${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : r.id.slice(0,8)}
@@ -236,7 +238,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                 </td>
                 <td className="px-3 py-2 max-w-[220px] truncate" title={r.clientName || r.clientId}>{r.clientName || r.clientId}</td>
                 <td className="px-3 py-2"><TypeBadge type={r.type} /></td>
-                <td className="px-3 py-2"><PipelineStageBadge stage={(r as any).pipelineStage} /></td>
+                <td className="px-3 py-2"><PipelineStageBadge stage={r.pipelineStage} /></td>
                 <td className="px-3 py-2">
                   <QuickChecklistBar
                     orderId={r.id}
@@ -250,7 +252,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                 <td className="px-3 py-2">
                   {r.nextDeliveryAt ? (
                     <span className="inline-flex items-center gap-1">
-                      <span>{new Date(r.nextDeliveryAt).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' })}</span>
+                      <span>{formatDayMonth(r.nextDeliveryAt, '—')}</span>
                       {r.nextDeliveryStatus ? (
                         <span className="rounded bg-black/10 px-1.5 py-0.5 text-[10px] uppercase tracking-wide dark:bg-white/10">{r.nextDeliveryStatus}</span>
                       ) : null}
@@ -260,7 +262,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                 <td className="px-3 py-2">
                   {r.nextInstallationAt ? (
                     <span className="inline-flex items-center gap-1">
-                      <span>{new Date(r.nextInstallationAt).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' })}</span>
+                      <span>{formatDayMonth(r.nextInstallationAt, '—')}</span>
                       {r.nextInstallationStatus ? (
                         <span className="rounded bg-black/10 px-1.5 py-0.5 text-[10px] uppercase tracking-wide dark:bg-white/10">{r.nextInstallationStatus}</span>
                       ) : null}
@@ -268,7 +270,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                   ) : '—'}
                 </td>
                 <td className="px-3 py-2 max-w-[140px] truncate" title={r.installerName || '-'}>{r.installerName || '-'}</td>
-                <td className="px-3 py-2">{new Date(r.createdAt).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' })}</td>
+                <td className="px-3 py-2">{formatDate(r.createdAt, '—')}</td>
                 <td className="px-3 py-2">
                   <OutcomeBadge outcome={r.outcome as 'won'|'lost'|null|undefined} iconOnly />
                 </td>
@@ -295,17 +297,16 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
           <div className="px-3 py-6 text-center opacity-70">{pl.orders.listEmpty}</div>
         ) : (
           rows.map((r) => {
-            const statusLabel = (pl.orders.statuses as Record<string,string>)[r.status] || r.status
             const href = r.orderNo ? `/zlecenia/nr/${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : `/zlecenia/${r.id}`
             return (
-              <div key={r.id} className="rounded-md border border-black/10 dark:border-white/10 p-3">
+              <div key={r.id} className="rounded-md border border-black/10 dark:border-white/10 p-3 anim-enter">
                 <div className="flex items-center justify-between">
                   <Link className="font-medium hover:underline focus:underline focus:outline-none" href={href}>
                     {r.orderNo ? `${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : r.id.slice(0,8)}
                   </Link>
                   <div className="flex items-center gap-2">
                     <TypeBadge type={r.type} />
-                    <PipelineStageBadge stage={(r as any).pipelineStage} />
+                    <PipelineStageBadge stage={r.pipelineStage} />
                   </div>
                 </div>
                 {/* Mini-kafelki checklisty na mobile */}
@@ -323,14 +324,14 @@ export default async function OrdersPage({ searchParams }: { searchParams: Searc
                 <div className="mt-1 grid grid-cols-2 gap-2 text-xs opacity-70">
                   <div>
                     <div className="opacity-70">Dostawa</div>
-                    <div>{r.nextDeliveryAt ? new Date(r.nextDeliveryAt).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' }) : '—'}</div>
+                    <div>{r.nextDeliveryAt ? formatDayMonth(r.nextDeliveryAt, '—') : '—'}</div>
                   </div>
                   <div>
                     <div className="opacity-70">Montaż</div>
-                    <div>{r.nextInstallationAt ? new Date(r.nextInstallationAt).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' }) : '—'}</div>
+                    <div>{r.nextInstallationAt ? formatDayMonth(r.nextInstallationAt, '—') : '—'}</div>
                   </div>
                 </div>
-                <div className="mt-1 text-xs opacity-70 flex justify-end">{new Date(r.createdAt).toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' })}</div>
+                <div className="mt-1 text-xs opacity-70 flex justify-end">{formatDate(r.createdAt, '—')}</div>
                 <div className="mt-2 flex items-center justify-between">
                   <OutcomeBadge outcome={r.outcome as 'won'|'lost'|null|undefined} iconOnly />
                   <div className="flex items-center gap-2">

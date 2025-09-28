@@ -22,7 +22,10 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       lg: "h-10 px-5 text-base",
     } as const;
     const Comp = asChild ? Slot : "button";
-    return <Comp ref={ref as any} className={twMerge(base, variants[variant], sizes[size], className)} {...props} />;
+    if (asChild) {
+      return <Comp className={twMerge(base, variants[variant], sizes[size], className)} {...props} />;
+    }
+    return <Comp ref={ref} className={twMerge(base, variants[variant], sizes[size], className)} {...props} />;
   }
 );
 Button.displayName = "Button";

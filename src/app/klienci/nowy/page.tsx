@@ -22,6 +22,7 @@ const schema = z.object({
   isCompany: z.boolean().default(false),
   companyName: z.string().optional(),
   note: z.string().optional(),
+  source: z.string().optional(),
   // Usunięto wybór serviceType z formularza – decyzja: domyślnie 'with_installation' pozostaje w backendzie (lub zostanie zrefaktoryzowane później)
 });
 
@@ -30,7 +31,7 @@ export default function NowyKlientPage() {
   const { toast } = useToast();
   const { register, handleSubmit, setValue, watch, formState: { errors, isSubmitting } } = useForm<z.input<typeof schema>>({
     resolver: zodResolver(schema),
-  defaultValues: { name: '', phone: '', email: '', invoiceCity: '', invoicePostalCode: '', invoiceAddress: '', taxId: '', companyName: '', isCompany: false, note: '' }
+  defaultValues: { name: '', phone: '', email: '', invoiceCity: '', invoicePostalCode: '', invoiceAddress: '', taxId: '', companyName: '', isCompany: false, note: '', source: '' }
   });
   const isCompany = watch('isCompany');
 
@@ -50,6 +51,7 @@ export default function NowyKlientPage() {
             invoicePostalCode: data.invoicePostalCode || '',
             invoiceAddress: data.invoiceAddress || '',
           };
+          if (data.source) payload.source = data.source;
           if (data.isCompany) {
             if (data.taxId) payload.taxId = data.taxId;
             if (data.companyName) payload.companyName = data.companyName;
@@ -104,6 +106,11 @@ export default function NowyKlientPage() {
             <Label>Kod pocztowy</Label>
             <Input {...register('invoicePostalCode')} />
           </div>
+        </div>
+
+        <div>
+          <Label>Źródło (skąd klient?)</Label>
+          <Input {...register('source')} placeholder="np. Polecenie, Google, Facebook" />
         </div>
 
         <div className="flex items-center gap-2">

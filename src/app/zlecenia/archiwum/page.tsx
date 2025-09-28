@@ -2,6 +2,7 @@ import { db } from '@/db'
 import { clients, orders, users } from '@/db/schema'
 import { desc, eq, isNotNull } from 'drizzle-orm'
 import Link from 'next/link'
+import { formatDate } from '@/lib/date'
 import { pl } from '@/i18n/pl'
 import { Badge } from '@/components/ui/badge'
 import { StatusBadge } from '@/components/badges'
@@ -57,7 +58,7 @@ export default async function OrdersArchivePage() {
                 <td colSpan={7} className="px-3 py-6 text-center opacity-70">Brak pozycji w archiwum</td>
               </tr>
             ) : rows.map((r) => (
-              <tr key={r.id} className="border-t border-black/10 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10">
+              <tr key={r.id} className="border-t border-black/10 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10 anim-enter">
                 <td className="px-3 py-2">
                   <Link className="hover:underline focus:underline focus:outline-none" href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : `/zlecenia/${r.id}`}>
                     {r.orderNo ? (
@@ -73,9 +74,9 @@ export default async function OrdersArchivePage() {
                 <td className="px-3 py-2">{r.clientName || r.clientId}</td>
                 <td className="px-3 py-2"><Badge size="xs" variant="neutral">{r.type === 'installation' ? pl.orders.typeInstallation : pl.orders.typeDelivery}</Badge></td>
                 <td className="px-3 py-2"><StatusBadge status={r.status} label={(pl.orders.statuses as Record<string,string>)[r.status] || r.status} /></td>
-                <td className="px-3 py-2">{r.scheduledDate ? new Date(r.scheduledDate).toLocaleDateString() : '-'}</td>
+                <td className="px-3 py-2">{formatDate(r.scheduledDate, '-')}</td>
                 <td className="px-3 py-2">{r.installerName || '-'}</td>
-                <td className="px-3 py-2">{r.archivedAt ? new Date(r.archivedAt).toLocaleString() : '-'}</td>
+                <td className="px-3 py-2">{formatDate(r.archivedAt, '-')}</td>
               </tr>
             ))}
           </tbody>
@@ -87,7 +88,7 @@ export default async function OrdersArchivePage() {
           <div className="px-3 py-6 text-center opacity-70">Brak pozycji w archiwum</div>
         ) : (
           rows.map((r) => (
-            <div key={r.id} className="rounded-md border border-black/10 dark:border-white/10 p-3">
+            <div key={r.id} className="rounded-md border border-black/10 dark:border-white/10 p-3 anim-enter">
               <div className="flex items-center justify-between">
                 <Link className="font-medium hover:underline focus:underline focus:outline-none" href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : `/zlecenia/${r.id}`}>
                   {r.orderNo ? `${r.orderNo}_${r.type === 'installation' ? 'm' : 'd'}` : r.id.slice(0,8)}
@@ -99,8 +100,8 @@ export default async function OrdersArchivePage() {
               </div>
               <div className="mt-1 text-sm">{r.clientName || r.clientId}</div>
               <div className="mt-1 flex items-center justify-between text-xs opacity-70">
-                <span>{r.scheduledDate ? new Date(r.scheduledDate).toLocaleDateString() : '-'}</span>
-                <span>{r.archivedAt ? new Date(r.archivedAt).toLocaleString() : '-'}</span>
+                <span>{formatDate(r.scheduledDate, '-')}</span>
+                <span>{formatDate(r.archivedAt, '-')}</span>
               </div>
             </div>
           ))

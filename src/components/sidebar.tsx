@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Users, ClipboardList, Settings, Wrench, UserCircle2, BarChart2, PieChart, LineChart, Globe, CalendarDays } from "lucide-react";
+import { Home, Users, ClipboardList, Settings, Wrench, UserCircle2, BarChart2, PieChart, LineChart, Globe, CalendarDays, CheckSquare } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 type NavItem = { href: string; label: string; icon: React.ComponentType<{ className?: string }> };
@@ -13,6 +13,7 @@ const sections: { title: string; items: NavItem[] }[] = [
       { href: "/klienci", label: "Klienci", icon: Users },
       { href: "/zlecenia", label: "Zlecenia", icon: ClipboardList },
       { href: "/zlecenia/kalendarz", label: "Kalendarz", icon: CalendarDays },
+  { href: "/zadania", label: "Zadania", icon: CheckSquare },
       { href: "/montaze", label: "Montaże — checklisty", icon: Wrench },
       { href: "/dostawy", label: "Dostawy — checklisty", icon: Wrench },
   { href: "/panel/zlecone-montaze", label: "Montaże — podgląd (admin)", icon: Wrench },
@@ -58,8 +59,8 @@ export function Sidebar() {
         if (item.href.startsWith('/panel/montazysta')) {
           return role === 'installer';
         }
-        // Calendar is available to any authenticated role (admin/manager/architect/installer)
-        if (item.href === '/zlecenia/kalendarz') {
+        // Calendar and Zadania are available to any authenticated role (admin/manager/architect/installer)
+        if (item.href === '/zlecenia/kalendarz' || item.href === '/zadania') {
           return isAuthed;
         }
         // Admin/manager-only data/reporting pages

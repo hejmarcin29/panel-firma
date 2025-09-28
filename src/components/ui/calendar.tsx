@@ -1,6 +1,7 @@
 "use client";
 import * as React from "react";
 import { DayPicker } from "react-day-picker";
+import { pl as dfnsPl } from 'date-fns/locale'
 import "react-day-picker/dist/style.css";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker> & {
@@ -37,6 +38,7 @@ export function Calendar({ className, ...props }: CalendarProps) {
       }}
       showOutsideDays
       fixedWeeks
+      locale={dfnsPl}
       {...props}
     />
   );

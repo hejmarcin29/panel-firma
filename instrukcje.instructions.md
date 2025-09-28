@@ -130,3 +130,44 @@ Te paczki są już dodane. Przy nowych komponentach korzystaj z odpowiedników s
 - Zamień `src/components/ui/alert-dialog.tsx` na shadcn `Dialog` + confirm variant.
 - Zamień `src/components/ui/dropdown-menu.tsx` na shadcn `DropdownMenu`.
 - Podmień `ToastProvider` w `app/layout.tsx` na `sonner` (`<Toaster />`) i przepnij `useToast()` na proxy do sonner (lub użyj bezpośrednio `toast`).
+
+## Backend – Route Handlers + Drizzle (LESSONS LEARNED 2025-09-28)
+
+Poniższe wnioski po incydencie z archiwizacją klienta i kaskadą zleceń.
+
+1) Next.js App Router – params w API i podpis funkcji
+- W części konfiguracji/środowisk Next 15 parametry dynamiczne w Route Handlers mogą być asynchroniczne.
+- Jeżeli pojawia się komunikat „params should be awaited before using its properties”, użyj podpisu z `Promise` i `await`:
+	- `export async function POST(_req: Request, ctx: { params: Promise<{ id: string }> }) { const { id } = await ctx.params }`
+- Dzięki temu unikamy błędu czasu wykonania przy dostępie do `params.id`.
+
+2) Drizzle ORM + better-sqlite3 – transakcje i egzekucja
+- Z adapterem `better-sqlite3` transakcje są synchroniczne:
+	- Używaj `db.transaction((tx) => { ... })` bez `async/await` w callbacku. Callback nie może zwracać promisy – inaczej pojawi się błąd „Transaction function cannot return a promise”.
+- Dla mutacji (`insert/update/delete`) wywołuj `.run()` na builderze, aby operacja faktycznie się wykonała:
+	- `tx.update(table).set({...}).where(...).run()`.
+- Kolumny czasu w schemacie `integer(..., { mode: 'timestamp_ms' })` akceptują `Date` – preferuj przekazywanie `new Date()` (Drizzle sam zamieni na ms). Po stronie API, do JSON wysyłaj wartości znormalizowane do epoch ms, aby uniknąć niespodzianek z typem `Date` w odpowiedzi.
+
+3) Middleware a API
+- Middleware służy do kontroli dostępu/nawigacji dla UI. Dla `/api/**` nie robimy przekierowań – mogą psuć odpowiedzi fetcha.
+- Wyłączamy middleware dla całego `/api/**`, a autoryzację i uprawnienia egzekwujemy w handlerach (401/403/200).
+
+4) Emisja eventów domenowych po mutacji – non‑fatal
+- Emisja eventu nie może wysadzać odpowiedzi 200 po udanym zapisie do bazy.
+- Owiń `emitDomainEvent(...)` w `try/catch` i loguj ostrzeżenie w razie błędu; odpowiedź API powinna pozostać 200.
+
+5) Kaskadowe archiwum (kontrakt)
+- Archiwizacja klienta ustawia `clients.archivedAt = now`, a także `orders.archivedAt = now` dla wszystkich zleceń danego klienta w jednej transakcji.
+- Przy przywracaniu oba pola są zerowane (`null`). Operacje powinny być idempotentne.
+
+6) UX na wypadek nietypowej odpowiedzi
+- W krytycznych akcjach (archiwizuj/przywróć) warto mieć fallback: przy nie‑OK odpowiedzi wykonać kontrolny GET i, jeśli stan faktycznie się zmienił, pokazać zielony toast. Po ustabilizowaniu endpointów fallback może pozostać jako siatka bezpieczeństwa.
+
+Checklist dla mutujących endpointów (API):
+- [ ] Sprawdzenie sesji/roli na początku i zwrot 401/403 w JSON.
+- [ ] Operacje w `db.transaction((tx) => { ... })` bez async/await.
+- [ ] Każda `insert/update/delete` zakończona `.run()` (better-sqlite3).
+- [ ] Zapisy czasów jako `new Date()` dla kolumn `timestamp_ms`; w odpowiedzi JSON – ms (number).
+- [ ] Emisja eventu w `try/catch` (non‑fatal dla odpowiedzi).
+- [ ] `return NextResponse.json({ ok: true }, { status: 200 })` na sukces.
+- [ ] (Opcjonalnie) fallbackowy GET w kliencie dla lepszego UX.

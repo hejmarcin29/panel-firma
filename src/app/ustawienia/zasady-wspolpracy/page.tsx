@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import dynamic from 'next/dynamic'
 const NewRuleForm = dynamic(() => import('./rule-form.client'))
+import { formatDate } from '@/lib/date'
 
 export default async function CooperationRulesAdminPage() {
   const session = await getSession()
@@ -51,7 +52,7 @@ export default async function CooperationRulesAdminPage() {
                     </div>
                   </div>
                   <div className="text-xs opacity-70">
-                    Utworzono: {r.createdAt ? new Date(r.createdAt as unknown as number).toLocaleString() : '—'}
+                    Utworzono: {formatDate(r.createdAt as unknown as number, '—')}
                   </div>
                 </div>
               ))}

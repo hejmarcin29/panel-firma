@@ -1,8 +1,14 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { BackButton } from '@/components/back-button';
 import { pl } from '@/i18n/pl';
+import { AlertDialog } from '@/components/ui/alert-dialog';
+import { Input } from '@/components/ui/input';
+import { DatePicker } from '@/components/ui/date-picker';
+import { useToast } from '@/components/ui/toaster';
+import { formatDate } from '@/lib/date';
 
 type Klient = {
   id: string;
@@ -17,6 +23,20 @@ export default function NoweZlecenieSelectPage() {
   const [selectedClient, setSelectedClient] = useState<Klient | null>(null);
   const [query, setQuery] = useState('');
   const [fromClientId, setFromClientId] = useState<string | null>(null);
+  const router = useRouter();
+  const { toast } = useToast();
+
+  // Modal state (MVP "Dodaj dostawę")
+  const [deliveryModalOpen, setDeliveryModalOpen] = useState(false);
+  const [deliveryClientId, setDeliveryClientId] = useState<string | null>(null);
+  const [plannedAt, setPlannedAt] = useState<string>("");
+  const [driver, setDriver] = useState<string>("admin"); // MVP: only one option
+  const [note, setNote] = useState<string>("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const canSubmitDelivery = useMemo(() => {
+    return Boolean(deliveryClientId && plannedAt && driver);
+  }, [deliveryClientId, plannedAt, driver]);
 
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
@@ -35,6 +55,61 @@ export default function NoweZlecenieSelectPage() {
       }
     })();
   }, []);
+
+  function openDeliveryModal(clientId: string) {
+    setDeliveryClientId(clientId);
+    setPlannedAt("");
+    setDriver("admin");
+    setNote("");
+    setDeliveryModalOpen(true);
+  }
+
+  async function handleCreateDelivery() {
+    if (!deliveryClientId) return;
+    if (!plannedAt) {
+      toast({ title: 'Błąd', description: 'Podaj datę dostawy', variant: 'destructive' });
+      return;
+    }
+    setSubmitting(true);
+    try {
+      // 1) Utwórz zlecenie typu "delivery"
+  const scheduledTs = new Date(plannedAt + 'T00:00:00').getTime();
+      const createOrderRes = await fetch('/api/zlecenia', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId: deliveryClientId, type: 'delivery', scheduledDate: scheduledTs }),
+      });
+      const created = await createOrderRes.json().catch(() => ({}));
+      if (!createOrderRes.ok) throw new Error(created?.error || 'Nie udało się utworzyć zlecenia');
+      const orderId: string | undefined = created?.id;
+      if (!orderId) throw new Error('Brak identyfikatora zlecenia');
+
+      // 2) Dodaj slot dostawy (MVP: kierowca = admin → wpiszemy w notatce + carrier="Własny")
+      const body: Record<string, unknown> = {
+        status: 'planned',
+        plannedAt: scheduledTs,
+        carrier: 'Własny',
+        trackingNo: null,
+        note: [note?.trim() || '', `Kierowca: ${driver}`].filter(Boolean).join(' | '),
+      };
+      const slotRes = await fetch(`/api/zlecenia/${orderId}/dostawy`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const slotJson = await slotRes.json().catch(() => ({}));
+      if (!slotRes.ok) throw new Error(slotJson?.error || 'Nie udało się dodać dostawy');
+
+      toast({ title: 'Dodano dostawę', variant: 'success' });
+      setDeliveryModalOpen(false);
+      router.push(`/zlecenia/${orderId}`);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Coś poszło nie tak';
+      toast({ title: 'Błąd', description: msg, variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   return (
     <div className="mx-auto max-w-4xl p-6 space-y-6">
@@ -58,10 +133,14 @@ export default function NoweZlecenieSelectPage() {
                       <div className="text-xs opacity-60">Utwórz zlecenie montażu</div>
                     </div>
                   </Link>
-                  <button disabled className="flex items-center justify-center rounded-lg border p-6 text-center opacity-60 dark:border-white/15" style={{ borderColor: 'var(--pp-border)' }}>
+                  <button
+                    onClick={() => openDeliveryModal(fromClientId)}
+                    className="group flex items-center justify-center rounded-lg border p-6 text-center transition hover:shadow-sm hover:scale-[1.01] dark:border-white/15"
+                    style={{ borderColor: 'var(--pp-border)' }}
+                  >
                     <div className="space-y-1">
                       <div className="text-lg font-medium">Tylko dostawa</div>
-                      <div className="text-xs opacity-60">Wkrótce</div>
+                      <div className="text-xs opacity-60">Utwórz zlecenie dostawy</div>
                     </div>
                   </button>
                 </div>
@@ -92,7 +171,7 @@ export default function NoweZlecenieSelectPage() {
                 >
                   <div className="flex items-center justify-between">
                     <span>{c.name}</span>
-                    <span className="text-[10px] opacity-60">{new Date(c.createdAt).toLocaleDateString()}</span>
+                    <span className="text-[10px] opacity-60">{formatDate(c.createdAt)}</span>
                   </div>
                 </button>
               ))}
@@ -112,7 +191,12 @@ export default function NoweZlecenieSelectPage() {
                   <div className="rounded border border-black/10 dark:border-white/10 p-2 text-sm">{selectedClient.name}</div>
                   <div className="space-y-2">
                     <Link href={`/zlecenia/montaz/nowy?clientId=${selectedClient.id}`} className="block w-full text-center inline-flex h-10 items-center justify-center rounded-md border border-black/15 hover:bg-black/5 text-sm dark:border-white/15 dark:hover:bg-white/10">Dodaj montaż</Link>
-                    <button disabled className="w-full inline-flex h-10 items-center justify-center rounded-md border border-black/15 bg-black/5 text-sm opacity-60 dark:border-white/15 dark:bg-white/10">Dodaj dostawę (wkrótce)</button>
+                    <button
+                      onClick={() => openDeliveryModal(selectedClient.id)}
+                      className="w-full inline-flex h-10 items-center justify-center rounded-md border border-black/15 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+                    >
+                      Dodaj dostawę
+                    </button>
                   </div>
                   <p className="text-[11px] opacity-60">Montaż: start od statusu „oczekuje na pomiar”.</p>
                 </div>
@@ -123,6 +207,38 @@ export default function NoweZlecenieSelectPage() {
           )}
         </div>
       )}
+
+      {/* Modal: Dodaj dostawę (MVP) */}
+      <AlertDialog
+        open={deliveryModalOpen}
+        onOpenChange={setDeliveryModalOpen}
+        title="Dodaj dostawę"
+        description={(
+          <div className="space-y-3 pt-2">
+            <div>
+              <label className="text-xs opacity-70">Data</label>
+              <div className="mt-1">
+                <DatePicker value={plannedAt} onChange={setPlannedAt} />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs opacity-70">Kierowca</label>
+              <select value={driver} onChange={(e) => setDriver(e.currentTarget.value)} className="mt-1 h-9 w-full rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15">
+                <option value="admin">admin</option>
+              </select>
+              <p className="mt-1 text-[11px] opacity-60">MVP: na razie tylko Ty jeździsz, więc lista zawiera jedną opcję.</p>
+            </div>
+            <div>
+              <label className="text-xs opacity-70">Notatka (opcjonalnie)</label>
+              <Input value={note} onChange={(e) => setNote(e.currentTarget.value)} placeholder="np. dostawa po 16:00" />
+            </div>
+          </div>
+        )}
+        confirmText={submitting ? 'Zapisywanie…' : 'Utwórz'}
+        onConfirm={async () => { if (!submitting && canSubmitDelivery) await handleCreateDelivery(); }}
+        showCancelButton
+        showConfirmButton
+      />
     </div>
   );
 }

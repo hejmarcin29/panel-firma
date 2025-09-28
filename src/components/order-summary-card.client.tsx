@@ -5,6 +5,7 @@ import { OrderOutcomeButtons } from '@/components/order-outcome-buttons.client'
 import { OrderArchiveButton } from '@/components/order-archive-button.client'
 import { pl } from '@/i18n/pl'
 import Link from 'next/link'
+import { formatDate } from '@/lib/date'
 
 type Props = {
   id: string
@@ -46,8 +47,8 @@ export function OrderSummaryCard({ id, type, status, outcome, createdAt, orderNo
         </div>
       </div>
 
-      <div className="mt-2 text-xs opacity-60 flex items-center justify-between">
-        <span>{new Date(createdAt).toLocaleString()}</span>
+    <div className="mt-2 text-xs opacity-60 flex items-center justify-between">
+  <span>{formatDate(createdAt)}</span>
       </div>
     </div>
   )

@@ -1,5 +1,6 @@
 "use client"
 import { useState } from 'react'
+import { formatDate } from '@/lib/date'
 
 type DeliverySlot = {
   id: string
@@ -24,11 +25,7 @@ type InstallationSlot = {
   note: string | null
 }
 
-function fmt(d: Date | number | null) {
-  if (!d) return '—'
-  const dt = d instanceof Date ? d : new Date(d)
-  return dt.toLocaleString()
-}
+function fmt(d: Date | number | null) { return formatDate(d, '—') }
 
 function ActionButtons({ onConfirm, onComplete, onCancel, onReschedule, disabled }: {
   onConfirm?: () => void

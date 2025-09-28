@@ -13,8 +13,8 @@ export function UploadButton({ onClientUploadComplete }: { onClientUploadComplet
           onClientUploadComplete?.(files);
         }}
         onUploadError={(e: Error) => {
-          // eslint-disable-next-line no-alert
-          alert(`Błąd przesyłania: ${e.message}`);
+          // Prefer toast or console over alert to satisfy lint rules
+          console.error('Błąd przesyłania', e);
         }}
       />
     </div>
