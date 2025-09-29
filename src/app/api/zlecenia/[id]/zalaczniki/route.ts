@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { getSession } from '@/lib/auth-session'
 import { db } from '@/db'
 import { orderAttachments, orders } from '@/db/schema'
-import { and, eq } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 
 export const runtime = 'nodejs'
@@ -41,8 +41,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
   try {
     const session = await getSession()
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    const role = session.user?.role
-    const actorId = session.user?.id ?? null
+  const role = session.user?.role
     if (!role || (role !== 'admin' && role !== 'manager' && role !== 'installer')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }

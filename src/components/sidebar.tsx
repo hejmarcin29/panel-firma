@@ -32,6 +32,7 @@ const sections: { title: string; items: NavItem[] }[] = [
     items: [
       { href: "/ustawienia", label: "Ustawienia", icon: Settings },
       { href: "/", label: "Panel główny", icon: Home },
+      { href: "/pliki", label: "Pliki (R2)", icon: Globe },
     ],
   },
   {
@@ -51,6 +52,7 @@ export function Sidebar() {
 
   const role = (session?.user && (session.user as { role?: string }).role) || undefined;
   const isAuthed = status === 'authenticated';
+  const r2ManagerUrl = typeof window !== 'undefined' ? (process.env.NEXT_PUBLIC_R2_MANAGER_URL || '') : (process.env.NEXT_PUBLIC_R2_MANAGER_URL || '');
   // Build sections based on role
   const filteredSections = sections
     .map((section) => {
@@ -71,6 +73,7 @@ export function Sidebar() {
           item.href === '/dostawy' ||
           item.href.startsWith('/panel/zlecone-montaze') ||
           item.href.startsWith('/ustawienia') ||
+          item.href === '/pliki' ||
           item.href.startsWith('/raporty')
         ) {
           return role === 'admin' || role === 'manager' || role === 'architect';
@@ -155,6 +158,26 @@ export function Sidebar() {
             </ul>
           </div>
         ))}
+        {/* External R2 Manager link (admin/manager/architect only) */}
+        {isAuthed && (role === 'admin' || role === 'manager' || role === 'architect') && r2ManagerUrl && (
+          <div>
+            <div className="px-2 text-[11px] uppercase tracking-wider opacity-60 mb-2">Narzędzia</div>
+            <ul className="space-y-1">
+              <li>
+                <a
+                  href={r2ManagerUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 rounded-md px-3 py-2 hover:bg-[var(--pp-primary-subtle-bg)]"
+                >
+                  {/* Using Globe icon already imported */}
+                  <Globe className="h-4 w-4 opacity-80" />
+                  <span>R2 Manager</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        )}
       </nav>
     </aside>
   );

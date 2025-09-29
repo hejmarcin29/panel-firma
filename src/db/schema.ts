@@ -58,6 +58,11 @@ export const clients = sqliteTable('clients', {
   invoiceCity: text('invoice_city'), // miasto (faktura)
   invoicePostalCode: text('invoice_postal_code'), // kod pocztowy (faktura)
   invoiceAddress: text('invoice_address'), // adres (faktura)
+  // Fakturowanie (preferencje)
+  preferVatInvoice: integer('prefer_vat_invoice', { mode: 'boolean' }).notNull().default(false),
+  buyerType: text('buyer_type'), // 'person' | 'company'
+  invoiceEmail: text('invoice_email'), // dedykowany email do faktury
+  eInvoiceConsent: integer('e_invoice_consent', { mode: 'boolean' }).notNull().default(false),
   deliveryCity: text('delivery_city'), // miasto (dostawa)
   deliveryAddress: text('delivery_address'), // adres (dostawa)
   // Typ usługi: tylko dostawa czy z montażem
@@ -224,6 +229,20 @@ export const installationSlots = sqliteTable('installation_slots', {
 }))
 
 export type InstallationSlot = typeof installationSlots.$inferSelect
+
+// Delivery items (pozycje dostawy) — powiązane z delivery_slots
+export const deliveryItems = sqliteTable('delivery_items', {
+  id: text('id').primaryKey(), // uuid
+  slotId: text('slot_id').notNull(), // delivery_slots.id
+  name: text('name').notNull(),
+  sqmCenti: integer('sqm_centi'), // m2 * 100 (np. 23.45 m2 => 2345)
+  packs: integer('packs'),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+}, (table) => ({
+  idxSlot: index('delivery_items_slot_idx').on(table.slotId),
+}))
+
+export type DeliveryItem = typeof deliveryItems.$inferSelect
 
 // Google Calendar preferences per installer
 export const installerGooglePrefs = sqliteTable('installer_google_prefs', {

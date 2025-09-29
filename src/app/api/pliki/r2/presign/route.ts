@@ -30,14 +30,14 @@ export async function POST(req: Request) {
       return Response.json({ error: "Błędne dane", issues: parsed.error.issues }, { status: 400 })
     }
     data = parsed.data
-  } catch (e) {
+  } catch {
     return Response.json({ error: "Niepoprawne JSON" }, { status: 400 })
   }
 
   const r2 = createR2Client()
   const bucket = getR2Bucket()
 
-  const ext = data.filename?.includes(".") ? data.filename!.split(".").pop() : undefined
+  // const ext = data.filename?.includes(".") ? data.filename!.split(".").pop() : undefined
   const rand = Math.random().toString(36).slice(2, 10)
   const now = new Date()
   const yyyy = now.getFullYear()

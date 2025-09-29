@@ -30,9 +30,58 @@ export default function NoweZlecenieSelectPage() {
   const [deliveryModalOpen, setDeliveryModalOpen] = useState(false);
   const [deliveryClientId, setDeliveryClientId] = useState<string | null>(null);
   const [plannedAt, setPlannedAt] = useState<string>("");
+  const [plannedTouched, setPlannedTouched] = useState(false);
   const [driver, setDriver] = useState<string>("admin"); // MVP: only one option
   const [note, setNote] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
+  // Data złożenia zamówienia (domyślnie dziś)
+  const [orderPlacedAt, setOrderPlacedAt] = useState<string>('');
+
+  // Helpers
+  function toISODate(d: Date) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+  function addBusinessDays(from: string, days: number) {
+    if (!from) return '';
+    // Prosta lista świąt PL (ustawowe) na bieżący i następny rok; bez świąt ruchomych (Wielkanoc/Boże Ciało) w MVP
+    const year = new Date().getFullYear();
+    const fixed = (y: number) => [
+      `${y}-01-01`, // Nowy Rok
+      `${y}-01-06`, // Trzech Króli
+      `${y}-05-01`, // Święto Pracy
+      `${y}-05-03`, // Święto Konstytucji 3 Maja
+      `${y}-08-15`, // Wniebowzięcie NMP
+      `${y}-11-01`, // Wszystkich Świętych
+      `${y}-11-11`, // Święto Niepodległości
+      `${y}-12-25`, // Boże Narodzenie (1)
+      `${y}-12-26`, // Boże Narodzenie (2)
+    ];
+    const holidays = new Set([...fixed(year), ...fixed(year + 1)]);
+
+  const d = new Date(from + 'T00:00:00');
+    let added = 0;
+    while (added < days) {
+      d.setDate(d.getDate() + 1);
+      const iso = toISODate(d);
+      const dow = d.getDay(); // 0=Sun,6=Sat
+      const isWeekend = (dow === 0 || dow === 6);
+      const isHoliday = holidays.has(iso);
+      if (!isWeekend && !isHoliday) added++;
+    }
+    return toISODate(d);
+  }
+  // Pozycje produktów (MVP: w notatce do slotu, ale od razu zbieramy ustrukturyzowane dane)
+  const [items, setItems] = useState<Array<{ name: string; sqm: string; packs: string }>>([
+    { name: '', sqm: '', packs: '' },
+  ]);
+  // Adres dostawy
+  const [sameAsInvoice, setSameAsInvoice] = useState(true);
+  const [delPostalCode, setDelPostalCode] = useState('');
+  const [delCity, setDelCity] = useState('');
+  const [delAddress, setDelAddress] = useState('');
 
   const canSubmitDelivery = useMemo(() => {
     return Boolean(deliveryClientId && plannedAt && driver);
@@ -58,9 +107,16 @@ export default function NoweZlecenieSelectPage() {
 
   function openDeliveryModal(clientId: string) {
     setDeliveryClientId(clientId);
-    setPlannedAt("");
+    const today = toISODate(new Date());
+    const defaultPlanned = addBusinessDays(today, 5);
+    setOrderPlacedAt(today);
+    setPlannedAt(defaultPlanned);
+    setPlannedTouched(false);
     setDriver("admin");
     setNote("");
+    setItems([{ name: '', sqm: '', packs: '' }]);
+    setSameAsInvoice(true);
+    setDelPostalCode(''); setDelCity(''); setDelAddress('');
     setDeliveryModalOpen(true);
   }
 
@@ -74,10 +130,17 @@ export default function NoweZlecenieSelectPage() {
     try {
       // 1) Utwórz zlecenie typu "delivery"
   const scheduledTs = new Date(plannedAt + 'T00:00:00').getTime();
+      const placedTs = orderPlacedAt ? new Date(orderPlacedAt + 'T00:00:00').getTime() : undefined
+      const orderBody: Record<string, unknown> = { clientId: deliveryClientId, type: 'delivery', scheduledDate: scheduledTs, orderPlacedAt: placedTs }
+      if (!sameAsInvoice) {
+        orderBody.locationPostalCode = delPostalCode.trim() || undefined
+        orderBody.locationCity = delCity.trim() || undefined
+        orderBody.locationAddress = delAddress.trim() || undefined
+      }
       const createOrderRes = await fetch('/api/zlecenia', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientId: deliveryClientId, type: 'delivery', scheduledDate: scheduledTs }),
+        body: JSON.stringify(orderBody),
       });
       const created = await createOrderRes.json().catch(() => ({}));
       if (!createOrderRes.ok) throw new Error(created?.error || 'Nie udało się utworzyć zlecenia');
@@ -85,12 +148,22 @@ export default function NoweZlecenieSelectPage() {
       if (!orderId) throw new Error('Brak identyfikatora zlecenia');
 
       // 2) Dodaj slot dostawy (MVP: kierowca = admin → wpiszemy w notatce + carrier="Własny")
+      const lines = items
+        .filter((it) => it.name.trim())
+        .map((it) => `• ${it.name.trim()}${it.sqm ? ` – ${it.sqm} m²` : ''}${it.packs ? ` (${it.packs} op.)` : ''}`)
       const body: Record<string, unknown> = {
         status: 'planned',
         plannedAt: scheduledTs,
         carrier: 'Własny',
         trackingNo: null,
-        note: [note?.trim() || '', `Kierowca: ${driver}`].filter(Boolean).join(' | '),
+        note: [
+          note?.trim() || '',
+          lines.length ? `Produkty:\n${lines.join('\n')}` : '',
+          `Kierowca: ${driver}`,
+        ].filter(Boolean).join(' | '),
+        items: items
+          .filter((it) => it.name.trim())
+          .map((it) => ({ name: it.name.trim(), sqm: it.sqm.trim(), packs: it.packs.trim() })),
       };
       const slotRes = await fetch(`/api/zlecenia/${orderId}/dostawy`, {
         method: 'POST',
@@ -216,9 +289,67 @@ export default function NoweZlecenieSelectPage() {
         description={(
           <div className="space-y-3 pt-2">
             <div>
+              <label className="text-xs opacity-70">Data złożenia zamówienia</label>
+              <div className="mt-1">
+                <DatePicker
+                  value={orderPlacedAt}
+                  onChange={(v) => {
+                    setOrderPlacedAt(v);
+                    if (!plannedTouched) {
+                      setPlannedAt(addBusinessDays(v, 5));
+                    }
+                  }}
+                />
+              </div>
+            </div>
+            <div>
               <label className="text-xs opacity-70">Data</label>
               <div className="mt-1">
-                <DatePicker value={plannedAt} onChange={setPlannedAt} />
+                <DatePicker value={plannedAt} onChange={(v) => { setPlannedAt(v); setPlannedTouched(true); }} />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs opacity-70">Pozycje (produkt)</label>
+              <div className="mt-1 space-y-2">
+                {items.map((it, idx) => (
+                  <div key={idx} className="grid grid-cols-1 md:grid-cols-6 gap-2">
+                    <input
+                      className="md:col-span-3 h-9 w-full rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15"
+                      placeholder="Nazwa produktu"
+                      value={it.name}
+                      onChange={(e) => {
+                        const v = e.currentTarget.value; setItems(prev => prev.map((p,i) => i===idx ? { ...p, name: v } : p))
+                      }}
+                    />
+                    <input
+                      className="md:col-span-1 h-9 w-full rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15"
+                      placeholder="m²"
+                      inputMode="decimal"
+                      value={it.sqm}
+                      onChange={(e) => {
+                        const v = e.currentTarget.value.replace(/[^0-9.,]/g,''); setItems(prev => prev.map((p,i) => i===idx ? { ...p, sqm: v } : p))
+                      }}
+                    />
+                    <input
+                      className="md:col-span-1 h-9 w-full rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15"
+                      placeholder="op."
+                      inputMode="numeric"
+                      value={it.packs}
+                      onChange={(e) => {
+                        const v = e.currentTarget.value.replace(/\D/g,''); setItems(prev => prev.map((p,i) => i===idx ? { ...p, packs: v } : p))
+                      }}
+                    />
+                    <button
+                      onClick={(e) => { e.preventDefault(); setItems(prev => prev.filter((_,i) => i!==idx)) }}
+                      className="md:col-span-1 h-9 rounded-md border border-black/15 px-3 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+                      disabled={items.length === 1}
+                    >Usuń</button>
+                  </div>
+                ))}
+                <button
+                  onClick={(e) => { e.preventDefault(); setItems(prev => [...prev, { name: '', sqm: '', packs: '' }]) }}
+                  className="h-8 rounded-md border border-black/15 px-3 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+                >Dodaj pozycję</button>
               </div>
             </div>
             <div>
@@ -227,6 +358,37 @@ export default function NoweZlecenieSelectPage() {
                 <option value="admin">admin</option>
               </select>
               <p className="mt-1 text-[11px] opacity-60">MVP: na razie tylko Ty jeździsz, więc lista zawiera jedną opcję.</p>
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <input id="sameAsInvoice" type="checkbox" className="h-4 w-4" checked={sameAsInvoice} onChange={(e) => setSameAsInvoice(e.currentTarget.checked)} />
+                <label htmlFor="sameAsInvoice" className="text-xs opacity-70">Adres dostawy taki sam jak do faktury</label>
+              </div>
+              {!sameAsInvoice && (
+                <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-2">
+                  <input
+                    className="h-9 w-full rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15"
+                    placeholder="Kod (00-000)"
+                    inputMode="numeric"
+                    value={delPostalCode}
+                    onChange={(e) => {
+                      const digits = e.currentTarget.value.replace(/\D/g, '').slice(0,5); const fm = digits.length <= 2 ? digits : `${digits.slice(0,2)}-${digits.slice(2)}`; setDelPostalCode(fm)
+                    }}
+                  />
+                  <input
+                    className="h-9 w-full rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15"
+                    placeholder="Miejscowość"
+                    value={delCity}
+                    onChange={(e) => setDelCity(e.currentTarget.value)}
+                  />
+                  <input
+                    className="h-9 w-full rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15"
+                    placeholder="Adres (ulica i numer, opcjonalnie lokal/piętro)"
+                    value={delAddress}
+                    onChange={(e) => setDelAddress(e.currentTarget.value)}
+                  />
+                </div>
+              )}
             </div>
             <div>
               <label className="text-xs opacity-70">Notatka (opcjonalnie)</label>

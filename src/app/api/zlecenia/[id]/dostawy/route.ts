@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
 import { db } from '@/db'
-import { deliverySlots } from '@/db/schema'
+import { deliveryItems, deliverySlots } from '@/db/schema'
 import { getSession } from '@/lib/auth-session'
 import { desc, eq } from 'drizzle-orm'
 
@@ -14,6 +14,7 @@ const createSchema = z.object({
   carrier: z.string().max(200).nullable().optional(),
   trackingNo: z.string().max(200).nullable().optional(),
   note: z.string().max(2000).nullable().optional(),
+  items: z.array(z.object({ name: z.string().min(1), sqm: z.string().optional(), packs: z.string().optional() })).optional(),
 })
 
 export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
@@ -30,8 +31,9 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     const now = new Date()
     const toDate = (v: number | null | undefined) => v == null ? null : new Date(v)
 
+    const slotId = crypto.randomUUID()
     await db.insert(deliverySlots).values({
-      id: crypto.randomUUID(),
+      id: slotId,
       orderId: id,
       plannedAt: toDate(parsed.data.plannedAt) ?? null,
       windowStart: toDate(parsed.data.windowStart) ?? null,
@@ -43,6 +45,28 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
       createdAt: now,
       updatedAt: now,
     })
+
+    if (parsed.data.items && parsed.data.items.length) {
+      const rows = parsed.data.items.map((it) => ({
+        id: crypto.randomUUID(),
+        slotId,
+        name: it.name,
+        sqmCenti: (() => {
+          const v = (it.sqm ?? '').replace(',', '.').trim()
+          if (!v) return null
+          const num = Number(v)
+          return Number.isFinite(num) ? Math.round(num * 100) : null
+        })(),
+        packs: (() => {
+          const p = (it.packs ?? '').trim()
+          if (!p) return null
+          const num = Number(p)
+          return Number.isFinite(num) ? Math.round(num) : null
+        })(),
+        createdAt: now,
+      }))
+      if (rows.length) await db.insert(deliveryItems).values(rows)
+    }
 
     revalidatePath(`/zlecenia/${id}`)
     revalidatePath('/zlecenia')

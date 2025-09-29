@@ -68,6 +68,13 @@ export const pl = {
     systemInfoTitle: 'Jak działa ten projekt',
     systemInfoDescription: 'Najważniejsze elementy konfiguracji i utrzymania.',
     systemInfoPoints: [
+  '2025-09-29 – [ZMIANA] Dodano CRUD pozycji dostawy (delivery_items) + edycja inline w szczegółach zlecenia; po mutacjach rewalidacja widoku i (jeśli dotyczy) list/kalendarza.',
+  '2025-09-29 – [DECYZJA] Jednostka m² zapisywana jako integer `sqmCenti` (m² × 100) dla spójnych sum i braku błędów float.',
+  '2025-09-29 – [ZMIANA] R2 Manager: mutacje tylko dla admina; listowanie/preview wymaga auth; klucze w formacie `client/<id>/<YYYY-MM>/...`.',
+  '2025-09-29 – [TODO] Dni robocze: dodać ruchome święta (Pon. Wielkanocny, Zesłanie Ducha Św., Boże Ciało) do kalkulacji +5 dni roboczych.',
+  '2025-09-29 – [ZMIANA] Dostawy: modal pozwala dodać pozycje (produkt/m²/op.), adres dostawy (domyślnie jak faktura), data dostawy domyślnie +5 dni roboczych od złożenia; API przyjmuje orderPlacedAt i zapisuje delivery_items; kalendarz pokazuje także terminy dostaw.',
+  '2025-09-29 – [ZMIANA] Edycja klienta: „Na firmę” = preferencja VAT, walidacja NIP (suma kontrolna), maska kodu 00-000; nowy komponent AddressFields dla adresu faktury.',
+  '2025-09-29 – [ZMIANA] Menedżer plików (R2): dodano filtr klienta (dropdown) i alias prefiksu „klienci/” dla „clients/”; poprawiono widok miesięcy (przycisk „Wszystkie miesiące”).',
   '2025-09-28 – [ZMIANA] Menu: dodano „Kalendarz” w nawigacji (widoczny po zalogowaniu). RBAC: montażysta widzi tylko swoje montaże, administrator/manager/architekt – wszystkie; ukryto filtr montażysty dla roli montażysta. [PORZĄDKI] Usunięto pozostałości parametru status z filtrów listy zleceń.',
   '2025-09-27 – [ZMIANA] Dodano biblioteki: TanStack Table (DataTable), NProgress (progress bar), FullCalendar (widok kalendarza), UploadThing (upload załączników), Lightbox (galeria), pdfjs (podgląd PDF). Pierwsze wdrożenia: tabela Klienci korzysta z DataTable; pasek postępu przy nawigacji; nowa strona /zlecenia/kalendarz; endpoint /api/uploadthing.',
   '2025-09-27 – [DECYZJA] Pełna adopcja shadcn/ui: doinstalowano Radix (slot, dialog, dropdown-menu, popover, tooltip) i sonner; kolejne iteracje będą zastępować lokalne prymitywy komponentami shadcn.',

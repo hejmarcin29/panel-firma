@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createR2Client, getR2Bucket } from '@/lib/r2'
-import { GetObjectCommand } from '@aws-sdk/client-s3'
+import { GetObjectCommand, type GetObjectCommandOutput } from '@aws-sdk/client-s3'
 import { getSession } from '@/lib/auth-session'
 
 export const runtime = 'nodejs'
@@ -17,8 +17,8 @@ export async function GET(req: Request) {
 
     const r2 = createR2Client()
     const bucket = getR2Bucket()
-  const obj = await r2.send(new GetObjectCommand({ Bucket: bucket, Key: key }))
-  const body = (obj as any).Body as ReadableStream<Uint8Array>
+  const obj: GetObjectCommandOutput = await r2.send(new GetObjectCommand({ Bucket: bucket, Key: key }))
+  const body = obj.Body as unknown as ReadableStream<Uint8Array>
     const headers = new Headers()
     headers.set('Content-Type', obj.ContentType || 'application/octet-stream')
     if (obj.ContentLength !== undefined) headers.set('Content-Length', String(obj.ContentLength))

@@ -1,6 +1,6 @@
 import { db } from '@/db'
-import { clients, orders, users, orderChecklistItems, clientNotes } from '@/db/schema'
-import { eq, desc } from 'drizzle-orm'
+import { clients, orders, users, orderChecklistItems, clientNotes, deliverySlots } from '@/db/schema'
+import { eq, desc, and, isNotNull } from 'drizzle-orm'
 import Link from 'next/link'
 import { pl } from '@/i18n/pl'
 import { OrderEditor } from '@/components/order-editor.client'
@@ -21,6 +21,7 @@ import { OrderArchiveButton } from '@/components/order-archive-button.client'
 import { OrderUnarchiveButton } from '@/components/order-unarchive-button.client'
 import { OrderOutcomeRevertButton } from '@/components/order-outcome-revert-button.client'
 import { formatDate } from '@/lib/date'
+import { DeliveryItems } from '@/components/delivery-items.client'
 
 export default async function OrderDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -72,6 +73,14 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
   // status (techniczy) nie pokazywany w UI – zamiast tego etap (pipelineStage)
 
   // Sloty montażu/dostawy nie są wyświetlane na szczegółach zlecenia (upraszczamy widok)
+
+  // Pobierz najnowszy (planowany lub potwierdzony) slot dostawy do podglądu pozycji
+  const latestDelivery = await db
+    .select({ id: deliverySlots.id })
+    .from(deliverySlots)
+    .where(and(eq(deliverySlots.orderId, row.id), isNotNull(deliverySlots.plannedAt)))
+    .orderBy(desc(deliverySlots.plannedAt))
+    .limit(1)
 
   const checklist = await db
     .select({ key: orderChecklistItems.key, done: orderChecklistItems.done })
@@ -172,6 +181,15 @@ export default async function OrderDetailsPage({ params }: { params: Promise<{ i
               <OrderChecklist orderId={row.id} type={row.type as 'delivery'|'installation'} items={checklist} />
             </CardContent>
           </Card>
+
+          {latestDelivery?.[0]?.id ? (
+            <Card>
+              <CardHeader className="pb-2"><CardTitle>Pozycje dostawy</CardTitle></CardHeader>
+              <CardContent>
+                <DeliveryItems orderId={row.id} slotId={latestDelivery[0].id} />
+              </CardContent>
+            </Card>
+          ) : null}
 
           {isInstaller ? (
             <Card>

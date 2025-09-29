@@ -49,6 +49,13 @@ Primary forms remain full pages (no modals/intercepting routes for now). See `do
 - Hashing: Argon2id (@node-rs/argon2). Wrapper w `src/lib/hash.ts`.
 - Auth: route `app/api/auth/[...nextauth]/route.ts` (Credentials + DrizzleAdapter).
 - Tailwind: konfiguracja w `postcss.config.mjs`, tokeny w `src/app/globals.css`.
+
+## Dziś (2025-09-29): Formularz klienta – VAT/NIP/Adres
+
+- „Na firmę” = automatyczna preferencja faktury VAT (ukryte pole `preferVatInvoice` zsynchronizowane z `buyerType`).
+- Walidacja NIP przy firmie: 10 cyfr + suma kontrolna (wagi `[6,5,7,2,3,4,5,6,7]`, mod 11); wymagamy też nazwy firmy.
+- Maska kodu pocztowego w UI: auto‑format `00-000` podczas wpisywania; dodatkowo walidacja regex.
+- Użycie komponentu `AddressFields` w edycji klienta (sekcja faktury); label doprecyzowany: „Adres (ulica i numer, opcjonalnie lokal/piętro)”.
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

@@ -12,9 +12,9 @@ interface SessionUser {
   } | null;
 }
 
-type UpdatableClientField = 'name' | 'phone' | 'email' | 'taxId' | 'companyName' | 'invoiceCity' | 'invoicePostalCode' | 'invoiceAddress' | 'source';
+type UpdatableClientField = 'name' | 'phone' | 'email' | 'taxId' | 'companyName' | 'invoiceCity' | 'invoicePostalCode' | 'invoiceAddress' | 'source' | 'preferVatInvoice' | 'buyerType' | 'invoiceEmail' | 'eInvoiceConsent';
 type ClientUpdateBody = Partial<Record<UpdatableClientField, unknown>> & { [k: string]: unknown };
-interface FieldChange { field: UpdatableClientField; before: string | null; after: string | null }
+interface FieldChange { field: UpdatableClientField; before: string | boolean | null; after: string | boolean | null }
 
 // GET /api/klienci/[id]
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
@@ -123,16 +123,19 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
 
   const raw = await req.json().catch(() => null) as unknown;
   const body: ClientUpdateBody = raw && typeof raw === 'object' ? (raw as ClientUpdateBody) : {};
-  const fields: UpdatableClientField[] = ['name','phone','email','taxId','companyName','invoiceCity','invoicePostalCode','invoiceAddress','source'];
+  const fields: UpdatableClientField[] = ['name','phone','email','taxId','companyName','invoiceCity','invoicePostalCode','invoiceAddress','source','preferVatInvoice','buyerType','invoiceEmail','eInvoiceConsent'];
 
   const [before] = await db.select().from(clients).where(eq(clients.id, id)).limit(1);
   if (!before) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   const userEmail = (session as SessionUser | null)?.user?.email ?? null;
 
-  const updates: Partial<Record<UpdatableClientField, string | null>> = {};
+  const updates: Partial<Record<UpdatableClientField, string | null | boolean>> = {};
   const changes: FieldChange[] = [];
 
-  const normalize = (v: unknown, field: UpdatableClientField): string | null => {
+  const normalize = (v: unknown, field: UpdatableClientField): string | null | boolean => {
+    if (field === 'preferVatInvoice' || field === 'eInvoiceConsent') {
+      return !!v;
+    }
     if (v == null) return field === 'name' ? null : null; // name null filtered later
     if (typeof v !== 'string') return null;
     const t = v.trim();
@@ -151,7 +154,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
         } else {
           updates[f] = incoming;
         }
-        changes.push({ field: f, before: prev ?? null, after: incoming ?? null });
+  changes.push({ field: f, before: (prev ?? null) as string | boolean | null, after: (incoming ?? null) as string | boolean | null });
       }
     }
   }
@@ -160,19 +163,23 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
 
   // Build set object with only provided keys. Drizzle's columns accept null for nullable fields.
   const setObject: Partial<Client> = {};
-  (Object.entries(updates) as [UpdatableClientField, string | null][]).forEach(([k, v]) => {
+  (Object.entries(updates) as [UpdatableClientField, string | null | boolean][]).forEach(([k, v]) => {
     if (v === undefined) return;
     switch (k) {
       case 'name':
         if (typeof v === 'string') setObject.name = v; break;
-      case 'phone': setObject.phone = v; break;
-      case 'email': setObject.email = v; break;
-      case 'taxId': setObject.taxId = v; break;
-  case 'companyName': setObject.companyName = v; break;
-      case 'invoiceCity': setObject.invoiceCity = v; break;
-  case 'invoicePostalCode': setObject.invoicePostalCode = v; break;
-      case 'invoiceAddress': setObject.invoiceAddress = v; break;
-      case 'source': setObject.source = v; break;
+      case 'phone': setObject.phone = v as string | null; break;
+      case 'email': setObject.email = v as string | null; break;
+      case 'taxId': setObject.taxId = v as string | null; break;
+      case 'companyName': setObject.companyName = v as string | null; break;
+      case 'invoiceCity': setObject.invoiceCity = v as string | null; break;
+      case 'invoicePostalCode': setObject.invoicePostalCode = v as string | null; break;
+      case 'invoiceAddress': setObject.invoiceAddress = v as string | null; break;
+      case 'source': setObject.source = v as string | null; break;
+      case 'preferVatInvoice': setObject.preferVatInvoice = Boolean(v); break;
+      case 'buyerType': setObject.buyerType = typeof v === 'string' ? v : null; break;
+      case 'invoiceEmail': setObject.invoiceEmail = v as string | null; break;
+      case 'eInvoiceConsent': setObject.eInvoiceConsent = Boolean(v); break;
     }
   });
   await db.update(clients).set(setObject).where(eq(clients.id, id));

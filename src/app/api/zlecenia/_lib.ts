@@ -19,6 +19,11 @@ export const createOrderBodySchema = z.object({
   preMeasurementSqm: z.number().int().positive().optional(),
   installerId: z.string().uuid().optional(),
   scheduledDate: z.number().int().positive().optional(),
+  orderPlacedAt: z.number().int().positive().optional(),
+  // Możliwość nadpisania adresu realizacji przy tworzeniu (np. adres dostawy różny od faktury)
+  locationCity: z.string().optional(),
+  locationPostalCode: z.string().optional(),
+  locationAddress: z.string().optional(),
 })
 
 export async function createOrderFromBody(session: SessionLike | null, raw: unknown) {
@@ -29,7 +34,10 @@ export async function createOrderFromBody(session: SessionLike | null, raw: unkn
   if (!parsed.success) {
     return NextResponse.json({ error: 'Błąd walidacji', issues: parsed.error.issues }, { status: 400 })
   }
-  const { clientId, type, note, preMeasurementSqm, installerId, scheduledDate } = parsed.data
+  const { clientId, type, note, preMeasurementSqm, installerId, scheduledDate, orderPlacedAt } = parsed.data
+  const locCity = (parsed.data.locationCity ?? '').trim()
+  const locPostal = (parsed.data.locationPostalCode ?? '').trim()
+  const locAddr = (parsed.data.locationAddress ?? '').trim()
 
   const [client] = await db
   .select({ id: clients.id, invoiceCity: clients.invoiceCity, invoicePostalCode: clients.invoicePostalCode, invoiceAddress: clients.invoiceAddress })
@@ -47,6 +55,7 @@ export async function createOrderFromBody(session: SessionLike | null, raw: unkn
   const id = randomUUID()
   const status = START_STATUS[type]
   const now = new Date()
+  const createdAt = orderPlacedAt ? new Date(orderPlacedAt) : now
 
   // Pobierz clientNo (może być null, wtedy orderNo też null)
   const [c] = await db.select({ clientNo: clients.clientNo }).from(clients).where(eq(clients.id, clientId)).limit(1)
@@ -76,14 +85,15 @@ export async function createOrderFromBody(session: SessionLike | null, raw: unkn
         installerId: installerId ?? null,
         preMeasurementSqm: preMeasurementSqm ?? null,
         internalNote: note ? note : null,
-        internalNoteUpdatedAt: note ? now : null,
+        internalNoteUpdatedAt: note ? createdAt : null,
         seq: nextSeq,
         orderNo,
         scheduledDate: scheduledDate ? new Date(scheduledDate) : null,
-        // Prefill location from client's invoice address (can be edited later on order)
-        locationCity: client?.invoiceCity ?? null,
-        locationPostalCode: (client as { invoicePostalCode?: string|null })?.invoicePostalCode ?? null,
-        locationAddress: client?.invoiceAddress ?? null,
+        createdAt,
+  // Prefill location from client's invoice address, z opcją nadpisania z body
+  locationCity: locCity !== '' ? locCity : (client?.invoiceCity ?? null),
+  locationPostalCode: locPostal !== '' ? locPostal : ((client as { invoicePostalCode?: string|null })?.invoicePostalCode ?? null),
+  locationAddress: locAddr !== '' ? locAddr : (client?.invoiceAddress ?? null),
       })
       inserted = true
     } catch (err) {

@@ -38,8 +38,10 @@ export function AlertDialog({
             {title}
           </Dialog.Title>
           {description && (
-            <Dialog.Description className="mt-1 text-sm opacity-80 space-y-2">
-              {description}
+            <Dialog.Description asChild>
+              <div className="mt-1 text-sm opacity-80 space-y-2">
+                {description}
+              </div>
             </Dialog.Description>
           )}
           {hasActions && (

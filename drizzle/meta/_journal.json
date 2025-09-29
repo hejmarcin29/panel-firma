@@ -148,6 +148,27 @@
       "when": 1759087509813,
       "tag": "0020_sour_abomination",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "6",
+      "when": 1759090330817,
+      "tag": "0021_faithful_namora",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "6",
+      "when": 1759174423180,
+      "tag": "0022_spotty_marvex",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "6",
+      "when": 1759177926728,
+      "tag": "0023_flippant_gideon",
+      "breakpoints": true
     }
   ]
 }

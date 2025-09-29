@@ -77,6 +77,65 @@ Tabela: `domain_events` (walidacja Zod w `emitDomainEvent`). Każdy nowy typ eve
 - [ ] `npm run check:iteration` przechodzi.
 - [ ] Wydarzenia domenowe ocenione (dodano / uznano że brak potrzeby → dopisany TODO).
 
+## 2025-09-29 – Zmiany w formularzu klienta (NOWE)
+
+- „Na firmę” implikuje preferencję faktury VAT. W UI usunięto osobny checkbox – `preferVatInvoice` ustawiany jest automatycznie (hidden input) na podstawie `buyerType`.
+- Walidacja NIP (Zod `superRefine`): włączona, gdy `buyerType = 'company'`. Wymagane 10 cyfr i poprawna suma kontrolna (wagi `[6,5,7,2,3,4,5,6,7]`, modulo 11). Dodatkowo wymagamy `companyName`.
+- Maska kodu pocztowego (UI): w `AddressFields` dodano opcjonalną maskę `00-000` (auto‑myślnik po 2 cyfrach). Walidacja regex `^[0-9]{2}-[0-9]{3}$` pozostaje w schemacie.
+- Komponent `AddressFields`: używany w edycji klienta dla pola fakturowego. Nie rozbijamy adresu; label doprecyzowany: „Adres (ulica i numer, opcjonalnie lokal/piętro)”.
+
+## 2025-09-29 – Dostawy: pozycje i kontrakty (NOWE)
+
+- Model DB: `delivery_items` (Drizzle): `id` (pk), `slotId` (FK do slotu dostawy), `name` (text), `sqmCenti` (int – m² × 100), `packs` (int ≥ 0), `createdAt` (epoch ms).
+- Jednostki: metry kw. zapisujemy jako centymetry kw. (`sqmCenti`) – suma i porównania są trywialne, bez błędów zmiennoprzecinkowych.
+- RBAC: odczyt admin + montażysta (w zakresie swoich zleceń); modyfikacje (POST/PATCH/DELETE) – tylko admin.
+- API:
+	- `GET /api/zlecenia/[id]/dostawy/[slotId]/pozycje` – lista pozycji slotu.
+	- `POST /api/zlecenia/[id]/dostawy/[slotId]/pozycje` – utworzenie pozycji; body: `{ name: string, sqmCenti: number, packs: number }` (Zod walidacja).
+	- `PATCH /api/zlecenia/[id]/dostawy/[slotId]/pozycje/[itemId]` – częściowa aktualizacja.
+	- `DELETE /api/zlecenia/[id]/dostawy/[slotId]/pozycje/[itemId]` – usunięcie pozycji.
+- UI: edycja inline (onBlur → PATCH), usuwanie z `AlertDialog` (fokus na „Anuluj”), podsumowanie łącznej powierzchni (m² z `sqmCenti`).
+- Rewalidacja: po mutacji odświeżamy szczegóły zlecenia (`/zlecenia/[id]`) i (jeśli zależne) listy/kalendarz.
+
+## 2025-09-29 – Dni robocze dla dostaw (NOWE)
+
+- Zasada: `plannedAt = orderPlacedAt + 5 dni roboczych`.
+- Obecnie pomijamy weekendy i stałe święta PL: 1.01, 6.01, 1.05, 3.05, 15.08, 1.11, 11.11, 25.12, 26.12.
+- [TODO] Ruchome święta: Poniedziałek Wielkanocny, Zesłanie Ducha Św., Boże Ciało – dodać do zestawu świąt w helperze.
+- UX: dopóki użytkownik nie zmieni `plannedAt` ręcznie, data nadąża za zmianami `orderPlacedAt`; po ręcznej edycji wyłączamy auto‑sync.
+
+## 2025-09-29 – R2: wbudowany menedżer plików (NOWE)
+
+- RBAC: listowanie/preview wymaga zalogowania; mutacje (przeniesienie/zmiana nazwy/kasowanie) wyłącznie rola admin.
+- Konwencja kluczy: `client/<clientId>/<YYYY-MM>/...` (miesiąc jako folder). Unikamy spacji i znaków narodowych w nazwach – preferuj `-`/`_`.
+- API kontrakty:
+	- `GET /api/pliki/r2/list?prefix=...` – stronicowane listowanie, walidacja prefiksu, zwraca klucze/rozmiar/mtime.
+	- `POST /api/pliki/r2/move` – copy+delete (rename/move); admin‑only.
+	- `DELETE /api/pliki/r2/object?key=...` – delete; admin‑only.
+	- `POST /api/pliki/r2/presign` – podpis do uploadu z kontrolą rozmiaru i MIME.
+	- `GET /api/pliki/r2/proxy?key=...` – serwerowy proxy preview z poprawnym `Content-Type`.
+- UX: widoki lista/grid, sticky toolbar (filtry: klient, miesiąc), DnD upload, zaznaczanie wielu i kasowanie zbiorcze; wszystkie teksty po polsku.
+
+## Rewalidacja cache po mutacjach (NOWE)
+
+- Po każdej mutacji CRUD (klienci, zlecenia, dostawy, pozycje, pliki) wywołujemy `revalidatePath` lub `revalidateTag` dla widoków zależnych:
+	- Szczegóły zlecenia: `/zlecenia/[id]`.
+	- Listy/kalendarz, jeśli ich cache korzysta z modyfikowanych danych.
+
+## Konfiguracja środowiska – R2 (NOWE)
+
+Do `.env.local` / `.env.example` dodaj:
+
+```
+R2_ACCOUNT_ID=
+R2_ACCESS_KEY_ID=
+R2_SECRET_ACCESS_KEY=
+R2_BUCKET=
+R2_PUBLIC_BASE_URL=
+```
+
+`R2_PUBLIC_BASE_URL` opcjonalne (gdy używamy wyłącznie serwerowego proxy preview). Limit rozmiaru uploadu i akceptowalne typy MIME wymuszamy po stronie serwera.
+
 ## Tipy
 - Najnowsze wpisy dopisuj na końcu (konsekwencja obecnego skryptu – patrzy na kolejność; ewentualnie można przełączyć na sort malejący później).
 - Jeśli zmiana to tylko kosmetyczny styl/ESLint → można pominąć plik iteracji, ale wpis 1-liniowy nadal preferowany (TAG `[UWAGA]` / `[TODO]`).
