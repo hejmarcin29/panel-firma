@@ -207,7 +207,7 @@ export default async function OrdersPage({
   // status usunięty z UI – pokazujemy etap (pipelineStage)
 
   return (
-    <div className="mx-auto max-w-none p-4 md:p-6">
+    <div className="mx-auto max-w-full overflow-x-hidden p-4 md:p-6">
       <section
         className="relative overflow-hidden rounded-2xl border bg-[var(--pp-panel)] mb-4"
         style={{ borderColor: "var(--pp-border)" }}
@@ -371,7 +371,7 @@ export default async function OrdersPage({
             );
           })
         )}
-      </div>
+        </div>
       {/* TODO: pagination controls */}
     </div>
   );

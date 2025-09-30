@@ -71,6 +71,7 @@ export const pl = {
     systemInfoTitle: "Jak działa ten projekt",
     systemInfoDescription: "Najważniejsze elementy konfiguracji i utrzymania.",
     systemInfoPoints: [
+      "2025-09-30 – [NOWE] /zlecenia: widok Pipeline (tylko odczyt) + przełącznik widoku (Tabela/Pipeline) zsynchronizowany z URL ?view=; tabela pozostaje domyślna.",
       "2025-09-30 – [ZMIANA] Mobile: naprawiono lekkie przycięcie na widoku Klienci (viewport + overflow-x:hidden); render prawidłowy od razu bez pinch-zoom.",
       "2025-09-30 – [ZMIANA] /zlecenia: tabela desktopowa przeniesiona na TanStack Table; karty na mobile bez zmian; start unifikacji tabel.",
       "2025-09-30 – [ZMIANA] Checklisty: widok mobilny (karty) dla /montaze i /dostawy; tabela tylko na desktopie (md+), brak poziomego przewijania.",

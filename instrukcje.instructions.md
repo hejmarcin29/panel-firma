@@ -259,3 +259,49 @@ Checklist dla mutujących endpointów (API):
 - [ ] Emisja eventu w `try/catch` (non‑fatal dla odpowiedzi).
 - [ ] `return NextResponse.json({ ok: true }, { status: 200 })` na sukces.
 - [ ] (Opcjonalnie) fallbackowy GET w kliencie dla lepszego UX.
+
+## Mobile layout hygiene (NOWE)
+
+Lekcje z naprawy subtelnego przycięcia prawej krawędzi na mobile (iOS/Android). Stosujemy jako standard w nowych widokach i podczas refaktorów.
+
+1) Viewport (Next.js App Router)
+
+- W `app/layout.tsx` eksportujemy `export const viewport`:
+  - `width: 'device-width', initialScale: 1, viewportFit: 'cover'`.
+  - Dodatkowo: `maximumScale: 1, userScalable: false` (eliminuje startowe autoprzybliżenie na iOS – opcjonalne, ale praktyczne w tym projekcie).
+
+2) Globalne CSS (globals.css)
+
+- `html, body { max-width: 100%; overflow-x: hidden }`.
+- `html { -webkit-text-size-adjust: 100% }` (iOS nie powiększa samoczynnie tekstu).
+- Jeżeli mamy globalny glow/tło: ograniczamy pseudo‑element `body::before` do szerokości viewportu (np. `inset: -20% 0 auto 0`).
+
+3) Topbar i ciasne układy (flex)
+
+- Zmniejsz padding poziomy na xs (np. `px-4 md:px-6`).
+- Główny obszar wyszukiwarki: `flex-1 basis-0 min-w-0` — może się realnie ścisnąć.
+- Prawa grupa przycisków: `flex-shrink-0`.
+- Na bardzo małych ekranach preferuj ikonę zamiast tekstu (np. "Wyloguj" → ikona) lub przenieś część akcji do menu.
+
+4) Sekcje hero z overlayem
+
+- Na kontenerze sekcji dodaj `overflow-x-hidden` (chroni przed wystającym radialnym tłem/box-shadow).
+- Nagłówek + kontrolki: na mobile `flex-col` i `flex-wrap`, na md+ `flex-row`.
+
+5) Paginations / toolbary
+
+- Dodaj `flex-wrap` i nie zakładaj, że wszystkie guziki zmieszczą się w jednym rzędzie.
+- Tam, gdzie to możliwe, używaj krótszych etykiet lub przenieś część akcji do menu overflow.
+
+6) Diagnostyka overflow
+
+- W DevTools włącz outline scrollable areas i testuj na 390×844.
+- Szukaj: `w-screen`, duże `min-w-*`, absolutnych overlay/gradientów bez clipa, długich tekstów bez łamania.
+- Szybkie obejście: tymczasowo dodaj `outline:1px solid red` do podejrzanego kontenera.
+
+7) Smoke test (DoD – mobile)
+
+- [ ] Na 390×844 brak poziomego scrolla i brak ucięć nagłówka.
+- [ ] Toolbary/paginacje zawijają się estetycznie.
+- [ ] Topbar mieści się bez maskowania (bez `overflow-x-clip`).
+

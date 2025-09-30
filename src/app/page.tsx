@@ -198,15 +198,16 @@ export default async function Home() {
             <CardTitle>Założenia (14 dni)</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-end justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <MiniSparkline
                 points={counts}
                 width={520}
                 height={96}
                 stroke="var(--pp-primary)"
+                responsive
               />
               <div
-                className="rounded-xl border p-3"
+                className="rounded-xl border p-3 self-stretch sm:self-auto"
                 style={{ borderColor: "var(--pp-border)" }}
               >
                 <div className="flex items-center justify-between gap-3 mb-1">

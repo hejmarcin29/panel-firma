@@ -165,3 +165,8 @@ body.no-scroll {
   overflow: hidden;
   touch-action: none;
 }
+
+/* Helper for drag-to-scroll interactions */
+.is-grabbing {
+  cursor: grabbing !important;
+}

@@ -166,7 +166,7 @@ export default function KlienciPage() {
       : pagedRows;
 
   return (
-    <div className="mx-auto max-w-6xl p-6">
+    <div className="mx-auto max-w-6xl p-4 md:p-6">
       <section
         className="relative overflow-hidden rounded-2xl border bg-[var(--pp-panel)] mb-4 overflow-x-hidden"
         style={{ borderColor: "var(--pp-border)" }}
@@ -179,9 +179,9 @@ export default function KlienciPage() {
               "radial-gradient(1000px 360px at -10% -20%, color-mix(in oklab, var(--pp-primary) 14%, transparent), transparent 42%), linear-gradient(120deg, color-mix(in oklab, var(--pp-primary) 8%, transparent), transparent 65%)",
           }}
         />
-        <div className="relative z-10 p-4 md:p-6 flex items-center justify-between gap-3">
+        <div className="relative z-10 p-4 md:p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <h1 className="text-2xl md:text-3xl font-semibold">{pl.clients.listTitle}</h1>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3 mt-1 md:mt-0">
             <label className="inline-flex items-center gap-1 select-none cursor-pointer opacity-90">
               <input
                 type="checkbox"

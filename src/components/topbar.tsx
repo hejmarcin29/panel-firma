@@ -16,7 +16,7 @@ export function Topbar() {
       className="sticky top-0 z-20 border-b bg-[var(--pp-panel)]/80 backdrop-blur"
       style={{ borderColor: "var(--pp-border)" }}
     >
-      <div className="h-16 px-6 flex items-center justify-between gap-2">
+      <div className="h-16 px-4 md:px-6 flex items-center justify-between gap-2">
         <div className="flex items-center gap-3 min-w-0">
           <button
             className="md:hidden h-9 w-9 inline-flex items-center justify-center rounded-md border"
@@ -44,7 +44,7 @@ export function Topbar() {
           >
             <Menu className="h-4 w-4" />
           </button>
-          <div className="relative flex-1 min-w-0 sm:max-w-md md:max-w-lg">
+          <div className="relative flex-1 basis-0 min-w-0 sm:max-w-md md:max-w-lg">
             <input
               type="search"
               placeholder="Szukaj"
@@ -54,7 +54,7 @@ export function Topbar() {
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 opacity-60" />
           </div>
         </div>
-  <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <Tooltip content="Powiadomienia">
             <button
               className="h-9 w-9 inline-flex items-center justify-center rounded-md border"

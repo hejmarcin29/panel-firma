@@ -24,12 +24,22 @@ type NavItem = {
 };
 
 const sections: { title: string; items: NavItem[] }[] = [
+  // Najpierw główne strony (Dashboard na górze, potem pliki i ustawienia)
+  {
+    title: "Strony",
+    items: [
+      { href: "/", label: "Panel główny", icon: Home },
+      { href: "/pliki", label: "Pliki (R2)", icon: Globe },
+      { href: "/ustawienia", label: "Ustawienia", icon: Settings },
+    ],
+  },
+  // Dane operacyjne w kolejności użycia: Zlecenia → Kalendarz → Klienci → Zadania → checklisty
   {
     title: "Data",
     items: [
-      { href: "/klienci", label: "Klienci", icon: Users },
       { href: "/zlecenia", label: "Zlecenia", icon: ClipboardList },
       { href: "/zlecenia/kalendarz", label: "Kalendarz", icon: CalendarDays },
+      { href: "/klienci", label: "Klienci", icon: Users },
       { href: "/zadania", label: "Zadania", icon: CheckSquare },
       { href: "/montaze", label: "Montaże — checklisty", icon: Wrench },
       { href: "/dostawy", label: "Dostawy — checklisty", icon: Wrench },
@@ -40,6 +50,17 @@ const sections: { title: string; items: NavItem[] }[] = [
       },
     ],
   },
+  // Raporty
+  {
+    title: "Wykresy",
+    items: [
+      { href: "/raporty/slupki", label: "Słupki", icon: BarChart2 },
+      { href: "/raporty/kolowy", label: "Kołowy", icon: PieChart },
+      { href: "/raporty/liniowy", label: "Liniowy", icon: LineChart },
+      { href: "/raporty/mapa", label: "Mapa", icon: Globe },
+    ],
+  },
+  // Panel montażysty na końcu (po stronie uprawnień i roli)
   {
     title: "Montażysta",
     items: [
@@ -54,23 +75,6 @@ const sections: { title: string; items: NavItem[] }[] = [
         label: "Ustawienia montażysty",
         icon: Settings,
       },
-    ],
-  },
-  {
-    title: "Strony",
-    items: [
-      { href: "/ustawienia", label: "Ustawienia", icon: Settings },
-      { href: "/", label: "Panel główny", icon: Home },
-      { href: "/pliki", label: "Pliki (R2)", icon: Globe },
-    ],
-  },
-  {
-    title: "Wykresy",
-    items: [
-      { href: "/raporty/slupki", label: "Słupki", icon: BarChart2 },
-      { href: "/raporty/kolowy", label: "Kołowy", icon: PieChart },
-      { href: "/raporty/liniowy", label: "Liniowy", icon: LineChart },
-      { href: "/raporty/mapa", label: "Mapa", icon: Globe },
     ],
   },
 ];
