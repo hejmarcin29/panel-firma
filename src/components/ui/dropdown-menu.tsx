@@ -6,19 +6,27 @@ type DropdownMenuProps = {
   trigger: React.ReactNode;
   children: React.ReactNode;
   align?: "start" | "end";
+  triggerClassName?: string;
 };
 
 export function DropdownMenu({
   trigger,
   children,
   align = "start",
+  triggerClassName,
 }: DropdownMenuProps) {
   return (
     <RD.Root>
       <RD.Trigger asChild>
         <button
           type="button"
-          className="inline-flex h-8 items-center rounded-md border border-black/15 px-2 text-xs dark:border-white/15 hover:bg-black/5 dark:hover:bg-white/10"
+          className={[
+            "inline-flex h-9 items-center rounded-md border bg-transparent px-3 text-sm",
+            "hover:bg-black/5 dark:hover:bg-white/10",
+            "border-black/15 dark:border-white/15",
+            triggerClassName || "",
+          ].join(" ")}
+          style={{ borderColor: "var(--pp-border)" }}
         >
           {trigger}
         </button>

@@ -59,6 +59,18 @@ body {
     sans-serif;
 }
 
+/* Prevent subtle mobile right-edge clipping / horizontal scroll */
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Avoid iOS Safari auto zoom/text size adjustments that can shift layout */
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 code,
 pre,
 .font-mono {
@@ -71,7 +83,8 @@ pre,
 body::before {
   content: "";
   position: fixed;
-  inset: -20% -10% auto -10%;
+  /* Keep within viewport horizontally to avoid right-edge overflow on mobile */
+  inset: -20% 0 auto 0;
   height: 60vh;
   pointer-events: none;
   background: radial-gradient(

@@ -71,6 +71,10 @@ export const pl = {
     systemInfoTitle: "Jak działa ten projekt",
     systemInfoDescription: "Najważniejsze elementy konfiguracji i utrzymania.",
     systemInfoPoints: [
+      "2025-09-30 – [ZMIANA] Mobile: naprawiono lekkie przycięcie na widoku Klienci (viewport + overflow-x:hidden); render prawidłowy od razu bez pinch-zoom.",
+      "2025-09-30 – [ZMIANA] /zlecenia: tabela desktopowa przeniesiona na TanStack Table; karty na mobile bez zmian; start unifikacji tabel.",
+      "2025-09-30 – [ZMIANA] Checklisty: widok mobilny (karty) dla /montaze i /dostawy; tabela tylko na desktopie (md+), brak poziomego przewijania.",
+      "2025-09-30 – [ZMIANA] Potwierdzenia usunięcia: dodano AlertDialog dla usuwania pozycji dostawy oraz zadań (spójne z plikami i załącznikami).",
       "2025-09-30 – [ZMIANA] Dashboard: konfigurowalny cel dzienny (Ustawienia → Cel) i statystyki typów (Montaże/Dostawy) w oknie 14 dni.",
       "2025-09-29 – [ZMIANA] Dodano CRUD pozycji dostawy (delivery_items) + edycja inline w szczegółach zlecenia; po mutacjach rewalidacja widoku i (jeśli dotyczy) list/kalendarza.",
       "2025-09-29 – [DECYZJA] Jednostka m² zapisywana jako integer `sqmCenti` (m² × 100) dla spójnych sum i braku błędów float.",

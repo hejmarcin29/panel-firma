@@ -67,20 +67,16 @@ export function OrderPipeline({ orderId, type, stage }: Props) {
       <label className="text-xs opacity-70">Etap (biznesowy)</label>
       <DropdownMenu
         trigger={
-          <span className="inline-flex items-center gap-2">
-            <span className="inline-flex h-9 items-center rounded-md border border-black/15 px-3 text-sm dark:border-white/15 bg-white dark:bg-neutral-900">
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Zapisywanie…
-                </>
-              ) : (
-                <>
-                  <span>{currentLabel}</span>
-                  <ChevronDown className="ml-2 h-4 w-4 opacity-60" />
-                </>
-              )}
-            </span>
-          </span>
+          loading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Zapisywanie…
+            </>
+          ) : (
+            <>
+              <span>{currentLabel}</span>
+              <ChevronDown className="ml-2 h-4 w-4 opacity-60" />
+            </>
+          )
         }
         align="start"
       >

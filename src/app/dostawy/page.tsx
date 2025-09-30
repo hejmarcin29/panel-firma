@@ -97,7 +97,58 @@ export default async function DeliveriesBoard() {
           </Link>
         </div>
       </section>
-      <div className="rounded-md border border-black/10 dark:border-white/10 overflow-x-auto">
+      {/* Mobile cards */}
+      <div className="md:hidden mt-2 space-y-2">
+        {data.length === 0 ? (
+          <div className="px-3 py-6 text-center opacity-70">Brak zleceń</div>
+        ) : (
+          data.map((r) => (
+            <div
+              key={r.id}
+              className="rounded-md border border-black/10 dark:border-white/10 p-3 anim-enter"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div className="font-medium">
+                  <Link
+                    className="hover:underline focus:underline focus:outline-none"
+                    href={
+                      r.orderNo ? `/zlecenia/nr/${r.orderNo}_d` : `/zlecenia/${r.id}`
+                    }
+                  >
+                    {r.orderNo ? `${r.orderNo}_d` : r.id.slice(0, 8)}
+                  </Link>
+                </div>
+                <Link
+                  href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_d` : `/zlecenia/${r.id}`}
+                  aria-label="Szczegóły"
+                  title="Szczegóły"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-black/15 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+                >
+                  <Info className="h-4 w-4" />
+                </Link>
+              </div>
+              <div className="mt-1 text-sm opacity-90">{r.clientName || "-"}</div>
+              <div className="mt-2">
+                <div className="text-xs opacity-70 mb-1">Etap</div>
+                <OrderPipeline orderId={r.id} type={"delivery"} stage={r.pipelineStage} />
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {cols.map((c) => (
+                  <div key={c.key} className="rounded-md border border-black/10 dark:border-white/10 p-2">
+                    <div className="text-xs mb-1 opacity-70">{c.label}</div>
+                    <div className="flex justify-center">
+                      <ChecklistCell orderId={r.id} keyName={c.key} initial={r.flags[c.key]} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block rounded-md border border-black/10 dark:border-white/10 overflow-x-auto">
         <table className="w-full text-sm min-w-[920px]">
           <thead className="text-left bg-black/5 dark:bg-white/10">
             <tr>

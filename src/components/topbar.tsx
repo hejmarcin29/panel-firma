@@ -1,6 +1,6 @@
 "use client";
 import { useSession, signOut } from "next-auth/react";
-import { Search, Bell, Sun, Moon, Settings, Menu } from "lucide-react";
+import { Search, Bell, Sun, Moon, Settings, Menu, LogOut } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useMemo } from "react";
 import { Tooltip } from "@/components/ui/tooltip";
@@ -16,7 +16,7 @@ export function Topbar() {
       className="sticky top-0 z-20 border-b bg-[var(--pp-panel)]/80 backdrop-blur"
       style={{ borderColor: "var(--pp-border)" }}
     >
-      <div className="h-16 px-6 flex items-center justify-between">
+      <div className="h-16 px-6 flex items-center justify-between gap-2">
         <div className="flex items-center gap-3 min-w-0">
           <button
             className="md:hidden h-9 w-9 inline-flex items-center justify-center rounded-md border"
@@ -54,7 +54,7 @@ export function Topbar() {
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 opacity-60" />
           </div>
         </div>
-        <div className="flex items-center gap-3">
+  <div className="flex items-center gap-2">
           <Tooltip content="Powiadomienia">
             <button
               className="h-9 w-9 inline-flex items-center justify-center rounded-md border"
@@ -105,10 +105,13 @@ export function Topbar() {
           {isAuthed && (
             <button
               onClick={() => signOut({ callbackUrl: "/login" })}
-              className="ml-1 inline-flex items-center rounded-md border px-3 h-9 text-sm font-medium"
+              className="ml-1 inline-flex items-center rounded-md border px-2 md:px-3 h-9 text-sm font-medium"
               style={{ borderColor: "var(--pp-border)" }}
+              aria-label="Wyloguj"
+              title="Wyloguj"
             >
-              Wyloguj
+              <LogOut className="h-4 w-4 md:hidden" aria-hidden />
+              <span className="hidden md:inline">Wyloguj</span>
             </button>
           )}
         </div>

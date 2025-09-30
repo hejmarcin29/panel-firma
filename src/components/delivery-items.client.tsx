@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { AlertDialog } from "@/components/ui/alert-dialog";
 
 type Item = {
   id: string;
@@ -30,6 +31,7 @@ export function DeliveryItems({
   const [newSqm, setNewSqm] = useState("");
   const [newPacks, setNewPacks] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
     setLoading(true);
@@ -106,7 +108,6 @@ export function DeliveryItems({
   }
 
   async function deleteItem(id: string) {
-    if (!confirm("Usunąć pozycję?")) return;
     setBusyId(id);
     try {
       const res = await fetch(
@@ -171,7 +172,7 @@ export function DeliveryItems({
               />
               <div className="flex items-center justify-end">
                 <button
-                  onClick={() => deleteItem(it.id)}
+                  onClick={() => setConfirmDeleteId(it.id)}
                   disabled={busyId === it.id}
                   className="inline-flex h-8 items-center rounded-md border border-black/15 px-3 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
                 >
@@ -224,6 +225,30 @@ export function DeliveryItems({
         </div>
       </div>
       <div className="text-xs opacity-60">Suma: {fmtSqm(totalSqm)} m²</div>
+      <AlertDialog
+        open={!!confirmDeleteId}
+        onOpenChange={(v) => {
+          if (!v) setConfirmDeleteId(null);
+        }}
+        title="Usunąć pozycję?"
+        description={
+          confirmDeleteId
+            ? (
+                <span>
+                  Tej operacji nie można cofnąć.
+                </span>
+              )
+            : null
+        }
+        confirmText="Usuń"
+        confirmVariant="destructive"
+        onConfirm={async () => {
+          const id = confirmDeleteId;
+          if (!id) return;
+          await deleteItem(id);
+          setConfirmDeleteId(null);
+        }}
+      />
     </div>
   );
 }

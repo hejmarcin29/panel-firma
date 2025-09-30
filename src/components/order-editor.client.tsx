@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import { AlertDialog } from "@/components/ui/alert-dialog";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
@@ -82,6 +83,9 @@ export function OrderEditor({
   const [category, setCategory] = useState<Attachment["category"]>("other");
   const [lightbox, setLightbox] = useState<{ open: boolean; index: number }>(
     () => ({ open: false, index: 0 }),
+  );
+  const [confirmDeleteAttId, setConfirmDeleteAttId] = useState<string | null>(
+    null,
   );
 
   const imageItems = useMemo(
@@ -348,7 +352,7 @@ export function OrderEditor({
                     <button
                       type="button"
                       className="rounded-md border border-red-500/50 px-2 py-1 text-xs text-red-600 hover:bg-red-500/10 dark:text-red-400"
-                      onClick={() => deleteAttachment(a.id)}
+                      onClick={() => setConfirmDeleteAttId(a.id)}
                     >
                       Usuń
                     </button>
@@ -366,6 +370,18 @@ export function OrderEditor({
           />
         )}
       </div>
+      {/* Dialog: delete attachment */}
+      <AlertDialog
+        open={!!confirmDeleteAttId}
+        onOpenChange={(v) => !v && setConfirmDeleteAttId(null)}
+        title="Usunąć plik?"
+        description="Tej operacji nie można cofnąć."
+        confirmText="Usuń"
+        confirmVariant="destructive"
+        onConfirm={() => {
+          if (confirmDeleteAttId) void deleteAttachment(confirmDeleteAttId);
+        }}
+      />
     </div>
   );
 
@@ -426,7 +442,6 @@ export function OrderEditor({
   }
 
   async function deleteAttachment(attId: string) {
-    if (!confirm("Na pewno usunąć plik?")) return;
     try {
       const r = await fetch(`/api/zlecenia/${orderId}/zalaczniki/${attId}`, {
         method: "DELETE",
@@ -434,6 +449,7 @@ export function OrderEditor({
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j?.error || "Błąd usuwania");
       setAttachments((prev) => prev.filter((a) => a.id !== attId));
+      setConfirmDeleteAttId(null);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Nie udało się usunąć";
       toast({ title: "Błąd", description: msg, variant: "destructive" });

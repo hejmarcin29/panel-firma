@@ -5,14 +5,15 @@ import type { SQL } from "drizzle-orm";
 import Link from "next/link";
 import { pl } from "@/i18n/pl";
 import { OrderOutcomeButtons } from "../../components/order-outcome-buttons.client";
-import { Wrench, Truck, Info } from "lucide-react";
+// removed old icon imports (quick links replaced by toolbar)
 import {
   TypeBadge,
   OutcomeBadge,
   PipelineStageBadge,
 } from "@/components/badges";
 import { QuickChecklistBar } from "@/components/quick-checklist-bar.client";
-import { FiltersDropdown } from "@/components/filters-dropdown.client";
+import { OrdersTable, type OrderRow } from "@/components/orders-table.client";
+import { OrdersToolbar } from "@/components/orders-toolbar.client";
 import { formatDate, formatDayMonth } from "@/lib/date";
 
 export const dynamic = "force-dynamic";
@@ -22,6 +23,7 @@ type SearchParams = Promise<{
   type?: string;
   outcome?: string;
   page?: string;
+  size?: string;
   installer?: string;
   sort?: string;
   dir?: string;
@@ -67,13 +69,16 @@ export default async function OrdersPage({
     type = "all",
     outcome = "all",
     page = "1",
+    size = "20",
     installer = "",
     sort = "created",
     dir = "desc",
     scope = "active",
   } = await searchParams;
   const pageNum = Math.max(1, parseInt(page || "1", 10) || 1);
-  const limit = 20;
+  const allowedSizes = new Set([10, 20, 50, 100]);
+  const parsedSize = parseInt(size || "20", 10);
+  const limit = allowedSizes.has(parsedSize) ? parsedSize : 20;
   const offset = (pageNum - 1) * limit;
 
   const clauses: SQL[] = [];
@@ -219,43 +224,7 @@ export default async function OrdersPage({
           <h1 className="text-2xl md:text-3xl font-semibold">
             {pl.orders.title}
           </h1>
-          <div className="flex gap-2 flex-wrap">
-            <Link
-              href="/zlecenia/nowe"
-              className="inline-flex h-9 items-center rounded-md border px-3 text-sm hover:bg-[var(--pp-primary-subtle-bg)]"
-              style={{ borderColor: "var(--pp-border)" }}
-            >
-              {pl.orders.new}
-            </Link>
-            <Link
-              href="/zlecenia/kalendarz"
-              className="inline-flex h-9 items-center rounded-md border px-3 text-sm hover:bg-[var(--pp-primary-subtle-bg)]"
-              style={{ borderColor: "var(--pp-border)" }}
-            >
-              Kalendarz
-            </Link>
-            <Link
-              href={`/zlecenia/kalendarz?date=${encodeURIComponent(new Date().toISOString().slice(0, 10))}&view=dayGridMonth`}
-              className="inline-flex h-9 items-center rounded-md border px-3 text-sm hover:bg-[var(--pp-primary-subtle-bg)]"
-              style={{ borderColor: "var(--pp-border)" }}
-            >
-              Dziś
-            </Link>
-            <Link
-              href={`/zlecenia/kalendarz?range=week&date=${encodeURIComponent(new Date().toISOString().slice(0, 10))}&view=dayGridWeek`}
-              className="inline-flex h-9 items-center rounded-md border px-3 text-sm hover:bg-[var(--pp-primary-subtle-bg)]"
-              style={{ borderColor: "var(--pp-border)" }}
-            >
-              Tydzień
-            </Link>
-            <Link
-              href="/zlecenia/archiwum"
-              className="inline-flex h-9 items-center rounded-md border px-3 text-sm hover:bg-[var(--pp-primary-subtle-bg)]"
-              style={{ borderColor: "var(--pp-border)" }}
-            >
-              Archiwum
-            </Link>
-          </div>
+          {/* Akcje zostały przeniesione do toolbara nad tabelą */}
         </div>
       </section>
 
@@ -277,8 +246,10 @@ export default async function OrdersPage({
           </div>
         </details>
       </div>
-      <div className="hidden md:block">
-        <Filters
+      {/* Usunięto stary desktopowy formularz filtrów – zastępuje go OrdersToolbar */}
+
+      <div className="hidden md:block space-y-2">
+        <OrdersToolbar
           q={q}
           type={type}
           outcome={outcome}
@@ -287,195 +258,13 @@ export default async function OrdersPage({
           dir={dir}
           scope={scope}
           installers={installers}
+          size={limit}
         />
       </div>
 
-      <div className="mt-2 flex flex-wrap gap-2">
-        {/* Szybkie filtrowanie typu */}
-        <Link
-          href={`/zlecenia?${new URLSearchParams({ q, outcome, installer, sort, dir, scope, type: type === "installation" ? "all" : "installation" }).toString()}`}
-          className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-2 text-xs ${type === "installation" ? "bg-black text-white dark:bg-white dark:text-black border-black/15 dark:border-white/15" : "border-black/15 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"}`}
-        >
-          <Wrench className="h-3.5 w-3.5" /> Pokaż tylko montaż
-        </Link>
-        <Link
-          href={`/zlecenia?${new URLSearchParams({ q, outcome, installer, sort, dir, scope, type: type === "delivery" ? "all" : "delivery" }).toString()}`}
-          className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-2 text-xs ${type === "delivery" ? "bg-black text-white dark:bg-white dark:text-black border-black/15 dark:border-white/15" : "border-black/15 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"}`}
-        >
-          <Truck className="h-3.5 w-3.5" /> Pokaż tylko dostawa
-        </Link>
-        <Link
-          href={`/zlecenia?${new URLSearchParams({ q, outcome, installer, sort, dir, scope, type: "all" }).toString()}`}
-          className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-2 text-xs ${type === "all" ? "bg-black text-white dark:bg-white dark:text-black border-black/15 dark:border-white/15" : "border-black/15 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"}`}
-        >
-          Wszystkie
-        </Link>
-        <FiltersDropdown
-          q={q}
-          type={type}
-          outcome={outcome}
-          installer={installer}
-          sort={sort}
-          dir={dir}
-          scope={scope}
-        />
-      </div>
-
-      {/* Table for md+ */}
-      <div className="mt-4 rounded-md border border-black/10 dark:border-white/10 hidden md:block overflow-x-auto">
-        <table className="w-full text-sm min-w-[1120px]">
-          <thead className="text-left bg-black/5 dark:bg-white/10">
-            <tr>
-              <th className="px-3 py-2 w-[120px]">Nr</th>
-              <th className="px-3 py-2 w-[220px]">Klient</th>
-              <th className="px-3 py-2 w-[90px]">Typ</th>
-              <th className="px-3 py-2 w-[140px]">Etap</th>
-              <th className="px-3 py-2 w-[170px]">Checklist</th>
-              <th className="px-3 py-2 w-[120px]">Dostawa</th>
-              <th className="px-3 py-2 w-[120px]">Montaż</th>
-              <th className="px-3 py-2 w-[140px]">Montażysta</th>
-              <th className="px-3 py-2 w-[90px]">Utw.</th>
-              <th className="px-3 py-2 w-[90px]">Wynik</th>
-              <th className="px-3 py-2 text-right w-[160px]">Akcje</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
-              <tr>
-                <td colSpan={10} className="px-3 py-6 text-center opacity-70">
-                  {pl.orders.listEmpty}
-                </td>
-              </tr>
-            ) : (
-              rows.map((r) => (
-                <tr
-                  key={r.id}
-                  className="border-t border-black/10 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10 anim-enter"
-                >
-                  <td className="px-3 py-2">
-                    <Link
-                      className="hover:underline focus:underline focus:outline-none"
-                      href={
-                        r.orderNo
-                          ? `/zlecenia/nr/${r.orderNo}_${r.type === "installation" ? "m" : "d"}`
-                          : `/zlecenia/${r.id}`
-                      }
-                    >
-                      {r.orderNo
-                        ? `${r.orderNo}_${r.type === "installation" ? "m" : "d"}`
-                        : r.id.slice(0, 8)}
-                    </Link>
-                  </td>
-                  <td
-                    className="px-3 py-2 max-w-[220px] truncate"
-                    title={r.clientName || r.clientId}
-                  >
-                    {r.clientName || r.clientId}
-                  </td>
-                  <td className="px-3 py-2">
-                    <TypeBadge type={r.type} />
-                  </td>
-                  <td className="px-3 py-2">
-                    <PipelineStageBadge stage={r.pipelineStage} />
-                  </td>
-                  <td className="px-3 py-2">
-                    <QuickChecklistBar
-                      orderId={r.id}
-                      type={r.type as "delivery" | "installation"}
-                      items={(r.type === "installation"
-                        ? [
-                            "measurement",
-                            "quote",
-                            "contract",
-                            "advance_payment",
-                            "installation",
-                            "handover_protocol",
-                            "final_invoice",
-                            "done",
-                          ]
-                        : [
-                            "proforma",
-                            "advance_invoice",
-                            "final_invoice",
-                            "post_delivery_invoice",
-                            "quote",
-                            "done",
-                          ]
-                      ).map((k) => ({
-                        key: k,
-                        label: k,
-                        done: Boolean((r as Record<string, unknown>)[k]),
-                      }))}
-                    />
-                  </td>
-                  <td className="px-3 py-2">
-                    {r.nextDeliveryAt ? (
-                      <span className="inline-flex items-center gap-1">
-                        <span>{formatDayMonth(r.nextDeliveryAt, "—")}</span>
-                        {r.nextDeliveryStatus ? (
-                          <span className="rounded bg-black/10 px-1.5 py-0.5 text-[10px] uppercase tracking-wide dark:bg-white/10">
-                            {r.nextDeliveryStatus}
-                          </span>
-                        ) : null}
-                      </span>
-                    ) : (
-                      "—"
-                    )}
-                  </td>
-                  <td className="px-3 py-2">
-                    {r.nextInstallationAt ? (
-                      <span className="inline-flex items-center gap-1">
-                        <span>{formatDayMonth(r.nextInstallationAt, "—")}</span>
-                        {r.nextInstallationStatus ? (
-                          <span className="rounded bg-black/10 px-1.5 py-0.5 text-[10px] uppercase tracking-wide dark:bg-white/10">
-                            {r.nextInstallationStatus}
-                          </span>
-                        ) : null}
-                      </span>
-                    ) : (
-                      "—"
-                    )}
-                  </td>
-                  <td
-                    className="px-3 py-2 max-w-[140px] truncate"
-                    title={r.installerName || "-"}
-                  >
-                    {r.installerName || "-"}
-                  </td>
-                  <td className="px-3 py-2">{formatDate(r.createdAt, "—")}</td>
-                  <td className="px-3 py-2">
-                    <OutcomeBadge
-                      outcome={r.outcome as "won" | "lost" | null | undefined}
-                      iconOnly
-                    />
-                  </td>
-                  <td className="px-3 py-2 text-right">
-                    <div className="flex items-center gap-2 justify-end flex-wrap">
-                      {/* Najpierw akcje wyniku */}
-                      <OrderOutcomeButtons
-                        id={r.id}
-                        outcome={r.outcome as "won" | "lost" | null}
-                      />
-                      {/* Szczegóły na końcu */}
-                      <Link
-                        className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-black/15 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
-                        href={
-                          r.orderNo
-                            ? `/zlecenia/nr/${r.orderNo}_${r.type === "installation" ? "m" : "d"}`
-                            : `/zlecenia/${r.id}`
-                        }
-                        aria-label="Szczegóły"
-                        title="Szczegóły"
-                      >
-                        <Info className="h-3.5 w-3.5" />
-                      </Link>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+      {/* Table for md+ (TanStack) */}
+      <div className="mt-4 hidden md:block">
+        <OrdersTable data={rows as unknown as OrderRow[]} />
       </div>
       {/* Mobile cards */}
       <div className="mt-4 space-y-2 md:hidden">

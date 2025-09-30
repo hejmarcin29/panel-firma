@@ -5,6 +5,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { formatDate } from "@/lib/date";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toaster";
+import { AlertDialog } from "@/components/ui/alert-dialog";
 
 type Task = {
   id: string;
@@ -34,6 +35,7 @@ export default function TasksPage() {
   const [status, setStatus] = useState<"open" | "done" | "all">("open");
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [users, setUsers] = useState<UserLite[]>([]);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // Quick add state
   const [title, setTitle] = useState("");
@@ -318,7 +320,7 @@ export default function TasksPage() {
               <div className="flex items-center gap-2">
                 <button
                   className="h-8 rounded-md border px-2 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
-                  onClick={() => removeTask(t.id)}
+                  onClick={() => setConfirmDeleteId(t.id)}
                 >
                   Usuń
                 </button>
@@ -327,6 +329,26 @@ export default function TasksPage() {
           ))
         )}
       </div>
+      <AlertDialog
+      open={!!confirmDeleteId}
+      onOpenChange={(v) => {
+        if (!v) setConfirmDeleteId(null);
+      }}
+      title="Usunąć zadanie?"
+      description={
+        confirmDeleteId ? (
+          <span>Tej operacji nie można cofnąć.</span>
+        ) : null
+      }
+      confirmText="Usuń"
+      confirmVariant="destructive"
+      onConfirm={async () => {
+        const id = confirmDeleteId;
+        if (!id) return;
+        await removeTask(id);
+        setConfirmDeleteId(null);
+      }}
+    />
     </div>
   );
 }
