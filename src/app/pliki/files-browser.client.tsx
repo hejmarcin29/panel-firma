@@ -33,7 +33,8 @@ export default function FilesBrowser() {
   const [loading, setLoading] = React.useState<boolean>(false);
   const [error, setError] = React.useState<string | null>(null);
   const [nextToken, setNextToken] = React.useState<string | null>(null);
-  const [view, setView] = React.useState<"grid" | "list">("grid");
+  // Domyślnie widok listy (lepszy na telefonie — pionowe przewijanie)
+  const [view, setView] = React.useState<"grid" | "list">("list");
   const [sortKey, setSortKey] = React.useState<"name" | "size" | "date">(
     "date",
   );
@@ -638,8 +639,9 @@ export default function FilesBrowser() {
           className="border rounded"
           style={{ borderColor: "var(--pp-border)" }}
         >
+          {/* Nagłówek tabeli ukryty na telefonie dla prostszego UI */}
           <div
-            className="grid grid-cols-12 gap-2 px-3 py-2 text-xs opacity-70"
+            className="hidden sm:grid grid-cols-12 gap-2 px-3 py-2 text-xs opacity-70"
             style={{ borderBottom: "1px solid var(--pp-border)" }}
           >
             <div className="col-span-7">Nazwa</div>
@@ -654,10 +656,10 @@ export default function FilesBrowser() {
               return (
                 <li
                   key={o.key}
-                  className="grid grid-cols-12 gap-2 px-3 py-2 items-center border-b"
+                  className="px-3 py-2 items-center border-b grid grid-cols-1 sm:grid-cols-12 gap-1 sm:gap-2"
                   style={{ borderColor: "var(--pp-border)" }}
                 >
-                  <div className="col-span-7 flex items-center gap-2">
+                  <div className="sm:col-span-7 flex items-center gap-2">
                     <input
                       type="checkbox"
                       checked={isSelected}
@@ -665,11 +667,14 @@ export default function FilesBrowser() {
                     />
                     <span className="break-all">{name}</span>
                   </div>
-                  <div className="col-span-2 text-sm opacity-70">
+                  <div className="text-xs sm:hidden opacity-70 pl-6">
+                    {formatBytes(o.size)} • {formatRelative(o.lastModified)}
+                  </div>
+                  <div className="hidden sm:flex sm:col-span-2 text-sm opacity-70">
                     {formatBytes(o.size)}
                   </div>
-                  <div className="col-span-3 flex items-center gap-3 text-sm">
-                    <span className="opacity-70">
+                  <div className="sm:col-span-3 flex flex-wrap items-center gap-3 text-sm">
+                    <span className="opacity-70 hidden sm:inline">
                       {formatRelative(o.lastModified)}
                     </span>
                     <a
