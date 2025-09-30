@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { pl } from "@/i18n/pl";
 import Link from "next/link";
+import { DailyGoalDialog } from "@/components/daily-goal-dialog.client";
 import { getSession } from "@/lib/auth-session";
 import { redirect } from "next/navigation";
 import {
@@ -210,12 +211,7 @@ export default async function Home() {
               >
                 <div className="flex items-center justify-between gap-3 mb-1">
                   <div className="text-xs opacity-70">Wykonanie celu</div>
-                  <Link
-                    href="/ustawienia/cel"
-                    className="text-xs underline opacity-80 hover:opacity-100"
-                  >
-                    Zmień
-                  </Link>
+                  <DailyGoalDialog />
                 </div>
                 <CircularGauge value={achievedPct} />
                 <div className="mt-2 text-xs opacity-70">

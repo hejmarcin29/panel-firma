@@ -1,51 +1,18 @@
 import { db } from "@/db";
 import { appSettings } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { z } from "zod";
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { pl } from "@/i18n/pl";
 import Link from "next/link";
+import { saveDailyGoal } from "@/app/actions/settings";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-const schema = z.object({
-  dailyGoal: z
-    .string()
-    .trim()
-    .regex(/^\d+$/, "Tylko liczby")
-    .transform((v) => parseInt(v, 10))
-    .refine((v) => v > 0 && v <= 100, "Podaj liczbę 1–100"),
-});
-
-async function saveAction(formData: FormData): Promise<void> {
+async function saveAndRedirect(formData: FormData) {
   "use server";
-  try {
-    const raw = Object.fromEntries(formData.entries());
-    const parsed = schema.parse({ dailyGoal: String(raw.dailyGoal ?? "") });
-    // upsert setting
-    const key = "daily_goal";
-    const rows = await db
-      .select({ v: appSettings.value })
-      .from(appSettings)
-      .where(eq(appSettings.key, key))
-      .limit(1);
-    if (rows.length === 0) {
-      await db
-        .insert(appSettings)
-        .values({ key, value: String(parsed.dailyGoal) });
-    } else {
-      await db
-        .update(appSettings)
-        .set({ value: String(parsed.dailyGoal) })
-        .where(eq(appSettings.key, key));
-    }
-    revalidatePath("/");
-    redirect("/ustawienia/cel");
-  } catch (e) {
-    throw e instanceof Error ? e : new Error("Błąd zapisu");
-  }
+  await saveDailyGoal(formData);
+  redirect("/ustawienia/cel");
 }
 
 export default async function Page() {
@@ -79,7 +46,7 @@ export default async function Page() {
           <CardTitle>Założenie: liczba zleceń dziennie</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={saveAction} className="space-y-3">
+          <form action={saveAndRedirect} className="space-y-3">
             <div>
               <label htmlFor="dailyGoal" className="block text-sm mb-1">
                 Cel (na dzień)

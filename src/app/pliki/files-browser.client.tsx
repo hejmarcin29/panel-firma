@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import { AlertDialog } from "@/components/ui/alert-dialog";
 
 type Obj = { key: string; size: number; lastModified: string | null };
 
@@ -144,14 +145,16 @@ export default function FilesBrowser() {
     load(up);
   };
 
-  const onDelete = async (key: string) => {
-    if (!confirm("Usunąć plik? Tej operacji nie można cofnąć.")) return;
+  const [confirmDeleteKey, setConfirmDeleteKey] = React.useState<string | null>(null);
+  const onConfirmDelete = async () => {
+    if (!confirmDeleteKey) return;
     const res = await fetch(
-      `/api/pliki/r2/object?key=${encodeURIComponent(key)}`,
+      `/api/pliki/r2/object?key=${encodeURIComponent(confirmDeleteKey)}`,
       { method: "DELETE" },
     );
     if (res.ok) {
-      setObjects((prev) => prev.filter((o) => o.key !== key));
+      setObjects((prev) => prev.filter((o) => o.key !== confirmDeleteKey));
+      setConfirmDeleteKey(null);
     } else {
       const j = await res.json().catch(() => ({}));
       alert(j?.error || "Nie udało się usunąć pliku (tylko admin).");
@@ -233,14 +236,9 @@ export default function FilesBrowser() {
     () => Object.keys(selected).filter((k) => selected[k]),
     [selected],
   );
-  const onBulkDelete = async () => {
-    if (selectedKeys.length === 0) return;
-    if (
-      !confirm(
-        `Usunąć ${selectedKeys.length} plik(i)? Tej operacji nie można cofnąć.`,
-      )
-    )
-      return;
+  const [confirmBulkOpen, setConfirmBulkOpen] = React.useState(false);
+  const onBulkDelete = () => setConfirmBulkOpen(true);
+  const onConfirmBulkDelete = async () => {
     for (const key of selectedKeys) {
       const res = await fetch(
         `/api/pliki/r2/object?key=${encodeURIComponent(key)}`,
@@ -251,6 +249,7 @@ export default function FilesBrowser() {
       }
     }
     clearSelection();
+    setConfirmBulkOpen(false);
   };
 
   const onRename = async (obj: Obj) => {
@@ -625,7 +624,7 @@ export default function FilesBrowser() {
                   </button>
                   <button
                     className="text-red-600 underline ml-auto"
-                    onClick={() => onDelete(o.key)}
+                    onClick={() => setConfirmDeleteKey(o.key)}
                   >
                     Usuń
                   </button>
@@ -693,7 +692,7 @@ export default function FilesBrowser() {
                     </button>
                     <button
                       className="text-red-600 underline"
-                      onClick={() => onDelete(o.key)}
+                      onClick={() => setConfirmDeleteKey(o.key)}
                     >
                       Usuń
                     </button>
@@ -734,6 +733,35 @@ export default function FilesBrowser() {
           </button>
         )}
       </div>
+
+      {/* Dialog: single delete */}
+      <AlertDialog
+        open={!!confirmDeleteKey}
+        onOpenChange={(v) => !v && setConfirmDeleteKey(null)}
+        title="Usunąć plik?"
+        description={
+          <div className="text-xs">
+            Tej operacji nie można cofnąć.
+            {confirmDeleteKey && (
+              <div className="mt-2 break-all opacity-70">{confirmDeleteKey}</div>
+            )}
+          </div>
+        }
+        confirmText="Usuń"
+        confirmVariant="destructive"
+        onConfirm={onConfirmDelete}
+      />
+
+      {/* Dialog: bulk delete */}
+      <AlertDialog
+        open={confirmBulkOpen}
+        onOpenChange={setConfirmBulkOpen}
+        title="Usunąć zaznaczone pliki?"
+        description={`Liczba plików: ${selectedKeys.length}. Tej operacji nie można cofnąć.`}
+        confirmText="Usuń"
+        confirmVariant="destructive"
+        onConfirm={onConfirmBulkDelete}
+      />
     </div>
   );
 }
