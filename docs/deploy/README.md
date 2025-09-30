@@ -29,6 +29,13 @@ These are example files to help you deploy on a VPS. They contain placeholders a
   - `sqlite3 /srv/prime/data/panel.db ".backup '/srv/prime/backups/panel-$(date +%F-%H%M).db'"`
 - Do not generate migrations on the server. Generate locally, commit, push.
 
+### Tips
+- Ensure files use LF line endings on Linux (see repo `.gitattributes`). Wrong CRLF may break `docker compose` parsing.
+- Never commit real secrets. Keep `app.env` outside Git (ignored by `.gitignore`).
+- Keep Caddy volumes as external to preserve certs across deploys.
+- Use `docker compose config -q` to validate YAML before `up`.
+
+
 ## Cloudflare R2 quick setup
 
 To enable uploads to Cloudflare R2:

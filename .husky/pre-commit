@@ -1,4 +1,27 @@
 #!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "[husky] pre-commit: quick hygiene checks"
+
+# Prevent committing secrets file (defense-in-depth)
+if git diff --cached --name-only | grep -qE '^app\.env$'; then
+  echo "[husky] ERROR: app.env is staged. Remove it from the commit (secrets must not be committed)." >&2
+  exit 1
+fi
+
+# Prevent committing runtime data accidentally
+if git diff --cached --name-only | grep -qE '^(uploads/|backups/)'; then
+  echo "[husky] ERROR: runtime data (uploads/ or backups/) is staged. Remove it from the commit." >&2
+  exit 1
+fi
+
+# Optional: run Prettier on staged files if present
+if command -v npx >/dev/null 2>&1; then
+  npx prettier -u -w . 2>/dev/null || true
+fi
+
+echo "[husky] pre-commit: OK"
+#!/usr/bin/env sh
 set -euo pipefail
 echo "[husky pre-commit] Quick lint + migration check"
 npm run lint --silent

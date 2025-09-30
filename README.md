@@ -263,6 +263,94 @@ Ważne:
 - `JWT_SESSION_ERROR` (Auth.js): ustaw prawidłowe `NEXTAUTH_URL` i `NEXTAUTH_SECRET`; restart + wyczyść cookies.
 - „database is locked”: SQLite ma pojedynczego writera; aplikacja ustawia `busy_timeout`, ogranicz równoległe zapisy i używaj transakcji.
 
+### Skrót operacyjny (VPS)
+
+- Status i logi:
+  - `docker compose ps`
+  - `docker compose logs --tail=120 app`
+  - `docker compose logs --tail=120 caddy`
+- Aktualizacja z repo (beta):
+  - `cd /srv/prime && git fetch --all --prune && git checkout beta && git pull --ff-only && docker compose build app && docker compose up -d app`
+- Snapshot SQLite przed większą zmianą:
+  - `sqlite3 /srv/prime/data/panel.db ".backup '/srv/prime/backups/panel-$(date +%F-%H%M).db'"`
+- Reset hasła admina (manual):
+  - `HASH=$(argon2 'NOWE_HASLO' -id -e)` →
+  - `sqlite3 /srv/prime/data/panel.db "UPDATE users SET password_hash='${HASH}' WHERE email='admin@twojadomena.pl';"`
+
+### Git i bind‑mounty — co zostaje, co się zmienia
+
+- `git pull` zmienia kod w katalogu repo, ale nie modyfikuje danych (bind‑mounty: `./data`, `./uploads`).
+- Aplikacja w kontenerze korzysta z obrazu. Po `git pull` zrób `docker compose build app` i `docker compose up -d app`, by użyć nowego kodu.
+- Bind‑mounty z hosta (`/srv/prime/data`, `/srv/prime/uploads`) przetrwają build/restart — to osobna warstwa.
+
+## Przywracanie backupu i rollback (Disaster recovery)
+
+Poniżej szybkie scenariusze na „złego deploya” lub uszkodzenie bazy.
+
+### A) Przywrócenie backupu SQLite
+
+1) Znajdź backup i zatrzymaj aplikację (żeby uniknąć locków):
+
+```bash
+cd /srv/prime
+ls -1t backups/ | head -n5  # wybierz plik np. backups/panel-YYYY-MM-DD-HHMM.db
+docker compose down app
+```
+
+2) Zrób kopię bieżącej bazy „na wszelki wypadek” i przywróć snapshot:
+
+```bash
+cp -a data/panel.db "data/panel.db.bak-$(date +%F-%H%M)" 2>/dev/null || true
+sqlite3 data/panel.db ".restore 'backups/panel-YYYY-MM-DD-HHMM.db'"
+```
+
+3) Uruchom aplikację i sprawdź logi:
+
+```bash
+docker compose up -d app
+docker compose logs --tail=120 app
+```
+
+Jeśli backup był zrobiony inną metodą (np. zwykła kopia pliku), możesz też zamienić plik bazy:
+
+```bash
+docker compose down app
+cp -f backups/panel-YYYY-MM-DD-HHMM.db data/panel.db
+docker compose up -d app
+```
+
+### B) Rollback aplikacji
+
+Masz dwie proste ścieżki:
+
+- Rollback kodu (zalecane, przewidywalne):
+
+```bash
+cd /srv/prime
+git log --oneline -n 5
+git checkout <POPRAWNY_COMMIT_ALBO_TAG>
+docker compose build app
+docker compose up -d app
+```
+
+- Rollback obrazu (gdy poprzedni obraz jest lokalnie):
+
+```bash
+# Znajdź poprzedni obraz prime-app i jego IMAGE ID
+docker images --format 'table {{.Repository}}\t{{.Tag}}\t{{.ID}}\t{{.CreatedSince}}' | grep '^prime-app'
+
+# Załóżmy, że wybierasz IMAGE_ID=sha256:abcd...
+docker tag IMAGE_ID prime-app:latest
+cd /srv/prime && docker compose up -d app
+```
+
+Wskazówki:
+- Zawsze rób snapshot bazy przed większym deployem (patrz sekcja Backup/Snapshot SQLite).
+- Po rollbacku kodu pamiętaj, by wrócić do gałęzi docelowej: `git checkout beta` i wykonać ponowny build, gdy będziesz gotów.
+- Jeśli rollback wymaga także odwrócenia migracji – rozważ przywrócenie bazy z backupu (ścieżka A).
+
+
+
 ## Przechowywanie plików: Cloudflare R2
 
 System korzysta z Cloudflare R2 (S3‑compatible) do przechowywania załączników do zleceń.

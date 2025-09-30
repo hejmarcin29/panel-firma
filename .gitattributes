@@ -1,0 +1,13 @@
+# Normalize line endings for YAML/compose and Dockerfile to avoid CRLF issues on Linux servers
+*.yml text eol=lf
+*.yaml text eol=lf
+Dockerfile text eol=lf
+*.sh text eol=lf
+
+# Keep binary and env files untouched
+*.png -text
+*.jpg -text
+*.jpeg -text
+*.gif -text
+*.svg -text
+app.env -text
