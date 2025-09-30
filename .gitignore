@@ -47,3 +47,18 @@ data/*.db
 data/*.db-wal
 data/*.db-shm
 
+
+# local editor settings
+.vscode/
+.idea/
+
+# runtime data (persisted on server)
+uploads/
+backups/
+
+# env/secrets
+app.env
+
+# local compose overrides
+docker-compose.override.yml
+
