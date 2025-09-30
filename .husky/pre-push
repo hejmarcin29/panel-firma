@@ -1,22 +1,15 @@
 #!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
+set -euo pipefail
 
-echo "[husky] pre-push: lint + migrations check"
+echo "[husky pre-push] Lint + iteration + migrations"
 
 # Run ESLint (cached) and fail on warnings
-npx eslint --cache --max-warnings=0 || exit 1
-
-# Ensure Drizzle migrations are consistent
-npm run check:migrations || exit 1
+npx eslint --cache --max-warnings=0
 
 # Optional: ensure system info updated (light governance)
 npm run check:iteration || true
 
-echo "[husky] pre-push: OK"
-#!/usr/bin/env sh
-set -euo pipefail
-echo "[husky pre-push] Lint + iteration + migrations"
-npm run lint
-npm run check:iteration
+# Ensure Drizzle migrations are consistent
 node scripts/check-migrations.mjs
+
 echo "[husky pre-push] OK"

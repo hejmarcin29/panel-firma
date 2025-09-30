@@ -46,15 +46,13 @@ export async function POST(req: Request) {
     }
     const id = randomUUID();
     const passwordHash = await hash(password);
-    await db
-      .insert(users)
-      .values({
-        id,
-        email: normalizedEmail,
-        name: name ?? null,
-        role: newRole,
-        passwordHash,
-      });
+    await db.insert(users).values({
+      id,
+      email: normalizedEmail,
+      name: name ?? null,
+      role: newRole,
+      passwordHash,
+    });
     return NextResponse.json({ ok: true, id });
   } catch (err) {
     console.error("[POST /api/uzytkownicy] Error", err);

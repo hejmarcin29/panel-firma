@@ -26,15 +26,13 @@ export async function POST(request: Request) {
       );
     }
     const passwordHash = await hash(password);
-    await db
-      .insert(users)
-      .values({
-        id: randomUUID(),
-        email,
-        name: "Administrator",
-        role: "admin",
-        passwordHash,
-      });
+    await db.insert(users).values({
+      id: randomUUID(),
+      email,
+      name: "Administrator",
+      role: "admin",
+      passwordHash,
+    });
     return NextResponse.json({
       ok: true,
       message: "Utworzono konto administratora. Możesz się zalogować.",

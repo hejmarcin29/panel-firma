@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
+set -euo pipefail
 
-echo "[husky] pre-commit: quick hygiene checks"
+echo "[husky pre-commit] Quick hygiene checks"
 
 # Prevent committing secrets file (defense-in-depth)
 if git diff --cached --name-only | grep -qE '^app\.env$'; then
@@ -15,14 +15,15 @@ if git diff --cached --name-only | grep -qE '^(uploads/|backups/)'; then
   exit 1
 fi
 
-# Optional: run Prettier on staged files if present
+# Optional: run Prettier on staged files if present (format only staged files)
 if command -v npx >/dev/null 2>&1; then
-  npx prettier -u -w . 2>/dev/null || true
+  STAGED="$(git diff --cached --name-only --diff-filter=ACMRT | grep -E '\\.(ts|tsx|js|jsx|mjs|cjs|json|md|css|scss)$' || true)"
+  if [ -n "$STAGED" ]; then
+    echo "$STAGED" | xargs npx prettier -u -w --log-level error || true
+    echo "$STAGED" | xargs git add -A || true
+  fi
 fi
 
-echo "[husky] pre-commit: OK"
-#!/usr/bin/env sh
-set -euo pipefail
 echo "[husky pre-commit] Quick lint + migration check"
 npm run lint --silent
 node scripts/check-migrations.mjs

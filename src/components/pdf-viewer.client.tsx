@@ -28,9 +28,7 @@ export function PdfViewer({
       try {
         const doc = (await (pdf as PdfJsModule).getDocument(url)
           .promise) as unknown as {
-          getPage: (
-            n: number,
-          ) => Promise<{
+          getPage: (n: number) => Promise<{
             getViewport: (opts: { scale: number }) => {
               height: number;
               width: number;

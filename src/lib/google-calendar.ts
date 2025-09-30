@@ -100,16 +100,14 @@ export async function savePrefs(userId: string, prefs: PrefsInput) {
       .set(payload)
       .where(eq(installerGooglePrefs.userId, userId));
   } else {
-    await db
-      .insert(installerGooglePrefs)
-      .values({
-        userId,
-        calendarId: payload.calendarId ?? null,
-        timeZone: payload.timeZone ?? "Europe/Warsaw",
-        defaultReminderMinutes: payload.defaultReminderMinutes ?? 60,
-        autoSync: payload.autoSync ?? true,
-        updatedAt: new Date(),
-      });
+    await db.insert(installerGooglePrefs).values({
+      userId,
+      calendarId: payload.calendarId ?? null,
+      timeZone: payload.timeZone ?? "Europe/Warsaw",
+      defaultReminderMinutes: payload.defaultReminderMinutes ?? 60,
+      autoSync: payload.autoSync ?? true,
+      updatedAt: new Date(),
+    });
   }
 }
 
@@ -180,15 +178,13 @@ export async function upsertOrderEvent({ orderId }: { orderId: string }) {
     );
     const created = await resp.json().catch(() => ({}));
     if (resp.ok && created.id) {
-      await db
-        .insert(orderGoogleEvents)
-        .values({
-          orderId,
-          installerId: ord.installerId,
-          calendarId: prefs.calendarId!,
-          googleEventId: created.id,
-          lastSyncedAt: new Date(),
-        });
+      await db.insert(orderGoogleEvents).values({
+        orderId,
+        installerId: ord.installerId,
+        calendarId: prefs.calendarId!,
+        googleEventId: created.id,
+        lastSyncedAt: new Date(),
+      });
     }
   } else {
     const resp = await fetch(

@@ -51,7 +51,13 @@ if (depth !== 0) {
   process.exit(1);
 }
 const raw = src.slice(startBracket + 1, i); // between brackets
-const points = Array.from(raw.matchAll(/'([^']+)'/g)).map((m) => m[1]);
+// Support both single-quoted and double-quoted entries
+const quoteRegex = /(['"])(.*?)\1/g;
+const points = [];
+for (const m of raw.matchAll(quoteRegex)) {
+  // m[2] is the content inside quotes
+  points.push(m[2]);
+}
 if (!points.length) {
   console.error("[check-system-info] systemInfoPoints is empty");
   process.exit(1);
