@@ -32,7 +32,6 @@ export function OrdersToolbar({
   installer,
   sort,
   dir,
-  scope,
   installers,
   size,
 }: {
@@ -42,7 +41,6 @@ export function OrdersToolbar({
   installer: string;
   sort: string;
   dir: string;
-  scope: string;
   installers: Installer[];
   size: number;
 }) {

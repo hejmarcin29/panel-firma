@@ -256,7 +256,6 @@ export default async function OrdersPage({
           installer={installer}
           sort={sort}
           dir={dir}
-          scope={scope}
           installers={installers}
           size={limit}
         />
