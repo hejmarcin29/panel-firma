@@ -6,7 +6,12 @@ export type BadgeProps = React.HTMLAttributes<HTMLSpanElement> & {
   size?: "xs" | "sm";
 };
 
-export function Badge({ className, variant = "neutral", size = "xs", ...props }: BadgeProps) {
+export function Badge({
+  className,
+  variant = "neutral",
+  size = "xs",
+  ...props
+}: BadgeProps) {
   const base = "inline-flex items-center rounded-full px-2 py-0.5 font-medium";
   const variants = {
     default: "bg-[var(--pp-primary)] text-white",
@@ -19,5 +24,10 @@ export function Badge({ className, variant = "neutral", size = "xs", ...props }:
     xs: "text-[11px]",
     sm: "text-xs",
   } as const;
-  return <span className={twMerge(base, variants[variant], sizes[size], className)} {...props} />;
+  return (
+    <span
+      className={twMerge(base, variants[variant], sizes[size], className)}
+      {...props}
+    />
+  );
 }

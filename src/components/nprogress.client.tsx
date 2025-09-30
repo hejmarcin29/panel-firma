@@ -36,7 +36,11 @@ export function NProgressProvider() {
 
   // Optional: expose window helpers to mark long actions
   useEffect(() => {
-    (window as unknown as { __ppNProgress?: { start: () => void; done: () => void } }).__ppNProgress = {
+    (
+      window as unknown as {
+        __ppNProgress?: { start: () => void; done: () => void };
+      }
+    ).__ppNProgress = {
       start: () => NProgress.start(),
       done: () => NProgress.done(),
     };

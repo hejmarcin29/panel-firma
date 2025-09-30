@@ -1,14 +1,14 @@
-import NextAuth from "next-auth/next"
-import Credentials from "next-auth/providers/credentials"
-import Google from "next-auth/providers/google"
-import { DrizzleAdapter } from "@auth/drizzle-adapter"
-import { db } from "@/db"
-import { users } from "@/db/schema"
-import { eq } from "drizzle-orm"
-import { verify } from "@/lib/hash"
-import type { Adapter } from "next-auth/adapters"
-import type { JWT } from "next-auth/jwt"
-import type { Session } from "next-auth"
+import NextAuth from "next-auth/next";
+import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
+import { DrizzleAdapter } from "@auth/drizzle-adapter";
+import { db } from "@/db";
+import { users } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { verify } from "@/lib/hash";
+import type { Adapter } from "next-auth/adapters";
+import type { JWT } from "next-auth/jwt";
+import type { Session } from "next-auth";
 
 const providers: unknown[] = [
   Credentials({
@@ -18,17 +18,26 @@ const providers: unknown[] = [
       password: { label: "Hasło", type: "password" },
     },
     authorize: async (credentials) => {
-      const email = credentials?.email?.toLowerCase().trim()
-      const password = credentials?.password || ""
-      if (!email || !password) return null
-      const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1)
-      if (!user) return null
-      const ok = await verify(user.passwordHash, password)
-      if (!ok) return null
-      return { id: user.id, email: user.email, name: user.name, role: user.role }
+      const email = credentials?.email?.toLowerCase().trim();
+      const password = credentials?.password || "";
+      if (!email || !password) return null;
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+      if (!user) return null;
+      const ok = await verify(user.passwordHash, password);
+      if (!ok) return null;
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      };
     },
   }),
-]
+];
 
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   providers.push(
@@ -37,14 +46,15 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       authorization: {
         params: {
-          scope: 'openid email profile https://www.googleapis.com/auth/calendar.events',
-          prompt: 'consent',
-          access_type: 'offline',
-          response_type: 'code',
+          scope:
+            "openid email profile https://www.googleapis.com/auth/calendar.events",
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code",
         },
       },
-    })
-  )
+    }),
+  );
 }
 
 export const authOptions = {
@@ -66,26 +76,28 @@ export const authOptions = {
   },
   callbacks: {
     async jwt({ token, user }: { token: JWT; user?: unknown }) {
-      if (user && typeof (user as { role?: unknown }).role === 'string') {
-        (token as Record<string, unknown>).role = (user as { role: string }).role
+      if (user && typeof (user as { role?: unknown }).role === "string") {
+        (token as Record<string, unknown>).role = (
+          user as { role: string }
+        ).role;
       }
-      return token
+      return token;
     },
     async session({ session, token }: { session: Session; token: JWT }) {
-      const role = (token as Record<string, unknown>).role
-      if (session.user && typeof role === 'string') {
-        (session.user as { role?: string }).role = role
+      const role = (token as Record<string, unknown>).role;
+      if (session.user && typeof role === "string") {
+        (session.user as { role?: string }).role = role;
       }
       // Dodaj id użytkownika do session.user, aby API mogło filtrować po installerId
-      if (session.user && typeof token.sub === 'string') {
-        (session.user as { id?: string }).id = token.sub
+      if (session.user && typeof token.sub === "string") {
+        (session.user as { id?: string }).id = token.sub;
       }
-      return session
+      return session;
     },
   },
-}
+};
 
 // Pragmatic cast due to NextAuth types variance across versions
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const handler = NextAuth(authOptions as any)
-export { handler as GET, handler as POST }
+const handler = NextAuth(authOptions as any);
+export { handler as GET, handler as POST };

@@ -15,6 +15,7 @@ Na dashboardzie znajduje się sekcja „Stan systemu” z trzema przyciskami:
 Zasada iteracyjna (Definition of Done): każda merytoryczna iteracja dodaje przynajmniej jeden nowy wpis do `systemInfoPoints` (kluczowa zmiana / decyzja / ryzyko / TODO). Jeśli brak zmian – w opisie PR wpis "Brak nowego wpisu do Stanu systemu (no-op)".
 
 Jeżeli w iteracji powstaje nowa automatyzacja lub nowy typ zdarzenia domenowego, należy:
+
 1. Dodać/zmodyfikować wpis w `systemInfoPoints` (TAG `[ZMIANA]`, `[DECYZJA]` lub `[TODO]`).
 2. Uzupełnić tłumaczenia / placeholdery paneli (jeżeli pojawiają się nowe kategorie).
 3. W przyszłości (po wdrożeniu outboxa) – dopisać event do centralnej definicji (np. `src/domain/events.ts`) i upewnić się, że panel Event store go poprawnie prezentuje.
@@ -22,9 +23,11 @@ Jeżeli w iteracji powstaje nowa automatyzacja lub nowy typ zdarzenia domenowego
 Format sugerowany wpisów: `YYYY-MM-DD – [TAG] Krótki opis`.
 
 ### Event Store (faza podstawowa wdrożona)
+
 Zaimplementowano tabelę `domain_events` oraz emisję zdarzeń dla operacji na kliencie i notatkach:
+
 - `client.created`, `client.updated` (lista `changedFields`), `client.deleted`, `client.note.added`.
-Helper: `emitDomainEvent` w `src/domain/events.ts` (walidacja payloadu Zod + zapis). Endpoint podglądu: `GET /api/events` (ostatnie 100). Dialog „Event store” w dashboardzie pobiera teraz realne dane.
+  Helper: `emitDomainEvent` w `src/domain/events.ts` (walidacja payloadu Zod + zapis). Endpoint podglądu: `GET /api/events` (ostatnie 100). Dialog „Event store” w dashboardzie pobiera teraz realne dane.
 
 Kolejne kroki (przyszłość): outbox worker (forward), kategorie/filtry w UI, integracje (e-mail/SMS), alerty anomalii.
 
@@ -35,16 +38,19 @@ Najświeższe wpisy trzymamy na górze listy.
 Primary forms remain full pages (no modals/intercepting routes for now). See `docs/UX_DECISIONS.md` for context and future considerations.
 
 ## Szybki start (dev)
+
 1. Skopiuj `.env.example` do `.env.local` i uzupełnij `NEXTAUTH_SECRET`.
 2. Uruchom dev: `npm run dev`.
 3. Ekran setup admina jest pod `/setup` (działa tylko po dodaniu logiki tworzenia konta).
 
 ## Migracje Drizzle
+
 - Konfiguracja: `drizzle.config.ts`.
 - Generowanie: `npx drizzle-kit generate` (po dodaniu definicji w `src/db/schema.ts`).
 - Migracja: `npx drizzle-kit migrate`.
 
 ## Notatki
+
 - Baza w pliku `./data/app.db` (tworzony automatycznie). Tryb WAL i `busy_timeout=5000` ustawione.
 - Hashing: Argon2id (@node-rs/argon2). Wrapper w `src/lib/hash.ts`.
 - Auth: route `app/api/auth/[...nextauth]/route.ts` (Credentials + DrizzleAdapter).
@@ -56,7 +62,7 @@ Primary forms remain full pages (no modals/intercepting routes for now). See `do
 - Walidacja NIP przy firmie: 10 cyfr + suma kontrolna (wagi `[6,5,7,2,3,4,5,6,7]`, mod 11); wymagamy też nazwy firmy.
 - Maska kodu pocztowego w UI: auto‑format `00-000` podczas wpisywania; dodatkowo walidacja regex.
 - Użycie komponentu `AddressFields` w edycji klienta (sekcja faktury); label doprecyzowany: „Adres (ulica i numer, opcjonalnie lokal/piętro)”.
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+  This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
 
@@ -100,24 +106,26 @@ Wymagane zmienne środowiskowe (patrz `.env.example`):
 - NEXTAUTH_URL – publiczny adres aplikacji (np. https://panel.twojadomena.pl)
 - NEXTAUTH_SECRET – silny losowy sekret (min. 32 znaki)
 - DATABASE_URL – dla SQLite: `file:./data/app.db`
- - UPLOADTHING_SECRET, UPLOADTHING_APP_ID – wymagane do wysyłek plików (uploadthing)
+- UPLOADTHING_SECRET, UPLOADTHING_APP_ID – wymagane do wysyłek plików (uploadthing)
 
 Budowa obrazu i uruchomienie:
 
-1) Zbuduj obraz multi-stage (Next.js standalone):
-	 - Dockerfile już dodany (Node 20 alpine, standalone output).
-2) Uruchom docker-compose z wolumenem na `./data`:
+1. Zbuduj obraz multi-stage (Next.js standalone):
+   - Dockerfile już dodany (Node 20 alpine, standalone output).
+2. Uruchom docker-compose z wolumenem na `./data`:
 
 ```
 docker compose up --build -d
 ```
 
 Aktualizacje/migracje:
+
 - Po zmianach w `src/db/schema.ts` wygeneruj migracje i zastosuj je przed buildem:
-	- `npx drizzle-kit generate; npx drizzle-kit migrate`
+  - `npx drizzle-kit generate; npx drizzle-kit migrate`
 - Przed większą zmianą zrób snapshot bazy: skopiuj `data/app.db` do `backups/`.
 
 Uwagi:
+
 - Obraz wykorzystuje `output=standalone`. Serwowanie odbywa się przez `node server.js` wewnątrz kontenera.
 - SQLite jest OK dla małego zespołu. Dla produkcji z wieloma równoległymi zapisami rozważ migrację do Postgresa.
 
@@ -134,17 +142,20 @@ Uwagi:
 Poniżej sprawdzona, prosta procedura uruchomienia produkcyjnego na własnym serwerze (HTTPS przez Caddy, baza SQLite w bind‑mouncie). Ten wariant jest lekki i bezobsługowy dla małego zespołu.
 
 ### Założenia
+
 - VPS z Ubuntu 22.04+ i zainstalowanym Dockerem + Docker Compose.
 - Domeny skierowane na serwer (rekord A/AAAA). Certyfikaty wystawi automatycznie Caddy (Let’s Encrypt).
 - Trwałe dane w katalogu hosta: `/srv/prime/data` zmapowane do katalogu kontenera: `/data`.
 - URL aplikacji: np. `https://b2b.primepodloga.pl`.
 
 ### Wymagane zmienne środowiskowe
+
 - `NEXTAUTH_URL` – publiczny adres aplikacji (np. `https://b2b.primepodloga.pl`).
 - `NEXTAUTH_SECRET` – silny, stabilny sekret (min. 32 losowe znaki) – nie zmieniaj między deployami.
 - `DATABASE_URL` – plik w bind‑mouncie: `file:/data/panel.db`.
 
 ### docker-compose.yml (przykład)
+
 Zapisz na serwerze obok repo:
 
 ```yaml
@@ -176,6 +187,7 @@ volumes:
 ```
 
 ### Caddyfile (przykład)
+
 Upewnij się, że montujesz plik→plik (nie katalog). Zapisz jako `/srv/prime/caddy/Caddyfile`:
 
 ```caddyfile
@@ -194,24 +206,31 @@ b2b.primepodloga.pl {
 ```
 
 ### Pierwsze uruchomienie
-1) Przygotuj katalogi:
+
+1. Przygotuj katalogi:
+
 ```bash
 sudo mkdir -p /srv/prime/data /srv/prime/caddy
 ```
-2) Build i start:
+
+2. Build i start:
+
 ```bash
 docker compose build --progress=plain app
 docker compose up -d app caddy
 docker compose logs -f --tail=100 app caddy
 ```
-3) Wejdź na `https://b2b.primepodloga.pl/`. Pierwszy raz: przekierowanie do `/login` (lub `/setup` jeśli brak użytkowników).
-4) Jeśli zmieniałeś `NEXTAUTH_SECRET`, wyczyść cookies domeny (lub użyj trybu prywatnego).
+
+3. Wejdź na `https://b2b.primepodloga.pl/`. Pierwszy raz: przekierowanie do `/login` (lub `/setup` jeśli brak użytkowników).
+4. Jeśli zmieniałeś `NEXTAUTH_SECRET`, wyczyść cookies domeny (lub użyj trybu prywatnego).
 
 Notatki techniczne:
+
 - Migracje Drizzle uruchamia skrypt startowy (`migrate.mjs`) – bez ręcznej ingerencji.
 - Baza działa w WAL, `busy_timeout=5000`, włączone `foreign_keys`.
 
 ### Backup/Snapshot bazy SQLite
+
 Zalecane przed aktualizacją i cyklicznie:
 
 ```bash
@@ -222,6 +241,7 @@ sqlite3 /srv/prime/data/panel.db \
 ```
 
 Przywracanie (zatrzymaj aplikację):
+
 ```bash
 docker compose down app
 sqlite3 /srv/prime/data/panel.db \
@@ -230,6 +250,7 @@ docker compose up -d app
 ```
 
 Cron – nocny backup + retencja 14 dni (`/etc/cron.d/panel-db-backup`):
+
 ```cron
 SHELL=/bin/bash
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
@@ -240,8 +261,10 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ```
 
 ### Bezpieczna aktualizacja (git pull → build → restart)
-1) Zrób snapshot bazy (jak wyżej).
-2) W katalogu repo na serwerze:
+
+1. Zrób snapshot bazy (jak wyżej).
+2. W katalogu repo na serwerze:
+
 ```bash
 git fetch --all
 git checkout beta  # jeśli używasz gałęzi beta
@@ -250,14 +273,17 @@ docker compose build app
 docker compose up -d app
 docker compose logs -f --tail=100 app
 ```
-3) Sanity check: strona główna ładuje się przez HTTPS; niezalogowany dostaje 302/307 do `/login`.
+
+3. Sanity check: strona główna ładuje się przez HTTPS; niezalogowany dostaje 302/307 do `/login`.
 
 Ważne:
+
 - Nie generuj migracji na serwerze – dodawaj je w repo i buduj obraz z migracjami.
 - Nie zmieniaj mapowania `/srv/prime/data:/data` – to trwała baza.
 - `NEXTAUTH_SECRET` musi być stabilny między deployami (zmiana unieważnia sesje).
 
 ### Rozwiązywanie problemów
+
 - Caddy błąd „not a directory” dla Caddyfile: montuj PLiK → `/etc/caddy/Caddyfile:ro`.
 - Nie ustawiaj zmiennej `CADDY_ADMIN=off` – użyj `admin off` w Caddyfile (blok globalny).
 - `JWT_SESSION_ERROR` (Auth.js): ustaw prawidłowe `NEXTAUTH_URL` i `NEXTAUTH_SECRET`; restart + wyczyść cookies.
@@ -289,7 +315,7 @@ Poniżej szybkie scenariusze na „złego deploya” lub uszkodzenie bazy.
 
 ### A) Przywrócenie backupu SQLite
 
-1) Znajdź backup i zatrzymaj aplikację (żeby uniknąć locków):
+1. Znajdź backup i zatrzymaj aplikację (żeby uniknąć locków):
 
 ```bash
 cd /srv/prime
@@ -297,14 +323,14 @@ ls -1t backups/ | head -n5  # wybierz plik np. backups/panel-YYYY-MM-DD-HHMM.db
 docker compose down app
 ```
 
-2) Zrób kopię bieżącej bazy „na wszelki wypadek” i przywróć snapshot:
+2. Zrób kopię bieżącej bazy „na wszelki wypadek” i przywróć snapshot:
 
 ```bash
 cp -a data/panel.db "data/panel.db.bak-$(date +%F-%H%M)" 2>/dev/null || true
 sqlite3 data/panel.db ".restore 'backups/panel-YYYY-MM-DD-HHMM.db'"
 ```
 
-3) Uruchom aplikację i sprawdź logi:
+3. Uruchom aplikację i sprawdź logi:
 
 ```bash
 docker compose up -d app
@@ -345,41 +371,45 @@ cd /srv/prime && docker compose up -d app
 ```
 
 Wskazówki:
+
 - Zawsze rób snapshot bazy przed większym deployem (patrz sekcja Backup/Snapshot SQLite).
 - Po rollbacku kodu pamiętaj, by wrócić do gałęzi docelowej: `git checkout beta` i wykonać ponowny build, gdy będziesz gotów.
 - Jeśli rollback wymaga także odwrócenia migracji – rozważ przywrócenie bazy z backupu (ścieżka A).
-
-
 
 ## Przechowywanie plików: Cloudflare R2
 
 System korzysta z Cloudflare R2 (S3‑compatible) do przechowywania załączników do zleceń.
 
 Wymagane zmienne środowiskowe:
+
 - R2_ENDPOINT – adres endpointu (np. https://<accountid>.r2.cloudflarestorage.com lub własna domena CDN)
 - R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY – klucze dostępu
 - R2_BUCKET – nazwa bucketa
 - R2_PUBLIC_BASE_URL – publiczny prefix URL do serwowania plików (np. https://cdn.twojadomena.pl lub https://<accountid>.r2.cloudflarestorage.com/<bucket>)
 
 Uprawnienia i CORS w R2:
+
 - W konsoli Cloudflare ustaw CORS dla bucketa, np. (dostosuj hosty):
   {
-    "AllowedOrigins": ["http://localhost:3000", "https://primepodloga.pl", "https://www.primepodloga.pl"],
-    "AllowedMethods": ["PUT", "GET", "HEAD"],
-    "AllowedHeaders": ["*"],
-    "ExposeHeaders": ["ETag"],
-    "MaxAgeSeconds": 3000
+  "AllowedOrigins": ["http://localhost:3000", "https://primepodloga.pl", "https://www.primepodloga.pl"],
+  "AllowedMethods": ["PUT", "GET", "HEAD"],
+  "AllowedHeaders": ["*"],
+  "ExposeHeaders": ["ETag"],
+  "MaxAgeSeconds": 3000
   }
 
 Przepływ uploadu (presigned PUT):
-1) Front prosi backend o URL: POST /api/zlecenia/:id/zalaczniki/presign z { filename, mime, size, category }.
-2) Dostaje { url, key, publicUrl } i wykonuje PUT bezpośrednio do R2.
-3) Po sukcesie zgłasza metadane: POST /api/zlecenia/:id/zalaczniki z { key, publicUrl, category, mime?, size? }.
-4) Lista: GET /api/zlecenia/:id/zalaczniki. Usuwanie: DELETE /api/zlecenia/:id/zalaczniki/:attId (twarde usunięcie z R2 i DB).
+
+1. Front prosi backend o URL: POST /api/zlecenia/:id/zalaczniki/presign z { filename, mime, size, category }.
+2. Dostaje { url, key, publicUrl } i wykonuje PUT bezpośrednio do R2.
+3. Po sukcesie zgłasza metadane: POST /api/zlecenia/:id/zalaczniki z { key, publicUrl, category, mime?, size? }.
+4. Lista: GET /api/zlecenia/:id/zalaczniki. Usuwanie: DELETE /api/zlecenia/:id/zalaczniki/:attId (twarde usunięcie z R2 i DB).
 
 Konwencja kluczy (ścieżek) w R2:
-- clients/<NrKlienta-Slug>/YYYY/MM/<kategoria>/<YYYYMMDD__v01__nazwa_pliku.ext>
-- Przykład: clients/10-jan-kowalski/2025/09/photos/20250928__v01__jan-kowalski.jpg
+
+- clients/<NrKlienta-Slug>/YYYY/MM/<kategoria>/<YYYYMMDD**v01**nazwa_pliku.ext>
+- Przykład: clients/10-jan-kowalski/2025/09/photos/20250928**v01**jan-kowalski.jpg
 
 UI:
+
 - Sekcja „Załączniki” w szczegółach zlecenia: drag&drop multi‑upload, lista z podglądem (obraz/PDF), pobraniem i usuwaniem, galeria zdjęć.

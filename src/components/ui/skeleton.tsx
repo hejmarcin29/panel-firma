@@ -1,12 +1,15 @@
-import React from 'react'
+import React from "react";
 
 type SkeletonProps = {
-  className?: string
-}
+  className?: string;
+};
 
 export function Skeleton({ className }: SkeletonProps) {
   return (
-    <div className={`animate-pulse rounded bg-black/10 dark:bg-white/10 ${className ?? ''}`} />)
+    <div
+      className={`animate-pulse rounded bg-black/10 dark:bg-white/10 ${className ?? ""}`}
+    />
+  );
 }
 
-export default Skeleton
+export default Skeleton;

@@ -1,30 +1,31 @@
-import { z } from 'zod';
-import { db } from '@/db';
-import { domainEvents } from '@/db/schema';
-import { randomUUID } from 'crypto';
+import { z } from "zod";
+import { db } from "@/db";
+import { domainEvents } from "@/db/schema";
+import { randomUUID } from "crypto";
 
 // Event type constants
 export const DomainEventTypes = {
-  clientCreated: 'client.created',
-  clientUpdated: 'client.updated',
-  clientDeleted: 'client.deleted',
-  clientArchived: 'client.archived',
-  clientUnarchived: 'client.unarchived',
-  clientNoteAdded: 'client.note.added',
-  clientServiceTypeChanged: 'client.serviceType.changed',
-  orderCreated: 'order.created',
-  orderStatusChanged: 'order.status.changed',
-  orderWon: 'order.won',
-  orderLost: 'order.lost',
-  orderOutcomeCleared: 'order.outcome.cleared',
-  orderPipelineChanged: 'order.pipeline.changed',
-  orderChecklistToggled: 'order.checklist.toggled',
-  ordersArchivedForClient: 'order.archived.bulkForClient',
-  userRoleChanged: 'user.role.changed',
-  userPasswordChanged: 'user.password.changed',
+  clientCreated: "client.created",
+  clientUpdated: "client.updated",
+  clientDeleted: "client.deleted",
+  clientArchived: "client.archived",
+  clientUnarchived: "client.unarchived",
+  clientNoteAdded: "client.note.added",
+  clientServiceTypeChanged: "client.serviceType.changed",
+  orderCreated: "order.created",
+  orderStatusChanged: "order.status.changed",
+  orderWon: "order.won",
+  orderLost: "order.lost",
+  orderOutcomeCleared: "order.outcome.cleared",
+  orderPipelineChanged: "order.pipeline.changed",
+  orderChecklistToggled: "order.checklist.toggled",
+  ordersArchivedForClient: "order.archived.bulkForClient",
+  userRoleChanged: "user.role.changed",
+  userPasswordChanged: "user.password.changed",
 } as const;
 
-export type DomainEventType = typeof DomainEventTypes[keyof typeof DomainEventTypes];
+export type DomainEventType =
+  (typeof DomainEventTypes)[keyof typeof DomainEventTypes];
 
 // Payload schemas
 export const clientCreatedPayloadSchema = z.object({
@@ -44,7 +45,7 @@ export const clientUpdatedPayloadSchema = z.object({
         field: z.string(),
         before: z.any().optional(),
         after: z.any().optional(),
-      })
+      }),
     )
     .optional(),
 });
@@ -76,7 +77,7 @@ export const clientServiceTypeChangedPayloadSchema = z.object({
 export const orderCreatedPayloadSchema = z.object({
   id: z.string().uuid(),
   clientId: z.string().uuid(),
-  type: z.enum(['delivery','installation']),
+  type: z.enum(["delivery", "installation"]),
   status: z.string(),
   // human-friendly numbers (optional when not yet assigned)
   clientNo: z.number().int().positive().optional().nullable(),
@@ -93,7 +94,7 @@ export const orderStatusChangedPayloadSchema = z.object({
 
 export const orderOutcomePayloadSchema = z.object({
   id: z.string().uuid(),
-  outcome: z.enum(['won','lost']),
+  outcome: z.enum(["won", "lost"]),
   clientNo: z.number().int().positive().optional().nullable(),
   orderNo: z.string().optional().nullable(),
   reasonCode: z.string().optional().nullable(),
@@ -110,7 +111,7 @@ export const orderPipelineChangedPayloadSchema = z.object({
   id: z.string().uuid(),
   from: z.string().nullable(),
   to: z.string(),
-  type: z.enum(['delivery','installation']),
+  type: z.enum(["delivery", "installation"]),
   clientNo: z.number().int().positive().optional().nullable(),
   orderNo: z.string().optional().nullable(),
 });
@@ -142,17 +143,35 @@ export type ClientCreatedPayload = z.infer<typeof clientCreatedPayloadSchema>;
 export type ClientUpdatedPayload = z.infer<typeof clientUpdatedPayloadSchema>;
 export type ClientDeletedPayload = z.infer<typeof clientDeletedPayloadSchema>;
 export type ClientArchivedPayload = z.infer<typeof clientArchivedPayloadSchema>;
-export type ClientUnarchivedPayload = z.infer<typeof clientUnarchivedPayloadSchema>;
-export type ClientNoteAddedPayload = z.infer<typeof clientNoteAddedPayloadSchema>;
-export type ClientServiceTypeChangedPayload = z.infer<typeof clientServiceTypeChangedPayloadSchema>;
+export type ClientUnarchivedPayload = z.infer<
+  typeof clientUnarchivedPayloadSchema
+>;
+export type ClientNoteAddedPayload = z.infer<
+  typeof clientNoteAddedPayloadSchema
+>;
+export type ClientServiceTypeChangedPayload = z.infer<
+  typeof clientServiceTypeChangedPayloadSchema
+>;
 export type OrderCreatedPayload = z.infer<typeof orderCreatedPayloadSchema>;
-export type OrderStatusChangedPayload = z.infer<typeof orderStatusChangedPayloadSchema>;
+export type OrderStatusChangedPayload = z.infer<
+  typeof orderStatusChangedPayloadSchema
+>;
 export type OrderOutcomePayload = z.infer<typeof orderOutcomePayloadSchema>;
-export type OrderPipelineChangedPayload = z.infer<typeof orderPipelineChangedPayloadSchema>;
-export type OrderChecklistToggledPayload = z.infer<typeof orderChecklistToggledPayloadSchema>;
-export type OrdersArchivedForClientPayload = z.infer<typeof ordersArchivedForClientPayloadSchema>;
-export type UserRoleChangedPayload = z.infer<typeof userRoleChangedPayloadSchema>;
-export type UserPasswordChangedPayload = z.infer<typeof userPasswordChangedPayloadSchema>;
+export type OrderPipelineChangedPayload = z.infer<
+  typeof orderPipelineChangedPayloadSchema
+>;
+export type OrderChecklistToggledPayload = z.infer<
+  typeof orderChecklistToggledPayloadSchema
+>;
+export type OrdersArchivedForClientPayload = z.infer<
+  typeof ordersArchivedForClientPayloadSchema
+>;
+export type UserRoleChangedPayload = z.infer<
+  typeof userRoleChangedPayloadSchema
+>;
+export type UserPasswordChangedPayload = z.infer<
+  typeof userPasswordChangedPayloadSchema
+>;
 
 const payloadSchemaByType: Record<DomainEventType, z.ZodTypeAny> = {
   [DomainEventTypes.clientCreated]: clientCreatedPayloadSchema,
@@ -161,14 +180,16 @@ const payloadSchemaByType: Record<DomainEventType, z.ZodTypeAny> = {
   [DomainEventTypes.clientArchived]: clientArchivedPayloadSchema,
   [DomainEventTypes.clientUnarchived]: clientUnarchivedPayloadSchema,
   [DomainEventTypes.clientNoteAdded]: clientNoteAddedPayloadSchema,
-  [DomainEventTypes.clientServiceTypeChanged]: clientServiceTypeChangedPayloadSchema,
+  [DomainEventTypes.clientServiceTypeChanged]:
+    clientServiceTypeChangedPayloadSchema,
   [DomainEventTypes.orderCreated]: orderCreatedPayloadSchema,
   [DomainEventTypes.orderStatusChanged]: orderStatusChangedPayloadSchema,
   [DomainEventTypes.orderWon]: orderOutcomePayloadSchema,
   [DomainEventTypes.orderLost]: orderOutcomePayloadSchema,
   [DomainEventTypes.orderPipelineChanged]: orderPipelineChangedPayloadSchema,
   [DomainEventTypes.orderChecklistToggled]: orderChecklistToggledPayloadSchema,
-  [DomainEventTypes.ordersArchivedForClient]: ordersArchivedForClientPayloadSchema,
+  [DomainEventTypes.ordersArchivedForClient]:
+    ordersArchivedForClientPayloadSchema,
   [DomainEventTypes.orderOutcomeCleared]: orderOutcomeClearedPayloadSchema,
   [DomainEventTypes.userRoleChanged]: userRoleChangedPayloadSchema,
   [DomainEventTypes.userPasswordChanged]: userPasswordChangedPayloadSchema,
@@ -183,7 +204,9 @@ interface EmitBase<T extends DomainEventType> {
   schemaVersion?: number;
 }
 
-export async function emitDomainEvent<T extends DomainEventType>(params: EmitBase<T>) {
+export async function emitDomainEvent<T extends DomainEventType>(
+  params: EmitBase<T>,
+) {
   const schema = payloadSchemaByType[params.type];
   const parsed = schema.parse(params.payload);
   const id = randomUUID();

@@ -8,11 +8,18 @@ type DropdownMenuProps = {
   align?: "start" | "end";
 };
 
-export function DropdownMenu({ trigger, children, align = "start" }: DropdownMenuProps) {
+export function DropdownMenu({
+  trigger,
+  children,
+  align = "start",
+}: DropdownMenuProps) {
   return (
     <RD.Root>
       <RD.Trigger asChild>
-        <button type="button" className="inline-flex h-8 items-center rounded-md border border-black/15 px-2 text-xs dark:border-white/15 hover:bg-black/5 dark:hover:bg-white/10">
+        <button
+          type="button"
+          className="inline-flex h-8 items-center rounded-md border border-black/15 px-2 text-xs dark:border-white/15 hover:bg-black/5 dark:hover:bg-white/10"
+        >
           {trigger}
         </button>
       </RD.Trigger>
@@ -29,7 +36,13 @@ export function DropdownMenu({ trigger, children, align = "start" }: DropdownMen
   );
 }
 
-export function DropdownItem({ onSelect, children }: { onSelect?: () => void; children: React.ReactNode }) {
+export function DropdownItem({
+  onSelect,
+  children,
+}: {
+  onSelect?: () => void;
+  children: React.ReactNode;
+}) {
   return (
     <RD.Item
       onSelect={(e) => {

@@ -10,7 +10,13 @@ export type TooltipProps = {
   delayDuration?: number;
 };
 
-export function Tooltip({ content, children, side = "top", align = "center", delayDuration = 200 }: TooltipProps) {
+export function Tooltip({
+  content,
+  children,
+  side = "top",
+  align = "center",
+  delayDuration = 200,
+}: TooltipProps) {
   return (
     <TooltipPrimitive.Provider delayDuration={delayDuration}>
       <TooltipPrimitive.Root>

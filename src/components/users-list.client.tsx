@@ -1,8 +1,8 @@
 "use client";
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useToast } from '@/components/ui/toaster';
-import { DropdownMenu, DropdownItem } from '@/components/ui/dropdown-menu'
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/toaster";
+import { DropdownMenu, DropdownItem } from "@/components/ui/dropdown-menu";
 
 type UserRow = { id: string; name: string | null; email: string; role: string };
 
@@ -10,28 +10,32 @@ export function UsersListClient({ initial }: { initial: UserRow[] }) {
   const [rows, setRows] = useState(initial);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [pwdEditId, setPwdEditId] = useState<string | null>(null);
-  const [pwdValue, setPwdValue] = useState<string>('');
+  const [pwdValue, setPwdValue] = useState<string>("");
   const router = useRouter();
   const { toast } = useToast();
 
-  const changeRole = async (id: string, role: 'admin' | 'installer' | 'architect' | 'manager') => {
+  const changeRole = async (
+    id: string,
+    role: "admin" | "installer" | "architect" | "manager",
+  ) => {
     setLoadingId(id);
     try {
       const r = await fetch(`/api/uzytkownicy/${id}/rola`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ role }),
       });
       if (!r.ok) {
-        const msg = (await r.json().catch(() => ({}))).error || 'Błąd zmiany roli';
+        const msg =
+          (await r.json().catch(() => ({}))).error || "Błąd zmiany roli";
         throw new Error(msg);
       }
-      setRows((prev) => prev.map(u => u.id === id ? { ...u, role } : u));
-      toast({ title: 'Zmieniono rolę', variant: 'success' });
+      setRows((prev) => prev.map((u) => (u.id === id ? { ...u, role } : u)));
+      toast({ title: "Zmieniono rolę", variant: "success" });
       router.refresh();
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Błąd';
-      toast({ title: 'Błąd', description: msg, variant: 'destructive' });
+      const msg = e instanceof Error ? e.message : "Błąd";
+      toast({ title: "Błąd", description: msg, variant: "destructive" });
     } finally {
       setLoadingId(null);
     }
@@ -39,26 +43,31 @@ export function UsersListClient({ initial }: { initial: UserRow[] }) {
 
   const changePassword = async (id: string) => {
     if (!pwdValue || pwdValue.length < 12) {
-      toast({ title: 'Błąd', description: 'Hasło musi mieć minimum 12 znaków', variant: 'destructive' });
+      toast({
+        title: "Błąd",
+        description: "Hasło musi mieć minimum 12 znaków",
+        variant: "destructive",
+      });
       return;
     }
     setLoadingId(id);
     try {
       const r = await fetch(`/api/uzytkownicy/${id}/haslo`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password: pwdValue }),
       });
       if (!r.ok) {
-        const msg = (await r.json().catch(() => ({}))).error || 'Błąd zmiany hasła';
+        const msg =
+          (await r.json().catch(() => ({}))).error || "Błąd zmiany hasła";
         throw new Error(msg);
       }
-      toast({ title: 'Zmieniono hasło', variant: 'success' });
+      toast({ title: "Zmieniono hasło", variant: "success" });
       setPwdEditId(null);
-      setPwdValue('');
+      setPwdValue("");
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Błąd';
-      toast({ title: 'Błąd', description: msg, variant: 'destructive' });
+      const msg = e instanceof Error ? e.message : "Błąd";
+      toast({ title: "Błąd", description: msg, variant: "destructive" });
     } finally {
       setLoadingId(null);
     }
@@ -66,7 +75,7 @@ export function UsersListClient({ initial }: { initial: UserRow[] }) {
 
   return (
     <div className="divide-y divide-black/10 dark:divide-white/10 rounded border border-black/10 dark:border-white/10">
-      {rows.map(u => (
+      {rows.map((u) => (
         <div key={u.id} className="p-3 text-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -74,21 +83,38 @@ export function UsersListClient({ initial }: { initial: UserRow[] }) {
               <div className="text-xs opacity-70">{u.email}</div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs rounded bg-black/5 dark:bg-white/10 px-2 py-0.5">{u.role}</span>
-              {u.email.toLowerCase() === 'admin@primepodloga.pl' ? (
-                <span className="text-xs rounded bg-black/5 dark:bg-white/10 px-2 py-0.5 opacity-70">Niezmienny Admin</span>
+              <span className="text-xs rounded bg-black/5 dark:bg-white/10 px-2 py-0.5">
+                {u.role}
+              </span>
+              {u.email.toLowerCase() === "admin@primepodloga.pl" ? (
+                <span className="text-xs rounded bg-black/5 dark:bg-white/10 px-2 py-0.5 opacity-70">
+                  Niezmienny Admin
+                </span>
               ) : (
                 <DropdownMenu trigger={<span>Rola…</span>} align="end">
-                  <DropdownItem onSelect={() => changeRole(u.id, 'admin')}>Ustaw Admin</DropdownItem>
-                  <DropdownItem onSelect={() => changeRole(u.id, 'installer')}>Ustaw Montażystę</DropdownItem>
-                  <DropdownItem onSelect={() => changeRole(u.id, 'architect')}>Ustaw Architekt</DropdownItem>
-                  <DropdownItem onSelect={() => changeRole(u.id, 'manager')}>Ustaw Manager</DropdownItem>
+                  <DropdownItem onSelect={() => changeRole(u.id, "admin")}>
+                    Ustaw Admin
+                  </DropdownItem>
+                  <DropdownItem onSelect={() => changeRole(u.id, "installer")}>
+                    Ustaw Montażystę
+                  </DropdownItem>
+                  <DropdownItem onSelect={() => changeRole(u.id, "architect")}>
+                    Ustaw Architekt
+                  </DropdownItem>
+                  <DropdownItem onSelect={() => changeRole(u.id, "manager")}>
+                    Ustaw Manager
+                  </DropdownItem>
                 </DropdownMenu>
               )}
               <button
-                onClick={() => { setPwdEditId(pwdEditId === u.id ? null : u.id); setPwdValue(''); }}
+                onClick={() => {
+                  setPwdEditId(pwdEditId === u.id ? null : u.id);
+                  setPwdValue("");
+                }}
                 className="inline-flex h-8 items-center rounded-md border border-black/15 px-2 text-xs dark:border-white/15 hover:bg-black/5 disabled:opacity-50 dark:hover:bg-white/10"
-              >Hasło…</button>
+              >
+                Hasło…
+              </button>
             </div>
           </div>
           {pwdEditId === u.id && (
@@ -104,11 +130,18 @@ export function UsersListClient({ initial }: { initial: UserRow[] }) {
                 onClick={() => changePassword(u.id)}
                 disabled={loadingId === u.id}
                 className="inline-flex h-8 items-center rounded-md border border-black/15 px-2 text-xs dark:border-white/15 hover:bg-black/5 disabled:opacity-50 dark:hover:bg-white/10"
-              >Zapisz hasło</button>
+              >
+                Zapisz hasło
+              </button>
               <button
-                onClick={() => { setPwdEditId(null); setPwdValue(''); }}
+                onClick={() => {
+                  setPwdEditId(null);
+                  setPwdValue("");
+                }}
                 className="inline-flex h-8 items-center rounded-md border border-black/15 px-2 text-xs dark:border-white/15 hover:bg-black/5 disabled:opacity-50 dark:hover:bg-white/10"
-              >Anuluj</button>
+              >
+                Anuluj
+              </button>
             </div>
           )}
         </div>

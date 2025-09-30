@@ -12,7 +12,10 @@ import { ToastProvider } from "@/components/ui/toaster";
 import { NProgressProvider } from "@/components/nprogress.client";
 
 const inter = Inter({ variable: "--font-sans", subsets: ["latin"] });
-const jetbrains = JetBrains_Mono({ variable: "--font-mono", subsets: ["latin"] });
+const jetbrains = JetBrains_Mono({
+  variable: "--font-mono",
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -26,14 +29,24 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pl" suppressHydrationWarning>
-  <body className={`${inter.variable} ${jetbrains.variable} antialiased`}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="pp-theme-v2">
+      <body className={`${inter.variable} ${jetbrains.variable} antialiased`}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem={false}
+          storageKey="pp-theme-v2"
+        >
           <ToastProvider>
             <Providers>
               <Suspense fallback={null}>
                 <NProgressProvider />
               </Suspense>
-              <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-[var(--pp-panel)] focus:border focus:px-3 focus:py-2 rounded-md">Pomiń do treści</a>
+              <a
+                href="#main-content"
+                className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-[var(--pp-panel)] focus:border focus:px-3 focus:py-2 rounded-md"
+              >
+                Pomiń do treści
+              </a>
               <AppShell>
                 <div className="flex">
                   <Sidebar />

@@ -15,17 +15,29 @@ type Props = {
   scope: string;
 };
 
-export function FiltersDropdown({ q, type, outcome, installer, sort, dir, scope }: Props) {
+export function FiltersDropdown({
+  q,
+  type,
+  outcome,
+  installer,
+  sort,
+  dir,
+  scope,
+}: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [localScope, setLocalScope] = useState(scope || "active");
-  const [localOutcome, setLocalOutcome] = useState(outcome && outcome !== "active" ? outcome : "all");
+  const [localOutcome, setLocalOutcome] = useState(
+    outcome && outcome !== "active" ? outcome : "all",
+  );
 
   function apply(nextScope: string, nextOutcome: string) {
     const params = new URLSearchParams({ q, type, installer, sort, dir });
-    if (nextScope && nextScope !== "all") params.set("scope", nextScope); else params.delete("scope");
-    if (!nextOutcome || nextOutcome === "all") params.set("outcome", "all"); else params.set("outcome", nextOutcome);
+    if (nextScope && nextScope !== "all") params.set("scope", nextScope);
+    else params.delete("scope");
+    if (!nextOutcome || nextOutcome === "all") params.set("outcome", "all");
+    else params.set("outcome", nextOutcome);
     router.push(`${pathname}?${params.toString()}`);
     setOpen(false);
   }
@@ -56,7 +68,10 @@ export function FiltersDropdown({ q, type, outcome, installer, sort, dir, scope 
         </button>
       </Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content sideOffset={6} className="z-20 w-72 rounded-md border border-black/15 bg-white p-3 text-sm shadow-lg outline-none dark:border-white/15 dark:bg-neutral-900 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0">
+        <Popover.Content
+          sideOffset={6}
+          className="z-20 w-72 rounded-md border border-black/15 bg-white p-3 text-sm shadow-lg outline-none dark:border-white/15 dark:bg-neutral-900 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+        >
           {/* Zakres */}
           <div>
             <div className="mb-1 text-xs opacity-70">Zakres</div>
@@ -66,7 +81,10 @@ export function FiltersDropdown({ q, type, outcome, installer, sort, dir, scope 
                 { v: "all", l: "Wszystkie" },
                 { v: "archived", l: "Archiwalne" },
               ].map((o) => (
-                <label key={o.v} className="inline-flex items-center gap-2 rounded border border-black/10 px-2 py-1 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10">
+                <label
+                  key={o.v}
+                  className="inline-flex items-center gap-2 rounded border border-black/10 px-2 py-1 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+                >
                   <input
                     type="radio"
                     name="scope"
@@ -91,7 +109,10 @@ export function FiltersDropdown({ q, type, outcome, installer, sort, dir, scope 
                 { v: "won", l: "Wygrane" },
                 { v: "lost", l: "Przegrane" },
               ].map((o) => (
-                <label key={o.v} className="inline-flex items-center gap-2 rounded border border-black/10 px-2 py-1 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10">
+                <label
+                  key={o.v}
+                  className="inline-flex items-center gap-2 rounded border border-black/10 px-2 py-1 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+                >
                   <input
                     type="radio"
                     name="outcome"
@@ -106,8 +127,20 @@ export function FiltersDropdown({ q, type, outcome, installer, sort, dir, scope 
           </div>
 
           <div className="mt-3 flex items-center justify-between">
-            <button type="button" onClick={onReset} className="h-8 rounded-md border border-black/15 px-2 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Reset</button>
-            <button type="button" onClick={onApply} className="h-8 rounded-md border border-black/15 px-3 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">Zastosuj</button>
+            <button
+              type="button"
+              onClick={onReset}
+              className="h-8 rounded-md border border-black/15 px-2 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+            >
+              Reset
+            </button>
+            <button
+              type="button"
+              onClick={onApply}
+              className="h-8 rounded-md border border-black/15 px-3 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+            >
+              Zastosuj
+            </button>
           </div>
         </Popover.Content>
       </Popover.Portal>

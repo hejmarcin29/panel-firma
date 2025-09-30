@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import { DayPicker } from "react-day-picker";
-import { pl as dfnsPl } from 'date-fns/locale'
+import { pl as dfnsPl } from "date-fns/locale";
 import "react-day-picker/dist/style.css";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker> & {
@@ -24,7 +24,8 @@ export function Calendar({ className, ...props }: CalendarProps) {
         nav_button_next: "absolute right-1",
         table: "w-full border-collapse space-y-1",
         head_row: "flex",
-        head_cell: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
+        head_cell:
+          "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
         row: "flex w-full mt-2",
         cell: "h-9 w-9 text-center text-sm p-0 relative",
         day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100",
@@ -33,7 +34,8 @@ export function Calendar({ className, ...props }: CalendarProps) {
         day_today: "bg-black/5 dark:bg-white/10",
         day_outside: "text-muted-foreground opacity-50",
         day_disabled: "text-muted-foreground opacity-50",
-        day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
+        day_range_middle:
+          "aria-selected:bg-accent aria-selected:text-accent-foreground",
         day_hidden: "invisible",
       }}
       showOutsideDays

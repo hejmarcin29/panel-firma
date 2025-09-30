@@ -12,28 +12,31 @@ export function Topbar() {
   const isDark = useMemo(() => theme === "dark", [theme]);
 
   return (
-    <header className="sticky top-0 z-20 border-b bg-[var(--pp-panel)]/80 backdrop-blur" style={{ borderColor: "var(--pp-border)" }}>
+    <header
+      className="sticky top-0 z-20 border-b bg-[var(--pp-panel)]/80 backdrop-blur"
+      style={{ borderColor: "var(--pp-border)" }}
+    >
       <div className="h-16 px-6 flex items-center justify-between">
-  <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-3 min-w-0">
           <button
             className="md:hidden h-9 w-9 inline-flex items-center justify-center rounded-md border"
-            style={{ borderColor: 'var(--pp-border)' }}
+            style={{ borderColor: "var(--pp-border)" }}
             aria-label="Menu"
             onClick={() => {
-              const el = document.querySelector('aside');
+              const el = document.querySelector("aside");
               if (el) {
-                const open = el.getAttribute('data-open') === 'true';
-                el.setAttribute('data-open', (!open).toString());
-                const overlay = document.getElementById('sidebar-overlay');
+                const open = el.getAttribute("data-open") === "true";
+                el.setAttribute("data-open", (!open).toString());
+                const overlay = document.getElementById("sidebar-overlay");
                 if (overlay) {
                   if (!open) {
-                    overlay.classList.remove('opacity-0');
-                    overlay.classList.remove('pointer-events-none');
-                    document.body.classList.add('no-scroll');
+                    overlay.classList.remove("opacity-0");
+                    overlay.classList.remove("pointer-events-none");
+                    document.body.classList.add("no-scroll");
                   } else {
-                    overlay.classList.add('opacity-0');
-                    overlay.classList.add('pointer-events-none');
-                    document.body.classList.remove('no-scroll');
+                    overlay.classList.add("opacity-0");
+                    overlay.classList.add("pointer-events-none");
+                    document.body.classList.remove("no-scroll");
                   }
                 }
               }
@@ -53,29 +56,50 @@ export function Topbar() {
         </div>
         <div className="flex items-center gap-3">
           <Tooltip content="Powiadomienia">
-            <button className="h-9 w-9 inline-flex items-center justify-center rounded-md border" style={{ borderColor: "var(--pp-border)" }} aria-label="Powiadomienia">
+            <button
+              className="h-9 w-9 inline-flex items-center justify-center rounded-md border"
+              style={{ borderColor: "var(--pp-border)" }}
+              aria-label="Powiadomienia"
+            >
               <Bell className="h-4 w-4" />
             </button>
           </Tooltip>
           <Tooltip content="Ustawienia">
-            <button className="h-9 w-9 inline-flex items-center justify-center rounded-md border" style={{ borderColor: "var(--pp-border)" }} aria-label="Ustawienia">
+            <button
+              className="h-9 w-9 inline-flex items-center justify-center rounded-md border"
+              style={{ borderColor: "var(--pp-border)" }}
+              aria-label="Ustawienia"
+            >
               <Settings className="h-4 w-4" />
             </button>
           </Tooltip>
-          <Tooltip content={isDark ? "Motyw: ciemny (kliknij aby jasny)" : "Motyw: jasny (kliknij aby ciemny)"}>
+          <Tooltip
+            content={
+              isDark
+                ? "Motyw: ciemny (kliknij aby jasny)"
+                : "Motyw: jasny (kliknij aby ciemny)"
+            }
+          >
             <button
               onClick={() => {
                 // Enable smooth theme transition for a brief moment
                 const html = document.documentElement;
-                html.classList.add('theme-transition');
-                setTimeout(() => html.classList.remove('theme-transition'), 250);
+                html.classList.add("theme-transition");
+                setTimeout(
+                  () => html.classList.remove("theme-transition"),
+                  250,
+                );
                 setTheme(isDark ? "light" : "dark");
               }}
               className="h-9 w-9 inline-flex items-center justify-center rounded-md border"
               style={{ borderColor: "var(--pp-border)" }}
               aria-label="Przełącz motyw"
             >
-              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              {isDark ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
             </button>
           </Tooltip>
           {isAuthed && (

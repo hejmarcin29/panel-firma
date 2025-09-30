@@ -6,44 +6,68 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 
-export function OrderOutcomeButtons({ id, outcome, size = 'sm' }: { id: string; outcome: 'won'|'lost'|null; size?: 'sm'|'md' }) {
-  const [pending, setPending] = useState<'won'|'lost'|null>(null)
-  const [openLost, setOpenLost] = useState(false)
-  const [reasonCode, setReasonCode] = useState<string>("")
-  const [reasonNote, setReasonNote] = useState<string>("")
-  const router = useRouter()
-  const { toast } = useToast()
+export function OrderOutcomeButtons({
+  id,
+  outcome,
+  size = "sm",
+}: {
+  id: string;
+  outcome: "won" | "lost" | null;
+  size?: "sm" | "md";
+}) {
+  const [pending, setPending] = useState<"won" | "lost" | null>(null);
+  const [openLost, setOpenLost] = useState(false);
+  const [reasonCode, setReasonCode] = useState<string>("");
+  const [reasonNote, setReasonNote] = useState<string>("");
+  const router = useRouter();
+  const { toast } = useToast();
 
-  if (outcome) return null
+  if (outcome) return null;
 
-  const setOutcome = async (o: 'won'|'lost', extra?: { reasonCode?: string|null, reasonNote?: string|null }) => {
+  const setOutcome = async (
+    o: "won" | "lost",
+    extra?: { reasonCode?: string | null; reasonNote?: string | null },
+  ) => {
     try {
-      setPending(o)
+      setPending(o);
       const r = await fetch(`/api/zlecenia/${id}/wynik`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ outcome: o, reasonCode: extra?.reasonCode ?? null, reasonNote: extra?.reasonNote ?? null })
-      })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          outcome: o,
+          reasonCode: extra?.reasonCode ?? null,
+          reasonNote: extra?.reasonNote ?? null,
+        }),
+      });
       if (!r.ok) {
-        const j = await r.json().catch(() => null)
-        throw new Error(j?.error || 'Błąd')
+        const j = await r.json().catch(() => null);
+        throw new Error(j?.error || "Błąd");
       }
-      toast({ title: 'Zapisano', description: o === 'won' ? 'Oznaczono jako wygrane' : 'Oznaczono jako przegrane', variant: 'success' })
-      router.refresh()
+      toast({
+        title: "Zapisano",
+        description:
+          o === "won" ? "Oznaczono jako wygrane" : "Oznaczono jako przegrane",
+        variant: "success",
+      });
+      router.refresh();
     } catch (e) {
-      toast({ title: 'Błąd', description: e instanceof Error ? e.message : 'Nie udało się zapisać', variant: 'destructive' })
+      toast({
+        title: "Błąd",
+        description: e instanceof Error ? e.message : "Nie udało się zapisać",
+        variant: "destructive",
+      });
     } finally {
-      setPending(null)
+      setPending(null);
     }
-  }
+  };
 
   const reasons = [
-    { id: 'price', label: 'Cena' },
-    { id: 'competition', label: 'Konkurencja' },
-    { id: 'no_contact', label: 'Brak kontaktu' },
-    { id: 'resigned', label: 'Rezygnacja' },
-    { id: 'other', label: 'Inny powód' },
-  ] as const
+    { id: "price", label: "Cena" },
+    { id: "competition", label: "Konkurencja" },
+    { id: "no_contact", label: "Brak kontaktu" },
+    { id: "resigned", label: "Rezygnacja" },
+    { id: "other", label: "Inny powód" },
+  ] as const;
 
   return (
     <div className="flex items-center justify-end gap-2">
@@ -51,10 +75,10 @@ export function OrderOutcomeButtons({ id, outcome, size = 'sm' }: { id: string; 
         variant="outline"
         size={size}
         disabled={pending !== null}
-        onClick={() => setOutcome('won')}
+        onClick={() => setOutcome("won")}
         aria-label="Oznacz jako wygrane"
         title="Oznacz jako wygrane"
-        className={size === 'sm' ? 'h-7 w-7 p-0' : 'h-9 w-9 p-0'}
+        className={size === "sm" ? "h-7 w-7 p-0" : "h-9 w-9 p-0"}
       >
         <CheckCircle2 className="h-4 w-4 text-emerald-600" />
       </Button>
@@ -65,7 +89,7 @@ export function OrderOutcomeButtons({ id, outcome, size = 'sm' }: { id: string; 
         onClick={() => setOpenLost(true)}
         aria-label="Oznacz jako przegrane"
         title="Oznacz jako przegrane"
-        className={size === 'sm' ? 'h-7 w-7 p-0' : 'h-9 w-9 p-0'}
+        className={size === "sm" ? "h-7 w-7 p-0" : "h-9 w-9 p-0"}
       >
         <XCircle className="h-4 w-4 text-red-600" />
       </Button>
@@ -73,14 +97,14 @@ export function OrderOutcomeButtons({ id, outcome, size = 'sm' }: { id: string; 
       <AlertDialog
         open={openLost}
         onOpenChange={(v) => {
-          setOpenLost(v)
+          setOpenLost(v);
           if (!v) {
-            setReasonCode("")
-            setReasonNote("")
+            setReasonCode("");
+            setReasonNote("");
           }
         }}
         title="Podaj powód przegranej"
-        description={(
+        description={
           <div className="mt-2 space-y-3">
             <div>
               <label className="mb-1 block text-xs opacity-70">Powód</label>
@@ -89,14 +113,20 @@ export function OrderOutcomeButtons({ id, outcome, size = 'sm' }: { id: string; 
                 value={reasonCode}
                 onChange={(e) => setReasonCode(e.target.value)}
               >
-                <option value="" disabled>— wybierz —</option>
-                {reasons.map(r => (
-                  <option key={r.id} value={r.id}>{r.label}</option>
+                <option value="" disabled>
+                  — wybierz —
+                </option>
+                {reasons.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.label}
+                  </option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs opacity-70">Notatka (opcjonalnie)</label>
+              <label className="mb-1 block text-xs opacity-70">
+                Notatka (opcjonalnie)
+              </label>
               <textarea
                 className="min-h-[80px] w-full rounded-md border border-black/15 bg-transparent p-2 text-sm outline-none dark:border-white/15"
                 placeholder="Dodatkowe informacje…"
@@ -105,14 +135,19 @@ export function OrderOutcomeButtons({ id, outcome, size = 'sm' }: { id: string; 
               />
             </div>
           </div>
-        )}
-        confirmText={pending === 'lost' ? 'Zapisywanie…' : 'Zapisz jako przegrane'}
+        }
+        confirmText={
+          pending === "lost" ? "Zapisywanie…" : "Zapisz jako przegrane"
+        }
         confirmVariant="destructive"
         onConfirm={async () => {
           if (!reasonCode) return; // prosta walidacja
-          await setOutcome('lost', { reasonCode, reasonNote: reasonNote.trim() ? reasonNote : null })
+          await setOutcome("lost", {
+            reasonCode,
+            reasonNote: reasonNote.trim() ? reasonNote : null,
+          });
         }}
       />
     </div>
-  )
+  );
 }

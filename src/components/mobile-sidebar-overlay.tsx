@@ -2,14 +2,14 @@
 
 export function MobileSidebarOverlay() {
   const closeSidebar = () => {
-    const aside = document.querySelector('aside');
-    if (aside) aside.setAttribute('data-open', 'false');
-    const overlay = document.getElementById('sidebar-overlay');
+    const aside = document.querySelector("aside");
+    if (aside) aside.setAttribute("data-open", "false");
+    const overlay = document.getElementById("sidebar-overlay");
     if (overlay) {
-      overlay.classList.add('opacity-0');
-      overlay.classList.add('pointer-events-none');
+      overlay.classList.add("opacity-0");
+      overlay.classList.add("pointer-events-none");
     }
-    document.body.classList.remove('no-scroll');
+    document.body.classList.remove("no-scroll");
   };
 
   return (

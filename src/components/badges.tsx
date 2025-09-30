@@ -1,19 +1,38 @@
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, XCircle, Wrench, Truck, Clock, CalendarDays, Trophy, Loader2 } from "lucide-react";
+import {
+  CheckCircle2,
+  XCircle,
+  Wrench,
+  Truck,
+  Clock,
+  CalendarDays,
+  Trophy,
+  Loader2,
+} from "lucide-react";
 
 export function TypeBadge({ type }: { type: string }) {
   const isInstall = type === "installation";
   return (
     <Badge size="xs" variant="neutral">
       <span className="inline-flex items-center gap-1.5">
-        {isInstall ? <Wrench className="h-3.5 w-3.5" /> : <Truck className="h-3.5 w-3.5" />}
+        {isInstall ? (
+          <Wrench className="h-3.5 w-3.5" />
+        ) : (
+          <Truck className="h-3.5 w-3.5" />
+        )}
         {isInstall ? "Montaż" : "Dostawa"}
       </span>
     </Badge>
   );
 }
 
-export function StatusBadge({ status, label }: { status: string; label: string }) {
+export function StatusBadge({
+  status,
+  label,
+}: {
+  status: string;
+  label: string;
+}) {
   // Mapujemy status → ikona + wariant koloru
   let icon: React.ReactNode = null;
   let variant: "neutral" | "success" | "warning" | "destructive" = "neutral";
@@ -51,7 +70,13 @@ export function StatusBadge({ status, label }: { status: string; label: string }
   );
 }
 
-export function OutcomeBadge({ outcome, iconOnly = true }: { outcome: "won" | "lost" | null | undefined; iconOnly?: boolean }) {
+export function OutcomeBadge({
+  outcome,
+  iconOnly = true,
+}: {
+  outcome: "won" | "lost" | null | undefined;
+  iconOnly?: boolean;
+}) {
   const isWon = outcome === "won";
   const isLost = outcome === "lost";
 
@@ -81,7 +106,11 @@ export function OutcomeBadge({ outcome, iconOnly = true }: { outcome: "won" | "l
     return (
       <Badge size="xs" variant={isWon ? "success" : "destructive"}>
         <span className="inline-flex items-center gap-1.5">
-          {isWon ? <CheckCircle2 className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
+          {isWon ? (
+            <CheckCircle2 className="h-3.5 w-3.5" />
+          ) : (
+            <XCircle className="h-3.5 w-3.5" />
+          )}
           {isWon ? "Wygrane" : "Przegrane"}
         </span>
       </Badge>
@@ -90,14 +119,17 @@ export function OutcomeBadge({ outcome, iconOnly = true }: { outcome: "won" | "l
   return (
     <Badge size="xs" variant="neutral">
       <span className="inline-flex items-center gap-1.5">
-        <Loader2 className="h-3.5 w-3.5" />
-        W trakcie
+        <Loader2 className="h-3.5 w-3.5" />W trakcie
       </span>
     </Badge>
   );
 }
 
-export function PipelineStageBadge({ stage }: { stage: string | null | undefined }) {
+export function PipelineStageBadge({
+  stage,
+}: {
+  stage: string | null | undefined;
+}) {
   if (!stage) {
     return (
       <Badge size="xs" variant="neutral">
@@ -110,24 +142,25 @@ export function PipelineStageBadge({ stage }: { stage: string | null | undefined
   }
   const labels: Record<string, string> = {
     // delivery
-    offer_sent: 'Wysłana oferta',
-    awaiting_payment: 'Czeka na wpłatę',
-    delivery: 'Dostawa',
-    final_invoice_issued: 'Wystawiona faktura końcowa',
+    offer_sent: "Wysłana oferta",
+    awaiting_payment: "Czeka na wpłatę",
+    delivery: "Dostawa",
+    final_invoice_issued: "Wystawiona faktura końcowa",
     // installation
-    awaiting_measurement: 'Czeka na pomiar',
-    awaiting_quote: 'Czeka na wycenę',
-    before_contract: 'Przed umową',
-    before_advance: 'Przed zaliczką',
-    before_installation: 'Przed montażem',
-    before_final_invoice: 'Przed fakturą końcową',
-    done: 'Koniec',
+    awaiting_measurement: "Czeka na pomiar",
+    awaiting_quote: "Czeka na wycenę",
+    before_contract: "Przed umową",
+    before_advance: "Przed zaliczką",
+    before_installation: "Przed montażem",
+    before_final_invoice: "Przed fakturą końcową",
+    done: "Koniec",
   };
   // Prosty dobór ikon wg prefiksu
   let icon: React.ReactNode = <Clock className="h-3.5 w-3.5" />;
-  if (stage === 'delivery') icon = <Truck className="h-3.5 w-3.5" />;
-  if (stage === 'done') icon = <CheckCircle2 className="h-3.5 w-3.5" />;
-  if (stage === 'before_installation' || stage === 'awaiting_measurement') icon = <Wrench className="h-3.5 w-3.5" />;
+  if (stage === "delivery") icon = <Truck className="h-3.5 w-3.5" />;
+  if (stage === "done") icon = <CheckCircle2 className="h-3.5 w-3.5" />;
+  if (stage === "before_installation" || stage === "awaiting_measurement")
+    icon = <Wrench className="h-3.5 w-3.5" />;
   return (
     <Badge size="xs" variant="neutral">
       <span className="inline-flex items-center gap-1.5">

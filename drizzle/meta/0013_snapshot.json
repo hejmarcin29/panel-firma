@@ -89,10 +89,7 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {
         "accounts_provider_provider_account_id_pk": {
-          "columns": [
-            "provider",
-            "provider_account_id"
-          ],
+          "columns": ["provider", "provider_account_id"],
           "name": "accounts_provider_provider_account_id_pk"
         }
       },
@@ -231,9 +228,7 @@
       "indexes": {
         "clients_client_no_unique": {
           "name": "clients_client_no_unique",
-          "columns": [
-            "client_no"
-          ],
+          "columns": ["client_no"],
           "isUnique": true
         }
       },
@@ -285,10 +280,7 @@
       "indexes": {
         "cooperation_rule_ack_user_version": {
           "name": "cooperation_rule_ack_user_version",
-          "columns": [
-            "user_id",
-            "version"
-          ],
+          "columns": ["user_id", "version"],
           "isUnique": true
         }
       },
@@ -379,9 +371,7 @@
       "indexes": {
         "cooperation_rules_active_version": {
           "name": "cooperation_rules_active_version",
-          "columns": [
-            "version"
-          ],
+          "columns": ["version"],
           "isUnique": true
         }
       },
@@ -477,17 +467,12 @@
       "indexes": {
         "delivery_slots_order_id_idx": {
           "name": "delivery_slots_order_id_idx",
-          "columns": [
-            "order_id"
-          ],
+          "columns": ["order_id"],
           "isUnique": false
         },
         "delivery_slots_status_planned_idx": {
           "name": "delivery_slots_status_planned_idx",
-          "columns": [
-            "status",
-            "planned_at"
-          ],
+          "columns": ["status", "planned_at"],
           "isUnique": false
         }
       },
@@ -659,25 +644,17 @@
       "indexes": {
         "installation_slots_order_id_idx": {
           "name": "installation_slots_order_id_idx",
-          "columns": [
-            "order_id"
-          ],
+          "columns": ["order_id"],
           "isUnique": false
         },
         "installation_slots_installer_planned_idx": {
           "name": "installation_slots_installer_planned_idx",
-          "columns": [
-            "installer_id",
-            "planned_at"
-          ],
+          "columns": ["installer_id", "planned_at"],
           "isUnique": false
         },
         "installation_slots_status_planned_idx": {
           "name": "installation_slots_status_planned_idx",
-          "columns": [
-            "status",
-            "planned_at"
-          ],
+          "columns": ["status", "planned_at"],
           "isUnique": false
         }
       },
@@ -1123,17 +1100,12 @@
       "indexes": {
         "orders_order_no_unique": {
           "name": "orders_order_no_unique",
-          "columns": [
-            "order_no"
-          ],
+          "columns": ["order_no"],
           "isUnique": true
         },
         "orders_client_seq_unique": {
           "name": "orders_client_seq_unique",
-          "columns": [
-            "client_id",
-            "seq"
-          ],
+          "columns": ["client_id", "seq"],
           "isUnique": true
         }
       },
@@ -1246,9 +1218,7 @@
       "indexes": {
         "users_email_unique": {
           "name": "users_email_unique",
-          "columns": [
-            "email"
-          ],
+          "columns": ["email"],
           "isUnique": true
         }
       },
@@ -1286,10 +1256,7 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {
         "verification_tokens_identifier_token_pk": {
-          "columns": [
-            "identifier",
-            "token"
-          ],
+          "columns": ["identifier", "token"],
           "name": "verification_tokens_identifier_token_pk"
         }
       },

@@ -37,7 +37,10 @@ export async function middleware(req: NextRequest) {
   if (!token) {
     const loginUrl = new URL("/login", req.url);
     // Optionally, pass the original path to redirect after login
-    loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname + req.nextUrl.search);
+    loginUrl.searchParams.set(
+      "callbackUrl",
+      req.nextUrl.pathname + req.nextUrl.search,
+    );
     return NextResponse.redirect(loginUrl);
   }
 

@@ -1,38 +1,40 @@
-import { db } from '@/db'
-import { clients, orders } from '@/db/schema'
-import { and, eq, isNull, sql } from 'drizzle-orm'
-import Link from 'next/link'
-import { redirect } from 'next/navigation'
-import { getSession } from '@/lib/auth-session'
-import { ChecklistCell } from '@/components/checklist-cell.client'
-import { OrderPipeline } from '@/components/order-pipeline.client'
-import { Info } from 'lucide-react'
+import { db } from "@/db";
+import { clients, orders } from "@/db/schema";
+import { and, eq, isNull, sql } from "drizzle-orm";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getSession } from "@/lib/auth-session";
+import { ChecklistCell } from "@/components/checklist-cell.client";
+import { OrderPipeline } from "@/components/order-pipeline.client";
+import { Info } from "lucide-react";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 const cols = [
-  { key: 'proforma', label: 'Proforma' },
-  { key: 'advance_invoice', label: 'Faktura zaliczkowa' },
-  { key: 'final_invoice', label: 'Faktura końcowa' },
-  { key: 'post_delivery_invoice', label: 'Faktura po dostawie' },
-  { key: 'quote', label: 'Wycena' },
-  { key: 'done', label: 'Koniec' },
-]
+  { key: "proforma", label: "Proforma" },
+  { key: "advance_invoice", label: "Faktura zaliczkowa" },
+  { key: "final_invoice", label: "Faktura końcowa" },
+  { key: "post_delivery_invoice", label: "Faktura po dostawie" },
+  { key: "quote", label: "Wycena" },
+  { key: "done", label: "Koniec" },
+];
 
 type Row = {
-  id: string
-  orderNo: string | null
-  clientName: string | null
-  status: string
-  pipelineStage: string | null
-  flags: Record<string, boolean>
-}
+  id: string;
+  orderNo: string | null;
+  clientName: string | null;
+  status: string;
+  pipelineStage: string | null;
+  flags: Record<string, boolean>;
+};
 
 export default async function DeliveriesBoard() {
-  const session = await getSession()
-  const role = (session?.user && (session.user as { role?: string|null }).role) || null
-  const allowed = role === 'admin' || role === 'manager' || role === 'architect'
-  if (!allowed) redirect('/')
+  const session = await getSession();
+  const role =
+    (session?.user && (session.user as { role?: string | null }).role) || null;
+  const allowed =
+    role === "admin" || role === "manager" || role === "architect";
+  if (!allowed) redirect("/");
   const rows = await db
     .select({
       id: orders.id,
@@ -50,9 +52,9 @@ export default async function DeliveriesBoard() {
     })
     .from(orders)
     .leftJoin(clients, eq(orders.clientId, clients.id))
-    .where(and(eq(orders.type, 'delivery'), isNull(orders.archivedAt)))
+    .where(and(eq(orders.type, "delivery"), isNull(orders.archivedAt)));
 
-  const data: Row[] = rows.map(r => ({
+  const data: Row[] = rows.map((r) => ({
     id: r.id,
     orderNo: r.orderNo,
     clientName: r.clientName,
@@ -65,17 +67,34 @@ export default async function DeliveriesBoard() {
       post_delivery_invoice: Boolean(r.post_delivery_invoice),
       quote: Boolean(r.quote),
       done: Boolean(r.done),
-    }
-  }))
+    },
+  }));
 
   return (
     <div className="mx-auto max-w-none p-4 md:p-6">
-      <section className="relative overflow-hidden rounded-2xl border bg-[var(--pp-panel)] mb-4" style={{ borderColor: 'var(--pp-border)' }}>
-        <div className="pointer-events-none absolute inset-0 opacity-80" aria-hidden
-             style={{ background: 'radial-gradient(1000px 360px at -10% -20%, color-mix(in oklab, var(--pp-primary) 14%, transparent), transparent 42%), linear-gradient(120deg, color-mix(in oklab, var(--pp-primary) 8%, transparent), transparent 65%)' }} />
+      <section
+        className="relative overflow-hidden rounded-2xl border bg-[var(--pp-panel)] mb-4"
+        style={{ borderColor: "var(--pp-border)" }}
+      >
+        <div
+          className="pointer-events-none absolute inset-0 opacity-80"
+          aria-hidden
+          style={{
+            background:
+              "radial-gradient(1000px 360px at -10% -20%, color-mix(in oklab, var(--pp-primary) 14%, transparent), transparent 42%), linear-gradient(120deg, color-mix(in oklab, var(--pp-primary) 8%, transparent), transparent 65%)",
+          }}
+        />
         <div className="relative z-10 p-4 md:p-6 flex items-center justify-between gap-3">
-          <h1 className="text-2xl md:text-3xl font-semibold">Dostawy — checklisty</h1>
-          <Link href="/montaze" className="inline-flex h-9 items-center rounded-md border px-3 text-sm hover:bg-[var(--pp-primary-subtle-bg)]" style={{ borderColor: 'var(--pp-border)' }}>Przejdź do Montaży</Link>
+          <h1 className="text-2xl md:text-3xl font-semibold">
+            Dostawy — checklisty
+          </h1>
+          <Link
+            href="/montaze"
+            className="inline-flex h-9 items-center rounded-md border px-3 text-sm hover:bg-[var(--pp-primary-subtle-bg)]"
+            style={{ borderColor: "var(--pp-border)" }}
+          >
+            Przejdź do Montaży
+          </Link>
         </div>
       </section>
       <div className="rounded-md border border-black/10 dark:border-white/10 overflow-x-auto">
@@ -85,38 +104,78 @@ export default async function DeliveriesBoard() {
               <th className="px-3 py-2">Nr zlecenia</th>
               <th className="px-3 py-2">Klient</th>
               <th className="px-3 py-2">Etap</th>
-              {cols.map(c => <th key={c.key} className="px-3 py-2 text-center">{c.label}</th>)}
+              {cols.map((c) => (
+                <th key={c.key} className="px-3 py-2 text-center">
+                  {c.label}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {data.length === 0 ? (
-              <tr><td colSpan={3+cols.length} className="px-3 py-6 text-center opacity-70">Brak zleceń</td></tr>
-            ) : data.map(r => (
-              <tr key={r.id} className="border-t border-black/10 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10 anim-enter">
-                <td className="px-3 py-2">
-                  <div className="inline-flex items-center gap-2">
-                    <Link className="hover:underline focus:underline focus:outline-none" href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_d` : `/zlecenia/${r.id}`}>
-                      {r.orderNo ? `${r.orderNo}_d` : r.id.slice(0,8)}
-                    </Link>
-                    <Link href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_d` : `/zlecenia/${r.id}`} aria-label="Szczegóły" title="Szczegóły" className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-black/15 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">
-                      <Info className="h-3.5 w-3.5" />
-                    </Link>
-                  </div>
+              <tr>
+                <td
+                  colSpan={3 + cols.length}
+                  className="px-3 py-6 text-center opacity-70"
+                >
+                  Brak zleceń
                 </td>
-                <td className="px-3 py-2">{r.clientName || '-'}</td>
-                <td className="px-3 py-2">
-                  <OrderPipeline orderId={r.id} type={'delivery'} stage={r.pipelineStage} />
-                </td>
-                {cols.map(c => (
-                  <td key={c.key} className="px-3 py-2 text-center">
-                    <ChecklistCell orderId={r.id} keyName={c.key} initial={r.flags[c.key]} />
-                  </td>
-                ))}
               </tr>
-            ))}
+            ) : (
+              data.map((r) => (
+                <tr
+                  key={r.id}
+                  className="border-t border-black/10 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10 anim-enter"
+                >
+                  <td className="px-3 py-2">
+                    <div className="inline-flex items-center gap-2">
+                      <Link
+                        className="hover:underline focus:underline focus:outline-none"
+                        href={
+                          r.orderNo
+                            ? `/zlecenia/nr/${r.orderNo}_d`
+                            : `/zlecenia/${r.id}`
+                        }
+                      >
+                        {r.orderNo ? `${r.orderNo}_d` : r.id.slice(0, 8)}
+                      </Link>
+                      <Link
+                        href={
+                          r.orderNo
+                            ? `/zlecenia/nr/${r.orderNo}_d`
+                            : `/zlecenia/${r.id}`
+                        }
+                        aria-label="Szczegóły"
+                        title="Szczegóły"
+                        className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-black/15 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+                      >
+                        <Info className="h-3.5 w-3.5" />
+                      </Link>
+                    </div>
+                  </td>
+                  <td className="px-3 py-2">{r.clientName || "-"}</td>
+                  <td className="px-3 py-2">
+                    <OrderPipeline
+                      orderId={r.id}
+                      type={"delivery"}
+                      stage={r.pipelineStage}
+                    />
+                  </td>
+                  {cols.map((c) => (
+                    <td key={c.key} className="px-3 py-2 text-center">
+                      <ChecklistCell
+                        orderId={r.id}
+                        keyName={c.key}
+                        initial={r.flags[c.key]}
+                      />
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
     </div>
-  )
+  );
 }

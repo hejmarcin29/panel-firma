@@ -27,9 +27,9 @@ interface ClientCreateBody {
 
 // GET /api/klienci - lista klientów (ostatnie najpierw)
 export async function GET(req: Request) {
-  const url = new URL(req.url)
-  const archivedParam = url.searchParams.get('archived')
-  const wantArchivedOnly = archivedParam === '1' || archivedParam === 'true'
+  const url = new URL(req.url);
+  const archivedParam = url.searchParams.get("archived");
+  const wantArchivedOnly = archivedParam === "1" || archivedParam === "true";
   // Base clients
   const q = db
     .select({
@@ -42,10 +42,16 @@ export async function GET(req: Request) {
       clientNo: clients.clientNo,
       createdAt: clients.createdAt,
     })
-    .from(clients)
+    .from(clients);
   const list = await (wantArchivedOnly
-    ? q.where(sql`(${clients.archivedAt} IS NOT NULL)`).orderBy(desc(clients.createdAt)).limit(200)
-    : q.where(isNull(clients.archivedAt)).orderBy(desc(clients.createdAt)).limit(200))
+    ? q
+        .where(sql`(${clients.archivedAt} IS NOT NULL)`)
+        .orderBy(desc(clients.createdAt))
+        .limit(200)
+    : q
+        .where(isNull(clients.archivedAt))
+        .orderBy(desc(clients.createdAt))
+        .limit(200));
 
   // For each client gather: activeOrders, nearest delivery/installation dates (planned or confirmed)
   type ClientListOut = {
@@ -63,24 +69,43 @@ export async function GET(req: Request) {
   };
   const out: ClientListOut[] = [];
   for (const c of list) {
-    const todayStart = (() => { const d = new Date(); d.setHours(0,0,0,0); return d.getTime(); })();
+    const todayStart = (() => {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      return d.getTime();
+    })();
     const toMs = (v: unknown): number | null => {
       if (v == null) return null;
       if (v instanceof Date) return v.getTime();
-      if (typeof v === 'number' && Number.isFinite(v)) return v;
+      if (typeof v === "number" && Number.isFinite(v)) return v;
       return null;
     };
     const [activeOrdersRow] = await db
       .select({ c: sql<number>`count(*)` })
       .from(orders)
-      .where(and(eq(orders.clientId, c.id), isNull(orders.archivedAt), isNull(orders.outcome)));
+      .where(
+        and(
+          eq(orders.clientId, c.id),
+          isNull(orders.archivedAt),
+          isNull(orders.outcome),
+        ),
+      );
 
     // nearest FUTURE installation via slots
     const [nextInstSlot] = await db
       .select({ t: installationSlots.plannedAt })
       .from(installationSlots)
       .innerJoin(orders, eq(orders.id, installationSlots.orderId))
-      .where(and(eq(orders.clientId, c.id), isNull(orders.archivedAt), isNull(orders.outcome), sql`(${installationSlots.status} in ('planned','confirmed'))`, isNotNull(installationSlots.plannedAt), sql`${installationSlots.plannedAt} >= ${todayStart}`))
+      .where(
+        and(
+          eq(orders.clientId, c.id),
+          isNull(orders.archivedAt),
+          isNull(orders.outcome),
+          sql`(${installationSlots.status} in ('planned','confirmed'))`,
+          isNotNull(installationSlots.plannedAt),
+          sql`${installationSlots.plannedAt} >= ${todayStart}`,
+        ),
+      )
       .orderBy(installationSlots.plannedAt)
       .limit(1);
 
@@ -88,7 +113,16 @@ export async function GET(req: Request) {
     const [nextInstOrder] = await db
       .select({ t: orders.scheduledDate })
       .from(orders)
-      .where(and(eq(orders.clientId, c.id), isNull(orders.archivedAt), isNull(orders.outcome), eq(orders.type, 'installation'), isNotNull(orders.scheduledDate), sql`${orders.scheduledDate} >= ${todayStart}`))
+      .where(
+        and(
+          eq(orders.clientId, c.id),
+          isNull(orders.archivedAt),
+          isNull(orders.outcome),
+          eq(orders.type, "installation"),
+          isNotNull(orders.scheduledDate),
+          sql`${orders.scheduledDate} >= ${todayStart}`,
+        ),
+      )
       .orderBy(orders.scheduledDate)
       .limit(1);
 
@@ -97,7 +131,16 @@ export async function GET(req: Request) {
       .select({ t: deliverySlots.plannedAt })
       .from(deliverySlots)
       .innerJoin(orders, eq(orders.id, deliverySlots.orderId))
-      .where(and(eq(orders.clientId, c.id), isNull(orders.archivedAt), isNull(orders.outcome), sql`(${deliverySlots.status} in ('planned','confirmed'))`, isNotNull(deliverySlots.plannedAt), sql`${deliverySlots.plannedAt} >= ${todayStart}`))
+      .where(
+        and(
+          eq(orders.clientId, c.id),
+          isNull(orders.archivedAt),
+          isNull(orders.outcome),
+          sql`(${deliverySlots.status} in ('planned','confirmed'))`,
+          isNotNull(deliverySlots.plannedAt),
+          sql`${deliverySlots.plannedAt} >= ${todayStart}`,
+        ),
+      )
       .orderBy(deliverySlots.plannedAt)
       .limit(1);
 
@@ -105,15 +148,28 @@ export async function GET(req: Request) {
     const [nextDelOrder] = await db
       .select({ t: orders.scheduledDate })
       .from(orders)
-      .where(and(eq(orders.clientId, c.id), isNull(orders.archivedAt), isNull(orders.outcome), eq(orders.type, 'delivery'), isNotNull(orders.scheduledDate), sql`${orders.scheduledDate} >= ${todayStart}`))
+      .where(
+        and(
+          eq(orders.clientId, c.id),
+          isNull(orders.archivedAt),
+          isNull(orders.outcome),
+          eq(orders.type, "delivery"),
+          isNotNull(orders.scheduledDate),
+          sql`${orders.scheduledDate} >= ${todayStart}`,
+        ),
+      )
       .orderBy(orders.scheduledDate)
       .limit(1);
     let nextInstTs = (() => {
-      const arr = [toMs(nextInstSlot?.t), toMs(nextInstOrder?.t)].filter((v): v is number => v !== null);
+      const arr = [toMs(nextInstSlot?.t), toMs(nextInstOrder?.t)].filter(
+        (v): v is number => v !== null,
+      );
       return arr.length ? Math.min(...arr) : Number.POSITIVE_INFINITY;
     })();
     let nextDelTs = (() => {
-      const arr = [toMs(nextDelSlot?.t), toMs(nextDelOrder?.t)].filter((v): v is number => v !== null);
+      const arr = [toMs(nextDelSlot?.t), toMs(nextDelOrder?.t)].filter(
+        (v): v is number => v !== null,
+      );
       return arr.length ? Math.min(...arr) : Number.POSITIVE_INFINITY;
     })();
 
@@ -123,16 +179,36 @@ export async function GET(req: Request) {
         .select({ t: installationSlots.plannedAt })
         .from(installationSlots)
         .innerJoin(orders, eq(orders.id, installationSlots.orderId))
-        .where(and(eq(orders.clientId, c.id), isNull(orders.archivedAt), isNull(orders.outcome), sql`(${installationSlots.status} in ('planned','confirmed'))`, isNotNull(installationSlots.plannedAt), sql`${installationSlots.plannedAt} < ${todayStart}`))
+        .where(
+          and(
+            eq(orders.clientId, c.id),
+            isNull(orders.archivedAt),
+            isNull(orders.outcome),
+            sql`(${installationSlots.status} in ('planned','confirmed'))`,
+            isNotNull(installationSlots.plannedAt),
+            sql`${installationSlots.plannedAt} < ${todayStart}`,
+          ),
+        )
         .orderBy(sql`${installationSlots.plannedAt} DESC`)
         .limit(1);
       const [pastInstOrder] = await db
         .select({ t: orders.scheduledDate })
         .from(orders)
-        .where(and(eq(orders.clientId, c.id), isNull(orders.archivedAt), isNull(orders.outcome), eq(orders.type, 'installation'), isNotNull(orders.scheduledDate), sql`${orders.scheduledDate} < ${todayStart}`))
+        .where(
+          and(
+            eq(orders.clientId, c.id),
+            isNull(orders.archivedAt),
+            isNull(orders.outcome),
+            eq(orders.type, "installation"),
+            isNotNull(orders.scheduledDate),
+            sql`${orders.scheduledDate} < ${todayStart}`,
+          ),
+        )
         .orderBy(sql`${orders.scheduledDate} DESC`)
         .limit(1);
-      const arr = [toMs(pastInstSlot?.t), toMs(pastInstOrder?.t)].filter((v): v is number => v !== null);
+      const arr = [toMs(pastInstSlot?.t), toMs(pastInstOrder?.t)].filter(
+        (v): v is number => v !== null,
+      );
       nextInstTs = arr.length ? Math.max(...arr) : Number.NEGATIVE_INFINITY;
     }
     if (!Number.isFinite(nextDelTs)) {
@@ -140,16 +216,36 @@ export async function GET(req: Request) {
         .select({ t: deliverySlots.plannedAt })
         .from(deliverySlots)
         .innerJoin(orders, eq(orders.id, deliverySlots.orderId))
-        .where(and(eq(orders.clientId, c.id), isNull(orders.archivedAt), isNull(orders.outcome), sql`(${deliverySlots.status} in ('planned','confirmed'))`, isNotNull(deliverySlots.plannedAt), sql`${deliverySlots.plannedAt} < ${todayStart}`))
+        .where(
+          and(
+            eq(orders.clientId, c.id),
+            isNull(orders.archivedAt),
+            isNull(orders.outcome),
+            sql`(${deliverySlots.status} in ('planned','confirmed'))`,
+            isNotNull(deliverySlots.plannedAt),
+            sql`${deliverySlots.plannedAt} < ${todayStart}`,
+          ),
+        )
         .orderBy(sql`${deliverySlots.plannedAt} DESC`)
         .limit(1);
       const [pastDelOrder] = await db
         .select({ t: orders.scheduledDate })
         .from(orders)
-        .where(and(eq(orders.clientId, c.id), isNull(orders.archivedAt), isNull(orders.outcome), eq(orders.type, 'delivery'), isNotNull(orders.scheduledDate), sql`${orders.scheduledDate} < ${todayStart}`))
+        .where(
+          and(
+            eq(orders.clientId, c.id),
+            isNull(orders.archivedAt),
+            isNull(orders.outcome),
+            eq(orders.type, "delivery"),
+            isNotNull(orders.scheduledDate),
+            sql`${orders.scheduledDate} < ${todayStart}`,
+          ),
+        )
         .orderBy(sql`${orders.scheduledDate} DESC`)
         .limit(1);
-      const arr = [toMs(pastDelSlot?.t), toMs(pastDelOrder?.t)].filter((v): v is number => v !== null);
+      const arr = [toMs(pastDelSlot?.t), toMs(pastDelOrder?.t)].filter(
+        (v): v is number => v !== null,
+      );
       nextDelTs = arr.length ? Math.max(...arr) : Number.NEGATIVE_INFINITY;
     }
     out.push({
@@ -163,7 +259,7 @@ export async function GET(req: Request) {
       createdAt: (() => {
         const v = c.createdAt as unknown;
         if (v instanceof Date) return v.getTime();
-        if (typeof v === 'number') return v;
+        if (typeof v === "number") return v;
         return Date.now();
       })(),
       _activeOrders: activeOrdersRow?.c ?? 0,
@@ -179,22 +275,30 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const session = await getSession();
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session)
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const raw = (await req.json().catch(() => null)) as unknown;
-    const body: Partial<ClientCreateBody> | null = (raw && typeof raw === 'object') ? raw as Partial<ClientCreateBody> : null;
+    const body: Partial<ClientCreateBody> | null =
+      raw && typeof raw === "object"
+        ? (raw as Partial<ClientCreateBody>)
+        : null;
 
     const trimOrNull = (v: unknown) => {
-      if (typeof v !== 'string') return null;
+      if (typeof v !== "string") return null;
       const t = v.trim();
-      return t === '' ? null : t;
+      return t === "" ? null : t;
     };
 
-    const name = typeof body?.name === 'string' ? body.name.trim() : '';
-    if (!name) return NextResponse.json({ error: "Imię i nazwisko wymagane" }, { status: 400 });
+    const name = typeof body?.name === "string" ? body.name.trim() : "";
+    if (!name)
+      return NextResponse.json(
+        { error: "Imię i nazwisko wymagane" },
+        { status: 400 },
+      );
 
     // Dane bazowe (clientNo wyliczymy poniżej)
-    const base: Omit<typeof clients.$inferInsert, 'clientNo'> = {
+    const base: Omit<typeof clients.$inferInsert, "clientNo"> = {
       id: randomUUID(),
       name,
       phone: trimOrNull(body?.phone) ?? null,
@@ -204,9 +308,9 @@ export async function POST(req: Request) {
       invoiceCity: trimOrNull(body?.invoiceCity) ?? null,
       invoicePostalCode: trimOrNull(body?.invoicePostalCode) ?? null,
       invoiceAddress: trimOrNull(body?.invoiceAddress) ?? null,
-  source: trimOrNull(body?.source) ?? null,
+      source: trimOrNull(body?.source) ?? null,
       // Ustaw jawnie, aby nie łapać NOT NULL przy create
-      serviceType: 'with_installation',
+      serviceType: "with_installation",
     };
 
     // Wylicz next clientNo bez transakcji (retry przy konflikcie unikalności)
@@ -238,26 +342,32 @@ export async function POST(req: Request) {
           // Kolizja numeru – spróbuj ponownie
           continue;
         }
-        console.error('[POST /api/klienci] Insert failed', e);
-        return NextResponse.json({ error: 'Błąd serwera (insert)' }, { status: 500 });
+        console.error("[POST /api/klienci] Insert failed", e);
+        return NextResponse.json(
+          { error: "Błąd serwera (insert)" },
+          { status: 500 },
+        );
       }
     }
     if (!created) {
-      return NextResponse.json({ error: 'Konflikt numeracji klienta, spróbuj ponownie' }, { status: 409 });
+      return NextResponse.json(
+        { error: "Konflikt numeracji klienta, spróbuj ponownie" },
+        { status: 409 },
+      );
     }
 
     const userEmail = (session as SessionUser | null)?.user?.email ?? null;
     await emitDomainEvent({
       type: DomainEventTypes.clientCreated,
       actor: userEmail,
-      entity: { type: 'client', id: base.id },
+      entity: { type: "client", id: base.id },
       payload: { id: base.id, name: base.name, clientNo: clientNoAssigned },
       schemaVersion: 2,
     });
 
     return NextResponse.json({ id: base.id });
   } catch (err) {
-    console.error('[POST /api/klienci] Error', err);
-    return NextResponse.json({ error: 'Błąd serwera' }, { status: 500 });
+    console.error("[POST /api/klienci] Error", err);
+    return NextResponse.json({ error: "Błąd serwera" }, { status: 500 });
   }
 }
