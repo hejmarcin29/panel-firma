@@ -339,3 +339,12 @@ export const orderAttachments = sqliteTable('order_attachments', {
 }))
 
 export type OrderAttachment = typeof orderAttachments.$inferSelect
+
+// App-wide settings (key-value)
+export const appSettings = sqliteTable('app_settings', {
+  key: text('key').primaryKey(),
+  value: text('value').notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(sql`(unixepoch() * 1000)`),
+})
+
+export type AppSetting = typeof appSettings.$inferSelect

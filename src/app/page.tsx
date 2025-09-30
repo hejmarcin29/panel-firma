@@ -4,7 +4,7 @@ import { pl } from "@/i18n/pl";
 import Link from "next/link";
 import { getSession } from "@/lib/auth-session";
 import { redirect } from "next/navigation";
-import { orders as ordersTable, clients as clientsTbl } from "@/db/schema";
+import { orders as ordersTable, clients as clientsTbl, appSettings } from "@/db/schema";
 import { and, gte, lte, eq as deq, asc, desc, ne, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { KpiCard } from "@/components/kpi-card";
@@ -43,19 +43,29 @@ export default async function Home() {
     .from(ordersTable)
     .where(and(gte(ordersTable.scheduledDate, now), lte(ordersTable.scheduledDate, weekAhead), isNull(ordersTable.archivedAt)));
 
-  // rudimentary trend: last 14 days number of scheduled orders per day
+  // Trendy (14 dni): liczba zaplanowanych zleceń per dzień + statystyki typów
   const trendDays = 14;
   const startTrend = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (trendDays - 1));
   const rows = await db
-    .select({ d: ordersTable.scheduledDate })
+    .select({ d: ordersTable.scheduledDate, t: ordersTable.type })
     .from(ordersTable)
     .where(and(gte(ordersTable.scheduledDate, startTrend), isNull(ordersTable.archivedAt)));
   const counts = Array.from({ length: trendDays }, () => 0);
+  let totalInstallations = 0;
+  let totalDeliveries = 0;
   for (const r of rows) {
     if (!r.d) continue;
     const idx = Math.floor((new Date(r.d).getTime() - startTrend.getTime()) / (24 * 3600 * 1000));
     if (idx >= 0 && idx < trendDays) counts[idx]++;
+    if (r.t === 'installation') totalInstallations++;
+    if (r.t === 'delivery') totalDeliveries++;
   }
+
+  // Ustawialny cel dzienny (domyślnie 2/dzień)
+  const goalRow = await db.select({ v: appSettings.value }).from(appSettings).where(eq(appSettings.key, 'daily_goal')).limit(1);
+  const dailyGoal = (() => { const n = parseInt(goalRow[0]?.v ?? '2', 10); return Number.isFinite(n) && n > 0 ? n : 2; })();
+  const goalTotal = trendDays * dailyGoal;
+  const achievedPct = Math.min(100, Math.round(((counts.reduce((a,b)=>a+b,0)) / (goalTotal || 1)) * 100));
 
   return (
     <div className="mx-auto max-w-7xl p-6 space-y-6">
@@ -81,13 +91,22 @@ export default async function Home() {
 
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card className="lg:col-span-2">
-          <CardHeader className="pb-2"><CardTitle>Trendy (14 dni)</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle>Założenia (14 dni)</CardTitle></CardHeader>
           <CardContent>
             <div className="flex items-end justify-between">
               <MiniSparkline points={counts} width={520} height={96} stroke="var(--pp-primary)" />
               <div className="rounded-xl border p-3" style={{ borderColor: 'var(--pp-border)' }}>
-                <div className="text-xs opacity-70 mb-1">Wykonanie celu</div>
-                <CircularGauge value={Math.min(100, Math.round(((counts.reduce((a,b)=>a+b,0))/ (trendDays*2)) * 100))} />
+                <div className="flex items-center justify-between gap-3 mb-1">
+                  <div className="text-xs opacity-70">Wykonanie celu</div>
+                  <Link href="/ustawienia/cel" className="text-xs underline opacity-80 hover:opacity-100">Zmień</Link>
+                </div>
+                <CircularGauge value={achievedPct} />
+                <div className="mt-2 text-xs opacity-70">
+                  Cel: {dailyGoal}/dzień • Suma: {counts.reduce((a,b)=>a+b,0)} / {goalTotal}
+                </div>
+                <div className="mt-1 text-xs opacity-70">
+                  Montaże: {totalInstallations} • Dostawy: {totalDeliveries}
+                </div>
               </div>
             </div>
           </CardContent>

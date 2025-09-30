@@ -68,6 +68,7 @@ export const pl = {
     systemInfoTitle: 'Jak działa ten projekt',
     systemInfoDescription: 'Najważniejsze elementy konfiguracji i utrzymania.',
     systemInfoPoints: [
+  '2025-09-30 – [ZMIANA] Dashboard: konfigurowalny cel dzienny (Ustawienia → Cel) i statystyki typów (Montaże/Dostawy) w oknie 14 dni.',
   '2025-09-29 – [ZMIANA] Dodano CRUD pozycji dostawy (delivery_items) + edycja inline w szczegółach zlecenia; po mutacjach rewalidacja widoku i (jeśli dotyczy) list/kalendarza.',
   '2025-09-29 – [DECYZJA] Jednostka m² zapisywana jako integer `sqmCenti` (m² × 100) dla spójnych sum i braku błędów float.',
   '2025-09-29 – [ZMIANA] R2 Manager: mutacje tylko dla admina; listowanie/preview wymaga auth; klucze w formacie `client/<id>/<YYYY-MM>/...`.',
