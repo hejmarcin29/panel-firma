@@ -71,6 +71,7 @@ export const pl = {
     systemInfoTitle: "Jak działa ten projekt",
     systemInfoDescription: "Najważniejsze elementy konfiguracji i utrzymania.",
     systemInfoPoints: [
+      "2025-10-01 – [ZMIANA] Checklista: popup przeniesiony na shadcn/Radix Popover (zamykanie kliknięciem w tło i Escape) + delikatne animacje.",
   "2025-09-30 – [AKTUALIZACJA] Usunięto eksperymentalny widok Pipeline i przełącznik widoku w /zlecenia (pozostała tabela).",
   "2025-09-30 – [NOWE] /zlecenia: widok Pipeline (tylko odczyt) + przełącznik widoku (Tabela/Pipeline) zsynchronizowany z URL ?view=; tabela pozostaje domyślna.",
       "2025-09-30 – [ZMIANA] Mobile: naprawiono lekkie przycięcie na widoku Klienci (viewport + overflow-x:hidden); render prawidłowy od razu bez pinch-zoom.",

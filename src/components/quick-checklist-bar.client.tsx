@@ -198,7 +198,6 @@ export function ChecklistPopoverButton({ orderId, type, items }: Props) {
         body: JSON.stringify({ key, done }),
       });
       if (!res.ok) throw new Error("Błąd");
-      // optymistycznie aktualizujemy lokalną mapę
       map.set(key, done);
     } finally {
       setBusyKey(null);
@@ -206,64 +205,45 @@ export function ChecklistPopoverButton({ orderId, type, items }: Props) {
   }
 
   return (
-    <div className="relative inline-block">
-      <button
-        type="button"
-        className="inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm hover:bg-black/5 dark:hover:bg-white/10"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        aria-haspopup="dialog"
-      >
-        Checklist
-        <QuickChecklistBar
-          orderId={orderId}
-          type={type}
-          items={orderForType[type].map((k) => ({
-            key: k,
-            label: k,
-            done: map.get(k) || false,
-          }))}
-        />
-      </button>
-      {open ? (
-        <div
-          role="dialog"
-          aria-label="Checklist"
-          className="absolute right-0 z-40 mt-2 w-72 rounded-md border bg-[var(--pp-panel)] p-2 shadow-lg"
-          onKeyDown={(e) => {
-            if (e.key === "Escape") setOpen(false);
-          }}
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm hover:bg-black/5 dark:hover:bg-white/10"
+          aria-expanded={open}
+          aria-haspopup="dialog"
         >
-          <div className="max-h-80 overflow-auto pr-1">
-            {orderForType[type].map((k) => {
-              const checked = map.get(k) || false;
-              return (
-                <label
-                  key={k}
-                  className="flex items-center gap-2 px-1 py-1 text-sm"
-                >
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4"
-                    checked={checked}
-                    disabled={busyKey === k}
-                    onChange={(e) => toggle(k, e.target.checked)}
-                  />
-                  <span>{labels[type][k]}</span>
-                </label>
-              );
-            })}
-          </div>
-          <div className="mt-2 flex justify-end">
-            <button
-              className="inline-flex h-8 items-center rounded-md border px-2 text-xs hover:bg-black/5 dark:hover:bg-white/10"
-              onClick={() => setOpen(false)}
-            >
-              Zamknij
-            </button>
-          </div>
+          Checklist
+          <QuickChecklistBar
+            orderId={orderId}
+            type={type}
+            items={orderForType[type].map((k) => ({
+              key: k,
+              label: k,
+              done: map.get(k) || false,
+            }))}
+          />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" sideOffset={8} className="w-72 p-2">
+        <div className="max-h-80 overflow-auto pr-1">
+          {orderForType[type].map((k) => {
+            const checked = map.get(k) || false;
+            return (
+              <label key={k} className="flex items-center gap-2 px-1 py-1 text-sm">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4"
+                  checked={checked}
+                  disabled={busyKey === k}
+                  onChange={(e) => toggle(k, e.target.checked)}
+                />
+                <span>{labels[type][k]}</span>
+              </label>
+            );
+          })}
         </div>
-      ) : null}
-    </div>
+      </PopoverContent>
+    </Popover>
   );
 }
