@@ -305,6 +305,15 @@ Lekcje z naprawy subtelnego przycięcia prawej krawędzi na mobile (iOS/Android)
 - [ ] Toolbary/paginacje zawijają się estetycznie.
 - [ ] Topbar mieści się bez maskowania (bez `overflow-x-clip`).
 
+## 2025-10-02 – Full‑width mobile + zero‑warnings (NOWE)
+
+- Mobile full‑width: wszystkie główne widoki mają edge‑to‑edge na xs.
+  - Globalnie: `<main>` w `app/layout.tsx` używa `px-0 md:px-6`.
+  - Kontenery stron na mobile: `max-w-none p-0` (od md `md:max-w-… md:p-6`).
+  - Dotyczy: Klienci (lista/szczegóły/nowy/edycja), Zlecenia (lista/szczegóły/nowy montaż), Montaże, Dostawy.
+- Lint: polityka „zero warnings” jest wymuszana w pre-push; unikamy `any` i poprawiamy `prefer-const`/unused vars.
+- Pamiętaj: po zmianach w `src/` dodaj 1‑linijkowy wpis do `systemInfoPoints` z dzisiejszą datą, inaczej `npm run check:iteration` zablokuje push.
+
 ## KeyValueRow – wiersz etykieta/wartość (NOWE)
 
 Cel: spójny układ label/value w całej aplikacji oraz brak overflow na mobile.

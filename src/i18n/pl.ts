@@ -76,6 +76,8 @@ export const pl = {
     systemInfoTitle: "Jak działa ten projekt",
     systemInfoDescription: "Najważniejsze elementy konfiguracji i utrzymania.",
     systemInfoPoints: [
+      "2025-10-02 – [ZMIANA] Mobile: pełna szerokość na małych ekranach (edge-to-edge). Globalnie: <main> ma px-0 na xs i md:px-6; widoki Klienci/Zlecenia/Montaże/Dostawy/edycje/nowe – kontenery max-w-none p-0 na mobile.",
+      "2025-10-02 – [PORZĄDKI] ESLint zero warnings: usunięto 'any' w kilku plikach (automatyzacje, szczegóły zlecenia, edytor zlecenia, Google Calendar) i prefer-const. Hook pre-push egzekwuje 0 ostrzeżeń.",
       "2025-10-01 – [ZMIANA] Klikalne wiersze/karty: ujednolicono nawigację kliknięciem w listach Klienci/Zlecenia/Dostawy (desktop+mobile) z a11y (Enter/Spacja) i strażnikiem elementów interaktywnych.",
       "2025-10-01 – [ZMIANA] Ujednolicono wiersze etykieta/wartość (KeyValueRow + BreakableText) i naprawiono overflow na mobile w szczegółach klienta i zlecenia.",
       "2025-10-01 – [ZMIANA] Ustawienia: etapy i checklisty edytowane tylko nazwami (bez kluczy w UI); klucze generowane automatycznie, a istniejące pozostają stabilne.",
