@@ -40,6 +40,10 @@ const schema = z.object({
   buildingType: z.enum(["house", "apartment"]).or(z.literal("")).optional(),
   desiredInstallFrom: z.string().optional(),
   desiredInstallTo: z.string().optional(),
+  // Miejsce realizacji (opcjonalne; gdy puste użyjemy adresu z faktury)
+  locationPostalCode: z.string().optional(),
+  locationCity: z.string().optional(),
+  locationAddress: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -49,6 +53,10 @@ export default function NewInstallationPage() {
   const { toast } = useToast();
   const sp = useSearchParams();
   const preselectedClientId = sp.get("clientId") || "";
+  const [sameAsInvoice, setSameAsInvoice] = useState(true);
+  const [invPostalCode, setInvPostalCode] = useState("");
+  const [invCity, setInvCity] = useState("");
+  const [invAddress, setInvAddress] = useState("");
 
   const [clients, setClients] = useState<Client[]>([]);
   const [installers, setInstallers] = useState<Installer[]>([]);
@@ -73,6 +81,9 @@ export default function NewInstallationPage() {
       buildingType: "",
       desiredInstallFrom: "",
       desiredInstallTo: "",
+      locationPostalCode: "",
+      locationCity: "",
+      locationAddress: "",
     },
   });
 
@@ -96,6 +107,33 @@ export default function NewInstallationPage() {
       }
     })();
   }, []);
+
+  // Load invoice address of selected client to preview in disabled fields
+  useEffect(() => {
+    const cid = preselectedClientId || watch("clientId");
+    if (!cid) {
+      setInvPostalCode("");
+      setInvCity("");
+      setInvAddress("");
+      return;
+    }
+    (async () => {
+      try {
+        const r = await fetch(`/api/klienci/${cid}`);
+        type ClientResp = { client?: { invoicePostalCode?: string | null; invoiceCity?: string | null; invoiceAddress?: string | null } };
+        const j = (await r.json().catch(() => null)) as ClientResp | null;
+        if (r.ok && j?.client) {
+          setInvPostalCode(j.client.invoicePostalCode || "");
+          setInvCity(j.client.invoiceCity || "");
+          setInvAddress(j.client.invoiceAddress || "");
+        }
+      } catch {
+        // ignore
+      }
+    })();
+    // We intentionally depend on raw value to re-fetch when client changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preselectedClientId, watch("clientId")]);
 
   // Keep clientId in sync if preselected
   useEffect(() => {
@@ -125,7 +163,7 @@ export default function NewInstallationPage() {
           0,
         ).getTime();
       }
-      // Installation extras
+  // Installation extras
       const priceStr = (values.proposedInstallPricePln || "").replace(",", ".");
       if (priceStr !== "") {
         const n = Number(priceStr);
@@ -163,6 +201,12 @@ export default function NewInstallationPage() {
           0,
           0,
         ).getTime();
+      }
+      // Lokalizacja (opcjonalnie) – tylko gdy odznaczono checkbox "taki sam jak faktura"
+      if (!sameAsInvoice) {
+        if ((values.locationPostalCode || "").trim() !== "") body.locationPostalCode = values.locationPostalCode!.trim();
+        if ((values.locationCity || "").trim() !== "") body.locationCity = values.locationCity!.trim();
+        if ((values.locationAddress || "").trim() !== "") body.locationAddress = values.locationAddress!.trim();
       }
       const resp = await fetch("/api/zlecenia/montaz", {
         method: "POST",
@@ -250,6 +294,51 @@ export default function NewInstallationPage() {
           <p className="text-xs opacity-60 mt-1">
             Opcjonalnie — bez godziny (dzień montażu).
           </p>
+        </div>
+        <div>
+          <Label>Miejsce realizacji (adres)</Label>
+          <div className="mt-1 flex items-center gap-2">
+            <input
+              id="sameAsInvoice"
+              type="checkbox"
+              className="h-4 w-4"
+              checked={sameAsInvoice}
+              onChange={(e) => setSameAsInvoice(e.currentTarget.checked)}
+            />
+            <label htmlFor="sameAsInvoice" className="text-sm opacity-70">
+              Adres realizacji taki sam jak do faktury
+            </label>
+          </div>
+          <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-2">
+            <Input
+              placeholder="Kod (00-000)"
+              inputMode="numeric"
+              disabled={sameAsInvoice}
+              className={sameAsInvoice ? "opacity-60 cursor-not-allowed bg-black/5 dark:bg-white/5" : undefined}
+              {...register("locationPostalCode")}
+              value={sameAsInvoice ? invPostalCode : watch("locationPostalCode")}
+              onChange={(e) => {
+                const digits = e.currentTarget.value.replace(/\D/g, "").slice(0, 5);
+                const fm = digits.length <= 2 ? digits : `${digits.slice(0, 2)}-${digits.slice(2)}`;
+                setValue("locationPostalCode", fm);
+              }}
+            />
+            <Input
+              placeholder="Miejscowość"
+              disabled={sameAsInvoice}
+              className={sameAsInvoice ? "opacity-60 cursor-not-allowed bg-black/5 dark:bg-white/5" : undefined}
+              {...register("locationCity")}
+              value={sameAsInvoice ? invCity : watch("locationCity")}
+            />
+            <Input
+              placeholder="Adres (ulica i numer, opcjonalnie lokal/piętro)"
+              disabled={sameAsInvoice}
+              className={sameAsInvoice ? "opacity-60 cursor-not-allowed bg-black/5 dark:bg-white/5" : undefined}
+              {...register("locationAddress")}
+              value={sameAsInvoice ? invAddress : watch("locationAddress")}
+            />
+          </div>
+          <p className="text-[11px] opacity-60 mt-1">Zaznaczone = użyjemy adresu z faktury; pola są podglądowe i wyłączone.</p>
         </div>
         <div>
           <Label htmlFor="sqm">m2 przed pomiarem</Label>
