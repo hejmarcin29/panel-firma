@@ -1,3 +1,4 @@
+export const metadata = { title: "Zlecenia" };
 import { db } from "@/db";
 import { clients, orders, users } from "@/db/schema";
 import { and, asc, desc, eq, like, isNull, isNotNull, sql } from "drizzle-orm";
@@ -7,8 +8,8 @@ import { pl } from "@/i18n/pl";
 import { OrderOutcomeButtons } from "../../components/order-outcome-buttons.client";
 // removed old icon imports (quick links replaced by toolbar)
 import { TypeBadge, OutcomeBadge } from "@/components/badges";
-import { OrderPipeline } from "@/components/order-pipeline.client";
-import { QuickChecklistBar } from "@/components/quick-checklist-bar.client";
+import { OrderPipelineList } from "@/components/order-pipeline-list.client";
+import { OrderChecklist } from "@/components/order-checklist.client";
 import { OrdersTable, type OrderRow } from "@/components/orders-table.client";
 import { OrdersToolbar } from "@/components/orders-toolbar.client";
 import { formatDate, formatDayMonth } from "@/lib/date";
@@ -26,6 +27,7 @@ type SearchParams = Promise<{
   sort?: string;
   dir?: string;
   scope?: string;
+  view?: string; // 'table' | 'cards'
 }>;
 
 type Row = {
@@ -37,6 +39,9 @@ type Row = {
   outcome: "won" | "lost" | null | string | null;
   clientId: string;
   clientName: string | null;
+  orderLocationCity?: string | null;
+  clientDeliveryCity?: string | null;
+  invoiceCity?: string | null;
   nextDeliveryAt: number | null;
   nextDeliveryStatus: string | null;
   nextInstallationAt: number | null;
@@ -72,8 +77,12 @@ export default async function OrdersPage({
     sort = "created",
     dir = "desc",
     scope = "active",
+    view = "table",
   } = await searchParams;
   const pageNum = Math.max(1, parseInt(page || "1", 10) || 1);
+  const showCardsOnDesktop = view === "cards";
+  // Lock type if coming from dedicated paths
+  const lockType = type === "installation" ? "installation" : type === "delivery" ? "delivery" : undefined;
   const allowedSizes = new Set([10, 20, 50, 100]);
   const parsedSize = parseInt(size || "20", 10);
   const limit = allowedSizes.has(parsedSize) ? parsedSize : 20;
@@ -103,6 +112,9 @@ export default async function OrdersPage({
       outcome: orders.outcome,
       clientId: orders.clientId,
       clientName: clients.name,
+      orderLocationCity: orders.locationCity,
+      clientDeliveryCity: clients.deliveryCity,
+      invoiceCity: clients.invoiceCity,
       // Checklist flags via EXISTS (SQLite returns 0/1)
       proforma: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'proforma' AND oci.done = 1)`,
       advance_invoice: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'advance_invoice' AND oci.done = 1)`,
@@ -220,7 +232,7 @@ export default async function OrdersPage({
         />
         <div className="relative z-10 p-4 md:p-6 flex items-center justify-between gap-3">
           <h1 className="text-2xl md:text-3xl font-semibold">
-            {pl.orders.title}
+            {lockType === "installation" ? "Montaż" : lockType === "delivery" ? "Dostawa" : pl.orders.title}
           </h1>
           {/* Akcje zostały przeniesione do toolbara nad tabelą */}
         </div>
@@ -256,48 +268,75 @@ export default async function OrdersPage({
           dir={dir}
           installers={installers}
           size={limit}
+          lockType={lockType}
         />
       </div>
 
       {/* Table for md+ (TanStack) */}
-      <div className="mt-4 hidden md:block">
-        <OrdersTable data={rows as unknown as OrderRow[]} />
-      </div>
-      {/* Mobile cards */}
-      <div className="mt-4 space-y-2 md:hidden">
+      {/* Table (desktop) or Cards, depending on view */}
+      {!showCardsOnDesktop && (
+        <div className="mt-4 hidden md:block">
+          <OrdersTable data={rows as unknown as OrderRow[]} listType={lockType} />
+        </div>
+      )}
+      {/* Cards: on mobile always; on desktop when view=cards */}
+      <div className={`mt-4 space-y-2 ${showCardsOnDesktop ? "" : "md:hidden"}`}>
         {rows.length === 0 ? (
           <div className="px-3 py-6 text-center opacity-70">
             {pl.orders.listEmpty}
           </div>
         ) : (
           rows.map((r) => {
-            const href = r.orderNo
-              ? `/zlecenia/nr/${r.orderNo}_${r.type === "installation" ? "m" : "d"}`
-              : `/zlecenia/${r.id}`;
+            const href = r.type === "installation"
+              ? (r.orderNo ? `/montaz/nr/${r.orderNo}_m` : `/montaz/${r.id}`)
+              : (r.orderNo ? `/dostawa/nr/${r.orderNo}_d` : `/dostawa/${r.id}`);
             return (
               <ClickableCard key={r.id} href={href} className="rounded-md border border-black/10 dark:border-white/10 p-3 anim-enter">
-                <div className="flex items-center justify-between">
-                  <Link
-                    className="font-medium hover:underline focus:underline focus:outline-none"
-                    href={href}
-                  >
-                    {r.orderNo
-                      ? `${r.orderNo}_${r.type === "installation" ? "m" : "d"}`
-                      : r.id.slice(0, 8)}
-                  </Link>
-                  <div className="flex items-center gap-2">
-                    <TypeBadge type={r.type} />
-                    {/* Editable stage */}
-                    <OrderPipeline
-                      orderId={r.id}
-                      type={r.type as "delivery" | "installation"}
-                      stage={r.pipelineStage}
-                    />
+                {/* Nagłówek: numer zlecenia + klient (większe), po prawej typ + miasto */}
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0 flex items-baseline gap-2">
+                    <Link
+                      className="font-medium hover:underline focus:underline focus:outline-none shrink-0"
+                      href={href}
+                    >
+                      {r.orderNo ? `${r.orderNo}_${r.type === "installation" ? "m" : "d"}` : r.id.slice(0, 8)}
+                    </Link>
+                    <div className="truncate text-base md:text-lg font-semibold leading-tight">
+                      {r.clientName || r.clientId}
+                    </div>
                   </div>
+                  {(() => {
+                    const trim = (s?: string | null) => (s && s.trim() !== "" ? s.trim() : null);
+                    const install = trim(r.orderLocationCity ?? null);
+                    const delivery = trim(r.clientDeliveryCity ?? null);
+                    const invoiceCity = trim((r as unknown as { invoiceCity?: string | null }).invoiceCity ?? null);
+                    const primaryCity = r.type === "installation" ? install : delivery;
+                    const chosen = primaryCity ?? invoiceCity;
+                    const fromInvoice = !primaryCity && !!invoiceCity;
+                    return (
+                      <div className="flex items-center gap-2 text-sm md:text-base">
+                        <TypeBadge type={r.type} />
+                        <div className="text-xs md:text-sm opacity-80">
+                          {chosen ? (
+                            <span>
+                              {chosen} {fromInvoice ? <span className="lowercase opacity-60">(z faktury)</span> : null}
+                            </span>
+                          ) : (
+                            <span className="opacity-60">—</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
-                {/* Mini-kafelki checklisty na mobile */}
-                <div className="mt-2">
-                  <QuickChecklistBar
+                {/* Wyświetl pełne Etapy + Checklistę obok siebie na desktopie */}
+                <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2 items-stretch">
+                  <OrderPipelineList
+                    orderId={r.id}
+                    type={r.type as "delivery" | "installation"}
+                    stage={r.pipelineStage}
+                  />
+                  <OrderChecklist
                     orderId={r.id}
                     type={r.type as "delivery" | "installation"}
                     items={(r.type === "installation"
@@ -319,31 +358,27 @@ export default async function OrdersPage({
                           "quote",
                           "done",
                         ]
-                    ).map((k) => ({
-                      key: k,
-                      label: k,
-                      done: Boolean((r as Record<string, unknown>)[k]),
-                    }))}
+                    ).map((k) => ({ key: k, done: Boolean((r as Record<string, unknown>)[k]) }))}
                   />
                 </div>
                 <div className="mt-1 text-sm">{r.clientName || r.clientId}</div>
                 <div className="mt-1 grid grid-cols-2 gap-2 text-xs opacity-70">
-                  <div>
-                    <div className="opacity-70">Dostawa</div>
+                  {lockType !== "installation" && (
                     <div>
-                      {r.nextDeliveryAt
-                        ? formatDayMonth(r.nextDeliveryAt, "—")
-                        : "—"}
+                      <div className="opacity-70">Dostawa</div>
+                      <div>
+                        {r.nextDeliveryAt ? formatDayMonth(r.nextDeliveryAt, "—") : "—"}
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <div className="opacity-70">Montaż</div>
+                  )}
+                  {lockType !== "delivery" && (
                     <div>
-                      {r.nextInstallationAt
-                        ? formatDayMonth(r.nextInstallationAt, "—")
-                        : "—"}
+                      <div className="opacity-70">Montaż</div>
+                      <div>
+                        {r.nextInstallationAt ? formatDayMonth(r.nextInstallationAt, "—") : "—"}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
                 <div className="mt-1 text-xs opacity-70 flex justify-end">
                   {formatDate(r.createdAt, "—")}
