@@ -87,6 +87,7 @@ export default function NoweZlecenieSelectPage() {
     return Boolean(deliveryClientId && plannedAt && driver);
   }, [deliveryClientId, plannedAt, driver]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const openDeliveryModal = React.useCallback((clientId: string) => {
     setDeliveryClientId(clientId);
     const today = toISODate(new Date());
