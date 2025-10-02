@@ -1,14 +1,13 @@
 #!/usr/bin/env node
-/*
- Simple guard: detect pages that likely touch server/DB during build (SSG)
- and ensure they (or an ancestor layout) export `export const dynamic = 'force-dynamic'`.
-
- Heuristics:
- - Flag any src/app/**/page.ts(x) importing from '@/db' or '@/app/actions/*'.
- - Allow if the page itself exports dynamic force-dynamic OR a layout.ts(x) in the same folder or any ancestor up to src/app does.
-
- This is a best-effort static check to avoid Docker build failures due to DB access at prerender time.
-*/
+// Simple guard: detect pages that likely touch server/DB during build (SSG)
+// and ensure they (or an ancestor layout) export: dynamic = 'force-dynamic'.
+//
+// Heuristics:
+// - Flag any pages like src/app/**/page.ts(x) that import from '@/db' or '@/app/actions/...'.
+// - Allow if the page itself exports force-dynamic OR a layout.ts(x) in the same folder
+//   or any ancestor up to src/app does.
+//
+// This is a best-effort static check to avoid Docker build failures due to DB access at prerender time.
 import fs from 'node:fs';
 import path from 'node:path';
 
