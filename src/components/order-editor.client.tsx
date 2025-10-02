@@ -290,7 +290,10 @@ export function OrderEditor({
         <Textarea
           rows={4}
           value={values.note}
-          onChange={(e) => setValues((v) => ({ ...v, note: e.target.value }))}
+          onChange={(e) => {
+            const val = e.target.value;
+            setValues((v) => ({ ...v, note: val }));
+          }}
         />
       </div>
       {type === "installation" && (
@@ -300,9 +303,10 @@ export function OrderEditor({
             <Input
               inputMode="numeric"
               value={values.preMeasurementSqm}
-              onChange={(e) =>
-                setValues((v) => ({ ...v, preMeasurementSqm: e.target.value }))
-              }
+              onChange={(e) => {
+                const val = e.target.value;
+                setValues((v) => ({ ...v, preMeasurementSqm: val }));
+              }}
               className="w-40"
             />
           </div>
@@ -310,9 +314,10 @@ export function OrderEditor({
             <Label>Przypisz montażystę</Label>
             <select
               value={values.installerId || ""}
-              onChange={(e) =>
-                setValues((v) => ({ ...v, installerId: e.target.value }))
-              }
+              onChange={(e) => {
+                const val = e.target.value;
+                setValues((v) => ({ ...v, installerId: val }));
+              }}
               className="mt-1 h-9 w-full rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15"
             >
               <option value="">-- bez przypisania --</option>
@@ -353,12 +358,18 @@ export function OrderEditor({
           <Input
             placeholder="Miejscowość"
             value={values.locationCity || ""}
-            onChange={(e) => setValues((v) => ({ ...v, locationCity: e.currentTarget.value }))}
+            onChange={(e) => {
+              const val = e.currentTarget.value;
+              setValues((v) => ({ ...v, locationCity: val }));
+            }}
           />
           <Input
             placeholder="Adres (ulica i numer, opcjonalnie lokal/piętro)"
             value={values.locationAddress || ""}
-            onChange={(e) => setValues((v) => ({ ...v, locationAddress: e.currentTarget.value }))}
+            onChange={(e) => {
+              const val = e.currentTarget.value;
+              setValues((v) => ({ ...v, locationAddress: val }));
+            }}
           />
         </div>
         <p className="text-[11px] opacity-60 mt-1">Zostaw puste, aby używać adresu z faktury klienta w podglądzie.</p>
@@ -371,12 +382,10 @@ export function OrderEditor({
               inputMode="decimal"
               placeholder="np. 1200,00"
               value={values.proposedInstallPricePln || ""}
-              onChange={(e) =>
-                setValues((v) => ({
-                  ...v,
-                  proposedInstallPricePln: e.target.value,
-                }))
-              }
+              onChange={(e) => {
+                const val = e.target.value;
+                setValues((v) => ({ ...v, proposedInstallPricePln: val }));
+              }}
               className="w-40"
             />
           </div>
@@ -384,12 +393,10 @@ export function OrderEditor({
             <Label>Dom czy blok?</Label>
             <select
               value={values.buildingType || ""}
-              onChange={(e) =>
-                setValues((v) => ({
-                  ...v,
-                  buildingType: (e.target.value as "house" | "apartment" | "") || "",
-                }))
-              }
+              onChange={(e) => {
+                const val = (e.target.value as "house" | "apartment" | "") || "";
+                setValues((v) => ({ ...v, buildingType: val }));
+              }}
               className="mt-1 h-9 w-full rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15"
             >
               <option value="">— nie wybrano —</option>

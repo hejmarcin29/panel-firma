@@ -1,11 +1,11 @@
 param(
-  [string]$Host = "91.99.109.84",
-  [int]$Port = 7722,
+  [string]$RemoteHost = "91.99.109.84",
+  [int]$RemotePort = 7722,
   [string]$Branch = "beta",
   [switch]$NoCache = $true
 )
 
-Write-Host "[deploy] Remote: $Host:$Port, branch: $Branch, no-cache: $NoCache"
+Write-Host ("[deploy] Remote: {0}:{1}, branch: {2}, no-cache: {3}" -f $RemoteHost, $RemotePort, $Branch, $NoCache)
 
 # Build remote command (single-line to avoid quoting issues)
 $buildArg = if ($NoCache) { " --no-cache" } else { "" }
@@ -23,7 +23,7 @@ $remoteCmd = @(
 
 Write-Host "[deploy] Running remote command via SSH..." -ForegroundColor Cyan
 
-$sshArgs = @('-p', $Port, "deploy@$Host", $remoteCmd)
+$sshArgs = @('-p', $RemotePort, "deploy@$RemoteHost", $remoteCmd)
 & ssh @sshArgs
 
 if ($LASTEXITCODE -ne 0) {
