@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BackButton } from "@/components/back-button";
@@ -87,25 +87,7 @@ export default function NoweZlecenieSelectPage() {
     return Boolean(deliveryClientId && plannedAt && driver);
   }, [deliveryClientId, plannedAt, driver]);
 
-  useEffect(() => {
-    const sp = new URLSearchParams(window.location.search);
-    const cid = sp.get("clientId");
-    if (cid) setFromClientId(cid);
-    (async () => {
-      try {
-        const r = await fetch("/api/klienci");
-        if (!r.ok) throw new Error("Błąd");
-        const j = await r.json();
-        setClients(j.clients || []);
-      } catch {
-        setError("Błąd ładowania");
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
-
-  function openDeliveryModal(clientId: string) {
+  const openDeliveryModal = React.useCallback((clientId: string) => {
     setDeliveryClientId(clientId);
     const today = toISODate(new Date());
     const defaultPlanned = addBusinessDays(today, 5);
@@ -120,7 +102,31 @@ export default function NoweZlecenieSelectPage() {
     setDelCity("");
     setDelAddress("");
     setDeliveryModalOpen(true);
-  }
+  }, []);
+
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const cid = sp.get("clientId");
+    const kind = sp.get("kind");
+    if (cid) setFromClientId(cid);
+    (async () => {
+      try {
+        const r = await fetch("/api/klienci");
+        if (!r.ok) throw new Error("Błąd");
+        const j = await r.json();
+        setClients(j.clients || []);
+      } catch {
+        setError("Błąd ładowania");
+      } finally {
+        setLoading(false);
+      }
+    })();
+    // Deep link: if kind=delivery and clientId present, open modal immediately
+    if (cid && kind === "delivery") {
+      // Defer to next tick to allow initial state to settle
+      setTimeout(() => openDeliveryModal(cid), 0);
+    }
+  }, [openDeliveryModal]);
 
   async function handleCreateDelivery() {
     if (!deliveryClientId) return;

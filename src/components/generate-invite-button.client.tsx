@@ -8,7 +8,6 @@ export function GenerateInviteButton() {
   const { toast } = useToast();
   const { data: session } = useSession();
   const [busy, setBusy] = React.useState(false);
-  const [url, setUrl] = React.useState<string | null>(null);
   const [open, setOpen] = React.useState(false);
   const [days, setDays] = React.useState<30 | 90>(90);
 
@@ -32,9 +31,8 @@ export function GenerateInviteButton() {
         } catch {}
         throw new Error(msg ?? `HTTP ${r.status}`);
       }
-      const j = (await r.json()) as { url: string };
-      setUrl(j.url);
-      await navigator.clipboard.writeText(j.url);
+  const j = (await r.json()) as { url: string };
+  await navigator.clipboard.writeText(j.url);
       toast({ variant: "success", title: "Skopiowano link" });
     } catch {
       toast({ variant: "destructive", title: "Nie udało się utworzyć linku" });
