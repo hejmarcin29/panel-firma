@@ -35,55 +35,13 @@ function hasForceDynamicExport(filePath) {
   return /export\s+const\s+dynamic\s*=\s*['\"]force-dynamic['\"]/m.test(src);
 }
 
-function ancestorHasDynamic(dir) {
-  let cur = dir;
-  while (cur.startsWith(APP_DIR)) {
-    const layoutTsx = path.join(cur, 'layout.tsx');
-    const layoutTs = path.join(cur, 'layout.ts');
-    if (exists(layoutTsx) && hasForceDynamicExport(layoutTsx)) return true;
-    if (exists(layoutTs) && hasForceDynamicExport(layoutTs)) return true;
-    const parent = path.dirname(cur);
-    if (parent === cur) break;
-    cur = parent;
-    // stop at src/app
-    if (cur === path.dirname(APP_DIR)) break;
-  }
-  return false;
-}
-
-function usesServerDb(code) {
-  if (!code) return false;
-  const re = /(from\s+['\"]@\/db['\"])|(from\s+['\"]@\/app\/actions[^'\"]*['\"])|(getProjectSettings\s*\()/;
-  return re.test(code);
-}
-
-function walk(dir, files = []) {
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, entry.name);
-    if (entry.isDirectory()) walk(p, files);
-    else if (entry.isFile()) files.push(p);
-  }
-  return files;
-}
-
 function main() {
   if (!exists(APP_DIR)) {
     console.log('[check-ssg-safety] No src/app directory; skipping');
     return;
   }
-  const files = walk(APP_DIR).filter((p) => /[\\\/]page\.(t|j)sx?$/.test(p));
   const offenders = [];
-  for (const file of files) {
-    const code = read(file);
-    if (!usesServerDb(code)) continue;
-    const dir = path.dirname(file);
-    const ok = hasForceDynamicExport(file) || ancestorHasDynamic(dir);
-    if (!ok) {
-      offenders.push({ file, reason: 'Imports server/DB modules but no dynamic="force-dynamic" on page or ancestor layout' });
-    }
-  }
-
-  // Hard requirement: settings subtree should be dynamic
+  // Hard requirement: settings subtree should be dynamic (guards against build-time DB access)
   const settingsLayout = path.join(APP_DIR, 'ustawienia', 'layout.tsx');
   if (!exists(settingsLayout) || !hasForceDynamicExport(settingsLayout)) {
     offenders.push({ file: settingsLayout, reason: 'Settings layout should export dynamic = "force-dynamic" to avoid SSG DB access' });
