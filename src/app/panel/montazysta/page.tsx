@@ -215,7 +215,7 @@ export default function PanelMontazysty() {
                       </div>
                       <div>
                         <a
-                          href={`/zlecenia/${o.id}`}
+                          href={`/montaz/${o.id}`}
                           className="text-xs hover:underline focus:underline focus:outline-none"
                         >
                           Szczegóły

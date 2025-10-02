@@ -19,6 +19,10 @@ const bodySchema = z.object({
   buildingType: z.enum(["house", "apartment"]).nullable().optional(),
   desiredInstallFrom: z.number().int().positive().nullable().optional(),
   desiredInstallTo: z.number().int().positive().nullable().optional(),
+  // Miejsce realizacji (opcjonalne dla obu typów)
+  locationPostalCode: z.string().nullable().optional(),
+  locationCity: z.string().nullable().optional(),
+  locationAddress: z.string().nullable().optional(),
 });
 
 export async function PATCH(
@@ -96,6 +100,16 @@ export async function PATCH(
         );
         update.scheduledDate = normalizedDate;
       }
+    }
+    // Lokalizacja (adres realizacji)
+    if (parsed.data.locationPostalCode !== undefined) {
+      update.locationPostalCode = parsed.data.locationPostalCode;
+    }
+    if (parsed.data.locationCity !== undefined) {
+      update.locationCity = parsed.data.locationCity;
+    }
+    if (parsed.data.locationAddress !== undefined) {
+      update.locationAddress = parsed.data.locationAddress;
     }
     // Zaproponowana cena montażu (grosze)
     if (parsed.data.proposedInstallPriceCents !== undefined) {

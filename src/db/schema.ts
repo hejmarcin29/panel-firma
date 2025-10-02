@@ -505,6 +505,10 @@ export const clientInvites = sqliteTable(
     token: text("token").notNull(), // random URL-safe token
     purpose: text("purpose").notNull().default("new_client"), // for future extension
     allowedFieldsJson: text("allowed_fields_json").notNull().default('["name","phone","email","source"]'), // JSON array of allowed field keys
+    // Optional scope: when used for order preview
+    clientId: text("client_id"),
+    orderId: text("order_id"),
+    allowEdit: integer("allow_edit", { mode: "boolean" }).notNull().default(false),
     expiresAt: integer("expires_at", { mode: "timestamp_ms" }),
     usedAt: integer("used_at", { mode: "timestamp_ms" }),
     resultClientId: text("result_client_id"), // clients.id after successful submission
@@ -517,6 +521,8 @@ export const clientInvites = sqliteTable(
     uniqToken: uniqueIndex("client_invites_token_unique").on(table.token),
     idxExpiry: index("client_invites_expires_idx").on(table.expiresAt),
     idxUsed: index("client_invites_used_idx").on(table.usedAt),
+    idxOrder: index("client_invites_order_idx").on(table.orderId),
+    idxClient: index("client_invites_client_idx").on(table.clientId),
   }),
 );
 

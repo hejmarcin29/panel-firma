@@ -145,8 +145,8 @@ export default async function CalendarPage({
     type: "delivery" | "installation",
   ) =>
     orderNo
-      ? `/zlecenia/nr/${orderNo}_${type === "installation" ? "m" : "d"}`
-      : `/zlecenia/${orderId}`;
+  ? (type === "installation" ? `/montaz/nr/${orderNo}_m` : `/dostawa/nr/${orderNo}_d`)
+  : (type === "installation" ? `/montaz/${orderId}` : `/dostawa/${orderId}`);
 
   const toIsoDate = (v: number | Date | null) => {
     if (!v) return undefined;

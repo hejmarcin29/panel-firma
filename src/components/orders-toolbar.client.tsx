@@ -34,6 +34,7 @@ export function OrdersToolbar({
   dir,
   installers,
   size,
+  lockType,
 }: {
   q: string;
   type: string;
@@ -43,6 +44,7 @@ export function OrdersToolbar({
   dir: string;
   installers: Installer[];
   size: number;
+  lockType?: "installation" | "delivery";
 }) {
   const { setMany } = useQueryUpdater();
 
@@ -54,6 +56,25 @@ export function OrdersToolbar({
   React.useEffect(() => setSearchValue(q), [q]);
 
   const today = new Date().toISOString().slice(0, 10);
+  // View mode (table|cards) derived from query or lockType default
+  const viewParam = useSearchParams()?.get("view");
+  const view = (viewParam === "cards" || viewParam === "table")
+    ? viewParam
+    : (lockType ? "cards" : "table");
+  const storageKey = React.useMemo(() => `orders:view:${lockType ?? "all"}`, [lockType]);
+
+  // On mount: if no view in URL, try localStorage and push it
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (viewParam === "cards" || viewParam === "table") return; // already set in URL
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved === "cards" || saved === "table") {
+        setMany({ view: saved });
+      }
+    } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewParam, storageKey]);
 
   return (
     <div className="mt-2 flex flex-col gap-2">
@@ -92,14 +113,55 @@ export function OrdersToolbar({
               <option key={n} value={n}>{n}</option>
             ))}
           </select>
+          {/* Widok: Tabela/Karty */}
+          <div className="flex items-center gap-1">
+            <span className="text-sm opacity-70 hidden md:inline">Widok:</span>
+            <button
+              type="button"
+              className={`inline-flex h-9 items-center rounded-md border px-3 text-sm ${view === "table" ? "bg-black text-white dark:bg-white dark:text-black border-black/15 dark:border-white/15" : "border-black/15 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"}`}
+              onClick={() => {
+                try { localStorage.setItem(storageKey, "table"); } catch {}
+                setMany({ view: "table" });
+              }}
+              title="Widok tabeli"
+              aria-pressed={view === "table"}
+            >
+              Tabela
+            </button>
+            <button
+              type="button"
+              className={`inline-flex h-9 items-center rounded-md border px-3 text-sm ${view === "cards" ? "bg-black text-white dark:bg-white dark:text-black border-black/15 dark:border-white/15" : "border-black/15 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"}`}
+              onClick={() => {
+                try { localStorage.setItem(storageKey, "cards"); } catch {}
+                setMany({ view: "cards" });
+              }}
+              title="Widok kart"
+              aria-pressed={view === "cards"}
+            >
+              Karty
+            </button>
+          </div>
           {/* Akcje: kolorystycznie rozróżnione */}
-          <Link
-            href="/zlecenia/nowe"
-            className="inline-flex h-9 items-center rounded-md px-3 text-sm text-white"
-            style={{ background: "var(--pp-primary)", borderColor: "var(--pp-primary)" }}
-          >
-            Nowe zlecenie
-          </Link>
+          {(() => {
+            const { href, label } = (() => {
+              if (lockType === "installation") {
+                return { href: "/zlecenia/montaz/nowy", label: "Dodaj montaż" } as const;
+              }
+              if (lockType === "delivery") {
+                return { href: "/zlecenia/dostawa/nowy", label: "Dodaj dostawę" } as const;
+              }
+              return { href: "/zlecenia/nowe", label: "Nowe zlecenie" } as const;
+            })();
+            return (
+              <Link
+                href={href}
+                className="inline-flex h-9 items-center rounded-md px-3 text-sm text-white"
+                style={{ background: "var(--pp-primary)", borderColor: "var(--pp-primary)" }}
+              >
+                {label}
+              </Link>
+            );
+          })()}
           <Link
             href="/zlecenia/kalendarz"
             className="inline-flex h-9 items-center rounded-md border px-3 text-sm hover:bg-[var(--pp-primary-subtle-bg)]"
@@ -141,30 +203,32 @@ export function OrdersToolbar({
 
       {/* Filtry szybkie (typ/outcome/installer/sort/dir) */}
       <div className="flex flex-wrap items-end gap-2">
-      {/* Typ: installation/delivery/all */}
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-2 text-xs ${isType("installation") ? "bg-black text-white dark:bg-white dark:text-black border-black/15 dark:border-white/15" : "border-black/15 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"}`}
-          onClick={() => setMany({ type: isType("installation") ? "all" : "installation", page: "1" })}
-        >
-          Montaż
-        </button>
-        <button
-          type="button"
-          className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-2 text-xs ${isType("delivery") ? "bg-black text-white dark:bg-white dark:text-black border-black/15 dark:border-white/15" : "border-black/15 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"}`}
-          onClick={() => setMany({ type: isType("delivery") ? "all" : "delivery", page: "1" })}
-        >
-          Dostawa
-        </button>
-        <button
-          type="button"
-          className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-2 text-xs ${isType("all") ? "bg-black text-white dark:bg-white dark:text-black border-black/15 dark:border-white/15" : "border-black/15 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"}`}
-          onClick={() => setMany({ type: "all", page: "1" })}
-        >
-          Wszystkie
-        </button>
-      </div>
+      {/* Typ: installation/delivery/all (ukryty gdy lockType) */}
+      {lockType ? null : (
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-2 text-xs ${isType("installation") ? "bg-black text-white dark:bg-white dark:text-black border-black/15 dark:border-white/15" : "border-black/15 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"}`}
+            onClick={() => setMany({ type: isType("installation") ? "all" : "installation", page: "1" })}
+          >
+            Montaż
+          </button>
+          <button
+            type="button"
+            className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-2 text-xs ${isType("delivery") ? "bg-black text-white dark:bg-white dark:text-black border-black/15 dark:border-white/15" : "border-black/15 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"}`}
+            onClick={() => setMany({ type: isType("delivery") ? "all" : "delivery", page: "1" })}
+          >
+            Dostawa
+          </button>
+          <button
+            type="button"
+            className={`inline-flex h-8 items-center gap-1.5 rounded-md border px-2 text-xs ${isType("all") ? "bg-black text-white dark:bg-white dark:text-black border-black/15 dark:border-white/15" : "border-black/15 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"}`}
+            onClick={() => setMany({ type: "all", page: "1" })}
+          >
+            Wszystkie
+          </button>
+        </div>
+      )}
 
       {/* Wynik: active/won/lost */}
       <div className="flex items-center gap-2">

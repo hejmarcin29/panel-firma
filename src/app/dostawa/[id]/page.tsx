@@ -41,7 +41,6 @@ export default async function OrderDetailsPage({
   const { id } = await params;
   const session = await getSession();
   const isAdmin = session?.user?.role === "admin";
-  const isInstaller = session?.user?.role === "installer";
   const [row] = await db
     .select({
       id: orders.id,

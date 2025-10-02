@@ -26,6 +26,8 @@ export type OrderRow = {
   outcome: "won" | "lost" | null | string | null;
   clientId: string;
   clientName: string | null;
+  orderLocationCity?: string | null;
+  clientDeliveryCity?: string | null;
   nextDeliveryAt: number | null;
   nextDeliveryStatus: string | null;
   nextInstallationAt: number | null;
@@ -46,7 +48,7 @@ export type OrderRow = {
   handover_protocol?: number | boolean;
 };
 
-export function OrdersTable({ data }: { data: OrderRow[] }) {
+export function OrdersTable({ data, listType }: { data: OrderRow[]; listType?: "installation" | "delivery" }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const { ref: containerRef, mode } = useContainerMode<HTMLDivElement>();
   const onRowNav = (href: string) => (e: React.MouseEvent | React.KeyboardEvent) => {
@@ -84,8 +86,8 @@ export function OrdersTable({ data }: { data: OrderRow[] }) {
         cell: ({ row }) => {
           const r = row.original;
           const href = r.orderNo
-            ? `/zlecenia/nr/${r.orderNo}_${r.type === "installation" ? "m" : "d"}`
-            : `/zlecenia/${r.id}`;
+            ? (r.type === "installation" ? `/montaz/nr/${r.orderNo}_m` : `/dostawa/nr/${r.orderNo}_d`)
+            : (r.type === "installation" ? `/montaz/${r.id}` : `/dostawa/${r.id}`);
           const label = r.orderNo
             ? `${r.orderNo}_${r.type === "installation" ? "m" : "d"}`
             : r.id.slice(0, 8);
@@ -105,6 +107,17 @@ export function OrdersTable({ data }: { data: OrderRow[] }) {
             <span className="block max-w-[220px] truncate" title={r.clientName || r.clientId}>
               {r.clientName || r.clientId}
             </span>
+          );
+        },
+      },
+      {
+        header: "Miasto",
+        id: "city",
+        cell: ({ row }) => {
+          const r = row.original;
+          const city = r.type === "installation" ? (r.orderLocationCity || "-") : (r.clientDeliveryCity || "-");
+          return (
+            <span className="block max-w-[160px] truncate" title={city}>{city}</span>
           );
         },
       },
@@ -226,8 +239,8 @@ export function OrdersTable({ data }: { data: OrderRow[] }) {
         cell: ({ row }) => {
           const r = row.original;
           const href = r.orderNo
-            ? `/zlecenia/nr/${r.orderNo}_${r.type === "installation" ? "m" : "d"}`
-            : `/zlecenia/${r.id}`;
+            ? (r.type === "installation" ? `/montaz/nr/${r.orderNo}_m` : `/dostawa/nr/${r.orderNo}_d`)
+            : (r.type === "installation" ? `/montaz/${r.id}` : `/dostawa/${r.id}`);
           return (
             <div className="flex items-center gap-2 justify-end">
               <OrderOutcomeButtons id={r.id} outcome={r.outcome as "won" | "lost" | null} />
@@ -267,6 +280,7 @@ export function OrdersTable({ data }: { data: OrderRow[] }) {
     type: true,
     pipelineStage: true,
     actions: true,
+    city: true,
   };
   // We will refer by header ids we set or accessorKey names
   const isWide = mode === "wide";
@@ -285,6 +299,13 @@ export function OrdersTable({ data }: { data: OrderRow[] }) {
     colVisibility["createdAt"] = false;
     colVisibility["outcome"] = false;
     colVisibility["installerName"] = false;
+  }
+
+  // Hide irrelevant date column when viewing type-specific lists
+  if (listType === "installation") {
+    colVisibility["nextDeliveryAt"] = false;
+  } else if (listType === "delivery") {
+    colVisibility["nextInstallationAt"] = false;
   }
 
   // Apply visibility by filtering headers/cells render-time (TanStack supports state.columnVisibility
@@ -335,8 +356,8 @@ export function OrdersTable({ data }: { data: OrderRow[] }) {
             rows.map((row) => {
               const r = row.original;
               const href = r.orderNo
-                ? `/zlecenia/nr/${r.orderNo}_${r.type === "installation" ? "m" : "d"}`
-                : `/zlecenia/${r.id}`;
+                ? (r.type === "installation" ? `/montaz/nr/${r.orderNo}_m` : `/dostawa/nr/${r.orderNo}_d`)
+                : (r.type === "installation" ? `/montaz/${r.id}` : `/dostawa/${r.id}`);
               return (
               <tr
                 key={row.id}

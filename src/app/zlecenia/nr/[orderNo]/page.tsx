@@ -17,10 +17,10 @@ export default async function OrderByNumberPage({
     return orderNo; // fallback – próbujemy jak jest
   })();
   const [o] = await db
-    .select({ id: orders.id })
+    .select({ id: orders.id, type: orders.type })
     .from(orders)
     .where(eq(orders.orderNo, normalized))
     .limit(1);
   if (!o) redirect("/zlecenia");
-  redirect(`/zlecenia/${o.id}`);
+  redirect(o.type === "installation" ? `/montaz/${o.id}` : `/dostawa/${o.id}`);
 }

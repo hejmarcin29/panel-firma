@@ -1,12 +1,13 @@
 "use client";
 import React from "react";
-import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { useParams, useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/toaster";
 
 type Meta = { allowedFields: string[] };
 
-export default function PublicClientFormPage({ params }: { params: { token: string } }) {
-  const { token } = params;
+export default function PublicClientFormPage() {
+  const { token } = useParams<{ token: string }>();
   const { toast } = useToast();
   const router = useRouter();
 
@@ -56,8 +57,13 @@ export default function PublicClientFormPage({ params }: { params: { token: stri
         body: JSON.stringify(payload),
       });
       if (!r.ok) throw new Error("submit failed");
+      const j = (await r.json()) as { portalUrl?: string | null };
       toast({ variant: "success", title: "Dziękujemy!", description: "Dane zostały przekazane." });
-      router.push("/public/dziekujemy");
+      if (j?.portalUrl) {
+        router.push(j.portalUrl);
+      } else {
+        router.push("/public/dziekujemy");
+      }
     } catch {
       toast({ variant: "destructive", title: "Nie udało się wysłać" });
     } finally {
@@ -73,6 +79,12 @@ export default function PublicClientFormPage({ params }: { params: { token: stri
 
   return (
     <div className="mx-auto max-w-none p-0 md:max-w-2xl md:p-6">
+      {/* Brand header */}
+      <div className="px-4 md:px-0 pt-4 md:pt-0">
+        <div className="flex items-center justify-center">
+          <Image src="/logo.svg" alt="Logo" width={128} height={64} className="h-12 md:h-16 w-auto" />
+        </div>
+      </div>
       <section className="rounded-2xl border p-4 md:p-6" style={{ borderColor: "var(--pp-border)" }}>
         <h1 className="text-xl md:text-2xl font-semibold">Dane kontaktowe</h1>
         <p className="mt-1 text-sm opacity-80">Uzupełnij proszę podstawowe informacje. Tylko wymagane pola.</p>
@@ -107,16 +119,16 @@ export default function PublicClientFormPage({ params }: { params: { token: stri
               <input name="taxId" className="w-full h-10 rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15" />
             </div>
           )}
-          {show("invoiceCity") && (
-            <div>
-              <label className="block text-sm mb-1">Miasto (faktura)</label>
-              <input name="invoiceCity" className="w-full h-10 rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15" />
-            </div>
-          )}
           {show("invoicePostalCode") && (
             <div>
               <label className="block text-sm mb-1">Kod pocztowy</label>
               <input name="invoicePostalCode" className="w-full h-10 rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15" />
+            </div>
+          )}
+          {show("invoiceCity") && (
+            <div>
+              <label className="block text-sm mb-1">Miasto (faktura)</label>
+              <input name="invoiceCity" className="w-full h-10 rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15" />
             </div>
           )}
           {show("invoiceAddress") && (

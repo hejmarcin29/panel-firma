@@ -74,9 +74,9 @@ export default async function OrdersArchivePage() {
                     <Link
                       className="hover:underline focus:underline focus:outline-none"
                       href={
-                        r.orderNo
-                          ? `/zlecenia/nr/${r.orderNo}_${r.type === "installation" ? "m" : "d"}`
-                          : `/zlecenia/${r.id}`
+                        r.type === "installation"
+                          ? (r.orderNo ? `/montaz/nr/${r.orderNo}_m` : `/montaz/${r.id}`)
+                          : (r.orderNo ? `/dostawa/nr/${r.orderNo}_d` : `/dostawa/${r.id}`)
                       }
                     >
                       {r.orderNo ? (
@@ -137,9 +137,9 @@ export default async function OrdersArchivePage() {
                 <Link
                   className="font-medium hover:underline focus:underline focus:outline-none"
                   href={
-                    r.orderNo
-                      ? `/zlecenia/nr/${r.orderNo}_${r.type === "installation" ? "m" : "d"}`
-                      : `/zlecenia/${r.id}`
+                    r.type === "installation"
+                      ? (r.orderNo ? `/montaz/nr/${r.orderNo}_m` : `/montaz/${r.id}`)
+                      : (r.orderNo ? `/dostawa/nr/${r.orderNo}_d` : `/dostawa/${r.id}`)
                   }
                 >
                   {r.orderNo

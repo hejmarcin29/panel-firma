@@ -23,8 +23,22 @@ const schema = z.object({
   companyName: z.string().optional(),
   note: z.string().optional(),
   source: z.string().optional(),
-  // Usunięto wybór serviceType z formularza – decyzja: domyślnie 'with_installation' pozostaje w backendzie (lub zostanie zrefaktoryzowane później)
-});
+})
+  .superRefine((data, ctx) => {
+    if (data.isCompany) {
+      if (!data.companyName || data.companyName.trim() === "") {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["companyName"], message: "Nazwa firmy jest wymagana" });
+      }
+      const nip = (data.taxId || "").replace(/\s|-/g, "");
+      if (!nip) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["taxId"], message: "NIP jest wymagany" });
+      } else if (!/^\d{10}$/.test(nip)) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["taxId"], message: "NIP powinien mieć 10 cyfr" });
+      }
+    }
+  });
+
+type FormValues = z.input<typeof schema>;
 
 export default function NowyKlientPage() {
   const router = useRouter();
@@ -35,7 +49,7 @@ export default function NowyKlientPage() {
     setValue,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm<z.input<typeof schema>>({
+  } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: "",
@@ -57,7 +71,6 @@ export default function NowyKlientPage() {
     <div className="mx-auto max-w-none p-0 md:max-w-2xl md:p-6">
       <div className="mb-4 flex items-center gap-2">
         <BackButton fallbackHref="/klienci" />
-        <h1 className="text-2xl font-semibold">{pl.clients.new}</h1>
       </div>
       <form
         className="space-y-4"
@@ -70,6 +83,7 @@ export default function NowyKlientPage() {
               invoiceCity: data.invoiceCity || "",
               invoicePostalCode: data.invoicePostalCode || "",
               invoiceAddress: data.invoiceAddress || "",
+              buyerType: data.isCompany ? "company" : "person",
             };
             if (data.source) payload.source = data.source;
             if (data.isCompany) {
@@ -115,7 +129,7 @@ export default function NowyKlientPage() {
         })}
       >
         <div>
-          <Label>{pl.clients.name}</Label>
+          <Label>{isCompany ? "Imię i nazwisko osoby kontaktowej" : pl.clients.name}</Label>
           <Input {...register("name")} />
           {errors.name && (
             <p className="text-sm text-red-600">{errors.name.message}</p>
@@ -137,6 +151,10 @@ export default function NowyKlientPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
+            <Label>Kod pocztowy</Label>
+            <Input {...register("invoicePostalCode")} />
+          </div>
+          <div>
             <Label>{pl.clients.invoiceCity}</Label>
             <Input
               {...register("invoiceCity")}
@@ -154,11 +172,10 @@ export default function NowyKlientPage() {
               }}
             />
           </div>
-          <div>
-            <Label>Kod pocztowy</Label>
-            <Input {...register("invoicePostalCode")} />
-          </div>
         </div>
+
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* Jeden email – brak osobnego pola do faktury */}
 
         <div>
           <Label>Źródło (skąd klient?)</Label>
@@ -178,14 +195,22 @@ export default function NowyKlientPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label>Nazwa firmy</Label>
-              <Input {...register("companyName")} />
+              <Input aria-invalid={!!errors.companyName} aria-describedby={errors.companyName ? "err-companyName" : undefined} {...register("companyName")} />
+              {errors.companyName && (
+                <p id="err-companyName" className="text-sm text-red-600">{errors.companyName.message as string}</p>
+              )}
             </div>
             <div>
               <Label>NIP</Label>
-              <Input {...register("taxId")} placeholder="np. 1234567890" />
+              <Input aria-invalid={!!errors.taxId} aria-describedby={errors.taxId ? "err-taxId" : undefined} {...register("taxId")} placeholder="np. 1234567890" />
+              {errors.taxId && (
+                <p id="err-taxId" className="text-sm text-red-600">{errors.taxId.message as string}</p>
+              )}
             </div>
           </div>
         )}
+
+        </div>
 
         {/* Pole wyboru typu usługi usunięte – placeholder do ewentualnego powrotu */}
 

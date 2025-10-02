@@ -34,8 +34,8 @@ export function OrderSummaryCard({
   const statusLabel =
     (pl.orders.statuses as Record<string, string>)[status] || status;
   const href = orderNo
-    ? `/zlecenia/nr/${orderNo}_${type === "installation" ? "m" : "d"}`
-    : `/zlecenia/${id}`;
+  ? (type === "installation" ? `/montaz/nr/${orderNo}_m` : `/dostawa/nr/${orderNo}_d`)
+  : (type === "installation" ? `/montaz/${id}` : `/dostawa/${id}`);
   return (
     <div className="group rounded-xl border border-black/10 p-3 shadow-sm transition hover:shadow-md dark:border-white/10">
       <div className="flex items-start justify-between gap-3">

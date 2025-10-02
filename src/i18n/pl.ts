@@ -76,6 +76,12 @@ export const pl = {
     systemInfoTitle: "Jak działa ten projekt",
     systemInfoDescription: "Najważniejsze elementy konfiguracji i utrzymania.",
     systemInfoPoints: [
+      "2025-10-02 – [ZMIANA] Karty zleceń (Montaż/Dostawa): wyświetlamy pełne Etapy oraz pełną Checklistę bez wchodzenia w szczegóły.",
+      "2025-10-02 – [ZMIANA] Klienci: dodano przełącznik widoku (Tabela/Karty) na desktopie, synchronizowany z URL ?view= i zapamiętywany w localStorage (clients:view).",
+      "2025-10-02 – [DECYZJA] Rozdział typów zleceń: widok 'Dostawa' pokazuje wyłącznie dane dostawy; widok 'Montaż' wyłącznie dane montażu. Montażysta nie jest przypisywany do zleceń 'Dostawa'. Przyszłe 'dostawy pod montaż' będą realizowane w zleceniu montażowym (poza zakresem teraz).",
+      "2025-10-02 – [DECYZJA] Link onboardingowy klienta ważny 90 dni; po zakończeniu generujemy stały link portalu klienta (rotowalny)",
+      "2025-10-02 – [NOWE] Link podglądu zlecenia: admin może wygenerować link publiczny z kart zlecenia (kopiuj do schowka). Strona: /public/zlecenia/[token].",
+      "2025-10-02 – [NOWE] Ustawienia: dodano historię linków publicznych (/ustawienia/linki) z typem, klientem, statusem i dniami do wygaśnięcia.",
       "2025-10-02 – [NOWE] Formularz publiczny (Faza 1): link z tokenem dla nowego klienta. Admin generuje link w Klienci → 'Generuj link: nowy klient'. Strony: /public/klienci/[token] + podziękowanie.",
       "2025-10-02 – [ZMIANA] Mobile: pełna szerokość na małych ekranach (edge-to-edge). Globalnie: <main> ma px-0 na xs i md:px-6; widoki Klienci/Zlecenia/Montaże/Dostawy/edycje/nowe – kontenery max-w-none p-0 na mobile.",
       "2025-10-02 – [PORZĄDKI] ESLint zero warnings: usunięto 'any' w kilku plikach (automatyzacje, szczegóły zlecenia, edytor zlecenia, Google Calendar) i prefer-const. Hook pre-push egzekwuje 0 ostrzeżeń.",

@@ -28,6 +28,8 @@ import { OrderEditor } from "@/components/order-editor.client";
 import { pl } from "@/i18n/pl";
 import { formatDate } from "@/lib/date";
 import { Button } from "@/components/ui/button";
+import { ClientPortalLinkActions } from "@/components/client-portal-link.client";
+import { GenerateOrderPreviewLinkButton } from "@/components/generate-order-preview-link.client";
 import { KeyValueRow, BreakableText } from "@/components/ui/key-value-row";
 
 type Klient = {
@@ -104,7 +106,7 @@ export default function KlientPage() {
       const j = await r.json();
       setClient(j.client as Klient);
       setNotes(j.notes);
-      const ro = await fetch(`/api/zlecenia?clientId=${id}&withFlags=1`);
+  const ro = await fetch(`/api/zlecenia?clientId=${id}&withFlags=1`);
       if (ro.ok) {
         const jo = await ro.json();
         const list: Order[] = (jo.orders || []) as Order[];
@@ -121,6 +123,7 @@ export default function KlientPage() {
   useEffect(() => {
     load();
   }, [load]);
+
 
   const isInteractive = (el: HTMLElement | null, stopAt?: HTMLElement | null): boolean => {
     let cur: HTMLElement | null = el;
@@ -305,9 +308,9 @@ export default function KlientPage() {
         <div className="relative z-10 p-4 md:p-6">
           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <BackButton fallbackHref="/klienci" />
-                <h1 className="truncate text-2xl md:text-3xl font-semibold">
+                <h1 className="min-w-0 max-w-full break-words break-all md:break-normal text-2xl md:text-3xl font-semibold">
                   {client.name}
                 </h1>
               </div>
@@ -351,12 +354,20 @@ export default function KlientPage() {
                 {pl.clients.edit}
               </Link>
               <Link
-                href={`/zlecenia/nowe?clientId=${id}`}
+                href={`/zlecenia/montaz/nowy?clientId=${id}`}
                 className="inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-sm hover:bg-[var(--pp-primary-subtle-bg)]"
                 style={{ borderColor: "var(--pp-border)" }}
               >
                 <Plus className="h-4 w-4" />
-                Nowe zlecenie
+                Dodaj montaż
+              </Link>
+              <Link
+                href={`/zlecenia/dostawa/nowy?clientId=${id}`}
+                className="inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-sm hover:bg-[var(--pp-primary-subtle-bg)]"
+                style={{ borderColor: "var(--pp-border)" }}
+              >
+                <Plus className="h-4 w-4" />
+                Dodaj dostawę
               </Link>
               {client.archivedAt ? (
                 <button
@@ -377,6 +388,8 @@ export default function KlientPage() {
                   {pl.clients.archive}
                 </button>
               )}
+              {/* Admin-only: akcje linku portalu klienta */}
+              <ClientPortalLinkActions clientId={id} />
             </div>
           </div>
         </div>
@@ -459,11 +472,11 @@ export default function KlientPage() {
                     </Button>
                   )}
               </KeyValueRow>
-              <KeyValueRow label="Miasto">
-                <BreakableText>{client.invoiceCity || "—"}</BreakableText>
-              </KeyValueRow>
               <KeyValueRow label="Kod pocztowy">
                 <BreakableText>{client.invoicePostalCode || "—"}</BreakableText>
+              </KeyValueRow>
+              <KeyValueRow label="Miasto">
+                <BreakableText>{client.invoiceCity || "—"}</BreakableText>
               </KeyValueRow>
               <KeyValueRow label="Adres">
                 <BreakableText>{client.invoiceAddress || "—"}</BreakableText>
@@ -573,8 +586,8 @@ export default function KlientPage() {
             <section className="space-y-4">
               {(() => {
                 const href = o.orderNo
-                  ? `/zlecenia/nr/${o.orderNo}_${o.type === "installation" ? "m" : "d"}`
-                  : `/zlecenia/${o.id}`;
+                  ? (o.type === "installation" ? `/montaz/nr/${o.orderNo}_m` : `/dostawa/nr/${o.orderNo}_d`)
+                  : (o.type === "installation" ? `/montaz/${o.id}` : `/dostawa/${o.id}`);
                 return (
               <ClickableCard href={href} className="block">
               <Card>
@@ -635,6 +648,7 @@ export default function KlientPage() {
                         ) : (
                           <OrderArchiveButton id={o.id} />
                         )}
+                        <GenerateOrderPreviewLinkButton orderId={o.id} />
                       </div>
                     </div>
                   </div>
@@ -643,8 +657,8 @@ export default function KlientPage() {
                       data-no-row-nav
                       href={
                         o.orderNo
-                          ? `/zlecenia/nr/${o.orderNo}_${o.type === "installation" ? "m" : "d"}`
-                          : `/zlecenia/${o.id}`
+                          ? (o.type === "installation" ? `/montaz/nr/${o.orderNo}_m` : `/dostawa/nr/${o.orderNo}_d`)
+                          : (o.type === "installation" ? `/montaz/${o.id}` : `/dostawa/${o.id}`)
                       }
                       className="text-xs hover:underline focus:underline focus:outline-none"
                     >
@@ -755,8 +769,8 @@ export default function KlientPage() {
                 <tbody>
                   {orders.map((o) => {
                     const href = o.orderNo
-                      ? `/zlecenia/nr/${o.orderNo}_${o.type === "installation" ? "m" : "d"}`
-                      : `/zlecenia/${o.id}`;
+                      ? (o.type === "installation" ? `/montaz/nr/${o.orderNo}_m` : `/dostawa/nr/${o.orderNo}_d`)
+                      : (o.type === "installation" ? `/montaz/${o.id}` : `/dostawa/${o.id}`);
                     const label = o.orderNo
                       ? `${o.orderNo}_${o.type === "installation" ? "m" : "d"}`
                       : o.id.slice(0, 8);

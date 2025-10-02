@@ -44,7 +44,20 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <SonnerToaster position="top-right" richColors expand theme="light" />
+      <SonnerToaster
+        position="top-right"
+        richColors
+        expand
+        theme="light"
+        toastOptions={{
+          classNames: {
+            toast: "border shadow-md border-[var(--pp-border)] bg-[var(--pp-surface)]",
+            success: "!bg-emerald-600 !text-white",
+            error: "!bg-rose-600 !text-white",
+            description: "opacity-90",
+          },
+        }}
+      />
     </ToastContext.Provider>
   );
 }

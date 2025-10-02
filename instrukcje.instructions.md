@@ -151,6 +151,14 @@ R2_PUBLIC_BASE_URL=
 
 `R2_PUBLIC_BASE_URL` opcjonalne (gdy używamy wyłącznie serwerowego proxy preview). Limit rozmiaru uploadu i akceptowalne typy MIME wymuszamy po stronie serwera.
 
+## Metadata i tytuły (NOWE)
+
+- Nie eksportuj `metadata` z komponentów oznaczonych `"use client"` (Next 15 blokuje to). Ustawienia tytułu realizujemy wyłącznie w server components (layout lub `generateMetadata`).
+- Globalny szablon tytułu utrzymujemy w `app/layout.tsx` (`title.default`, `title.template`).
+- Dla tras statycznych (np. `/login`, `/ustawienia`, `/klienci/nowy`) używamy lokalnego `layout.tsx` z `export const metadata = { title: "..." }`.
+- Dla tras dynamicznych (np. `/klienci/[id]`, `/zlecenia/[id]`) implementujemy `export async function generateMetadata({ params }: { params: Promise<{ id: string }> })` i pobieramy dane z DB (Drizzle) do złożenia tytułu, np. `Klient: Jan Kowalski` lub `Zlecenie 123 – Jan Kowalski`.
+- Przykłady produkcyjne: patrz `app/klienci/[id]/layout.tsx` oraz `app/zlecenia/[id]/layout.tsx`.
+
 ## Tipy
 
 - Najnowsze wpisy dopisuj na końcu (konsekwencja obecnego skryptu – patrzy na kolejność; ewentualnie można przełączyć na sort malejący później).
@@ -159,6 +167,25 @@ R2_PUBLIC_BASE_URL=
 ---
 
 Ten dokument ma być krótki i praktyczny – dopisuj kolejne sekcje, gdy pojawią się nowe automatyzacje lub zasady.
+
+## Publiczne linki: Onboarding i Portal klienta (NOWE)
+
+- Strategia jednego linku klienta:
+  - Onboarding: jednorazowy link z ważnością 90 dni (purpose `onboarding` w `client_invites`), prowadzi do publicznego formularza danych i po użyciu jest oznaczany `usedAt`.
+  - Portal klienta: po zakończeniu onboardingu generujemy link portalu (purpose `portal`, bez `expiresAt` – można rotować/revokować). Link prowadzi do podglądu klienta i jego zleceń.
+- Trasy publiczne (faza 1):
+  - Onboarding: `/public/klienci/[token]` (GET/POST API pod `/api/public/klienci/[token]`).
+  - Portal: `/public/klient/[token]` (GET API zwraca dane klienta i listę zleceń). W przyszłości można przejść na ścieżkę stabilną `/public/k/[portalId]` + magic-link jako cookie.
+- Bezpieczeństwo:
+  - Tokeny losowe, możliwość rotacji i revoke przez admina; scoping tylko do `clientId` linku.
+  - Onboarding: `expiresAt = now + 90d`. Portal: długowieczny, ale rotowalny.
+- Eventy domenowe (do rozważenia i wdrożenia przy implementacji):
+  - `client.onboarding.started`, `client.onboarding.completed`
+  - `client.portal.link.created`, `client.portal.link.revoked`, `client.portal.link.rotated`
+  - `client.portal.accessed`
+- Phasing:
+  - Faza 1: bazuj na istniejącej tabeli `client_invites` (purpose `onboarding`/`portal`), TTL 90d dla onboardingu.
+  - Faza 2: stabilny `portalId` w osobnej tabeli + magic-link do sesji.
 
 ## Typy i lint – unikanie `any` (NOWE)
 
@@ -356,4 +383,38 @@ Cel: spójne UX „kliknij gdziekolwiek, żeby wejść w szczegóły” zarówno
   - Kliknięcie w tło wiersza/karty na desktop/mobile przenosi do szczegółów.
   - Kliknięcia w linki/przyciski wewnątrz NIE wywołują nawigacji z wiersza/karty.
   - Enter/Spacja na fokusowanym wierszu/kartcie działa.
+
+## Rozdział typów: Montaż i Dostawa (NOWE)
+
+Decyzja architektoniczna: nie używamy więcej ogólnego pojęcia „Zlecenia” w UI. Zamiast tego istnieją dwa odseparowane byty i widoki: „Montaż” oraz „Dostawa”.
+
+- Trasy list i szczegółów:
+  - Lista montaży: `/montaz`
+  - Lista dostaw: `/dostawa`
+  - Szczegóły (friendly): `/montaz/nr/[ORDERNO]_m`, `/dostawa/nr/[ORDERNO]_d`
+  - Fallback po id: `/montaz/[id]`, `/dostawa/[id]`
+  - Redirecty: stare `/zlecenia/...` przekierowujemy 301 do odpowiednich ścieżek (bez SEO – aplikacja prywatna; chodzi o zgodność linków).
+- Nawigacja: w sidebarze osobne pozycje „Montaż” i „Dostawa”. Widok łączony „Zlecenia” nie wraca.
+- Numeracja: zachowujemy istniejący format z sufiksem `_m` / `_d` w friendly URL i etykietach.
+- RBAC: montażysta ma dostęp tylko do `/montaz` (swoje przypisane); brak dostępu do `/dostawa`.
+- UI: każdy widok pokazuje wyłącznie własne pola (checklista/etapy, sekcje, akcje). Brak „ukrywania” rozumianego jako maskowanie – po prostu selekcja danych per typ.
+- Przyszłość: „dostawy pod montaż” będą częścią widoku Montaż (osobna sekcja i model), nie osobnym „Zleceniem dostawy”.
+
+W konsekwencji należy zaktualizować linki wewnętrzne, breadcrumbsy i dokumentację, a także dodać redirecty w App Router.
+
+## Długie URL-e w tabelach (NOWE)
+
+- Mobile (xs–sm): pokazuj pełny adres z klasami `break-all break-words` i mniejszym fontem (`text-xs`), dzięki czemu zawartość nie wymusza przewijania poziomego.
+- Desktop (md+): zamiast pełnego adresu renderuj krótki, niebieski anchor „LINK” (lub ikonę łańcucha) z `href` i `title` zawierającym pełny URL.
+  - Styl: `text-blue-600 hover:underline font-medium` (dark mode: `dark:text-blue-400`).
+  - Kolumna z linkiem powinna mieć ograniczenie szerokości (`max-w-[220px]`, `truncate` jeżeli tekst występuje) lub po prostu sam anchor bez tekstu URL.
+  - Tooltip `title` zapewnia dostęp do pełnego adresu na hover; na mobile pełny adres pozostaje widoczny.
+  - Upewnij się, że komórka/wiersz ma `min-w-0`, a długie treści w innych kolumnach mogą się zawijać (`whitespace-normal`).
+
+### Specjalne stany kolumny „Wygasa za” (historia linków)
+
+- Portal klienta: posiada TTL (domyślnie 90 dni). W UI pokazujemy `X d (do YYYY-MM-DD)`; jeśli brak `expiresAt` (legacy), pokazujemy `—`.
+- Onboarding i inne czasowe: `X d` lub `—` przy braku danych.
+
+Admin API (portal): `POST /api/public/klient/portal/[clientId]?days=90` tworzy/rotuje link z podanym TTL (1..365 dni, domyślnie 90). Odpowiedź zawiera `expiresAt` (ms).
 

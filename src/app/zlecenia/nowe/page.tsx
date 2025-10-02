@@ -16,6 +16,42 @@ type Klient = {
   createdAt: number;
 };
 
+// Helpers hoisted to module scope to avoid re-creation inside hooks
+function toISODate(d: Date) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+function addBusinessDays(from: string, days: number) {
+  if (!from) return "";
+  const year = new Date().getFullYear();
+  const fixed = (y: number) => [
+    `${y}-01-01`,
+    `${y}-01-06`,
+    `${y}-05-01`,
+    `${y}-05-03`,
+    `${y}-08-15`,
+    `${y}-11-01`,
+    `${y}-11-11`,
+    `${y}-12-25`,
+    `${y}-12-26`,
+  ];
+  const holidays = new Set([...fixed(year), ...fixed(year + 1)]);
+
+  const d = new Date(from + "T00:00:00");
+  let added = 0;
+  while (added < days) {
+    d.setDate(d.getDate() + 1);
+    const iso = toISODate(d);
+    const dow = d.getDay();
+    const isWeekend = dow === 0 || dow === 6;
+    const isHoliday = holidays.has(iso);
+    if (!isWeekend && !isHoliday) added++;
+  }
+  return toISODate(d);
+}
+
 export default function NoweZlecenieSelectPage() {
   const [clients, setClients] = useState<Klient[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,42 +73,6 @@ export default function NoweZlecenieSelectPage() {
   // Data złożenia zamówienia (domyślnie dziś)
   const [orderPlacedAt, setOrderPlacedAt] = useState<string>("");
 
-  // Helpers
-  function toISODate(d: Date) {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${y}-${m}-${day}`;
-  }
-  function addBusinessDays(from: string, days: number) {
-    if (!from) return "";
-    // Prosta lista świąt PL (ustawowe) na bieżący i następny rok; bez świąt ruchomych (Wielkanoc/Boże Ciało) w MVP
-    const year = new Date().getFullYear();
-    const fixed = (y: number) => [
-      `${y}-01-01`, // Nowy Rok
-      `${y}-01-06`, // Trzech Króli
-      `${y}-05-01`, // Święto Pracy
-      `${y}-05-03`, // Święto Konstytucji 3 Maja
-      `${y}-08-15`, // Wniebowzięcie NMP
-      `${y}-11-01`, // Wszystkich Świętych
-      `${y}-11-11`, // Święto Niepodległości
-      `${y}-12-25`, // Boże Narodzenie (1)
-      `${y}-12-26`, // Boże Narodzenie (2)
-    ];
-    const holidays = new Set([...fixed(year), ...fixed(year + 1)]);
-
-    const d = new Date(from + "T00:00:00");
-    let added = 0;
-    while (added < days) {
-      d.setDate(d.getDate() + 1);
-      const iso = toISODate(d);
-      const dow = d.getDay(); // 0=Sun,6=Sat
-      const isWeekend = dow === 0 || dow === 6;
-      const isHoliday = holidays.has(iso);
-      if (!isWeekend && !isHoliday) added++;
-    }
-    return toISODate(d);
-  }
   // Pozycje produktów (MVP: w notatce do slotu, ale od razu zbieramy ustrukturyzowane dane)
   const [items, setItems] = useState<
     Array<{ name: string; sqm: string; packs: string }>
@@ -87,7 +87,6 @@ export default function NoweZlecenieSelectPage() {
     return Boolean(deliveryClientId && plannedAt && driver);
   }, [deliveryClientId, plannedAt, driver]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const openDeliveryModal = React.useCallback((clientId: string) => {
     setDeliveryClientId(clientId);
     const today = toISODate(new Date());

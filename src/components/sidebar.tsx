@@ -1,20 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Home,
-  Users,
-  ClipboardList,
-  Settings,
-  Wrench,
-  UserCircle2,
-  BarChart2,
-  PieChart,
-  LineChart,
-  Globe,
-  CalendarDays,
-  CheckSquare,
-} from "lucide-react";
+import { Home, Users, Settings, Wrench, UserCircle2, BarChart2, PieChart, LineChart, Globe, CalendarDays, CheckSquare } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 type NavItem = {
@@ -33,16 +20,17 @@ const sections: { title: string; items: NavItem[] }[] = [
       { href: "/ustawienia", label: "Ustawienia", icon: Settings },
     ],
   },
-  // Dane operacyjne w kolejności użycia: Zlecenia → Kalendarz → Klienci → Zadania → checklisty
+  // Dane operacyjne w kolejności użycia: Montaż/Dostawa → Kalendarz → Klienci → Zadania → checklisty
   {
     title: "Data",
     items: [
-      { href: "/zlecenia", label: "Zlecenia", icon: ClipboardList },
+      { href: "/montaz", label: "Montaż", icon: Wrench },
+      { href: "/dostawa", label: "Dostawa", icon: Wrench },
       { href: "/zlecenia/kalendarz", label: "Kalendarz", icon: CalendarDays },
       { href: "/klienci", label: "Klienci", icon: Users },
       { href: "/zadania", label: "Zadania", icon: CheckSquare },
-      { href: "/montaze", label: "Montaże — checklisty", icon: Wrench },
-      { href: "/dostawy", label: "Dostawy — checklisty", icon: Wrench },
+  { href: "/checklist/montaz", label: "Montaże — checklisty", icon: Wrench },
+  { href: "/checklist/dostawa", label: "Dostawy — checklisty", icon: Wrench },
       {
         href: "/panel/zlecone-montaze",
         label: "Montaże — podgląd (admin)",
@@ -105,9 +93,10 @@ export function Sidebar() {
         // Admin/manager-only data/reporting pages
         if (
           item.href === "/klienci" ||
-          item.href === "/zlecenia" ||
-          item.href === "/montaze" ||
-          item.href === "/dostawy" ||
+          item.href === "/montaz" ||
+          item.href === "/dostawa" ||
+          item.href === "/checklist/montaz" ||
+          item.href === "/checklist/dostawa" ||
           item.href.startsWith("/panel/zlecone-montaze") ||
           item.href.startsWith("/ustawienia") ||
           item.href === "/pliki" ||

@@ -33,6 +33,27 @@ type Klient = {
 
 export default function KlienciPage() {
   const router = useRouter();
+  const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+  const viewParam = params.get('view');
+  const [view, setView] = React.useState<'table' | 'cards'>(() => {
+    if (viewParam === 'table' || viewParam === 'cards') return viewParam;
+    try {
+      const saved = localStorage.getItem('clients:view');
+      if (saved === 'table' || saved === 'cards') return saved;
+    } catch {}
+    return 'table';
+  });
+
+  React.useEffect(() => {
+    // Sync URL param when view changes
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      sp.set('view', view);
+      const url = `${window.location.pathname}?${sp.toString()}`;
+      window.history.replaceState(null, '', url);
+      localStorage.setItem('clients:view', view);
+    } catch {}
+  }, [view]);
   const [data, setData] = React.useState<{ clients: Klient[] } | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -255,15 +276,28 @@ export default function KlienciPage() {
         <p>{pl.common.loadError}</p>
       ) : (
         <>
-          {/* Desktop table */}
+          {/* Desktop: table or cards depending on view */}
+          {view === 'table' && (
           <div className="hidden md:block overflow-x-auto rounded-lg border" style={{ borderColor: "var(--pp-border)" }}>
             <div className="p-2 border-b flex flex-col gap-2 md:flex-row md:items-center md:justify-between" style={{ borderColor: "var(--pp-border)" }}>
-              <input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Szukaj po nazwie/miastach…"
-                className="h-9 w-full md:w-80 rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15"
-              />
+              <div className="flex items-center gap-2 w-full md:w-auto">
+                <input
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="Szukaj po nazwie/miastach…"
+                  className="h-9 w-full md:w-80 rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15"
+                />
+                <button
+                  type="button"
+                  className="inline-flex h-9 items-center rounded-md border px-3 text-sm bg-black text-white dark:bg-white dark:text-black border-black/15 dark:border-white/15"
+                  onClick={() => setView('table')}
+                >Tabela</button>
+                <button
+                  type="button"
+                  className="inline-flex h-9 items-center rounded-md border px-3 text-sm border-black/15 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+                  onClick={() => setView('cards')}
+                >Karty</button>
+              </div>
               <div className="flex items-center gap-2 text-sm">
                 <span className="opacity-70">Wyniki:</span>
                 <span className="font-medium">{total}</span>
@@ -379,6 +413,88 @@ export default function KlienciPage() {
               </div>
             </div>
           </div>
+          )}
+
+          {view === 'cards' && (
+            <div className="hidden md:block">
+              <div className="p-2 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div className="flex items-center gap-2 w-full md:w-auto">
+                  <input
+                    value={q}
+                    onChange={(e) => setQ(e.target.value)}
+                    placeholder="Szukaj po nazwie/miastach…"
+                    className="h-9 w-full md:w-80 rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15"
+                  />
+                  <button
+                    type="button"
+                    className="inline-flex h-9 items-center rounded-md border px-3 text-sm border-black/15 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+                    onClick={() => setView('table')}
+                  >Tabela</button>
+                  <button
+                    type="button"
+                    className="inline-flex h-9 items-center rounded-md border px-3 text-sm bg-black text-white dark:bg-white dark:text-black border-black/15 dark:border-white/15"
+                    onClick={() => setView('cards')}
+                  >Karty</button>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="opacity-70">Wyniki:</span>
+                  <span className="font-medium">{total}</span>
+                </div>
+              </div>
+              <div className="mt-2 space-y-2">
+                {total === 0 ? (
+                  <div className="px-3 py-6 text-center opacity-70">Brak wyników</div>
+                ) : (
+                  rowsToRender.map((row) => {
+                    const c = row.original;
+                    const city = c.deliveryCity || c.invoiceCity || '—';
+                    const href = `/klienci/${c.id}`;
+                    return (
+                      <ClickableCard key={c.id} href={href} className="rounded-md border border-black/10 dark:border-white/10 p-3 anim-enter">
+                        <div className="flex items-center justify-between">
+                          <div className="font-medium">{c.clientNo ?? '—'}</div>
+                          <Link
+                            className="inline-flex h-8 items-center rounded-md border border-black/15 px-3 text-xs hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
+                            href={`/klienci/${c.id}`}
+                          >
+                            Szczegóły
+                          </Link>
+                        </div>
+                        <div className="mt-1 text-sm">{c.name}</div>
+                        <div className="mt-1 grid grid-cols-2 gap-2 text-xs opacity-70">
+                          <div>
+                            <div className="opacity-70">Miasto</div>
+                            <div className="inline-flex items-center gap-1.5">
+                              {c.deliveryCity ? (
+                                <Truck className="h-3.5 w-3.5 opacity-70" />
+                              ) : c.invoiceCity ? (
+                                <FileText className="h-3.5 w-3.5 opacity-70" />
+                              ) : null}
+                              <span>{city}</span>
+                            </div>
+                          </div>
+                          <div>
+                            <div className="opacity-70">Utworzono</div>
+                            <div>{formatDate(c.createdAt)}</div>
+                          </div>
+                        </div>
+                        <div className="mt-2 grid grid-cols-2 gap-2 text-xs opacity-70">
+                          <div>
+                            <div className="opacity-70">Najbliższy montaż</div>
+                            <div>{c._nextInstallationAt ? formatDate(c._nextInstallationAt) : '—'}</div>
+                          </div>
+                          <div>
+                            <div className="opacity-70">Najbliższa dostawa</div>
+                            <div>{c._nextDeliveryAt ? formatDate(c._nextDeliveryAt) : '—'}</div>
+                          </div>
+                        </div>
+                      </ClickableCard>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Mobile cards */}
           <div className="md:hidden">

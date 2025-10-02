@@ -95,7 +95,7 @@ export default async function InstallationsBoard() {
             Montaże — checklisty
           </h1>
           <Link
-            href="/dostawy"
+            href="/checklist/dostawa"
             className="inline-flex h-9 items-center rounded-md border px-3 text-sm hover:bg-[var(--pp-primary-subtle-bg)]"
             style={{ borderColor: "var(--pp-border)" }}
           >
@@ -103,8 +103,8 @@ export default async function InstallationsBoard() {
           </Link>
         </div>
       </section>
-      {/* Mobile cards */}
-      <div className="md:hidden mt-2 space-y-2">
+  {/* Mobile cards (hidden – wymuszamy widok tabeli na wszystkich rozmiarach) */}
+  <div className="hidden mt-2 space-y-2">
         {data.length === 0 ? (
           <div className="px-3 py-6 text-center opacity-70">Brak zleceń</div>
         ) : (
@@ -118,14 +118,14 @@ export default async function InstallationsBoard() {
                   <Link
                     className="hover:underline focus:underline focus:outline-none"
                     href={
-                      r.orderNo ? `/zlecenia/nr/${r.orderNo}_m` : `/zlecenia/${r.id}`
+                      r.orderNo ? `/montaz/nr/${r.orderNo}_m` : `/montaz/${r.id}`
                     }
                   >
                     {r.orderNo ? `${r.orderNo}_m` : r.id.slice(0, 8)}
                   </Link>
                 </div>
                 <Link
-                  href={r.orderNo ? `/zlecenia/nr/${r.orderNo}_m` : `/zlecenia/${r.id}`}
+                  href={r.orderNo ? `/montaz/nr/${r.orderNo}_m` : `/montaz/${r.id}`}
                   aria-label="Szczegóły"
                   title="Szczegóły"
                   className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-black/15 hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
@@ -153,8 +153,8 @@ export default async function InstallationsBoard() {
         )}
       </div>
 
-      {/* Desktop table */}
-      <div className="hidden md:block rounded-md border border-black/10 dark:border-white/10 overflow-x-auto">
+  {/* Tabela (widoczna na wszystkich rozmiarach, przewijanie poziome dla wąskich ekranów) */}
+  <div className="block rounded-md border border-black/10 dark:border-white/10 overflow-x-auto">
         {/* TODO: container-query condensed mode like OrdersTable; for now loosen min-width and tighten paddings */}
         <table className="w-full text-sm">
           <thead className="text-left bg-black/5 dark:bg-white/10">
@@ -191,8 +191,8 @@ export default async function InstallationsBoard() {
                         className="hover:underline focus:underline focus:outline-none"
                         href={
                           r.orderNo
-                            ? `/zlecenia/nr/${r.orderNo}_m`
-                            : `/zlecenia/${r.id}`
+                            ? `/montaz/nr/${r.orderNo}_m`
+                            : `/montaz/${r.id}`
                         }
                       >
                         {r.orderNo ? `${r.orderNo}_m` : r.id.slice(0, 8)}
@@ -200,8 +200,8 @@ export default async function InstallationsBoard() {
                       <Link
                         href={
                           r.orderNo
-                            ? `/zlecenia/nr/${r.orderNo}_m`
-                            : `/zlecenia/${r.id}`
+                            ? `/montaz/nr/${r.orderNo}_m`
+                            : `/montaz/${r.id}`
                         }
                         aria-label="Szczegóły"
                         title="Szczegóły"

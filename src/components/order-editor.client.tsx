@@ -31,6 +31,10 @@ const schema = z.object({
   installerId: z.union([z.string().uuid(), z.literal("")]).optional(),
   // Date-only (YYYY-MM-DD)
   scheduledDate: z.string().optional(),
+  // Lokalizacja (opcjonalne; puste stringi pomijamy w PATCH)
+  locationPostalCode: z.string().optional(),
+  locationCity: z.string().optional(),
+  locationAddress: z.string().optional(),
 });
 
 type Values = z.infer<typeof schema> & {
@@ -62,6 +66,9 @@ export function OrderEditor({
     buildingType?: "house" | "apartment" | null;
     desiredInstallFrom?: number | null;
     desiredInstallTo?: number | null;
+    locationPostalCode?: string | null;
+    locationCity?: string | null;
+    locationAddress?: string | null;
   };
   type?: "delivery" | "installation";
 }) {
@@ -84,6 +91,9 @@ export function OrderEditor({
           return `${y}-${m}-${d}`;
         })()
       : "",
+    locationPostalCode: defaults.locationPostalCode ?? "",
+    locationCity: defaults.locationCity ?? "",
+    locationAddress: defaults.locationAddress ?? "",
     // Installation-specific defaults
     proposedInstallPricePln:
       typeof defaults.proposedInstallPriceCents === "number"
@@ -198,6 +208,29 @@ export function OrderEditor({
       // Explicitly clear if previously set and now empty
       body.scheduledDate = null;
     }
+    // Lokalizacja (jeśli wpisano cokolwiek — przekaż string; jeśli wyczyszczono pole, ustaw null)
+    if (
+      parsed.data.locationPostalCode !== undefined ||
+      parsed.data.locationCity !== undefined ||
+      parsed.data.locationAddress !== undefined
+    ) {
+      const pc = (parsed.data.locationPostalCode || "").trim();
+      const city = (parsed.data.locationCity || "").trim();
+      const addr = (parsed.data.locationAddress || "").trim();
+      if (pc !== "" || city !== "" || addr !== "") {
+        if (parsed.data.locationPostalCode !== undefined)
+          body.locationPostalCode = pc || null;
+        if (parsed.data.locationCity !== undefined)
+          body.locationCity = city || null;
+        if (parsed.data.locationAddress !== undefined)
+          body.locationAddress = addr || null;
+      } else {
+        // wszystkie puste => wyczyść lokalizację
+        body.locationPostalCode = null;
+        body.locationCity = null;
+        body.locationAddress = null;
+      }
+    }
     // Installation-specific payload
     if (type === "installation") {
       const priceStr = (values.proposedInstallPricePln || "").replace(",", ".").trim();
@@ -260,34 +293,38 @@ export function OrderEditor({
           onChange={(e) => setValues((v) => ({ ...v, note: e.target.value }))}
         />
       </div>
-      <div>
-        <Label>m2 przed pomiarem</Label>
-        <Input
-          inputMode="numeric"
-          value={values.preMeasurementSqm}
-          onChange={(e) =>
-            setValues((v) => ({ ...v, preMeasurementSqm: e.target.value }))
-          }
-          className="w-40"
-        />
-      </div>
-      <div>
-        <Label>Przypisz montażystę</Label>
-        <select
-          value={values.installerId || ""}
-          onChange={(e) =>
-            setValues((v) => ({ ...v, installerId: e.target.value }))
-          }
-          className="mt-1 h-9 w-full rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15"
-        >
-          <option value="">-- bez przypisania --</option>
-          {installers.map((u) => (
-            <option key={u.id} value={u.id}>
-              {u.name || u.email}
-            </option>
-          ))}
-        </select>
-      </div>
+      {type === "installation" && (
+        <>
+          <div>
+            <Label>m2 przed pomiarem</Label>
+            <Input
+              inputMode="numeric"
+              value={values.preMeasurementSqm}
+              onChange={(e) =>
+                setValues((v) => ({ ...v, preMeasurementSqm: e.target.value }))
+              }
+              className="w-40"
+            />
+          </div>
+          <div>
+            <Label>Przypisz montażystę</Label>
+            <select
+              value={values.installerId || ""}
+              onChange={(e) =>
+                setValues((v) => ({ ...v, installerId: e.target.value }))
+              }
+              className="mt-1 h-9 w-full rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15"
+            >
+              <option value="">-- bez przypisania --</option>
+              {installers.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name || u.email}
+                </option>
+              ))}
+            </select>
+          </div>
+        </>
+      )}
       <div>
         <Label>Planowana data</Label>
         <div className="mt-1">
@@ -298,6 +335,33 @@ export function OrderEditor({
             }
           />
         </div>
+      </div>
+      {/* Miejsce realizacji (adres) */}
+      <div>
+        <Label>Miejsce realizacji (adres)</Label>
+        <div className="mt-1 grid grid-cols-1 md:grid-cols-3 gap-2">
+          <Input
+            placeholder="Kod (00-000)"
+            inputMode="numeric"
+            value={values.locationPostalCode || ""}
+            onChange={(e) => {
+              const digits = e.currentTarget.value.replace(/\D/g, "").slice(0, 5);
+              const fm = digits.length <= 2 ? digits : `${digits.slice(0, 2)}-${digits.slice(2)}`;
+              setValues((v) => ({ ...v, locationPostalCode: fm }));
+            }}
+          />
+          <Input
+            placeholder="Miejscowość"
+            value={values.locationCity || ""}
+            onChange={(e) => setValues((v) => ({ ...v, locationCity: e.currentTarget.value }))}
+          />
+          <Input
+            placeholder="Adres (ulica i numer, opcjonalnie lokal/piętro)"
+            value={values.locationAddress || ""}
+            onChange={(e) => setValues((v) => ({ ...v, locationAddress: e.currentTarget.value }))}
+          />
+        </div>
+        <p className="text-[11px] opacity-60 mt-1">Zostaw puste, aby używać adresu z faktury klienta w podglądzie.</p>
       </div>
       {type === "installation" && (
         <>

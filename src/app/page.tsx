@@ -36,6 +36,8 @@ import { formatDate } from "@/lib/date";
 
 export const dynamic = "force-dynamic";
 
+export const metadata = { title: "Dashboard" };
+
 export default async function Home() {
   const session = await getSession();
   if (!session) {
@@ -414,8 +416,8 @@ async function UpcomingOrders() {
               className="hover:underline focus:underline focus:outline-none"
               href={
                 r.orderNo
-                  ? `/zlecenia/nr/${r.orderNo}_${r.type === "installation" ? "m" : "d"}`
-                  : `/zlecenia/${r.id}`
+                  ? (r.type === "installation" ? `/montaz/nr/${r.orderNo}_m` : `/dostawa/nr/${r.orderNo}_d`)
+                  : (r.type === "installation" ? `/montaz/${r.id}` : `/dostawa/${r.id}`)
               }
             >
               {r.clientName || r.clientId}
@@ -475,8 +477,8 @@ async function RecentCompletedOrders() {
               className="hover:underline focus:underline focus:outline-none"
               href={
                 r.orderNo
-                  ? `/zlecenia/nr/${r.orderNo}_${r.type === "installation" ? "m" : "d"}`
-                  : `/zlecenia/${r.id}`
+                  ? (r.type === "installation" ? `/montaz/nr/${r.orderNo}_m` : `/dostawa/nr/${r.orderNo}_d`)
+                  : (r.type === "installation" ? `/montaz/${r.id}` : `/dostawa/${r.id}`)
               }
             >
               {r.clientName || r.clientId}

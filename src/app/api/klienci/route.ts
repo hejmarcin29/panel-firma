@@ -19,6 +19,8 @@ interface ClientCreateBody {
   invoiceCity?: string | null;
   invoicePostalCode?: string | null;
   invoiceAddress?: string | null;
+  invoiceEmail?: string | null;
+  buyerType?: "person" | "company" | null;
   source?: string | null;
   // serviceType usunięte z formularza – pozostawiamy pole na przyszłość (ignorowane przy create)
   // Allow unknown extra keys (ignored)
@@ -308,6 +310,8 @@ export async function POST(req: Request) {
       invoiceCity: trimOrNull(body?.invoiceCity) ?? null,
       invoicePostalCode: trimOrNull(body?.invoicePostalCode) ?? null,
       invoiceAddress: trimOrNull(body?.invoiceAddress) ?? null,
+      invoiceEmail: trimOrNull(body?.invoiceEmail) ?? null,
+      buyerType: body?.buyerType === "company" ? "company" : "person",
       source: trimOrNull(body?.source) ?? null,
       // Ustaw jawnie, aby nie łapać NOT NULL przy create
       serviceType: "with_installation",

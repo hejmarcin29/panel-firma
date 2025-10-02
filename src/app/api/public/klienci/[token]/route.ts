@@ -22,7 +22,13 @@ async function getInviteByToken(token: string) {
   const rows = await db
     .select()
     .from(clientInvites)
-    .where(and(eq(clientInvites.token, token), isNull(clientInvites.usedAt)));
+    .where(
+      and(
+        eq(clientInvites.token, token),
+        isNull(clientInvites.usedAt),
+        eq(clientInvites.purpose, "onboarding"),
+      ),
+    );
   const inv = rows[0];
   if (!inv) return null;
   const now = Date.now();
@@ -31,8 +37,8 @@ async function getInviteByToken(token: string) {
   return inv;
 }
 
-export async function GET(_req: Request, { params }: { params: { token: string } }) {
-  const { token } = params;
+export async function GET(_req: Request, { params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params;
   const inv = await getInviteByToken(token);
   if (!inv) return NextResponse.json({ error: "Not found" }, { status: 404 });
   let allowed: string[];
@@ -59,8 +65,8 @@ const submitSchema = z.object({
   source: z.string().optional().nullable(),
 });
 
-export async function POST(req: Request, { params }: { params: { token: string } }) {
-  const { token } = params;
+export async function POST(req: Request, { params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params;
   const inv = await getInviteByToken(token);
   if (!inv) return NextResponse.json({ error: "Invalid token" }, { status: 404 });
 
@@ -139,6 +145,31 @@ export async function POST(req: Request, { params }: { params: { token: string }
     .set({ usedAt: new Date(), resultClientId: base.id })
     .where(eq(clientInvites.id, inv.id));
 
+  // Create a portal link (rotowalny, bez expires) – Phase 1
+  let portalUrl: string | null = null;
+  let portalToken: string | null = null;
+  let portalExpiresAt: number | null = null;
+  try {
+    portalToken = crypto.randomUUID().replace(/-/g, "");
+    const now = Date.now();
+    const expiresAt = new Date(now + 90 * 24 * 60 * 60 * 1000); // domyślnie 90 dni
+    await db.insert(clientInvites).values({
+      id: crypto.randomUUID(),
+      token: portalToken,
+      purpose: "portal",
+      clientId: base.id,
+      allowEdit: false,
+      expiresAt,
+      createdAt: new Date(),
+      createdBy: "system",
+    });
+    const origin = new URL("/", req.url).origin;
+    portalUrl = `${origin}/public/klient/${encodeURIComponent(portalToken)}`;
+    portalExpiresAt = expiresAt.getTime();
+  } catch (e) {
+    console.error("[public onboarding] failed to create portal link", e);
+  }
+
   await emitDomainEvent({
     type: DomainEventTypes.clientCreated,
     actor: "public",
@@ -147,5 +178,5 @@ export async function POST(req: Request, { params }: { params: { token: string }
     schemaVersion: 2,
   });
 
-  return NextResponse.json({ id: base.id });
+  return NextResponse.json({ id: base.id, portalUrl, portalToken, portalExpiresAt });
 }

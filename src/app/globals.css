@@ -71,6 +71,14 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
+/* Variant 1: Slightly denser typography on small screens (~90% scale)
+   We adjust the root font-size on narrow viewports so all rem-based sizes scale consistently. */
+@media (max-width: 640px) {
+  html {
+    font-size: 15px; /* default ~16px → 15px (~94%) for a denser but still readable UI */
+  }
+}
+
 code,
 pre,
 .font-mono {

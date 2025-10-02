@@ -1,6 +1,7 @@
 import { pl } from "@/i18n/pl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
+export const metadata = { title: "Ustawienia" };
 
 export default function SettingsPage() {
   return (
@@ -47,6 +48,20 @@ export default function SettingsPage() {
             </Link>
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Linki publiczne</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm opacity-70 mb-3">
+              Historia wygenerowanych linków do formularza publicznego (typ, klient, status, ważność).
+            </p>
+            <Link href="/ustawienia/linki" className="underline text-sm">
+              Otwórz historię linków
+            </Link>
+          </CardContent>
+        </Card>
+        {null}
         <Card>
           <CardHeader>
             <CardTitle>{pl.settings.usersSection}</CardTitle>

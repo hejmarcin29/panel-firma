@@ -180,7 +180,7 @@ export default function ZleconeMontazePage() {
                     </div>
                     <div>
                       <a
-                        href={`/zlecenia/${o.id}`}
+                        href={`/montaz/${o.id}`}
                         className="text-xs underline"
                       >
                         Szczegóły

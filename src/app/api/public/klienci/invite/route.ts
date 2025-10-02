@@ -26,7 +26,8 @@ export async function POST(req: Request) {
   const origin = url.origin;
 
   const json = (await req.json().catch(() => null)) as Body | null;
-  const hours = Math.max(1, Math.min(24 * 30, Math.floor(json?.expiresInHours ?? 24 * 7)));
+  // Default TTL: 90 dni
+  const hours = Math.max(1, Math.min(24 * 365, Math.floor(json?.expiresInHours ?? 24 * 90)));
   const allowed = Array.isArray(json?.allowedFields) && json!.allowedFields!.length > 0
     ? json!.allowedFields!
     : ["name", "phone", "email", "source"];
@@ -39,7 +40,7 @@ export async function POST(req: Request) {
   await db.insert(clientInvites).values({
     id,
     token,
-    purpose: "new_client",
+    purpose: "onboarding",
     allowedFieldsJson: JSON.stringify(allowed),
     expiresAt,
     createdAt: new Date(now),

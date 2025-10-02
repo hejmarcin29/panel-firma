@@ -71,7 +71,7 @@ export default function PrywatneMontazysty() {
           <CardContent className="text-sm flex items-center justify-between">
             <div>
               Masz przypięte zlecenie:{" "}
-              <a className="underline" href={`/zlecenia/${pinnedOrderId}`}>
+              <a className="underline" href={`/montaz/${pinnedOrderId}`}>
                 {pinnedOrderId.slice(0, 8)}
               </a>
             </div>
@@ -177,7 +177,7 @@ export default function PrywatneMontazysty() {
                           Zlecenie:{" "}
                           <a
                             className="underline"
-                            href={`/zlecenia/${t.relatedOrderId}`}
+                            href={`/montaz/${t.relatedOrderId}`}
                           >
                             {t.relatedOrderId.slice(0, 8)}
                           </a>
@@ -234,7 +234,7 @@ export default function PrywatneMontazysty() {
                         Zlecenie:{" "}
                         <a
                           className="underline"
-                          href={`/zlecenia/${n.relatedOrderId}`}
+                          href={`/montaz/${n.relatedOrderId}`}
                         >
                           {n.relatedOrderId.slice(0, 8)}
                         </a>

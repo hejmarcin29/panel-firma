@@ -16,8 +16,8 @@ export function Topbar() {
       className="sticky top-0 z-20 border-b bg-[var(--pp-panel)]/80 backdrop-blur"
       style={{ borderColor: "var(--pp-border)" }}
     >
-      <div className="h-16 px-4 md:px-6 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-3 min-w-0">
+      <div className="h-16 px-4 md:px-6 flex items-center justify-between gap-2 min-w-0">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           <button
             className="md:hidden h-9 w-9 inline-flex items-center justify-center rounded-md border"
             style={{ borderColor: "var(--pp-border)" }}
@@ -44,7 +44,7 @@ export function Topbar() {
           >
             <Menu className="h-4 w-4" />
           </button>
-          <div className="relative flex-1 basis-0 min-w-0 sm:max-w-md md:max-w-lg">
+          <div className="relative flex-1 basis-0 min-w-0 max-w-full sm:max-w-md md:max-w-lg overflow-hidden">
             <input
               type="search"
               placeholder="Szukaj"
@@ -111,7 +111,7 @@ export function Topbar() {
               title="Wyloguj"
             >
               <LogOut className="h-4 w-4 md:hidden" aria-hidden />
-              <span className="hidden md:inline">Wyloguj</span>
+              <span className="hidden lg:inline">Wyloguj</span>
             </button>
           )}
         </div>
