@@ -1,5 +1,7 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ClickableCard } from "@/components/clickable-card.client";
 import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Truck, FileText } from "lucide-react";
@@ -29,6 +31,7 @@ type Klient = {
 };
 
 export default function KlienciPage() {
+  const router = useRouter();
   const [data, setData] = React.useState<{ clients: Klient[] } | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -165,8 +168,44 @@ export default function KlienciPage() {
       ? table.getRowModel().rows.slice(0, Math.min(pageSize, total))
       : pagedRows;
 
+  // Helpers: bezpieczne kliknięcie całego wiersza/karty (ignoruje kliki w przyciski/linki/inputs)
+  const isInteractive = (el: HTMLElement | null, stopAt?: HTMLElement | null): boolean => {
+    let cur: HTMLElement | null = el;
+    while (cur) {
+      if (stopAt && cur === stopAt) break;
+      const tag = cur.tagName;
+      if (
+        tag === "A" ||
+        tag === "BUTTON" ||
+        tag === "INPUT" ||
+        tag === "SELECT" ||
+        tag === "TEXTAREA"
+      )
+        return true;
+      const role = cur.getAttribute("role");
+      if (role === "button" || role === "link") return true;
+      if ((cur as HTMLElement).dataset?.noRowNav) return true;
+      cur = cur.parentElement;
+    }
+    return false;
+  };
+  const go = (href: string) => router.push(href);
+  const onRowClick = (href: string) => (e: React.MouseEvent | React.KeyboardEvent) => {
+    if ("key" in e) {
+      const ke = e as React.KeyboardEvent;
+      if (ke.key !== "Enter" && ke.key !== " ") return;
+      ke.preventDefault();
+      go(href);
+      return;
+    }
+    const me = e as React.MouseEvent;
+    if (me.defaultPrevented) return;
+    if (isInteractive(me.target as HTMLElement, me.currentTarget as HTMLElement)) return;
+    go(href);
+  };
+
   return (
-    <div className="mx-auto max-w-6xl p-4 md:p-6">
+    <div className="mx-auto max-w-none p-0 md:max-w-6xl md:p-6">
       <section
         className="relative overflow-hidden rounded-2xl border bg-[var(--pp-panel)] mb-4 overflow-x-hidden"
         style={{ borderColor: "var(--pp-border)" }}
@@ -276,15 +315,25 @@ export default function KlienciPage() {
                     </td>
                   </tr>
                 ) : (
-                  rowsToRender.map((row) => (
-                    <tr key={row.id} className="border-t hover:bg-[var(--pp-table-row-hover)] anim-enter" style={{ borderColor: "var(--pp-border)" }}>
+                  rowsToRender.map((row) => {
+                    const href = `/klienci/${row.original.id}`;
+                    return (
+                    <tr
+                      key={row.id}
+                      role="link"
+                      tabIndex={0}
+                      onClick={onRowClick(href)}
+                      onKeyDown={onRowClick(href)}
+                      className="cursor-pointer border-t hover:bg-[var(--pp-table-row-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--pp-primary)] anim-enter"
+                      style={{ borderColor: "var(--pp-border)" }}
+                    >
                       {row.getVisibleCells().map((cell) => (
                         <td key={cell.id} className="px-3 py-2">
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </td>
                       ))}
                     </tr>
-                  ))
+                  );})
                 )}
               </tbody>
             </table>
@@ -349,8 +398,9 @@ export default function KlienciPage() {
                 rowsToRender.map((row) => {
                   const c = row.original;
                   const city = c.deliveryCity || c.invoiceCity || "—";
+                  const href = `/klienci/${c.id}`;
                   return (
-                    <div key={c.id} className="rounded-md border border-black/10 dark:border-white/10 p-3 anim-enter">
+                    <ClickableCard key={c.id} href={href} className="rounded-md border border-black/10 dark:border-white/10 p-3 anim-enter">
                       <div className="flex items-center justify-between">
                         <div className="font-medium">{c.clientNo ?? "—"}</div>
                         <Link
@@ -388,7 +438,7 @@ export default function KlienciPage() {
                           <div>{c._nextDeliveryAt ? formatDate(c._nextDeliveryAt) : "—"}</div>
                         </div>
                       </div>
-                    </div>
+                    </ClickableCard>
                   );
                 })
               )}

@@ -1,9 +1,10 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DropdownMenu, DropdownItem } from "@/components/ui/dropdown-menu";
 import { Loader2, ChevronDown } from "lucide-react";
 import { useToast } from "@/components/ui/toaster";
+import { defaultPipelineStages } from "@/lib/project-settings";
 
 type Props = {
   orderId: string;
@@ -11,31 +12,42 @@ type Props = {
   stage: string | null;
 };
 
-const stages = {
-  delivery: [
-    { value: "offer_sent", label: "Wysłana oferta" },
-    { value: "awaiting_payment", label: "Czeka na wpłatę" },
-    { value: "delivery", label: "Dostawa" },
-    { value: "final_invoice_issued", label: "Wystawiona faktura końcowa" },
-    { value: "done", label: "Koniec" },
-  ],
-  installation: [
-    { value: "awaiting_measurement", label: "Czeka na pomiar" },
-    { value: "awaiting_quote", label: "Czeka na wycenę" },
-    { value: "before_contract", label: "Przed umową" },
-    { value: "before_advance", label: "Przed zaliczką" },
-    { value: "before_installation", label: "Przed montażem" },
-    { value: "before_final_invoice", label: "Przed fakturą końcową" },
-    { value: "done", label: "Koniec" },
-  ],
-} as const;
-
 export function OrderPipeline({ orderId, type, stage }: Props) {
   const router = useRouter();
   const [value, setValue] = useState(stage ?? "");
   const [loading, setLoading] = useState(false);
-  const opts = stages[type];
+  const [opts, setOpts] = useState<{ value: string; label: string }[]>(
+    defaultPipelineStages[type].map((e) => ({ value: e.key, label: e.label })),
+  );
   const { toast } = useToast();
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const r = await fetch("/api/ustawienia/projekt", { cache: "no-store" });
+        const j = (await r.json()) as {
+          pipelineStages?: {
+            delivery: { key: string; label: string }[];
+            installation: { key: string; label: string }[];
+          };
+        };
+        const arr = (j?.pipelineStages?.[type] ?? []).map((e) => ({ value: e.key, label: e.label }));
+        if (!cancelled) setOpts(arr);
+      } catch {
+        // ignore
+      }
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [type]);
+
+  // Keep internal state in sync when external stage prop changes (after refresh)
+  useEffect(() => {
+    setValue(stage ?? "");
+  }, [stage]);
 
   const currentLabel = useMemo(
     () => opts.find((o) => o.value === value)?.label ?? "— wybierz —",
@@ -63,42 +75,39 @@ export function OrderPipeline({ orderId, type, stage }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-1">
-      <label className="text-xs opacity-70">Etap (biznesowy)</label>
-      <DropdownMenu
-        trigger={
-          loading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Zapisywanie…
-            </>
-          ) : (
-            <>
-              <span>{currentLabel}</span>
-              <ChevronDown className="ml-2 h-4 w-4 opacity-60" />
-            </>
-          )
-        }
-        align="start"
-      >
-        {opts.map((o) => (
-          <DropdownItem
-            key={o.value}
-            onSelect={() => {
-              if (loading) return;
-              setValue(o.value);
-              // autosave on selection
-              void save(o.value);
-            }}
-          >
-            <div className="flex items-center gap-2">
-              <div
-                className={`h-2 w-2 rounded-full ${value === o.value ? "bg-black dark:bg-white" : "bg-black/30 dark:bg-white/30"}`}
-              />
-              <span>{o.label}</span>
-            </div>
-          </DropdownItem>
-        ))}
-      </DropdownMenu>
-    </div>
+    <DropdownMenu
+      trigger={
+        loading ? (
+          <>
+            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Zapisywanie…
+          </>
+        ) : (
+          <>
+            <span>{currentLabel}</span>
+            <ChevronDown className="ml-1 h-3.5 w-3.5 opacity-60" />
+          </>
+        )
+      }
+      triggerClassName="h-7 rounded-full bg-black/5 px-2 text-xs dark:bg-white/10 border-black/10 dark:border-white/10"
+      align="start"
+    >
+      {opts.map((o) => (
+        <DropdownItem
+          key={o.value}
+          onSelect={() => {
+            if (loading) return;
+            setValue(o.value);
+            void save(o.value);
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <div
+              className={`h-2 w-2 rounded-full ${value === o.value ? "bg-black dark:bg-white" : "bg-black/30 dark:bg-white/30"}`}
+            />
+            <span>{o.label}</span>
+          </div>
+        </DropdownItem>
+      ))}
+    </DropdownMenu>
   );
 }

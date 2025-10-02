@@ -77,7 +77,7 @@ export default async function InstallationsBoard() {
   }));
 
   return (
-    <div className="mx-auto max-w-none p-4 md:p-6">
+    <div className="mx-auto max-w-none p-0 md:p-6">
       <section
         className="relative overflow-hidden rounded-2xl border bg-[var(--pp-panel)] mb-4"
         style={{ borderColor: "var(--pp-border)" }}
@@ -155,14 +155,15 @@ export default async function InstallationsBoard() {
 
       {/* Desktop table */}
       <div className="hidden md:block rounded-md border border-black/10 dark:border-white/10 overflow-x-auto">
-        <table className="w-full text-sm min-w-[920px]">
+        {/* TODO: container-query condensed mode like OrdersTable; for now loosen min-width and tighten paddings */}
+        <table className="w-full text-sm">
           <thead className="text-left bg-black/5 dark:bg-white/10">
             <tr>
-              <th className="px-3 py-2">Nr zlecenia</th>
-              <th className="px-3 py-2">Klient</th>
-              <th className="px-3 py-2">Etap</th>
+              <th className="px-2.5 py-1.5">Nr zlecenia</th>
+              <th className="px-2.5 py-1.5">Klient</th>
+              <th className="px-2.5 py-1.5">Etap</th>
               {cols.map((c) => (
-                <th key={c.key} className="px-3 py-2 text-center">
+                <th key={c.key} className="px-2.5 py-1.5 text-center">
                   {c.label}
                 </th>
               ))}
@@ -184,7 +185,7 @@ export default async function InstallationsBoard() {
                   key={r.id}
                   className="border-t border-black/10 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10 anim-enter"
                 >
-                  <td className="px-3 py-2">
+                  <td className="px-2.5 py-1.5">
                     <div className="inline-flex items-center gap-2">
                       <Link
                         className="hover:underline focus:underline focus:outline-none"
@@ -210,8 +211,8 @@ export default async function InstallationsBoard() {
                       </Link>
                     </div>
                   </td>
-                  <td className="px-3 py-2">{r.clientName || "-"}</td>
-                  <td className="px-3 py-2">
+                  <td className="px-2.5 py-1.5">{r.clientName || "-"}</td>
+                  <td className="px-2.5 py-1.5">
                     <OrderPipeline
                       orderId={r.id}
                       type={"installation"}
@@ -219,7 +220,7 @@ export default async function InstallationsBoard() {
                     />
                   </td>
                   {cols.map((c) => (
-                    <td key={c.key} className="px-3 py-2 text-center">
+                    <td key={c.key} className="px-2.5 py-1.5 text-center">
                       <ChecklistCell
                         orderId={r.id}
                         keyName={c.key}

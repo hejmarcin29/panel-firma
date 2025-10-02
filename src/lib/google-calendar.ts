@@ -115,7 +115,20 @@ function buildOrderSummary(orderNo: string | null, clientName: string | null) {
   return `Montaż${orderNo ? " #" + orderNo : ""}${clientName ? " – " + clientName : ""}`;
 }
 
-export async function upsertOrderEvent({ orderId }: { orderId: string }) {
+export async function upsertOrderEvent(
+  params:
+    | { orderId: string }
+    | { orderId: string; createIfMissing?: boolean; updateIfExists?: boolean },
+) {
+  const { orderId, createIfMissing = true, updateIfExists = true } =
+    "orderId" in params
+      ? ({
+          orderId: params.orderId,
+          createIfMissing: (params as { createIfMissing?: boolean }).createIfMissing ?? true,
+          updateIfExists: (params as { updateIfExists?: boolean }).updateIfExists ?? true,
+        } as const)
+      : params;
+
   const [ord] = await db
     .select()
     .from(orders)
@@ -141,7 +154,7 @@ export async function upsertOrderEvent({ orderId }: { orderId: string }) {
     data?.orderNo ?? null,
     data?.clientName ?? null,
   );
-  const dateIso = new Date(ord.scheduledDate as unknown as number)
+  const dateIso = new Date(Number(ord.scheduledDate))
     .toISOString()
     .slice(0, 10); // YYYY-MM-DD
   const eventBody = {
@@ -164,6 +177,9 @@ export async function upsertOrderEvent({ orderId }: { orderId: string }) {
     .where(eq(orderGoogleEvents.orderId, orderId))
     .limit(1);
   const mapping = mrows[0];
+  // Respect automations toggles passed by caller
+  if (!mapping && !createIfMissing) return; // do not create when disabled
+  if (mapping && !updateIfExists) return; // do not update when disabled
   if (!mapping) {
     const resp = await fetch(
       `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(prefs.calendarId!)}/events`,
@@ -176,7 +192,7 @@ export async function upsertOrderEvent({ orderId }: { orderId: string }) {
         body: JSON.stringify(eventBody),
       },
     );
-    const created = await resp.json().catch(() => ({}));
+    const created = (await resp.json().catch(() => ({}))) as { id?: string };
     if (resp.ok && created.id) {
       await db.insert(orderGoogleEvents).values({
         orderId,

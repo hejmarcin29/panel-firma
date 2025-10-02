@@ -42,11 +42,9 @@ export default function SettingsPage() {
             <p className="text-sm opacity-70 mb-3">
               {pl.settings.systemDescription}
             </p>
-            <ul className="list-disc space-y-1 pl-5 text-sm">
-              {pl.dashboard.systemInfoPoints.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
+            <Link href="/ustawienia/system" className="underline text-sm">
+              {pl.common.seeAll}
+            </Link>
           </CardContent>
         </Card>
         <Card>
@@ -64,17 +62,27 @@ export default function SettingsPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Zasady współpracy</CardTitle>
+            <CardTitle>{pl.settings.projectChecklistSection}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm opacity-70 mb-3">
-              Publikuj i zarządzaj wersjami zasad (admin).
+              {pl.settings.projectChecklistDescription}
             </p>
-            <Link
-              href="/ustawienia/zasady-wspolpracy"
-              className="underline text-sm"
-            >
-              Przejdź do Zasad współpracy
+            <Link href="/ustawienia/checklisty" className="underline text-sm">
+              {pl.settings.goToSection}
+            </Link>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>{pl.settings.projectStagesSection}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm opacity-70 mb-3">
+              {pl.settings.projectStagesDescription}
+            </p>
+            <Link href="/ustawienia/etapy" className="underline text-sm">
+              {pl.settings.goToSection}
             </Link>
           </CardContent>
         </Card>
@@ -88,6 +96,19 @@ export default function SettingsPage() {
             </p>
             <Link href="/ustawienia/integracje" className="underline text-sm">
               Przejdź do Integracji
+            </Link>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Automatyzacje</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm opacity-70 mb-3">
+              Włączaj/wyłączaj reguły automatyczne (kalendarz, powiadomienia, walidacje UI).
+            </p>
+            <Link href="/ustawienia/automatyzacje" className="underline text-sm">
+              Otwórz Automatyzacje
             </Link>
           </CardContent>
         </Card>

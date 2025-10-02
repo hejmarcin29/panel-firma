@@ -33,7 +33,12 @@ const schema = z.object({
   scheduledDate: z.string().optional(),
 });
 
-type Values = z.infer<typeof schema>;
+type Values = z.infer<typeof schema> & {
+  proposedInstallPricePln?: string;
+  buildingType?: "house" | "apartment" | "";
+  desiredInstallFrom?: string; // YYYY-MM-DD
+  desiredInstallTo?: string; // YYYY-MM-DD
+};
 
 type Installer = {
   id: string;
@@ -45,6 +50,7 @@ type Installer = {
 export function OrderEditor({
   orderId,
   defaults,
+  type,
 }: {
   orderId: string;
   defaults: {
@@ -52,7 +58,12 @@ export function OrderEditor({
     preMeasurementSqm?: number | null;
     installerId?: string | null;
     scheduledDate?: number | null;
+    proposedInstallPriceCents?: number | null;
+    buildingType?: "house" | "apartment" | null;
+    desiredInstallFrom?: number | null;
+    desiredInstallTo?: number | null;
   };
+  type?: "delivery" | "installation";
 }) {
   const { toast } = useToast();
   const router = useRouter();
@@ -67,6 +78,33 @@ export function OrderEditor({
     scheduledDate: defaults.scheduledDate
       ? (() => {
           const dt = new Date(defaults.scheduledDate!);
+          const y = dt.getFullYear();
+          const m = String(dt.getMonth() + 1).padStart(2, "0");
+          const d = String(dt.getDate()).padStart(2, "0");
+          return `${y}-${m}-${d}`;
+        })()
+      : "",
+    // Installation-specific defaults
+    proposedInstallPricePln:
+      typeof defaults.proposedInstallPriceCents === "number"
+        ? (defaults.proposedInstallPriceCents / 100).toFixed(2)
+        : "",
+    buildingType:
+      defaults.buildingType === "house" || defaults.buildingType === "apartment"
+        ? defaults.buildingType
+        : "",
+    desiredInstallFrom: defaults.desiredInstallFrom
+      ? (() => {
+          const dt = new Date(defaults.desiredInstallFrom!);
+          const y = dt.getFullYear();
+          const m = String(dt.getMonth() + 1).padStart(2, "0");
+          const d = String(dt.getDate()).padStart(2, "0");
+          return `${y}-${m}-${d}`;
+        })()
+      : "",
+    desiredInstallTo: defaults.desiredInstallTo
+      ? (() => {
+          const dt = new Date(defaults.desiredInstallTo!);
           const y = dt.getFullYear();
           const m = String(dt.getMonth() + 1).padStart(2, "0");
           const d = String(dt.getDate()).padStart(2, "0");
@@ -160,6 +198,35 @@ export function OrderEditor({
       // Explicitly clear if previously set and now empty
       body.scheduledDate = null;
     }
+    // Installation-specific payload
+    if (type === "installation") {
+      const priceStr = (values.proposedInstallPricePln || "").replace(",", ".").trim();
+      if (priceStr !== "") {
+        const priceNumber = Number(priceStr);
+        if (!Number.isNaN(priceNumber) && Number.isFinite(priceNumber)) {
+          body.proposedInstallPriceCents = Math.round(priceNumber * 100);
+        }
+      } else if (typeof defaults.proposedInstallPriceCents === "number") {
+        body.proposedInstallPriceCents = null; // clear
+      }
+      if (values.buildingType !== undefined) {
+        body.buildingType = values.buildingType === "" ? null : values.buildingType;
+      }
+      const fromStr = (values.desiredInstallFrom || "").trim();
+      if (fromStr !== "") {
+        const [y, m, d] = fromStr.split("-").map((x) => parseInt(x, 10));
+        body.desiredInstallFrom = new Date(y, (m || 1) - 1, d || 1, 0, 0, 0, 0).getTime();
+      } else if ((defaults.desiredInstallFrom ?? null) !== null) {
+        body.desiredInstallFrom = null;
+      }
+      const toStr = (values.desiredInstallTo || "").trim();
+      if (toStr !== "") {
+        const [y, m, d] = toStr.split("-").map((x) => parseInt(x, 10));
+        body.desiredInstallTo = new Date(y, (m || 1) - 1, d || 1, 0, 0, 0, 0).getTime();
+      } else if ((defaults.desiredInstallTo ?? null) !== null) {
+        body.desiredInstallTo = null;
+      }
+    }
     if (Object.keys(body).length === 0) {
       toast({ title: "Brak zmian" });
       return;
@@ -232,6 +299,65 @@ export function OrderEditor({
           />
         </div>
       </div>
+      {type === "installation" && (
+        <>
+          <div>
+            <Label>Zaproponowana cena montażu (PLN)</Label>
+            <Input
+              inputMode="decimal"
+              placeholder="np. 1200,00"
+              value={values.proposedInstallPricePln || ""}
+              onChange={(e) =>
+                setValues((v) => ({
+                  ...v,
+                  proposedInstallPricePln: e.target.value,
+                }))
+              }
+              className="w-40"
+            />
+          </div>
+          <div>
+            <Label>Dom czy blok?</Label>
+            <select
+              value={values.buildingType || ""}
+              onChange={(e) =>
+                setValues((v) => ({
+                  ...v,
+                  buildingType: (e.target.value as "house" | "apartment" | "") || "",
+                }))
+              }
+              className="mt-1 h-9 w-full rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15"
+            >
+              <option value="">— nie wybrano —</option>
+              <option value="house">Dom</option>
+              <option value="apartment">Blok</option>
+            </select>
+          </div>
+          <div>
+            <Label>Kiedy chce montaż (przedział)</Label>
+            <div className="mt-1 grid grid-cols-1 gap-2 md:grid-cols-2">
+              <div>
+                <div className="text-xs opacity-70 mb-1">Od</div>
+                <DatePicker
+                  value={values.desiredInstallFrom || ""}
+                  onChange={(next) =>
+                    setValues((v) => ({ ...v, desiredInstallFrom: next }))
+                  }
+                />
+              </div>
+              <div>
+                <div className="text-xs opacity-70 mb-1">Do</div>
+                <DatePicker
+                  value={values.desiredInstallTo || ""}
+                  onChange={(next) =>
+                    setValues((v) => ({ ...v, desiredInstallTo: next }))
+                  }
+                />
+              </div>
+            </div>
+          </div>
+        </>
+      )}
       <div>
         <button
           type="button"

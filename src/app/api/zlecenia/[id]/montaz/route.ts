@@ -6,6 +6,7 @@ import { db } from "@/db";
 import { orders, orderNoteHistory, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { getSession } from "@/lib/auth-session";
+import { getProjectSettings } from "@/app/actions/project-settings";
 
 // PATCH body can include any subset of fields below
 const bodySchema = z.object({
@@ -13,6 +14,11 @@ const bodySchema = z.object({
   preMeasurementSqm: z.number().int().positive().optional(),
   installerId: z.string().uuid().nullable().optional(),
   scheduledDate: z.number().int().positive().nullable().optional(),
+  // Nowe pola dla zleceń typu montaż
+  proposedInstallPriceCents: z.number().int().positive().nullable().optional(),
+  buildingType: z.enum(["house", "apartment"]).nullable().optional(),
+  desiredInstallFrom: z.number().int().positive().nullable().optional(),
+  desiredInstallTo: z.number().int().positive().nullable().optional(),
 });
 
 export async function PATCH(
@@ -91,19 +97,69 @@ export async function PATCH(
         update.scheduledDate = normalizedDate;
       }
     }
+    // Zaproponowana cena montażu (grosze)
+    if (parsed.data.proposedInstallPriceCents !== undefined) {
+      update.proposedInstallPriceCents = parsed.data.proposedInstallPriceCents;
+    }
+    // Typ budynku (dom/blok)
+    if (parsed.data.buildingType !== undefined) {
+      update.buildingType = parsed.data.buildingType;
+    }
+    // Preferowany przedział dat montażu (data-only)
+    if (parsed.data.desiredInstallFrom !== undefined) {
+      if (parsed.data.desiredInstallFrom === null) {
+        update.desiredInstallFrom = null;
+      } else {
+        const dt = new Date(parsed.data.desiredInstallFrom);
+        const normalized = new Date(
+          dt.getFullYear(),
+          dt.getMonth(),
+          dt.getDate(),
+          0,
+          0,
+          0,
+          0,
+        );
+        update.desiredInstallFrom = normalized;
+      }
+    }
+    if (parsed.data.desiredInstallTo !== undefined) {
+      if (parsed.data.desiredInstallTo === null) {
+        update.desiredInstallTo = null;
+      } else {
+        const dt = new Date(parsed.data.desiredInstallTo);
+        const normalized = new Date(
+          dt.getFullYear(),
+          dt.getMonth(),
+          dt.getDate(),
+          0,
+          0,
+          0,
+          0,
+        );
+        update.desiredInstallTo = normalized;
+      }
+    }
     if (Object.keys(update).length === 0)
       return NextResponse.json({ ok: true });
     await db.update(orders).set(update).where(eq(orders.id, id));
-    // Google Calendar sync hooks
+    // Google Calendar sync hooks — respect Automatyzacje ustawienia
+    const settings = await getProjectSettings();
     if (update.scheduledDate === null || update.installerId === null) {
-      await deleteOrderEvent({ orderId: id });
+      if (settings.automations.autoDeleteGoogleEventOnUnassign) {
+        await deleteOrderEvent({ orderId: id });
+      }
     } else if (
       update.scheduledDate !== undefined ||
       update.installerId !== undefined ||
       update.preMeasurementSqm !== undefined ||
       update.internalNote !== undefined
     ) {
-      await upsertOrderEvent({ orderId: id });
+      await upsertOrderEvent({
+        orderId: id,
+        createIfMissing: settings.automations.autoCreateGoogleEventOnSchedule,
+        updateIfExists: settings.automations.autoUpdateGoogleEventOnChange,
+      });
     }
     // Revalidate details page and dashboard (upcoming orders)
     revalidatePath(`/zlecenia/${id}`);

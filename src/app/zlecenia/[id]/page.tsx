@@ -25,7 +25,7 @@ import {
 // import { ScheduleInstallationForm } from '@/components/schedule-installation-form.client'
 import { getSession } from "@/lib/auth-session";
 // Usunięto sekcję planowania (sloty) — plan przy tworzeniu zlecenia
-import { OrderPipeline } from "@/components/order-pipeline.client";
+import { OrderPipelineList } from "@/components/order-pipeline-list.client";
 import { OrderChecklist } from "@/components/order-checklist.client";
 import { QuickChecklistBar } from "@/components/quick-checklist-bar.client";
 import { OrderArchiveButton } from "@/components/order-archive-button.client";
@@ -33,6 +33,7 @@ import { OrderUnarchiveButton } from "@/components/order-unarchive-button.client
 import { OrderOutcomeRevertButton } from "@/components/order-outcome-revert-button.client";
 import { formatDate } from "@/lib/date";
 import { DeliveryItems } from "@/components/delivery-items.client";
+import { KeyValueRow, BreakableText } from "@/components/ui/key-value-row";
 
 export default async function OrderDetailsPage({
   params,
@@ -67,6 +68,10 @@ export default async function OrderDetailsPage({
       installerEmail: users.email,
       preMeasurementSqm: orders.preMeasurementSqm,
       scheduledDate: orders.scheduledDate,
+      proposedInstallPriceCents: orders.proposedInstallPriceCents,
+      buildingType: orders.buildingType,
+      desiredInstallFrom: orders.desiredInstallFrom,
+      desiredInstallTo: orders.desiredInstallTo,
       createdAt: orders.createdAt,
       orderNo: orders.orderNo,
     })
@@ -122,7 +127,7 @@ export default async function OrderDetailsPage({
     .orderBy(desc(clientNotes.createdAt));
 
   return (
-    <div className="mx-auto max-w-6xl p-6 space-y-6">
+    <div className="mx-auto max-w-none p-0 md:max-w-6xl md:p-6 space-y-6">
       {/* Hero */}
       <section
         className="relative overflow-hidden rounded-2xl border bg-[var(--pp-panel)]"
@@ -166,16 +171,68 @@ export default async function OrderDetailsPage({
                 <span className="opacity-70">Utworzono:</span>
                 <span>{formatDate(row.createdAt)}</span>
               </div>
+              {/* Podstawowe dane klienta – przeniesione do sekcji nagłówka */}
+              <div
+                className="mt-3 rounded-md border p-3 text-sm min-w-0"
+                style={{ borderColor: "var(--pp-border)" }}
+              >
+                <div className="text-xs font-medium opacity-70 mb-2">
+                  Podstawowe dane klienta
+                </div>
+                <div className="grid grid-cols-1 gap-1">
+                  <KeyValueRow label="Nazwa" labelClassName="basis-auto w-auto pr-3">
+                    <BreakableText>{row.clientName || row.clientId}</BreakableText>
+                  </KeyValueRow>
+                  <KeyValueRow label="Telefon" labelClassName="basis-auto w-auto pr-3">
+                    {row.clientPhone ? (
+                      <a
+                        href={`tel:${row.clientPhone}`}
+                        className="hover:underline break-words break-all focus:underline focus:outline-none"
+                      >
+                        {row.clientPhone}
+                      </a>
+                    ) : (
+                      <span>—</span>
+                    )}
+                  </KeyValueRow>
+                  <KeyValueRow label="Email" labelClassName="basis-auto w-auto pr-3">
+                    {row.clientEmail ? (
+                      <a
+                        href={`mailto:${row.clientEmail}`}
+                        className="hover:underline break-words break-all focus:underline focus:outline-none"
+                      >
+                        {row.clientEmail}
+                      </a>
+                    ) : (
+                      <span>—</span>
+                    )}
+                  </KeyValueRow>
+                  <KeyValueRow label="Faktura" labelClassName="basis-auto w-auto pr-3">
+                    <BreakableText>
+                      {row.clientInvoiceCity
+                        ? `${row.clientInvoiceCity}${row.clientInvoicePostalCode ? ` ${row.clientInvoicePostalCode}` : ""}, ${row.clientInvoiceAddress || ""}`
+                        : "—"}
+                    </BreakableText>
+                  </KeyValueRow>
+                  <KeyValueRow label="Miejsce realizacji" labelClassName="basis-auto w-auto pr-3">
+                    <BreakableText>
+                      {row.locationCity
+                        ? `${row.locationCity}${row.locationPostalCode ? ` ${row.locationPostalCode}` : ""}, ${row.locationAddress || ""}`
+                        : "—"}
+                    </BreakableText>
+                  </KeyValueRow>
+                  <div>
+                    <Link
+                      href={`/klienci/${row.clientId}`}
+                      className="text-xs hover:underline focus:underline focus:outline-none"
+                    >
+                      Wejdź do klienta
+                    </Link>
+                  </div>
+                </div>
+              </div>
             </div>
             <div className="flex flex-col items-stretch gap-2 md:items-end">
-              {/* Pipeline (biznesowy etap) */}
-              <div className="flex items-end gap-2">
-                <OrderPipeline
-                  orderId={row.id}
-                  type={row.type as "delivery" | "installation"}
-                  stage={row.pipelineStage ?? null}
-                />
-              </div>
               {/* Akcje biznesowe */}
               {isAdmin ? (
                 <div className="flex flex-wrap items-center justify-end gap-2">
@@ -201,6 +258,32 @@ export default async function OrderDetailsPage({
 
       {/* Main grid */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {/* Etap i checklist – przeniesione na górę */}
+        <div className="md:col-span-2">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle>Etap i checklist</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Mini-kafelki (pasek) dla szybkiego podglądu */}
+              <QuickChecklistBar
+                orderId={row.id}
+                type={row.type as "delivery" | "installation"}
+                items={checklist.map((i) => ({ ...i, label: i.key }))}
+              />
+              {/* Lista wszystkich etapów z oznaczeniem aktualnego (tylko podgląd) */}
+              <OrderPipelineList
+                type={row.type as "delivery" | "installation"}
+                stage={row.pipelineStage}
+              />
+              <OrderChecklist
+                orderId={row.id}
+                type={row.type as "delivery" | "installation"}
+                items={checklist}
+              />
+            </CardContent>
+          </Card>
+        </div>
         {/* Left column */}
         <div className="space-y-4">
           <Card id="order-info" className="scroll-mt-16">
@@ -208,32 +291,49 @@ export default async function OrderDetailsPage({
               <CardTitle>Podstawowe informacje</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
-              <div>
-                <span className="opacity-60">Klient:</span>{" "}
-                {row.clientName || row.clientId}
-              </div>
-              <div>
-                <span className="opacity-60">m2 przed pomiarem:</span>{" "}
+              <KeyValueRow label="Klient">
+                <BreakableText>{row.clientName || row.clientId}</BreakableText>
+              </KeyValueRow>
+              <KeyValueRow label="m2 przed pomiarem">
                 {row.preMeasurementSqm ?? "-"}
-              </div>
-              <div>
-                <span className="opacity-60">Planowana data:</span>{" "}
+              </KeyValueRow>
+              <KeyValueRow label="Planowana data">
                 {row.scheduledDate ? formatDate(row.scheduledDate) : "-"}
-              </div>
-              <div>
-                <span className="opacity-60">Montażysta:</span>{" "}
-                {row.installerName || row.installerEmail || "-"}
-              </div>
-              <div>
-                <span className="opacity-60">Utworzono:</span>{" "}
+              </KeyValueRow>
+              {row.type === "installation" ? (
+                <>
+                  <KeyValueRow label="Proponowana cena montażu">
+                    {typeof row.proposedInstallPriceCents === "number"
+                      ? `${(row.proposedInstallPriceCents / 100).toFixed(2)} zł`
+                      : "-"}
+                  </KeyValueRow>
+                  <KeyValueRow label="Dom czy blok?">
+                    {row.buildingType === "house"
+                      ? "Dom"
+                      : row.buildingType === "apartment"
+                        ? "Blok"
+                        : "-"}
+                  </KeyValueRow>
+                  <KeyValueRow label="Preferowany termin montażu">
+                    {row.desiredInstallFrom || row.desiredInstallTo
+                      ? `${row.desiredInstallFrom ? formatDate(row.desiredInstallFrom) : "?"} — ${row.desiredInstallTo ? formatDate(row.desiredInstallTo) : "?"}`
+                      : "-"}
+                  </KeyValueRow>
+                </>
+              ) : null}
+              <KeyValueRow label="Montażysta">
+                <BreakableText>
+                  {row.installerName || row.installerEmail || "-"}
+                </BreakableText>
+              </KeyValueRow>
+              <KeyValueRow label="Utworzono">
                 {formatDate(row.createdAt)}
-              </div>
+              </KeyValueRow>
               {row.outcome && (
-                <div>
-                  <span className="opacity-60">Wynik:</span>{" "}
+                <KeyValueRow label="Wynik">
                   {row.outcome === "won" ? "Wygrane" : "Przegrane"}{" "}
                   {row.outcomeAt ? `(${formatDate(row.outcomeAt)})` : ""}
-                </div>
+                </KeyValueRow>
               )}
               {/* Edycja zlecenia (połączona z informacjami) */}
               <div
@@ -242,6 +342,7 @@ export default async function OrderDetailsPage({
               >
                 <OrderEditor
                   orderId={row.id}
+                  type={row.type as "delivery" | "installation"}
                   defaults={{
                     note: null,
                     preMeasurementSqm: row.preMeasurementSqm,
@@ -249,6 +350,19 @@ export default async function OrderDetailsPage({
                     scheduledDate: row.scheduledDate
                       ? ((row.scheduledDate as unknown as Date).getTime?.() ??
                         Number(row.scheduledDate))
+                      : null,
+                    proposedInstallPriceCents: (typeof row.proposedInstallPriceCents === "number"
+                      ? row.proposedInstallPriceCents
+                      : null),
+                    buildingType:
+                      row.buildingType === "house" || row.buildingType === "apartment"
+                        ? row.buildingType
+                        : null,
+                    desiredInstallFrom: row.desiredInstallFrom
+                      ? ((row.desiredInstallFrom as unknown as Date).getTime?.() ?? Number(row.desiredInstallFrom))
+                      : null,
+                    desiredInstallTo: row.desiredInstallTo
+                      ? ((row.desiredInstallTo as unknown as Date).getTime?.() ?? Number(row.desiredInstallTo))
                       : null,
                   }}
                 />
@@ -264,25 +378,6 @@ export default async function OrderDetailsPage({
         {/* Right column */}
         <div className="space-y-4">
           {/* Karta planu usunięta */}
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle>Etap i checklist</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Mini-kafelki (pasek) dla szybkiego podglądu */}
-              <QuickChecklistBar
-                orderId={row.id}
-                type={row.type as "delivery" | "installation"}
-                items={checklist.map((i) => ({ ...i, label: i.key }))}
-              />
-              <OrderChecklist
-                orderId={row.id}
-                type={row.type as "delivery" | "installation"}
-                items={checklist}
-              />
-            </CardContent>
-          </Card>
 
           {latestDelivery?.[0]?.id ? (
             <Card>
@@ -306,46 +401,6 @@ export default async function OrderDetailsPage({
             </Card>
           ) : null}
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle>Podstawowe dane klienta</CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-1 gap-1 text-sm">
-              <div>
-                <span className="opacity-60">Nazwa:</span>{" "}
-                {row.clientName || row.clientId}
-              </div>
-              <div>
-                <span className="opacity-60">Telefon:</span>{" "}
-                {row.clientPhone || "—"}
-              </div>
-              <div>
-                <span className="opacity-60">Email:</span>{" "}
-                {row.clientEmail || "—"}
-              </div>
-              <div>
-                <span className="opacity-60">Faktura:</span>{" "}
-                {row.clientInvoiceCity
-                  ? `${row.clientInvoiceCity}${row.clientInvoicePostalCode ? ` ${row.clientInvoicePostalCode}` : ""}, ${row.clientInvoiceAddress || ""}`
-                  : "—"}
-              </div>
-              <div>
-                <span className="opacity-60">Miejsce realizacji:</span>{" "}
-                {row.locationCity
-                  ? `${row.locationCity}${row.locationPostalCode ? ` ${row.locationPostalCode}` : ""}, ${row.locationAddress || ""}`
-                  : "—"}
-              </div>
-              <div>
-                <Link
-                  href={`/klienci/${row.clientId}`}
-                  className="text-xs hover:underline focus:underline focus:outline-none"
-                >
-                  Wejdź do klienta
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Notatki klienta – widoczne również dla montażysty */}
           <Card>
             <CardHeader className="pb-2">
@@ -361,7 +416,7 @@ export default async function OrderDetailsPage({
                       key={n.id}
                       className="rounded border border-black/10 p-2 dark:border-white/10"
                     >
-                      <div className="text-sm whitespace-pre-wrap">
+                      <div className="text-sm whitespace-pre-wrap break-words">
                         {n.content}
                       </div>
                       <div className="text-xs opacity-60 mt-1">

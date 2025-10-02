@@ -1,13 +1,14 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { BackButton } from "@/components/back-button";
+import { ClickableCard } from "@/components/clickable-card.client";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import { useToast } from "@/components/ui/toaster";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Pencil, Archive, ArchiveRestore } from "lucide-react";
+import { Plus, Pencil, Archive, ArchiveRestore, Copy } from "lucide-react";
 import {
   TypeBadge,
   OutcomeBadge,
@@ -26,6 +27,8 @@ import { OrderEditor } from "@/components/order-editor.client";
 // import { OrderSummaryCard } from "@/components/order-summary-card.client";
 import { pl } from "@/i18n/pl";
 import { formatDate } from "@/lib/date";
+import { Button } from "@/components/ui/button";
+import { KeyValueRow, BreakableText } from "@/components/ui/key-value-row";
 
 type Klient = {
   id: string;
@@ -65,6 +68,11 @@ type Order = {
   createdAt: number;
   // dodatkowe flagi checklisty (opcjonalne, gdy withFlags=1)
   flags?: Record<string, boolean>;
+  // dodatkowe pola instalacyjne (opcjonalne w payloadzie)
+  proposedInstallPriceCents?: number | null;
+  buildingType?: string | null;
+  desiredInstallFrom?: number | null;
+  desiredInstallTo?: number | null;
 };
 
 type Note = {
@@ -76,7 +84,7 @@ type Note = {
 
 export default function KlientPage() {
   const { id } = useParams<{ id: string }>();
-  // const router = useRouter();
+  const router = useRouter();
   const { toast } = useToast();
   const [client, setClient] = useState<Klient | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
@@ -113,6 +121,50 @@ export default function KlientPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  const isInteractive = (el: HTMLElement | null, stopAt?: HTMLElement | null): boolean => {
+    let cur: HTMLElement | null = el;
+    while (cur) {
+      if (stopAt && cur === stopAt) break;
+      const tag = cur.tagName;
+      if (tag === "A" || tag === "BUTTON" || tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") return true;
+      const role = cur.getAttribute("role");
+      if (role === "button" || role === "link") return true;
+      if ((cur as HTMLElement).dataset?.noRowNav) return true;
+      cur = cur.parentElement;
+    }
+    return false;
+  };
+
+  const onRowNav = (href: string) => (e: React.MouseEvent | React.KeyboardEvent) => {
+    if ("key" in e) {
+      const ke = e as React.KeyboardEvent;
+      if (ke.key !== "Enter" && ke.key !== " ") return;
+      ke.preventDefault();
+      router.push(href);
+      return;
+    }
+    const me = e as React.MouseEvent;
+    if (me.defaultPrevented) return;
+    if (isInteractive(me.target as HTMLElement, me.currentTarget as HTMLElement)) return;
+    router.push(href);
+  };
+
+  const copyToClipboard = useCallback(
+    async (text: string, label: string) => {
+      try {
+        await navigator.clipboard.writeText(text);
+        toast({ title: `Skopiowano ${label}`, variant: "success" });
+      } catch {
+        toast({
+          title: "Nie udało się skopiować",
+          description: "Spróbuj ponownie lub skopiuj ręcznie.",
+          variant: "destructive",
+        });
+      }
+    },
+    [toast],
+  );
 
   const addNote = async () => {
     const content = newNote.trim();
@@ -207,7 +259,7 @@ export default function KlientPage() {
 
   if (loading)
     return (
-      <div className="mx-auto max-w-4xl p-6 space-y-4">
+  <div className="mx-auto max-w-none p-0 md:max-w-4xl md:p-6 space-y-4">
         <div className="flex items-center gap-2">
           <Skeleton className="h-6 w-6 rounded-full" />
           <Skeleton className="h-6 w-64" />
@@ -237,7 +289,7 @@ export default function KlientPage() {
   // Etykiety etapów wyświetlamy spójnie z UI przez PipelineStageBadge (PL)
 
   return (
-    <div className="mx-auto max-w-5xl p-6 space-y-6">
+  <div className="mx-auto max-w-none p-0 md:max-w-5xl md:p-6 space-y-6">
       <section
         className="relative overflow-hidden rounded-2xl border bg-[var(--pp-panel)]"
         style={{ borderColor: "var(--pp-border)" }}
@@ -251,7 +303,7 @@ export default function KlientPage() {
           }}
         />
         <div className="relative z-10 p-4 md:p-6">
-          <div className="flex items-start justify-between gap-3">
+          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <BackButton fallbackHref="/klienci" />
@@ -289,7 +341,7 @@ export default function KlientPage() {
                 )}
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="min-w-0 max-w-full flex flex-wrap items-center gap-2 md:justify-end">
               <Link
                 href={`/klienci/${id}/edytuj`}
                 className="inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-sm hover:bg-[var(--pp-primary-subtle-bg)]"
@@ -330,43 +382,108 @@ export default function KlientPage() {
         </div>
       </section>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle>{pl.clients.invoice}</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm space-y-1">
-            <div>
-              <span className="opacity-60">NIP:</span> {client.taxId || "—"}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle>Dane klienta</CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {/* Kontakt */}
+            <div className="space-y-2">
+              <div className="text-xs font-medium opacity-70">Kontakt</div>
+              <KeyValueRow label="Telefon">
+                  {client.phone ? (
+                    <a
+                      href={`tel:${client.phone}`}
+                      className="hover:underline break-words break-all"
+                    >
+                      {client.phone}
+                    </a>
+                  ) : (
+                    <span>—</span>
+                  )}
+                  {client.phone && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      aria-label="Kopiuj telefon"
+                      onClick={() => copyToClipboard(client.phone!, "telefon")}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  )}
+              </KeyValueRow>
+              <KeyValueRow label="Email">
+                  {client.email ? (
+                    <a
+                      href={`mailto:${client.email}`}
+                      className="hover:underline break-words break-all"
+                    >
+                      {client.email}
+                    </a>
+                  ) : (
+                    <span>—</span>
+                  )}
+                  {client.email && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      aria-label="Kopiuj email"
+                      onClick={() => copyToClipboard(client.email!, "email")}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  )}
+              </KeyValueRow>
+              <KeyValueRow label="Źródło">
+                <BreakableText>{client.source || "—"}</BreakableText>
+              </KeyValueRow>
+              <div className="text-xs opacity-60 pt-1">
+                Dodano: {formatDate(client.createdAt)}
+              </div>
             </div>
-            <div>
-              <span className="opacity-60">Miasto:</span>{" "}
-              {client.invoiceCity || "—"}
+
+            {/* Fakturowanie */}
+            <div className="space-y-2">
+              <div className="text-xs font-medium opacity-70">Fakturowanie</div>
+              <KeyValueRow label="NIP">
+                  <span>{client.taxId || "—"}</span>
+                  {client.taxId && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      aria-label="Kopiuj NIP"
+                      onClick={() => copyToClipboard(client.taxId!, "NIP")}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  )}
+              </KeyValueRow>
+              <KeyValueRow label="Miasto">
+                <BreakableText>{client.invoiceCity || "—"}</BreakableText>
+              </KeyValueRow>
+              <KeyValueRow label="Kod pocztowy">
+                <BreakableText>{client.invoicePostalCode || "—"}</BreakableText>
+              </KeyValueRow>
+              <KeyValueRow label="Adres">
+                <BreakableText>{client.invoiceAddress || "—"}</BreakableText>
+                  {client.invoiceAddress && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      aria-label="Kopiuj adres"
+                      onClick={() =>
+                        copyToClipboard(client.invoiceAddress!, "adres")
+                      }
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  )}
+              </KeyValueRow>
             </div>
-            <div>
-              <span className="opacity-60">Kod pocztowy:</span>{" "}
-              {client.invoicePostalCode || "—"}
-            </div>
-            <div>
-              <span className="opacity-60">Adres:</span>{" "}
-              {client.invoiceAddress || "—"}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle>{pl.clients.contact}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-sm">Telefon: {client.phone || "—"}</div>
-            <div className="text-sm">Email: {client.email || "—"}</div>
-            <div className="text-sm">Źródło: {client.source || "—"}</div>
-            <div className="mt-2 text-xs opacity-60">
-              Dodano: {formatDate(client.createdAt)}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Notatki klienta – bliżej danych kontaktowych */}
       <Card>
@@ -383,7 +500,7 @@ export default function KlientPage() {
                   key={n.id}
                   className="rounded border border-black/10 p-2 dark:border-white/10"
                 >
-                  <div className="text-sm whitespace-pre-wrap">{n.content}</div>
+                  <div className="text-sm whitespace-pre-wrap break-words">{n.content}</div>
                   <div className="text-xs opacity-60 mt-1">
                     {formatDate(n.createdAt)}{" "}
                     {n.createdBy ? `• ${n.createdBy}` : ""}
@@ -454,19 +571,31 @@ export default function KlientPage() {
           };
           return (
             <section className="space-y-4">
+              {(() => {
+                const href = o.orderNo
+                  ? `/zlecenia/nr/${o.orderNo}_${o.type === "installation" ? "m" : "d"}`
+                  : `/zlecenia/${o.id}`;
+                return (
+              <ClickableCard href={href} className="block">
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle>
                     Zlecenie #
-                    {o.orderNo
-                      ? `${o.orderNo}_${o.type === "installation" ? "m" : "d"}`
-                      : o.id.slice(0, 8)}
+                    <Link
+                      data-no-row-nav
+                      className="hover:underline focus:underline focus:outline-none ml-1"
+                      href={href}
+                    >
+                      {o.orderNo
+                        ? `${o.orderNo}_${o.type === "installation" ? "m" : "d"}`
+                        : o.id.slice(0, 8)}
+                    </Link>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                     <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2 text-sm">
+                      <div className="min-w-0 max-w-full flex flex-wrap items-center gap-2 text-sm">
                         <TypeBadge type={o.type} />
                         <PipelineStageBadge stage={o.pipelineStage} />
                         <OutcomeBadge
@@ -479,7 +608,7 @@ export default function KlientPage() {
                         <span>{formatDate(o.createdAt)}</span>
                         <div className="h-4 w-px bg-black/10 dark:bg-white/10" />
                         <span className="opacity-70">Miejsce realizacji:</span>
-                        <span>
+                        <span className="break-words break-all">
                           {o.locationCity
                             ? `${o.locationCity}${o.locationPostalCode ? ` ${o.locationPostalCode}` : ""}${o.locationAddress ? `, ${o.locationAddress}` : ""}`
                             : "—"}
@@ -509,8 +638,24 @@ export default function KlientPage() {
                       </div>
                     </div>
                   </div>
+                  <div className="mt-2">
+                    <Link
+                      data-no-row-nav
+                      href={
+                        o.orderNo
+                          ? `/zlecenia/nr/${o.orderNo}_${o.type === "installation" ? "m" : "d"}`
+                          : `/zlecenia/${o.id}`
+                      }
+                      className="text-xs hover:underline focus:underline focus:outline-none"
+                    >
+                      Wejdź do zlecenia
+                    </Link>
+                  </div>
                 </CardContent>
               </Card>
+              </ClickableCard>
+                );
+              })()}
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {/* Lewa kolumna */}
@@ -535,12 +680,21 @@ export default function KlientPage() {
                       >
                         <OrderEditor
                           orderId={o.id}
+                          type={o.type as "delivery" | "installation"}
                           defaults={{
                             note: null,
                             preMeasurementSqm: o.preMeasurementSqm ?? null,
-                            installerId:
-                              (o.installerId as string | null) ?? null,
+                            installerId: o.installerId ?? null,
                             scheduledDate: o.scheduledDate ?? null,
+                            proposedInstallPriceCents:
+                              o.proposedInstallPriceCents ?? null,
+                            buildingType:
+                              o.buildingType === "house" ||
+                              o.buildingType === "apartment"
+                                ? o.buildingType
+                                : null,
+                            desiredInstallFrom: o.desiredInstallFrom ?? null,
+                            desiredInstallTo: o.desiredInstallTo ?? null,
                           }}
                         />
                       </div>
@@ -591,7 +745,7 @@ export default function KlientPage() {
               <table className="min-w-full text-sm">
                 <thead className="bg-[var(--pp-table-header-bg)]">
                   <tr className="text-left">
-                    <th className="px-3 py-2 font-medium">Typ</th>
+                    <th className="px-3 py-2 font-medium">Zlecenie</th>
                     <th className="px-3 py-2 font-medium">Etap</th>
                     <th className="px-3 py-2 font-medium">Najbliższy termin</th>
                     <th className="px-3 py-2 font-medium">Miasto</th>
@@ -599,14 +753,34 @@ export default function KlientPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {orders.map((o) => (
+                  {orders.map((o) => {
+                    const href = o.orderNo
+                      ? `/zlecenia/nr/${o.orderNo}_${o.type === "installation" ? "m" : "d"}`
+                      : `/zlecenia/${o.id}`;
+                    const label = o.orderNo
+                      ? `${o.orderNo}_${o.type === "installation" ? "m" : "d"}`
+                      : o.id.slice(0, 8);
+                    return (
                     <tr
                       key={o.id}
-                      className="border-t"
+                      role="link"
+                      tabIndex={0}
+                      onClick={onRowNav(href)}
+                      onKeyDown={onRowNav(href)}
+                      className="cursor-pointer border-t hover:bg-black/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--pp-primary)] dark:hover:bg-white/10"
                       style={{ borderColor: "var(--pp-border)" }}
                     >
                       <td className="px-3 py-2">
-                        {o.type === "installation" ? "Montaż" : "Dostawa"}
+                        <Link
+                          data-no-row-nav
+                          className="hover:underline focus:underline focus:outline-none"
+                          href={href}
+                        >
+                          {label}
+                        </Link>
+                        <span className="ml-2 align-middle inline-block">
+                          <TypeBadge type={o.type} />
+                        </span>
                       </td>
                       <td className="px-3 py-2">
                         {o.pipelineStage ? (
@@ -621,10 +795,9 @@ export default function KlientPage() {
                       <td className="px-3 py-2">{o.locationCity || "-"}</td>
                       <td className="px-3 py-2">
                         <Link
+                          data-no-row-nav
                           href={
-                            o.orderNo
-                              ? `/zlecenia/nr/${o.orderNo}_${o.type === "installation" ? "m" : "d"}`
-                              : `/zlecenia/${o.id}`
+                            href
                           }
                           className="inline-flex h-8 items-center rounded-md border px-2 text-xs hover:bg-[var(--pp-primary-subtle-bg)]"
                           style={{ borderColor: "var(--pp-border)" }}
@@ -633,7 +806,7 @@ export default function KlientPage() {
                         </Link>
                       </td>
                     </tr>
-                  ))}
+                  );})}
                 </tbody>
               </table>
             </div>

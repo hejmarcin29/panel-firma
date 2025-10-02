@@ -1,4 +1,7 @@
+"use client";
 import { Badge } from "@/components/ui/badge";
+import { useEffect, useState } from "react";
+import { defaultPipelineStageLabels } from "@/lib/project-settings";
 import {
   CheckCircle2,
   XCircle,
@@ -130,6 +133,24 @@ export function PipelineStageBadge({
 }: {
   stage: string | null | undefined;
 }) {
+  const [labels, setLabels] = useState<Record<string, string>>(
+    defaultPipelineStageLabels,
+  );
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await fetch("/api/ustawienia/projekt", { cache: "no-store" });
+        if (r.ok) {
+          const j = (await r.json()) as {
+            pipelineStageLabels?: Record<string, string>;
+          };
+          if (j?.pipelineStageLabels) setLabels(j.pipelineStageLabels);
+        }
+      } catch {
+        // ignore fetch errors
+      }
+    })();
+  }, []);
   if (!stage) {
     return (
       <Badge size="xs" variant="neutral">
@@ -140,21 +161,6 @@ export function PipelineStageBadge({
       </Badge>
     );
   }
-  const labels: Record<string, string> = {
-    // delivery
-    offer_sent: "Wysłana oferta",
-    awaiting_payment: "Czeka na wpłatę",
-    delivery: "Dostawa",
-    final_invoice_issued: "Wystawiona faktura końcowa",
-    // installation
-    awaiting_measurement: "Czeka na pomiar",
-    awaiting_quote: "Czeka na wycenę",
-    before_contract: "Przed umową",
-    before_advance: "Przed zaliczką",
-    before_installation: "Przed montażem",
-    before_final_invoice: "Przed fakturą końcową",
-    done: "Koniec",
-  };
   // Prosty dobór ikon wg prefiksu
   let icon: React.ReactNode = <Clock className="h-3.5 w-3.5" />;
   if (stage === "delivery") icon = <Truck className="h-3.5 w-3.5" />;

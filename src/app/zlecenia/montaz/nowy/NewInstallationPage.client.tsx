@@ -29,6 +29,17 @@ const schema = z.object({
   note: z.string().max(2000),
   installerId: z.union([z.string().uuid(), z.literal("")]),
   scheduledDate: z.string().optional(),
+  // Nowe pola (opcjonalne)
+  proposedInstallPricePln: z
+    .string()
+    .transform((v) => v.trim())
+    .refine((v) => v === "" || /^\d+(?:[\.,]\d{1,2})?$/.test(v), {
+      message: "Nieprawidłowy format ceny",
+    })
+    .optional(),
+  buildingType: z.enum(["house", "apartment"]).or(z.literal("")).optional(),
+  desiredInstallFrom: z.string().optional(),
+  desiredInstallTo: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -58,6 +69,10 @@ export default function NewInstallationPage() {
       note: "",
       installerId: "",
       scheduledDate: "",
+      proposedInstallPricePln: "",
+      buildingType: "",
+      desiredInstallFrom: "",
+      desiredInstallTo: "",
     },
   });
 
@@ -110,6 +125,45 @@ export default function NewInstallationPage() {
           0,
         ).getTime();
       }
+      // Installation extras
+      const priceStr = (values.proposedInstallPricePln || "").replace(",", ".");
+      if (priceStr !== "") {
+        const n = Number(priceStr);
+        if (!Number.isNaN(n) && Number.isFinite(n)) {
+          body.proposedInstallPriceCents = Math.round(n * 100);
+        }
+      }
+      if (typeof values.buildingType === "string" && values.buildingType !== "") {
+        body.buildingType = values.buildingType;
+      }
+      if (values.desiredInstallFrom && values.desiredInstallFrom.trim() !== "") {
+        const [y, m, d] = values.desiredInstallFrom
+          .split("-")
+          .map((x) => parseInt(x, 10));
+        body.desiredInstallFrom = new Date(
+          y,
+          (m || 1) - 1,
+          d || 1,
+          0,
+          0,
+          0,
+          0,
+        ).getTime();
+      }
+      if (values.desiredInstallTo && values.desiredInstallTo.trim() !== "") {
+        const [y, m, d] = values.desiredInstallTo
+          .split("-")
+          .map((x) => parseInt(x, 10));
+        body.desiredInstallTo = new Date(
+          y,
+          (m || 1) - 1,
+          d || 1,
+          0,
+          0,
+          0,
+          0,
+        ).getTime();
+      }
       const resp = await fetch("/api/zlecenia/montaz", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -133,7 +187,7 @@ export default function NewInstallationPage() {
   const clientId = watch("clientId");
 
   return (
-    <div className="mx-auto max-w-3xl p-6 space-y-6">
+    <div className="mx-auto max-w-none p-0 md:max-w-3xl md:p-6 space-y-6">
       <div className="flex items-center gap-2">
         <BackButton fallbackHref="/" />
         <h1 className="text-2xl font-semibold">Dodaj montaż</h1>
@@ -226,6 +280,51 @@ export default function NewInstallationPage() {
               </option>
             ))}
           </select>
+        </div>
+        <div>
+          <Label>Zaproponowana cena montażu (PLN)</Label>
+          <Input
+            placeholder="np. 1200,00"
+            inputMode="decimal"
+            className="mt-1 w-40"
+            {...register("proposedInstallPricePln")}
+          />
+          {errors.proposedInstallPricePln && (
+            <p className="text-xs text-red-600 mt-1">
+              {errors.proposedInstallPricePln.message as string}
+            </p>
+          )}
+        </div>
+        <div>
+          <Label>Dom czy blok?</Label>
+          <select
+            className="mt-1 h-9 w-full rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15"
+            {...register("buildingType")}
+          >
+            <option value="">— nie wybrano —</option>
+            <option value="house">Dom</option>
+            <option value="apartment">Blok</option>
+          </select>
+        </div>
+        <div>
+          <Label>Kiedy chce montaż (przedział)</Label>
+          <div className="mt-1 grid grid-cols-1 gap-2 md:grid-cols-2">
+            <div>
+              <div className="text-xs opacity-70 mb-1">Od</div>
+              <DatePicker
+                value={watch("desiredInstallFrom") || ""}
+                onChange={(v) => setValue("desiredInstallFrom", v)}
+              />
+            </div>
+            <div>
+              <div className="text-xs opacity-70 mb-1">Do</div>
+              <DatePicker
+                value={watch("desiredInstallTo") || ""}
+                onChange={(v) => setValue("desiredInstallTo", v)}
+              />
+            </div>
+          </div>
+          <p className="text-xs opacity-60 mt-1">Oba pola opcjonalne; można podać tylko jedno.</p>
         </div>
         <div className="flex gap-2">
           <button

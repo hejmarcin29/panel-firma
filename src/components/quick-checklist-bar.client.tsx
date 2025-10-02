@@ -16,7 +16,7 @@ type Props = {
   items: Item[];
 };
 
-const labels: Record<"delivery" | "installation", Record<string, string>> = {
+const defaultLabels: Record<"delivery" | "installation", Record<string, string>> = {
   delivery: {
     proforma: "Proforma",
     advance_invoice: "FV zaliczkowa",
@@ -59,6 +59,24 @@ const orderForType: Record<"delivery" | "installation", string[]> = {
 };
 
 export function QuickChecklistBar({ orderId, type, items }: Props) {
+  const [labels, setLabels] = useState<Record<string, string>>(defaultLabels[type]);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await fetch("/api/ustawienia/projekt", { cache: "no-store" });
+        if (!r.ok) return;
+        const j = (await r.json()) as {
+          checklistLabels?: Record<"delivery" | "installation", Record<string, string>>;
+        };
+        const next = j?.checklistLabels?.[type];
+        if (next && !cancelled) setLabels(next);
+      } catch {}
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [type]);
   const map = useMemo(
     () => new Map(items.map((i) => [i.key, i.done])),
     [items],
@@ -90,8 +108,8 @@ export function QuickChecklistBar({ orderId, type, items }: Props) {
             return (
               <span
                 key={k}
-                title={labels[type][k]}
-                aria-label={labels[type][k]}
+                title={labels[k] || k}
+                aria-label={labels[k] || k}
                 className={[
                   "inline-flex h-5 w-5 items-center justify-center rounded-sm border text-[10px] select-none",
                   checked
@@ -161,7 +179,7 @@ export function QuickChecklistBar({ orderId, type, items }: Props) {
                             }
                           }}
                         />
-                        <span>{labels[type][k]}</span>
+                        <span>{labels[k] || k}</span>
                       </div>
                       <span
                         className={
@@ -188,6 +206,7 @@ export function ChecklistPopoverButton({ orderId, type, items }: Props) {
     () => new Map(items.map((i) => [i.key, i.done])),
     [items],
   );
+  const labelsMap = defaultLabels[type];
 
   async function toggle(key: string, done: boolean) {
     setBusyKey(key);
@@ -238,7 +257,7 @@ export function ChecklistPopoverButton({ orderId, type, items }: Props) {
                   disabled={busyKey === k}
                   onChange={(e) => toggle(k, e.target.checked)}
                 />
-                <span>{labels[type][k]}</span>
+                <span>{labelsMap[k] || k}</span>
               </label>
             );
           })}

@@ -61,7 +61,7 @@ export default function RootLayout({
                   <Sidebar />
                   <div className="flex-1 min-h-screen md:pl-64">
                     <Topbar />
-                    <main id="main-content" className="px-6 py-6 overflow-x-hidden">
+                    <main id="main-content" className="px-0 md:px-6 py-6 overflow-x-hidden">
                       {children}
                     </main>
                   </div>

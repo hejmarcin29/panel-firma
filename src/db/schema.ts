@@ -178,6 +178,14 @@ export const orders = sqliteTable(
     pipelineStageUpdatedAt: integer("pipeline_stage_updated_at", {
       mode: "timestamp_ms",
     }),
+    // Montaż – dodatkowe informacje (opcjonalne)
+    // Proponowana cena montażu w groszach (integer). UI wprowadza w PLN.
+    proposedInstallPriceCents: integer("proposed_install_price_cents"),
+    // Typ budynku: 'house' (Dom) | 'apartment' (Blok)
+    buildingType: text("building_type"),
+    // Preferowany przedział czasowy montażu (data od/do – bez godzin)
+    desiredInstallFrom: integer("desired_install_from", { mode: "timestamp_ms" }),
+    desiredInstallTo: integer("desired_install_to", { mode: "timestamp_ms" }),
     archivedAt: integer("archived_at", { mode: "timestamp_ms" }), // data archiwizacji (opc.)
     createdAt: integer("created_at", { mode: "timestamp_ms" })
       .notNull()

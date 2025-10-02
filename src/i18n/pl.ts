@@ -60,6 +60,11 @@ export const pl = {
     usersSection: "Użytkownicy",
     usersDescription: "Zarządzanie kontami i rolami.",
     usersLink: "Przejdź do Użytkowników",
+    projectChecklistSection: "Checklisty (etykiety)",
+    projectChecklistDescription: "Zdefiniuj nazwy pozycji checklisty dla Montaży i Dostaw.",
+    projectStagesSection: "Etapy (pipeline)",
+    projectStagesDescription: "Nazwy etapów procesu (pipeline) wyświetlane w badge'ach.",
+    goToSection: "Przejdź",
   },
   dashboard: {
     title: "Dashboard",
@@ -71,6 +76,13 @@ export const pl = {
     systemInfoTitle: "Jak działa ten projekt",
     systemInfoDescription: "Najważniejsze elementy konfiguracji i utrzymania.",
     systemInfoPoints: [
+      "2025-10-01 – [ZMIANA] Klikalne wiersze/karty: ujednolicono nawigację kliknięciem w listach Klienci/Zlecenia/Dostawy (desktop+mobile) z a11y (Enter/Spacja) i strażnikiem elementów interaktywnych.",
+      "2025-10-01 – [ZMIANA] Ujednolicono wiersze etykieta/wartość (KeyValueRow + BreakableText) i naprawiono overflow na mobile w szczegółach klienta i zlecenia.",
+      "2025-10-01 – [ZMIANA] Ustawienia: etapy i checklisty edytowane tylko nazwami (bez kluczy w UI); klucze generowane automatycznie, a istniejące pozostają stabilne.",
+      "2025-10-01 – [DECYZJA] Etapy w /zlecenia edytujemy dropdownem; lista opcji pochodzi z ustawień i działa dla własnych, nowych etapów.",
+      "2025-10-01 – [UWAGA] Usunięte etapy zachowują etykiety jako legacy – stare rekordy nadal wyświetlą poprawny tekst, nawet jeśli klucz wypadł z listy.",
+      "2025-10-01 – [ZMIANA] Walidacja ustawień: unikalność kluczy etapów (Dostawa+Montaż) enforced na serwerze; UI automatycznie zapobiega kolizjom.",
+      "2025-10-01 – [ZMIANA] Ustawienia: 'Stan systemu' przeniesiony do osobnej karty (/ustawienia/system) z pełną listą.",
       "2025-10-01 – [ZMIANA] Checklista: popup przeniesiony na shadcn/Radix Popover (zamykanie kliknięciem w tło i Escape) + delikatne animacje.",
   "2025-09-30 – [AKTUALIZACJA] Usunięto eksperymentalny widok Pipeline i przełącznik widoku w /zlecenia (pozostała tabela).",
   "2025-09-30 – [NOWE] /zlecenia: widok Pipeline (tylko odczyt) + przełącznik widoku (Tabela/Pipeline) zsynchronizowany z URL ?view=; tabela pozostaje domyślna.",
@@ -200,5 +212,6 @@ export const pl = {
     success: "Sukces",
     destructive: "Błąd",
     close: "Zamknij",
+    seeAll: "Zobacz wszystko",
   },
 } as const;

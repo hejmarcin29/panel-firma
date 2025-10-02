@@ -128,7 +128,7 @@ export function DeliveryItems({
   if (!items) return null;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 min-w-0">
       <div className="text-sm font-medium">Pozycje dostawy</div>
       {items.length === 0 ? (
         <div className="text-xs opacity-60">Brak pozycji</div>
@@ -137,11 +137,10 @@ export function DeliveryItems({
           {items.map((it) => (
             <div
               key={it.id}
-              className="p-2 grid items-center gap-2"
-              style={{ gridTemplateColumns: "1fr 100px 80px 90px" }}
+              className="p-2 grid items-center gap-2 grid-cols-[minmax(120px,1fr)_60px_52px_64px] md:grid-cols-[minmax(0,1fr)_100px_80px_90px]"
             >
               <input
-                className="h-8 rounded border border-black/15 bg-transparent px-2 text-sm outline-none dark:border-white/15"
+                className="h-8 w-full min-w-0 rounded border border-black/15 bg-transparent px-2 text-sm outline-none dark:border-white/15"
                 defaultValue={it.name}
                 onBlur={(e) => {
                   const v = e.currentTarget.value;
@@ -150,7 +149,7 @@ export function DeliveryItems({
                 disabled={busyId === it.id}
               />
               <input
-                className="h-8 rounded border border-black/15 bg-transparent px-2 text-sm outline-none dark:border-white/15"
+                className="h-8 w-full rounded border border-black/15 bg-transparent px-2 text-sm outline-none dark:border-white/15"
                 defaultValue={fmtSqm(it.sqmCenti)}
                 inputMode="decimal"
                 onBlur={(e) => {
@@ -160,7 +159,7 @@ export function DeliveryItems({
                 disabled={busyId === it.id}
               />
               <input
-                className="h-8 rounded border border-black/15 bg-transparent px-2 text-sm outline-none dark:border-white/15"
+                className="h-8 w-full rounded border border-black/15 bg-transparent px-2 text-sm outline-none dark:border-white/15"
                 defaultValue={it.packs == null ? "" : String(it.packs)}
                 inputMode="numeric"
                 onBlur={(e) => {
@@ -184,18 +183,17 @@ export function DeliveryItems({
         </div>
       )}
       <div
-        className="grid items-center gap-2"
-        style={{ gridTemplateColumns: "1fr 100px 80px 90px" }}
+        className="grid items-center gap-2 grid-cols-[minmax(120px,1fr)_60px_52px] md:grid-cols-[minmax(0,1fr)_100px_80px_90px]"
       >
         <input
-          className="h-8 rounded border border-black/15 bg-transparent px-2 text-sm outline-none dark:border-white/15"
+          className="h-8 w-full min-w-0 rounded border border-black/15 bg-transparent px-2 text-sm outline-none dark:border-white/15"
           placeholder="Nazwa"
           value={newName}
           onChange={(e) => setNewName(e.currentTarget.value)}
           disabled={adding}
         />
         <input
-          className="h-8 rounded border border-black/15 bg-transparent px-2 text-sm outline-none dark:border-white/15"
+          className="h-8 w-full rounded border border-black/15 bg-transparent px-2 text-sm outline-none dark:border-white/15"
           placeholder="m²"
           inputMode="decimal"
           value={newSqm}
@@ -205,7 +203,7 @@ export function DeliveryItems({
           disabled={adding}
         />
         <input
-          className="h-8 rounded border border-black/15 bg-transparent px-2 text-sm outline-none dark:border-white/15"
+          className="h-8 w-full rounded border border-black/15 bg-transparent px-2 text-sm outline-none dark:border-white/15"
           placeholder="op."
           inputMode="numeric"
           value={newPacks}
@@ -214,7 +212,7 @@ export function DeliveryItems({
           }
           disabled={adding}
         />
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-end col-start-3 mt-1 md:col-start-auto md:mt-0">
           <button
             onClick={addItem}
             disabled={adding || !newName.trim()}

@@ -6,15 +6,13 @@ import Link from "next/link";
 import { pl } from "@/i18n/pl";
 import { OrderOutcomeButtons } from "../../components/order-outcome-buttons.client";
 // removed old icon imports (quick links replaced by toolbar)
-import {
-  TypeBadge,
-  OutcomeBadge,
-  PipelineStageBadge,
-} from "@/components/badges";
+import { TypeBadge, OutcomeBadge } from "@/components/badges";
+import { OrderPipeline } from "@/components/order-pipeline.client";
 import { QuickChecklistBar } from "@/components/quick-checklist-bar.client";
 import { OrdersTable, type OrderRow } from "@/components/orders-table.client";
 import { OrdersToolbar } from "@/components/orders-toolbar.client";
 import { formatDate, formatDayMonth } from "@/lib/date";
+import { ClickableCard } from "@/components/clickable-card.client";
 
 export const dynamic = "force-dynamic";
 
@@ -207,7 +205,7 @@ export default async function OrdersPage({
   // status usunięty z UI – pokazujemy etap (pipelineStage)
 
   return (
-    <div className="mx-auto max-w-full overflow-x-hidden p-4 md:p-6">
+    <div className="mx-auto max-w-none overflow-x-hidden p-0 md:p-6">
       <section
         className="relative overflow-hidden rounded-2xl border bg-[var(--pp-panel)] mb-4"
         style={{ borderColor: "var(--pp-border)" }}
@@ -277,10 +275,7 @@ export default async function OrdersPage({
               ? `/zlecenia/nr/${r.orderNo}_${r.type === "installation" ? "m" : "d"}`
               : `/zlecenia/${r.id}`;
             return (
-              <div
-                key={r.id}
-                className="rounded-md border border-black/10 dark:border-white/10 p-3 anim-enter"
-              >
+              <ClickableCard key={r.id} href={href} className="rounded-md border border-black/10 dark:border-white/10 p-3 anim-enter">
                 <div className="flex items-center justify-between">
                   <Link
                     className="font-medium hover:underline focus:underline focus:outline-none"
@@ -292,7 +287,12 @@ export default async function OrdersPage({
                   </Link>
                   <div className="flex items-center gap-2">
                     <TypeBadge type={r.type} />
-                    <PipelineStageBadge stage={r.pipelineStage} />
+                    {/* Editable stage */}
+                    <OrderPipeline
+                      orderId={r.id}
+                      type={r.type as "delivery" | "installation"}
+                      stage={r.pipelineStage}
+                    />
                   </div>
                 </div>
                 {/* Mini-kafelki checklisty na mobile */}
@@ -367,7 +367,7 @@ export default async function OrdersPage({
                     </Link>
                   </div>
                 </div>
-              </div>
+              </ClickableCard>
             );
           })
         )}

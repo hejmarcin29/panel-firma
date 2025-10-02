@@ -6,24 +6,8 @@ import { eq } from "drizzle-orm";
 import { getSession } from "@/lib/auth-session";
 import { emitDomainEvent, DomainEventTypes } from "@/domain/events";
 import { revalidatePath } from "next/cache";
-
-const stagesDelivery = [
-  "offer_sent",
-  "awaiting_payment",
-  "delivery",
-  "final_invoice_issued",
-  "done",
-] as const;
-const stagesInstallation = [
-  "awaiting_measurement",
-  "awaiting_quote",
-  "before_contract",
-  "before_advance",
-  "before_installation",
-  "before_final_invoice",
-  "done",
-] as const;
-const allStages = [...stagesDelivery, ...stagesInstallation] as const;
+import { getProjectSettings } from "@/app/actions/project-settings";
+type Stage = string;
 
 export async function PATCH(
   req: Request,
@@ -38,7 +22,7 @@ export async function PATCH(
 
     const { id } = await ctx.params;
     const json = await req.json().catch(() => null);
-    const bodySchema = z.object({ stage: z.enum(allStages) });
+    const bodySchema = z.object({ stage: z.string().min(1) });
     const parsed = bodySchema.safeParse(json);
     if (!parsed.success)
       return NextResponse.json(
@@ -59,8 +43,11 @@ export async function PATCH(
         { status: 409 },
       );
 
-    const allowedStages: readonly string[] =
-      order.type === "delivery" ? [...stagesDelivery] : [...stagesInstallation];
+    const settings = await getProjectSettings();
+    const allowedStages: readonly Stage[] =
+      order.type === "delivery"
+        ? settings.pipelineStages.delivery.map((e) => e.key)
+        : settings.pipelineStages.installation.map((e) => e.key);
     const to = parsed.data.stage;
     if (!allowedStages.includes(to))
       return NextResponse.json(

@@ -30,6 +30,11 @@ export const createOrderBodySchema = z.object({
   locationCity: z.string().optional(),
   locationPostalCode: z.string().optional(),
   locationAddress: z.string().optional(),
+  // Installation extras (opcjonalne)
+  proposedInstallPriceCents: z.number().int().positive().optional(),
+  buildingType: z.enum(["house", "apartment"]).optional(),
+  desiredInstallFrom: z.number().int().positive().optional(),
+  desiredInstallTo: z.number().int().positive().optional(),
 });
 
 export async function createOrderFromBody(
@@ -54,6 +59,10 @@ export async function createOrderFromBody(
     installerId,
     scheduledDate,
     orderPlacedAt,
+    proposedInstallPriceCents,
+    buildingType,
+    desiredInstallFrom,
+    desiredInstallTo,
   } = parsed.data;
   const locCity = (parsed.data.locationCity ?? "").trim();
   const locPostal = (parsed.data.locationPostalCode ?? "").trim();
@@ -141,6 +150,11 @@ export async function createOrderFromBody(
                 ?.invoicePostalCode ?? null),
         locationAddress:
           locAddr !== "" ? locAddr : (client?.invoiceAddress ?? null),
+        // Installation extras
+        proposedInstallPriceCents: proposedInstallPriceCents ?? null,
+        buildingType: buildingType ?? null,
+        desiredInstallFrom: desiredInstallFrom ? new Date(desiredInstallFrom) : null,
+        desiredInstallTo: desiredInstallTo ? new Date(desiredInstallTo) : null,
       });
       inserted = true;
     } catch (err) {

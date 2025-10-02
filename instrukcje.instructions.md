@@ -305,3 +305,46 @@ Lekcje z naprawy subtelnego przycięcia prawej krawędzi na mobile (iOS/Android)
 - [ ] Toolbary/paginacje zawijają się estetycznie.
 - [ ] Topbar mieści się bez maskowania (bez `overflow-x-clip`).
 
+## KeyValueRow – wiersz etykieta/wartość (NOWE)
+
+Cel: spójny układ label/value w całej aplikacji oraz brak overflow na mobile.
+
+- Komponent: `src/components/ui/key-value-row.tsx`
+  - `KeyValueRow` – wrapper na wiersz: `flex items-center gap-3`.
+    - Label: `opacity-60 shrink-0 basis-24`.
+    - Value: `min-w-0 max-w-full flex items-center gap-2` (pozwala się ścisnąć i zawijać).
+  - `BreakableText` – `span` z `break-words break-all` do długich ciągów.
+- Zasady użycia:
+  - Unikaj `justify-between` dla label/value – użyj `KeyValueRow` z `basis-24` dla etykiety.
+  - Dla tekstów/linków, które mogą być długie (email, adres, source): owiń w `BreakableText`.
+  - Wartość może zawierać przyciski (np. kopiuj) – dodawaj je jako dzieci `KeyValueRow` po tekście.
+- Migracja: nowe/edytowane widoki powinny używać `KeyValueRow` zamiast ręcznego zestawu klas.
+
+## Clickable rows/cards – nawigacja po kliknięciu (NOWE)
+
+Cel: spójne UX „kliknij gdziekolwiek, żeby wejść w szczegóły” zarówno na listach desktopowych (wiersze tabeli), jak i na kartach mobilnych.
+
+- Komponent: `src/components/clickable-card.client.tsx`
+  - Służy do opakowania „karty” na stronach serwerowych (App Router). Zapewnia a11y (role=link, tabIndex=0, Enter/Spacja) i bezpieczną nawigację.
+  - Wbudowana ochrona przed przechwyceniem kliknięć na elementach interaktywnych (A, BUTTON, INPUT, SELECT, TEXTAREA oraz `[role=button|link]`).
+  - Można oznaczyć dowolny element `data-no-row-nav` aby wyłączyć nawigację z wiersza/karty dla jego poddrzewa.
+
+- Tabele (desktop):
+  - Jeżeli tabela jest komponentem klienckim (np. `OrdersTable`), dodaj `role="link" tabIndex=0 onClick onKeyDown` na `<tr>` i użyj tej samej funkcji strażnika co w `ClickableCard` (przerywaj traversal na `currentTarget`).
+  - Nie rób handlerów w Server Components – zamiast tego deleguj do komponentu klientowego lub użyj `ClickableCard` gdzie to możliwe.
+
+- Karty (mobile):
+  - Na stronach serwerowych opakuj korzeń karty w `<ClickableCard href=...>` i pozostaw wewnętrzne `<Link>`/przyciski bez zmian – strażnik zadba o brak konfliktu.
+
+- A11y i styl:
+  - Root ma `cursor-pointer` + `focus-visible:ring-2 ring-[var(--pp-primary)]`.
+  - Klawiatura: Enter/Spacja aktywują nawigację.
+
+- Konwencja URL: dla zleceń używamy przyjaznych adresów z sufiksem typu, jeśli dostępny:
+  - `/zlecenia/nr/${orderNo}_m` dla montaży, `/zlecenia/nr/${orderNo}_d` dla dostaw; fallback: `/zlecenia/${id}`.
+
+- Testowanie (smoke):
+  - Kliknięcie w tło wiersza/karty na desktop/mobile przenosi do szczegółów.
+  - Kliknięcia w linki/przyciski wewnątrz NIE wywołują nawigacji z wiersza/karty.
+  - Enter/Spacja na fokusowanym wierszu/kartcie działa.
+

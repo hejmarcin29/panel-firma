@@ -148,7 +148,7 @@ export default function EdytujKlientaPage() {
   }, [id, reset]);
 
   return (
-    <div className="mx-auto max-w-2xl p-6">
+    <div className="mx-auto max-w-none p-0 md:max-w-2xl md:p-6">
       <div className="mb-4 flex items-center gap-2">
         <BackButton fallbackHref={`/klienci/${id}`} />
         <h1 className="text-2xl font-semibold">{pl.clients.edit} klienta</h1>
