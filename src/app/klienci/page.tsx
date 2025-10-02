@@ -5,6 +5,7 @@ import { ClickableCard } from "@/components/clickable-card.client";
 import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Truck, FileText } from "lucide-react";
+import { GenerateInviteButton } from "@/components/generate-invite-button.client";
 import { pl } from "@/i18n/pl";
 import {
   ColumnDef,
@@ -229,6 +230,7 @@ export default function KlienciPage() {
               />
               <span>Pokaż archiwalne</span>
             </label>
+            <GenerateInviteButton />
             <Link
               href="/klienci/nowy"
               className="inline-flex h-9 items-center gap-2 rounded-md border px-4 text-sm hover:bg-[var(--pp-primary-subtle-bg)]"
