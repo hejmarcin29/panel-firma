@@ -15,7 +15,7 @@ export async function PATCH(req: Request) {
     if (!res.ok) return NextResponse.json(res, { status: 400 });
     const settings = await getProjectSettings();
     return NextResponse.json(settings);
-  } catch (e) {
+  } catch {
     return NextResponse.json({ ok: false, error: "Błąd" }, { status: 400 });
   }
 }
