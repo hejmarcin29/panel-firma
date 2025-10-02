@@ -14,17 +14,24 @@ import {
 const KEY = "project_settings";
 
 export async function getProjectSettings(): Promise<ProjectSettings> {
-  const rows = await db
-    .select({ v: appSettings.value })
-    .from(appSettings)
-    .where(eq(appSettings.key, KEY))
-    .limit(1);
-  if (rows.length === 0) return mergeProjectSettings();
   try {
-    const parsed = JSON.parse(rows[0].v) as unknown;
-    const data = projectSettingsSchema.partial().parse(parsed);
-    return mergeProjectSettings(data);
+    const rows = await db
+      .select({ v: appSettings.value })
+      .from(appSettings)
+      .where(eq(appSettings.key, KEY))
+      .limit(1);
+    if (rows.length === 0) return mergeProjectSettings();
+    try {
+      const parsed = JSON.parse(rows[0].v) as unknown;
+      const data = projectSettingsSchema.partial().parse(parsed);
+      return mergeProjectSettings(data);
+    } catch {
+      return mergeProjectSettings();
+    }
   } catch {
+    // During build (prerender) or before migrations run, the table may not exist yet.
+    // Gracefully fall back to defaults instead of failing the build.
+    // Drizzle/better-sqlite3 will throw SQLITE_ERROR: no such table: app_settings
     return mergeProjectSettings();
   }
 }

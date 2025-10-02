@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -euo pipefail
 
-echo "[husky pre-push] Lint + iteration + migrations"
+echo "[husky pre-push] Lint + iteration + migrations + SSG safety"
 
 # Run ESLint (cached). Allow warnings during push, fail only on errors (CI can enforce stricter rules)
 npx eslint --cache --max-warnings=1000
@@ -11,5 +11,8 @@ npm run check:iteration || true
 
 # Ensure Drizzle migrations are consistent
 node scripts/check-migrations.mjs
+
+# Prevent build-time DB access via SSG (best-effort static check)
+npm run check:ssg
 
 echo "[husky pre-push] OK"

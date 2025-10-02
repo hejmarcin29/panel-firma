@@ -9,6 +9,7 @@
     "diag": "node scripts/diag.mjs",
     "start": "next start",
     "lint": "eslint",
+  "check:ssg": "node scripts/check-ssg-safety.mjs",
     "check:iteration": "node scripts/check-system-info.mjs",
     "check:migrations": "node scripts/check-migrations.mjs",
     "fix:migrations": "node scripts/fix-migrations.mjs",
