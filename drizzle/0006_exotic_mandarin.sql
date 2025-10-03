@@ -1,1 +1,0 @@
-ALTER TABLE `orders` ADD `archived_at` integer;
