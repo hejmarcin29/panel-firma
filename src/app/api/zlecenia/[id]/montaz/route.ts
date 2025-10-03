@@ -157,6 +157,8 @@ export async function PATCH(
     if (Object.keys(update).length === 0)
       return NextResponse.json({ ok: true });
     await db.update(orders).set(update).where(eq(orders.id, id));
+
+    // Stage 2: mirror to installation_slots removed. orders.scheduledDate is the single source of truth.
     // Google Calendar sync hooks — respect Automatyzacje ustawienia
     const settings = await getProjectSettings();
     if (update.scheduledDate === null || update.installerId === null) {
@@ -178,6 +180,10 @@ export async function PATCH(
     // Revalidate details page and dashboard (upcoming orders)
     revalidatePath(`/zlecenia/${id}`);
     revalidatePath("/");
+    // Also revalidate lists and installer dashboard views
+    revalidatePath("/zlecenia");
+    revalidatePath("/montaze");
+    revalidatePath("/panel/montazysta");
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[PATCH /api/zlecenia/:id/montaz] Error", err);

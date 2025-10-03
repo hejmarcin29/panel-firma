@@ -284,7 +284,7 @@ export default function NewInstallationPage() {
           </p>
         </div>
         <div>
-          <Label htmlFor="scheduledDate">Planowana data montażu</Label>
+          <Label htmlFor="scheduledDate">Ustalona data montażu</Label>
           <div className="mt-1">
             <DatePicker
               value={watch("scheduledDate") || ""}

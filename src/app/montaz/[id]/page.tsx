@@ -112,6 +112,8 @@ export default async function OrderDetailsPage({
     .orderBy(desc(deliverySlots.plannedAt))
     .limit(1);
 
+  // Etap 2: brak slotów montażu – źródłem prawdy jest orders.scheduledDate
+
   const checklist = await db
     .select({ key: orderChecklistItems.key, done: orderChecklistItems.done })
     .from(orderChecklistItems)
@@ -137,7 +139,7 @@ export default async function OrderDetailsPage({
               "radial-gradient(1200px 420px at -10% -20%, color-mix(in oklab, var(--pp-primary) 16%, transparent), transparent 40%), linear-gradient(120deg, color-mix(in oklab, var(--pp-primary) 10%, transparent), transparent 65%)",
           }}
         />
-        <div className="relative z-10 p-4 md:p-6">
+  <div className="relative z-10 p-3 md:p-5">
           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
@@ -167,61 +169,6 @@ export default async function OrderDetailsPage({
                 <span className="opacity-70">Utworzono:</span>
                 <span>{formatDate(row.createdAt)}</span>
               </div>
-              <div
-                className="mt-3 rounded-md border p-3 text-sm min-w-0"
-                style={{ borderColor: "var(--pp-border)" }}
-              >
-                <div className="text-xs font-medium opacity-70 mb-2">
-                  Podstawowe dane klienta
-                </div>
-                <div className="grid grid-cols-1 gap-1">
-                  <KeyValueRow label="Nazwa" labelClassName="basis-auto w-auto pr-3">
-                    <BreakableText>{row.clientName || row.clientId}</BreakableText>
-                  </KeyValueRow>
-                  <KeyValueRow label="Telefon" labelClassName="basis-auto w-auto pr-3">
-                    {row.clientPhone ? (
-                      <a
-                        href={`tel:${row.clientPhone}`}
-                        className="hover:underline break-words break-all focus:underline focus:outline-none"
-                      >
-                        {row.clientPhone}
-                      </a>
-                    ) : (
-                      <span>—</span>
-                    )}
-                  </KeyValueRow>
-                  <KeyValueRow label="Email" labelClassName="basis-auto w-auto pr-3">
-                    {row.clientEmail ? (
-                      <a
-                        href={`mailto:${row.clientEmail}`}
-                        className="hover:underline break-words break-all focus:underline focus:outline-none"
-                      >
-                        {row.clientEmail}
-                      </a>
-                    ) : (
-                      <span>—</span>
-                    )}
-                  </KeyValueRow>
-                  <KeyValueRow label="Faktura" labelClassName="basis-auto w-auto pr-3">
-                    <BreakableText>
-                      {formatInvoiceLine(row.clientInvoicePostalCode, row.clientInvoiceCity, row.clientInvoiceAddress)}
-                    </BreakableText>
-                  </KeyValueRow>
-                  <KeyValueRow label="Miejsce realizacji" labelClassName="basis-auto w-auto pr-3">
-                    <BreakableText>
-                      {formatCityPostalAddress(row.locationCity, row.locationPostalCode, row.locationAddress)}
-                    </BreakableText>
-                  </KeyValueRow>
-                  <div>
-                    <Link
-                      href={`/klienci/${row.clientId}`}
-                      className="text-xs hover:underline focus:underline focus:outline-none"
-                    >
-                      Wejdź do klienta
-                    </Link>
-                  </div>
-                </div>
-              </div>
             </div>
             <div className="flex flex-col items-stretch gap-2 md:items-end">
               {isAdmin ? (
@@ -244,6 +191,62 @@ export default async function OrderDetailsPage({
               ) : null}
             </div>
           </div>
+          {/* Dół nagłówka: dwie kolumny – po lewej dane klienta, po prawej miasta + termin */}
+          <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2">
+            <div
+              className="rounded-md border p-2.5 text-sm"
+              style={{ borderColor: "var(--pp-border)" }}
+            >
+              <div className="text-xs font-medium opacity-70 mb-1.5">Podstawowe dane klienta</div>
+              <div className="grid grid-cols-1 gap-0.5">
+                <KeyValueRow label="Nazwa" labelClassName="basis-auto w-auto pr-3">
+                  <BreakableText>{row.clientName || row.clientId}</BreakableText>
+                </KeyValueRow>
+                <KeyValueRow label="Telefon" labelClassName="basis-auto w-auto pr-3">
+                  {row.clientPhone ? (
+                    <a href={`tel:${row.clientPhone}`} className="hover:underline break-words break-all focus:underline focus:outline-none">{row.clientPhone}</a>
+                  ) : (<span>—</span>)}
+                </KeyValueRow>
+                <KeyValueRow label="Email" labelClassName="basis-auto w-auto pr-3">
+                  {row.clientEmail ? (
+                    <a href={`mailto:${row.clientEmail}`} className="hover:underline break-words break-all focus:underline focus:outline-none">{row.clientEmail}</a>
+                  ) : (<span>—</span>)}
+                </KeyValueRow>
+                <KeyValueRow label="Faktura" labelClassName="basis-auto w-auto pr-3">
+                  <BreakableText>{formatInvoiceLine(row.clientInvoicePostalCode, row.clientInvoiceCity, row.clientInvoiceAddress)}</BreakableText>
+                </KeyValueRow>
+                <KeyValueRow label="Miejsce realizacji" labelClassName="basis-auto w-auto pr-3">
+                  <BreakableText>{formatCityPostalAddress(row.locationCity, row.locationPostalCode, row.locationAddress)}</BreakableText>
+                </KeyValueRow>
+                <div>
+                  <Link href={`/klienci/${row.clientId}`} className="text-xs hover:underline focus:underline focus:outline-none">Wejdź do klienta</Link>
+                </div>
+              </div>
+            </div>
+            <div className="rounded-md border p-2.5 text-sm" style={{ borderColor: "var(--pp-border)" }}>
+              {(() => {
+                const trim = (s?: string | null) => (s && s.trim() !== "" ? s.trim() : "—");
+                const invoiceCity = trim((row as unknown as { clientInvoiceCity?: string | null }).clientInvoiceCity ?? null);
+                const realizationCity = trim((row as unknown as { locationCity?: string | null }).locationCity ?? null);
+                const effectiveInstallDate = row.scheduledDate;
+                const termStr = effectiveInstallDate ? formatDate(effectiveInstallDate) : "—";
+                return (
+                  <div className="grid grid-cols-1 gap-1">
+                    <div className="opacity-80"><span className="opacity-60 mr-1">Miasto faktura:</span><span>{invoiceCity}</span></div>
+                    <div className="opacity-80"><span className="opacity-60 mr-1">Miasto realizacja:</span><span>{realizationCity}</span></div>
+                    <div className="opacity-80"><span className="opacity-60 mr-1">Termin montażu:</span><span className="inline-flex items-center rounded-md border border-black/15 px-1.5 py-0.5 text-[11px] dark:border-white/15">{termStr}</span></div>
+                    <div className="mt-1 pt-1 border-t" style={{ borderColor: "var(--pp-border)" }}>
+                      <QuickChecklistBar
+                        orderId={row.id}
+                        type={row.type as "delivery" | "installation"}
+                        items={checklist.map((i) => ({ ...i, label: i.key }))}
+                      />
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -254,79 +257,87 @@ export default async function OrderDetailsPage({
               <CardTitle>Etap i checklist</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <QuickChecklistBar
-                orderId={row.id}
-                type={row.type as "delivery" | "installation"}
-                items={checklist.map((i) => ({ ...i, label: i.key }))}
-              />
-              <OrderPipelineList
-                type={row.type as "delivery" | "installation"}
-                stage={row.pipelineStage}
-              />
-              <OrderChecklist
-                orderId={row.id}
-                type={row.type as "delivery" | "installation"}
-                items={checklist}
-              />
+              <div className="grid grid-cols-2 gap-2 items-start">
+                <div className="min-w-0">
+                  <OrderPipelineList
+                    type={row.type as "delivery" | "installation"}
+                    stage={row.pipelineStage}
+                  />
+                </div>
+                <div className="min-w-0">
+                  <OrderChecklist
+                    orderId={row.id}
+                    type={row.type as "delivery" | "installation"}
+                    items={checklist}
+                  />
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
-        <div className="space-y-4">
+        {/* Pełna szerokość: Podstawowe informacje */}
+        <div className="md:col-span-2">
           <Card id="order-info" className="scroll-mt-16">
             <CardHeader className="pb-2">
               <CardTitle>Podstawowe informacje</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <KeyValueRow label="Klient">
-                <BreakableText>{row.clientName || row.clientId}</BreakableText>
-              </KeyValueRow>
-              {row.type === "installation" && (
-                <KeyValueRow label="m2 przed pomiarem">
-                  {row.preMeasurementSqm ?? "-"}
+            <CardContent className="text-sm">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+                <KeyValueRow label="Klient" className="md:col-span-2">
+                  <BreakableText>{row.clientName || row.clientId}</BreakableText>
                 </KeyValueRow>
-              )}
-              <KeyValueRow label="Planowana data">
-                {row.scheduledDate ? formatDate(row.scheduledDate) : "-"}
-              </KeyValueRow>
-              {row.type === "installation" ? (
-                <>
-                  <KeyValueRow label="Proponowana cena montażu">
-                    {typeof row.proposedInstallPriceCents === "number"
-                      ? `${(row.proposedInstallPriceCents / 100).toFixed(2)} zł`
-                      : "-"}
+                <KeyValueRow label="Ustalona data montażu">
+                  {row.scheduledDate ? formatDate(row.scheduledDate) : "-"}
+                </KeyValueRow>
+                {row.type === "installation" && (
+                  <KeyValueRow label="Montażysta" className="gap-2 text-[13px]" labelClassName="basis-20">
+                    {row.installerName || row.installerEmail ? (
+                      <BreakableText>
+                        {row.installerName || row.installerEmail}
+                      </BreakableText>
+                    ) : (
+                      <Link href="#order-info" className="text-xs hover:underline focus:underline focus:outline-none">Przypisz</Link>
+                    )}
                   </KeyValueRow>
-                  <KeyValueRow label="Dom czy blok?">
-                    {row.buildingType === "house"
-                      ? "Dom"
-                      : row.buildingType === "apartment"
-                        ? "Blok"
+                )}
+                {row.type === "installation" && (
+                  <KeyValueRow label="m2 przed pomiarem">
+                    {row.preMeasurementSqm ?? "-"}
+                  </KeyValueRow>
+                )}
+                {row.type === "installation" ? (
+                  <>
+                    <KeyValueRow label="Proponowana cena montażu">
+                      {typeof row.proposedInstallPriceCents === "number"
+                        ? `${(row.proposedInstallPriceCents / 100).toFixed(2)} zł`
                         : "-"}
-                  </KeyValueRow>
-                  <KeyValueRow label="Preferowany termin montażu">
-                    {row.desiredInstallFrom || row.desiredInstallTo
-                      ? `${row.desiredInstallFrom ? formatDate(row.desiredInstallFrom) : "?"} — ${row.desiredInstallTo ? formatDate(row.desiredInstallTo) : "?"}`
-                      : "-"}
-                  </KeyValueRow>
-                </>
-              ) : null}
-              {row.type === "installation" && (
-                <KeyValueRow label="Montażysta">
-                  <BreakableText>
-                    {row.installerName || row.installerEmail || "-"}
-                  </BreakableText>
+                    </KeyValueRow>
+                    <KeyValueRow label="Dom czy blok?">
+                      {row.buildingType === "house"
+                        ? "Dom"
+                        : row.buildingType === "apartment"
+                          ? "Blok"
+                          : "-"}
+                    </KeyValueRow>
+                    <KeyValueRow label="Preferowany termin montażu" className="md:col-span-2">
+                      {row.desiredInstallFrom || row.desiredInstallTo
+                        ? `${row.desiredInstallFrom ? formatDate(row.desiredInstallFrom) : "?"} — ${row.desiredInstallTo ? formatDate(row.desiredInstallTo) : "?"}`
+                        : "-"}
+                    </KeyValueRow>
+                  </>
+                ) : null}
+                <KeyValueRow label="Utworzono">
+                  {formatDate(row.createdAt)}
                 </KeyValueRow>
-              )}
-              <KeyValueRow label="Utworzono">
-                {formatDate(row.createdAt)}
-              </KeyValueRow>
-              {row.outcome && (
-                <KeyValueRow label="Wynik">
-                  {row.outcome === "won" ? "Wygrane" : "Przegrane"}{" "}
-                  {row.outcomeAt ? `(${formatDate(row.outcomeAt)})` : ""}
-                </KeyValueRow>
-              )}
+                {row.outcome && (
+                  <KeyValueRow label="Wynik">
+                    {row.outcome === "won" ? "Wygrane" : "Przegrane"}{" "}
+                    {row.outcomeAt ? `(${formatDate(row.outcomeAt)})` : ""}
+                  </KeyValueRow>
+                )}
+              </div>
               <div
-                className="pt-2 border-t"
+                className="pt-2 mt-2 border-t"
                 style={{ borderColor: "var(--pp-border)" }}
               >
                 <OrderEditor
@@ -370,7 +381,9 @@ export default async function OrderDetailsPage({
               </div>
             </CardContent>
           </Card>
-
+        </div>
+        {/* Pozostałe sekcje w zwykłej kolumnie pod spodem */}
+        <div className="space-y-4">
           {latestDelivery?.[0]?.id ? (
             <Card>
               <CardHeader className="pb-2">

@@ -4,7 +4,6 @@ import {
   clients,
   clientNotes,
   deliverySlots,
-  installationSlots,
   orders,
   type Client,
 } from "@/db/schema";
@@ -66,23 +65,6 @@ export async function GET(
     if (typeof v === "number" && Number.isFinite(v)) return v;
     return null;
   };
-  // nearest FUTURE dates via slots
-  const [nextInstSlot] = await db
-    .select({ t: installationSlots.plannedAt })
-    .from(installationSlots)
-    .innerJoin(orders, eq(orders.id, installationSlots.orderId))
-    .where(
-      and(
-        eq(orders.clientId, id),
-        isNull(orders.archivedAt),
-        isNull(orders.outcome),
-        sql`(${installationSlots.status} in ('planned','confirmed'))`,
-        isNotNull(installationSlots.plannedAt),
-        sql`${installationSlots.plannedAt} >= ${todayStart}`,
-      ),
-    )
-    .orderBy(installationSlots.plannedAt)
-    .limit(1);
   const [nextInstOrder] = await db
     .select({ t: orders.scheduledDate })
     .from(orders)
@@ -134,12 +116,7 @@ export async function GET(
     .from(clientNotes)
     .where(eq(clientNotes.clientId, id))
     .orderBy(desc(clientNotes.createdAt));
-  let nextInstTs = (() => {
-    const arr = [toMs(nextInstSlot?.t), toMs(nextInstOrder?.t)].filter(
-      (v): v is number => v !== null,
-    );
-    return arr.length ? Math.min(...arr) : Number.POSITIVE_INFINITY;
-  })();
+  let nextInstTs = toMs(nextInstOrder?.t) ?? Number.POSITIVE_INFINITY;
   let nextDelTs = (() => {
     const arr = [toMs(nextDelSlot?.t), toMs(nextDelOrder?.t)].filter(
       (v): v is number => v !== null,
@@ -148,22 +125,6 @@ export async function GET(
   })();
 
   if (!Number.isFinite(nextInstTs)) {
-    const [pastInstSlot] = await db
-      .select({ t: installationSlots.plannedAt })
-      .from(installationSlots)
-      .innerJoin(orders, eq(orders.id, installationSlots.orderId))
-      .where(
-        and(
-          eq(orders.clientId, id),
-          isNull(orders.archivedAt),
-          isNull(orders.outcome),
-          sql`(${installationSlots.status} in ('planned','confirmed'))`,
-          isNotNull(installationSlots.plannedAt),
-          sql`${installationSlots.plannedAt} < ${todayStart}`,
-        ),
-      )
-      .orderBy(sql`${installationSlots.plannedAt} DESC`)
-      .limit(1);
     const [pastInstOrder] = await db
       .select({ t: orders.scheduledDate })
       .from(orders)
@@ -179,10 +140,7 @@ export async function GET(
       )
       .orderBy(sql`${orders.scheduledDate} DESC`)
       .limit(1);
-    const arr = [toMs(pastInstSlot?.t), toMs(pastInstOrder?.t)].filter(
-      (v): v is number => v !== null,
-    );
-    nextInstTs = arr.length ? Math.max(...arr) : Number.NEGATIVE_INFINITY;
+    nextInstTs = toMs(pastInstOrder?.t) ?? Number.NEGATIVE_INFINITY;
   }
 
   if (!Number.isFinite(nextDelTs)) {

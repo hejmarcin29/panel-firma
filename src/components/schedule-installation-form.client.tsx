@@ -20,15 +20,13 @@ export function ScheduleInstallationForm({ orderId }: { orderId: string }) {
         setLoading(true);
         try {
           const body: Record<string, unknown> = {
-            status: "planned",
-            plannedAt: plannedAt
+            scheduledDate: plannedAt
               ? new Date(plannedAt + "T00:00:00").getTime()
               : null,
-            durationMinutes: duration ? parseInt(duration, 10) : null,
             note: note || null,
           };
-          await fetch(`/api/zlecenia/${orderId}/montaze`, {
-            method: "POST",
+          await fetch(`/api/zlecenia/${orderId}/montaz`, {
+            method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body),
           });

@@ -3,11 +3,9 @@ import OrdersPage from "@/app/zlecenia/page";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
-export default function DostawaListWrapper(props: { searchParams: SearchParams }) {
-  const sp = props.searchParams || {};
-  return (
-    // Wymuszamy type=delivery i używamy tej samej strony listy
-    // @ts-expect-error Next.js 15 App Router: dynamic route accepts Promise searchParams
-    <OrdersPage searchParams={Promise.resolve({ ...sp, type: "delivery", view: sp.view ?? "cards" })} />
-  );
+export default async function DostawaListWrapper(props: { searchParams: Promise<SearchParams> }) {
+  const sp = { ...(await props.searchParams) };
+  const view = (sp.view as string | undefined) ?? "cards";
+  // Wymuszamy type=delivery i używamy tej samej strony listy
+  return <OrdersPage searchParams={Promise.resolve({ ...sp, type: "delivery", view })} />;
 }

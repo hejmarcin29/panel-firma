@@ -46,7 +46,7 @@ export async function updateProjectSettings(
     return { ok: false, error: "Brak uprawnień" };
   }
   try {
-    const toSave = updateSchema.parse(input);
+  const toSave = updateSchema.parse(input);
     const current = await getProjectSettings();
     // Validate unique stage keys within each section only, and only if user explicitly provided pipelineStages
     const providedPipelineStages = Object.prototype.hasOwnProperty.call(
@@ -89,6 +89,7 @@ export async function updateProjectSettings(
     revalidatePath("/klienci");
   revalidatePath("/dostawy");
   revalidatePath("/montaze");
+    revalidatePath("/panel/montazysta");
     return { ok: true };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Błąd zapisu";

@@ -684,7 +684,7 @@ export default function KlientPage() {
                         {o.preMeasurementSqm ?? "-"}
                       </div>
                       <div>
-                        <span className="opacity-60">Planowana data:</span>{" "}
+                        <span className="opacity-60">Ustalona data montażu:</span>{" "}
                         {formatDate(o.scheduledDate, "-")}
                       </div>
                       {/* Edycja zlecenia (połączone z informacjami) */}

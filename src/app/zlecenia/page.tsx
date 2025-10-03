@@ -7,12 +7,12 @@ import Link from "next/link";
 import { pl } from "@/i18n/pl";
 import { OrderOutcomeButtons } from "../../components/order-outcome-buttons.client";
 // removed old icon imports (quick links replaced by toolbar)
-import { TypeBadge, OutcomeBadge } from "@/components/badges";
+import { TypeBadge } from "@/components/badges";
 import { OrderPipelineList } from "@/components/order-pipeline-list.client";
 import { OrderChecklist } from "@/components/order-checklist.client";
 import { OrdersTable, type OrderRow } from "@/components/orders-table.client";
 import { OrdersToolbar } from "@/components/orders-toolbar.client";
-import { formatDate, formatDayMonth } from "@/lib/date";
+import { formatDayMonth } from "@/lib/date";
 import { ClickableCard } from "@/components/clickable-card.client";
 
 export const dynamic = "force-dynamic";
@@ -42,6 +42,7 @@ type Row = {
   orderLocationCity?: string | null;
   clientDeliveryCity?: string | null;
   invoiceCity?: string | null;
+  scheduledDate?: number | null;
   nextDeliveryAt: number | null;
   nextDeliveryStatus: string | null;
   nextInstallationAt: number | null;
@@ -115,6 +116,8 @@ export default async function OrdersPage({
       orderLocationCity: orders.locationCity,
       clientDeliveryCity: clients.deliveryCity,
       invoiceCity: clients.invoiceCity,
+  // Normalize scheduledDate to epoch ms number for Row typing
+  scheduledDate: sql<number>`CAST(${orders.scheduledDate} AS INTEGER)`,
       // Checklist flags via EXISTS (SQLite returns 0/1)
       proforma: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'proforma' AND oci.done = 1)`,
       advance_invoice: sql<number>`EXISTS(SELECT 1 FROM order_checklist_items oci WHERE oci.order_id = ${orders.id} AND oci.key = 'advance_invoice' AND oci.done = 1)`,
@@ -293,7 +296,7 @@ export default async function OrdersPage({
             return (
               <ClickableCard key={r.id} href={href} className="rounded-md border border-black/10 dark:border-white/10 p-3 anim-enter">
                 {/* Nagłówek: numer zlecenia + klient (większe), po prawej typ + miasto */}
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between md:gap-3">
                   <div className="min-w-0 flex items-baseline gap-2">
                     <Link
                       className="font-medium hover:underline focus:underline focus:outline-none shrink-0"
@@ -306,102 +309,101 @@ export default async function OrdersPage({
                     </div>
                   </div>
                   {(() => {
-                    const trim = (s?: string | null) => (s && s.trim() !== "" ? s.trim() : null);
+                    const trim = (s?: string | null) => (s && s.trim() !== "" ? s.trim() : "-");
                     const install = trim(r.orderLocationCity ?? null);
-                    const delivery = trim(r.clientDeliveryCity ?? null);
+                    const delivery = trim((r.clientDeliveryCity || r.orderLocationCity) ?? null);
                     const invoiceCity = trim((r as unknown as { invoiceCity?: string | null }).invoiceCity ?? null);
-                    const primaryCity = r.type === "installation" ? install : delivery;
-                    const chosen = primaryCity ?? invoiceCity;
-                    const fromInvoice = !primaryCity && !!invoiceCity;
+                    const secondary = r.type === "installation" ? install : delivery;
+                    const secondaryLabel = r.type === "installation" ? "realizacja" : "dostawa";
+                    const src = r.type === "installation"
+                      ? (r.orderLocationCity ? "order" : (r.clientDeliveryCity ? "client" : null))
+                      : (r.clientDeliveryCity ? "client" : (r.orderLocationCity ? "order" : null));
+                    const mini = src ? (src === "client" ? "K" : "Z") : null;
+                    const miniTitle = src ? (src === "client" ? "źródło: klient" : "źródło: zlecenie") : undefined;
+                    // Dla montaży: pokazuj 'ustaloną datę montażu' z orders.scheduledDate (jeśli jest), a jeśli brak – najbliższy slot z installation_slots
+                    const termTs = r.type === "installation" ? (r.scheduledDate ?? r.nextInstallationAt) : r.nextDeliveryAt;
+                    const termLabel = r.type === "installation" ? "Termin montażu" : "Termin";
                     return (
-                      <div className="flex items-center gap-2 text-sm md:text-base">
+                      <div className="flex items-center gap-2 text-sm md:text-base md:self-auto self-start">
                         <TypeBadge type={r.type} />
-                        <div className="text-xs md:text-sm opacity-80">
-                          {chosen ? (
-                            <span>
-                              {chosen} {fromInvoice ? <span className="lowercase opacity-60">(z faktury)</span> : null}
-                            </span>
-                          ) : (
-                            <span className="opacity-60">—</span>
-                          )}
+                        <div className="text-left md:text-right">
+                          <div className="truncate text-xs md:text-sm opacity-80" title={`${invoiceCity} (Miasto faktura)`}>
+                            <span className="opacity-60 text-[11px] mr-1 md:hidden">fakt.:</span>
+                            <span className="opacity-60 text-[11px] mr-1 hidden md:inline">Miasto faktura:</span>
+                            <span>{invoiceCity}</span>
+                          </div>
+                          <div className="truncate text-xs md:text-sm opacity-80" title={`${secondary} (${secondaryLabel})${mini ? `, ${miniTitle}` : ""}`}>
+                            <span className="opacity-60 text-[11px] mr-1 md:hidden">{secondaryLabel === "dostawa" ? "dost.:" : "real.:"}</span>
+                            <span className="opacity-60 text-[11px] mr-1 hidden md:inline">{secondaryLabel === "dostawa" ? "Miasto dostawa:" : "Miasto realizacja:"}</span>
+                            <span>{secondary}</span>
+                            {mini ? (
+                              <span className="ml-1 inline-flex items-center rounded border border-black/15 px-1 py-0.5 text-[10px] leading-none opacity-70 align-middle dark:border-white/15" title={miniTitle} aria-label={miniTitle}>{mini}</span>
+                            ) : null}
+                          </div>
+                          <div className="truncate text-xs md:text-sm opacity-80" title={termTs ? formatDayMonth(termTs, "—") : "—"}>
+                            <span className="opacity-60 text-[11px] mr-1 md:hidden">term.:</span>
+                            <span className="opacity-60 text-[11px] mr-1 hidden md:inline">{termLabel}:</span>
+                            <span>{termTs ? formatDayMonth(termTs, "—") : "—"}</span>
+                          </div>
                         </div>
                       </div>
                     );
                   })()}
                 </div>
-                {/* Wyświetl pełne Etapy + Checklistę obok siebie na desktopie */}
-                <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2 items-stretch">
-                  <OrderPipelineList
-                    orderId={r.id}
-                    type={r.type as "delivery" | "installation"}
-                    stage={r.pipelineStage}
-                  />
-                  <OrderChecklist
-                    orderId={r.id}
-                    type={r.type as "delivery" | "installation"}
-                    items={(r.type === "installation"
-                      ? [
-                          "measurement",
-                          "quote",
-                          "contract",
-                          "advance_payment",
-                          "installation",
-                          "handover_protocol",
-                          "final_invoice",
-                          "done",
-                        ]
-                      : [
-                          "proforma",
-                          "advance_invoice",
-                          "final_invoice",
-                          "post_delivery_invoice",
-                          "quote",
-                          "done",
-                        ]
-                    ).map((k) => ({ key: k, done: Boolean((r as Record<string, unknown>)[k]) }))}
-                  />
-                </div>
-                <div className="mt-1 text-sm">{r.clientName || r.clientId}</div>
-                <div className="mt-1 grid grid-cols-2 gap-2 text-xs opacity-70">
-                  {lockType !== "installation" && (
-                    <div>
-                      <div className="opacity-70">Dostawa</div>
-                      <div>
-                        {r.nextDeliveryAt ? formatDayMonth(r.nextDeliveryAt, "—") : "—"}
-                      </div>
-                    </div>
-                  )}
-                  {lockType !== "delivery" && (
-                    <div>
-                      <div className="opacity-70">Montaż</div>
-                      <div>
-                        {r.nextInstallationAt ? formatDayMonth(r.nextInstallationAt, "—") : "—"}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="mt-1 text-xs opacity-70 flex justify-end">
-                  {formatDate(r.createdAt, "—")}
-                </div>
-                <div className="mt-2 flex items-center justify-between">
-                  <OutcomeBadge
-                    outcome={r.outcome as "won" | "lost" | null | undefined}
-                    iconOnly
-                  />
-                  <div className="flex items-center gap-2">
-                    <OrderOutcomeButtons
-                      id={r.id}
-                      outcome={r.outcome as "won" | "lost" | null}
-                      size="md"
+                {/* Wyświetl pełne Etapy + Checklistę obok siebie na desktopie.
+                    Akcje (Wygrana/Przegrana + Szczegóły) przenosimy na dół prawej kolumny
+                    obok checklisty, tak jak na screenie. */}
+                <div className="mt-2 grid grid-cols-2 md:grid-cols-[1fr_1fr_auto] gap-2 items-stretch">
+                  <div className="min-w-0">
+                    <OrderPipelineList
+                      orderId={r.id}
+                      type={r.type as "delivery" | "installation"}
+                      stage={r.pipelineStage}
                     />
-                    <Link
-                      className="inline-flex h-9 items-center gap-1.5 rounded-md border border-black/15 px-3 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10"
-                      href={href}
-                    >
+                  </div>
+                  <div className="h-full min-h-0 flex flex-col">
+                    <OrderChecklist
+                      orderId={r.id}
+                      type={r.type as "delivery" | "installation"}
+                      items={(r.type === "installation"
+                        ? [
+                            "measurement",
+                            "quote",
+                            "contract",
+                            "advance_payment",
+                            "installation",
+                            "handover_protocol",
+                            "final_invoice",
+                            "done",
+                          ]
+                        : [
+                            "proforma",
+                            "advance_invoice",
+                            "final_invoice",
+                            "post_delivery_invoice",
+                            "quote",
+                            "done",
+                          ]
+                      ).map((k) => ({ key: k, done: Boolean((r as Record<string, unknown>)[k]) }))}
+                    />
+                    {/* Akcje pod checklistą tylko na mobile (na desktopie są w trzeciej kolumnie) */}
+                    <div className="md:hidden mt-2 flex items-center justify-end gap-2">
+                      <OrderOutcomeButtons id={r.id} outcome={r.outcome as "won" | "lost" | null} size="sm" />
+                      <Link className="inline-flex h-8 items-center gap-1.5 rounded-md border border-black/15 px-2.5 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10" href={href}>
+                        Szczegóły
+                      </Link>
+                    </div>
+                  </div>
+                  {/* Trzecia kolumna z akcjami (tylko desktop) */}
+                  <div className="hidden md:flex flex-col items-end justify-start gap-2">
+                    <OrderOutcomeButtons id={r.id} outcome={r.outcome as "won" | "lost" | null} size="sm" />
+                    <Link className="inline-flex h-8 items-center gap-1.5 rounded-md border border-black/15 px-2.5 text-sm hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10" href={href}>
                       Szczegóły
                     </Link>
                   </div>
                 </div>
+                {/* Usuwamy sekcję terminów z body — termin wyświetlamy w nagłówku pod miastem. */}
+                {/* Usunięto osobny dolny przycisk Szczegóły – jest obok Wygrana/Przegrana */}
               </ClickableCard>
             );
           })

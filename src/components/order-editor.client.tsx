@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -128,23 +128,41 @@ export function OrderEditor({
   const [attLoading, setAttLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
-  const [category, setCategory] = useState<Attachment["category"]>("other");
+  // Filtr widoku listy załączników (domyślnie: wszystkie)
+  const [filterCategory, setFilterCategory] = useState<
+    Attachment["category"] | "all"
+  >("all");
+  // Domyślna kategoria dla NOWYCH plików (upload) zależna od kontekstu strony
+  const defaultUploadCategory: Attachment["category"] =
+    type === "installation" ? "installs" : "other";
   const [lightbox, setLightbox] = useState<{ open: boolean; index: number }>(
     () => ({ open: false, index: 0 }),
   );
   const [confirmDeleteAttId, setConfirmDeleteAttId] = useState<string | null>(
     null,
   );
-
-  const imageItems = useMemo(
-    () =>
-      attachments
-        .filter((a) => (a.mime || "").startsWith("image/"))
-        .map((a) => ({
-          src: `/api/pliki/r2/proxy?key=${encodeURIComponent(a.key)}`,
-        })),
-    [attachments],
+  // Dialog wybierania kategorii przed uploadem
+  const [pickOpen, setPickOpen] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<File[] | null>(null);
+  const [pickCategory, setPickCategory] = useState<Attachment["category"]>(
+    defaultUploadCategory,
   );
+  const [forcedCategory, setForcedCategory] = useState<
+    Attachment["category"] | null
+  >(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const imageItems = useMemo(() => {
+    const list =
+      filterCategory === "all"
+        ? attachments
+        : attachments.filter((a) => a.category === filterCategory);
+    return list
+      .filter((a) => (a.mime || "").startsWith("image/"))
+      .map((a) => ({
+        src: `/api/pliki/r2/proxy?key=${encodeURIComponent(a.key)}`,
+      }));
+  }, [attachments, filterCategory]);
 
   useEffect(() => {
     (async () => {
@@ -296,7 +314,7 @@ export function OrderEditor({
           }}
         />
       </div>
-      {type === "installation" && (
+      {type === "installation" ? (
         <>
           <div>
             <Label>m2 przed pomiarem</Label>
@@ -310,37 +328,52 @@ export function OrderEditor({
               className="w-40"
             />
           </div>
-          <div>
-            <Label>Przypisz montażystę</Label>
-            <select
-              value={values.installerId || ""}
-              onChange={(e) => {
-                const val = e.target.value;
-                setValues((v) => ({ ...v, installerId: val }));
-              }}
-              className="mt-1 h-9 w-full rounded-md border border-black/15 bg-transparent px-3 text-sm outline-none dark:border-white/15"
-            >
-              <option value="">-- bez przypisania --</option>
-              {installers.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name || u.email}
-                </option>
-              ))}
-            </select>
+          {/* Planowana data + Montażysta obok siebie */}
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div>
+              <Label>Ustalona data montażu</Label>
+              <div className="mt-1 w-40">
+                <DatePicker
+                  value={values.scheduledDate || ""}
+                  onChange={(next) =>
+                    setValues((v) => ({ ...v, scheduledDate: next }))
+                  }
+                />
+              </div>
+            </div>
+            <div>
+              <Label>Przypisz montażystę</Label>
+              <select
+                value={values.installerId || ""}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setValues((v) => ({ ...v, installerId: val }));
+                }}
+                className="mt-1 h-8 w-56 rounded-md border border-black/15 bg-transparent px-2 text-sm outline-none dark:border-white/15"
+              >
+                <option value="">-- bez przypisania --</option>
+                {installers.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name || u.email}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </>
-      )}
-      <div>
-        <Label>Planowana data</Label>
-        <div className="mt-1">
-          <DatePicker
-            value={values.scheduledDate || ""}
-            onChange={(next) =>
-              setValues((v) => ({ ...v, scheduledDate: next }))
-            }
-          />
+      ) : (
+        <div>
+          <Label>Ustalona data montażu</Label>
+          <div className="mt-1 w-40">
+            <DatePicker
+              value={values.scheduledDate || ""}
+              onChange={(next) =>
+                setValues((v) => ({ ...v, scheduledDate: next }))
+              }
+            />
+          </div>
         </div>
-      </div>
+      )}
       {/* Miejsce realizacji (adres) */}
       <div>
         <Label>Miejsce realizacji (adres)</Label>
@@ -441,21 +474,86 @@ export function OrderEditor({
       </div>
       <div className="mt-6 border-t border-black/10 pt-4 dark:border-white/10">
         <div className="mb-2 font-medium">Załączniki</div>
-        <div className="mb-2 flex items-center gap-2">
-          <label className="text-sm">Kategoria:</label>
-          <select
-            value={category}
-            onChange={(e) =>
-              setCategory(e.target.value as Attachment["category"])
-            }
-            className="h-8 rounded-md border border-black/15 bg-transparent px-2 text-sm dark:border-white/15"
-          >
-            <option value="invoices">Faktury</option>
-            <option value="installs">Montaże</option>
-            <option value="contracts">Umowy</option>
-            <option value="protocols">Protokoły</option>
-            <option value="other">Inne</option>
-          </select>
+        <div className="mb-2 flex flex-wrap items-center gap-3">
+          {/* Filtr kategorii (dotyczy WYŚWIETLANIA). Domyślnie pokazujemy wszystkie */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm">Filtr:</label>
+            <select
+              value={filterCategory}
+              onChange={(e) =>
+                setFilterCategory(
+                  (e.target.value as Attachment["category"] | "all") || "all",
+                )
+              }
+              className="h-8 rounded-md border border-black/15 bg-transparent px-2 text-sm dark:border-white/15"
+            >
+              <option value="all">Wszystkie</option>
+              <option value="invoices">Faktury</option>
+              <option value="installs">Montaże</option>
+              <option value="contracts">Umowy</option>
+              <option value="protocols">Protokoły</option>
+              <option value="other">Inne</option>
+            </select>
+          </div>
+          {/* Szybkie dodawanie do kategorii */}
+          <div className="flex items-center gap-2 ml-auto">
+            <span className="text-sm opacity-70">Dodaj do:</span>
+            <button
+              type="button"
+              disabled={uploading}
+              className="h-8 rounded-md border border-black/15 px-2 text-sm dark:border-white/15 hover:bg-black/5 disabled:opacity-50"
+              onClick={() => {
+                setForcedCategory("invoices");
+                fileInputRef.current?.click();
+              }}
+            >
+              Faktury
+            </button>
+            <button
+              type="button"
+              disabled={uploading}
+              className="h-8 rounded-md border border-black/15 px-2 text-sm dark:border-white/15 hover:bg-black/5 disabled:opacity-50"
+              onClick={() => {
+                setForcedCategory("installs");
+                fileInputRef.current?.click();
+              }}
+            >
+              Montaże
+            </button>
+            <button
+              type="button"
+              disabled={uploading}
+              className="h-8 rounded-md border border-black/15 px-2 text-sm dark:border-white/15 hover:bg-black/5 disabled:opacity-50"
+              onClick={() => {
+                setForcedCategory("contracts");
+                fileInputRef.current?.click();
+              }}
+            >
+              Umowy
+            </button>
+            <button
+              type="button"
+              disabled={uploading}
+              className="h-8 rounded-md border border-black/15 px-2 text-sm dark:border-white/15 hover:bg-black/5 disabled:opacity-50"
+              onClick={() => {
+                setForcedCategory("protocols");
+                fileInputRef.current?.click();
+              }}
+            >
+              Protokoły
+            </button>
+            <button
+              type="button"
+              disabled={uploading}
+              className="h-8 rounded-md border border-black/15 px-2 text-sm dark:border-white/15 hover:bg-black/5 disabled:opacity-50"
+              onClick={() => {
+                setForcedCategory("other");
+                fileInputRef.current?.click();
+              }}
+            >
+              Inne
+            </button>
+          </div>
         </div>
         <div
           onDragOver={(e) => {
@@ -467,7 +565,13 @@ export function OrderEditor({
             e.preventDefault();
             setDragOver(false);
             const files = Array.from(e.dataTransfer.files || []);
-            if (files.length) void handleFiles(files);
+            if (files.length) {
+              setPendingFiles(files);
+              setPickCategory(
+                filterCategory === "all" ? defaultUploadCategory : filterCategory,
+              );
+              setPickOpen(true);
+            }
           }}
           className={`mb-3 rounded-md border border-dashed p-4 text-center text-sm ${dragOver ? "border-blue-500 bg-blue-500/5" : "border-black/15 dark:border-white/15"}`}
         >
@@ -476,10 +580,24 @@ export function OrderEditor({
             <input
               type="file"
               multiple
+              ref={fileInputRef}
               className="hidden"
               onChange={(e) => {
                 const files = Array.from(e.currentTarget.files || []);
-                if (files.length) void handleFiles(files);
+                if (files.length) {
+                  if (forcedCategory) {
+                    void handleFiles(files, forcedCategory);
+                    setForcedCategory(null);
+                  } else {
+                    setPendingFiles(files);
+                    setPickCategory(
+                      filterCategory === "all"
+                        ? defaultUploadCategory
+                        : filterCategory,
+                    );
+                    setPickOpen(true);
+                  }
+                }
                 e.currentTarget.value = "";
               }}
             />{" "}
@@ -493,11 +611,17 @@ export function OrderEditor({
         <div className="grid gap-2">
           {attLoading ? (
             <div className="text-sm opacity-70">Ładowanie…</div>
-          ) : attachments.length === 0 ? (
+          ) : (filterCategory === "all"
+              ? attachments.length === 0
+              : attachments.filter((a) => a.category === filterCategory)
+                  .length === 0) ? (
             <div className="text-sm opacity-70">Brak załączników</div>
           ) : (
             <ul className="grid gap-2">
-              {attachments.map((a, idx) => (
+              {(filterCategory === "all"
+                ? attachments
+                : attachments.filter((a) => a.category === filterCategory)
+              ).map((a, idx) => (
                 <li
                   key={a.id}
                   className="flex items-center justify-between gap-3 rounded-md border border-black/10 p-2 text-sm dark:border-white/10"
@@ -579,10 +703,55 @@ export function OrderEditor({
           if (confirmDeleteAttId) void deleteAttachment(confirmDeleteAttId);
         }}
       />
+      {/* Dialog: wybierz kategorię dla nowych plików */}
+      <AlertDialog
+        open={pickOpen}
+        onOpenChange={(v) => {
+          if (!v) {
+            setPickOpen(false);
+            setPendingFiles(null);
+          }
+        }}
+        title="Wybierz kategorię dla nowych plików"
+        description={
+          <div className="grid gap-2">
+            <label className="text-sm" htmlFor="pick-cat">
+              Kategoria
+            </label>
+            <select
+              id="pick-cat"
+              value={pickCategory}
+              onChange={(e) =>
+                setPickCategory(e.target.value as Attachment["category"])
+              }
+              className="h-9 rounded-md border border-black/15 bg-transparent px-2 text-sm dark:border-white/15"
+            >
+              <option value="invoices">Faktury</option>
+              <option value="installs">Montaże</option>
+              <option value="contracts">Umowy</option>
+              <option value="protocols">Protokoły</option>
+              <option value="other">Inne</option>
+            </select>
+            <div className="text-xs opacity-70">
+              Podpowiadamy kategorię na podstawie kontekstu strony lub aktywnego filtra.
+            </div>
+          </div>
+        }
+        confirmText={uploading ? "Wysyłanie…" : "Wyślij"}
+        onConfirm={() => {
+          if (!pendingFiles || pendingFiles.length === 0) return;
+          void handleFiles(pendingFiles, pickCategory);
+          setPickOpen(false);
+          setPendingFiles(null);
+        }}
+      />
     </div>
   );
 
-  async function handleFiles(files: File[]) {
+  async function handleFiles(
+    files: File[],
+    chosenCategory: Attachment["category"] = defaultUploadCategory,
+  ) {
     setUploading(true);
     try {
       for (const file of files) {
@@ -596,7 +765,7 @@ export function OrderEditor({
               filename: file.name,
               mime: file.type || "application/octet-stream",
               size: file.size,
-              category,
+              category: chosenCategory,
             }),
           },
         );
@@ -616,7 +785,7 @@ export function OrderEditor({
           body: JSON.stringify({
             key: pj.key,
             publicUrl: pj.publicUrl,
-            category,
+            category: chosenCategory,
             mime: file.type || null,
             size: file.size,
           }),

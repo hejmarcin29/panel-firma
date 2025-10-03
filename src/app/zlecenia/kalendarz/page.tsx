@@ -4,13 +4,12 @@ import { db } from "@/db";
 import {
   clients,
   deliverySlots,
-  installationSlots,
   orders,
   users,
   orderChecklistItems,
   orderGoogleEvents,
 } from "@/db/schema";
-import { and, eq, inArray, asc } from "drizzle-orm";
+import { and, eq, inArray, asc, isNotNull, sql } from "drizzle-orm";
 import { getSession, isUserRole } from "@/lib/auth-session";
 
 type CalendarEvent = {
@@ -110,13 +109,14 @@ export default async function CalendarPage({
     .where(inArray(deliverySlots.status, statusesArr as readonly string[]))
     .orderBy(asc(deliverySlots.plannedAt));
 
+  // Installations based on orders.scheduledDate (Stage 1 simplification)
   const iRows = await db
     .select({
-      id: installationSlots.id,
-      orderId: installationSlots.orderId,
-      plannedAt: installationSlots.plannedAt,
-      status: installationSlots.status,
-      installerId: installationSlots.installerId,
+      id: orders.id,
+      orderId: orders.id,
+      plannedAt: orders.scheduledDate,
+      status: sql<string>`'confirmed'`,
+      installerId: orders.installerId,
       clientName: clients.name,
       orderNo: orders.orderNo,
       orderType: orders.type,
@@ -126,18 +126,16 @@ export default async function CalendarPage({
       clientDeliveryCity: clients.deliveryCity,
       clientDeliveryAddress: clients.deliveryAddress,
     })
-    .from(installationSlots)
-    .leftJoin(orders, eq(installationSlots.orderId, orders.id))
+    .from(orders)
     .leftJoin(clients, eq(orders.clientId, clients.id))
     .where(
       and(
-        inArray(installationSlots.status, statusesArr as readonly string[]),
-        ...(effectiveInstaller
-          ? [eq(installationSlots.installerId, effectiveInstaller)]
-          : []),
+        eq(orders.type, "installation"),
+        isNotNull(orders.scheduledDate),
+        ...(effectiveInstaller ? [eq(orders.installerId, effectiveInstaller)] : []),
       ),
     )
-    .orderBy(asc(installationSlots.plannedAt));
+    .orderBy(asc(orders.scheduledDate));
 
   const fmtHref = (
     orderId: string,
@@ -151,7 +149,11 @@ export default async function CalendarPage({
   const toIsoDate = (v: number | Date | null) => {
     if (!v) return undefined;
     const d = v instanceof Date ? v : new Date(v);
-    return d.toISOString().slice(0, 10);
+    // Format YYYY-MM-DD in local time to avoid timezone shifting the day
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
   };
 
   // Apply q filter (client name or order no). Keep minimal until we enrich events.

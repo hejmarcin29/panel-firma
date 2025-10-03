@@ -28,6 +28,7 @@ export type OrderRow = {
   clientName: string | null;
   orderLocationCity?: string | null;
   clientDeliveryCity?: string | null;
+  invoiceCity?: string | null;
   nextDeliveryAt: number | null;
   nextDeliveryStatus: string | null;
   nextInstallationAt: number | null;
@@ -115,9 +116,40 @@ export function OrdersTable({ data, listType }: { data: OrderRow[]; listType?: "
         id: "city",
         cell: ({ row }) => {
           const r = row.original;
-          const city = r.type === "installation" ? (r.orderLocationCity || "-") : (r.clientDeliveryCity || "-");
+          const inv = r.invoiceCity || "-";
+          // Sekundarne miasto i jego źródło: dla instalacji preferujemy zlecenie; dla dostawy preferujemy klienta
+          let secondary = "-" as string;
+          let src: "client" | "order" | null = null;
+          if (r.type === "installation") {
+            if (r.orderLocationCity) { secondary = r.orderLocationCity; src = "order"; }
+            else if (r.clientDeliveryCity) { secondary = r.clientDeliveryCity; src = "client"; }
+          } else {
+            if (r.clientDeliveryCity) { secondary = r.clientDeliveryCity; src = "client"; }
+            else if (r.orderLocationCity) { secondary = r.orderLocationCity; src = "order"; }
+          }
+          const secondaryLabel = r.type === "installation" ? "realizacja" : "dostawa";
+          const mini = src ? (src === "client" ? "K" : "Z") : null;
+          const miniTitle = src ? (src === "client" ? "źródło: klient" : "źródło: zlecenie") : undefined;
           return (
-            <span className="block max-w-[160px] truncate" title={city}>{city}</span>
+            <div className="max-w-[220px]">
+              <div className="truncate" title={`${inv} (faktura)`}>
+                <span className="opacity-60 text-[11px] mr-1">faktura:</span>
+                <span>{inv}</span>
+              </div>
+              <div className="truncate" title={`${secondary} (${secondaryLabel})${mini ? `, ${miniTitle}` : ""}`}>
+                <span className="opacity-60 text-[11px] mr-1">{secondaryLabel}:</span>
+                <span>{secondary}</span>
+                {mini ? (
+                  <span
+                    className="ml-1 inline-flex items-center rounded border border-black/15 px-1 py-0.5 text-[10px] leading-none opacity-70 align-middle dark:border-white/15"
+                    title={miniTitle}
+                    aria-label={miniTitle}
+                  >
+                    {mini}
+                  </span>
+                ) : null}
+              </div>
+            </div>
           );
         },
       },

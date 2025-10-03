@@ -28,6 +28,7 @@ const sections: { title: string; items: NavItem[] }[] = [
       { href: "/dostawa", label: "Dostawa", icon: Wrench },
       { href: "/zlecenia/kalendarz", label: "Kalendarz", icon: CalendarDays },
       { href: "/klienci", label: "Klienci", icon: Users },
+      { href: "/montazysci", label: "Montażyści", icon: Users },
       { href: "/zadania", label: "Zadania", icon: CheckSquare },
   { href: "/checklist/montaz", label: "Montaże — checklisty", icon: Wrench },
   { href: "/checklist/dostawa", label: "Dostawy — checklisty", icon: Wrench },
@@ -95,6 +96,7 @@ export function Sidebar() {
           item.href === "/klienci" ||
           item.href === "/montaz" ||
           item.href === "/dostawa" ||
+          item.href === "/montazysci" ||
           item.href === "/checklist/montaz" ||
           item.href === "/checklist/dostawa" ||
           item.href.startsWith("/panel/zlecone-montaze") ||

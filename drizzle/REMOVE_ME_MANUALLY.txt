@@ -1,0 +1,1 @@
+If this file exists, an automated tool couldn't delete a duplicate migration. Please remove drizzle/0028_drop_installation_slots.sql manually to pass the pre-commit migration check.

@@ -19,6 +19,23 @@ type MyOrder = {
 };
 
 export default function PanelMontazysty() {
+  const [invoiceInfo, setInvoiceInfo] = useState<string>("");
+  const [canEditInvoice, setCanEditInvoice] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await fetch("/api/ustawienia/projekt");
+        const j = await r.json().catch(() => ({}));
+        if (typeof j.invoiceInfoText === "string") setInvoiceInfo(j.invoiceInfoText);
+        // simple role check from session endpoint (optional lightweight)
+        const s = await fetch("/api/auth/session");
+        const sj = await s.json().catch(() => ({}));
+        const role = sj?.user?.role as string | undefined;
+        setCanEditInvoice(role === "admin");
+      } catch {}
+    })();
+  }, []);
   const [orders, setOrders] = useState<MyOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -101,6 +118,28 @@ export default function PanelMontazysty() {
   return (
     <div className="mx-auto max-w-4xl p-6 space-y-4">
       <h1 className="text-2xl font-semibold">Moje montaże</h1>
+      {/* Dane do faktury — widoczne dla montażystów na dashboardzie */}
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle>Dane do faktury</CardTitle>
+            {canEditInvoice && (
+              <a
+                href="/ustawienia"
+                className="text-xs hover:underline focus:underline focus:outline-none"
+                title="Edytuj w Ustawieniach"
+              >
+                Edytuj
+              </a>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="text-sm leading-relaxed whitespace-pre-line">
+            {invoiceInfo || "—"}
+          </div>
+        </CardContent>
+      </Card>
       <div className="flex items-center gap-2">
         <button
           className={[

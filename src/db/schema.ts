@@ -302,39 +302,7 @@ export const deliverySlots = sqliteTable(
 export type DeliverySlot = typeof deliverySlots.$inferSelect;
 
 // Installation schedule entries (1:N per order)
-export const installationSlots = sqliteTable(
-  "installation_slots",
-  {
-    id: text("id").primaryKey(), // uuid
-    orderId: text("order_id").notNull(),
-    plannedAt: integer("planned_at", { mode: "timestamp_ms" }),
-    windowStart: integer("window_start", { mode: "timestamp_ms" }),
-    windowEnd: integer("window_end", { mode: "timestamp_ms" }),
-    status: text("status").notNull().default("planned"), // 'planned' | 'confirmed' | 'completed' | 'canceled'
-    installerId: text("installer_id"),
-    durationMinutes: integer("duration_minutes"),
-    note: text("note"),
-    createdAt: integer("created_at", { mode: "timestamp_ms" })
-      .notNull()
-      .default(sql`(unixepoch() * 1000)`),
-    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
-      .notNull()
-      .default(sql`(unixepoch() * 1000)`),
-  },
-  (table) => ({
-    idxOrder: index("installation_slots_order_id_idx").on(table.orderId),
-    idxInstallerPlanned: index("installation_slots_installer_planned_idx").on(
-      table.installerId,
-      table.plannedAt,
-    ),
-    idxStatusPlanned: index("installation_slots_status_planned_idx").on(
-      table.status,
-      table.plannedAt,
-    ),
-  }),
-);
-
-export type InstallationSlot = typeof installationSlots.$inferSelect;
+// installation_slots removed in Etap 2; orders.scheduledDate is the source of truth for installations
 
 // Delivery items (pozycje dostawy) — powiązane z delivery_slots
 export const deliveryItems = sqliteTable(

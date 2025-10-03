@@ -57,6 +57,25 @@ export const defaultPipelineStages = {
 } as const;
 
 export const projectSettingsSchema = z.object({
+  invoiceInfoText: z
+    .string()
+    .default(
+      [
+        "Primepodloga.pl Marcin Przybyła",
+        "Koszalińska 38A",
+        "47-400 Racibórz",
+        "NIP: 6392026404",
+        "Alior Bank",
+        "27249000050000453000562099",
+        "",
+        "tytułem: Usługa montażu paneli winylowych - budynek mieszkalny",
+        "jednorodzinny",
+        "",
+        "W uwagach",
+        "numer zlecenia np. 23_1_m",
+      ].join("\n"),
+    )
+    .optional(),
   checklistLabels: z
     .object({
       delivery: z
@@ -146,6 +165,7 @@ export function mergeProjectSettings(partial?: Partial<ProjectSettings> | null):
   }
 
   return {
+    invoiceInfoText: partial.invoiceInfoText ?? base.invoiceInfoText,
     checklistLabels,
     pipelineStageLabels,
     pipelineStages: { delivery: deliveryStages, installation: installationStages },

@@ -99,7 +99,8 @@ export function OrderPipelineList({ type, stage, orderId }: Props) {
               )}
               {isCurrent ? (
                 <span className="ml-1 rounded-full bg-black/10 px-1.5 py-0.5 text-[10px] uppercase tracking-wide dark:bg-white/10">
-                  aktualny
+                  <span className="inline md:hidden">AKT.</span>
+                  <span className="hidden md:inline">aktualny</span>
                 </span>
               ) : null}
             </li>
