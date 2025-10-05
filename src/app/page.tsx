@@ -1,14 +1,44 @@
-export default function Home() {
+import { DashboardOverview } from "./_components/dashboard-overview";
+import { getOrdersDashboardData } from "@/lib/orders";
+import { getUsersMetrics } from "@/lib/users";
+
+export const metadata = {
+  title: "Dashboard",
+  description: "Centrum dowodzenia operacjami panelu.",
+};
+
+export default async function HomePage() {
+  const [dashboardData, usersMetrics] = await Promise.all([
+    getOrdersDashboardData(20),
+    getUsersMetrics(),
+  ]);
+
+  const { metrics, stageDistribution, orders } = dashboardData;
+  const serializedOrders = orders.map((order) => ({
+    id: order.id,
+    orderNumber: order.orderNumber,
+    title: order.title,
+    clientName: order.clientName,
+    clientCity: order.clientCity,
+    partnerName: order.partnerName,
+    stage: order.stage,
+    stageNotes: order.stageNotes,
+    stageChangedAt: order.stageChangedAt.toISOString(),
+    requiresAdminAttention: order.requiresAdminAttention,
+    pendingTasks: order.pendingTasks,
+    scheduledInstallationDate: order.scheduledInstallationDate
+      ? order.scheduledInstallationDate.toISOString()
+      : null,
+    createdAt: order.createdAt.toISOString(),
+  }));
+
   return (
-    <main style={{ padding: 24, fontFamily: 'system-ui, sans-serif' }}>
-      <h1 style={{ fontSize: 24, fontWeight: 600 }}>Panel – minimal start</h1>
-      <p style={{ marginTop: 8 }}>Projekt został zresetowany do wersji podstawowej.</p>
-      <ul style={{ marginTop: 12, lineHeight: 1.7 }}>
-        <li>Next.js 15 (App Router, TS)</li>
-        <li>Tailwind v4 – można dodać później</li>
-        <li>Brak bazy i backendu – start od czystego UI</li>
-      </ul>
-      <p style={{ marginTop: 12 }}>Możesz teraz stopniowo dodawać funkcje zgodnie z instrukcją w README.</p>
-    </main>
+    <DashboardOverview
+      metrics={metrics}
+      stageDistribution={stageDistribution}
+      usersMetrics={usersMetrics}
+      orders={serializedOrders}
+      generatedAt={new Date().toISOString()}
+    />
   );
 }

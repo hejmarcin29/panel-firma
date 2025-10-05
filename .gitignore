@@ -23,6 +23,8 @@
 # misc
 .DS_Store
 *.pem
+sqlite.db
+drizzle/
 
 # debug
 npm-debug.log*
@@ -39,28 +41,3 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-# SQLite runtime
-*.db
-*.db-wal
-*.db-shm
-data/*.db
-data/*.db-wal
-data/*.db-shm
-
-
-# local editor settings
-.vscode/
-.idea/
-
-# runtime data (persisted on server)
-uploads/
-backups/
-
-# env/secrets
-app.env
-
-# local compose overrides
-docker-compose.override.yml
-
-.eslintcache
-

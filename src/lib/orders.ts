@@ -1,0 +1,581 @@
+import { subDays } from "date-fns";
+import { and, count, desc, eq, gt, inArray, ne, sql } from "drizzle-orm";
+
+import { db } from "@db/index";
+import {
+  clients,
+  installations,
+  orderStatusHistory,
+  orders,
+  orderStages,
+  partners,
+  tasks,
+  type OrderStage,
+  type TaskStatus,
+} from "@db/schema";
+import type { CreateOrderInput } from "@/lib/orders/schemas";
+
+export type OrdersMetrics = {
+  totalOrders: number;
+  requiringAttention: number;
+  newThisWeek: number;
+  scheduledInstallations: number;
+  totalDeclaredFloorArea: number;
+};
+
+export type StageDistributionEntry = {
+  stage: OrderStage;
+  count: number;
+};
+
+export type OrdersListItem = {
+  id: string;
+  orderNumber: string | null;
+  title: string | null;
+  clientName: string;
+  clientCity: string | null;
+  partnerName: string | null;
+  stage: OrderStage;
+  stageNotes: string | null;
+  stageChangedAt: Date;
+  declaredFloorArea: number | null;
+  declaredBaseboardLength: number | null;
+  requiresAdminAttention: boolean;
+  pendingTasks: number;
+  scheduledInstallationDate: Date | null;
+  createdAt: Date;
+};
+
+const taskStatusesRequiringAttention: TaskStatus[] = ["OPEN", "IN_PROGRESS", "BLOCKED"];
+
+const emptyStageDistribution: StageDistributionEntry[] = orderStages.map((stage) => ({
+  stage,
+  count: 0,
+}));
+
+export async function getOrdersMetrics(): Promise<OrdersMetrics> {
+  const weekAgo = subDays(new Date(), 7);
+
+  const [totalResult, requiringAttentionResult, newThisWeekResult, upcomingInstallationsResult, totalAreaResult] =
+    await Promise.all([
+      db.select({ value: count() }).from(orders),
+      db
+        .select({ value: count() })
+        .from(orders)
+        .where(eq(orders.requiresAdminAttention, true)),
+      db
+        .select({ value: count() })
+        .from(orders)
+        .where(gt(orders.createdAt, weekAgo)),
+      db
+        .select({ value: count() })
+        .from(installations)
+        .where(
+          and(
+            eq(installations.status, "SCHEDULED"),
+            gt(installations.scheduledStartAt, new Date())
+          )
+        ),
+      db
+        .select({
+          value: sql<number>`coalesce(sum(${orders.declaredFloorArea}), 0)`
+        })
+        .from(orders),
+    ]);
+
+  return {
+    totalOrders: totalResult[0]?.value ?? 0,
+    requiringAttention: requiringAttentionResult[0]?.value ?? 0,
+    newThisWeek: newThisWeekResult[0]?.value ?? 0,
+    scheduledInstallations: upcomingInstallationsResult[0]?.value ?? 0,
+    totalDeclaredFloorArea: totalAreaResult[0]?.value ?? 0,
+  };
+}
+
+export async function getStageDistribution(): Promise<StageDistributionEntry[]> {
+  const rows = await db
+    .select({
+      stage: orders.stage,
+      count: sql<number>`count(*)`,
+    })
+    .from(orders)
+    .groupBy(orders.stage)
+    .orderBy(orders.stage);
+
+  if (!rows.length) {
+    return emptyStageDistribution;
+  }
+
+  const resultMap = new Map<OrderStage, number>();
+  for (const entry of rows) {
+    resultMap.set(entry.stage, entry.count ?? 0);
+  }
+
+  return emptyStageDistribution.map((item) => ({
+    stage: item.stage,
+    count: resultMap.get(item.stage) ?? 0,
+  }));
+}
+
+export async function getOrdersList(limit = 20): Promise<OrdersListItem[]> {
+  const rows = await db
+    .select({
+      id: orders.id,
+      orderNumber: orders.orderNumber,
+      title: orders.title,
+      clientName: clients.fullName,
+      clientCity: clients.city,
+      partnerName: partners.companyName,
+      stage: orders.stage,
+      stageNotes: orders.stageNotes,
+      stageChangedAt: orders.stageChangedAt,
+      declaredFloorArea: orders.declaredFloorArea,
+      declaredBaseboardLength: orders.declaredBaseboardLength,
+      requiresAdminAttention: orders.requiresAdminAttention,
+      pendingTasks: sql<number>`coalesce(sum(case when ${inArray(
+        tasks.status,
+        taskStatusesRequiringAttention
+      )} then 1 else 0 end), 0)`,
+      scheduledInstallationDate: sql<Date | null>`min(${installations.scheduledStartAt})`,
+      createdAt: orders.createdAt,
+    })
+    .from(orders)
+    .leftJoin(clients, eq(orders.clientId, clients.id))
+    .leftJoin(partners, eq(orders.partnerId, partners.id))
+    .leftJoin(tasks, eq(tasks.relatedOrderId, orders.id))
+    .leftJoin(installations, eq(installations.orderId, orders.id))
+    .orderBy(desc(orders.stageChangedAt))
+    .groupBy(
+      orders.id,
+      orders.orderNumber,
+      orders.title,
+      clients.fullName,
+      clients.city,
+      partners.companyName,
+      orders.stage,
+      orders.stageNotes,
+      orders.stageChangedAt,
+      orders.declaredFloorArea,
+      orders.declaredBaseboardLength,
+      orders.requiresAdminAttention,
+      orders.createdAt
+    )
+    .limit(limit);
+
+  return rows.map((row) => ({
+    id: row.id,
+    orderNumber: row.orderNumber ?? null,
+    title: row.title ?? null,
+    clientName: row.clientName ?? "Klient nieznany",
+    clientCity: row.clientCity,
+    partnerName: row.partnerName,
+    stage: row.stage,
+    stageNotes: row.stageNotes,
+    stageChangedAt: row.stageChangedAt,
+    declaredFloorArea: row.declaredFloorArea,
+    declaredBaseboardLength: row.declaredBaseboardLength,
+    requiresAdminAttention: row.requiresAdminAttention,
+    pendingTasks: Number(row.pendingTasks ?? 0),
+    scheduledInstallationDate: row.scheduledInstallationDate ?? null,
+    createdAt: row.createdAt,
+  }));
+}
+
+export async function getOrdersDashboardData(limit = 20) {
+  const [metrics, stageDistribution, ordersList] = await Promise.all([
+    getOrdersMetrics(),
+    getStageDistribution(),
+    getOrdersList(limit),
+  ]);
+
+  return {
+    metrics,
+    stageDistribution,
+    orders: ordersList,
+  };
+}
+
+const isFutureDate = (value: Date | null | undefined): value is Date => {
+  return Boolean(value && value.getTime() > Date.now());
+};
+
+export async function getOrderDetail(orderId: string) {
+  const orderRecord = await db.query.orders.findFirst({
+    where: (table, { eq }) => eq(table.id, orderId),
+    with: {
+      client: true,
+      partner: true,
+      measurements: {
+        with: {
+          attachments: true,
+          adjustments: true,
+          panelProduct: true,
+        },
+        orderBy: (table, { desc }) => [desc(table.createdAt)],
+      },
+      installations: {
+        with: {
+          attachments: true,
+          panelProduct: true,
+          baseboardProduct: true,
+          assignedInstaller: true,
+        },
+        orderBy: (table, { desc }) => [desc(table.createdAt)],
+      },
+      deliveries: {
+        with: {
+          attachments: true,
+          panelProduct: true,
+          baseboardProduct: true,
+        },
+        orderBy: (table, { desc }) => [desc(table.createdAt)],
+      },
+      tasks: {
+        with: {
+          assignedTo: true,
+        },
+        orderBy: (table, { desc }) => [desc(table.createdAt)],
+      },
+      attachments: true,
+      statusHistory: {
+        with: {
+          changedBy: true,
+        },
+        orderBy: (table, { desc }) => [desc(table.createdAt)],
+      },
+    },
+  });
+
+  if (!orderRecord) {
+    return null;
+  }
+
+  const measurementAttachmentCount = orderRecord.measurements.reduce(
+    (acc, measurement) => acc + (measurement.attachments?.length ?? 0),
+    0
+  );
+  const installationAttachmentCount = orderRecord.installations.reduce(
+    (acc, installation) => acc + (installation.attachments?.length ?? 0),
+    0
+  );
+  const deliveryAttachmentCount = orderRecord.deliveries.reduce(
+    (acc, delivery) => acc + (delivery.attachments?.length ?? 0),
+    0
+  );
+  const ownAttachmentCount = orderRecord.attachments?.length ?? 0;
+
+  const pendingTaskCount = orderRecord.tasks.filter((task) =>
+    taskStatusesRequiringAttention.includes(task.status)
+  ).length;
+  const closedTaskCount = orderRecord.tasks.filter((task) => task.status === "DONE").length;
+
+  const upcomingInstallationDate = orderRecord.installations
+    .map((installation) => installation.scheduledStartAt)
+    .filter(isFutureDate)
+    .sort((a, b) => a.getTime() - b.getTime())[0] ?? null;
+
+  const installationChecklist = {
+    quoteSent: Boolean(orderRecord.quoteSent),
+    depositInvoiceIssued: Boolean(orderRecord.depositInvoiceIssued),
+    finalInvoiceIssued: Boolean(orderRecord.finalInvoiceIssued),
+    measurementCompleted: orderRecord.measurements.some((measurement) => Boolean(measurement.measuredAt)),
+    handoverProtocolSigned: orderRecord.installations.some((installation) => installation.handoverProtocolSigned),
+    reviewReceived: orderRecord.installations.some((installation) => installation.reviewReceived),
+  } as const;
+
+  const deliveryChecklist = {
+    proformaIssued: orderRecord.deliveries.some((delivery) => delivery.proformaIssued),
+    depositOrFinalInvoiceIssued: orderRecord.deliveries.some((delivery) => delivery.depositOrFinalInvoiceIssued),
+    shippingOrdered: orderRecord.deliveries.some((delivery) => delivery.shippingOrdered),
+    reviewReceived: orderRecord.deliveries.some((delivery) => delivery.reviewReceived),
+  } as const;
+
+  return {
+    order: {
+      id: orderRecord.id,
+      orderNumber: orderRecord.orderNumber ?? null,
+      title: orderRecord.title ?? null,
+      stage: orderRecord.stage,
+      stageNotes: orderRecord.stageNotes,
+      stageChangedAt: orderRecord.stageChangedAt,
+      requiresAdminAttention: orderRecord.requiresAdminAttention,
+      declaredFloorArea: orderRecord.declaredFloorArea,
+      declaredBaseboardLength: orderRecord.declaredBaseboardLength,
+      buildingType: orderRecord.buildingType,
+      panelPreference: orderRecord.panelPreference,
+      baseboardPreference: orderRecord.baseboardPreference,
+      createdAt: orderRecord.createdAt,
+      updatedAt: orderRecord.updatedAt,
+    },
+    client: orderRecord.client
+      ? {
+          id: orderRecord.client.id,
+          fullName: orderRecord.client.fullName,
+          phone: orderRecord.client.phone ?? null,
+          email: orderRecord.client.email ?? null,
+          city: orderRecord.client.city ?? null,
+          street: orderRecord.client.street ?? null,
+          postalCode: orderRecord.client.postalCode ?? null,
+        }
+      : null,
+    partner: orderRecord.partner
+      ? {
+          id: orderRecord.partner.id,
+          companyName: orderRecord.partner.companyName,
+          contactName: orderRecord.partner.contactName ?? null,
+          contactEmail: orderRecord.partner.contactEmail ?? null,
+          contactPhone: orderRecord.partner.contactPhone ?? null,
+        }
+      : null,
+    summary: {
+      openTaskCount: pendingTaskCount,
+      closedTaskCount,
+      totalAttachments: ownAttachmentCount + measurementAttachmentCount + installationAttachmentCount + deliveryAttachmentCount,
+      totalMeasurements: orderRecord.measurements.length,
+      totalDeliveries: orderRecord.deliveries.length,
+      upcomingInstallationDate,
+    },
+    checklists: {
+      installation: installationChecklist,
+      delivery: deliveryChecklist,
+    },
+    measurements: orderRecord.measurements.map((measurement) => ({
+      id: measurement.id,
+      scheduledAt: measurement.scheduledAt,
+      measuredAt: measurement.measuredAt,
+      measuredFloorArea: measurement.measuredFloorArea,
+      measuredBaseboardLength: measurement.measuredBaseboardLength,
+      offcutPercent: measurement.offcutPercent,
+      deliveryTimingType: measurement.deliveryTimingType,
+      deliveryDaysBefore: measurement.deliveryDaysBefore,
+      deliveryDate: measurement.deliveryDate,
+      panelProductName: measurement.panelProduct?.name ?? null,
+      additionalNotes: measurement.additionalNotes,
+      adjustmentsCount: measurement.adjustments?.length ?? 0,
+      attachmentsCount: measurement.attachments?.length ?? 0,
+      createdAt: measurement.createdAt,
+    })),
+    installations: orderRecord.installations.map((installation) => ({
+      id: installation.id,
+      status: installation.status,
+      scheduledStartAt: installation.scheduledStartAt,
+      scheduledEndAt: installation.scheduledEndAt,
+      actualStartAt: installation.actualStartAt,
+      actualEndAt: installation.actualEndAt,
+      assignedInstallerName: installation.assignedInstaller?.name ?? installation.assignedInstaller?.username ?? null,
+      panelProductName: installation.panelProduct?.name ?? null,
+      baseboardProductName: installation.baseboardProduct?.name ?? null,
+      additionalWork: installation.additionalWork,
+      additionalInfo: installation.additionalInfo,
+      attachmentsCount: installation.attachments?.length ?? 0,
+      handoverProtocolSigned: Boolean(installation.handoverProtocolSigned),
+      reviewReceived: Boolean(installation.reviewReceived),
+      requiresAdminAttention: Boolean(installation.requiresAdminAttention),
+      createdAt: installation.createdAt,
+    })),
+    deliveries: orderRecord.deliveries.map((delivery) => ({
+      id: delivery.id,
+      type: delivery.type,
+      stage: delivery.stage,
+      scheduledDate: delivery.scheduledDate,
+      includePanels: Boolean(delivery.includePanels),
+      includeBaseboards: Boolean(delivery.includeBaseboards),
+      panelProductName: delivery.panelProduct?.name ?? null,
+      baseboardProductName: delivery.baseboardProduct?.name ?? null,
+      notes: delivery.notes,
+      attachmentsCount: delivery.attachments?.length ?? 0,
+      requiresAdminAttention: Boolean(delivery.requiresAdminAttention),
+      createdAt: delivery.createdAt,
+    })),
+    tasks: orderRecord.tasks.map((task) => ({
+      id: task.id,
+      title: task.title,
+      status: task.status,
+      priority: task.priority,
+      dueDate: task.dueDate,
+      assignedToName: task.assignedTo?.name ?? task.assignedTo?.username ?? null,
+      createdAt: task.createdAt,
+    })),
+    statusHistory: orderRecord.statusHistory.map((entry) => ({
+      id: entry.id,
+      fromStage: entry.fromStage ?? null,
+      toStage: entry.toStage,
+      note: entry.note,
+      changedAt: entry.createdAt,
+      changedByName: entry.changedBy?.name ?? entry.changedBy?.username ?? null,
+    })),
+    attachments: (orderRecord.attachments ?? []).map((file) => ({
+      id: file.id,
+      fileName: file.fileName,
+      fileSize: file.fileSize,
+      description: file.description ?? null,
+      contentType: file.contentType ?? null,
+      createdAt: file.createdAt,
+    })),
+  };
+}
+
+export type OrderDetail = NonNullable<Awaited<ReturnType<typeof getOrderDetail>>>;
+
+const normalizeText = (value?: string | null) => {
+  if (typeof value !== "string") {
+    return null;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+};
+
+export async function createOrder(payload: CreateOrderInput, createdById: string | null) {
+  return db.transaction(async (tx) => {
+    const now = new Date();
+
+    const clientRecord = await tx.query.clients.findFirst({
+      where: (table, { eq }) => eq(table.id, payload.clientId),
+      columns: {
+        clientNumber: true,
+      },
+    });
+
+    if (!clientRecord) {
+      throw new Error("Nie znaleziono klienta dla wybranego zlecenia.");
+    }
+
+    let generatedOrderNumber = normalizeText(payload.orderNumber ?? null);
+
+    if (!generatedOrderNumber) {
+      const [countRow] = await tx
+        .select({ value: sql<number>`count(*)` })
+        .from(orders)
+        .where(eq(orders.clientId, payload.clientId));
+
+      const nextSequence = Number(countRow?.value ?? 0) + 1;
+      generatedOrderNumber = `${clientRecord.clientNumber}_Z_${nextSequence}`;
+    }
+
+    const record: typeof orders.$inferInsert = {
+      clientId: payload.clientId,
+      partnerId: payload.partnerId ?? null,
+      orderNumber: generatedOrderNumber,
+      title: payload.title ?? null,
+      createdById: createdById ?? null,
+      ownerId: payload.ownerId ?? null,
+      stage: payload.stage,
+      stageNotes: normalizeText(payload.stageNotes ?? null),
+      stageChangedAt: now,
+      declaredFloorArea: payload.declaredFloorArea ?? null,
+      declaredBaseboardLength: payload.declaredBaseboardLength ?? null,
+      buildingType: normalizeText(payload.buildingType ?? null),
+      panelPreference: normalizeText(payload.panelPreference ?? null),
+      baseboardPreference: normalizeText(payload.baseboardPreference ?? null),
+      preferredPanelProductId: payload.preferredPanelProductId ?? null,
+      preferredBaseboardProductId: payload.preferredBaseboardProductId ?? null,
+      requiresAdminAttention: payload.requiresAdminAttention,
+      quoteSent: payload.quoteSent,
+      depositInvoiceIssued: payload.depositInvoiceIssued,
+      finalInvoiceIssued: payload.finalInvoiceIssued,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const [created] = await tx.insert(orders).values(record).returning();
+
+    if (!created) {
+      throw new Error("Nie udało się utworzyć zlecenia.");
+    }
+
+    await tx.insert(orderStatusHistory).values({
+      orderId: created.id,
+      changedById: createdById,
+      fromStage: null,
+      toStage: created.stage,
+      note: created.stageNotes,
+      createdAt: now,
+    });
+
+    return created;
+  });
+}
+
+export async function ensureOrderForClient(options: {
+  clientId: string;
+  createdById: string | null;
+  title?: string | null;
+}) {
+  const { clientId, createdById, title } = options;
+
+  const existingOrder = await db.query.orders.findFirst({
+    where: (table, { eq }) => and(eq(table.clientId, clientId), ne(table.stage, "COMPLETED" as OrderStage)),
+    orderBy: (table, { desc }) => [desc(table.createdAt)],
+  });
+
+  if (existingOrder) {
+    return existingOrder;
+  }
+
+  return createOrder(
+    {
+      clientId,
+      partnerId: null,
+      ownerId: null,
+      orderNumber: null,
+      title: title ?? null,
+      stage: "RECEIVED",
+      stageNotes: null,
+      declaredFloorArea: null,
+      declaredBaseboardLength: null,
+      buildingType: null,
+      panelPreference: null,
+      baseboardPreference: null,
+      preferredPanelProductId: null,
+      preferredBaseboardProductId: null,
+      requiresAdminAttention: false,
+      quoteSent: false,
+      depositInvoiceIssued: false,
+      finalInvoiceIssued: false,
+    },
+    createdById,
+  );
+}
+
+export type OrderSelectItem = {
+  id: string;
+  label: string;
+  stage: OrderStage;
+};
+
+export async function listOrdersForSelect(options?: {
+  clientId?: string;
+  stages?: OrderStage[];
+}): Promise<OrderSelectItem[]> {
+  const query = db
+    .select({
+      id: orders.id,
+      orderNumber: orders.orderNumber,
+      title: orders.title,
+      stage: orders.stage,
+      clientName: clients.fullName,
+    })
+    .from(orders)
+    .leftJoin(clients, eq(orders.clientId, clients.id))
+    .orderBy(desc(orders.createdAt));
+
+  const rows = options?.clientId
+    ? options?.stages?.length
+      ? await query
+          .where(and(eq(orders.clientId, options.clientId), inArray(orders.stage, options.stages)))
+      : await query.where(eq(orders.clientId, options.clientId))
+    : options?.stages?.length
+      ? await query.where(inArray(orders.stage, options.stages))
+      : await query;
+
+  return rows.map((row) => {
+    const reference = row.orderNumber?.trim().length ? row.orderNumber : row.id.slice(0, 6).toUpperCase();
+    const title = row.title?.trim().length ? row.title : "Zlecenie";
+    const clientLabel = row.clientName ? ` · ${row.clientName}` : "";
+    return {
+      id: row.id,
+      label: `${reference} – ${title}${clientLabel}`,
+      stage: row.stage,
+    };
+  });
+}

@@ -1,42 +1,36 @@
-# Panel – Basic Reset
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-Ten projekt został zresetowany do minimalnego szablonu opartego o Next.js 15 (App Router, TypeScript). Startujemy od czystego UI i będziemy iteracyjnie dokładać warstwy (DB, auth, komponenty UI).
+## Getting Started
 
-## Co jest na pokładzie teraz
-- Next.js 15, App Router, TypeScript
-- Strona główna z prostym komunikatem
-- Brak bazy danych i backendu (API) – świadomie, zaczynamy od frontu
+First, run the development server:
 
-## Jak uruchomić
-1. Zainstaluj zależności
-2. Uruchom tryb deweloperski
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-## Reset bazy (jeśli dodasz DB w kolejnych krokach)
-- Dostępna jest komenda pomocnicza:
-  - Reset lokalnej bazy: tworzy backup i usuwa plik DB oraz pliki WAL/SHM.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Kierunek rozwoju (proponowana ścieżka)
-1. UI: proste widoki i routing
-2. DB: podpięcie Drizzle + SQLite, generacja migracji
-3. Auth: NextAuth (Credentials) – tylko gdy potrzebne
-4. Komponenty UI: prymitywy (Button/Input/Label) i Toaster
-5. Moduły domenowe (zlecenia/klienci) – krok po kroku
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-## Notatki
-- Repo posiada historię. Gałąź `beta` zawierała poprzednią wersję systemu. Bieżąca gałąź (`reset/basic`) zawiera reset i minimalny start.
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-Przepływ uploadu (presigned PUT):
+## Learn More
 
-1. Front prosi backend o URL: POST /api/zlecenia/:id/zalaczniki/presign z { filename, mime, size, category }.
-2. Dostaje { url, key, publicUrl } i wykonuje PUT bezpośrednio do R2.
-3. Po sukcesie zgłasza metadane: POST /api/zlecenia/:id/zalaczniki z { key, publicUrl, category, mime?, size? }.
-4. Lista: GET /api/zlecenia/:id/zalaczniki. Usuwanie: DELETE /api/zlecenia/:id/zalaczniki/:attId (twarde usunięcie z R2 i DB).
+To learn more about Next.js, take a look at the following resources:
 
-Konwencja kluczy (ścieżek) w R2:
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-- clients/<NrKlienta-Slug>/YYYY/MM/<kategoria>/<YYYYMMDD**v01**nazwa_pliku.ext>
-- Przykład: clients/10-jan-kowalski/2025/09/photos/20250928**v01**jan-kowalski.jpg
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-UI:
+## Deploy on Vercel
 
-- Sekcja „Załączniki” w szczegółach zlecenia: drag&drop multi‑upload, lista z podglądem (obraz/PDF), pobraniem i usuwaniem, galeria zdjęć.
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
