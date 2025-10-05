@@ -29,6 +29,7 @@
 - Pliki z server actions zaczynają się od `"use server"`, przyjmują tylko `FormData`, a w komponentach klienckich używamy `action={fn}` bez `method` i `encType`.
 - Każdy nowy ekran powinien mieć nagłówek (tytuł + opis), zestaw KPI cards oraz co najmniej jeden moduł analityczny (wykres/tabela/lista); po zmianach uruchamiamy `npm run lint` i dodajemy mockowe dane, gdy są potrzebne.
 - Menedżer pakietów: **npm** (pnpm nie jest zainstalowany w środowisku). Do buildów i lintu używamy `npm run ...`; komendy `pnpm ...` zakończą się błędem.
+- Produkcyjne wdrożenie na VPS-ie realizujemy przez `docker compose build` / `docker compose up -d` z wykorzystaniem plików `Dockerfile` i `docker-compose.yml`; wolumen `./data` montujemy do `/app/data`, aby zachować bazę SQLite poza kontenerem.
 - Każdy nowy ekran powinien mieć nagłówek (tytuł + opis), zestaw KPI cards oraz co najmniej jeden moduł analityczny (wykres/tabela/lista); po zmianach uruchamiamy `npm run lint` i dodajemy mockowe dane, gdy są potrzebne.
 - Generujemy URL i UI po polsku!
 

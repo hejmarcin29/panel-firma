@@ -1,4 +1,5 @@
-# Wskazówki dla AI w projekcie `appgit`
+ls -al /srv
+find /srv -maxdepth 1 -type d -name "prime*"# Wskazówki dla AI w projekcie `appgit`
 
 ## Komunikacja i ton
 - Wszystkie komunikaty, odpowiedzi i aktualizacje kieruj do użytkownika wyłącznie po polsku, w przyjaznym i konkretnym tonie. Brak wyjątków od tej zasady.

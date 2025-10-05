@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Stos technologiczny
 
-## Getting Started
+- Next.js 15 (App Router, Turbopack)
+- Tailwind CSS + shadcn/ui
+- Drizzle ORM + SQLite (`data/panel.db`)
 
-First, run the development server:
+## Uruchomienie lokalne
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Aplikacja startuje pod adresem [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Budowanie i start w trybie produkcyjnym
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm run start
+```
 
-## Learn More
+## Wdrożenie przez Docker Compose
 
-To learn more about Next.js, take a look at the following resources:
+1. Upewnij się, że w katalogu głównym istnieje plik `.env` z wymaganymi zmiennymi (np. klucze sesji, URL bazy).
+2. uruchom build i start kontenera:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+docker compose build
+docker compose up -d
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Serwis nasłuchuje na porcie `3000`. Wolumen `./data` jest montowany do `/app/data`, dzięki czemu baza SQLite pozostaje poza kontenerem.
 
-## Deploy on Vercel
+## Aktualizacja schematu bazy
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Do migracji używamy `drizzle-kit`:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npx drizzle-kit push
+```
+
+Migracje generują pliki w katalogu `drizzle/`. Baza działa na pliku `data/panel.db` (tworzy się automatycznie, jeśli brakuje).
