@@ -16,13 +16,14 @@ export const metadata = {
 }
 
 type NewDeliveryPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     clientId?: string
-  }
+  }>
 }
 
 export default async function NewDeliveryPage({ searchParams }: NewDeliveryPageProps) {
-  const preselectedClientId = searchParams?.clientId ?? null
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
+  const preselectedClientId = resolvedSearchParams?.clientId ?? null
 
   const [clients, orders, installations, panelProducts, baseboardProducts] = await Promise.all([
     listClientsForSelect(),

@@ -5,7 +5,7 @@
   "packageManager": "npm@10.9.3",
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+  "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },

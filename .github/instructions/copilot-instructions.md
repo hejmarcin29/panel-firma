@@ -7,10 +7,10 @@ find /srv -maxdepth 1 -type d -name "prime*"# Wskazówki dla AI w projekcie `app
 - Unikaj zbędnego żargonu, stawiaj na zwięzłe podsumowania i jasno oznaczaj kolejne kroki.
 
 ## Architektura i kontekst
-- Projekt stoi na **Next.js App Router 15.x** z Turbopackiem; widoki znajdziesz w `src/app/**`, domyślnie z polskimi slugami (`/zlecenia`, `/uzytkownicy`, `/setup`, `/logowanie`).
+- Projekt stoi na **Next.js App Router 15.x**; dewelopersko używamy Turbopacka (`npm run dev`), a build produkcyjny uruchamiamy klasycznie (`npm run build`). Widoki znajdziesz w `src/app/**`, domyślnie z polskimi slugami (`/zlecenia`, `/uzytkownicy`, `/setup`, `/logowanie`).
 - Stylizacja opiera się o **Tailwind + shadcn/ui** (`src/components/ui/**`); trzymaj layouty na `gap-6`, karty na `rounded-2xl`/`border`/`p-6`, a dla większych modułów `rounded-3xl`.
 - Używamy aliasów `@/*`. Logika domenowa żyje w `src/lib/**`, komponenty UI w `src/components/**`, mocki w `src/data/**`.
-- Baza to **SQLite + Drizzle ORM** (`db/schema.ts`, `db/index.ts`); wszystkie wywołania DB wykonujemy po stronie serwera, komponenty klienckie nie importują `@db/index`.
+- Baza to **SQLite + Drizzle ORM** (`db/schema.ts`, `db/index.ts`); wszystkie wywołania DB wykonujemy po stronie serwera, komponenty klienckie nie importują `@db/index`. Role użytkowników definiujemy w `src/lib/user-roles.ts`, a `db/schema.ts` tylko je re-eksportuje.
 - Projektowe ustalenia i roadmapa są w `instructions.md` – traktuj je jak spec i aktualizuj Copilot, gdy pojawią się nowe sekcje.
 
 ## Autoryzacja i sesje
@@ -40,6 +40,7 @@ find /srv -maxdepth 1 -type d -name "prime*"# Wskazówki dla AI w projekcie `app
 - Komponenty klienckie oznaczaj `"use client"`. Jeśli potrzebują stałych z warstwy serwera (np. role), wyciągnij je do osobnego modułu bez zależności od DB.
 - Logika domenowa (Drizzle, auth) zostaje po stronie serwera; komponenty `async` w App Routerze są OK, ale niech nie trafiają do bundla przeglądarki.
 - Dane mockowane trzymaj w `src/data/**` i opisuj w `instructions.md`. Alias `@/` wykorzystuj do importów.
+- App Router potrafi przekazać `params`/`searchParams` jako `Promise`; rozpakuj je (`const resolved = await params`) zanim użyjesz wartości na stronie.
 
 ## Baza danych i migracje
 - Drizzle ORM + SQLite – schemat w `db/schema.ts`, klient z konfiguracją w `db/index.ts`.
@@ -53,6 +54,7 @@ find /srv -maxdepth 1 -type d -name "prime*"# Wskazówki dla AI w projekcie `app
 - Przy zmianach schematu usuń `data/panel.db` i wypchnij migracje `npx drizzle-kit push`.
 - Nowy ekran = nagłówek (tytuł + opis), karty KPI, moduł analityczny (tabela/wykres/lista) + mockowe dane, jeśli backend jeszcze nie dostarcza wartości.
 - Po każdej iteracji ważne ustalenia dopisujemy do `instructions.md`, a streszczenie trafia tutaj.
+- Deploy na VPS-ie robimy przez `docker compose build` + `docker compose up -d` wykorzystując przygotowany `Dockerfile`. Pamiętaj o pliku `.env` w katalogu repo (wystarczy pusty), bo compose wczytuje go domyślnie, oraz o wolumenie `./data:/app/data` dla bazy SQLite.
 
 ## Najczęstsze pułapki
 - Błąd `Can't resolve 'fs'` oznacza, że komponent kliencki importuje moduł serwerowy – rozdziel dane i UI (patrz `userRoleLabels`).

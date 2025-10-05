@@ -3,11 +3,11 @@ import { randomUUID } from "node:crypto";
 import { relations } from "drizzle-orm";
 import { blob, index, integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import type { PartnerStatusOption } from "../src/lib/partners/schemas";
+import type { UserRole } from "../src/lib/user-roles";
 
 export { partnerStatuses } from "../src/lib/partners/schemas";
-
-export const userRoles = ["ADMIN", "MONTER", "PARTNER"] as const;
-export type UserRole = (typeof userRoles)[number];
+export { userRoles } from "../src/lib/user-roles";
+export type { UserRole } from "../src/lib/user-roles";
 
 export type PartnerStatus = PartnerStatusOption;
 

@@ -30,6 +30,8 @@
 - Każdy nowy ekran powinien mieć nagłówek (tytuł + opis), zestaw KPI cards oraz co najmniej jeden moduł analityczny (wykres/tabela/lista); po zmianach uruchamiamy `npm run lint` i dodajemy mockowe dane, gdy są potrzebne.
 - Menedżer pakietów: **npm** (pnpm nie jest zainstalowany w środowisku). Do buildów i lintu używamy `npm run ...`; komendy `pnpm ...` zakończą się błędem.
 - Produkcyjne wdrożenie na VPS-ie realizujemy przez `docker compose build` / `docker compose up -d` z wykorzystaniem plików `Dockerfile` i `docker-compose.yml`; wolumen `./data` montujemy do `/app/data`, aby zachować bazę SQLite poza kontenerem.
+- Build produkcyjny opiera się o standardowy bundler Next.js (`npm run build` bez flagi `--turbopack`); Docker korzysta z wieloetapowego `Dockerfile`, który uruchamia `npm ci --include=dev`, `npm run build` i `npm prune --omit=dev`.
+- Role użytkowników definiujemy w `src/lib/user-roles.ts` i re-eksportujemy z `db/schema.ts`; komponenty klienckie importują wyłącznie wersję z `lib`, aby uniknąć zależności od modułów Node.js.
 - Każdy nowy ekran powinien mieć nagłówek (tytuł + opis), zestaw KPI cards oraz co najmniej jeden moduł analityczny (wykres/tabela/lista); po zmianach uruchamiamy `npm run lint` i dodajemy mockowe dane, gdy są potrzebne.
 - Generujemy URL i UI po polsku!
 

@@ -1,4 +1,6 @@
-import { userRoles, type UserRole } from "@db/schema";
+﻿export const userRoles = ["ADMIN", "MONTER", "PARTNER"] as const;
+
+export type UserRole = (typeof userRoles)[number];
 
 export const userRoleLabels: Record<UserRole, string> = {
   ADMIN: "Administrator",

@@ -91,8 +91,11 @@ const formatDate = (value: Date | null | undefined, fallback = 'Nie określono')
   return format(value, 'dd MMM yyyy', { locale: pl })
 }
 
-export async function generateMetadata({ params }: { params: { orderId: string } }) {
-  const detail = await getOrderDetail(params.orderId)
+type OrderDetailPageParams = Promise<{ orderId: string }>
+
+export async function generateMetadata({ params }: { params: OrderDetailPageParams }) {
+  const resolvedParams = await params
+  const detail = await getOrderDetail(resolvedParams.orderId)
 
   if (!detail) {
     return {
@@ -109,8 +112,9 @@ export async function generateMetadata({ params }: { params: { orderId: string }
   }
 }
 
-export default async function OrderDetailPage({ params }: { params: { orderId: string } }) {
-  const detail = await getOrderDetail(params.orderId)
+export default async function OrderDetailPage({ params }: { params: OrderDetailPageParams }) {
+  const resolvedParams = await params
+  const detail = await getOrderDetail(resolvedParams.orderId)
 
   if (!detail) {
     notFound()

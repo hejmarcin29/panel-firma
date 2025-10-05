@@ -26,6 +26,7 @@ import {
 import { cn } from '@/lib/utils'
 import type { RoleBreakdownEntry, UserListItem, UsersMetrics } from '@/lib/users'
 import { userRoleLabels } from '@/lib/user-roles'
+import type { UserRole } from '@/lib/user-roles'
 
 const ROLE_FILTER_ALL = 'ALL'
 
@@ -191,7 +192,7 @@ export function UsersTable({
                         roleAccentClasses[user.role] ?? ''
                       )}
                     >
-                      {userRoleLabels[user.role]}
+                      {userRoleLabels[user.role as UserRole]}
                     </Badge>
                   </TableCell>
                   <TableCell>

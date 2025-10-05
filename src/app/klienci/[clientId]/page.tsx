@@ -28,8 +28,11 @@ import { orderStageBadgeClasses, orderStageLabels } from '@/lib/order-stage'
 
 const numberFormatter = new Intl.NumberFormat('pl-PL', { maximumFractionDigits: 1 })
 
-export async function generateMetadata({ params }: { params: { clientId: string } }) {
-  const detail = await getClientDetail(params.clientId)
+type ClientDetailPageParams = Promise<{ clientId: string }>
+
+export async function generateMetadata({ params }: { params: ClientDetailPageParams }) {
+  const resolvedParams = await params
+  const detail = await getClientDetail(resolvedParams.clientId)
 
   if (!detail) {
     return {
@@ -44,8 +47,9 @@ export async function generateMetadata({ params }: { params: { clientId: string 
   }
 }
 
-export default async function ClientDetailPage({ params }: { params: { clientId: string } }) {
-  const detail = await getClientDetail(params.clientId)
+export default async function ClientDetailPage({ params }: { params: ClientDetailPageParams }) {
+  const resolvedParams = await params
+  const detail = await getClientDetail(resolvedParams.clientId)
 
   if (!detail) {
     notFound()
