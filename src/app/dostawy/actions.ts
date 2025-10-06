@@ -5,9 +5,10 @@ import { redirect } from "next/navigation";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 
 import { requireRole } from "@/lib/auth";
-import { createDelivery } from "@/lib/deliveries";
+import { createDelivery, updateDelivery } from "@/lib/deliveries";
 import {
   createDeliverySchema,
+  updateDeliverySchema,
   type CreateDeliveryFormErrors,
   type CreateDeliveryFormState,
 } from "@/lib/deliveries/schemas";
@@ -128,9 +129,76 @@ export async function createDeliveryAction(
 
     const parsed = createDeliverySchema.parse(payload);
 
-    await createDelivery(parsed, session.user.id);
+    const delivery = await createDelivery(parsed, session.user.id);
 
     revalidatePath("/dostawy");
+    if (delivery.orderId) {
+      revalidatePath("/zlecenia");
+      revalidatePath(`/zlecenia/${delivery.orderId}`);
+    }
+    redirect("/dostawy");
+  } catch (error) {
+    if (isRedirectError(error)) {
+      throw error;
+    }
+
+    return mapZodErrors(error);
+  }
+
+  return { status: "idle" };
+}
+
+export async function updateDeliveryAction(
+  _prevState: CreateDeliveryFormState,
+  formData: FormData,
+): Promise<CreateDeliveryFormState> {
+  try {
+    const session = await requireRole(["ADMIN"]);
+
+    const payload: Record<string, unknown> = {};
+
+    for (const [name, value] of formData.entries()) {
+      if (CHECKBOX_FIELDS.includes(name as CheckboxField)) {
+        payload[name] = toBoolean(value);
+        continue;
+      }
+
+      if (DATE_FIELDS.includes(name as DateField)) {
+        payload[name] = toDate(value);
+        continue;
+      }
+
+      if (STRING_FIELDS.includes(name as StringField)) {
+        payload[name] = toRequiredString(value);
+        continue;
+      }
+
+      payload[name] = toNullableString(value);
+    }
+
+    for (const field of CHECKBOX_FIELDS) {
+      if (!(field in payload)) {
+        payload[field] = false;
+      }
+    }
+
+    payload.orderId = toNullableString(formData.get("orderId"));
+    payload.installationId = toNullableString(formData.get("installationId"));
+    payload.deliveryId = toRequiredString(formData.get("deliveryId"));
+
+    const parsed = updateDeliverySchema.parse(payload);
+
+    const result = await updateDelivery(parsed, session.user.id);
+
+    revalidatePath("/dostawy");
+    if (parsed.installationId) {
+      revalidatePath("/montaze");
+    }
+    if (result.orderId) {
+      revalidatePath(`/zlecenia/${result.orderId}`);
+      redirect(`/zlecenia/${result.orderId}`);
+    }
+
     redirect("/dostawy");
   } catch (error) {
     if (isRedirectError(error)) {

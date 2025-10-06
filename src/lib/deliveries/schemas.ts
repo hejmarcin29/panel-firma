@@ -59,8 +59,15 @@ export type CreateDeliveryInput = z.infer<typeof createDeliverySchema>;
 
 export type CreateDeliveryFormErrors = Partial<Record<keyof CreateDeliveryInput, string>> & {
   clientId?: string;
+  deliveryId?: string;
 };
 
 export type CreateDeliveryFormState =
   | { status: "idle" }
   | { status: "error"; message?: string; errors?: CreateDeliveryFormErrors };
+
+export const updateDeliverySchema = createDeliverySchema.safeExtend({
+  deliveryId: z.string().min(1, "Brakuje identyfikatora dostawy."),
+});
+
+export type UpdateDeliveryInput = z.infer<typeof updateDeliverySchema>;

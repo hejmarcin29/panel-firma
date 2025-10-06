@@ -25,6 +25,10 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { getClientDetail } from '@/lib/clients'
 import { orderStageBadgeClasses, orderStageLabels } from '@/lib/order-stage'
+import { listClientAttachments } from '@/lib/r2'
+import { ClientAttachmentsCard } from './_components/client-attachments-card'
+import { ClientInstallationsCard } from './_components/client-installations-card'
+import { ClientDeliveriesCard } from './_components/client-deliveries-card'
 
 const numberFormatter = new Intl.NumberFormat('pl-PL', { maximumFractionDigits: 1 })
 
@@ -55,7 +59,14 @@ export default async function ClientDetailPage({ params }: { params: ClientDetai
     notFound()
   }
 
-  const { client, partner, stats, orders } = detail
+  const { client, partner, stats, orders, installations, deliveries } = detail
+  const attachments = await listClientAttachments(client.id, { fullName: client.fullName })
+  const serializedAttachments = attachments.map((attachment) => ({
+    key: attachment.key,
+    fileName: attachment.fileName,
+    size: attachment.size,
+    lastModified: attachment.lastModified?.toISOString() ?? null,
+  }))
 
   return (
     <div className="flex flex-col gap-6 lg:gap-8">
@@ -153,7 +164,7 @@ export default async function ClientDetailPage({ params }: { params: ClientDetai
             ) : (
               <Card className="rounded-2xl border border-dashed border-primary/40 bg-primary/5 text-primary">
                 <CardContent className="p-4 text-sm">
-                  Przypisz partnera, aby zapewnić pełną obsługę klienta.
+                  Dodaj partnera, aby ewidencjonować prowizje i historię współpracy.
                 </CardContent>
               </Card>
             )}
@@ -271,27 +282,45 @@ export default async function ClientDetailPage({ params }: { params: ClientDetai
           </CardContent>
         </Card>
 
-        <Card className="rounded-3xl border border-border/60">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg font-semibold text-foreground">Notatki i źródła</CardTitle>
-            <CardDescription>Główne informacje referencyjne dla zespołu.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 text-sm text-muted-foreground">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Źródło pozyskania</p>
-              <p className="mt-1 text-foreground text-base">
-                {client.acquisitionSource ? client.acquisitionSource : 'Nie określono'}
-              </p>
-            </div>
-            <Separator className="border-border/40" />
-            <div>
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Informacje dodatkowe</p>
-              <p className="mt-1 whitespace-pre-wrap text-foreground">
-                {client.additionalInfo ? client.additionalInfo : 'Brak dodatkowych notatek.'}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="flex flex-col gap-4">
+          <ClientInstallationsCard
+            clientId={client.id}
+            clientName={client.fullName}
+            installations={installations}
+          />
+          <ClientDeliveriesCard
+            clientId={client.id}
+            clientName={client.fullName}
+            deliveries={deliveries}
+          />
+          <ClientAttachmentsCard
+            clientId={client.id}
+            clientFullName={client.fullName}
+            attachments={serializedAttachments}
+          />
+
+          <Card className="rounded-3xl border border-border/60">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg font-semibold text-foreground">Notatki i źródła</CardTitle>
+              <CardDescription>Główne informacje referencyjne dla zespołu.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm text-muted-foreground">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Źródło pozyskania</p>
+                <p className="mt-1 text-foreground text-base">
+                  {client.acquisitionSource ? client.acquisitionSource : 'Nie określono'}
+                </p>
+              </div>
+              <Separator className="border-border/40" />
+              <div>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Informacje dodatkowe</p>
+                <p className="mt-1 whitespace-pre-wrap text-foreground">
+                  {client.additionalInfo ? client.additionalInfo : 'Brak dodatkowych notatek.'}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </section>
     </div>
   )

@@ -2,9 +2,16 @@ import { startOfMonth } from "date-fns";
 import { asc, count, desc, eq, sql } from "drizzle-orm";
 
 import { db } from "@db/index";
-import { clients, orders, partners } from "@db/schema";
+import { clients, deliveries, installations, orders, partners, users } from "@db/schema";
 
-import type { OrderStage } from "@db/schema";
+import type {
+  DeliveryStage,
+  DeliveryType,
+  InstallationStatus,
+  OrderStage,
+} from "@db/schema";
+import { installationStatusLabels } from "@/lib/installations/constants";
+import { deliveryStageLabels, deliveryTypeLabels } from "@/lib/deliveries";
 
 const COMPLETED_STAGE: OrderStage = "COMPLETED";
 
@@ -42,6 +49,35 @@ export type ClientOrderSummary = {
   declaredBaseboardLength: number | null;
 };
 
+export type ClientInstallationSummary = {
+  id: string;
+  installationNumber: string;
+  status: InstallationStatus;
+  statusLabel: string;
+  scheduledStartAt: Date | null;
+  scheduledEndAt: Date | null;
+  assignedInstallerName: string | null;
+  requiresAdminAttention: boolean;
+  orderId: string;
+  orderReference: string;
+  orderTitle: string | null;
+};
+
+export type ClientDeliverySummary = {
+  id: string;
+  deliveryNumber: string;
+  stage: DeliveryStage;
+  stageLabel: string;
+  type: DeliveryType;
+  typeLabel: string;
+  scheduledDate: Date | null;
+  requiresAdminAttention: boolean;
+  orderId: string | null;
+  orderReference: string | null;
+  orderTitle: string | null;
+  installationId: string | null;
+};
+
 export type ClientDetail = {
   client: {
     id: string;
@@ -71,6 +107,8 @@ export type ClientDetail = {
     lastOrderAt: Date | null;
   };
   orders: ClientOrderSummary[];
+  installations: ClientInstallationSummary[];
+  deliveries: ClientDeliverySummary[];
 };
 
 function mapClientsList(rows: Array<{
@@ -181,6 +219,91 @@ export async function getClientDetail(clientId: string): Promise<ClientDetail | 
   const openOrders = totalOrders - completedOrders;
   const lastOrderAt = ordersSummary[0]?.stageChangedAt ?? null;
 
+  const installationRows = await db
+    .select({
+      id: installations.id,
+      installationNumber: installations.installationNumber,
+      status: installations.status,
+      scheduledStartAt: installations.scheduledStartAt,
+      scheduledEndAt: installations.scheduledEndAt,
+      requiresAdminAttention: installations.requiresAdminAttention,
+      orderId: installations.orderId,
+      orderNumber: orders.orderNumber,
+      orderTitle: orders.title,
+      assignedInstallerName: users.name,
+      assignedInstallerUsername: users.username,
+      createdAt: installations.createdAt,
+    })
+    .from(installations)
+    .leftJoin(orders, eq(installations.orderId, orders.id))
+    .leftJoin(users, eq(installations.assignedInstallerId, users.id))
+    .where(eq(orders.clientId, clientId))
+    .orderBy(desc(installations.createdAt))
+    .limit(6);
+
+  const installationsSummary: ClientInstallationSummary[] = installationRows.map((row) => {
+    const orderReference = row.orderNumber?.trim().length
+      ? row.orderNumber.trim()
+      : row.orderId.slice(0, 6).toUpperCase();
+
+    return {
+      id: row.id,
+      installationNumber: row.installationNumber,
+      status: row.status,
+      statusLabel: installationStatusLabels[row.status],
+      scheduledStartAt: row.scheduledStartAt ? new Date(row.scheduledStartAt) : null,
+      scheduledEndAt: row.scheduledEndAt ? new Date(row.scheduledEndAt) : null,
+      assignedInstallerName: row.assignedInstallerName ?? row.assignedInstallerUsername ?? null,
+      requiresAdminAttention: Boolean(row.requiresAdminAttention),
+      orderId: row.orderId,
+      orderReference,
+      orderTitle: row.orderTitle ?? null,
+    };
+  });
+
+  const deliveryRows = await db
+    .select({
+      id: deliveries.id,
+      deliveryNumber: deliveries.deliveryNumber,
+      stage: deliveries.stage,
+      type: deliveries.type,
+      scheduledDate: deliveries.scheduledDate,
+      requiresAdminAttention: deliveries.requiresAdminAttention,
+      orderId: deliveries.orderId,
+      orderNumber: orders.orderNumber,
+      orderTitle: orders.title,
+      installationId: deliveries.installationId,
+      createdAt: deliveries.createdAt,
+    })
+    .from(deliveries)
+    .leftJoin(orders, eq(deliveries.orderId, orders.id))
+    .where(eq(deliveries.clientId, clientId))
+    .orderBy(desc(deliveries.createdAt))
+    .limit(6);
+
+  const deliveriesSummary: ClientDeliverySummary[] = deliveryRows.map((row) => {
+    const orderReference = row.orderNumber?.trim().length
+      ? row.orderNumber.trim()
+      : row.orderId
+        ? row.orderId.slice(0, 6).toUpperCase()
+        : null;
+
+    return {
+      id: row.id,
+      deliveryNumber: row.deliveryNumber,
+      stage: row.stage,
+      stageLabel: deliveryStageLabels[row.stage],
+      type: row.type,
+      typeLabel: deliveryTypeLabels[row.type],
+      scheduledDate: row.scheduledDate ? new Date(row.scheduledDate) : null,
+      requiresAdminAttention: Boolean(row.requiresAdminAttention),
+      orderId: row.orderId ?? null,
+      orderReference,
+      orderTitle: row.orderTitle ?? null,
+      installationId: row.installationId ?? null,
+    };
+  });
+
   return {
     client: {
       id: base.id,
@@ -212,16 +335,28 @@ export async function getClientDetail(clientId: string): Promise<ClientDetail | 
       lastOrderAt,
     },
     orders: ordersSummary,
+    installations: installationsSummary,
+    deliveries: deliveriesSummary,
   };
 }
 
-export async function listClientsForSelect(): Promise<Array<{ id: string; label: string }>> {
+export type ClientSelectOption = {
+  id: string;
+  label: string;
+  street: string | null;
+  city: string | null;
+  postalCode: string | null;
+};
+
+export async function listClientsForSelect(): Promise<ClientSelectOption[]> {
   const rows = await db
     .select({
       id: clients.id,
       clientNumber: clients.clientNumber,
       fullName: clients.fullName,
       city: clients.city,
+      street: clients.street,
+      postalCode: clients.postalCode,
     })
     .from(clients)
     .orderBy(asc(clients.fullName));
@@ -231,6 +366,9 @@ export async function listClientsForSelect(): Promise<Array<{ id: string; label:
     return {
       id: row.id,
       label: `#${row.clientNumber} — ${baseLabel}`,
+      street: row.street ?? null,
+      city: row.city ?? null,
+      postalCode: row.postalCode ?? null,
     };
   });
 }

@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { type ColumnDef, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
 import { useRouter } from 'next/navigation'
-import { Search } from 'lucide-react'
+import { Filter, Search } from 'lucide-react'
 
 import {
   Empty,
@@ -14,6 +14,9 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { ButtonGroup, ButtonGroupText } from '@/components/ui/button-group'
+import { cn } from '@/lib/utils'
 import {
   Table,
   TableBody,
@@ -29,17 +32,55 @@ interface OrdersTableProps {
   data: OrdersListItem[]
 }
 
+const MODE_FILTERS = [
+  { value: 'ALL', label: 'Wszystkie' },
+  { value: 'INSTALLATION_ONLY', label: 'Montaże' },
+  { value: 'DELIVERY_ONLY', label: 'Dostawy' },
+] as const
+
+type ModeFilter = (typeof MODE_FILTERS)[number]['value']
+
 export function OrdersTable({ columns, data }: OrdersTableProps) {
   const [query, setQuery] = React.useState('')
+  const [modeFilter, setModeFilter] = React.useState<ModeFilter>('ALL')
   const router = useRouter()
+
+  const modeCounts = React.useMemo(
+    () =>
+      data.reduce(
+        (acc, item) => {
+          if (item.executionMode === 'INSTALLATION_ONLY') {
+            acc.INSTALLATION_ONLY += 1
+          }
+          if (item.executionMode === 'DELIVERY_ONLY') {
+            acc.DELIVERY_ONLY += 1
+          }
+          acc.ALL += 1
+          return acc
+        },
+        {
+          ALL: 0,
+          INSTALLATION_ONLY: 0,
+          DELIVERY_ONLY: 0,
+        } as Record<Exclude<ModeFilter, 'ALL'> | 'ALL', number>
+      ),
+    [data]
+  )
 
   const filteredData = React.useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
     if (!normalizedQuery) {
-      return data
+      return modeFilter === 'ALL'
+        ? data
+        : data.filter((item) => item.executionMode === modeFilter)
     }
 
     return data.filter((item) => {
+      const matchesMode = modeFilter === 'ALL' ? true : item.executionMode === modeFilter
+      if (!matchesMode) {
+        return false
+      }
+
       const tokens = [
         item.orderNumber,
         item.title,
@@ -50,9 +91,14 @@ export function OrdersTable({ columns, data }: OrdersTableProps) {
         .filter(Boolean)
         .map((value) => value!.toLowerCase())
 
-      return tokens.some((token) => token.includes(normalizedQuery))
+      const modeTokens =
+        item.executionMode === 'DELIVERY_ONLY'
+          ? ['dostawa', 'delivery']
+          : ['montaż', 'montaz', 'installation']
+
+      return [...tokens, ...modeTokens].some((token) => token.includes(normalizedQuery))
     })
-  }, [query, data])
+  }, [query, data, modeFilter])
 
   const table = useReactTable({
     data: filteredData,
@@ -62,21 +108,50 @@ export function OrdersTable({ columns, data }: OrdersTableProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h2 className="text-lg font-semibold text-foreground">Lista zleceń</h2>
           <p className="text-sm text-muted-foreground">
             Wyszukaj klienta, numer zlecenia lub partnera, aby przejść do szczegółów workflowu.
           </p>
         </div>
-        <div className="relative w-full lg:w-80">
-          <Search className="text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2" aria-hidden />
-          <Input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Filtruj po kliencie, numerze, partnerze..."
-            className="pl-9"
-          />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+          <div className="flex flex-col gap-1">
+            <ButtonGroupText className="text-xs uppercase tracking-wide text-muted-foreground">
+              <Filter className="size-3.5" aria-hidden /> Tryb zlecenia
+            </ButtonGroupText>
+            <ButtonGroup className="rounded-full border border-border/60 bg-muted/40 p-1">
+              {MODE_FILTERS.map((option) => (
+                <Button
+                  key={option.value}
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setModeFilter(option.value)}
+                  className={cn(
+                    'rounded-full px-4 text-sm font-medium transition',
+                    modeFilter === option.value
+                      ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90'
+                      : 'text-muted-foreground hover:bg-background/60'
+                  )}
+                >
+                  <span>{option.label}</span>
+                  <span className="ml-2 text-xs font-semibold opacity-70">
+                    {modeCounts[option.value as keyof typeof modeCounts]}
+                  </span>
+                </Button>
+              ))}
+            </ButtonGroup>
+          </div>
+          <div className="relative w-full sm:w-64 lg:w-72">
+            <Search className="text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2" aria-hidden />
+            <Input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Filtruj po kliencie, numerze, partnerze..."
+              className="pl-9"
+            />
+          </div>
         </div>
       </div>
 

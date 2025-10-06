@@ -41,11 +41,18 @@ export const createInstallationSchema = z
 
 export type CreateInstallationInput = z.infer<typeof createInstallationSchema>;
 
+export const updateInstallationSchema = createInstallationSchema.safeExtend({
+  installationId: z.string().min(1, "Brakuje identyfikatora montażu."),
+});
+
 export type CreateInstallationFormErrors = Partial<Record<keyof CreateInstallationInput, string>> & {
   orderId?: string;
   clientId?: string;
+  installationId?: string;
 };
 
 export type CreateInstallationFormState =
   | { status: "idle" }
   | { status: "error"; message?: string; errors?: CreateInstallationFormErrors };
+
+export type UpdateInstallationInput = z.infer<typeof updateInstallationSchema>;

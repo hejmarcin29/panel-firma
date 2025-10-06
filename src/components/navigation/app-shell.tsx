@@ -1,7 +1,8 @@
 "use client";
 
 import { ReactNode } from "react";
-import { Bell, HelpCircle, Search, Settings2 } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { ArrowLeft, Bell, HelpCircle, Search, Settings2 } from "lucide-react";
 
 import { LogoutButton } from "@/components/auth/logout-button";
 import { AppSidebar } from "@/components/navigation/app-sidebar";
@@ -14,6 +15,8 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Toaster } from "@/components/ui/sonner";
+import { isPublicPath } from "@/lib/routes";
 
 export type AppShellUser = {
   displayName: string;
@@ -30,6 +33,18 @@ export function AppShell({
   user: AppShellUser;
   notifications?: number;
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const showBackButton = !isPublicPath(pathname);
+
+  const handleBack = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+      return;
+    }
+    router.push("/zlecenia");
+  };
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-muted/20">
@@ -38,6 +53,17 @@ export function AppShell({
           <header className="sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-border/60 bg-background/70 px-6 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="flex flex-1 items-center gap-3">
               <SidebarTrigger className="md:hidden" />
+              {showBackButton ? (
+                <Button
+                  variant="ghost"
+                  onClick={handleBack}
+                  className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/70 px-4 py-2 text-sm font-semibold text-foreground shadow-sm transition hover:bg-background"
+                  aria-label="Wróć do poprzedniej strony"
+                >
+                  <ArrowLeft className="size-4" aria-hidden />
+                  <span className="hidden sm:inline">Wstecz</span>
+                </Button>
+              ) : null}
               <div className="relative hidden flex-1 items-center gap-2 rounded-full border border-border/60 bg-background px-3 py-2 shadow-sm md:flex">
                 <Search className="size-4 text-muted-foreground" aria-hidden />
                 <Input
@@ -87,6 +113,7 @@ export function AppShell({
             </div>
           </div>
         </SidebarInset>
+        <Toaster position="top-right" richColors />
       </div>
     </SidebarProvider>
   );

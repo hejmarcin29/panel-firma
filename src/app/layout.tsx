@@ -3,7 +3,8 @@ import { headers } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { AppShell } from "@/components/navigation/app-shell";
-import { LOGIN_ROUTE, SETUP_ROUTE, requireSession } from "@/lib/auth";
+import { requireSession } from "@/lib/auth";
+import { isPublicPath } from "@/lib/routes";
 import { userRoleLabels } from "@/lib/user-roles";
 
 import "./globals.css";
@@ -23,38 +24,41 @@ export const metadata: Metadata = {
   description: "Minimalny start aplikacji – dodaj własne moduły i widoki.",
 };
 
-const PUBLIC_PATH_PREFIXES = [LOGIN_ROUTE, SETUP_ROUTE];
-
 async function resolveCurrentPath(): Promise<string> {
   const headerList = await headers();
 
-  const directPath =
-    headerList.get("x-invoke-path") ??
-    headerList.get("x-pathname") ??
-    headerList.get("x-forwarded-uri");
+  const host = headerList.get("x-forwarded-host") ?? headerList.get("host") ?? "localhost";
+  const candidates = [
+    headerList.get("x-invoke-path"),
+    headerList.get("x-pathname"),
+    headerList.get("x-forwarded-uri"),
+    headerList.get("x-original-uri"),
+    headerList.get("x-request-uri"),
+    headerList.get(":path"),
+    headerList.get("next-url"),
+    headerList.get("x-url"),
+    headerList.get("referer"),
+  ];
 
-  if (directPath) {
-    return directPath;
-  }
-
-  const urlCandidates = [headerList.get("x-url"), headerList.get("referer"), headerList.get("next-url")];
-
-  for (const candidate of urlCandidates) {
+  for (const candidate of candidates) {
     if (!candidate) continue;
+
+    if (candidate.startsWith("/")) {
+      const [pathname] = candidate.split("?");
+      return pathname || "/";
+    }
+
     try {
-      const parsed = new URL(candidate, "http://localhost");
-      return parsed.pathname;
+      const parsed = new URL(candidate, `http://${host}`);
+      if (parsed.pathname) {
+        return parsed.pathname;
+      }
     } catch (error) {
       void error;
-      continue;
     }
   }
 
   return "/";
-}
-
-function isPublicPath(pathname: string) {
-  return PUBLIC_PATH_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
 
 function getUserInitials(name?: string | null, username?: string | null) {

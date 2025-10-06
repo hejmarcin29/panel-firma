@@ -26,10 +26,12 @@ find /srv -maxdepth 1 -type d -name "prime*"# Wskazówki dla AI w projekcie `app
 - Korzystaj z gotowych komponentów shadcn (Card, Tabs, Badge, Dialog, Table itd.). Ikony dobieramy z `lucide-react`, a wykresy renderujemy przez helpery `@/components/ui/chart` (Recharts).
 - Każdą tabelę budujemy na TanStack React Table (`@tanstack/react-table`) z filtrami, sortowaniem i opcjonalną paginacją.
 - Zachowuj responsywność (grid/flex, breakpointy md/lg/xl), typografię `font-sans`, spacing: sekcje 24px, wnętrze kart 16px. Dodawaj wskaźniki trendów (`TrendingUp`/`TrendingDown`) i kolorowe badge dla zmian procentowych.
+- Na stronie `/zlecenia` sekcje „Przegląd montaży” i „Przegląd dostaw” renderują klikalne karty kierujące do szczegółów `/zlecenia/{orderId}`; zachowaj ten pattern linkowania i stany hover/focus przy dalszych zmianach layoutu.
 - Referencyjny layout dashboardu (sidebar + topbar + rząd kart KPI + sekcje analityczne jak na dostarczonym screenie) traktuj jako bazę – wszystkie nowe podstrony powinny dzielić ten sam styl kart, spacing i hierarchię nagłówków. Sidebar jest stały na desktopie, na mobile działa jako wysuwany panel.
 
 ## Struktura modułów i danych
-- **Zlecenia**: front w `src/app/zlecenia/**`, logika w `src/lib/orders.ts`, etapy w `src/lib/order-stage.ts`. Statusy przechodzą: *Przyjęto → Przed pomiarem → Przed wyceną → Oczekiwanie na zaliczkę → Przed dostawą → Przed montażem → Oczekiwanie na końcową → Koniec*.
+- **Zlecenia**: front w `src/app/zlecenia/**`, logika w `src/lib/orders.ts`, etapy w `src/lib/order-stage.ts`. Statusy przechodzą: *Przyjęto → Przed pomiarem → Przed wyceną → Oczekiwanie na zaliczkę → Przed dostawą → Przed montażem → Oczekiwanie na końcową → Koniec*. Samodzielne dostawy generują rekordy z `executionMode: 'DELIVERY_ONLY'` i numeracją `_Z_` zgodną z pozostałymi zleceniami (np. `2_Z_2`).
+- W szczegółach zlecenia ukrywamy zakładki i sekcje „Pomiary” oraz „Montaże”, jeżeli `executionMode === 'DELIVERY_ONLY'`; zachowaj tę logikę wraz z ewentualnymi refactorami widoku.
 - **Użytkownicy**: `src/app/uzytkownicy/**` + helpery `src/lib/users.ts`; etykiety ról w `src/lib/user-roles.ts` są bezpieczne dla klientów.
 - **Partnerzy, dostawy, pomiary, montaż, produkty** – kolejne moduły powielają układ: hero (tytuł + opis), 2–3 karty KPI, moduł analityczny (tabela/wykres) i listy szczegółowe.
 - Kluczowe encje Drizzle: `clients`, `products`, `orders`, `measurements`, `installations`, `deliveries`, `attachments`, `partner_status_history`. Relacje opieramy na `order_id` oraz identyfikatorach partnerów/klientów.
@@ -54,6 +56,7 @@ find /srv -maxdepth 1 -type d -name "prime*"# Wskazówki dla AI w projekcie `app
 - Przy zmianach schematu usuń `data/panel.db` i wypchnij migracje `npx drizzle-kit push`.
 - Nowy ekran = nagłówek (tytuł + opis), karty KPI, moduł analityczny (tabela/wykres/lista) + mockowe dane, jeśli backend jeszcze nie dostarcza wartości.
 - Po każdej iteracji ważne ustalenia dopisujemy do `instructions.md`, a streszczenie trafia tutaj.
+- Gdy trzeba wyrównać historyczne numery zleceń dostawowych, odpal `node scripts/fix-delivery-order-numbers.mjs` – skrypt zamienia stare `_D_` na sekwencję `_Z_` bez ruszania pozostałych rekordów.
 - Deploy na VPS-ie robimy przez `docker compose build` + `docker compose up -d` wykorzystując przygotowany `Dockerfile`. Pamiętaj o pliku `.env` w katalogu repo (wystarczy pusty), bo compose wczytuje go domyślnie, oraz o wolumenie `./data:/app/data` dla bazy SQLite.
 
 ## Najczęstsze pułapki

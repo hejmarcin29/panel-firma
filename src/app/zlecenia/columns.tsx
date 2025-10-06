@@ -77,6 +77,20 @@ export const ordersColumns: ColumnDef<OrdersListItem>[] = [
     },
   },
   {
+    accessorKey: 'executionMode',
+    header: 'Tryb',
+    cell: ({ row }) => {
+      const mode = row.original.executionMode
+      const isDeliveryOnly = mode === 'DELIVERY_ONLY'
+      const label = isDeliveryOnly ? 'Dostawa' : 'Montaż'
+      const badgeClass = isDeliveryOnly
+        ? 'border border-amber-500/60 bg-amber-500/10 text-amber-600 dark:text-amber-200'
+        : 'border border-emerald-500/60 bg-emerald-500/10 text-emerald-600 dark:text-emerald-200'
+
+      return <Badge className={`rounded-full px-3 py-1 text-xs ${badgeClass}`}>{label}</Badge>
+    },
+  },
+  {
     accessorKey: 'declaredFloorArea',
     header: 'Powierzchnia [m²]',
     cell: ({ getValue }) => {

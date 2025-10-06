@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { format, formatDistanceToNow } from 'date-fns'
 import { pl } from 'date-fns/locale'
@@ -5,6 +6,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   Circle,
+  ClipboardEdit,
   ClipboardList,
   Clock,
   FileText,
@@ -40,17 +42,25 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty'
+import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { getOrderDetail } from '@/lib/orders'
+import { listProductsForSelect } from '@/lib/products'
 import {
-  getOrderStageIndex,
   orderStageBadgeClasses,
   orderStageDescriptions,
   orderStageLabels,
   orderStageSequence,
 } from '@/lib/order-stage'
+import {
+  deliveryStageBadgeClasses,
+  deliveryStageDescriptions,
+  deliveryStageLabels,
+  deliveryStageSequence,
+} from '@/lib/deliveries'
+import { OrderParametersDialog } from './_components/order-parameters-dialog'
 
 const numberFormatter = new Intl.NumberFormat('pl-PL', {
   maximumFractionDigits: 1,
@@ -73,6 +83,21 @@ const taskStatusBadgeClasses: Partial<Record<'OPEN' | 'IN_PROGRESS' | 'BLOCKED' 
   IN_PROGRESS: 'bg-blue-500/10 text-blue-600 dark:text-blue-200',
   BLOCKED: 'bg-red-500/10 text-red-600 dark:text-red-300',
   DONE: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-200',
+}
+
+const executionModeLabels = {
+  INSTALLATION_ONLY: 'Montaż + logistyka',
+  DELIVERY_ONLY: 'Tylko dostawa',
+} as const
+
+const executionModeBadgeClasses: Record<keyof typeof executionModeLabels, string> = {
+  INSTALLATION_ONLY: 'border border-emerald-500/60 bg-emerald-500/10 text-emerald-600 dark:text-emerald-200',
+  DELIVERY_ONLY: 'border border-amber-500/60 bg-amber-500/10 text-amber-600 dark:text-amber-200',
+}
+
+const executionModeTaglines: Record<keyof typeof executionModeLabels, string> = {
+  INSTALLATION_ONLY: 'Śledzimy pełny proces pomiaru, dostaw i montażu.',
+  DELIVERY_ONLY: 'Skupiamy się na logistyce, transportach i dokumentach dostawy.',
 }
 
 const formatDateTime = (value: Date | null | undefined, fallback = 'Brak danych') => {
@@ -120,21 +145,87 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
     notFound()
   }
 
+  const planInstallationHref = detail.client ? `/montaze/nowy?clientId=${detail.client.id}` : '/montaze/nowy'
+  const addDeliverySearch = new URLSearchParams()
+  addDeliverySearch.set('type', 'STANDALONE')
+  addDeliverySearch.set('orderId', detail.order.id)
+  if (detail.client?.id) {
+    addDeliverySearch.set('clientId', detail.client.id)
+  }
+  const addDeliveryHref = `/dostawy/nowa?${addDeliverySearch.toString()}`
+
   const reference = detail.order.orderNumber ?? detail.order.id.slice(0, 7).toUpperCase()
-  const stageBadge = orderStageBadgeClasses[detail.order.stage] ?? 'bg-muted text-foreground'
-  const stageLabel = orderStageLabels[detail.order.stage]
-  const stageChangedDistance = detail.order.stageChangedAt
-    ? formatDistanceToNow(detail.order.stageChangedAt, { addSuffix: true, locale: pl })
-    : 'brak danych'
-  const currentStageIndex = getOrderStageIndex(detail.order.stage)
-  const totalStages = orderStageSequence.length
-  const stageProgress = Math.min(100, Math.round(((currentStageIndex + 1) / totalStages) * 100))
-  const currentStageDescription = orderStageDescriptions[detail.order.stage] ?? null
+  const executionModeLabel = executionModeLabels[detail.order.executionMode]
+  const executionModeBadge = executionModeBadgeClasses[detail.order.executionMode]
+  const executionModeTagline = executionModeTaglines[detail.order.executionMode]
+  const isDeliveryOnly = detail.order.executionMode === 'DELIVERY_ONLY'
   const now = new Date()
   const installationPendingStatuses = new Set(['PLANNED', 'SCHEDULED'])
   const deliveryCompletedStages = new Set(['DELIVERED', 'COMPLETED'])
   const installationChecklist = detail.checklists.installation
   const deliveryChecklist = detail.checklists.delivery
+
+  const deliveriesForView = detail.deliveries.filter((delivery) =>
+    isDeliveryOnly ? delivery.type === 'STANDALONE' : delivery.type === 'FOR_INSTALLATION'
+  )
+
+  const activeDelivery = isDeliveryOnly ? deliveriesForView[0] ?? null : null
+  let panelProductOptions: Array<{ id: string; label: string }> = []
+  let baseboardProductOptions: Array<{ id: string; label: string }> = []
+
+  if (!isDeliveryOnly) {
+    const [panelProducts, baseboardProducts] = await Promise.all([
+      listProductsForSelect({ types: ['PANEL'] }),
+      listProductsForSelect({ types: ['BASEBOARD'] }),
+    ])
+
+    panelProductOptions = panelProducts.map(({ id, label }) => ({ id, label }))
+    baseboardProductOptions = baseboardProducts.map(({ id, label }) => ({ id, label }))
+  }
+  const stageSequence = isDeliveryOnly && activeDelivery ? deliveryStageSequence : orderStageSequence
+  const stageLabelsRecord = ((isDeliveryOnly && activeDelivery ? deliveryStageLabels : orderStageLabels) as Record<string, string>)
+  const stageDescriptionsRecord = ((isDeliveryOnly && activeDelivery ? deliveryStageDescriptions : orderStageDescriptions) as Record<string, string | undefined>)
+  const stageBadgeRecord = ((isDeliveryOnly && activeDelivery ? deliveryStageBadgeClasses : orderStageBadgeClasses) as Record<string, string | undefined>)
+  const currentStageValue = (isDeliveryOnly && activeDelivery ? activeDelivery.stage : detail.order.stage) as string
+  const stageBadge = stageBadgeRecord[currentStageValue] ?? 'bg-muted text-foreground'
+  const stageLabel = stageLabelsRecord[currentStageValue] ?? 'Brak etapu'
+  const currentStageIndexRaw = stageSequence.findIndex((stage) => stage === currentStageValue)
+  const currentStageIndex = currentStageIndexRaw >= 0 ? currentStageIndexRaw : 0
+  const totalStages = stageSequence.length
+  const stageProgress = totalStages > 0 ? Math.min(100, Math.round(((currentStageIndex + 1) / totalStages) * 100)) : 0
+  const currentStageDescription = stageDescriptionsRecord[currentStageValue] ?? null
+  const stageChangedDistance = (() => {
+    if (isDeliveryOnly && activeDelivery?.createdAt) {
+      return formatDistanceToNow(activeDelivery.createdAt, { addSuffix: true, locale: pl })
+    }
+
+    if (detail.order.stageChangedAt) {
+      return formatDistanceToNow(detail.order.stageChangedAt, { addSuffix: true, locale: pl })
+    }
+
+    return 'brak danych'
+  })()
+  const heroDescription = isDeliveryOnly
+    ? 'Monitoruj logistykę, status płatności i dokumenty dla zlecenia w trybie „Tylko dostawa”.'
+    : 'Monitoruj status, harmonogram i zależne procesy dla tego zlecenia montażowego. Poniżej znajdziesz pomiary, montaże, dostawy oraz zadania przypisane do zespołu.'
+
+  const documentFlags = [
+    {
+      key: 'quoteSent',
+      label: 'Wycena wysłana',
+      active: detail.order.quoteSent,
+    },
+    {
+      key: 'depositInvoiceIssued',
+      label: 'Faktura zaliczkowa',
+      active: detail.order.depositInvoiceIssued,
+    },
+    {
+      key: 'finalInvoiceIssued',
+      label: 'Faktura końcowa',
+      active: detail.order.finalInvoiceIssued,
+    },
+  ] as const
 
   type UpcomingEvent = {
     id: string
@@ -166,12 +257,12 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
         icon: Ruler,
         accentClass: 'bg-primary/15 text-primary border border-primary/30',
       })),
-    ...detail.deliveries
+    ...deliveriesForView
       .filter((delivery) => delivery.scheduledDate && delivery.scheduledDate > now)
       .map((delivery) => ({
         id: `delivery-${delivery.id}`,
         date: delivery.scheduledDate!,
-        label: delivery.type === 'FOR_INSTALLATION' ? 'Dostawa pod montaż' : 'Samodzielna dostawa',
+  label: delivery.type === 'FOR_INSTALLATION' ? 'Dostawa pod montaż' : 'Tylko dostawa',
         description: [delivery.panelProductName, delivery.baseboardProductName].filter(Boolean).join(' • ') || null,
         icon: Package,
         accentClass: 'bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-100',
@@ -212,7 +303,7 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
         description: task.assignedToName ? `Właściciel: ${task.assignedToName}` : null,
         icon: ListChecks,
       })),
-    ...detail.deliveries
+    ...deliveriesForView
       .filter(
         (delivery) =>
           delivery.scheduledDate &&
@@ -222,7 +313,7 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
       .map((delivery) => ({
         id: `delivery-overdue-${delivery.id}`,
         dueDate: delivery.scheduledDate!,
-        label: delivery.type === 'FOR_INSTALLATION' ? 'Dostawa pod montaż (przeterminowana)' : 'Dostawa (przeterminowana)',
+  label: delivery.type === 'FOR_INSTALLATION' ? 'Dostawa pod montaż (przeterminowana)' : 'Tylko dostawa (przeterminowana)',
         description: [delivery.panelProductName, delivery.baseboardProductName]
           .filter(Boolean)
           .join(' • ') || null,
@@ -246,6 +337,8 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
         icon: HardHat,
       })),
   ].sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
+
+  const nextUpcomingEvent = upcomingEvents[0] ?? null
 
   return (
     <div className="flex flex-col gap-6 lg:gap-8">
@@ -271,6 +364,7 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
               Zlecenie #{reference}
             </Badge>
             <Badge className={`rounded-full px-3 py-1 text-xs ${stageBadge}`}>{stageLabel}</Badge>
+            <Badge className={`rounded-full px-3 py-1 text-xs ${executionModeBadge}`}>{executionModeLabel}</Badge>
             {detail.order.requiresAdminAttention ? (
               <Badge variant="outline" className="border-red-500/60 bg-red-500/10 text-red-500">
                 <AlertTriangle className="mr-1 size-3.5" aria-hidden />
@@ -283,8 +377,10 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
               {detail.order.title ?? 'Zarządzaj etapami realizacji'}
             </h1>
             <p className="max-w-2xl text-sm text-muted-foreground lg:text-base">
-              Monitoruj status, harmonogram i zależne procesy dla tego zlecenia montażowego. Poniżej znajdziesz
-              pomiary, montaże, dostawy oraz zadania przypisane do zespołu.
+              {heroDescription}
+            </p>
+            <p className="text-xs font-medium text-muted-foreground/80">
+              {executionModeTagline}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
@@ -297,6 +393,31 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
               </span>
             ) : null}
           </div>
+          <div className="flex flex-wrap items-center gap-3">
+            {detail.order.executionMode === 'INSTALLATION_ONLY' ? (
+              <Button asChild className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20">
+                <Link href={planInstallationHref}>Zaplanuj montaż</Link>
+              </Button>
+            ) : null}
+            {detail.order.executionMode === 'DELIVERY_ONLY' ? (
+              <Button
+                asChild
+                className="rounded-full bg-amber-500 px-5 py-2 text-sm font-semibold text-amber-950 shadow-lg shadow-amber-500/30 hover:bg-amber-500/90"
+              >
+                <Link href={addDeliveryHref}>Dodaj dostawę</Link>
+              </Button>
+            ) : null}
+            <Button
+              variant="ghost"
+              asChild
+              className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-muted-foreground hover:text-primary"
+            >
+              <Link href={`/zlecenia/${detail.order.id}/edytuj`}>
+                <ClipboardEdit className="size-4" aria-hidden />
+                Edytuj zlecenie
+              </Link>
+            </Button>
+          </div>
           <div className="space-y-3 rounded-2xl border border-border/50 bg-background/80 p-4">
             <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-medium text-muted-foreground">
               <span>Postęp procesu</span>
@@ -306,7 +427,7 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
             </div>
             <Progress value={stageProgress} className="h-2" aria-label="Postęp realizacji zlecenia" />
             <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {orderStageSequence.map((stage, index) => {
+              {stageSequence.map((stage, index) => {
                 const isCompleted = index < currentStageIndex
                 const isCurrent = index === currentStageIndex
                 return (
@@ -331,7 +452,7 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
                               : 'text-muted-foreground/70'
                         }`}
                       >
-                        {orderStageLabels[stage]}
+                        {stageLabelsRecord[stage] ?? stage}
                       </span>
                       {isCurrent && currentStageDescription ? (
                         <span className="text-[11px] text-muted-foreground">{currentStageDescription}</span>
@@ -348,16 +469,25 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
             <CardContent className="flex flex-col gap-1 p-4">
               <span className="text-xs uppercase text-muted-foreground">Otwarte zadania</span>
               <span className="text-2xl font-semibold text-foreground">{detail.summary.openTaskCount}</span>
+              <span className="text-[11px] text-muted-foreground">Wymagają reakcji zespołu.</span>
             </CardContent>
           </Card>
           <Card className="rounded-2xl border-none bg-primary/10 shadow-lg shadow-primary/20">
             <CardContent className="flex flex-col gap-1 p-4">
-              <span className="text-xs uppercase text-primary">Najbliższy montaż</span>
-              <span className="text-2xl font-semibold text-primary">
-                {detail.summary.upcomingInstallationDate
-                  ? format(detail.summary.upcomingInstallationDate, 'dd MMM', { locale: pl })
-                  : '—'}
-              </span>
+              <span className="text-xs uppercase text-primary/80">Nadchodzący krok</span>
+              {nextUpcomingEvent ? (
+                <>
+                  <span className="text-sm font-semibold text-foreground">{nextUpcomingEvent.label}</span>
+                  <span className="text-xl font-semibold text-primary">
+                    {format(nextUpcomingEvent.date, 'dd MMM yyyy', { locale: pl })}
+                  </span>
+                  {nextUpcomingEvent.description ? (
+                    <span className="text-[11px] text-primary/80">{nextUpcomingEvent.description}</span>
+                  ) : null}
+                </>
+              ) : (
+                <span className="text-sm text-primary/80">Brak zaplanowanych terminów.</span>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -455,17 +585,21 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
             <ClipboardList className="size-4" aria-hidden />
             Przegląd
           </TabsTrigger>
-          <TabsTrigger value="measurements">
-            <Ruler className="size-4" aria-hidden />
-            Pomiary
-          </TabsTrigger>
-          <TabsTrigger value="installations">
-            <HardHat className="size-4" aria-hidden />
-            Montaże
-          </TabsTrigger>
+          {!isDeliveryOnly ? (
+            <>
+              <TabsTrigger value="measurements">
+                <Ruler className="size-4" aria-hidden />
+                Pomiary
+              </TabsTrigger>
+              <TabsTrigger value="installations">
+                <HardHat className="size-4" aria-hidden />
+                Montaże
+              </TabsTrigger>
+            </>
+          ) : null}
           <TabsTrigger value="deliveries">
             <Package className="size-4" aria-hidden />
-            Dostawy
+            {isDeliveryOnly ? 'Dostawy' : 'Dostawa pod montaż'}
           </TabsTrigger>
           <TabsTrigger value="tasks">
             <ListChecks className="size-4" aria-hidden />
@@ -484,45 +618,106 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
         <TabsContent value="overview" className="space-y-6">
           <div className="grid gap-6 lg:grid-cols-3">
             <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle>Informacje o zleceniu</CardTitle>
-                <CardDescription>Podstawowe dane deklarowane podczas tworzenia zlecenia.</CardDescription>
+              <CardHeader className="flex flex-col gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <CardTitle>Parametry inwestycji</CardTitle>
+                    <CardDescription>
+                      Kluczowe informacje liczbowe i preferencje materiałowe. Edytuj je w locie bez opuszczania karty.
+                    </CardDescription>
+                  </div>
+                  {!isDeliveryOnly ? (
+                    <OrderParametersDialog
+                      detail={detail}
+                      panelProducts={panelProductOptions}
+                      baseboardProducts={baseboardProductOptions}
+                    />
+                  ) : null}
+                </div>
+                {isDeliveryOnly ? (
+                  <p className="text-xs text-muted-foreground/80">
+                    Parametry montażowe są ukryte, ponieważ zlecenie działa w trybie dostawy.
+                  </p>
+                ) : null}
               </CardHeader>
               <CardContent>
-                <dl className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-1">
-                    <dt className="text-xs uppercase text-muted-foreground">Etap</dt>
-                    <dd className="text-sm font-medium text-foreground">{stageLabel}</dd>
+                {isDeliveryOnly ? (
+                  <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border/70 bg-muted/30 p-6 text-center">
+                    <ClipboardList className="size-6 text-muted-foreground" aria-hidden />
+                    <p className="text-sm text-muted-foreground">
+                      Tryb „Tylko dostawa” ukrywa parametry inwestycji. Przełącz na pełny montaż, aby edytować dane.
+                    </p>
                   </div>
-                  <div className="space-y-1">
-                    <dt className="text-xs uppercase text-muted-foreground">Deklarowana powierzchnia</dt>
-                    <dd className="text-sm font-medium text-foreground">
-                      {detail.order.declaredFloorArea
-                        ? `${numberFormatter.format(detail.order.declaredFloorArea)} m²`
-                        : 'Brak danych'}
-                    </dd>
-                  </div>
-                  <div className="space-y-1">
-                    <dt className="text-xs uppercase text-muted-foreground">Deklarowana listwa</dt>
-                    <dd className="text-sm font-medium text-foreground">
-                      {detail.order.declaredBaseboardLength
-                        ? `${numberFormatter.format(detail.order.declaredBaseboardLength)} mb`
-                        : 'Brak danych'}
-                    </dd>
-                  </div>
-                  <div className="space-y-1">
-                    <dt className="text-xs uppercase text-muted-foreground">Typ budynku</dt>
-                    <dd className="text-sm font-medium text-foreground">{detail.order.buildingType ?? 'Nie określono'}</dd>
-                  </div>
-                  <div className="space-y-1">
-                    <dt className="text-xs uppercase text-muted-foreground">Preferencja paneli</dt>
-                    <dd className="text-sm font-medium text-foreground">{detail.order.panelPreference ?? 'Brak'}</dd>
-                  </div>
-                  <div className="space-y-1">
-                    <dt className="text-xs uppercase text-muted-foreground">Preferencja listew</dt>
-                    <dd className="text-sm font-medium text-foreground">{detail.order.baseboardPreference ?? 'Brak'}</dd>
-                  </div>
-                </dl>
+                ) : (
+                  <dl className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    <div className="space-y-1">
+                      <dt className="text-xs uppercase text-muted-foreground">Deklarowana powierzchnia</dt>
+                      <dd className="text-sm font-medium text-foreground">
+                        {detail.order.declaredFloorArea
+                          ? `${numberFormatter.format(detail.order.declaredFloorArea)} m²`
+                          : 'Brak danych'}
+                      </dd>
+                    </div>
+                    <div className="space-y-1">
+                      <dt className="text-xs uppercase text-muted-foreground">Deklarowane listwy</dt>
+                      <dd className="text-sm font-medium text-foreground">
+                        {detail.order.declaredBaseboardLength
+                          ? `${numberFormatter.format(detail.order.declaredBaseboardLength)} mb`
+                          : 'Brak danych'}
+                      </dd>
+                    </div>
+                    <div className="space-y-1">
+                      <dt className="text-xs uppercase text-muted-foreground">Typ budynku</dt>
+                      <dd className="text-sm font-medium text-foreground">{detail.order.buildingType ?? 'Nie określono'}</dd>
+                    </div>
+                    <div className="space-y-1">
+                      <dt className="text-xs uppercase text-muted-foreground">Preferencje paneli</dt>
+                      <dd className="text-sm font-medium text-foreground">
+                        {detail.order.panelPreference ?? 'Brak danych'}
+                      </dd>
+                    </div>
+                    <div className="space-y-1">
+                      <dt className="text-xs uppercase text-muted-foreground">Preferencje listew</dt>
+                      <dd className="text-sm font-medium text-foreground">
+                        {detail.order.baseboardPreference ?? 'Brak danych'}
+                      </dd>
+                    </div>
+                    <div className="space-y-1">
+                      <dt className="text-xs uppercase text-muted-foreground">Preferowany produkt paneli</dt>
+                      <dd className="text-sm font-medium text-foreground">
+                        {detail.order.preferredPanelProductName ?? 'Nie wybrano'}
+                      </dd>
+                    </div>
+                    <div className="space-y-1">
+                      <dt className="text-xs uppercase text-muted-foreground">Preferowany produkt listew</dt>
+                      <dd className="text-sm font-medium text-foreground">
+                        {detail.order.preferredBaseboardProductName ?? 'Nie wybrano'}
+                      </dd>
+                    </div>
+                    <div className="space-y-1">
+                      <dt className="text-xs uppercase text-muted-foreground">Status dokumentów</dt>
+                      <dd className="flex flex-wrap gap-2">
+                        {documentFlags.map((flag) => (
+                          <Badge
+                            key={flag.key}
+                            className={
+                              'rounded-full px-3 py-1 text-xs font-semibold ' +
+                              (flag.active
+                                ? 'border border-emerald-500/50 bg-emerald-500/10 text-emerald-600'
+                                : 'border border-border text-muted-foreground')
+                            }
+                          >
+                            {flag.label}
+                          </Badge>
+                        ))}
+                      </dd>
+                    </div>
+                    <div className="space-y-1">
+                      <dt className="text-xs uppercase text-muted-foreground">Etap procesu</dt>
+                      <dd className="text-sm font-medium text-foreground">{stageLabel}</dd>
+                    </div>
+                  </dl>
+                )}
               </CardContent>
             </Card>
 
@@ -566,6 +761,19 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
                   ) : (
                     <p className="text-muted-foreground">Brak przypisanego partnera.</p>
                   )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Właściciel procesu</CardTitle>
+                  <CardDescription>Osoba odpowiedzialna operacyjnie za zlecenie.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-1 text-sm text-muted-foreground">
+                  <div className="font-semibold text-foreground">
+                    {detail.order.ownerName ?? 'Nie przypisano'}
+                  </div>
+                  {detail.order.ownerEmail ? <div>{detail.order.ownerEmail}</div> : null}
                 </CardContent>
               </Card>
             </div>
@@ -620,271 +828,329 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
 
             <Card className="rounded-3xl border border-border/60">
               <CardHeader className="flex flex-col gap-1">
-                <CardTitle>Checklisty etapów</CardTitle>
-                <CardDescription>Monitoruj kluczowe działania finansowe i operacyjne.</CardDescription>
+                <CardTitle>{isDeliveryOnly ? 'Checklist logistyki dostaw' : 'Checklist montażu'}</CardTitle>
+                <CardDescription>
+                  {isDeliveryOnly
+                    ? 'Kontroluj kroki finansowe i operacyjne związane z trybem „Tylko dostawa”.'
+                    : 'Monitoruj kolejne działania związane z realizacją montażu.'}
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="space-y-3">
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground">Montaż</h3>
-                    <p className="text-xs text-muted-foreground">Wszystkie kroki związane z realizacją montażu.</p>
+                {isDeliveryOnly ? (
+                  <div className="space-y-3">
+                    <div>
+                      <h3 className="text-sm font-semibold text-foreground">Tylko dostawa</h3>
+                      <p className="text-xs text-muted-foreground">Flagi dotyczące procesu logistycznego.</p>
+                    </div>
+                    <ul className="space-y-2 text-sm">
+                      {[
+                        {
+                          label: 'Faktura proforma',
+                          completed: deliveryChecklist.proformaIssued,
+                        },
+                        {
+                          label: 'Faktura zaliczkowa/końcowa',
+                          completed: deliveryChecklist.depositOrFinalInvoiceIssued,
+                        },
+                        {
+                          label: 'Zlecono wysyłkę',
+                          completed: deliveryChecklist.shippingOrdered,
+                        },
+                        {
+                          label: 'Opinia klienta',
+                          completed: deliveryChecklist.reviewReceived,
+                        },
+                      ].map((item) => (
+                        <li key={item.label} className="flex items-center gap-3">
+                          <span
+                            className={`inline-flex size-6 items-center justify-center rounded-full border text-xs font-semibold ${
+                              item.completed
+                                ? 'border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300'
+                                : 'border-border text-muted-foreground'
+                            }`}
+                            aria-hidden="true"
+                          >
+                            {item.completed ? <CheckCircle2 className="size-4" /> : <Circle className="size-3" />}
+                          </span>
+                          <span className={item.completed ? 'text-foreground' : 'text-muted-foreground'}>{item.label}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                  <ul className="space-y-2 text-sm">
-                    {[
-                      {
-                        label: 'Wycena wysłana',
-                        completed: installationChecklist.quoteSent,
-                      },
-                      {
-                        label: 'Pomiar wykonany',
-                        completed: installationChecklist.measurementCompleted,
-                      },
-                      {
-                        label: 'Faktura zaliczkowa',
-                        completed: installationChecklist.depositInvoiceIssued,
-                      },
-                      {
-                        label: 'Faktura końcowa',
-                        completed: installationChecklist.finalInvoiceIssued,
-                      },
-                      {
-                        label: 'Protokół odbioru',
-                        completed: installationChecklist.handoverProtocolSigned,
-                      },
-                      {
-                        label: 'Opinia',
-                        completed: installationChecklist.reviewReceived,
-                      },
-                    ].map((item) => (
-                      <li key={item.label} className="flex items-center gap-3">
-                        <span
-                          className={`inline-flex size-6 items-center justify-center rounded-full border text-xs font-semibold ${
-                            item.completed
-                              ? 'border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300'
-                              : 'border-border text-muted-foreground'
-                          }`}
-                          aria-hidden="true"
-                        >
-                          {item.completed ? <CheckCircle2 className="size-4" /> : <Circle className="size-3" />}
-                        </span>
-                        <span className={item.completed ? 'text-foreground' : 'text-muted-foreground'}>{item.label}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-3">
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground">Tylko dostawa</h3>
-                    <p className="text-xs text-muted-foreground">Flagi dotyczące procesu logistycznego.</p>
+                ) : (
+                  <div className="space-y-3">
+                    <div>
+                      <h3 className="text-sm font-semibold text-foreground">Montaż</h3>
+                      <p className="text-xs text-muted-foreground">Wszystkie kroki związane z realizacją montażu.</p>
+                    </div>
+                    <ul className="space-y-2 text-sm">
+                      {[
+                        {
+                          label: 'Wycena wysłana',
+                          completed: installationChecklist.quoteSent,
+                        },
+                        {
+                          label: 'Pomiar wykonany',
+                          completed: installationChecklist.measurementCompleted,
+                        },
+                        {
+                          label: 'Faktura zaliczkowa',
+                          completed: installationChecklist.depositInvoiceIssued,
+                        },
+                        {
+                          label: 'Faktura końcowa',
+                          completed: installationChecklist.finalInvoiceIssued,
+                        },
+                        {
+                          label: 'Protokół odbioru',
+                          completed: installationChecklist.handoverProtocolSigned,
+                        },
+                        {
+                          label: 'Opinia klienta',
+                          completed: installationChecklist.reviewReceived,
+                        },
+                      ].map((item) => (
+                        <li key={item.label} className="flex items-center gap-3">
+                          <span
+                            className={`inline-flex size-6 items-center justify-center rounded-full border text-xs font-semibold ${
+                              item.completed
+                                ? 'border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300'
+                                : 'border-border text-muted-foreground'
+                            }`}
+                            aria-hidden="true"
+                          >
+                            {item.completed ? <CheckCircle2 className="size-4" /> : <Circle className="size-3" />}
+                          </span>
+                          <span className={item.completed ? 'text-foreground' : 'text-muted-foreground'}>{item.label}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                  <ul className="space-y-2 text-sm">
-                    {[
-                      {
-                        label: 'Faktura proforma',
-                        completed: deliveryChecklist.proformaIssued,
-                      },
-                      {
-                        label: 'Faktura zaliczkowa/końcowa',
-                        completed: deliveryChecklist.depositOrFinalInvoiceIssued,
-                      },
-                      {
-                        label: 'Zlecono wysyłkę',
-                        completed: deliveryChecklist.shippingOrdered,
-                      },
-                      {
-                        label: 'Opinia',
-                        completed: deliveryChecklist.reviewReceived,
-                      },
-                    ].map((item) => (
-                      <li key={item.label} className="flex items-center gap-3">
-                        <span
-                          className={`inline-flex size-6 items-center justify-center rounded-full border text-xs font-semibold ${
-                            item.completed
-                              ? 'border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300'
-                              : 'border-border text-muted-foreground'
-                          }`}
-                          aria-hidden="true"
-                        >
-                          {item.completed ? <CheckCircle2 className="size-4" /> : <Circle className="size-3" />}
-                        </span>
-                        <span className={item.completed ? 'text-foreground' : 'text-muted-foreground'}>{item.label}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                )}
               </CardContent>
             </Card>
           </div>
 
         </TabsContent>
 
-        <TabsContent value="measurements" className="space-y-4">
-          {detail.measurements.length === 0 ? (
-            <Card className="rounded-3xl border border-border/60">
-              <CardContent className="p-6">
-                <Empty>
-                  <EmptyMedia variant="icon">
-                    <Ruler className="size-6" aria-hidden />
-                  </EmptyMedia>
-                  <EmptyHeader>
-                    <EmptyTitle>Brak pomiarów</EmptyTitle>
-                    <EmptyDescription>Dodaj protokół z pomiaru, aby oszacować materiały i harmonogram.</EmptyDescription>
-                  </EmptyHeader>
-                </Empty>
-              </CardContent>
-            </Card>
-          ) : (
-            detail.measurements.map((measurement) => (
-              <Card key={measurement.id} className="rounded-3xl border border-border/60">
-                <CardHeader className="flex flex-col gap-1">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Ruler className="size-5 text-primary" aria-hidden />
-                    Protokół pomiarowy
-                  </CardTitle>
-                  <CardDescription>
-                    Zarejestrowano {formatDateTime(measurement.measuredAt, 'brak daty')}. Liczba korekt: {measurement.adjustmentsCount}.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4 text-sm text-muted-foreground">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <div className="text-xs uppercase">Zmierzona powierzchnia</div>
-                      <div className="text-foreground text-sm font-medium">
-                        {measurement.measuredFloorArea
-                          ? `${numberFormatter.format(measurement.measuredFloorArea)} m²`
-                          : 'Brak danych'}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs uppercase">Zmierzona listwa</div>
-                      <div className="text-foreground text-sm font-medium">
-                        {measurement.measuredBaseboardLength
-                          ? `${numberFormatter.format(measurement.measuredBaseboardLength)} mb`
-                          : 'Brak danych'}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs uppercase">Docinki</div>
-                      <div className="text-foreground text-sm font-medium">
-                        {measurement.offcutPercent ? `${measurement.offcutPercent}%` : 'Nie określono'}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs uppercase">Produkt paneli</div>
-                      <div className="text-foreground text-sm font-medium">
-                        {measurement.panelProductName ?? 'Brak'}
-                      </div>
-                    </div>
-                  </div>
-                  <Separator />
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <div className="text-xs uppercase">Timing dostawy</div>
-                      <div className="text-foreground text-sm font-medium">
-                        {measurementTimingLabels[measurement.deliveryTimingType]}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs uppercase">Planowana dostawa</div>
-                      <div className="text-foreground text-sm font-medium">
-                        {measurement.deliveryTimingType === 'DAYS_BEFORE'
-                          ? `${measurement.deliveryDaysBefore ?? '—'} dni przed montażem`
-                          : formatDate(measurement.deliveryDate)}
-                      </div>
-                    </div>
-                  </div>
-                  {measurement.additionalNotes ? (
-                    <div className="rounded-2xl bg-muted/60 p-4 text-sm text-muted-foreground">
-                      {measurement.additionalNotes}
-                    </div>
-                  ) : null}
-                  <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-                    <span>Załączniki: {measurement.attachmentsCount}</span>
-                    <span>Zarejestrowano: {formatDateTime(measurement.createdAt)}</span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </TabsContent>
+        {!isDeliveryOnly ? (
+          <>
+            <TabsContent value="measurements" className="space-y-4">
+              {detail.measurements.length === 0 ? (
+                <Card className="rounded-3xl border border-border/60">
+                  <CardContent className="p-6">
+                    <Empty>
+                      <EmptyMedia variant="icon">
+                        <Ruler className="size-6" aria-hidden />
+                      </EmptyMedia>
+                      <EmptyHeader>
+                        <EmptyTitle>Brak pomiarów</EmptyTitle>
+                        <EmptyDescription>Zaplanuj pomiar, aby zsynchronizować przygotowanie materiałów.</EmptyDescription>
+                      </EmptyHeader>
+                    </Empty>
+                  </CardContent>
+                </Card>
+              ) : (
+                detail.measurements.map((measurement) => {
+                  const measurementReference = measurement.id.slice(0, 6).toUpperCase()
+                  const measurementMeta = [
+                    measurement.measuredAt
+                      ? `Zarejestrowano ${formatDateTime(measurement.measuredAt, 'brak daty')}`
+                      : measurement.scheduledAt
+                        ? `Plan na ${formatDateTime(measurement.scheduledAt)}`
+                        : null,
+                    `Liczba korekt: ${measurement.adjustmentsCount}`,
+                  ]
+                    .filter(Boolean)
+                    .join(' • ')
+                  const deliveryTimingLabel = measurement.deliveryTimingType
+                    ? measurementTimingLabels[measurement.deliveryTimingType]
+                    : 'Nie określono'
+                  const plannedDelivery =
+                    measurement.deliveryTimingType === 'DAYS_BEFORE'
+                      ? `${measurement.deliveryDaysBefore ?? '—'} dni przed montażem`
+                      : formatDate(measurement.deliveryDate)
 
-        <TabsContent value="installations" className="space-y-4">
-          {detail.installations.length === 0 ? (
-            <Card className="rounded-3xl border border-border/60">
-              <CardContent className="p-6">
-                <Empty>
-                  <EmptyMedia variant="icon">
-                    <HardHat className="size-6" aria-hidden />
-                  </EmptyMedia>
-                  <EmptyHeader>
-                    <EmptyTitle>Brak harmonogramów montaży</EmptyTitle>
-                    <EmptyDescription>Dodaj termin montażu, aby zsynchronizować pracę ekipy oraz dostawy.</EmptyDescription>
-                  </EmptyHeader>
-                </Empty>
-              </CardContent>
-            </Card>
-          ) : (
-            detail.installations.map((installation) => (
-              <Card key={installation.id} className="rounded-3xl border border-border/60">
-                <CardHeader className="flex flex-col gap-1">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <HardHat className="size-5 text-primary" aria-hidden />
-                    Harmonogram montażu
-                  </CardTitle>
-                  <CardDescription>Status: {installation.status}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4 text-sm text-muted-foreground">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <div className="text-xs uppercase">Plan</div>
-                      <div className="text-foreground text-sm font-medium">
-                        {formatDate(installation.scheduledStartAt)} – {formatDate(installation.scheduledEndAt)}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs uppercase">Realizacja</div>
-                      <div className="text-foreground text-sm font-medium">
-                        {installation.actualStartAt || installation.actualEndAt
-                          ? `${formatDate(installation.actualStartAt, '—')} – ${formatDate(installation.actualEndAt, '—')}`
-                          : 'Brak danych'}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs uppercase">Przypisany monter</div>
-                      <div className="text-foreground text-sm font-medium">
-                        {installation.assignedInstallerName ?? 'Nie przypisano'}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs uppercase">Produkty</div>
-                      <div className="text-foreground text-sm font-medium space-y-1">
-                        <div>Panel: {installation.panelProductName ?? 'Brak'}</div>
-                        <div>Listwa: {installation.baseboardProductName ?? 'Brak'}</div>
-                      </div>
-                    </div>
-                  </div>
-                  {installation.additionalWork || installation.additionalInfo ? (
-                    <div className="rounded-2xl bg-muted/60 p-4 text-sm text-muted-foreground space-y-2">
-                      {installation.additionalWork ? <div>Prace dodatkowe: {installation.additionalWork}</div> : null}
-                      {installation.additionalInfo ? <div>Uwagi: {installation.additionalInfo}</div> : null}
-                    </div>
-                  ) : null}
-                  <div className="grid gap-2 text-xs text-muted-foreground sm:grid-cols-3">
-                    <span>Protokół: {installation.handoverProtocolSigned ? 'podpisany' : 'brak'}</span>
-                    <span>Opinia klienta: {installation.reviewReceived ? 'otrzymano' : 'brak'}</span>
-                    <span>Załączniki: {installation.attachmentsCount}</span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </TabsContent>
+                  return (
+                    <Card key={measurement.id} className="rounded-3xl border border-border/60">
+                      <CardHeader className="flex flex-col gap-1">
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                          <Ruler className="size-5 text-primary" aria-hidden />
+                          Pomiar
+                          <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
+                            #{measurementReference}
+                          </span>
+                        </CardTitle>
+                        <CardDescription>{measurementMeta}</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4 text-sm text-muted-foreground">
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <div>
+                            <div className="text-xs uppercase">Planowany termin</div>
+                            <div className="text-foreground text-sm font-medium">
+                              {formatDateTime(measurement.scheduledAt, 'Nie ustalono')}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs uppercase">Data pomiaru</div>
+                            <div className="text-foreground text-sm font-medium">
+                              {formatDateTime(measurement.measuredAt, 'Nie wykonano')}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs uppercase">Zmierzona powierzchnia</div>
+                            <div className="text-foreground text-sm font-medium">
+                              {measurement.measuredFloorArea
+                                ? `${numberFormatter.format(measurement.measuredFloorArea)} m²`
+                                : 'Brak danych'}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs uppercase">Zmierzona listwa</div>
+                            <div className="text-foreground text-sm font-medium">
+                              {measurement.measuredBaseboardLength
+                                ? `${numberFormatter.format(measurement.measuredBaseboardLength)} mb`
+                                : 'Brak danych'}
+                            </div>
+                          </div>
+                        </div>
+                        <Separator />
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <div>
+                            <div className="text-xs uppercase">Docinki</div>
+                            <div className="text-foreground text-sm font-medium">
+                              {measurement.offcutPercent ? `${measurement.offcutPercent}%` : 'Nie określono'}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs uppercase">Produkt paneli</div>
+                            <div className="text-foreground text-sm font-medium">
+                              {measurement.panelProductName ?? 'Brak'}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs uppercase">Timing dostawy</div>
+                            <div className="text-foreground text-sm font-medium">{deliveryTimingLabel}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs uppercase">Planowana dostawa</div>
+                            <div className="text-foreground text-sm font-medium">{plannedDelivery}</div>
+                          </div>
+                        </div>
+                        {measurement.additionalNotes ? (
+                          <div className="rounded-2xl bg-muted/60 p-4 text-sm text-muted-foreground">
+                            {measurement.additionalNotes}
+                          </div>
+                        ) : null}
+                        <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                          <span>Załączniki: {measurement.attachmentsCount}</span>
+                          <span>Korekty: {measurement.adjustmentsCount}</span>
+                          <span>Zarejestrowano: {formatDateTime(measurement.createdAt)}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )
+                })
+              )}
+            </TabsContent>
+
+            <TabsContent value="installations" className="space-y-4">
+              {detail.installations.length === 0 ? (
+                <Card className="rounded-3xl border border-border/60">
+                  <CardContent className="p-6">
+                    <Empty>
+                      <EmptyMedia variant="icon">
+                        <HardHat className="size-6" aria-hidden />
+                      </EmptyMedia>
+                      <EmptyHeader>
+                        <EmptyTitle>Brak harmonogramów montaży</EmptyTitle>
+                        <EmptyDescription>Dodaj termin montażu, aby zsynchronizować pracę ekipy oraz dostawy.</EmptyDescription>
+                      </EmptyHeader>
+                    </Empty>
+                  </CardContent>
+                </Card>
+              ) : (
+                detail.installations.map((installation) => {
+                  const installationReference = installation.installationNumber ?? installation.id.slice(0, 6).toUpperCase()
+                  const installationModuleHref = {
+                    pathname: '/montaze',
+                    query: { q: installationReference },
+                  } as const
+
+                  return (
+                    <Card key={installation.id} className="rounded-3xl border border-border/60">
+                      <CardHeader className="flex flex-col gap-3">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <CardTitle className="flex flex-wrap items-center gap-2 text-lg">
+                            <HardHat className="size-5 text-primary" aria-hidden />
+                            Harmonogram montażu
+                            <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
+                              #{installationReference}
+                            </span>
+                          </CardTitle>
+                          <Button
+                            asChild
+                            variant="outline"
+                            size="sm"
+                            className="rounded-full border-primary/40 text-primary shadow-sm hover:border-primary hover:text-primary"
+                          >
+                            <Link href={installationModuleHref}>Otwórz w module montaży</Link>
+                          </Button>
+                        </div>
+                        <CardDescription>Status: {installation.statusLabel}</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4 text-sm text-muted-foreground">
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <div>
+                            <div className="text-xs uppercase">Plan</div>
+                            <div className="text-foreground text-sm font-medium">
+                              {formatDate(installation.scheduledStartAt)} – {formatDate(installation.scheduledEndAt)}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs uppercase">Realizacja</div>
+                            <div className="text-foreground text-sm font-medium">
+                              {installation.actualStartAt || installation.actualEndAt
+                                ? `${formatDate(installation.actualStartAt, '—')} – ${formatDate(installation.actualEndAt, '—')}`
+                                : 'Brak danych'}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs uppercase">Przypisany monter</div>
+                            <div className="text-foreground text-sm font-medium">
+                              {installation.assignedInstallerName ?? 'Nie przypisano'}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs uppercase">Produkty</div>
+                            <div className="text-foreground text-sm font-medium space-y-1">
+                              <div>Panel: {installation.panelProductName ?? 'Brak'}</div>
+                              <div>Listwa: {installation.baseboardProductName ?? 'Brak'}</div>
+                            </div>
+                          </div>
+                        </div>
+                        {installation.additionalWork || installation.additionalInfo ? (
+                          <div className="rounded-2xl bg-muted/60 p-4 text-sm text-muted-foreground space-y-2">
+                            {installation.additionalWork ? <div>Prace dodatkowe: {installation.additionalWork}</div> : null}
+                            {installation.additionalInfo ? <div>Uwagi: {installation.additionalInfo}</div> : null}
+                          </div>
+                        ) : null}
+                        <div className="grid gap-2 text-xs text-muted-foreground sm:grid-cols-3">
+                          <span>Protokół: {installation.handoverProtocolSigned ? 'podpisany' : 'brak'}</span>
+                          <span>Opinia klienta: {installation.reviewReceived ? 'otrzymano' : 'brak'}</span>
+                          <span>Załączniki: {installation.attachmentsCount}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )
+                })
+              )}
+            </TabsContent>
+          </>
+        ) : null}
 
         <TabsContent value="deliveries" className="space-y-4">
-          {detail.deliveries.length === 0 ? (
+          {deliveriesForView.length === 0 ? (
             <Card className="rounded-3xl border border-border/60">
               <CardContent className="p-6">
                 <Empty>
@@ -893,46 +1159,228 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
                   </EmptyMedia>
                   <EmptyHeader>
                     <EmptyTitle>Brak dostaw</EmptyTitle>
-                    <EmptyDescription>Dodaj wysyłkę, aby zsynchronizować logistykę materiałów.</EmptyDescription>
+                    <EmptyDescription>
+                      {isDeliveryOnly
+                        ? 'Dodaj dostawę w trybie „Tylko dostawa”, aby kontrolować przepływ towaru.'
+                        : 'Dodaj transport powiązany z montażem, aby zsynchronizować logistykę materiałów.'}
+                    </EmptyDescription>
                   </EmptyHeader>
                 </Empty>
               </CardContent>
             </Card>
           ) : (
-            detail.deliveries.map((delivery) => (
-              <Card key={delivery.id} className="rounded-3xl border border-border/60">
-                <CardHeader className="flex flex-col gap-1">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Package className="size-5 text-primary" aria-hidden />
-                    Dostawa ({delivery.type === 'FOR_INSTALLATION' ? 'pod montaż' : 'samodzielna'})
-                  </CardTitle>
-                  <CardDescription>Status: {delivery.stage}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4 text-sm text-muted-foreground">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <div className="text-xs uppercase">Planowana data</div>
-                      <div className="text-foreground text-sm font-medium">{formatDate(delivery.scheduledDate)}</div>
+            deliveriesForView.map((delivery) => {
+              const deliveryReference = delivery.deliveryNumber ?? delivery.id.slice(0, 6).toUpperCase()
+              const deliveriesModuleHref =
+                delivery.type === 'FOR_INSTALLATION'
+                  ? `/dostawy-pod-montaz?delivery=${deliveryReference}`
+                  : `/dostawy?delivery=${deliveryReference}`
+              const moduleButtonLabel =
+                delivery.type === 'FOR_INSTALLATION'
+                  ? 'Otwórz moduł dostaw pod montaż'
+                  : 'Otwórz moduł dostaw'
+              const deliveryStageIndex = Math.max(0, deliveryStageSequence.indexOf(delivery.stage))
+              const deliveryStageTotal = deliveryStageSequence.length
+              const deliveryStageProgress = Math.round(
+                ((deliveryStageIndex + 1) / deliveryStageTotal) * 100
+              )
+              const deliveryAddressParts = [
+                delivery.shippingAddressStreet,
+                delivery.shippingAddressPostalCode,
+                delivery.shippingAddressCity,
+              ].filter(Boolean)
+              const deliveryStatusFlags = [
+                {
+                  label: 'Faktura proforma',
+                  completed: delivery.proformaIssued,
+                },
+                {
+                  label: 'Faktura zaliczkowa/końcowa',
+                  completed: delivery.depositOrFinalInvoiceIssued,
+                },
+                {
+                  label: 'Transport zlecony',
+                  completed: delivery.shippingOrdered,
+                },
+                {
+                  label: 'Opinia klienta',
+                  completed: delivery.reviewReceived,
+                },
+              ]
+
+              return (
+                <Card key={delivery.id} className="rounded-3xl border border-border/60">
+                  <CardHeader className="flex flex-col gap-3">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <CardTitle className="flex flex-wrap items-center gap-2 text-lg">
+                        <Package className="size-5 text-primary" aria-hidden />
+                        {delivery.type === 'FOR_INSTALLATION' ? 'Dostawa pod montaż' : 'Tylko dostawa'}
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
+                          #{deliveryReference}
+                        </span>
+                      </CardTitle>
+                      <Button
+                        asChild
+                        variant="outline"
+                        size="sm"
+                        className="rounded-full border-amber-400/40 text-amber-600 shadow-sm hover:border-amber-500 hover:text-amber-600"
+                      >
+                        <Link href={deliveriesModuleHref}>{moduleButtonLabel}</Link>
+                      </Button>
                     </div>
-                    <div>
-                      <div className="text-xs uppercase">Pakiet</div>
-                      <div className="text-foreground text-sm font-medium space-y-1">
-                        <div>Panele: {delivery.includePanels ? delivery.panelProductName ?? 'Tak' : 'Nie'}</div>
-                        <div>Listwy: {delivery.includeBaseboards ? delivery.baseboardProductName ?? 'Tak' : 'Nie'}</div>
+                    <CardDescription>Status: {delivery.stageLabel}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-5 text-sm text-muted-foreground">
+                    <div className="space-y-3 rounded-2xl border border-border/60 bg-background/60 p-4">
+                      <div className="flex flex-wrap items-center justify-between text-xs font-medium text-muted-foreground">
+                        <span>Postęp procesu dostawy</span>
+                        <span>
+                          Etap {deliveryStageIndex + 1} z {deliveryStageTotal}
+                        </span>
+                      </div>
+                      <Progress
+                        value={deliveryStageProgress}
+                        className="h-2"
+                        aria-label={`Postęp dostawy ${deliveryReference}`}
+                      />
+                      <ol className="space-y-2">
+                        {deliveryStageSequence.map((stage, index) => {
+                          const isCompleted = index < deliveryStageIndex
+                          const isCurrent = index === deliveryStageIndex
+                          const StageIcon = isCompleted ? CheckCircle2 : isCurrent ? Clock : Circle
+
+                          return (
+                            <li
+                              key={stage}
+                              className="flex items-start gap-3 rounded-2xl border border-border/40 bg-background/80 p-3"
+                            >
+                              <span
+                                className={`mt-0.5 inline-flex items-center justify-center rounded-full p-1 ${
+                                  isCompleted
+                                    ? 'bg-emerald-500/15 text-emerald-600'
+                                    : isCurrent
+                                      ? 'bg-primary/15 text-primary'
+                                      : 'bg-muted text-muted-foreground'
+                                }`}
+                                aria-hidden="true"
+                              >
+                                <StageIcon className="size-4" />
+                              </span>
+                              <div className="flex flex-col gap-1">
+                                <span
+                                  className={`text-sm font-medium ${
+                                    isCurrent
+                                      ? 'text-foreground'
+                                      : isCompleted
+                                        ? 'text-muted-foreground'
+                                        : 'text-muted-foreground/80'
+                                  }`}
+                                >
+                                  {deliveryStageLabels[stage]}
+                                </span>
+                                {deliveryStageDescriptions[stage] ? (
+                                  <span className="text-xs text-muted-foreground/80">
+                                    {deliveryStageDescriptions[stage]}
+                                  </span>
+                                ) : null}
+                              </div>
+                            </li>
+                          )
+                        })}
+                      </ol>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      <div className="space-y-3 rounded-2xl border border-border/60 bg-muted/30 p-4">
+                        <h4 className="text-xs uppercase text-muted-foreground">Harmonogram</h4>
+                        <dl className="space-y-2">
+                          <div>
+                            <dt className="text-xs text-muted-foreground/80">Planowana data</dt>
+                            <dd className="text-sm font-medium text-foreground">
+                              {formatDate(delivery.scheduledDate)}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt className="text-xs text-muted-foreground/80">Zarejestrowano</dt>
+                            <dd className="text-sm font-medium text-foreground">
+                              {formatDateTime(delivery.createdAt)}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt className="text-xs text-muted-foreground/80">Wymaga uwagi</dt>
+                            <dd className="text-sm font-medium text-foreground">
+                              {delivery.requiresAdminAttention ? 'Tak' : 'Nie'}
+                            </dd>
+                          </div>
+                        </dl>
+                      </div>
+
+                      <div className="space-y-3 rounded-2xl border border-border/60 bg-muted/30 p-4">
+                        <h4 className="text-xs uppercase text-muted-foreground">Pakiet i adres</h4>
+                        <dl className="space-y-2">
+                          <div>
+                            <dt className="text-xs text-muted-foreground/80">Panele</dt>
+                            <dd className="text-sm font-medium text-foreground">
+                              {delivery.includePanels ? delivery.panelProductName ?? 'Tak' : 'Nie'}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt className="text-xs text-muted-foreground/80">Listwy</dt>
+                            <dd className="text-sm font-medium text-foreground">
+                              {delivery.includeBaseboards ? delivery.baseboardProductName ?? 'Tak' : 'Nie'}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt className="text-xs text-muted-foreground/80">Adres wysyłki</dt>
+                            <dd className="text-sm font-medium text-foreground">
+                              {deliveryAddressParts.length
+                                ? deliveryAddressParts.join(', ')
+                                : 'Nie ustawiono'}
+                            </dd>
+                          </div>
+                        </dl>
+                      </div>
+
+                      <div className="space-y-3 rounded-2xl border border-border/60 bg-muted/30 p-4">
+                        <h4 className="text-xs uppercase text-muted-foreground">Dokumenty i feedback</h4>
+                        <ul className="space-y-2">
+                          {deliveryStatusFlags.map((item) => (
+                            <li key={item.label} className="flex items-center gap-3">
+                              <span
+                                className={`inline-flex size-6 items-center justify-center rounded-full border text-xs font-semibold ${
+                                  item.completed
+                                    ? 'border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300'
+                                    : 'border-border text-muted-foreground'
+                                }`}
+                                aria-hidden="true"
+                              >
+                                {item.completed ? <CheckCircle2 className="size-4" /> : <Circle className="size-3" />}
+                              </span>
+                              <span className={item.completed ? 'text-foreground' : 'text-muted-foreground'}>
+                                {item.label}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                     </div>
-                  </div>
-                  {delivery.notes ? (
-                    <div className="rounded-2xl bg-muted/60 p-4 text-sm text-muted-foreground">{delivery.notes}</div>
-                  ) : null}
-                  <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-                    <span>Załączniki: {delivery.attachmentsCount}</span>
-                    <span>Wymaga uwagi: {delivery.requiresAdminAttention ? 'tak' : 'nie'}</span>
-                    <span>Zarejestrowano: {formatDateTime(delivery.createdAt)}</span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+
+                    {delivery.notes ? (
+                      <div className="rounded-2xl bg-muted/60 p-4 text-sm text-muted-foreground">
+                        {delivery.notes}
+                      </div>
+                    ) : null}
+
+                    <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                      <span>Załączniki: {delivery.attachmentsCount}</span>
+                      {delivery.requiresAdminAttention ? (
+                        <span className="text-red-600">Flaga administracyjna aktywna</span>
+                      ) : null}
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })
           )}
         </TabsContent>
 

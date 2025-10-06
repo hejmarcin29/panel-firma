@@ -6,10 +6,11 @@ import { eq } from "drizzle-orm";
 import { db } from "@db/index";
 import { sessions, userRoles, users } from "@db/schema";
 import { ensurePasswordPolicy, verifyPassword } from "@/lib/password";
+import { LOGIN_ROUTE, SETUP_ROUTE } from "@/lib/routes";
+
+export { LOGIN_ROUTE, SETUP_ROUTE } from "@/lib/routes";
 
 export const SESSION_COOKIE_NAME = "session";
-export const LOGIN_ROUTE = "/logowanie";
-export const SETUP_ROUTE = "/setup";
 const SESSION_TTL_MINUTES = 60 * 24 * 14; // 14 dni
 
 type DbUser = typeof users.$inferSelect;

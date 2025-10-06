@@ -1,9 +1,18 @@
+import { randomUUID } from "node:crypto";
+
 import { subDays } from "date-fns";
-import { count, desc, eq, gt, sql } from "drizzle-orm";
+import { and, count, desc, eq, gt, ne, sql } from "drizzle-orm";
 
 import { db } from "@db/index";
 import { userRoles, users, type UserRole } from "@db/schema";
+import { hashPassword } from "@/lib/password";
 import { userRoleLabels } from "@/lib/user-roles";
+import {
+  createUserSchema,
+  updateUserSchema,
+  type CreateUserInput,
+  type UpdateUserInput,
+} from "@/lib/users/schemas";
 
 export type UsersMetrics = {
   totalUsers: number;
@@ -155,5 +164,155 @@ export async function listUsersForSelect(options?: { role?: UserRole }): Promise
       label: `${displayName} • ${roleLabel}`,
       role: row.role as UserRole,
     };
+  });
+}
+
+function normalizeIdentifier(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function normalizeNullable(value?: string | null) {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+export async function createUser(input: CreateUserInput) {
+  const parsed = createUserSchema.parse(input);
+  const username = normalizeIdentifier(parsed.username);
+  const email = normalizeIdentifier(parsed.email);
+  const name = normalizeNullable(parsed.name ?? null);
+  const phone = normalizeNullable(parsed.phone ?? null);
+  const passwordHash = await hashPassword(parsed.password);
+  const now = new Date();
+
+  return db.transaction((tx) => {
+    const usernameConflict = tx
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.username, username))
+      .limit(1)
+      .get();
+
+    if (usernameConflict) {
+      throw new Error("Podany login jest już zajęty.");
+    }
+
+    const emailConflict = tx
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1)
+      .get();
+
+    if (emailConflict) {
+      throw new Error("Podany adres e-mail jest już przypisany do innego użytkownika.");
+    }
+
+    const created = tx
+      .insert(users)
+      .values({
+        id: randomUUID(),
+        username,
+        email,
+        passwordHash,
+        role: parsed.role,
+        name,
+        phone,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returning()
+      .get();
+
+    if (!created) {
+      throw new Error("Nie udało się utworzyć użytkownika.");
+    }
+
+    return created;
+  });
+}
+
+export async function updateUser(input: UpdateUserInput) {
+  const parsed = updateUserSchema.parse(input);
+  const username = normalizeIdentifier(parsed.username);
+  const email = normalizeIdentifier(parsed.email);
+  const name = normalizeNullable(parsed.name ?? null);
+  const phone = normalizeNullable(parsed.phone ?? null);
+  const nextRole: UserRole = parsed.role;
+  const passwordHash = parsed.password && parsed.password.length > 0 ? await hashPassword(parsed.password) : null;
+  const updatedAt = new Date();
+
+  return db.transaction((tx) => {
+    const existing = tx.select().from(users).where(eq(users.id, parsed.id)).limit(1).get();
+
+    if (!existing) {
+      throw new Error("Nie znaleziono użytkownika.");
+    }
+
+    const usernameConflict = tx
+      .select({ id: users.id })
+      .from(users)
+      .where(and(eq(users.username, username), ne(users.id, parsed.id)))
+      .limit(1)
+      .get();
+
+    if (usernameConflict) {
+      throw new Error("Podany login jest już zajęty.");
+    }
+
+    const emailConflict = tx
+      .select({ id: users.id })
+      .from(users)
+      .where(and(eq(users.email, email), ne(users.id, parsed.id)))
+      .limit(1)
+      .get();
+
+    if (emailConflict) {
+      throw new Error("Podany adres e-mail jest już przypisany do innego użytkownika.");
+    }
+
+    if (existing.role === "ADMIN" && nextRole !== "ADMIN") {
+      const remaining = tx
+        .select({ value: count() })
+        .from(users)
+        .where(and(eq(users.role, "ADMIN"), ne(users.id, existing.id)))
+        .limit(1)
+        .get();
+
+      const adminsLeft = Number(remaining?.value ?? 0);
+      if (adminsLeft === 0) {
+        throw new Error("W systemie musi pozostać przynajmniej jeden administrator.");
+      }
+    }
+
+    const updatePayload: Partial<typeof users.$inferInsert> = {
+      username,
+      email,
+      role: nextRole,
+      name,
+      phone,
+      updatedAt,
+    };
+
+    if (passwordHash) {
+      updatePayload.passwordHash = passwordHash;
+    }
+
+    const updated = tx
+      .update(users)
+      .set(updatePayload)
+      .where(eq(users.id, parsed.id))
+      .returning()
+      .get();
+
+    if (!updated) {
+      throw new Error("Nie udało się zaktualizować użytkownika.");
+    }
+
+    return updated;
   });
 }

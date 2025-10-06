@@ -11,8 +11,11 @@ import {
   partners,
   tasks,
   type OrderStage,
+  type OrderExecutionMode,
   type TaskStatus,
 } from "@db/schema";
+import { installationStatusLabels } from "@/lib/installations";
+import { deliveryStageLabels } from "@/lib/deliveries";
 import type { CreateOrderInput } from "@/lib/orders/schemas";
 
 export type OrdersMetrics = {
@@ -36,6 +39,7 @@ export type OrdersListItem = {
   clientCity: string | null;
   partnerName: string | null;
   stage: OrderStage;
+  executionMode: OrderExecutionMode;
   stageNotes: string | null;
   stageChangedAt: Date;
   declaredFloorArea: number | null;
@@ -127,6 +131,7 @@ export async function getOrdersList(limit = 20): Promise<OrdersListItem[]> {
       clientCity: clients.city,
       partnerName: partners.companyName,
       stage: orders.stage,
+      executionMode: orders.executionMode,
       stageNotes: orders.stageNotes,
       stageChangedAt: orders.stageChangedAt,
       declaredFloorArea: orders.declaredFloorArea,
@@ -153,6 +158,7 @@ export async function getOrdersList(limit = 20): Promise<OrdersListItem[]> {
       clients.city,
       partners.companyName,
       orders.stage,
+      orders.executionMode,
       orders.stageNotes,
       orders.stageChangedAt,
       orders.declaredFloorArea,
@@ -170,6 +176,7 @@ export async function getOrdersList(limit = 20): Promise<OrdersListItem[]> {
     clientCity: row.clientCity,
     partnerName: row.partnerName,
     stage: row.stage,
+    executionMode: row.executionMode,
     stageNotes: row.stageNotes,
     stageChangedAt: row.stageChangedAt,
     declaredFloorArea: row.declaredFloorArea,
@@ -205,6 +212,8 @@ export async function getOrderDetail(orderId: string) {
     with: {
       client: true,
       partner: true,
+      preferredPanelProduct: true,
+      preferredBaseboardProduct: true,
       measurements: {
         with: {
           attachments: true,
@@ -293,8 +302,12 @@ export async function getOrderDetail(orderId: string) {
   return {
     order: {
       id: orderRecord.id,
+      clientId: orderRecord.clientId,
+      partnerId: orderRecord.partnerId ?? null,
+      ownerId: orderRecord.ownerId ?? null,
       orderNumber: orderRecord.orderNumber ?? null,
       title: orderRecord.title ?? null,
+      executionMode: orderRecord.executionMode as OrderExecutionMode,
       stage: orderRecord.stage,
       stageNotes: orderRecord.stageNotes,
       stageChangedAt: orderRecord.stageChangedAt,
@@ -304,6 +317,13 @@ export async function getOrderDetail(orderId: string) {
       buildingType: orderRecord.buildingType,
       panelPreference: orderRecord.panelPreference,
       baseboardPreference: orderRecord.baseboardPreference,
+      preferredPanelProductId: orderRecord.preferredPanelProductId ?? null,
+      preferredPanelProductName: orderRecord.preferredPanelProduct?.name ?? null,
+      preferredBaseboardProductId: orderRecord.preferredBaseboardProductId ?? null,
+      preferredBaseboardProductName: orderRecord.preferredBaseboardProduct?.name ?? null,
+      quoteSent: Boolean(orderRecord.quoteSent),
+      depositInvoiceIssued: Boolean(orderRecord.depositInvoiceIssued),
+      finalInvoiceIssued: Boolean(orderRecord.finalInvoiceIssued),
       createdAt: orderRecord.createdAt,
       updatedAt: orderRecord.updatedAt,
     },
@@ -357,7 +377,9 @@ export async function getOrderDetail(orderId: string) {
     })),
     installations: orderRecord.installations.map((installation) => ({
       id: installation.id,
+      installationNumber: installation.installationNumber,
       status: installation.status,
+      statusLabel: installationStatusLabels[installation.status],
       scheduledStartAt: installation.scheduledStartAt,
       scheduledEndAt: installation.scheduledEndAt,
       actualStartAt: installation.actualStartAt,
@@ -375,13 +397,22 @@ export async function getOrderDetail(orderId: string) {
     })),
     deliveries: orderRecord.deliveries.map((delivery) => ({
       id: delivery.id,
+      deliveryNumber: delivery.deliveryNumber,
       type: delivery.type,
       stage: delivery.stage,
+      stageLabel: deliveryStageLabels[delivery.stage],
       scheduledDate: delivery.scheduledDate,
       includePanels: Boolean(delivery.includePanels),
       includeBaseboards: Boolean(delivery.includeBaseboards),
       panelProductName: delivery.panelProduct?.name ?? null,
       baseboardProductName: delivery.baseboardProduct?.name ?? null,
+      shippingAddressStreet: delivery.shippingAddressStreet ?? null,
+      shippingAddressCity: delivery.shippingAddressCity ?? null,
+      shippingAddressPostalCode: delivery.shippingAddressPostalCode ?? null,
+      proformaIssued: Boolean(delivery.proformaIssued),
+      depositOrFinalInvoiceIssued: Boolean(delivery.depositOrFinalInvoiceIssued),
+      shippingOrdered: Boolean(delivery.shippingOrdered),
+      reviewReceived: Boolean(delivery.reviewReceived),
       notes: delivery.notes,
       attachmentsCount: delivery.attachments?.length ?? 0,
       requiresAdminAttention: Boolean(delivery.requiresAdminAttention),
@@ -426,15 +457,14 @@ const normalizeText = (value?: string | null) => {
 };
 
 export async function createOrder(payload: CreateOrderInput, createdById: string | null) {
-  return db.transaction(async (tx) => {
+  return db.transaction((tx) => {
     const now = new Date();
 
-    const clientRecord = await tx.query.clients.findFirst({
-      where: (table, { eq }) => eq(table.id, payload.clientId),
-      columns: {
-        clientNumber: true,
-      },
-    });
+    const clientRecord = tx
+      .select({ clientNumber: clients.clientNumber })
+      .from(clients)
+      .where(eq(clients.id, payload.clientId))
+      .get();
 
     if (!clientRecord) {
       throw new Error("Nie znaleziono klienta dla wybranego zlecenia.");
@@ -443,10 +473,11 @@ export async function createOrder(payload: CreateOrderInput, createdById: string
     let generatedOrderNumber = normalizeText(payload.orderNumber ?? null);
 
     if (!generatedOrderNumber) {
-      const [countRow] = await tx
+      const countRow = tx
         .select({ value: sql<number>`count(*)` })
         .from(orders)
-        .where(eq(orders.clientId, payload.clientId));
+        .where(eq(orders.clientId, payload.clientId))
+        .get();
 
       const nextSequence = Number(countRow?.value ?? 0) + 1;
       generatedOrderNumber = `${clientRecord.clientNumber}_Z_${nextSequence}`;
@@ -460,6 +491,7 @@ export async function createOrder(payload: CreateOrderInput, createdById: string
       createdById: createdById ?? null,
       ownerId: payload.ownerId ?? null,
       stage: payload.stage,
+      executionMode: payload.executionMode,
       stageNotes: normalizeText(payload.stageNotes ?? null),
       stageChangedAt: now,
       declaredFloorArea: payload.declaredFloorArea ?? null,
@@ -477,22 +509,178 @@ export async function createOrder(payload: CreateOrderInput, createdById: string
       updatedAt: now,
     };
 
-    const [created] = await tx.insert(orders).values(record).returning();
+    const created = tx.insert(orders).values(record).returning().get();
 
     if (!created) {
       throw new Error("Nie udało się utworzyć zlecenia.");
     }
 
-    await tx.insert(orderStatusHistory).values({
+    tx.insert(orderStatusHistory).values({
       orderId: created.id,
       changedById: createdById,
       fromStage: null,
       toStage: created.stage,
       note: created.stageNotes,
       createdAt: now,
-    });
+    }).run();
 
     return created;
+  });
+}
+
+export type OrderForEditing = {
+  id: string;
+  clientId: string;
+  partnerId: string | null;
+  ownerId: string | null;
+  orderNumber: string | null;
+  title: string | null;
+  executionMode: OrderExecutionMode;
+  stage: OrderStage;
+  stageNotes: string | null;
+  declaredFloorArea: number | null;
+  declaredBaseboardLength: number | null;
+  buildingType: string | null;
+  panelPreference: string | null;
+  baseboardPreference: string | null;
+  preferredPanelProductId: string | null;
+  preferredBaseboardProductId: string | null;
+  requiresAdminAttention: boolean;
+  quoteSent: boolean;
+  depositInvoiceIssued: boolean;
+  finalInvoiceIssued: boolean;
+};
+
+export async function getOrderForEditing(orderId: string): Promise<OrderForEditing | null> {
+  const row = await db.query.orders.findFirst({
+    where: (table, { eq }) => eq(table.id, orderId),
+    columns: {
+      id: true,
+      clientId: true,
+      partnerId: true,
+      ownerId: true,
+      orderNumber: true,
+      title: true,
+  executionMode: true,
+      stage: true,
+      stageNotes: true,
+      declaredFloorArea: true,
+      declaredBaseboardLength: true,
+      buildingType: true,
+      panelPreference: true,
+      baseboardPreference: true,
+      preferredPanelProductId: true,
+      preferredBaseboardProductId: true,
+      requiresAdminAttention: true,
+      quoteSent: true,
+      depositInvoiceIssued: true,
+      finalInvoiceIssued: true,
+      updatedAt: true,
+      stageChangedAt: true,
+    },
+  });
+
+  if (!row) {
+    return null;
+  }
+
+  return {
+    id: row.id,
+    clientId: row.clientId,
+    partnerId: row.partnerId ?? null,
+    ownerId: row.ownerId ?? null,
+    orderNumber: row.orderNumber ?? null,
+    title: row.title ?? null,
+    stage: row.stage,
+  executionMode: row.executionMode,
+    stageNotes: row.stageNotes ?? null,
+    declaredFloorArea: row.declaredFloorArea ?? null,
+    declaredBaseboardLength: row.declaredBaseboardLength ?? null,
+    buildingType: row.buildingType ?? null,
+    panelPreference: row.panelPreference ?? null,
+    baseboardPreference: row.baseboardPreference ?? null,
+    preferredPanelProductId: row.preferredPanelProductId ?? null,
+    preferredBaseboardProductId: row.preferredBaseboardProductId ?? null,
+    requiresAdminAttention: Boolean(row.requiresAdminAttention),
+    quoteSent: Boolean(row.quoteSent),
+    depositInvoiceIssued: Boolean(row.depositInvoiceIssued),
+    finalInvoiceIssued: Boolean(row.finalInvoiceIssued),
+  };
+}
+
+export async function updateOrder(
+  orderId: string,
+  payload: CreateOrderInput,
+  updatedById: string | null,
+): Promise<typeof orders.$inferSelect> {
+  return db.transaction((tx) => {
+    const existing = tx
+      .select({
+        id: orders.id,
+        stage: orders.stage,
+        stageChangedAt: orders.stageChangedAt,
+      })
+      .from(orders)
+      .where(eq(orders.id, orderId))
+      .get();
+
+    if (!existing) {
+      throw new Error("Nie znaleziono zlecenia do aktualizacji.");
+    }
+
+    const now = new Date();
+    const stageChanged = existing.stage !== payload.stage;
+
+    const record: Partial<typeof orders.$inferInsert> = {
+      clientId: payload.clientId,
+      partnerId: payload.partnerId ?? null,
+      ownerId: payload.ownerId ?? null,
+      orderNumber: normalizeText(payload.orderNumber ?? null),
+      title: normalizeText(payload.title ?? null),
+      stage: payload.stage,
+      executionMode: payload.executionMode,
+      stageNotes: normalizeText(payload.stageNotes ?? null),
+      declaredFloorArea: payload.declaredFloorArea ?? null,
+      declaredBaseboardLength: payload.declaredBaseboardLength ?? null,
+      buildingType: normalizeText(payload.buildingType ?? null),
+      panelPreference: normalizeText(payload.panelPreference ?? null),
+      baseboardPreference: normalizeText(payload.baseboardPreference ?? null),
+      preferredPanelProductId: payload.preferredPanelProductId ?? null,
+      preferredBaseboardProductId: payload.preferredBaseboardProductId ?? null,
+      requiresAdminAttention: payload.requiresAdminAttention,
+      quoteSent: payload.quoteSent,
+      depositInvoiceIssued: payload.depositInvoiceIssued,
+      finalInvoiceIssued: payload.finalInvoiceIssued,
+      stageChangedAt: stageChanged ? now : existing.stageChangedAt,
+      updatedAt: now,
+    };
+
+    const updated = tx
+      .update(orders)
+      .set(record)
+      .where(eq(orders.id, orderId))
+      .returning()
+      .get();
+
+    if (!updated) {
+      throw new Error("Nie udało się zaktualizować zlecenia.");
+    }
+
+    if (stageChanged) {
+      tx
+        .insert(orderStatusHistory)
+        .values({
+          orderId: updated.id,
+          changedById: updatedById,
+          fromStage: existing.stage,
+          toStage: updated.stage,
+          note: updated.stageNotes,
+          createdAt: now,
+        })
+        .run();
+    }
+
+    return updated;
   });
 }
 
@@ -519,6 +707,7 @@ export async function ensureOrderForClient(options: {
       ownerId: null,
       orderNumber: null,
       title: title ?? null,
+      executionMode: "INSTALLATION_ONLY",
       stage: "RECEIVED",
       stageNotes: null,
       declaredFloorArea: null,

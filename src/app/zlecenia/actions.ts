@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 
 import { requireRole } from "@/lib/auth";
-import { createOrder } from "@/lib/orders";
+import { createOrder, updateOrder } from "@/lib/orders";
 import { createOrderSchema, type CreateOrderFormErrors, type CreateOrderFormState } from "@/lib/orders/schemas";
 
 const NUMBER_FIELD_NAMES = new Set(["declaredFloorArea", "declaredBaseboardLength"]);
@@ -76,6 +76,41 @@ const CHECKBOX_FIELDS = [
 
 type CheckboxField = (typeof CHECKBOX_FIELDS)[number];
 
+function buildOrderPayload(formData: FormData): Record<string, unknown> {
+  const payload: Record<string, unknown> = {};
+
+  for (const [name, value] of formData.entries()) {
+    if (CHECKBOX_FIELDS.includes(name as CheckboxField)) {
+      payload[name] = toBoolean(value);
+      continue;
+    }
+
+    if (NUMBER_FIELD_NAMES.has(name)) {
+      payload[name] = toNumber(value);
+      continue;
+    }
+
+    if (name === "stage") {
+      payload[name] = typeof value === "string" ? value : undefined;
+      continue;
+    }
+
+    payload[name] = toNullableString(value);
+  }
+
+  for (const field of CHECKBOX_FIELDS) {
+    if (!(field in payload)) {
+      payload[field] = false;
+    }
+  }
+
+  if (!payload.clientId) {
+    payload.clientId = toNullableString(formData.get("clientId"));
+  }
+
+  return payload;
+}
+
 export async function createOrderAction(
   _prevState: CreateOrderFormState,
   formData: FormData,
@@ -83,36 +118,7 @@ export async function createOrderAction(
   try {
     const session = await requireRole(["ADMIN", "MONTER"]);
 
-    const payload: Record<string, unknown> = {};
-
-    for (const [name, value] of formData.entries()) {
-      if (CHECKBOX_FIELDS.includes(name as CheckboxField)) {
-        payload[name] = toBoolean(value);
-        continue;
-      }
-
-      if (NUMBER_FIELD_NAMES.has(name)) {
-        payload[name] = toNumber(value);
-        continue;
-      }
-
-      if (name === "stage") {
-        payload[name] = typeof value === "string" ? value : undefined;
-        continue;
-      }
-
-      payload[name] = toNullableString(value);
-    }
-
-    for (const field of CHECKBOX_FIELDS) {
-      if (!(field in payload)) {
-        payload[field] = false;
-      }
-    }
-
-    if (!payload.clientId) {
-      payload.clientId = toNullableString(formData.get("clientId"));
-    }
+    const payload = buildOrderPayload(formData);
 
     const parsed = createOrderSchema.parse(payload);
 
@@ -120,6 +126,33 @@ export async function createOrderAction(
 
     revalidatePath("/zlecenia");
     redirect(`/zlecenia/${order.id}`);
+  } catch (error) {
+    if (isRedirectError(error)) {
+      throw error;
+    }
+
+    return mapZodErrors(error);
+  }
+
+  return { status: "idle" };
+}
+
+export async function updateOrderAction(
+  orderId: string,
+  _prevState: CreateOrderFormState,
+  formData: FormData,
+): Promise<CreateOrderFormState> {
+  try {
+    const session = await requireRole(["ADMIN", "MONTER"]);
+
+    const payload = buildOrderPayload(formData);
+    const parsed = createOrderSchema.parse(payload);
+
+    await updateOrder(orderId, parsed, session.user.id);
+
+    revalidatePath("/zlecenia");
+    revalidatePath(`/zlecenia/${orderId}`);
+    redirect(`/zlecenia/${orderId}`);
   } catch (error) {
     if (isRedirectError(error)) {
       throw error;

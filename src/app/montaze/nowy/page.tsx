@@ -1,15 +1,13 @@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { installationStatusLabels } from '@/lib/installations'
+import { installationStatusOptions } from '@/lib/installations/constants'
 import { listClientsForSelect } from '@/lib/clients'
 import { listOrdersForSelect } from '@/lib/orders'
 import { listUsersForSelect } from '@/lib/users'
 import { listProductsForSelect } from '@/lib/products'
-import { installationStatuses } from '@db/schema'
 import { Building2, ClipboardList, Wrench } from 'lucide-react'
 
 import { NewInstallationForm } from './new-installation-form'
-
 export const metadata = {
   title: 'Nowy montaż',
   description: 'Zaplanuj montaż dla wybranego zlecenia i zespołu monterskiego.',
@@ -18,12 +16,15 @@ export const metadata = {
 type NewInstallationPageProps = {
   searchParams?: Promise<{
     clientId?: string
+    orderId?: string
+    scope?: string
   }>
 }
-
 export default async function NewInstallationPage({ searchParams }: NewInstallationPageProps) {
   const resolvedSearchParams = searchParams ? await searchParams : undefined
   const preselectedClientId = resolvedSearchParams?.clientId ?? null
+  const preselectedOrderId = resolvedSearchParams?.orderId ?? null
+  const scope = resolvedSearchParams?.scope === 'baseboard' ? 'baseboard' : 'standard'
 
   const [clients, orders, installers, panelProducts, baseboardProducts] = await Promise.all([
     listClientsForSelect(),
@@ -33,17 +34,14 @@ export default async function NewInstallationPage({ searchParams }: NewInstallat
     listProductsForSelect({ types: ['BASEBOARD'] }),
   ])
 
-  const statusOptions = installationStatuses.map((status) => ({
-    value: status,
-    label: installationStatusLabels[status],
-  }))
+  const statusOptions = installationStatusOptions
 
   return (
     <div className="flex flex-col gap-6 lg:gap-8">
-      <section className="rounded-3xl border border-border/60 bg-gradient-to-br from-background via-background to-primary/10 p-6 shadow-sm lg:p-8">
+      <section className="rounded-3xl border border-border/60 bg-gradient-to-br from-background via-background to-emerald-200/20 p-6 shadow-sm lg:p-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-3">
-            <Badge variant="outline" className="rounded-full border-primary/50 text-primary">
+            <Badge variant="outline" className="rounded-full border-emerald-500/50 text-emerald-600">
               Nowy montaż
             </Badge>
             <div className="space-y-2">
@@ -57,19 +55,19 @@ export default async function NewInstallationPage({ searchParams }: NewInstallat
             </div>
           </div>
           <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-3 lg:w-auto">
-            <Card className="rounded-2xl border-none bg-background/80 shadow-lg shadow-primary/10">
+            <Card className="rounded-2xl border-none bg-background/80 shadow-lg shadow-emerald-500/10">
               <CardContent className="flex flex-col gap-1 p-4">
                 <span className="text-xs uppercase text-muted-foreground">Aktywne zlecenia</span>
                 <span className="flex items-center gap-2 text-2xl font-semibold text-foreground">
-                  <ClipboardList className="size-5 text-primary" aria-hidden />
+                  <ClipboardList className="size-5 text-emerald-600" aria-hidden />
                   {orders.length}
                 </span>
               </CardContent>
             </Card>
-            <Card className="rounded-2xl border-none bg-primary/10 shadow-lg shadow-primary/20">
+            <Card className="rounded-2xl border-none bg-emerald-500/10 shadow-lg shadow-emerald-500/20">
               <CardContent className="flex flex-col gap-1 p-4">
-                <span className="text-xs uppercase text-primary">Dostępne ekipy</span>
-                <span className="flex items-center gap-2 text-2xl font-semibold text-primary">
+                <span className="text-xs uppercase text-emerald-600">Dostępne ekipy</span>
+                <span className="flex items-center gap-2 text-2xl font-semibold text-emerald-600">
                   <Wrench className="size-5" aria-hidden />
                   {installers.length}
                 </span>
@@ -89,10 +87,12 @@ export default async function NewInstallationPage({ searchParams }: NewInstallat
       </section>
 
       <NewInstallationForm
-        clients={clients.map((client) => ({ id: client.id, label: client.label }))}
+        clients={clients}
         orders={orders.map((order) => ({ id: order.id, label: order.label }))}
         installers={installers.map((installer) => ({ id: installer.id, label: installer.label }))}
         panelProducts={panelProducts.map((product) => ({ id: product.id, label: product.label }))}
+        defaultOrderId={preselectedOrderId ?? undefined}
+        scope={scope}
         baseboardProducts={baseboardProducts.map((product) => ({ id: product.id, label: product.label }))}
         statusOptions={statusOptions}
         defaultClientId={preselectedClientId ?? undefined}

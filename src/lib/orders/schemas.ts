@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { orderStages } from "@db/schema";
+import { orderExecutionModes, orderStages } from "@db/schema";
 
 const nullableString = z.union([z.string().min(1), z.literal(null)]).optional();
 
@@ -11,6 +11,7 @@ export const createOrderSchema = z.object({
   partnerId: nullableString,
   ownerId: nullableString,
   orderNumber: nullableString,
+  executionMode: z.enum(orderExecutionModes).default("INSTALLATION_ONLY"),
   title: nullableString,
   stage: z.enum(orderStages).default("RECEIVED"),
   stageNotes: nullableLooseString,

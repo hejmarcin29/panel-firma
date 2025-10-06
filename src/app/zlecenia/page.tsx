@@ -18,7 +18,6 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty'
-import { Progress } from '@/components/ui/progress'
 import { getDeliveriesSnapshot } from '@/lib/deliveries'
 import { getInstallationsSnapshot } from '@/lib/installations'
 import { getOrdersDashboardData } from '@/lib/orders'
@@ -26,6 +25,7 @@ import { getOrdersDashboardData } from '@/lib/orders'
 import { ordersColumns } from './columns'
 import { orderStageLabels } from '@/lib/order-stage'
 import { OrdersTable } from './orders-table'
+import { StageDistributionSwitcher, type StageDistributionGroup } from './_components/stage-distribution-switcher'
 
 export const metadata = {
   title: 'Zlecenia',
@@ -40,12 +40,50 @@ export default async function OrdersPage() {
   ])
   const totalOrders = metrics.totalOrders || 0
 
-  const stageDistributionWithPercentages = stageDistribution.map((bucket) => ({
+  const ordersDistribution = stageDistribution.map((bucket) => ({
+    id: bucket.stage,
+    label: orderStageLabels[bucket.stage],
+    count: bucket.count,
+  }))
+
+  const ordersDistributionWithPercentages = ordersDistribution.map((bucket) => ({
     ...bucket,
     percentage: totalOrders > 0 ? Math.round((bucket.count / totalOrders) * 100) : 0,
   }))
 
-  const highlightStage = stageDistributionWithPercentages.find((bucket) => bucket.percentage > 0)
+  const highlightStage =
+    totalOrders > 0 && ordersDistributionWithPercentages.length
+      ? ordersDistributionWithPercentages.reduce((prev, current) =>
+          current.percentage > prev.percentage ? current : prev
+        )
+      : null
+
+  const stageDistributionGroups: StageDistributionGroup[] = [
+    {
+      id: 'installations',
+      label: 'Montaże',
+      description: 'Postęp realizacji montaży w harmonogramie.',
+      items: installationsSnapshot.distribution.map((bucket) => ({
+        id: bucket.stage,
+        label: bucket.label,
+        count: bucket.count,
+      })),
+      total: installationsSnapshot.metrics.total,
+      emptyMessage: 'Dodaj montaż, aby zobaczyć rozkład statusów i zaplanować ekipę.',
+    },
+    {
+      id: 'deliveries',
+      label: 'Dostawy',
+      description: 'Statusy logistyczne i fakturowe ostatnich dostaw.',
+      items: deliveriesSnapshot.distribution.map((bucket) => ({
+        id: bucket.stage,
+        label: bucket.label,
+        count: bucket.count,
+      })),
+      total: deliveriesSnapshot.metrics.total,
+      emptyMessage: 'Dodaj dostawę, żeby śledzić etapy logistyki i dokumenty.',
+    },
+  ]
 
   const installationMetricCards = [
     { label: 'Łącznie montaży', value: installationsSnapshot.metrics.total },
@@ -99,7 +137,8 @@ export default async function OrdersPage() {
           {highlightStage ? (
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-2 text-xs font-medium text-primary">
               Najwięcej zleceń znajduje się w etapie:{' '}
-              <span className="font-semibold">{orderStageLabels[highlightStage.stage]}</span>
+              <span className="font-semibold">{highlightStage.label}</span>
+              <span className="opacity-70">({highlightStage.percentage}%)</span>
             </div>
           ) : null}
         </div>
@@ -175,29 +214,7 @@ export default async function OrdersPage() {
           </CardContent>
         </Card>
       </section>
-
-      <Card className="rounded-3xl border border-border/60">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-lg font-semibold text-foreground">Rozkład etapów</CardTitle>
-          <CardDescription>Kadra zleceń według bieżącego etapu procesu.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {stageDistributionWithPercentages.map((bucket) => (
-            <div key={bucket.stage} className="flex flex-col gap-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="font-medium text-foreground">{orderStageLabels[bucket.stage]}</span>
-                <span className="text-muted-foreground">{bucket.count} / {bucket.percentage}%</span>
-              </div>
-              <Progress value={bucket.percentage} className="h-2" />
-            </div>
-          ))}
-          {totalOrders === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Zacznij od dodania klienta i zaplanowania montażu lub dostawy, aby zobaczyć wizualizację pipeline’u.
-            </p>
-          ) : null}
-        </CardContent>
-      </Card>
+      <StageDistributionSwitcher groups={stageDistributionGroups} />
 
       <Card className="rounded-3xl border border-border/60">
         <CardContent className="p-6">
@@ -231,32 +248,42 @@ export default async function OrdersPage() {
 
             <div className="space-y-4">
               {installationsSnapshot.recent.length ? (
-                installationsSnapshot.recent.map((installation) => (
-                  <div
-                    key={installation.id}
-                    className="flex flex-col gap-2 rounded-2xl border border-border/60 bg-background/60 p-4 shadow-sm"
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">#{installation.installationNumber}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {installation.clientName ?? 'Klient nieznany'}
-                          {installation.city ? ` · ${installation.city}` : ''}
-                        </p>
+                installationsSnapshot.recent.map((installation) => {
+                  const installationHref = installation.orderId
+                    ? `/zlecenia/${installation.orderId}`
+                    : '/montaze'
+
+                  return (
+                    <Link
+                      key={installation.id}
+                      href={installationHref}
+                      className="group flex flex-col gap-2 rounded-2xl border border-border/60 bg-background/60 p-4 shadow-sm transition hover:border-primary/50 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                      aria-label={`Przejdź do szczegółów montażu ${installation.installationNumber}`}
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground transition-colors group-hover:text-primary">
+                            #{installation.installationNumber}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {installation.clientName ?? 'Klient nieznany'}
+                            {installation.city ? ` · ${installation.city}` : ''}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="rounded-full border-primary/40 text-xs font-medium text-primary">
+                          {installation.statusLabel}
+                        </Badge>
                       </div>
-                      <Badge variant="outline" className="rounded-full border-primary/40 text-xs font-medium text-primary">
-                        {installation.statusLabel}
-                      </Badge>
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {formatDate(installation.scheduledStartAt) ? (
-                        <span>Planowany start: {formatDate(installation.scheduledStartAt)}</span>
-                      ) : (
-                        <span>Brak zaplanowanej daty</span>
-                      )}
-                    </div>
-                  </div>
-                ))
+                      <div className="text-xs text-muted-foreground">
+                        {formatDate(installation.scheduledStartAt) ? (
+                          <span>Planowany start: {formatDate(installation.scheduledStartAt)}</span>
+                        ) : (
+                          <span>Brak zaplanowanej daty</span>
+                        )}
+                      </div>
+                    </Link>
+                  )
+                })
               ) : (
                 <Empty className="border border-dashed border-border/60">
                   <EmptyMedia variant="icon">
@@ -300,31 +327,41 @@ export default async function OrdersPage() {
 
             <div className="space-y-4">
               {deliveriesSnapshot.recent.length ? (
-                deliveriesSnapshot.recent.map((delivery) => (
-                  <div
-                    key={delivery.id}
-                    className="flex flex-col gap-2 rounded-2xl border border-border/60 bg-background/60 p-4 shadow-sm"
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">#{delivery.deliveryNumber}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {delivery.clientName ?? 'Klient nieznany'} · {delivery.typeLabel}
-                        </p>
+                deliveriesSnapshot.recent.map((delivery) => {
+                  const deliveryHref = delivery.orderId
+                    ? `/zlecenia/${delivery.orderId}`
+                    : `/dostawy`
+
+                  return (
+                    <Link
+                      key={delivery.id}
+                      href={deliveryHref}
+                      className="group flex flex-col gap-2 rounded-2xl border border-border/60 bg-background/60 p-4 shadow-sm transition hover:border-primary/50 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                      aria-label={`Przejdź do szczegółów dostawy ${delivery.deliveryNumber}`}
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground transition-colors group-hover:text-primary">
+                            #{delivery.deliveryNumber}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {delivery.clientName ?? 'Klient nieznany'} · {delivery.typeLabel}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="rounded-full border-primary/40 text-xs font-medium text-primary">
+                          {delivery.stageLabel}
+                        </Badge>
                       </div>
-                      <Badge variant="outline" className="rounded-full border-primary/40 text-xs font-medium text-primary">
-                        {delivery.stageLabel}
-                      </Badge>
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {formatDate(delivery.scheduledDate) ? (
-                        <span>Planowana data: {formatDate(delivery.scheduledDate)}</span>
-                      ) : (
-                        <span>Brak zaplanowanej daty</span>
-                      )}
-                    </div>
-                  </div>
-                ))
+                      <div className="text-xs text-muted-foreground">
+                        {formatDate(delivery.scheduledDate) ? (
+                          <span>Planowana data: {formatDate(delivery.scheduledDate)}</span>
+                        ) : (
+                          <span>Brak zaplanowanej daty</span>
+                        )}
+                      </div>
+                    </Link>
+                  )
+                })
               ) : (
                 <Empty className="border border-dashed border-border/60">
                   <EmptyMedia variant="icon">

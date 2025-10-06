@@ -27,6 +27,8 @@ import { cn } from '@/lib/utils'
 import type { RoleBreakdownEntry, UserListItem, UsersMetrics } from '@/lib/users'
 import { userRoleLabels } from '@/lib/user-roles'
 import type { UserRole } from '@/lib/user-roles'
+import { CreateUserDialog } from './_components/create-user-dialog'
+import { EditUserDialog } from './_components/edit-user-dialog'
 
 const ROLE_FILTER_ALL = 'ALL'
 
@@ -109,38 +111,43 @@ export function UsersTable({
   return (
     <div className={cn('flex flex-col gap-5', className)}>
       <Card className="border border-border/60">
-        <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="flex flex-col gap-2">
-            <span className="text-xs uppercase tracking-wide text-muted-foreground">Filtry</span>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Szukaj po nazwisku, loginie lub e-mailu"
-                className="w-full min-w-64"
-              />
-              <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Rola" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={ROLE_FILTER_ALL}>
-                    Wszyscy ({metrics.totalUsers})
-                  </SelectItem>
-                  {roleBreakdown.map((entry) => (
-                    <SelectItem key={entry.role} value={entry.role}>
-                      {entry.label} ({entry.count})
+        <CardContent className="flex flex-col gap-4 p-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col gap-2">
+              <span className="text-xs uppercase tracking-wide text-muted-foreground">Filtry</span>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <Input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Szukaj po nazwisku, loginie lub e-mailu"
+                  className="w-full min-w-64"
+                />
+                <Select value={roleFilter} onValueChange={setRoleFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Rola" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ROLE_FILTER_ALL}>
+                      Wszyscy ({metrics.totalUsers})
                     </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    {roleBreakdown.map((entry) => (
+                      <SelectItem key={entry.role} value={entry.role}>
+                        {entry.label} ({entry.count})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center gap-2 rounded-xl border border-border/50 bg-muted/40 px-4 py-2 text-sm text-muted-foreground">
-            <UsersIcon className="size-4 text-muted-foreground" aria-hidden />
-            <span>
-              Wyświetlono {filteredUsers.length} z {metrics.totalUsers}
-            </span>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto">
+              <div className="flex items-center justify-between gap-2 rounded-xl border border-border/50 bg-muted/40 px-4 py-2 text-sm text-muted-foreground sm:justify-center">
+                <UsersIcon className="size-4 text-muted-foreground" aria-hidden />
+                <span>
+                  Wyświetlono {filteredUsers.length} z {metrics.totalUsers}
+                </span>
+              </div>
+              <CreateUserDialog />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -154,12 +161,13 @@ export function UsersTable({
               <TableHead className="hidden md:table-cell">Rola</TableHead>
               <TableHead>Ostatnia aktywność</TableHead>
               <TableHead className="hidden lg:table-cell">Utworzono</TableHead>
+              <TableHead className="w-0 text-right text-muted-foreground">Akcje</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredUsers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
                   Brak użytkowników spełniających kryteria wyszukiwania.
                 </TableCell>
               </TableRow>
@@ -210,6 +218,9 @@ export function UsersTable({
                   </TableCell>
                   <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
                     {formatDate(user.createdAt)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <EditUserDialog user={user} />
                   </TableCell>
                 </TableRow>
               ))

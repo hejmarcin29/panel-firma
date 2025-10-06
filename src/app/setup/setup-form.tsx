@@ -1,6 +1,7 @@
 'use client'
 
-import { useFormState, useFormStatus } from 'react-dom'
+import { useActionState } from 'react'
+import { useFormStatus } from 'react-dom'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -24,7 +25,7 @@ function SubmitButton() {
 }
 
 export function SetupForm({ className }: { className?: string }) {
-  const [state, action] = useFormState<SetupFormState, FormData>(registerInitialAdmin, INITIAL_STATE)
+  const [state, action] = useActionState<SetupFormState, FormData>(registerInitialAdmin, INITIAL_STATE)
 
   return (
     <Card className={cn('w-full max-w-xl border border-border/60 shadow-lg shadow-primary/10', className)}>

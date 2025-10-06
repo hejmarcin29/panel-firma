@@ -208,6 +208,12 @@ export const products = sqliteTable(
   })
 );
 
+export const orderExecutionModes = [
+  "INSTALLATION_ONLY",
+  "DELIVERY_ONLY",
+] as const;
+export type OrderExecutionMode = (typeof orderExecutionModes)[number];
+
 export const orderStages = [
   "RECEIVED",
   "BEFORE_MEASUREMENT",
@@ -243,6 +249,10 @@ export const orders = sqliteTable(
     stageChangedAt: integer("stage_changed_at", { mode: "timestamp" })
       .notNull()
       .$defaultFn(() => new Date()),
+    executionMode: text("execution_mode")
+      .$type<OrderExecutionMode>()
+      .notNull()
+      .default("INSTALLATION_ONLY"),
     declaredFloorArea: real("declared_floor_area"),
     declaredBaseboardLength: real("declared_baseboard_length"),
     buildingType: text("building_type"),

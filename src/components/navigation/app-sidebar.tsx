@@ -39,6 +39,7 @@ const navigation = [
       { title: "Zlecenia", href: "/zlecenia", icon: ClipboardList },
       { title: "Dostawy", href: "/dostawy", icon: Truck },
       { title: "Montaże", href: "/montaze", icon: HardHat },
+      { title: "Dostawy pod montaż", href: "/dostawy-pod-montaz", icon: Package },
       { title: "Pomiary", href: "/pomiary", icon: LineChart },
     ],
   },
