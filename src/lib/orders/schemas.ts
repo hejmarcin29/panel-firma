@@ -10,6 +10,7 @@ export const createOrderSchema = z.object({
   clientId: z.string().min(1, "Wybierz klienta."),
   partnerId: nullableString,
   ownerId: nullableString,
+  assignedInstallerId: nullableString,
   orderNumber: nullableString,
   executionMode: z.enum(orderExecutionModes).default("INSTALLATION_ONLY"),
   title: nullableString,

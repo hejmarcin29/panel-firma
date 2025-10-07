@@ -26,11 +26,12 @@ export default async function EditOrderPage({ params }: { params: EditOrderPageP
   const resolvedParams = await params
   const orderId = resolvedParams.orderId
 
-  const [order, clients, partners, users, panelProducts, baseboardProducts] = await Promise.all([
+  const [order, clients, partners, users, installers, panelProducts, baseboardProducts] = await Promise.all([
     getOrderForEditing(orderId),
     listClientsForSelect(),
     listPartnersForSelect(),
     listUsersForSelect(),
+    listUsersForSelect({ role: "MONTER" }),
     listProductsForSelect({ types: ["PANEL"] }),
     listProductsForSelect({ types: ["BASEBOARD"] }),
   ])
@@ -124,6 +125,7 @@ export default async function EditOrderPage({ params }: { params: EditOrderPageP
         clients={clients.map(({ id, label }) => ({ id, label }))}
         partners={partners}
         users={users.map(({ id, label }) => ({ id, label }))}
+        installers={installers.map(({ id, label }) => ({ id, label }))}
         panelProducts={panelProducts.map(({ id, label }) => ({ id, label }))}
         baseboardProducts={baseboardProducts.map(({ id, label }) => ({ id, label }))}
         stageOptions={stageOptions}

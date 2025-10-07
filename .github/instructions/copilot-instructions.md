@@ -48,6 +48,7 @@ find /srv -maxdepth 1 -type d -name "prime*"# Wskazówki dla AI w projekcie `app
 - Drizzle ORM + SQLite – schemat w `db/schema.ts`, klient z konfiguracją w `db/index.ts`.
 - Baza żyje w `./data/panel.db`; jeśli katalogu brakuje, utwórz go przed startem.
 - Migracje generujemy/uruchamiamy tylko przez `drizzle-kit` (`npx drizzle-kit push`), bez użycia Prisma.
+- Polecenia drizzle prowadzimy zawsze przez `npx drizzle-kit …`; nie używaj `pnpm drizzle-kit` ani globalnych skrótów, żeby uniknąć brakujących binarek.
 - Najnowsze zmiany: rozbudowana tabela `partners` (status, segment, region, archiwizacja, kontakt) + historia statusów, nowe modele `orders`, `order_status_history`, `measurement_adjustments`, `attachments`, uproszczone `measurements`, `installations`, `deliveries`, `tasks` spięte przez `order_id`.
 
 ## Workflow deweloperski

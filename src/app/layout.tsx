@@ -30,6 +30,15 @@ async function resolveCurrentPath(): Promise<string> {
   const host = headerList.get("x-forwarded-host") ?? headerList.get("host") ?? "localhost";
   const candidates = [
     headerList.get("x-invoke-path"),
+    headerList.get("x-matched-path"),
+    headerList.get("x-request-path"),
+    headerList.get("x-forwarded-path"),
+  headerList.get("x-forwarded-url"),
+    headerList.get("x-original-url"),
+  headerList.get("x-original-path"),
+    headerList.get("request-url"),
+  headerList.get("x-middleware-pathname"),
+  headerList.get("x-next-pathname"),
     headerList.get("x-pathname"),
     headerList.get("x-forwarded-uri"),
     headerList.get("x-original-uri"),
@@ -37,21 +46,24 @@ async function resolveCurrentPath(): Promise<string> {
     headerList.get(":path"),
     headerList.get("next-url"),
     headerList.get("x-url"),
-    headerList.get("referer"),
+    headerList.get("rsc-pathname"),
+    headerList.get("x-now-route-matches"),
+    headerList.get("traceparent"),
   ];
 
   for (const candidate of candidates) {
     if (!candidate) continue;
 
     if (candidate.startsWith("/")) {
-      const [pathname] = candidate.split("?");
-      return pathname || "/";
+      const [rawPathname] = candidate.split("?");
+      const pathname = rawPathname || "/";
+      return normalizeAppPath(pathname);
     }
 
     try {
       const parsed = new URL(candidate, `http://${host}`);
       if (parsed.pathname) {
-        return parsed.pathname;
+        return normalizeAppPath(parsed.pathname);
       }
     } catch (error) {
       void error;
@@ -59,6 +71,27 @@ async function resolveCurrentPath(): Promise<string> {
   }
 
   return "/";
+}
+
+function normalizeAppPath(pathname: string): string {
+  if (pathname.startsWith("/_next/data/")) {
+    const segments = pathname.split("/");
+    if (segments.length >= 4) {
+      const rest = segments.slice(3).join("/");
+      const normalized = rest.endsWith(".json") ? rest.slice(0, -5) : rest;
+      return normalized.startsWith("/") ? normalized : `/${normalized}`;
+    }
+  }
+
+  if (pathname.startsWith("/_next/")) {
+    return pathname;
+  }
+
+  if (pathname === "") {
+    return "/";
+  }
+
+  return pathname;
 }
 
 function getUserInitials(name?: string | null, username?: string | null) {

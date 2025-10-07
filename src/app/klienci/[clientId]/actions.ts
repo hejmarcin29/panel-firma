@@ -14,6 +14,7 @@ const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
 type UploadActionContext = {
   clientId: string;
   clientFullName?: string;
+  pathsToRevalidate?: string[];
 };
 
 export async function uploadClientAttachmentsAction(
@@ -63,8 +64,15 @@ export async function uploadClientAttachmentsAction(
       });
     }
 
-    revalidatePath("/pliki");
-    revalidatePath(`/klienci/${clientId}`);
+    const revalidateTargets = new Set<string>([
+      "/pliki",
+      `/klienci/${clientId}`,
+      ...(context.pathsToRevalidate ?? []),
+    ]);
+
+    for (const path of revalidateTargets) {
+      revalidatePath(path);
+    }
 
     return {
       status: "success",

@@ -31,6 +31,7 @@ type DeliveryForInstallationFormProps = {
   stageOptions: StageOption[]
   panelProducts: SelectOption[]
   baseboardProducts: SelectOption[]
+  defaultInstallationId?: string
 }
 
 function FieldError({ message }: { message?: string }) {
@@ -57,6 +58,7 @@ export function DeliveryForInstallationForm({
   stageOptions,
   panelProducts,
   baseboardProducts,
+  defaultInstallationId,
 }: DeliveryForInstallationFormProps) {
   const [state, action] = useActionState(createInstallationDeliveryAction, INITIAL_DELIVERY_FORM_STATE)
   const errors = state.status === 'error' ? state.errors ?? {} : {}
@@ -84,7 +86,7 @@ export function DeliveryForInstallationForm({
                 id="installationId"
                 name="installationId"
                 required
-                defaultValue=""
+                defaultValue={defaultInstallationId ?? ''}
                 className="h-11 w-full rounded-xl border border-border/60 bg-background px-3 text-sm text-foreground shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
                 aria-invalid={errors.installationId ? 'true' : 'false'}
               >

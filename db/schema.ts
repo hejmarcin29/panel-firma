@@ -244,6 +244,9 @@ export const orders = sqliteTable(
     ownerId: text("owner_id").references(() => users.id, {
       onDelete: "set null",
     }),
+    assignedInstallerId: text("assigned_installer_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
     stage: text("stage").$type<OrderStage>().notNull(),
     stageNotes: text("stage_notes"),
     stageChangedAt: integer("stage_changed_at", { mode: "timestamp" })
@@ -296,6 +299,9 @@ export const orders = sqliteTable(
     orders_stage_idx: index("orders_stage_idx").on(table.stage),
     orders_partner_idx: index("orders_partner_idx").on(table.partnerId),
     orders_owner_idx: index("orders_owner_idx").on(table.ownerId),
+    orders_assigned_installer_idx: index("orders_assigned_installer_idx").on(
+      table.assignedInstallerId
+    ),
   })
 );
 
@@ -722,6 +728,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   partnerStatusChanges: many(partnerStatusHistory),
   createdOrders: many(orders, { relationName: "orderCreatedBy" }),
   ownedOrders: many(orders, { relationName: "orderOwner" }),
+  assignedOrders: many(orders, { relationName: "orderAssignedInstaller" }),
   orderStatusChanges: many(orderStatusHistory),
   measurements: many(measurements, {
     relationName: "measurementMeasuredBy",
@@ -817,6 +824,11 @@ export const ordersRelations = relations(orders, ({ one, many }) => ({
     fields: [orders.ownerId],
     references: [users.id],
     relationName: "orderOwner",
+  }),
+  assignedInstaller: one(users, {
+    fields: [orders.assignedInstallerId],
+    references: [users.id],
+    relationName: "orderAssignedInstaller",
   }),
   preferredPanelProduct: one(products, {
     fields: [orders.preferredPanelProductId],

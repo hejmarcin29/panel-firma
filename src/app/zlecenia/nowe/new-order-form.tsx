@@ -30,6 +30,7 @@ type NewOrderFormProps = {
   clients: SelectOption[]
   partners: SelectOption[]
   users: SelectOption[]
+  installers?: SelectOption[]
   panelProducts: SelectOption[]
   baseboardProducts: SelectOption[]
   stageOptions: StageOption[]
@@ -85,6 +86,7 @@ export function NewOrderForm({
   clients,
   partners,
   users,
+  installers = [],
   panelProducts,
   baseboardProducts,
   stageOptions,
@@ -155,7 +157,7 @@ export function NewOrderForm({
             <FieldError message={errors.executionMode} />
           </div>
 
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
             <div className="space-y-2">
               <Label htmlFor="clientId">Klient</Label>
               <select
@@ -210,6 +212,23 @@ export function NewOrderForm({
                 ))}
               </select>
               <FieldError message={errors.ownerId} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="assignedInstallerId">Przypisany monter (opcjonalnie)</Label>
+              <select
+                id="assignedInstallerId"
+                name="assignedInstallerId"
+                defaultValue=""
+                className="h-11 w-full rounded-xl border border-border/60 bg-background px-3 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+              >
+                <option value="">Wybierz montera</option>
+                {installers.map((installer) => (
+                  <option key={installer.id} value={installer.id}>
+                    {installer.label}
+                  </option>
+                ))}
+              </select>
+              <FieldError message={errors.assignedInstallerId} />
             </div>
           </div>
 

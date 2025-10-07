@@ -8,8 +8,11 @@ import {
   CalendarClock,
   CalendarDays,
   ClipboardList,
+  HardHat,
+  Package,
   Ruler,
   TrendingUp,
+  Truck,
 } from "lucide-react";
 import type { ComponentType, SVGProps } from "react";
 
@@ -40,6 +43,7 @@ export type DashboardOverviewOrder = {
   clientName: string;
   clientCity: string | null;
   partnerName: string | null;
+  executionMode: "INSTALLATION_ONLY" | "DELIVERY_ONLY";
   stage: StageDistributionEntry["stage"];
   stageNotes: string | null;
   stageChangedAt: string;
@@ -49,15 +53,142 @@ export type DashboardOverviewOrder = {
   createdAt: string;
 };
 
+export type DashboardOverviewInstallation = {
+  id: string;
+  installationNumber: string;
+  status: string;
+  statusLabel: string;
+  orderId: string;
+  orderReference: string;
+  clientName: string | null;
+  city: string | null;
+  scheduledStartAt: string | null;
+};
+
+export type DashboardOverviewDelivery = {
+  id: string;
+  deliveryNumber: string;
+  stage: string;
+  stageLabel: string;
+  type: string;
+  typeLabel: string;
+  requiresAdminAttention: boolean;
+  orderId: string | null;
+  clientName: string | null;
+  clientCity: string | null;
+  scheduledDate: string | null;
+  createdAt: string;
+};
+
+export type DashboardOverviewClient = {
+  id: string;
+  clientNumber: number;
+  fullName: string;
+  city: string | null;
+  partnerName: string | null;
+  totalOrders: number;
+  openOrders: number;
+  lastOrderAt: string | null;
+  createdAt: string;
+};
+
+type InstallationSummaryWithDates = DashboardOverviewInstallation & {
+  scheduledStartAtDate: Date | null;
+};
+
+type DeliverySummaryWithDates = DashboardOverviewDelivery & {
+  scheduledDateValue: Date | null;
+  createdAtDate: Date;
+};
+
+type ClientHighlightWithDates = DashboardOverviewClient & {
+  createdAtDate: Date;
+  lastOrderAtDate: Date | null;
+};
+
+const installationStatusBadgeClasses: Record<string, string> = {
+  PLANNED: "bg-muted text-muted-foreground",
+  SCHEDULED: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-200",
+  IN_PROGRESS: "bg-sky-500/15 text-sky-700 dark:text-sky-200",
+  COMPLETED: "bg-emerald-600/20 text-emerald-700 dark:text-emerald-100",
+  ON_HOLD: "bg-amber-500/15 text-amber-700 dark:text-amber-200",
+  CANCELLED: "bg-red-500/15 text-red-700 dark:text-red-200",
+} as const;
+
+const deliveryStageBadgeClasses: Record<string, string> = {
+  RECEIVED: "bg-muted text-foreground",
+  PROFORMA_SENT_AWAITING_PAYMENT: "bg-amber-500/15 text-amber-700 dark:text-amber-200",
+  SHIPPING_ORDERED: "bg-sky-500/15 text-sky-700 dark:text-sky-200",
+  DELIVERED_AWAITING_FINAL_INVOICE: "bg-violet-500/15 text-violet-700 dark:text-violet-200",
+  COMPLETED: "bg-emerald-500/20 text-emerald-700 dark:text-emerald-200",
+} as const;
+
+const executionModeLabels = {
+  INSTALLATION_ONLY: "Montaż + logistyka",
+  DELIVERY_ONLY: "Tylko dostawa",
+} as const;
+
+const executionModeBadgeClasses: Record<keyof typeof executionModeLabels, string> = {
+  INSTALLATION_ONLY: "border border-emerald-500/60 bg-emerald-500/10 text-emerald-700 dark:text-emerald-200",
+  DELIVERY_ONLY: "border border-amber-500/60 bg-amber-500/10 text-amber-700 dark:text-amber-200",
+};
+
 export type DashboardOverviewProps = {
   metrics: OrdersMetrics;
   stageDistribution: StageDistributionEntry[];
   usersMetrics: UsersMetrics;
   orders: DashboardOverviewOrder[];
+  installations: {
+    metrics: {
+      total: number;
+      scheduled: number;
+      inProgress: number;
+      completed: number;
+      requiringAttention: number;
+    };
+    distribution: Array<{
+      stage: StageDistributionEntry["stage"];
+      label: string;
+      count: number;
+    }>;
+    recent: DashboardOverviewInstallation[];
+  };
+  deliveries: {
+    metrics: {
+      total: number;
+      awaitingPayment: number;
+      shippingOrdered: number;
+      completed: number;
+      requiringAttention: number;
+    };
+    distribution: Array<{
+      stage: string;
+      label: string;
+      count: number;
+    }>;
+    recent: DashboardOverviewDelivery[];
+  };
+  clients: {
+    metrics: {
+      totalClients: number;
+      clientsWithOpenOrders: number;
+      newThisMonth: number;
+    };
+    clients: DashboardOverviewClient[];
+  };
   generatedAt: string;
 };
 
-export function DashboardOverview({ metrics, stageDistribution, usersMetrics, orders, generatedAt }: DashboardOverviewProps) {
+export function DashboardOverview({
+  metrics,
+  stageDistribution,
+  usersMetrics,
+  orders,
+  installations,
+  deliveries,
+  clients,
+  generatedAt,
+}: DashboardOverviewProps) {
   const totalOrders = metrics.totalOrders ?? 0;
   const completedOrders = stageDistribution.find((bucket) => bucket.stage === "COMPLETED")?.count ?? 0;
   const inProgress = Math.max(totalOrders - completedOrders, 0);
@@ -78,6 +209,30 @@ export function DashboardOverview({ metrics, stageDistribution, usersMetrics, or
     .filter((order) => order.scheduledInstallationDate && isFuture(new Date(order.scheduledInstallationDate)))
     .slice(0, 5);
   const recentOrders = orders.slice(0, 5);
+
+  const installationSummaries = installations.recent.map((item) => ({
+    ...item,
+    scheduledStartAtDate: item.scheduledStartAt ? new Date(item.scheduledStartAt) : null,
+  })) as InstallationSummaryWithDates[];
+
+  const deliverySummaries = deliveries.recent.map((item) => ({
+    ...item,
+    scheduledDateValue: item.scheduledDate ? new Date(item.scheduledDate) : null,
+    createdAtDate: new Date(item.createdAt),
+  })) as DeliverySummaryWithDates[];
+
+  const clientHighlights = clients.clients.map((client) => ({
+    ...client,
+    createdAtDate: new Date(client.createdAt),
+    lastOrderAtDate: client.lastOrderAt ? new Date(client.lastOrderAt) : null,
+  })) as ClientHighlightWithDates[];
+
+  const openClientsRatio = clients.metrics.totalClients > 0
+    ? Math.round((clients.metrics.clientsWithOpenOrders / clients.metrics.totalClients) * 100)
+    : 0;
+  const newClientsRatio = clients.metrics.totalClients > 0
+    ? Math.round((clients.metrics.newThisMonth / clients.metrics.totalClients) * 100)
+    : 0;
 
   return (
     <div className="flex flex-col gap-6">
@@ -172,9 +327,10 @@ export function DashboardOverview({ metrics, stageDistribution, usersMetrics, or
         />
         <KpiCard
           title="Zaplanowane montaże"
-          value={metrics.scheduledInstallations}
-          icon={CalendarDays}
-          description="Status SCHEDULED z przyszłą datą rozpoczęcia."
+          value={installations.metrics.scheduled}
+          icon={HardHat}
+          description="Status „Zaplanowany” z aktywną datą rozpoczęcia."
+          tone="emerald"
         />
         <KpiCard
           title="Powierzchnia w pipeline"
@@ -189,6 +345,36 @@ export function DashboardOverview({ metrics, stageDistribution, usersMetrics, or
           value={metrics.requiringAttention}
           icon={AlertTriangle}
           description="Zlecenia oznaczone flagą requires_admin_attention."
+          tone="amber"
+        />
+      </section>
+
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <KpiCard
+          title="Montaże w realizacji"
+          value={installations.metrics.inProgress}
+          icon={CalendarDays}
+          description="Brygady z aktywnym statusem „W realizacji”."
+          tone="primary"
+        />
+        <KpiCard
+          title="Montaże wymagają reakcji"
+          value={installations.metrics.requiringAttention}
+          icon={AlertTriangle}
+          description="Flaga administracyjna przy montażu."
+          tone="amber"
+        />
+        <KpiCard
+          title="Dostawy w drodze"
+          value={deliveries.metrics.shippingOrdered}
+          icon={Truck}
+          description="Status „Zlecono wysyłkę” w trybie dostawy."
+        />
+        <KpiCard
+          title="Dostawy oczekują na płatność"
+          value={deliveries.metrics.awaitingPayment}
+          icon={Package}
+          description="Etap proformy wymagający zaksięgowania."
           tone="amber"
         />
       </section>
@@ -249,6 +435,59 @@ export function DashboardOverview({ metrics, stageDistribution, usersMetrics, or
         </Card>
       </section>
 
+      <section className="grid gap-6 xl:grid-cols-[1.6fr_1.4fr]">
+        <Card className="rounded-3xl border border-border/60">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg font-semibold text-foreground">Montaże – skrót operacyjny</CardTitle>
+            <CardDescription>Podgląd harmonogramu brygad i ostatnich rekordów.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <QuickStat label="Łącznie" value={installations.metrics.total} hint="Aktywne rekordy modułu montaży." />
+              <QuickStat label="Zaplanowane" value={installations.metrics.scheduled} hint="Daty z kalendarza ekip." />
+              <QuickStat label="W realizacji" value={installations.metrics.inProgress} hint="Status „W realizacji”." />
+              <QuickStat label="Alerty" value={installations.metrics.requiringAttention} hint="Flaga administratora." />
+            </div>
+            <div className="space-y-3">
+              {installationSummaries.length ? (
+                installationSummaries.map((installation) => (
+                  <InstallationSummaryRow key={installation.id} installation={installation} />
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Brak zaplanowanych montaży. Przejdź do modułu <Link href="/montaze" className="font-medium text-emerald-600 underline-offset-4 hover:underline">Montaże</Link>, aby dodać pierwszy harmonogram.
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="rounded-3xl border border-border/60">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg font-semibold text-foreground">Dostawy – status logistyczny</CardTitle>
+            <CardDescription>Najważniejsze etapy i ostatnie zgłoszenia „Tylko dostawa”.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <QuickStat label="Łącznie" value={deliveries.metrics.total} hint="Tryb „Tylko dostawa”." />
+              <QuickStat label="W transporcie" value={deliveries.metrics.shippingOrdered} hint="Status „Zlecono wysyłkę”." />
+              <QuickStat label="Oczekują na płatność" value={deliveries.metrics.awaitingPayment} hint="Trwa potwierdzanie proformy." />
+              <QuickStat label="Alerty" value={deliveries.metrics.requiringAttention} hint="Wpisy wymagające reakcji." />
+            </div>
+            <div className="space-y-3">
+              {deliverySummaries.length ? (
+                deliverySummaries.map((delivery) => (
+                  <DeliverySummaryRow key={delivery.id} delivery={delivery} />
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Nie dodano jeszcze dostaw w trybie stand-alone. Użyj przycisku „Dodaj dostawę” w module logistycznym.
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
       <section className="grid gap-6 xl:grid-cols-2">
         <Card className="rounded-3xl border border-border/60">
           <CardHeader className="pb-4">
@@ -297,6 +536,30 @@ export function DashboardOverview({ metrics, stageDistribution, usersMetrics, or
                 <DashboardOrderRow key={order.id} order={order} compact />
               ))
             )}
+          </CardContent>
+        </Card>
+        <Card className="rounded-3xl border border-border/60">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg font-semibold text-foreground">Aktywni klienci</CardTitle>
+            <CardDescription>Nowe relacje i klienci z otwartymi zleceniami.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <QuickStat label="Łącznie" value={clients.metrics.totalClients} hint={`${openClientsRatio}% z aktywnymi zleceniami.`} />
+              <QuickStat label="Otwarty pipeline" value={clients.metrics.clientsWithOpenOrders} hint="Przynajmniej jedno zlecenie w toku." />
+              <QuickStat label="Nowi w tym miesiącu" value={clients.metrics.newThisMonth} hint={`${newClientsRatio}% bazy klientów.`} />
+            </div>
+            <div className="space-y-3">
+              {clientHighlights.length ? (
+                clientHighlights.map((client) => (
+                  <ClientHighlightRow key={client.id} client={client} />
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Dodaj pierwszego klienta, aby monitorować pipeline sprzedażowy.
+                </p>
+              )}
+            </div>
           </CardContent>
         </Card>
       </section>
@@ -357,6 +620,24 @@ function MetricRow({ label, value }: MetricRowProps) {
   );
 }
 
+type QuickStatProps = {
+  label: string;
+  value: number | string;
+  hint?: string;
+};
+
+function QuickStat({ label, value, hint }: QuickStatProps) {
+  const formatted = typeof value === "number" ? numberFormatter.format(value) : value;
+
+  return (
+    <div className="flex flex-col gap-1 rounded-2xl border border-border/60 bg-background/80 px-4 py-3">
+      <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</span>
+      <span className="text-xl font-semibold text-foreground">{formatted}</span>
+      {hint ? <span className="text-[11px] text-muted-foreground">{hint}</span> : null}
+    </div>
+  );
+}
+
 type DashboardOrderRowProps = {
   order: DashboardOverviewOrder;
   compact?: boolean;
@@ -370,20 +651,28 @@ function DashboardOrderRow({ order, compact, showTasks }: DashboardOrderRowProps
   const title = order.title ?? order.orderNumber ?? "Zlecenie bez nazwy";
   const cityLabel = order.clientCity ? `· ${order.clientCity}` : "";
   const partnerLabel = order.partnerName ? `Partner: ${order.partnerName}` : null;
+  const executionLabel = executionModeLabels[order.executionMode];
+  const executionBadgeClass = executionModeBadgeClasses[order.executionMode] ?? "border border-border/60 bg-muted text-muted-foreground";
 
   return (
-    <div className="flex flex-col gap-2 rounded-2xl border border-border/60 bg-background/70 p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <Link
+      href={`/zlecenia/${order.id}`}
+      className="group flex flex-col gap-2 rounded-2xl border border-border/60 bg-background/70 p-4 transition hover:border-primary/40 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="font-medium text-foreground">{title}</p>
+          <p className="font-medium text-foreground group-hover:text-primary">{title}</p>
           <p className="text-sm text-muted-foreground">
             {order.clientName} {cityLabel}
           </p>
           {partnerLabel ? <p className="text-xs text-muted-foreground">{partnerLabel}</p> : null}
         </div>
-        <Badge variant="outline" className="rounded-full border-primary/30 bg-primary/5 text-primary">
-          {orderStageLabels[order.stage]}
-        </Badge>
+        <div className="flex flex-col items-end gap-2 text-right sm:flex-row sm:items-center sm:gap-2">
+          <Badge className={`rounded-full px-3 py-1 text-xs font-semibold ${executionBadgeClass}`}>{executionLabel}</Badge>
+          <Badge variant="outline" className="rounded-full border-primary/30 bg-primary/5 text-primary">
+            {orderStageLabels[order.stage]}
+          </Badge>
+        </div>
       </div>
       <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
         <span>Ostatnia zmiana: {formatDistanceToNowStrict(stageChangedDate, { locale: pl, addSuffix: true })}</span>
@@ -398,6 +687,127 @@ function DashboardOrderRow({ order, compact, showTasks }: DashboardOrderRowProps
       {!compact && order.stageNotes ? (
         <p className="text-sm text-muted-foreground line-clamp-2">{order.stageNotes}</p>
       ) : null}
+    </Link>
+  );
+}
+
+type InstallationSummaryRowProps = {
+  installation: InstallationSummaryWithDates;
+};
+
+function InstallationSummaryRow({ installation }: InstallationSummaryRowProps) {
+  const scheduledLabel = installation.scheduledStartAtDate
+    ? format(installation.scheduledStartAtDate, "d MMM yyyy", { locale: pl })
+    : "Termin do ustalenia";
+  const clientLabel = installation.clientName ?? "Klient nieznany";
+  const cityLabel = installation.city ? ` • ${installation.city}` : "";
+  const badgeClass = installationStatusBadgeClasses[installation.status] ?? "bg-muted text-foreground";
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/60 bg-muted/30 p-4">
+      <div className="space-y-1">
+        <p className="text-sm font-semibold text-foreground">#{installation.installationNumber}</p>
+        <p className="text-xs text-muted-foreground">
+          {clientLabel}
+          {cityLabel}
+        </p>
+      </div>
+      <div className="flex flex-col items-end gap-1 text-xs text-muted-foreground">
+        <Badge className={`rounded-full px-3 py-1 text-xs ${badgeClass}`}>{installation.statusLabel}</Badge>
+        <span>Start: {scheduledLabel}</span>
+        <Link
+          href={`/zlecenia/${installation.orderId}`}
+          className="text-xs font-semibold text-primary underline-offset-4 hover:underline"
+        >
+          Zobacz {installation.orderReference}
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+type DeliverySummaryRowProps = {
+  delivery: DeliverySummaryWithDates;
+};
+
+function DeliverySummaryRow({ delivery }: DeliverySummaryRowProps) {
+  const badgeClass = deliveryStageBadgeClasses[delivery.stage] ?? "bg-muted text-foreground";
+  const scheduledLabel = delivery.scheduledDateValue
+    ? format(delivery.scheduledDateValue, "d MMM yyyy", { locale: pl })
+    : "Termin w planowaniu";
+  const createdLabel = formatDistanceToNowStrict(delivery.createdAtDate, { locale: pl, addSuffix: true });
+  const clientLabel = delivery.clientName ?? "Klient nieznany";
+  const cityLabel = delivery.clientCity ? ` • ${delivery.clientCity}` : "";
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/60 bg-muted/30 p-4">
+      <div className="space-y-1">
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-semibold text-foreground">#{delivery.deliveryNumber}</p>
+          {delivery.requiresAdminAttention ? (
+            <Badge variant="outline" className="rounded-full border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-200">
+              Uwaga
+            </Badge>
+          ) : null}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {clientLabel}
+          {cityLabel}
+        </p>
+        <p className="text-[11px] text-muted-foreground">Typ: {delivery.typeLabel}</p>
+      </div>
+      <div className="flex flex-col items-end gap-1 text-xs text-muted-foreground">
+        <Badge className={`rounded-full px-3 py-1 text-xs ${badgeClass}`}>{delivery.stageLabel}</Badge>
+        <span>Plan: {scheduledLabel}</span>
+        <span>Dodano {createdLabel}</span>
+        {delivery.orderId ? (
+          <Link
+            href={`/zlecenia/${delivery.orderId}`}
+            className="text-xs font-semibold text-primary underline-offset-4 hover:underline"
+          >
+            Powiązane zlecenie
+          </Link>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+type ClientHighlightRowProps = {
+  client: ClientHighlightWithDates;
+};
+
+function ClientHighlightRow({ client }: ClientHighlightRowProps) {
+  const THIRTY_DAYS_MS = 1000 * 60 * 60 * 24 * 30;
+  const isNew = Date.now() - client.createdAtDate.getTime() < THIRTY_DAYS_MS;
+  const lastOrderLabel = client.lastOrderAtDate
+    ? formatDistanceToNowStrict(client.lastOrderAtDate, { locale: pl, addSuffix: true })
+    : "Brak zleceń";
+  const locationLabel = client.city ?? "Brak miasta";
+  const partnerLabel = client.partnerName ? `Partner: ${client.partnerName}` : null;
+  const activeLabel = `${numberFormatter.format(client.openOrders)} otw. / ${numberFormatter.format(client.totalOrders)} łącznie`;
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/60 bg-background/80 p-4">
+      <div className="space-y-1">
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-semibold text-foreground">#{client.clientNumber} · {client.fullName}</p>
+          {isNew ? (
+            <Badge variant="outline" className="rounded-full border-emerald-500/40 bg-emerald-500/10 text-emerald-700">
+              Nowy
+            </Badge>
+          ) : null}
+        </div>
+        <p className="text-xs text-muted-foreground">{locationLabel}</p>
+        {partnerLabel ? <p className="text-[11px] text-muted-foreground">{partnerLabel}</p> : null}
+      </div>
+      <div className="flex flex-col items-end gap-1 text-right text-xs text-muted-foreground">
+        <span className="text-sm font-semibold text-foreground">{activeLabel}</span>
+        <span>Ostatnia aktywność: {lastOrderLabel}</span>
+        <Link href={`/klienci/${client.id}`} className="text-xs font-semibold text-primary underline-offset-4 hover:underline">
+          Profil klienta
+        </Link>
+      </div>
     </div>
   );
 }

@@ -15,9 +15,30 @@ export const metadata = {
 
 const activeStatuses: InstallationStatus[] = ['PLANNED', 'SCHEDULED', 'IN_PROGRESS']
 
-export default async function InstallationDeliveryPage() {
-  const [installations, panelProducts, baseboardProducts] = await Promise.all([
-    listInstallationsForSelect({ statuses: activeStatuses }),
+type InstallationDeliveryPageProps = {
+  searchParams?: Promise<{
+    orderId?: string
+    installationId?: string
+  }>
+}
+
+export default async function InstallationDeliveryPage({ searchParams }: InstallationDeliveryPageProps) {
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
+  const requestedOrderIdRaw = resolvedSearchParams?.orderId?.trim()
+  const requestedOrderId = requestedOrderIdRaw && requestedOrderIdRaw.length > 0 ? requestedOrderIdRaw : undefined
+  const requestedInstallationIdRaw = resolvedSearchParams?.installationId?.trim()
+  const requestedInstallationId =
+    requestedInstallationIdRaw && requestedInstallationIdRaw.length > 0 ? requestedInstallationIdRaw : undefined
+
+  let installations = requestedOrderId
+    ? await listInstallationsForSelect({ orderId: requestedOrderId, statuses: activeStatuses })
+    : await listInstallationsForSelect({ statuses: activeStatuses })
+
+  if (requestedOrderId && installations.length === 0) {
+    installations = await listInstallationsForSelect({ statuses: activeStatuses })
+  }
+
+  const [panelProducts, baseboardProducts] = await Promise.all([
     listProductsForSelect({ types: ['PANEL'] }),
     listProductsForSelect({ types: ['BASEBOARD'] }),
   ])
@@ -26,6 +47,12 @@ export default async function InstallationDeliveryPage() {
     value: stage,
     label: deliveryStageLabels[stage],
   }))
+
+  const defaultInstallationId = installations.some((installation) => installation.id === requestedInstallationId)
+    ? requestedInstallationId
+    : requestedOrderId && installations.length === 1
+      ? installations[0]?.id
+      : undefined
 
   const totalInstallations = installations.length
   const plannedCount = installations.filter((installation) => installation.status === 'PLANNED').length
@@ -84,6 +111,7 @@ export default async function InstallationDeliveryPage() {
         stageOptions={stageOptions}
         panelProducts={panelProducts.map((product) => ({ id: product.id, label: product.label }))}
         baseboardProducts={baseboardProducts.map((product) => ({ id: product.id, label: product.label }))}
+        defaultInstallationId={defaultInstallationId}
       />
     </div>
   )

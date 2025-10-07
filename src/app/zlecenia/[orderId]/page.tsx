@@ -48,6 +48,7 @@ import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { getOrderDetail } from '@/lib/orders'
 import { listProductsForSelect } from '@/lib/products'
+import { listClientAttachments } from '@/lib/r2'
 import {
   orderStageBadgeClasses,
   orderStageDescriptions,
@@ -60,16 +61,18 @@ import {
   deliveryStageLabels,
   deliveryStageSequence,
 } from '@/lib/deliveries'
+import {
+  deliveryTimingLabels,
+  measurementStatusBadgeClasses,
+  measurementStatusLabels,
+  resolveMeasurementStatus,
+} from '@/lib/measurements/constants'
 import { OrderParametersDialog } from './_components/order-parameters-dialog'
+import { OrderClientAttachmentsCard } from './_components/order-client-attachments-card'
 
 const numberFormatter = new Intl.NumberFormat('pl-PL', {
   maximumFractionDigits: 1,
 })
-
-const measurementTimingLabels: Record<'DAYS_BEFORE' | 'EXACT_DATE', string> = {
-  DAYS_BEFORE: 'Liczba dni przed montażem',
-  EXACT_DATE: 'Konkretny termin dostawy',
-}
 
 const taskStatusLabels: Record<'OPEN' | 'IN_PROGRESS' | 'BLOCKED' | 'DONE', string> = {
   OPEN: 'Otwarte',
@@ -99,6 +102,8 @@ const executionModeTaglines: Record<keyof typeof executionModeLabels, string> = 
   INSTALLATION_ONLY: 'Śledzimy pełny proces pomiaru, dostaw i montażu.',
   DELIVERY_ONLY: 'Skupiamy się na logistyce, transportach i dokumentach dostawy.',
 }
+
+const measurementStatusOrder = ['PENDING', 'PLANNED', 'OVERDUE', 'COMPLETED'] as const
 
 const formatDateTime = (value: Date | null | undefined, fallback = 'Brak danych') => {
   if (!value) {
@@ -145,6 +150,20 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
     notFound()
   }
 
+  const clientAttachments = detail.client
+    ? await listClientAttachments(detail.client.id, {
+        fullName: detail.client.fullName,
+        limit: 20,
+      })
+    : []
+
+  const serializedClientAttachments = clientAttachments.map((attachment) => ({
+    key: attachment.key,
+    fileName: attachment.fileName,
+    size: attachment.size,
+    lastModified: attachment.lastModified?.toISOString() ?? null,
+  }))
+
   const planInstallationHref = detail.client ? `/montaze/nowy?clientId=${detail.client.id}` : '/montaze/nowy'
   const addDeliverySearch = new URLSearchParams()
   addDeliverySearch.set('type', 'STANDALONE')
@@ -153,6 +172,18 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
     addDeliverySearch.set('clientId', detail.client.id)
   }
   const addDeliveryHref = `/dostawy/nowa?${addDeliverySearch.toString()}`
+
+  const activeInstallationForDelivery = detail.installations.find((installation) =>
+    installation.status === 'SCHEDULED' || installation.status === 'IN_PROGRESS'
+  )
+  const fallbackInstallationForDelivery = detail.installations.length === 1 ? detail.installations[0] : null
+  const preselectedInstallationForDelivery = activeInstallationForDelivery ?? fallbackInstallationForDelivery ?? null
+  const addInstallationDeliverySearch = new URLSearchParams()
+  addInstallationDeliverySearch.set('orderId', detail.order.id)
+  if (preselectedInstallationForDelivery) {
+    addInstallationDeliverySearch.set('installationId', preselectedInstallationForDelivery.id)
+  }
+  const addInstallationDeliveryHref = `/montaze/nowa-dostawa?${addInstallationDeliverySearch.toString()}`
 
   const reference = detail.order.orderNumber ?? detail.order.id.slice(0, 7).toUpperCase()
   const executionModeLabel = executionModeLabels[detail.order.executionMode]
@@ -340,6 +371,35 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
 
   const nextUpcomingEvent = upcomingEvents[0] ?? null
 
+  const measurementEntries = detail.measurements.map((measurement) => {
+    const status = resolveMeasurementStatus({
+      scheduledAt: measurement.scheduledAt ?? null,
+      measuredAt: measurement.measuredAt ?? null,
+      now,
+    })
+
+    return {
+      ...measurement,
+      status,
+    }
+  })
+
+  const measurementStatusSummary = measurementEntries.reduce(
+    (acc, measurement) => {
+      acc[measurement.status] = (acc[measurement.status] ?? 0) + 1
+      return acc
+    },
+    {
+      PENDING: 0,
+      PLANNED: 0,
+      OVERDUE: 0,
+      COMPLETED: 0,
+    } as Record<'PENDING' | 'PLANNED' | 'OVERDUE' | 'COMPLETED', number>,
+  )
+
+  const measurementModuleHref = '/pomiary'
+  const measurementCreateHref = `/pomiary/nowy?orderId=${detail.order.id}`
+
   return (
     <div className="flex flex-col gap-6 lg:gap-8">
       <Breadcrumb>
@@ -365,6 +425,11 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
             </Badge>
             <Badge className={`rounded-full px-3 py-1 text-xs ${stageBadge}`}>{stageLabel}</Badge>
             <Badge className={`rounded-full px-3 py-1 text-xs ${executionModeBadge}`}>{executionModeLabel}</Badge>
+            {detail.order.assignedInstallerName ? (
+              <Badge className="rounded-full border border-primary/50 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                Monter: {detail.order.assignedInstallerName}
+              </Badge>
+            ) : null}
             {detail.order.requiresAdminAttention ? (
               <Badge variant="outline" className="border-red-500/60 bg-red-500/10 text-red-500">
                 <AlertTriangle className="mr-1 size-3.5" aria-hidden />
@@ -395,9 +460,21 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
           </div>
           <div className="flex flex-wrap items-center gap-3">
             {detail.order.executionMode === 'INSTALLATION_ONLY' ? (
-              <Button asChild className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20">
-                <Link href={planInstallationHref}>Zaplanuj montaż</Link>
-              </Button>
+              <>
+                <Button asChild className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20">
+                  <Link href={planInstallationHref}>Zaplanuj montaż</Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="inline-flex items-center gap-2 rounded-full border-amber-500/60 text-sm font-semibold text-amber-600 shadow-sm hover:border-amber-500 hover:text-amber-600"
+                >
+                  <Link href={addInstallationDeliveryHref}>
+                    <Package className="size-4" aria-hidden />
+                    Dodaj dostawę pod montaż
+                  </Link>
+                </Button>
+              </>
             ) : null}
             {detail.order.executionMode === 'DELIVERY_ONLY' ? (
               <Button
@@ -773,7 +850,22 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
                   <div className="font-semibold text-foreground">
                     {detail.order.ownerName ?? 'Nie przypisano'}
                   </div>
+                  {detail.order.ownerPhone ? <div>Tel.: {detail.order.ownerPhone}</div> : null}
                   {detail.order.ownerEmail ? <div>{detail.order.ownerEmail}</div> : null}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Przypisany monter</CardTitle>
+                  <CardDescription>Ekipę możesz zmienić w edycji zlecenia.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-1 text-sm text-muted-foreground">
+                  <div className="font-semibold text-foreground">
+                    {detail.order.assignedInstallerName ?? 'Nie przypisano'}
+                  </div>
+                  {detail.order.assignedInstallerPhone ? <div>Tel.: {detail.order.assignedInstallerPhone}</div> : null}
+                  {detail.order.assignedInstallerEmail ? <div>{detail.order.assignedInstallerEmail}</div> : null}
                 </CardContent>
               </Card>
             </div>
@@ -935,8 +1027,47 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
 
         {!isDeliveryOnly ? (
           <>
-            <TabsContent value="measurements" className="space-y-4">
-              {detail.measurements.length === 0 ? (
+            <TabsContent value="measurements" className="space-y-6">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-base font-semibold text-foreground">Pomiary i wizje lokalne</h3>
+                  <p className="text-sm text-muted-foreground">Synchronizuj harmonogram pomiaru z dostawami i montażem.</p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    asChild
+                    size="sm"
+                    className="rounded-full bg-amber-500 px-4 py-2 text-sm font-semibold text-amber-950 shadow-sm shadow-amber-500/30 hover:bg-amber-500/90"
+                  >
+                    <Link href={measurementCreateHref}>Dodaj pomiar</Link>
+                  </Button>
+                  <Button
+                    asChild
+                    variant="ghost"
+                    size="sm"
+                    className="rounded-full text-sm font-semibold text-muted-foreground hover:text-primary"
+                  >
+                    <Link href={measurementModuleHref}>Przegląd modułu</Link>
+                  </Button>
+                </div>
+              </div>
+
+              {measurementEntries.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {measurementStatusOrder.map((status) => (
+                    <Badge
+                      key={status}
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                        measurementStatusBadgeClasses[status] ?? 'bg-muted text-muted-foreground'
+                      }`}
+                    >
+                      {measurementStatusLabels[status]}: {measurementStatusSummary[status] ?? 0}
+                    </Badge>
+                  ))}
+                </div>
+              ) : null}
+
+              {measurementEntries.length === 0 ? (
                 <Card className="rounded-3xl border border-border/60">
                   <CardContent className="p-6">
                     <Empty>
@@ -951,37 +1082,55 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
                   </CardContent>
                 </Card>
               ) : (
-                detail.measurements.map((measurement) => {
+                measurementEntries.map((measurement) => {
                   const measurementReference = measurement.id.slice(0, 6).toUpperCase()
-                  const measurementMeta = [
-                    measurement.measuredAt
-                      ? `Zarejestrowano ${formatDateTime(measurement.measuredAt, 'brak daty')}`
-                      : measurement.scheduledAt
-                        ? `Plan na ${formatDateTime(measurement.scheduledAt)}`
-                        : null,
-                    `Liczba korekt: ${measurement.adjustmentsCount}`,
-                  ]
-                    .filter(Boolean)
-                    .join(' • ')
+                  const statusBadge = measurementStatusBadgeClasses[measurement.status] ?? 'bg-muted text-muted-foreground'
+                  const statusLabel = measurementStatusLabels[measurement.status]
+                  const measurementModuleLink = `/pomiary?measurement=${measurement.id}`
                   const deliveryTimingLabel = measurement.deliveryTimingType
-                    ? measurementTimingLabels[measurement.deliveryTimingType]
+                    ? deliveryTimingLabels[measurement.deliveryTimingType]
                     : 'Nie określono'
                   const plannedDelivery =
                     measurement.deliveryTimingType === 'DAYS_BEFORE'
-                      ? `${measurement.deliveryDaysBefore ?? '—'} dni przed montażem`
-                      : formatDate(measurement.deliveryDate)
+                      ? typeof measurement.deliveryDaysBefore === 'number'
+                        ? `${measurement.deliveryDaysBefore} dni przed montażem`
+                        : 'Nie określono'
+                      : measurement.deliveryDate
+                        ? formatDate(measurement.deliveryDate)
+                        : 'Nie określono'
 
                   return (
                     <Card key={measurement.id} className="rounded-3xl border border-border/60">
-                      <CardHeader className="flex flex-col gap-1">
-                        <CardTitle className="flex items-center gap-2 text-lg">
-                          <Ruler className="size-5 text-primary" aria-hidden />
-                          Pomiar
-                          <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
-                            #{measurementReference}
-                          </span>
-                        </CardTitle>
-                        <CardDescription>{measurementMeta}</CardDescription>
+                      <CardHeader className="flex flex-col gap-3">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <CardTitle className="flex items-center gap-2 text-lg">
+                            <Ruler className="size-5 text-primary" aria-hidden />
+                            Pomiar
+                            <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
+                              #{measurementReference}
+                            </span>
+                          </CardTitle>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Badge className={`rounded-full px-3 py-1 text-xs font-semibold ${statusBadge}`}>
+                              {statusLabel}
+                            </Badge>
+                            <Button
+                              asChild
+                              variant="outline"
+                              size="sm"
+                              className="rounded-full border-amber-400/40 text-amber-600 shadow-sm hover:border-amber-500 hover:text-amber-600"
+                            >
+                              <Link href={measurementModuleLink}>Otwórz moduł pomiarów</Link>
+                            </Button>
+                          </div>
+                        </div>
+                        <CardDescription className="text-sm text-muted-foreground">
+                          {measurement.measuredAt
+                            ? `Zarejestrowano ${formatDateTime(measurement.measuredAt, 'brak daty')}`
+                            : measurement.scheduledAt
+                              ? `Plan na ${formatDateTime(measurement.scheduledAt)}`
+                              : 'Brak terminu pomiaru'}
+                        </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-4 text-sm text-muted-foreground">
                         <div className="grid gap-4 sm:grid-cols-2">
@@ -1019,7 +1168,9 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
                           <div>
                             <div className="text-xs uppercase">Docinki</div>
                             <div className="text-foreground text-sm font-medium">
-                              {measurement.offcutPercent ? `${measurement.offcutPercent}%` : 'Nie określono'}
+                              {typeof measurement.offcutPercent === 'number'
+                                ? `${measurement.offcutPercent}%`
+                                : 'Nie określono'}
                             </div>
                           </div>
                           <div>
@@ -1029,11 +1180,11 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
                             </div>
                           </div>
                           <div>
-                            <div className="text-xs uppercase">Timing dostawy</div>
+                            <div className="text-xs uppercase">Plan dostawy</div>
                             <div className="text-foreground text-sm font-medium">{deliveryTimingLabel}</div>
                           </div>
                           <div>
-                            <div className="text-xs uppercase">Planowana dostawa</div>
+                            <div className="text-xs uppercase">Szczegóły dostawy</div>
                             <div className="text-foreground text-sm font-medium">{plannedDelivery}</div>
                           </div>
                         </div>
@@ -1423,6 +1574,24 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
         </TabsContent>
 
         <TabsContent value="documents" className="space-y-4">
+          {detail.client ? (
+            <OrderClientAttachmentsCard
+              clientId={detail.client.id}
+              clientFullName={detail.client.fullName}
+              orderId={detail.order.id}
+              attachments={serializedClientAttachments}
+            />
+          ) : (
+            <Card className="rounded-3xl border border-border/60">
+              <CardHeader>
+                <CardTitle>Załączniki klienta</CardTitle>
+                <CardDescription>Przypisz klienta do zlecenia, aby dodać dokumenty do jego repozytorium.</CardDescription>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground">
+                To zlecenie nie ma przypisanego klienta, dlatego nie ma dostępu do folderu z dokumentami klienta.
+              </CardContent>
+            </Card>
+          )}
           <Card className="rounded-3xl border border-border/60">
             <CardHeader>
               <CardTitle>Załączniki zlecenia</CardTitle>

@@ -82,6 +82,7 @@ export function OrderParametersDialog({ detail, panelProducts, baseboardProducts
           <input type="hidden" name="clientId" value={detail.order.clientId} />
           <input type="hidden" name="partnerId" value={detail.order.partnerId ?? ""} />
           <input type="hidden" name="ownerId" value={detail.order.ownerId ?? ""} />
+          <input type="hidden" name="assignedInstallerId" value={detail.order.assignedInstallerId ?? ""} />
           <input type="hidden" name="orderNumber" value={detail.order.orderNumber ?? ""} />
           <input type="hidden" name="title" value={detail.order.title ?? ""} />
           <input type="hidden" name="executionMode" value={detail.order.executionMode} />

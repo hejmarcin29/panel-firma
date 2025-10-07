@@ -212,6 +212,8 @@ export async function getOrderDetail(orderId: string) {
     with: {
       client: true,
       partner: true,
+      owner: true,
+      assignedInstaller: true,
       preferredPanelProduct: true,
       preferredBaseboardProduct: true,
       measurements: {
@@ -305,6 +307,13 @@ export async function getOrderDetail(orderId: string) {
       clientId: orderRecord.clientId,
       partnerId: orderRecord.partnerId ?? null,
       ownerId: orderRecord.ownerId ?? null,
+      ownerName: orderRecord.owner?.name ?? orderRecord.owner?.username ?? null,
+      ownerEmail: orderRecord.owner?.email ?? null,
+      ownerPhone: orderRecord.owner?.phone ?? null,
+      assignedInstallerId: orderRecord.assignedInstallerId ?? null,
+      assignedInstallerName: orderRecord.assignedInstaller?.name ?? orderRecord.assignedInstaller?.username ?? null,
+      assignedInstallerEmail: orderRecord.assignedInstaller?.email ?? null,
+      assignedInstallerPhone: orderRecord.assignedInstaller?.phone ?? null,
       orderNumber: orderRecord.orderNumber ?? null,
       title: orderRecord.title ?? null,
       executionMode: orderRecord.executionMode as OrderExecutionMode,
@@ -490,6 +499,7 @@ export async function createOrder(payload: CreateOrderInput, createdById: string
       title: payload.title ?? null,
       createdById: createdById ?? null,
       ownerId: payload.ownerId ?? null,
+      assignedInstallerId: payload.assignedInstallerId ?? null,
       stage: payload.stage,
       executionMode: payload.executionMode,
       stageNotes: normalizeText(payload.stageNotes ?? null),
@@ -533,6 +543,7 @@ export type OrderForEditing = {
   clientId: string;
   partnerId: string | null;
   ownerId: string | null;
+  assignedInstallerId: string | null;
   orderNumber: string | null;
   title: string | null;
   executionMode: OrderExecutionMode;
@@ -559,6 +570,7 @@ export async function getOrderForEditing(orderId: string): Promise<OrderForEditi
       clientId: true,
       partnerId: true,
       ownerId: true,
+  assignedInstallerId: true,
       orderNumber: true,
       title: true,
   executionMode: true,
@@ -589,6 +601,7 @@ export async function getOrderForEditing(orderId: string): Promise<OrderForEditi
     clientId: row.clientId,
     partnerId: row.partnerId ?? null,
     ownerId: row.ownerId ?? null,
+  assignedInstallerId: row.assignedInstallerId ?? null,
     orderNumber: row.orderNumber ?? null,
     title: row.title ?? null,
     stage: row.stage,
@@ -635,6 +648,7 @@ export async function updateOrder(
       clientId: payload.clientId,
       partnerId: payload.partnerId ?? null,
       ownerId: payload.ownerId ?? null,
+      assignedInstallerId: payload.assignedInstallerId ?? null,
       orderNumber: normalizeText(payload.orderNumber ?? null),
       title: normalizeText(payload.title ?? null),
       stage: payload.stage,
@@ -705,6 +719,7 @@ export async function ensureOrderForClient(options: {
       clientId,
       partnerId: null,
       ownerId: null,
+      assignedInstallerId: null,
       orderNumber: null,
       title: title ?? null,
       executionMode: "INSTALLATION_ONLY",
@@ -730,6 +745,7 @@ export type OrderSelectItem = {
   id: string;
   label: string;
   stage: OrderStage;
+  assignedInstallerId: string | null;
 };
 
 export async function listOrdersForSelect(options?: {
@@ -743,6 +759,7 @@ export async function listOrdersForSelect(options?: {
       title: orders.title,
       stage: orders.stage,
       clientName: clients.fullName,
+      assignedInstallerId: orders.assignedInstallerId,
     })
     .from(orders)
     .leftJoin(clients, eq(orders.clientId, clients.id))
@@ -765,6 +782,7 @@ export async function listOrdersForSelect(options?: {
       id: row.id,
       label: `${reference} – ${title}${clientLabel}`,
       stage: row.stage,
+      assignedInstallerId: row.assignedInstallerId ?? null,
     };
   });
 }

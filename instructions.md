@@ -35,6 +35,11 @@
 - Każdy nowy ekran powinien mieć nagłówek (tytuł + opis), zestaw KPI cards oraz co najmniej jeden moduł analityczny (wykres/tabela/lista); po zmianach uruchamiamy `npm run lint` i dodajemy mockowe dane, gdy są potrzebne.
 - Generujemy URL i UI po polsku!
 
+## Moduł pomiarów (05.10.2025)
+- `/pomiary` prezentuje dashboard z metrykami (łącznie, zaplanowane, po terminie, zrealizowane), rozkładem planowania dostaw oraz filtrowalną tabelą pomiarów.
+- `/pomiary/nowy` udostępnia formularz wizji lokalnej z uploadem plików, walidacją Drizzle/Zod i integracją z `createMeasurementAction`.
+- Zakładka **Pomiary** w szczegółach zlecenia agreguje statusy, plan dostawy i linki do modułu pomiarów; CTA „Dodaj pomiar” prowadzi do formularza z prefillowanym `orderId`.
+
 ## Panel zarządzania (05.10.2025)
 - **Cele biznesowe**: koordynacja procesów montażowych, dostaw i sprzedaży; raporty operacyjne (liczba zleceń, m²) w ujęciu tyg./mies. oraz mini-ERP dla kart produktów.
 - **Role i uprawnienia**:
