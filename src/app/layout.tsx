@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { AppShell } from "@/components/navigation/app-shell";
-import { requireSession } from "@/lib/auth";
+import { getCurrentSession } from "@/lib/auth";
 import { isPublicPath } from "@/lib/routes";
 import { userRoleLabels } from "@/lib/user-roles";
 
@@ -119,9 +119,11 @@ export default async function RootLayout({
 }>) {
   const currentPath = await resolveCurrentPath();
   const isProtectedRoute = !isPublicPath(currentPath);
-  const session = isProtectedRoute ? await requireSession() : null;
-  const displayName = session?.user.name ?? session?.user.username ?? "Użytkownik";
-  const initials = getUserInitials(session?.user.name, session?.user.username);
+  const session = await getCurrentSession();
+  const rawName = session?.user.name;
+  const rawUsername = session?.user.username;
+  const displayName = rawName ?? rawUsername ?? (isProtectedRoute ? "Użytkownik" : "Gość");
+  const initials = getUserInitials(rawName ?? displayName, rawUsername);
   const roleLabel = session?.user.role ? userRoleLabels[session.user.role as keyof typeof userRoleLabels] ?? session.user.role : null;
 
   return (
