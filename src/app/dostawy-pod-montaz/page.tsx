@@ -20,6 +20,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { requireSession } from "@/lib/auth";
 import { getInstallationDeliveriesDashboardData } from "@/lib/installation-deliveries";
 
 import { installationDeliveriesColumns } from "./columns";
@@ -34,6 +35,7 @@ const formatDate = (value: Date | null | undefined) =>
   value ? format(value, "dd MMM yyyy", { locale: pl }) : null;
 
 export default async function InstallationDeliveriesPage() {
+  await requireSession();
   const { snapshot, list } = await getInstallationDeliveriesDashboardData(60);
 
   const now = new Date();

@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID, createHash } from "node:crypto";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 
@@ -12,6 +12,8 @@ export { LOGIN_ROUTE, SETUP_ROUTE } from "@/lib/routes";
 
 export const SESSION_COOKIE_NAME = "session";
 const SESSION_TTL_MINUTES = 60 * 24 * 14; // 14 dni
+const SESSION_REFRESH_THRESHOLD_MINUTES = 60 * 24 * 3; // 3 dni
+const SESSION_ACTIVITY_UPDATE_THRESHOLD_MS = 5 * 60 * 1000; // 5 minut
 
 type DbUser = typeof users.$inferSelect;
 type SessionRecord = typeof sessions.$inferSelect;
@@ -31,6 +33,47 @@ async function hashToken(token: string) {
 
 async function generateSessionToken() {
   return randomBytes(32).toString("base64url");
+}
+
+function getSessionExpiryDate() {
+  return new Date(Date.now() + SESSION_TTL_MINUTES * 60 * 1000);
+}
+
+async function shouldUseSecureCookies() {
+  try {
+    const headerList = await headers();
+    const forwardedProto = headerList.get("x-forwarded-proto");
+    if (forwardedProto) {
+      const proto = forwardedProto.split(",")[0]?.trim();
+      if (proto) {
+        return proto === "https";
+      }
+    }
+
+    const host = headerList.get("host") ?? "";
+    if (
+      host.startsWith("localhost") ||
+      host.startsWith("127.") ||
+      host.startsWith("[::1]") ||
+      host.endsWith(".local")
+    ) {
+      return false;
+    }
+  } catch (error) {
+    void error;
+  }
+
+  return process.env.NODE_ENV === "production";
+}
+
+async function getSessionCookieOptions(expiresAt: Date) {
+  return {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure: await shouldUseSecureCookies(),
+    path: "/",
+    expires: expiresAt,
+  };
 }
 
 interface SessionInfo {
@@ -57,7 +100,7 @@ export async function hasAdminUser() {
 export async function createSession(user: DbUser, userAgent?: string, ipAddress?: string) {
   const token = await generateSessionToken();
   const tokenHash = await hashToken(token);
-  const expiresAt = new Date(Date.now() + SESSION_TTL_MINUTES * 60 * 1000);
+  const expiresAt = getSessionExpiryDate();
   const id = randomUUID();
 
   await db.insert(sessions).values({
@@ -72,13 +115,16 @@ export async function createSession(user: DbUser, userAgent?: string, ipAddress?
   });
 
   const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE_NAME, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    expires: expiresAt,
-  });
+  cookieStore.set(SESSION_COOKIE_NAME, token, await getSessionCookieOptions(expiresAt));
+
+  const now = new Date();
+  await db
+    .update(users)
+    .set({
+      lastLoginAt: now,
+      updatedAt: now,
+    })
+    .where(eq(users.id, user.id));
 
   return token;
 }
@@ -106,14 +152,45 @@ export async function getCurrentSession(): Promise<SessionInfo | null> {
     .where(eq(sessions.tokenHash, tokenHash));
 
   if (!sessionWithUser) {
+    cookieStore.delete(SESSION_COOKIE_NAME);
     return null;
   }
 
   const { session, user } = sessionWithUser;
+  const now = new Date();
 
-  if (session.expiresAt.getTime() <= Date.now()) {
+  if (session.expiresAt.getTime() <= now.getTime()) {
     await db.delete(sessions).where(eq(sessions.id, session.id));
+    cookieStore.delete(SESSION_COOKIE_NAME);
     return null;
+  }
+
+  const timeRemainingMs = session.expiresAt.getTime() - now.getTime();
+  const shouldRefresh = timeRemainingMs <= SESSION_REFRESH_THRESHOLD_MINUTES * 60 * 1000;
+  const shouldUpdateActivity =
+    now.getTime() - session.updatedAt.getTime() >= SESSION_ACTIVITY_UPDATE_THRESHOLD_MS;
+
+  if (shouldRefresh || shouldUpdateActivity) {
+    const newExpiresAt = shouldRefresh ? getSessionExpiryDate() : session.expiresAt;
+
+    await db
+      .update(sessions)
+      .set({
+        updatedAt: now,
+        ...(shouldRefresh ? { expiresAt: newExpiresAt } : {}),
+      })
+      .where(eq(sessions.id, session.id));
+
+    if (shouldRefresh) {
+      cookieStore.set(
+        SESSION_COOKIE_NAME,
+        token,
+        await getSessionCookieOptions(newExpiresAt),
+      );
+      session.expiresAt = newExpiresAt;
+    }
+
+    session.updatedAt = now;
   }
 
   return {

@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
+import { requireSession } from '@/lib/auth'
 import { getMeasurementsSnapshot, getMeasurementsList } from '@/lib/measurements'
 import { deliveryTimingLabels, measurementStatusBadgeClasses, measurementStatusLabels } from '@/lib/measurements/constants'
 import { CalendarClock, CheckCircle2, ClipboardList, LucideIcon, Plus, UploadCloud } from 'lucide-react'
@@ -34,6 +35,7 @@ const STAT_CARD_CLASSES: Record<'default' | 'accent' | 'success' | 'warning', st
 }
 
 export default async function MeasurementsPage() {
+  await requireSession();
   const [snapshot, measurements] = await Promise.all([getMeasurementsSnapshot(), getMeasurementsList(40)])
 
   const { metrics, recent, distribution } = snapshot

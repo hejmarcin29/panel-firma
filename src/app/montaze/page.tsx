@@ -15,6 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
+import { requireSession } from "@/lib/auth";
 import { getInstallationsDashboardData } from "@/lib/installations";
 import { installationStatusLabels } from "@/lib/installations/constants";
 
@@ -36,6 +37,7 @@ type MontazePageProps = {
 };
 
 export default async function MontazePage({ searchParams }: MontazePageProps) {
+  await requireSession();
   const { snapshot, list } = await getInstallationsDashboardData(60);
 
   const resolvedSearchParams = searchParams ? await searchParams : undefined;

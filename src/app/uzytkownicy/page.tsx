@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 
+import { requireSession } from '@/lib/auth'
 import { getUsersDashboardData } from '@/lib/users'
 
 import { UsersTable } from './users-table'
@@ -14,6 +15,7 @@ export const metadata = {
 }
 
 export default async function UsersPage() {
+  await requireSession();
   const { metrics, roleBreakdown, users } = await getUsersDashboardData()
 
   const highlightedRole = roleBreakdown.reduce((top, current) => {

@@ -4,7 +4,7 @@ export const SETUP_ROUTE = "/setup";
 export const PUBLIC_PATH_PREFIXES = [LOGIN_ROUTE, SETUP_ROUTE] as const;
 
 const PUBLIC_STATIC_PREFIXES = ["/_next/", "/favicon", "/assets/", "/public/"] as const;
-const PUBLIC_STATIC_PATHS = ["/", "/favicon.ico", "/robots.txt", "/sitemap.xml", "/manifest.json"] as const;
+const PUBLIC_STATIC_PATHS = ["/favicon.ico", "/robots.txt", "/sitemap.xml", "/manifest.json"] as const;
 
 export function isPublicPath(pathname: string | null | undefined): boolean {
   if (!pathname) {

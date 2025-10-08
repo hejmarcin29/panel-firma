@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { requireSession } from '@/lib/auth'
 import { getClientsDashboardData } from '@/lib/clients'
 
 import { ClientsTable } from './clients-table'
@@ -18,6 +19,7 @@ export const metadata = {
 }
 
 export default async function ClientsPage() {
+  await requireSession();
   const { metrics, clients } = await getClientsDashboardData()
 
   const openRatio = metrics.totalClients > 0 ? Math.round((metrics.clientsWithOpenOrders / metrics.totalClients) * 100) : 0

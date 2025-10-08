@@ -18,7 +18,9 @@ find /srv -maxdepth 1 -type d -name "prime*"# Wskazówki dla AI w projekcie `app
 - Hasła haszujemy przez `bcryptjs` i weryfikujemy `ensurePasswordPolicy`. Dostępne są `getCurrentSession()`, `getCurrentUser()`, `requireSession()` oraz `requireRole()` w `src/lib/auth.ts`.
 - Logowanie i wylogowanie obsługują route handlers `src/app/api/auth/login/route.ts` oraz `src/app/api/auth/logout/route.ts`.
 - `/setup` (server action w `src/app/setup/actions.ts`) zakłada pierwszego admina i ustawia sesję; `/logowanie` przekierowuje gotowego admina na `/zlecenia`.
-- Tworząc nową trasę wymagającą logowania, wołaj `await requireSession()` na serwerze albo dopisz ścieżkę do listy publicznych tras w `layout.tsx`.
+- **Middleware (`middleware.ts`)** automatycznie przekierowuje niezalogowanych użytkowników na `/logowanie` dla wszystkich stron oprócz publicznych (`/logowanie`, `/setup`, `/_next/*`, `/api/auth/*`).
+- **KAŻDA nowa chroniona strona** (`page.tsx`) MUSI zaczynać się od `await requireSession()` lub `await requireRole(['ADMIN'])` - middleware sprawdza tylko cookie, a `requireSession()` weryfikuje ważność sesji w bazie.
+- Tworząc nową publiczną trasę (dostępną bez logowania), dodaj ją do listy `PUBLIC_PATHS` w `middleware.ts`.
 
 ## UI i UX
 - Celujemy w nowoczesny panel SaaS 2025: jasna paleta, pastelowe akcenty, miękkie cienie, szybkie skanowanie KPI.

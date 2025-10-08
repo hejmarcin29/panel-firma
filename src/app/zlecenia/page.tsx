@@ -18,6 +18,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty'
+import { requireSession } from '@/lib/auth'
 import { getDeliveriesSnapshot } from '@/lib/deliveries'
 import { getInstallationsSnapshot } from '@/lib/installations'
 import { getOrdersDashboardData } from '@/lib/orders'
@@ -33,6 +34,7 @@ export const metadata = {
 }
 
 export default async function OrdersPage() {
+  await requireSession();
   const [{ metrics, stageDistribution, orders }, installationsSnapshot, deliveriesSnapshot] = await Promise.all([
     getOrdersDashboardData(50),
     getInstallationsSnapshot(5),

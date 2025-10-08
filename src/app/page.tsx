@@ -1,4 +1,5 @@
 import { DashboardOverview } from "./_components/dashboard-overview";
+import { requireSession } from "@/lib/auth";
 import { getDeliveriesSnapshot } from "@/lib/deliveries";
 import { getInstallationsSnapshot } from "@/lib/installations";
 import { getClientsDashboardData } from "@/lib/clients";
@@ -11,6 +12,7 @@ export const metadata = {
 };
 
 export default async function HomePage() {
+  await requireSession();
   const [dashboardData, usersMetrics, installationsSnapshot, deliveriesSnapshot, clientsDashboard] = await Promise.all([
     getOrdersDashboardData(20),
     getUsersMetrics(),

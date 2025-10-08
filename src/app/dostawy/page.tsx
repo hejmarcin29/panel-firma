@@ -38,6 +38,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { requireSession } from "@/lib/auth";
 import {
   deliveryStageBadgeClasses,
   getDeliveriesSnapshot,
@@ -67,6 +68,7 @@ const formatRelativeDate = (value: Date | null | undefined) => {
 };
 
 export default async function DostawyPage({ searchParams }: DostawyPageProps) {
+  await requireSession();
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const highlightedDeliveryRaw = resolvedSearchParams?.delivery ?? "";
   const highlightedDelivery = highlightedDeliveryRaw.trim();
