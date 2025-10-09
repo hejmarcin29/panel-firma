@@ -1,9 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { eq } from "drizzle-orm";
 
 import { requireRole } from "@/lib/auth";
 import { createUser, updateUser } from "@/lib/users";
+import { generateSecurePassword, hashPassword } from "@/lib/password";
+import { db } from "@db/index";
+import { users } from "@db/schema";
 import {
   createUserSchema,
   updateUserSchema,
@@ -246,4 +250,62 @@ export async function updateUserAction(
   }
 
   return { status: "success", message: "Zmiany zostały zapisane." };
+}
+
+interface ResetPasswordState {
+  status: 'idle' | 'pending' | 'success' | 'error'
+  message?: string
+  newPassword?: string
+}
+
+export async function resetUserPasswordAction(
+  _prevState: ResetPasswordState,
+  formData: FormData,
+): Promise<ResetPasswordState> {
+  try {
+    await requireRole(["ADMIN"]);
+
+    const userId = toTrimmedString(formData.get("userId"));
+    
+    if (!userId) {
+      return {
+        status: "error",
+        message: "Nie podano ID użytkownika.",
+      };
+    }
+
+    // Wygeneruj nowe hasło
+    const newPassword = generateSecurePassword();
+    const passwordHash = await hashPassword(newPassword);
+
+    // Zaktualizuj hasło w bazie
+    const now = new Date();
+    await db
+      .update(users)
+      .set({
+        passwordHash,
+        updatedAt: now,
+      })
+      .where(eq(users.id, userId));
+
+    revalidatePath("/uzytkownicy");
+
+    return {
+      status: "success",
+      message: "Nowe hasło zostało wygenerowane.",
+      newPassword,
+    };
+  } catch (error) {
+    if (error instanceof Error) {
+      return {
+        status: "error",
+        message: error.message,
+      };
+    }
+
+    return {
+      status: "error",
+      message: "Nie udało się zresetować hasła.",
+    };
+  }
 }

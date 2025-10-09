@@ -19,14 +19,26 @@ import { updateUserAction } from '../actions'
 import { INITIAL_UPDATE_USER_FORM_STATE } from '../form-state'
 import { UserForm, type UserFormDefaultValues } from './user-form'
 
-export function EditUserDialog({ user }: { user: UserListItem }) {
-  const [open, setOpen] = useState(false)
+export function EditUserDialog({ 
+  user,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+}: { 
+  user: UserListItem
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+}) {
+  const [internalOpen, setInternalOpen] = useState(false)
   const [formKey, setFormKey] = useState(0)
   const formRef = useRef<HTMLFormElement>(null)
   const [state, formAction] = useActionState<UpdateUserFormState, FormData>(
     updateUserAction,
     INITIAL_UPDATE_USER_FORM_STATE,
   )
+
+  const isControlled = controlledOpen !== undefined
+  const open = isControlled ? controlledOpen : internalOpen
+  const setOpen = isControlled ? (controlledOnOpenChange ?? (() => {})) : setInternalOpen
 
   useEffect(() => {
     if (state.status === 'success') {

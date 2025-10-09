@@ -24,21 +24,21 @@ export default async function LoginPage() {
       <section className="flex w-full max-w-6xl flex-col items-center gap-6 text-center">
         <div className="space-y-3">
           <span className="inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-4 py-1 text-xs font-medium uppercase tracking-wide text-primary">
-            Panel zarządzania firmą
+            Panel zarządzania
           </span>
           <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-            Witaj ponownie w centrum operacyjnym
+            Witaj w centrum operacyjnym
           </h1>
           <p className="mx-auto max-w-xl text-sm text-muted-foreground sm:text-base">
-            Zaloguj się, aby nadzorować sprzedaż, montaże, dostawy i obsługę partnerów w jednym miejscu. Twoja sesja
-            pozostaje zabezpieczona za pomocą tokenu w przeglądarce.
+            Zaloguj się, aby zarządzać zleceniami, montażami, dostawami i współpracą z partnerami. 
+            Panel dostępny dla administratorów, montażystów i architektów.
           </p>
         </div>
 
         <LoginForm className="mt-4" />
 
         <p className="max-w-md text-xs text-muted-foreground">
-          Masz problem z logowaniem? Skontaktuj się z administratorem w celu resetu hasła lub odnowienia uprawnień.
+          Masz problem z logowaniem? Skontaktuj się z administratorem w celu resetu hasła lub nadania uprawnień.
         </p>
       </section>
     </main>

@@ -120,16 +120,20 @@ export default async function RootLayout({
   const currentPath = await resolveCurrentPath();
   const isProtectedRoute = !isPublicPath(currentPath);
   const session = await getCurrentSession();
+  
+  // Jeśli brak sesji, nie pokazuj nawigacji (niezależnie od ścieżki)
+  const shouldShowNavigation = isProtectedRoute && session !== null;
+  
   const rawName = session?.user.name;
   const rawUsername = session?.user.username;
-  const displayName = rawName ?? rawUsername ?? (isProtectedRoute ? "Użytkownik" : "Gość");
+  const displayName = rawName ?? rawUsername ?? (shouldShowNavigation ? "Użytkownik" : "Gość");
   const initials = getUserInitials(rawName ?? displayName, rawUsername);
   const roleLabel = session?.user.role ? userRoleLabels[session.user.role as keyof typeof userRoleLabels] ?? session.user.role : null;
 
   return (
     <html lang="pl">
       <body className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-background text-foreground antialiased`}>
-        {isProtectedRoute ? (
+        {shouldShowNavigation ? (
           <AppShell
             user={{
               displayName,
