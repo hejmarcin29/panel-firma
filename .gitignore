@@ -39,3 +39,31 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+<<<<<<< HEAD
+=======
+# SQLite runtime
+*.db
+*.db-wal
+*.db-shm
+data/*.db
+data/*.db-wal
+data/*.db-shm
+
+
+# local editor settings
+.vscode/
+.idea/
+
+# runtime data (persisted on server)
+uploads/
+backups/
+
+# env/secrets
+app.env
+
+# local compose overrides
+docker-compose.override.yml
+
+.eslintcache
+
+>>>>>>> dababeff8c8f75bf6fcf08091018b9a035607b77
