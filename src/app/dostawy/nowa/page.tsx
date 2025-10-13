@@ -1,9 +1,11 @@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { requireRole } from '@/lib/auth'
 import { listClientsForSelect } from '@/lib/clients'
 import { deliveryStageLabels, deliveryTypeLabels } from '@/lib/deliveries'
 import { listOrdersForSelect } from '@/lib/orders'
 import { listProductsForSelect } from '@/lib/products'
+import { listPartnersForSelect } from '@/lib/partners'
 import { deliveryStages, deliveryTypes } from '@db/schema'
 import { Boxes, ClipboardList, Truck } from 'lucide-react'
 
@@ -23,16 +25,19 @@ type NewDeliveryPageProps = {
 }
 
 export default async function NewDeliveryPage({ searchParams }: NewDeliveryPageProps) {
+  await requireRole(['ADMIN'])
+  
   const resolvedSearchParams = searchParams ? await searchParams : undefined
   const preselectedClientId = resolvedSearchParams?.clientId ?? null
   const preselectedOrderId = resolvedSearchParams?.orderId ?? null
   const preselectedType = resolvedSearchParams?.type ?? null
 
-  const [clients, orders, panelProducts, baseboardProducts] = await Promise.all([
+  const [clients, orders, panelProducts, baseboardProducts, partners] = await Promise.all([
     listClientsForSelect(),
     listOrdersForSelect({ stages: ['BEFORE_DELIVERY', 'RECEIVED', 'BEFORE_INSTALLATION', 'AWAITING_FINAL_PAYMENT', 'BEFORE_QUOTE', 'BEFORE_MEASUREMENT'] }),
     listProductsForSelect({ types: ['PANEL'] }),
     listProductsForSelect({ types: ['BASEBOARD'] }),
+    listPartnersForSelect(),
   ])
 
   const typeOptions = deliveryTypes
@@ -99,6 +104,7 @@ export default async function NewDeliveryPage({ searchParams }: NewDeliveryPageP
 
       <NewDeliveryForm
         clients={clients}
+        partners={partners.map((partner) => ({ id: partner.id, label: partner.label }))}
         orders={orders.map((order) => ({ id: order.id, label: order.label }))}
         panelProducts={panelProducts.map((product) => ({ id: product.id, label: product.label }))}
         baseboardProducts={baseboardProducts.map((product) => ({ id: product.id, label: product.label }))}

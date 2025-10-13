@@ -1,10 +1,13 @@
 import { DashboardOverview } from "./_components/dashboard-overview";
+import { InstallerDashboard } from "./_components/installer-dashboard";
 import { requireSession } from "@/lib/auth";
 import { getDeliveriesSnapshot } from "@/lib/deliveries";
 import { getInstallationsSnapshot } from "@/lib/installations";
 import { getClientsDashboardData } from "@/lib/clients";
 import { getOrdersDashboardData } from "@/lib/orders";
 import { getUsersMetrics } from "@/lib/users";
+import { getMeasurementsSnapshot } from "@/lib/measurements";
+import { getInstallationDeliveriesSnapshot } from "@/lib/installation-deliveries";
 
 export const metadata = {
   title: "Dashboard",
@@ -12,7 +15,30 @@ export const metadata = {
 };
 
 export default async function HomePage() {
-  await requireSession();
+  const session = await requireSession();
+  
+  // MONTER widzi dedykowany dashboard
+  if (session.user.role === 'MONTER') {
+    const installerFilters = { assignedInstallerId: session.user.id };
+    const measurerFilters = { assignedMeasurerId: session.user.id };
+    
+    const [installations, measurements, deliveries] = await Promise.all([
+      getInstallationsSnapshot(10, installerFilters),
+      getMeasurementsSnapshot(6, measurerFilters),
+      getInstallationDeliveriesSnapshot(5, installerFilters),
+    ]);
+    
+    return (
+      <InstallerDashboard
+        userName={session.user.name || 'Monterze'}
+        installations={installations}
+        measurements={measurements}
+        deliveries={deliveries}
+      />
+    );
+  }
+  
+  // ADMIN widzi pełny dashboard
   const [dashboardData, usersMetrics, installationsSnapshot, deliveriesSnapshot, clientsDashboard] = await Promise.all([
     getOrdersDashboardData(20),
     getUsersMetrics(),

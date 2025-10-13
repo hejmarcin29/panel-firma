@@ -37,8 +37,14 @@ type MontazePageProps = {
 };
 
 export default async function MontazePage({ searchParams }: MontazePageProps) {
-  await requireSession();
-  const { snapshot, list } = await getInstallationsDashboardData(60);
+  const session = await requireSession();
+  
+  // Dla MONTER: filtruj tylko montaże przypisane do niego
+  const installationFilters = session.user.role === 'MONTER' 
+    ? { assignedInstallerId: session.user.id }
+    : {};
+  
+  const { snapshot, list } = await getInstallationsDashboardData(60, installationFilters);
 
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const initialQueryRaw = resolvedSearchParams?.q ?? "";
@@ -116,22 +122,26 @@ export default async function MontazePage({ searchParams }: MontazePageProps) {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <Button asChild className="rounded-full bg-emerald-600 px-5 py-2 text-sm font-semibold text-emerald-50 shadow-lg shadow-emerald-500/20 hover:bg-emerald-700">
-              <Link href="/montaze/nowy">
-                <HardHat className="mr-2 size-4" aria-hidden />
-                Zaplanuj montaż
-              </Link>
-            </Button>
-            <Button
-              variant="outline"
-              asChild
-              className="rounded-full border-emerald-500/60 px-5 py-2 text-sm font-semibold text-emerald-600 shadow-sm"
-            >
-              <Link href="/montaze/nowa-dostawa">
-                <PlusCircle className="mr-2 size-4" aria-hidden />
-                Dodaj dostawę pod montaż
-              </Link>
-            </Button>
+            {session.user.role === 'ADMIN' && (
+              <>
+                <Button asChild className="rounded-full bg-emerald-600 px-5 py-2 text-sm font-semibold text-emerald-50 shadow-lg shadow-emerald-500/20 hover:bg-emerald-700">
+                  <Link href="/montaze/nowy">
+                    <HardHat className="mr-2 size-4" aria-hidden />
+                    Zaplanuj montaż
+                  </Link>
+                </Button>
+                <Button
+                  variant="outline"
+                  asChild
+                  className="rounded-full border-emerald-500/60 px-5 py-2 text-sm font-semibold text-emerald-600 shadow-sm"
+                >
+                  <Link href="/montaze/nowa-dostawa">
+                    <PlusCircle className="mr-2 size-4" aria-hidden />
+                    Dodaj dostawę pod montaż
+                  </Link>
+                </Button>
+              </>
+            )}
             <Button
               variant="ghost"
               asChild

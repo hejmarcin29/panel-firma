@@ -152,7 +152,7 @@ export async function getCurrentSession(): Promise<SessionInfo | null> {
     .where(eq(sessions.tokenHash, tokenHash));
 
   if (!sessionWithUser) {
-    cookieStore.delete(SESSION_COOKIE_NAME);
+    // Nie możemy usuwać cookie w Server Component - middleware to zrobi
     return null;
   }
 
@@ -161,7 +161,7 @@ export async function getCurrentSession(): Promise<SessionInfo | null> {
 
   if (session.expiresAt.getTime() <= now.getTime()) {
     await db.delete(sessions).where(eq(sessions.id, session.id));
-    cookieStore.delete(SESSION_COOKIE_NAME);
+    // Nie możemy usuwać cookie w Server Component - middleware to zrobi
     return null;
   }
 

@@ -3,19 +3,10 @@
 import * as React from 'react'
 import { format, formatDistanceToNow } from 'date-fns'
 import { pl } from 'date-fns/locale'
-import { MoreHorizontal, Pencil, Key, Users as UsersIcon } from 'lucide-react'
+import { Users as UsersIcon } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -37,8 +28,7 @@ import type { RoleBreakdownEntry, UserListItem, UsersMetrics } from '@/lib/users
 import { userRoleLabels } from '@/lib/user-roles'
 import type { UserRole } from '@/lib/user-roles'
 import { CreateUserDialog } from './_components/create-user-dialog'
-import { EditUserDialog } from './_components/edit-user-dialog'
-import { ResetPasswordDialog } from './_components/reset-password-dialog'
+import { UserRowActions } from './_components/user-row-actions'
 
 const ROLE_FILTER_ALL = 'ALL'
 
@@ -94,8 +84,6 @@ export function UsersTable({
 }) {
   const [roleFilter, setRoleFilter] = React.useState<string>(ROLE_FILTER_ALL)
   const [query, setQuery] = React.useState('')
-  const [editingUser, setEditingUser] = React.useState<UserListItem | null>(null)
-  const [resetPasswordUser, setResetPasswordUser] = React.useState<UserListItem | null>(null)
 
   const filteredUsers = React.useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
@@ -232,30 +220,7 @@ export function UsersTable({
                     {formatDate(user.createdAt)}
                   </TableCell>
                   <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 rounded-full border border-border/40 text-muted-foreground hover:text-primary"
-                          aria-label={`Akcje dla użytkownika ${user.username}`}
-                        >
-                          <MoreHorizontal className="size-4" aria-hidden />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuLabel>Akcje</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => setEditingUser(user)}>
-                          <Pencil className="mr-2 size-4" />
-                          Edytuj dane
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setResetPasswordUser(user)}>
-                          <Key className="mr-2 size-4" />
-                          Pokaż hasło
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <UserRowActions user={user} />
                   </TableCell>
                 </TableRow>
               ))
@@ -263,22 +228,6 @@ export function UsersTable({
           </TableBody>
         </Table>
       </div>
-
-      {editingUser && (
-        <EditUserDialog 
-          user={editingUser} 
-          open={!!editingUser}
-          onOpenChange={(open: boolean) => !open && setEditingUser(null)}
-        />
-      )}
-      
-      {resetPasswordUser && (
-        <ResetPasswordDialog
-          user={resetPasswordUser}
-          open={!!resetPasswordUser}
-          onOpenChange={(open: boolean) => !open && setResetPasswordUser(null)}
-        />
-      )}
     </div>
   )
 }

@@ -1,5 +1,6 @@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { requireRole } from '@/lib/auth'
 import { deliveryStageLabels } from '@/lib/deliveries'
 import { listInstallationsForSelect } from '@/lib/installations'
 import { listProductsForSelect } from '@/lib/products'
@@ -23,6 +24,8 @@ type InstallationDeliveryPageProps = {
 }
 
 export default async function InstallationDeliveryPage({ searchParams }: InstallationDeliveryPageProps) {
+  await requireRole(['ADMIN'])
+  
   const resolvedSearchParams = searchParams ? await searchParams : undefined
   const requestedOrderIdRaw = resolvedSearchParams?.orderId?.trim()
   const requestedOrderId = requestedOrderIdRaw && requestedOrderIdRaw.length > 0 ? requestedOrderIdRaw : undefined

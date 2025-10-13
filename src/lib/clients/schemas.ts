@@ -41,4 +41,5 @@ export type CreateClientFormErrors = Partial<Record<keyof CreateClientInput, str
 
 export type CreateClientFormState =
   | { status: "idle" }
-  | { status: "error"; message?: string; errors?: CreateClientFormErrors };
+  | { status: "error"; message?: string; errors?: CreateClientFormErrors }
+  | { status: "success"; clientId: string; clientName: string };

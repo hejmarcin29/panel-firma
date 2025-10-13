@@ -7,7 +7,7 @@ import {
   ClipboardList,
   FileText,
   HardHat,
-  LayoutDashboard,
+  Home,
   Package,
   Settings2,
   Truck,
@@ -30,52 +30,94 @@ import {
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
 
-const navigation = [
+type NavigationItem = {
+  title: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
+  roles?: string[];
+};
+
+type NavigationSection = {
+  title: string;
+  badge: string | null;
+  items: NavigationItem[];
+  roles?: string[];
+};
+
+const navigation: NavigationSection[] = [
   {
     title: "Panel",
-    badge: null as string | null,
+    badge: null,
     items: [
-      { title: "Dashboard", href: "/", icon: LayoutDashboard },
-      { title: "Zlecenia", href: "/zlecenia", icon: ClipboardList },
-      { title: "Dostawy", href: "/dostawy", icon: Truck },
-      { title: "Montaże", href: "/montaze", icon: HardHat },
-      { title: "Dostawy pod montaż", href: "/dostawy-pod-montaz", icon: Package },
-      { title: "Pomiary", href: "/pomiary", icon: LineChart },
+      { title: "Strona główna", href: "/", icon: Home, roles: ["ADMIN", "MONTER", "PARTNER"] },
+      { title: "Zlecenia", href: "/zlecenia", icon: ClipboardList, roles: ["ADMIN", "MONTER"] },
+      { title: "Dostawy", href: "/dostawy", icon: Truck, roles: ["ADMIN"] },
+      { title: "Montaże", href: "/montaze", icon: HardHat, roles: ["ADMIN", "MONTER"] },
+      { title: "Dostawy pod montaż", href: "/dostawy-pod-montaz", icon: Package, roles: ["ADMIN", "MONTER"] },
+      { title: "Pomiary", href: "/pomiary", icon: LineChart, roles: ["ADMIN", "MONTER"] },
     ],
   },
   {
     title: "CRM",
-    badge: null as string | null,
+    badge: null,
     items: [
-      { title: "Klienci", href: "/klienci", icon: UsersIcon },
-      { title: "Partnerzy", href: "/partnerzy", icon: Handshake },
+      { title: "Klienci", href: "/klienci", icon: UsersIcon, roles: ["ADMIN"] },
+      { title: "Partnerzy", href: "/partnerzy", icon: Handshake, roles: ["ADMIN"] },
     ],
+    roles: ["ADMIN"],
   },
   {
     title: "Katalog",
-    badge: null as string | null,
+    badge: null,
     items: [
-      { title: "Produkty", href: "/produkty", icon: Package },
-      { title: "Pliki", href: "/pliki", icon: FileText },
+      { title: "Produkty", href: "/produkty", icon: Package, roles: ["ADMIN"] },
+      { title: "Pliki", href: "/pliki", icon: FileText, roles: ["ADMIN"] },
     ],
+    roles: ["ADMIN"],
   },
   {
     title: "Administracja",
-    badge: null as string | null,
+    badge: null,
     items: [
-      { title: "Użytkownicy", href: "/uzytkownicy", icon: UsersIcon },
-      { title: "Logi", href: "/logi", icon: ActivitySquare },
-      { title: "Ustawienia", href: "/ustawienia", icon: Settings2 },
+      { title: "Użytkownicy", href: "/uzytkownicy", icon: UsersIcon, roles: ["ADMIN"] },
+      { title: "Logi", href: "/logi", icon: ActivitySquare, roles: ["ADMIN"] },
+      { title: "Ustawienia", href: "/ustawienia", icon: Settings2, roles: ["ADMIN"] },
     ],
+    roles: ["ADMIN"],
   },
 ];
 
 export function AppSidebar({
   notifications = 0,
+  userRole = null,
 }: {
   notifications?: number;
+  userRole?: string | null;
 }) {
   const pathname = usePathname();
+
+  // Filtrowanie sekcji i elementów według roli użytkownika
+  const filteredNavigation = navigation
+    .filter((section) => {
+      // Jeśli sekcja ma określone role, sprawdź czy użytkownik ma dostęp
+      if (section.roles && userRole) {
+        return section.roles.includes(userRole);
+      }
+      // Jeśli sekcja nie ma ograniczeń, pokaż ją
+      return true;
+    })
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => {
+        // Filtruj elementy według roli
+        if (item.roles && userRole) {
+          return item.roles.includes(userRole);
+        }
+        // Jeśli element nie ma ograniczeń, pokaż go
+        return true;
+      }),
+    }))
+    .filter((section) => section.items.length > 0); // Usuń puste sekcje
 
   return (
     <Sidebar collapsible="icon">
@@ -91,7 +133,7 @@ export function AppSidebar({
         </Link>
       </SidebarHeader>
       <SidebarContent>
-        {navigation.map((section) => (
+        {filteredNavigation.map((section) => (
           <SidebarGroup key={section.title}>
             <SidebarGroupLabel>{section.title}</SidebarGroupLabel>
             <SidebarGroupContent>

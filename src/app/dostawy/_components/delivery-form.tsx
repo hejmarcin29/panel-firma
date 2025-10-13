@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { AddClientDialog } from '@/components/clients/add-client-dialog'
 
 import { INITIAL_DELIVERY_FORM_STATE } from '../initial-state'
 
@@ -66,6 +67,7 @@ export type DeliveryFormInitialValues = {
 type DeliveryFormProps = {
   mode: 'create' | 'edit'
   clients: ClientOption[]
+  partners?: SelectOption[]
   orders: SelectOption[]
   panelProducts: SelectOption[]
   baseboardProducts: SelectOption[]
@@ -119,6 +121,7 @@ function SubmitButton({ idleLabel, pendingLabel }: SubmitButtonProps) {
 export function DeliveryForm({
   mode,
   clients,
+  partners = [],
   orders,
   panelProducts,
   baseboardProducts,
@@ -138,10 +141,26 @@ export function DeliveryForm({
 
   const initialClientId = initialValues?.clientId ?? defaultClientId ?? ''
   const [selectedClientId, setSelectedClientId] = useState<string>(initialClientId)
+  const [clientsList, setClientsList] = useState<ClientOption[]>(clients)
+  
   const selectedClient = useMemo(
-    () => clients.find((client) => client.id === selectedClientId) ?? null,
-    [clients, selectedClientId],
+    () => clientsList.find((client) => client.id === selectedClientId) ?? null,
+    [clientsList, selectedClientId],
   )
+
+  // Callback do obsługi nowo dodanego klienta
+  const handleClientCreated = (clientId: string, clientName: string) => {
+    const newClient: ClientOption = {
+      id: clientId,
+      label: clientName,
+      street: null,
+      city: null,
+      postalCode: null,
+    }
+    setClientsList((prev) => [...prev, newClient])
+    setSelectedClientId(clientId)
+    setUseClientAddress(false)
+  }
 
   const [useClientAddress, setUseClientAddress] = useState(() =>
     initialValues?.shippingAddressStreet || initialValues?.shippingAddressCity || initialValues?.shippingAddressPostalCode
@@ -185,12 +204,24 @@ export function DeliveryForm({
       {selectedType ? <input type="hidden" name="type" value={selectedType} /> : null}
 
       <Card className="border border-border/60 shadow-lg shadow-orange-500/10">
-        <CardHeader className="space-y-2">
-          <CardTitle className="flex items-center gap-2 text-lg text-foreground">
-            <Truck className="size-5 text-orange-600" aria-hidden />
-            {mode === 'create' ? 'Szczegóły dostawy' : 'Edytuj dostawę'}
-          </CardTitle>
-          <CardDescription>Ustal podstawowe informacje o dostawie i powiązaniach ze zleceniem.</CardDescription>
+        <CardHeader className="space-y-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div className="space-y-2">
+              <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+                <Truck className="size-5 text-orange-600" aria-hidden />
+                {mode === 'create' ? 'Szczegóły dostawy' : 'Edytuj dostawę'}
+              </CardTitle>
+              <CardDescription>Ustal podstawowe informacje o dostawie i powiązaniach ze zleceniem.</CardDescription>
+            </div>
+            {mode === 'create' ? (
+              <AddClientDialog
+                partners={partners}
+                onClientCreated={handleClientCreated}
+                triggerVariant="link"
+                triggerClassName="text-orange-600 hover:text-orange-700"
+              />
+            ) : null}
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
@@ -218,7 +249,7 @@ export function DeliveryForm({
                 <option value="" disabled>
                   Wybierz klienta…
                 </option>
-                {clients.map((client) => (
+                {clientsList.map((client) => (
                   <option key={client.id} value={client.id}>
                     {client.label}
                   </option>

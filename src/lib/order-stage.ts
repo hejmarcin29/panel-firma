@@ -22,6 +22,20 @@ export const orderStageLabels: Record<OrderStage, string> = {
   COMPLETED: "Koniec",
 };
 
+/**
+ * Krótsze etykiety etapów dla montera - bardziej operacyjne
+ */
+export const orderStageLabelsShort: Record<OrderStage, string> = {
+  RECEIVED: "Przyjęto",
+  BEFORE_MEASUREMENT: "Pomiar",
+  BEFORE_QUOTE: "Wycena",
+  AWAITING_DEPOSIT: "Zaliczka",
+  BEFORE_DELIVERY: "Dostawa",
+  BEFORE_INSTALLATION: "Montaż",
+  AWAITING_FINAL_PAYMENT: "Końcówka",
+  COMPLETED: "Zakończono",
+};
+
 export const orderStageBadgeClasses: Partial<Record<OrderStage, string>> = {
   RECEIVED: "bg-muted text-foreground",
   BEFORE_MEASUREMENT: "bg-blue-100 text-blue-600 dark:bg-blue-500/15 dark:text-blue-200",

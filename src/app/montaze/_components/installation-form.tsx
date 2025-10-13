@@ -13,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { AddClientDialog } from '@/components/clients/add-client-dialog'
 
 import { INITIAL_INSTALLATION_FORM_STATE } from '../form-state'
 
@@ -69,6 +70,7 @@ export type InstallationFormInitialValues = {
 type InstallationFormProps = {
   mode: 'create' | 'edit'
   clients: ClientOption[]
+  partners?: SelectOption[]
   orders?: SelectOption[]
   installers: SelectOption[]
   panelProducts: SelectOption[]
@@ -121,6 +123,7 @@ function SubmitButton({ idleLabel, pendingLabel }: SubmitButtonProps) {
 export function InstallationForm({
   mode,
   clients,
+  partners = [],
   orders = [],
   installers,
   panelProducts,
@@ -140,10 +143,28 @@ export function InstallationForm({
 
   const initialClientId = initialValues?.clientId ?? defaultClientId ?? ''
   const [selectedClientId, setSelectedClientId] = useState<string>(initialClientId)
+  const [clientsList, setClientsList] = useState<ClientOption[]>(clients)
+  
   const selectedClient = useMemo(
-    () => clients.find((client) => client.id === selectedClientId) ?? null,
-    [clients, selectedClientId],
+    () => clientsList.find((client) => client.id === selectedClientId) ?? null,
+    [clientsList, selectedClientId],
   )
+
+  // Callback do obsługi nowo dodanego klienta
+  const handleClientCreated = (clientId: string, clientName: string) => {
+    // Dodaj nowego klienta do listy
+    const newClient: ClientOption = {
+      id: clientId,
+      label: clientName,
+      street: null,
+      city: null,
+      postalCode: null,
+    }
+    setClientsList((prev) => [...prev, newClient])
+    // Automatycznie wybierz nowego klienta
+    setSelectedClientId(clientId)
+    setUseClientAddress(false) // Nowy klient nie ma adresu
+  }
 
   const hasCustomAddress = Boolean(
     initialValues?.addressStreet || initialValues?.addressCity || initialValues?.addressPostalCode,
@@ -235,14 +256,26 @@ export function InstallationForm({
     <form className="space-y-6 pb-24 md:pb-16 lg:pb-12" action={action}>
       {installationId ? <input type="hidden" name="installationId" value={installationId} /> : null}
       <Card className="border border-border/60 shadow-lg shadow-emerald-500/10">
-        <CardHeader className="space-y-2">
-          <CardTitle className="flex items-center gap-2 text-lg text-foreground">
-            <HardHat className="size-5 text-emerald-600" aria-hidden />
-            {mode === 'create' ? 'Konfiguracja montażu' : 'Edytuj montaż'}
-          </CardTitle>
-          <CardDescription>
-            Wybierz klienta, ekipę oraz status. Jeśli nie wskażesz istniejącego zlecenia, utworzymy je automatycznie.
-          </CardDescription>
+        <CardHeader className="space-y-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div className="space-y-2">
+              <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+                <HardHat className="size-5 text-emerald-600" aria-hidden />
+                {mode === 'create' ? 'Konfiguracja montażu' : 'Edytuj montaż'}
+              </CardTitle>
+              <CardDescription>
+                Wybierz klienta, ekipę oraz status. Jeśli nie wskażesz istniejącego zlecenia, utworzymy je automatycznie.
+              </CardDescription>
+            </div>
+            {mode === 'create' ? (
+              <AddClientDialog
+                partners={partners}
+                onClientCreated={handleClientCreated}
+                triggerVariant="link"
+                triggerClassName="text-emerald-600 hover:text-emerald-700"
+              />
+            ) : null}
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
@@ -266,7 +299,7 @@ export function InstallationForm({
           ) : null}
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
-            <div className="space-y-2">
+            <div className="space-y-2 lg:col-span-1">
               <Label htmlFor="clientId">Klient</Label>
               <select
                 id="clientId"
@@ -283,7 +316,7 @@ export function InstallationForm({
                 <option value="" disabled>
                   Wybierz klienta…
                 </option>
-                {clients.map((client) => (
+                {clientsList.map((client) => (
                   <option key={client.id} value={client.id}>
                     {client.label}
                   </option>

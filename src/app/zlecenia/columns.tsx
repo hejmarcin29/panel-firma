@@ -7,14 +7,24 @@ import Link from 'next/link'
 
 import { Badge } from '@/components/ui/badge'
 import type { OrdersListItem } from '@/lib/orders'
-import { orderStageBadgeClasses, orderStageLabels } from '@/lib/order-stage'
+import { orderStageBadgeClasses, orderStageLabels, orderStageLabelsShort } from '@/lib/order-stage'
+import type { UserRole } from '@/lib/user-roles'
 
 const numberFormatter = new Intl.NumberFormat('pl-PL', {
   maximumFractionDigits: 1,
 })
 
-export const ordersColumns: ColumnDef<OrdersListItem>[] = [
-  {
+/**
+ * Generuje kolumny dla tabeli zleceń, dostosowane do roli użytkownika.
+ * MONTER widzi uproszczony widok (bez powierzchni, partnera, wartości).
+ */
+export function getOrdersColumns(userRole: UserRole): ColumnDef<OrdersListItem>[] {
+  const isMonter = userRole === 'MONTER'
+  
+  const columns: ColumnDef<OrdersListItem>[] = []
+  
+  // Kolumna: Zlecenie (widoczna dla wszystkich)
+  columns.push({
     accessorKey: 'orderNumber',
     header: 'Zlecenie',
     cell: ({ row }) => {
@@ -43,8 +53,10 @@ export const ordersColumns: ColumnDef<OrdersListItem>[] = [
         </div>
       )
     },
-  },
-  {
+  })
+  
+  // Kolumna: Klient (widoczna dla wszystkich)
+  columns.push({
     accessorKey: 'clientName',
     header: 'Klient',
     cell: ({ row }) => {
@@ -60,23 +72,28 @@ export const ordersColumns: ColumnDef<OrdersListItem>[] = [
         </div>
       )
     },
-  },
-  {
+  })
+  
+  // Kolumna: Etap (widoczna dla wszystkich, zmieniona nazwa dla MONTER)
+  columns.push({
     accessorKey: 'stage',
-    header: 'Status',
+    header: isMonter ? 'Etap' : 'Status',
     cell: ({ row }) => {
       const stage = row.original.stage
+      const stageLabels = isMonter ? orderStageLabelsShort : orderStageLabels
       return (
         <Badge
           variant="secondary"
           className={orderStageBadgeClasses[stage] ?? 'bg-muted text-foreground'}
         >
-          {orderStageLabels[stage]}
+          {stageLabels[stage]}
         </Badge>
       )
     },
-  },
-  {
+  })
+  
+  // Kolumna: Tryb (widoczna dla wszystkich)
+  columns.push({
     accessorKey: 'executionMode',
     header: 'Tryb',
     cell: ({ row }) => {
@@ -89,8 +106,10 @@ export const ordersColumns: ColumnDef<OrdersListItem>[] = [
 
       return <Badge className={`rounded-full px-3 py-1 text-xs ${badgeClass}`}>{label}</Badge>
     },
-  },
-  {
+  })
+  
+  // Kolumna: Powierzchnia (widoczna dla wszystkich)
+  columns.push({
     accessorKey: 'declaredFloorArea',
     header: 'Powierzchnia [m²]',
     cell: ({ getValue }) => {
@@ -101,8 +120,10 @@ export const ordersColumns: ColumnDef<OrdersListItem>[] = [
 
       return <span>{numberFormatter.format(value)}</span>
     },
-  },
-  {
+  })
+  
+  // Kolumna: Zadania (widoczna dla wszystkich)
+  columns.push({
     accessorKey: 'pendingTasks',
     header: 'Zadania',
     cell: ({ getValue }) => {
@@ -117,42 +138,64 @@ export const ordersColumns: ColumnDef<OrdersListItem>[] = [
         </Badge>
       )
     },
-  },
-  {
-    accessorKey: 'stageChangedAt',
-    header: 'Aktualizacja',
-    cell: ({ getValue }) => {
-      const value = getValue<Date>()
-      if (!value) {
-        return <span className="text-xs text-muted-foreground">—</span>
-      }
+  })
+  
+  // Kolumna: Aktualizacja (tylko dla ADMIN i PARTNER)
+  if (!isMonter) {
+    columns.push({
+      accessorKey: 'stageChangedAt',
+      header: 'Aktualizacja',
+      cell: ({ getValue }) => {
+        const value = getValue<Date>()
+        if (!value) {
+          return <span className="text-xs text-muted-foreground">—</span>
+        }
 
-      return (
-        <div className="flex flex-col text-xs">
-          <span className="font-medium text-foreground">
-            {formatDistanceToNow(value, { addSuffix: true, locale: pl })}
-          </span>
-          <span className="text-muted-foreground">
-            {format(value, 'dd MMM yyyy, HH:mm', { locale: pl })}
-          </span>
-        </div>
-      )
-    },
-  },
-  {
+        return (
+          <div className="flex flex-col text-xs">
+            <span className="font-medium text-foreground">
+              {formatDistanceToNow(value, { addSuffix: true, locale: pl })}
+            </span>
+            <span className="text-muted-foreground">
+              {format(value, 'dd MMM yyyy, HH:mm', { locale: pl })}
+            </span>
+          </div>
+        )
+      },
+    })
+  }
+  
+  // Kolumna: Termin realizacji (widoczna dla wszystkich)
+  columns.push({
     accessorKey: 'scheduledInstallationDate',
-    header: 'Plan montażu',
-    cell: ({ getValue }) => {
-      const value = getValue<Date | null>()
-      if (!value) {
+    header: 'Termin realizacji',
+    cell: ({ row }) => {
+      const order = row.original
+      const isDeliveryOnly = order.executionMode === 'DELIVERY_ONLY'
+      const date = isDeliveryOnly ? order.scheduledDeliveryDate : order.scheduledInstallationDate
+      
+      if (!date) {
         return <span className="text-xs text-muted-foreground">Nie zaplanowano</span>
       }
 
       return (
-        <span className="text-sm font-medium text-foreground">
-          {format(value, 'dd MMM', { locale: pl })}
-        </span>
+        <div className="flex flex-col gap-0.5">
+          <span className="text-sm font-medium text-foreground">
+            {format(date, 'dd MMM', { locale: pl })}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {isDeliveryOnly ? 'Dostawa' : 'Montaż'}
+          </span>
+        </div>
       )
     },
-  },
-]
+  })
+  
+  return columns
+}
+
+/**
+ * Stare kolumny dla zachowania kompatybilności wstecznej.
+ * @deprecated Użyj getOrdersColumns(userRole) zamiast tego.
+ */
+export const ordersColumns: ColumnDef<OrdersListItem>[] = getOrdersColumns('ADMIN')

@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 
 import { db } from "@db/index";
-import { attachments } from "@db/schema";
+import { attachments, orders } from "@db/schema";
 
 import { requireRole } from "@/lib/auth";
 import { uploadClientAttachment } from "@/lib/r2";
@@ -18,6 +18,7 @@ import {
   type CreateMeasurementFormErrors,
   type CreateMeasurementFormState,
 } from "@/lib/measurements/schemas";
+import { eq } from "drizzle-orm";
 
 const DATE_FIELDS = ["scheduledAt", "measuredAt", "deliveryDate"] as const;
 type DateField = (typeof DATE_FIELDS)[number];
@@ -161,6 +162,21 @@ export async function createMeasurementAction(
 
     const parsed = createMeasurementSchema.parse(payload);
     const files = extractFiles(formData);
+
+    // MONTER może tworzyć pomiary tylko dla swoich zleceń
+    if (session.user.role === 'MONTER') {
+      const order = await db.query.orders.findFirst({
+        where: eq(orders.id, parsed.orderId),
+        columns: { assignedInstallerId: true }
+      });
+
+      if (!order || order.assignedInstallerId !== session.user.id) {
+        return {
+          status: "error",
+          message: "Nie masz uprawnień do utworzenia pomiaru dla tego zlecenia.",
+        };
+      }
+    }
 
     const result = await createMeasurement(parsed, session.user.id);
 

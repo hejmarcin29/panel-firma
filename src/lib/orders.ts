@@ -1,10 +1,12 @@
-import { subDays } from "date-fns";
+ import { subDays } from "date-fns";
 import { and, count, desc, eq, gt, inArray, ne, sql } from "drizzle-orm";
 
 import { db } from "@db/index";
 import {
   clients,
+  deliveries,
   installations,
+  measurements,
   orderStatusHistory,
   orders,
   orderStages,
@@ -47,6 +49,7 @@ export type OrdersListItem = {
   requiresAdminAttention: boolean;
   pendingTasks: number;
   scheduledInstallationDate: Date | null;
+  scheduledDeliveryDate: Date | null;
   createdAt: Date;
 };
 
@@ -57,34 +60,123 @@ const emptyStageDistribution: StageDistributionEntry[] = orderStages.map((stage)
   count: 0,
 }));
 
-export async function getOrdersMetrics(): Promise<OrdersMetrics> {
+export type OrdersFilters = {
+  assignedInstallerId?: string;
+  clientId?: string;
+  partnerId?: string;
+};
+
+export async function getOrdersMetrics(filters?: OrdersFilters): Promise<OrdersMetrics> {
   const weekAgo = subDays(new Date(), 7);
+
+  // Dla assignedInstallerId: JOIN z measurements i installations (OR)
+  if (filters?.assignedInstallerId) {
+    const installerCondition = sql`(${measurements.assignedMeasurerId} = ${filters.assignedInstallerId} OR ${installations.assignedInstallerId} = ${filters.assignedInstallerId})`;
+    
+    const additionalFilters = [];
+    if (filters.clientId) {
+      additionalFilters.push(eq(orders.clientId, filters.clientId));
+    }
+    if (filters.partnerId) {
+      additionalFilters.push(eq(orders.partnerId, filters.partnerId));
+    }
+    
+    const baseWhere = additionalFilters.length > 0 
+      ? and(installerCondition, ...additionalFilters)
+      : installerCondition;
+
+    const [totalResult, requiringAttentionResult, newThisWeekResult, upcomingInstallationsResult, totalAreaResult] =
+      await Promise.all([
+        db
+          .select({ value: sql<number>`count(distinct ${orders.id})` })
+          .from(orders)
+          .leftJoin(measurements, eq(measurements.orderId, orders.id))
+          .leftJoin(installations, eq(installations.orderId, orders.id))
+          .where(baseWhere),
+        db
+          .select({ value: sql<number>`count(distinct ${orders.id})` })
+          .from(orders)
+          .leftJoin(measurements, eq(measurements.orderId, orders.id))
+          .leftJoin(installations, eq(installations.orderId, orders.id))
+          .where(and(baseWhere, eq(orders.requiresAdminAttention, true))),
+        db
+          .select({ value: sql<number>`count(distinct ${orders.id})` })
+          .from(orders)
+          .leftJoin(measurements, eq(measurements.orderId, orders.id))
+          .leftJoin(installations, eq(installations.orderId, orders.id))
+          .where(and(baseWhere, gt(orders.createdAt, weekAgo))),
+        db
+          .select({ value: count() })
+          .from(installations)
+          .where(
+            and(
+              eq(installations.assignedInstallerId, filters.assignedInstallerId),
+              eq(installations.status, "SCHEDULED"),
+              gt(installations.scheduledStartAt, new Date())
+            )
+          ),
+        db
+          .select({
+            value: sql<number>`coalesce(sum(distinct ${orders.declaredFloorArea}), 0)`
+          })
+          .from(orders)
+          .leftJoin(measurements, eq(measurements.orderId, orders.id))
+          .leftJoin(installations, eq(installations.orderId, orders.id))
+          .where(baseWhere),
+      ]);
+
+    return {
+      totalOrders: Number(totalResult[0]?.value ?? 0),
+      requiringAttention: Number(requiringAttentionResult[0]?.value ?? 0),
+      newThisWeek: Number(newThisWeekResult[0]?.value ?? 0),
+      scheduledInstallations: upcomingInstallationsResult[0]?.value ?? 0,
+      totalDeclaredFloorArea: totalAreaResult[0]?.value ?? 0,
+    };
+  }
+
+  // Standardowe filtrowanie bez assignedInstallerId
+  const filterConditions = [];
+  if (filters?.clientId) {
+    filterConditions.push(eq(orders.clientId, filters.clientId));
+  }
+  if (filters?.partnerId) {
+    filterConditions.push(eq(orders.partnerId, filters.partnerId));
+  }
+
+  const baseWhere = filterConditions.length > 0 ? and(...filterConditions) : undefined;
 
   const [totalResult, requiringAttentionResult, newThisWeekResult, upcomingInstallationsResult, totalAreaResult] =
     await Promise.all([
-      db.select({ value: count() }).from(orders),
+      db.select({ value: count() }).from(orders).where(baseWhere),
       db
         .select({ value: count() })
         .from(orders)
-        .where(eq(orders.requiresAdminAttention, true)),
+        .where(baseWhere ? and(baseWhere, eq(orders.requiresAdminAttention, true)) : eq(orders.requiresAdminAttention, true)),
       db
         .select({ value: count() })
         .from(orders)
-        .where(gt(orders.createdAt, weekAgo)),
+        .where(baseWhere ? and(baseWhere, gt(orders.createdAt, weekAgo)) : gt(orders.createdAt, weekAgo)),
       db
         .select({ value: count() })
         .from(installations)
         .where(
-          and(
-            eq(installations.status, "SCHEDULED"),
-            gt(installations.scheduledStartAt, new Date())
-          )
+          filters?.assignedInstallerId
+            ? and(
+                eq(installations.assignedInstallerId, filters.assignedInstallerId),
+                eq(installations.status, "SCHEDULED"),
+                gt(installations.scheduledStartAt, new Date())
+              )
+            : and(
+                eq(installations.status, "SCHEDULED"),
+                gt(installations.scheduledStartAt, new Date())
+              )
         ),
       db
         .select({
           value: sql<number>`coalesce(sum(${orders.declaredFloorArea}), 0)`
         })
-        .from(orders),
+        .from(orders)
+        .where(baseWhere),
     ]);
 
   return {
@@ -96,13 +188,65 @@ export async function getOrdersMetrics(): Promise<OrdersMetrics> {
   };
 }
 
-export async function getStageDistribution(): Promise<StageDistributionEntry[]> {
+export async function getStageDistribution(filters?: OrdersFilters): Promise<StageDistributionEntry[]> {
+  // Dla assignedInstallerId: musimy JOIN z measurements i installations (OR)
+  if (filters?.assignedInstallerId) {
+    const filterConditions = [
+      sql`(${measurements.assignedMeasurerId} = ${filters.assignedInstallerId} OR ${installations.assignedInstallerId} = ${filters.assignedInstallerId})`
+    ];
+    
+    if (filters.clientId) {
+      filterConditions.push(eq(orders.clientId, filters.clientId));
+    }
+    if (filters.partnerId) {
+      filterConditions.push(eq(orders.partnerId, filters.partnerId));
+    }
+
+    const rows = await db
+      .select({
+        stage: orders.stage,
+        count: sql<number>`count(distinct ${orders.id})`,
+      })
+      .from(orders)
+      .leftJoin(measurements, eq(measurements.orderId, orders.id))
+      .leftJoin(installations, eq(installations.orderId, orders.id))
+      .where(and(...filterConditions))
+      .groupBy(orders.stage)
+      .orderBy(orders.stage);
+
+    if (!rows.length) {
+      return emptyStageDistribution;
+    }
+
+    const resultMap = new Map<OrderStage, number>();
+    for (const entry of rows) {
+      resultMap.set(entry.stage, entry.count ?? 0);
+    }
+
+    return emptyStageDistribution.map((item) => ({
+      stage: item.stage,
+      count: resultMap.get(item.stage) ?? 0,
+    }));
+  }
+  
+  // Standardowe filtrowanie bez assignedInstallerId
+  const filterConditions = [];
+  if (filters?.clientId) {
+    filterConditions.push(eq(orders.clientId, filters.clientId));
+  }
+  if (filters?.partnerId) {
+    filterConditions.push(eq(orders.partnerId, filters.partnerId));
+  }
+
+  const baseWhere = filterConditions.length > 0 ? and(...filterConditions) : undefined;
+
   const rows = await db
     .select({
       stage: orders.stage,
       count: sql<number>`count(*)`,
     })
     .from(orders)
+    .where(baseWhere)
     .groupBy(orders.stage)
     .orderBy(orders.stage);
 
@@ -121,7 +265,29 @@ export async function getStageDistribution(): Promise<StageDistributionEntry[]> 
   }));
 }
 
-export async function getOrdersList(limit = 20): Promise<OrdersListItem[]> {
+export async function getOrdersList(limit = 20, filters?: OrdersFilters): Promise<OrdersListItem[]> {
+  // Buduj warunki filtrowania - dla assignedInstallerId filtrujemy przez measurements OR installations
+  const filterConditions = [];
+  
+  // Inne filtry bezpośrednio na orders
+  if (filters?.clientId) {
+    filterConditions.push(eq(orders.clientId, filters.clientId));
+  }
+  if (filters?.partnerId) {
+    filterConditions.push(eq(orders.partnerId, filters.partnerId));
+  }
+
+  const baseWhere = filterConditions.length > 0 ? and(...filterConditions) : undefined;
+  
+  // Dla assignedInstallerId: filtr przez measurements OR installations
+  const installerFilter = filters?.assignedInstallerId
+    ? sql`(${measurements.assignedMeasurerId} = ${filters.assignedInstallerId} OR ${installations.assignedInstallerId} = ${filters.assignedInstallerId})`
+    : undefined;
+  
+  const finalWhere = baseWhere && installerFilter
+    ? and(baseWhere, installerFilter)
+    : baseWhere ?? installerFilter;
+
   const rows = await db
     .select({
       id: orders.id,
@@ -142,13 +308,17 @@ export async function getOrdersList(limit = 20): Promise<OrdersListItem[]> {
         taskStatusesRequiringAttention
       )} then 1 else 0 end), 0)`,
       scheduledInstallationDate: sql<Date | null>`min(${installations.scheduledStartAt})`,
+      scheduledDeliveryDate: sql<Date | null>`min(${deliveries.scheduledDate})`,
       createdAt: orders.createdAt,
     })
     .from(orders)
     .leftJoin(clients, eq(orders.clientId, clients.id))
     .leftJoin(partners, eq(orders.partnerId, partners.id))
     .leftJoin(tasks, eq(tasks.relatedOrderId, orders.id))
+    .leftJoin(measurements, eq(measurements.orderId, orders.id))
     .leftJoin(installations, eq(installations.orderId, orders.id))
+    .leftJoin(deliveries, eq(deliveries.orderId, orders.id))
+    .where(finalWhere)
     .orderBy(desc(orders.stageChangedAt))
     .groupBy(
       orders.id,
@@ -184,15 +354,16 @@ export async function getOrdersList(limit = 20): Promise<OrdersListItem[]> {
     requiresAdminAttention: row.requiresAdminAttention,
     pendingTasks: Number(row.pendingTasks ?? 0),
     scheduledInstallationDate: row.scheduledInstallationDate ?? null,
+    scheduledDeliveryDate: row.scheduledDeliveryDate ?? null,
     createdAt: row.createdAt,
   }));
 }
 
-export async function getOrdersDashboardData(limit = 20) {
+export async function getOrdersDashboardData(limit = 20, filters?: OrdersFilters) {
   const [metrics, stageDistribution, ordersList] = await Promise.all([
-    getOrdersMetrics(),
-    getStageDistribution(),
-    getOrdersList(limit),
+    getOrdersMetrics(filters),
+    getStageDistribution(filters),
+    getOrdersList(limit, filters),
   ]);
 
   return {
@@ -393,7 +564,12 @@ export async function getOrderDetail(orderId: string) {
       scheduledEndAt: installation.scheduledEndAt,
       actualStartAt: installation.actualStartAt,
       actualEndAt: installation.actualEndAt,
+      assignedInstallerId: installation.assignedInstallerId ?? null,
       assignedInstallerName: installation.assignedInstaller?.name ?? installation.assignedInstaller?.username ?? null,
+      addressStreet: installation.addressStreet ?? null,
+      addressCity: installation.addressCity ?? null,
+      addressPostalCode: installation.addressPostalCode ?? null,
+      clientPhone: orderRecord.client?.phone ?? null,
       panelProductName: installation.panelProduct?.name ?? null,
       baseboardProductName: installation.baseboardProduct?.name ?? null,
       additionalWork: installation.additionalWork,
@@ -533,6 +709,9 @@ export async function createOrder(payload: CreateOrderInput, createdById: string
       note: created.stageNotes,
       createdAt: now,
     }).run();
+
+    // Uwaga: Synchronizacja montera do montaży nastąpi gdy montaż zostanie utworzony
+    // lub gdy zlecenie zostanie edytowane (patrz updateOrder)
 
     return created;
   });
@@ -694,6 +873,27 @@ export async function updateOrder(
         .run();
     }
 
+    // Synchronizuj montera do wszystkich montaży i pomiarów w tym zleceniu
+    if (record.assignedInstallerId !== undefined) {
+      tx
+        .update(installations)
+        .set({ 
+          assignedInstallerId: record.assignedInstallerId,
+          updatedAt: now
+        })
+        .where(eq(installations.orderId, updated.id))
+        .run();
+
+      tx
+        .update(measurements)
+        .set({ 
+          assignedMeasurerId: record.assignedInstallerId,
+          updatedAt: now
+        })
+        .where(eq(measurements.orderId, updated.id))
+        .run();
+    }
+
     return updated;
   });
 }
@@ -785,4 +985,25 @@ export async function listOrdersForSelect(options?: {
       assignedInstallerId: row.assignedInstallerId ?? null,
     };
   });
+}
+
+/**
+ * Synchronizuje przypisanego montera ze zlecenia do wszystkich jego montaży.
+ * Używane gdy admin zmienia montera na poziomie zlecenia.
+ * 
+ * @param orderId - ID zlecenia
+ * @param installerId - ID montera do przypisania (lub null aby usunąć)
+ */
+export async function syncOrderInstallerToInstallations(
+  orderId: string, 
+  installerId: string | null
+): Promise<void> {
+  await db
+    .update(installations)
+    .set({ 
+      assignedInstallerId: installerId,
+      updatedAt: new Date()
+    })
+    .where(eq(installations.orderId, orderId))
+    .run();
 }

@@ -5,6 +5,7 @@ import { ClipboardEdit, HardHat, Package, User2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { requireRole } from "@/lib/auth"
 import { listClientsForSelect } from "@/lib/clients"
 import { getOrderForEditing } from "@/lib/orders"
 import { orderStageLabels } from "@/lib/order-stage"
@@ -23,6 +24,8 @@ export const metadata = {
 type EditOrderPageParams = Promise<{ orderId: string }>
 
 export default async function EditOrderPage({ params }: { params: EditOrderPageParams }) {
+  await requireRole(['ADMIN'])
+  
   const resolvedParams = await params
   const orderId = resolvedParams.orderId
 

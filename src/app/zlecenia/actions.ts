@@ -116,7 +116,8 @@ export async function createOrderAction(
   formData: FormData,
 ): Promise<CreateOrderFormState> {
   try {
-    const session = await requireRole(["ADMIN", "MONTER"]);
+    // Tylko ADMIN może tworzyć nowe zlecenia
+    const session = await requireRole(["ADMIN"]);
 
     const payload = buildOrderPayload(formData);
 
@@ -143,6 +144,7 @@ export async function updateOrderAction(
   formData: FormData,
 ): Promise<CreateOrderFormState> {
   try {
+    // ADMIN i MONTER mogą edytować zlecenia (MONTER tylko swoje, weryfikacja w updateOrder)
     const session = await requireRole(["ADMIN", "MONTER"]);
 
     const payload = buildOrderPayload(formData);

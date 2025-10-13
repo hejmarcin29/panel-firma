@@ -23,7 +23,6 @@ import { getDeliveriesSnapshot } from '@/lib/deliveries'
 import { getInstallationsSnapshot } from '@/lib/installations'
 import { getOrdersDashboardData } from '@/lib/orders'
 
-import { ordersColumns } from './columns'
 import { orderStageLabels } from '@/lib/order-stage'
 import { OrdersTable } from './orders-table'
 import { StageDistributionSwitcher, type StageDistributionGroup } from './_components/stage-distribution-switcher'
@@ -34,10 +33,16 @@ export const metadata = {
 }
 
 export default async function OrdersPage() {
-  await requireSession();
+  const session = await requireSession();
+  
+  // Dla MONTER: filtruj tylko zlecenia przypisane do niego
+  const orderFilters = session.user.role === 'MONTER' 
+    ? { assignedInstallerId: session.user.id }
+    : {};
+  
   const [{ metrics, stageDistribution, orders }, installationsSnapshot, deliveriesSnapshot] = await Promise.all([
-    getOrdersDashboardData(50),
-    getInstallationsSnapshot(5),
+    getOrdersDashboardData(50, orderFilters),
+    getInstallationsSnapshot(5, session.user.role === 'MONTER' ? { assignedInstallerId: session.user.id } : {}),
     getDeliveriesSnapshot(5),
   ])
   const totalOrders = metrics.totalOrders || 0
@@ -126,15 +131,19 @@ export default async function OrdersPage() {
             <Button asChild className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90">
               <Link href="/montaze/nowy">Zaplanuj montaż</Link>
             </Button>
-            <Button variant="outline" asChild className="rounded-full border-primary/50 px-5 py-2 text-sm font-semibold text-primary shadow-sm">
-              <Link href="/dostawy/nowa">Zaplanuj dostawę</Link>
-            </Button>
-            <Button variant="ghost" asChild className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-muted-foreground hover:text-primary">
-              <Link href="/klienci">
-                <UserPlus2 className="size-4" aria-hidden />
-                Dodaj klienta
-              </Link>
-            </Button>
+            {session.user.role === 'ADMIN' && (
+              <>
+                <Button variant="outline" asChild className="rounded-full border-primary/50 px-5 py-2 text-sm font-semibold text-primary shadow-sm">
+                  <Link href="/dostawy/nowa">Zaplanuj dostawę</Link>
+                </Button>
+                <Button variant="ghost" asChild className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-muted-foreground hover:text-primary">
+                  <Link href="/klienci">
+                    <UserPlus2 className="size-4" aria-hidden />
+                    Dodaj klienta
+                  </Link>
+                </Button>
+              </>
+            )}
           </div>
           {highlightStage ? (
             <div className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-2 text-xs font-medium text-primary">
@@ -220,7 +229,7 @@ export default async function OrdersPage() {
 
       <Card className="rounded-3xl border border-border/60">
         <CardContent className="p-6">
-          <OrdersTable columns={ordersColumns} data={orders} />
+          <OrdersTable userRole={session.user.role} data={orders} />
         </CardContent>
       </Card>
 

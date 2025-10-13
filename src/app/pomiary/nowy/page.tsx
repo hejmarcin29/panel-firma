@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { requireSession } from '@/lib/auth'
 import { listOrdersForSelect } from '@/lib/orders'
 import { listProductsForSelect } from '@/lib/products'
 import { getMeasurementsSnapshot } from '@/lib/measurements'
@@ -23,6 +24,8 @@ type NewMeasurementPageProps = {
 }
 
 export default async function NewMeasurementPage({ searchParams }: NewMeasurementPageProps) {
+  await requireSession()
+  
   const resolvedSearchParams = searchParams ? await searchParams : undefined
   const defaultOrderId = resolvedSearchParams?.orderId ?? undefined
 

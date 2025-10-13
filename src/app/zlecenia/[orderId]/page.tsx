@@ -46,6 +46,7 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { requireSession } from '@/lib/auth'
 import { getOrderDetail } from '@/lib/orders'
 import { listProductsForSelect } from '@/lib/products'
 import { listClientAttachments } from '@/lib/r2'
@@ -69,6 +70,7 @@ import {
 } from '@/lib/measurements/constants'
 import { OrderParametersDialog } from './_components/order-parameters-dialog'
 import { OrderClientAttachmentsCard } from './_components/order-client-attachments-card'
+import { redirect } from 'next/navigation'
 
 const numberFormatter = new Intl.NumberFormat('pl-PL', {
   maximumFractionDigits: 1,
@@ -143,11 +145,17 @@ export async function generateMetadata({ params }: { params: OrderDetailPagePara
 }
 
 export default async function OrderDetailPage({ params }: { params: OrderDetailPageParams }) {
+  const session = await requireSession()
   const resolvedParams = await params
   const detail = await getOrderDetail(resolvedParams.orderId)
 
   if (!detail) {
     notFound()
+  }
+
+  // MONTER może widzieć tylko zlecenia przypisane do niego
+  if (session.user.role === 'MONTER' && detail.order.assignedInstallerId !== session.user.id) {
+    redirect('/zlecenia')
   }
 
   const clientAttachments = detail.client
@@ -682,14 +690,18 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
             <ListChecks className="size-4" aria-hidden />
             Zadania
           </TabsTrigger>
-          <TabsTrigger value="documents">
-            <Paperclip className="size-4" aria-hidden />
-            Dokumenty
-          </TabsTrigger>
-          <TabsTrigger value="history">
-            <Clock className="size-4" aria-hidden />
-            Historia
-          </TabsTrigger>
+          {session.user.role !== 'MONTER' ? (
+            <>
+              <TabsTrigger value="documents">
+                <Paperclip className="size-4" aria-hidden />
+                Dokumenty
+              </TabsTrigger>
+              <TabsTrigger value="history">
+                <Clock className="size-4" aria-hidden />
+                Historia
+              </TabsTrigger>
+            </>
+          ) : null}
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -1221,12 +1233,20 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
                   </CardContent>
                 </Card>
               ) : (
-                detail.installations.map((installation) => {
+                detail.installations
+                  // MONTER widzi tylko swoje montaże
+                  .filter((installation) => 
+                    session.user.role === 'MONTER' 
+                      ? installation.assignedInstallerId === session.user.id
+                      : true
+                  )
+                  .map((installation) => {
                   const installationReference = installation.installationNumber ?? installation.id.slice(0, 6).toUpperCase()
                   const installationModuleHref = {
                     pathname: '/montaze',
                     query: { q: installationReference },
                   } as const
+                  const installationEditHref = `/montaze/${installation.id}/edytuj`
 
                   return (
                     <Card key={installation.id} className="rounded-3xl border border-border/60">
@@ -1238,28 +1258,52 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
                             <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
                               #{installationReference}
                             </span>
+                            <Badge className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                              installation.status === 'COMPLETED' 
+                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-200'
+                                : installation.status === 'IN_PROGRESS'
+                                ? 'bg-blue-500/10 text-blue-600 dark:text-blue-200'
+                                : 'bg-muted text-foreground'
+                            }`}>
+                              {installation.statusLabel}
+                            </Badge>
                           </CardTitle>
-                          <Button
-                            asChild
-                            variant="outline"
-                            size="sm"
-                            className="rounded-full border-primary/40 text-primary shadow-sm hover:border-primary hover:text-primary"
-                          >
-                            <Link href={installationModuleHref}>Otwórz w module montaży</Link>
-                          </Button>
+                          <div className="flex flex-wrap gap-2">
+                            {session.user.role === 'ADMIN' && (
+                              <Button
+                                asChild
+                                size="sm"
+                                className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm"
+                              >
+                                <Link href={installationEditHref}>Edytuj</Link>
+                              </Button>
+                            )}
+                            <Button
+                              asChild
+                              variant="outline"
+                              size="sm"
+                              className="rounded-full border-primary/40 text-primary shadow-sm hover:border-primary hover:text-primary"
+                            >
+                              <Link href={installationModuleHref}>Otwórz w module montaży</Link>
+                            </Button>
+                          </div>
                         </div>
-                        <CardDescription>Status: {installation.statusLabel}</CardDescription>
+                        <CardDescription>
+                          {installation.assignedInstallerName 
+                            ? `Monter: ${installation.assignedInstallerName}` 
+                            : 'Brak przypisanego montera'}
+                        </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-4 text-sm text-muted-foreground">
                         <div className="grid gap-4 sm:grid-cols-2">
                           <div>
-                            <div className="text-xs uppercase">Plan</div>
+                            <div className="text-xs uppercase text-muted-foreground">Plan</div>
                             <div className="text-foreground text-sm font-medium">
                               {formatDate(installation.scheduledStartAt)} – {formatDate(installation.scheduledEndAt)}
                             </div>
                           </div>
                           <div>
-                            <div className="text-xs uppercase">Realizacja</div>
+                            <div className="text-xs uppercase text-muted-foreground">Realizacja</div>
                             <div className="text-foreground text-sm font-medium">
                               {installation.actualStartAt || installation.actualEndAt
                                 ? `${formatDate(installation.actualStartAt, '—')} – ${formatDate(installation.actualEndAt, '—')}`
@@ -1267,16 +1311,32 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
                             </div>
                           </div>
                           <div>
-                            <div className="text-xs uppercase">Przypisany monter</div>
+                            <div className="text-xs uppercase text-muted-foreground">Adres montażu</div>
                             <div className="text-foreground text-sm font-medium">
-                              {installation.assignedInstallerName ?? 'Nie przypisano'}
+                              {[installation.addressStreet, installation.addressCity, installation.addressPostalCode]
+                                .filter(Boolean)
+                                .join(', ') || 'Nie określono'}
                             </div>
                           </div>
                           <div>
-                            <div className="text-xs uppercase">Produkty</div>
-                            <div className="text-foreground text-sm font-medium space-y-1">
-                              <div>Panel: {installation.panelProductName ?? 'Brak'}</div>
-                              <div>Listwa: {installation.baseboardProductName ?? 'Brak'}</div>
+                            <div className="text-xs uppercase text-muted-foreground">Kontakt klienta</div>
+                            <div className="text-foreground text-sm font-medium">
+                              {installation.clientPhone ?? 'Brak danych'}
+                            </div>
+                          </div>
+                        </div>
+                        <Separator />
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <div>
+                            <div className="text-xs uppercase text-muted-foreground">Produkty panelowe</div>
+                            <div className="text-foreground text-sm font-medium">
+                              {installation.panelProductName ?? 'Brak'}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-xs uppercase text-muted-foreground">Produkty listew</div>
+                            <div className="text-foreground text-sm font-medium">
+                              {installation.baseboardProductName ?? 'Brak'}
                             </div>
                           </div>
                         </div>
@@ -1573,103 +1633,107 @@ export default async function OrderDetailPage({ params }: { params: OrderDetailP
           )}
         </TabsContent>
 
-        <TabsContent value="documents" className="space-y-4">
-          {detail.client ? (
-            <OrderClientAttachmentsCard
-              clientId={detail.client.id}
-              clientFullName={detail.client.fullName}
-              orderId={detail.order.id}
-              attachments={serializedClientAttachments}
-            />
-          ) : (
-            <Card className="rounded-3xl border border-border/60">
-              <CardHeader>
-                <CardTitle>Załączniki klienta</CardTitle>
-                <CardDescription>Przypisz klienta do zlecenia, aby dodać dokumenty do jego repozytorium.</CardDescription>
-              </CardHeader>
-              <CardContent className="text-sm text-muted-foreground">
-                To zlecenie nie ma przypisanego klienta, dlatego nie ma dostępu do folderu z dokumentami klienta.
-              </CardContent>
-            </Card>
-          )}
-          <Card className="rounded-3xl border border-border/60">
-            <CardHeader>
-              <CardTitle>Załączniki zlecenia</CardTitle>
-              <CardDescription>Lista dokumentów powiązanych bezpośrednio ze zleceniem.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {detail.attachments.length === 0 ? (
-                <Empty>
-                  <EmptyMedia variant="icon">
-                    <Paperclip className="size-6" aria-hidden />
-                  </EmptyMedia>
-                  <EmptyHeader>
-                    <EmptyTitle>Brak plików</EmptyTitle>
-                    <EmptyDescription>Dodaj umowy, protokoły lub zdjęcia w zakładce dokumentów.</EmptyDescription>
-                  </EmptyHeader>
-                </Empty>
+        {session.user.role !== 'MONTER' ? (
+          <>
+            <TabsContent value="documents" className="space-y-4">
+              {detail.client ? (
+                <OrderClientAttachmentsCard
+                  clientId={detail.client.id}
+                  clientFullName={detail.client.fullName}
+                  orderId={detail.order.id}
+                  attachments={serializedClientAttachments}
+                />
               ) : (
-                <ul className="space-y-3 text-sm text-muted-foreground">
-                  {detail.attachments.map((file) => (
-                    <li key={file.id} className="rounded-2xl border border-border/60 p-3">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-foreground">{file.fileName}</span>
-                        <span className="text-xs">{file.fileSize ? `${Math.round(file.fileSize / 1024)} KB` : '—'}</span>
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        Dodano: {formatDateTime(file.createdAt)}
-                        {file.description ? ` • ${file.description}` : ''}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                <Card className="rounded-3xl border border-border/60">
+                  <CardHeader>
+                    <CardTitle>Załączniki klienta</CardTitle>
+                    <CardDescription>Przypisz klienta do zlecenia, aby dodać dokumenty do jego repozytorium.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="text-sm text-muted-foreground">
+                    To zlecenie nie ma przypisanego klienta, dlatego nie ma dostępu do folderu z dokumentami klienta.
+                  </CardContent>
+                </Card>
               )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+              <Card className="rounded-3xl border border-border/60">
+                <CardHeader>
+                  <CardTitle>Załączniki zlecenia</CardTitle>
+                  <CardDescription>Lista dokumentów powiązanych bezpośrednio ze zleceniem.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {detail.attachments.length === 0 ? (
+                    <Empty>
+                      <EmptyMedia variant="icon">
+                        <Paperclip className="size-6" aria-hidden />
+                      </EmptyMedia>
+                      <EmptyHeader>
+                        <EmptyTitle>Brak plików</EmptyTitle>
+                        <EmptyDescription>Dodaj umowy, protokoły lub zdjęcia w zakładce dokumentów.</EmptyDescription>
+                      </EmptyHeader>
+                    </Empty>
+                  ) : (
+                    <ul className="space-y-3 text-sm text-muted-foreground">
+                      {detail.attachments.map((file) => (
+                        <li key={file.id} className="rounded-2xl border border-border/60 p-3">
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium text-foreground">{file.fileName}</span>
+                            <span className="text-xs">{file.fileSize ? `${Math.round(file.fileSize / 1024)} KB` : '—'}</span>
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Dodano: {formatDateTime(file.createdAt)}
+                            {file.description ? ` • ${file.description}` : ''}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-        <TabsContent value="history" className="space-y-4">
-          <Card className="rounded-3xl border border-border/60">
-            <CardHeader>
-              <CardTitle>Historia etapów</CardTitle>
-              <CardDescription>Chronologiczny zapis zmian statusu wraz z komentarzami.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {detail.statusHistory.length === 0 ? (
-                <Empty>
-                  <EmptyMedia variant="icon">
-                    <Clock className="size-6" aria-hidden />
-                  </EmptyMedia>
-                  <EmptyHeader>
-                    <EmptyTitle>Brak zmian</EmptyTitle>
-                    <EmptyDescription>Historia statusów pojawi się po pierwszej aktualizacji etapu.</EmptyDescription>
-                  </EmptyHeader>
-                </Empty>
-              ) : (
-                <ul className="space-y-4">
-                  {detail.statusHistory.map((entry) => (
-                    <li key={entry.id} className="flex flex-col gap-1 rounded-2xl border border-border/60 p-4">
-                      <div className="flex flex-wrap items-center gap-2 text-sm">
-                        <Badge variant="outline" className="rounded-full border-border/70 text-muted-foreground">
-                          {orderStageLabels[entry.toStage]}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {formatDateTime(entry.changedAt)} ({formatDistanceToNow(entry.changedAt, { addSuffix: true, locale: pl })})
-                        </span>
-                      </div>
-                      {entry.note ? (
-                        <div className="text-sm text-foreground">{entry.note}</div>
-                      ) : null}
-                      <div className="text-xs text-muted-foreground">
-                        Wykonał: {entry.changedByName ?? 'nieznany użytkownik'}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+            <TabsContent value="history" className="space-y-4">
+              <Card className="rounded-3xl border border-border/60">
+                <CardHeader>
+                  <CardTitle>Historia etapów</CardTitle>
+                  <CardDescription>Chronologiczny zapis zmian statusu wraz z komentarzami.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {detail.statusHistory.length === 0 ? (
+                    <Empty>
+                      <EmptyMedia variant="icon">
+                        <Clock className="size-6" aria-hidden />
+                      </EmptyMedia>
+                      <EmptyHeader>
+                        <EmptyTitle>Brak zmian</EmptyTitle>
+                        <EmptyDescription>Historia statusów pojawi się po pierwszej aktualizacji etapu.</EmptyDescription>
+                      </EmptyHeader>
+                    </Empty>
+                  ) : (
+                    <ul className="space-y-4">
+                      {detail.statusHistory.map((entry) => (
+                        <li key={entry.id} className="flex flex-col gap-1 rounded-2xl border border-border/60 p-4">
+                          <div className="flex flex-wrap items-center gap-2 text-sm">
+                            <Badge variant="outline" className="rounded-full border-border/70 text-muted-foreground">
+                              {orderStageLabels[entry.toStage]}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              {formatDateTime(entry.changedAt)} ({formatDistanceToNow(entry.changedAt, { addSuffix: true, locale: pl })})
+                            </span>
+                          </div>
+                          {entry.note ? (
+                            <div className="text-sm text-foreground">{entry.note}</div>
+                          ) : null}
+                          <div className="text-xs text-muted-foreground">
+                            Wykonał: {entry.changedByName ?? 'nieznany użytkownik'}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </>
+        ) : null}
       </Tabs>
     </div>
   )

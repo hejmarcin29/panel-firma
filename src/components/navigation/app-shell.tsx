@@ -21,6 +21,7 @@ import { isPublicPath } from "@/lib/routes";
 export type AppShellUser = {
   displayName: string;
   role?: string | null;
+  rawRole?: string | null;
   initials: string;
 };
 
@@ -48,7 +49,7 @@ export function AppShell({
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-muted/20">
-        <AppSidebar notifications={notifications} />
+        <AppSidebar notifications={notifications} userRole={user.rawRole ?? null} />
   <SidebarInset className="relative flex flex-1 flex-col gap-6 overflow-x-hidden bg-background/80 pb-10">
           <header className="sticky top-0 z-20 flex items-center justify-between gap-4 border-b border-border/60 bg-background/70 px-6 py-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="flex flex-1 items-center gap-3">

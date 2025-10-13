@@ -240,6 +240,7 @@ export async function updateInstallationAction(
     const result = await updateInstallation(parsed, session.user.id);
 
     revalidatePath("/montaze");
+    revalidatePath(`/montaze/${parsed.installationId}/edytuj`);
     revalidatePath(`/zlecenia/${result.orderId}`);
     redirect(`/zlecenia/${result.orderId}`);
   } catch (error) {

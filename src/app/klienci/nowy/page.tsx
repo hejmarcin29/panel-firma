@@ -1,5 +1,6 @@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { requireRole } from '@/lib/auth'
 import { getClientTotals } from '@/lib/clients'
 import { listPartnersForSelect } from '@/lib/partners'
 import { CircleUserRound, Handshake, Users } from 'lucide-react'
@@ -12,6 +13,8 @@ export const metadata = {
 }
 
 export default async function NewClientPage() {
+  await requireRole(['ADMIN'])
+  
   const [totals, partners] = await Promise.all([getClientTotals(), listPartnersForSelect()])
 
   const summaryCards = [

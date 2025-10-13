@@ -206,11 +206,17 @@ export type MeasurementsSnapshot = {
   }>;
 };
 
-export async function getMeasurementsSnapshot(limit = 6): Promise<MeasurementsSnapshot> {
+export type MeasurementsFilters = {
+  assignedInstallerId?: string;
+  assignedMeasurerId?: string;
+  orderId?: string;
+};
+
+export async function getMeasurementsSnapshot(limit = 6, filters?: MeasurementsFilters): Promise<MeasurementsSnapshot> {
   const now = new Date();
   const nowTimestamp = now.getTime();
 
-  const [metricsRow] = await db
+  let metricsQuery = db
     .select({
       total: sql<number>`coalesce(count(*), 0)`,
       planned: sql<number>`coalesce(sum(case when ${measurements.measuredAt} is null and ${measurements.scheduledAt} is not null and ${measurements.scheduledAt} >= ${nowTimestamp} then 1 else 0 end), 0)`,
@@ -220,13 +226,26 @@ export async function getMeasurementsSnapshot(limit = 6): Promise<MeasurementsSn
     })
     .from(measurements);
 
+  // Priorytet filtrowania: assignedMeasurerId > assignedInstallerId > orderId
+  if (filters?.assignedMeasurerId) {
+    metricsQuery = metricsQuery.where(eq(measurements.assignedMeasurerId, filters.assignedMeasurerId));
+  } else if (filters?.assignedInstallerId) {
+    metricsQuery = metricsQuery
+      .innerJoin(orders, eq(measurements.orderId, orders.id))
+      .where(eq(orders.assignedInstallerId, filters.assignedInstallerId));
+  } else if (filters?.orderId) {
+    metricsQuery = metricsQuery.where(eq(measurements.orderId, filters.orderId));
+  }
+
+  const [metricsRow] = await metricsQuery;
+
   const [adjustmentsRow] = await db
     .select({
       value: sql<number>`coalesce(count(distinct ${measurementAdjustments.measurementId}), 0)`,
     })
     .from(measurementAdjustments);
 
-  const recentRows = await db
+  let recentQuery = db
     .select({
       id: measurements.id,
       orderId: measurements.orderId,
@@ -246,7 +265,18 @@ export async function getMeasurementsSnapshot(limit = 6): Promise<MeasurementsSn
     .from(measurements)
     .leftJoin(orders, eq(measurements.orderId, orders.id))
     .leftJoin(clients, eq(orders.clientId, clients.id))
-    .leftJoin(measurementAdjustments, eq(measurementAdjustments.measurementId, measurements.id))
+    .leftJoin(measurementAdjustments, eq(measurementAdjustments.measurementId, measurements.id));
+
+  // Priorytet filtrowania: assignedMeasurerId > assignedInstallerId > orderId
+  if (filters?.assignedMeasurerId) {
+    recentQuery = recentQuery.where(eq(measurements.assignedMeasurerId, filters.assignedMeasurerId));
+  } else if (filters?.assignedInstallerId) {
+    recentQuery = recentQuery.where(eq(orders.assignedInstallerId, filters.assignedInstallerId));
+  } else if (filters?.orderId) {
+    recentQuery = recentQuery.where(eq(measurements.orderId, filters.orderId));
+  }
+
+  const recentRows = await recentQuery
     .groupBy(
       measurements.id,
       measurements.orderId,
@@ -265,13 +295,22 @@ export async function getMeasurementsSnapshot(limit = 6): Promise<MeasurementsSn
     .orderBy(desc(measurements.createdAt))
     .limit(limit);
 
-  const distributionRows = await db
+  let distributionQuery = db
     .select({
       deliveryTimingType: measurements.deliveryTimingType,
       count: sql<number>`count(*)`,
     })
-    .from(measurements)
-    .groupBy(measurements.deliveryTimingType);
+    .from(measurements);
+
+  if (filters?.assignedInstallerId) {
+    distributionQuery = distributionQuery
+      .innerJoin(orders, eq(measurements.orderId, orders.id))
+      .where(eq(orders.assignedInstallerId, filters.assignedInstallerId));
+  } else if (filters?.orderId) {
+    distributionQuery = distributionQuery.where(eq(measurements.orderId, filters.orderId));
+  }
+
+  const distributionRows = await distributionQuery.groupBy(measurements.deliveryTimingType);
 
   const metrics = {
     total: Number(metricsRow?.total ?? 0),
@@ -345,10 +384,10 @@ export type MeasurementListItem = {
   createdAt: Date;
 };
 
-export async function getMeasurementsList(limit = 30): Promise<MeasurementListItem[]> {
+export async function getMeasurementsList(limit = 30, filters?: MeasurementsFilters): Promise<MeasurementListItem[]> {
   const now = new Date();
 
-  const rows = await db
+  let query = db
     .select({
       id: measurements.id,
       orderId: measurements.orderId,
@@ -377,7 +416,16 @@ export async function getMeasurementsList(limit = 30): Promise<MeasurementListIt
     .leftJoin(users, eq(measurements.measuredById, users.id))
     .leftJoin(products, eq(measurements.panelProductId, products.id))
     .leftJoin(measurementAdjustments, eq(measurementAdjustments.measurementId, measurements.id))
-    .leftJoin(attachments, eq(attachments.measurementId, measurements.id))
+    .leftJoin(attachments, eq(attachments.measurementId, measurements.id));
+
+  // Filtrowanie
+  if (filters?.assignedInstallerId) {
+    query = query.where(eq(orders.assignedInstallerId, filters.assignedInstallerId));
+  } else if (filters?.orderId) {
+    query = query.where(eq(measurements.orderId, filters.orderId));
+  }
+
+  const rows = await query
     .groupBy(
       measurements.id,
       measurements.orderId,

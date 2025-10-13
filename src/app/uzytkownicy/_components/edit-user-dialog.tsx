@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useEffect, useRef, useState } from 'react'
+import { type ReactNode, useActionState, useEffect, useMemo, useRef, useState } from 'react'
 import { Pencil } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -19,26 +19,38 @@ import { updateUserAction } from '../actions'
 import { INITIAL_UPDATE_USER_FORM_STATE } from '../form-state'
 import { UserForm, type UserFormDefaultValues } from './user-form'
 
-export function EditUserDialog({ 
-  user,
-  open: controlledOpen,
-  onOpenChange: controlledOnOpenChange,
-}: { 
+type EditUserDialogProps = {
   user: UserListItem
   open?: boolean
   onOpenChange?: (open: boolean) => void
-}) {
-  const [internalOpen, setInternalOpen] = useState(false)
+  hideTrigger?: boolean
+  trigger?: ReactNode
+}
+
+export function EditUserDialog({
+  user,
+  open: controlledOpen,
+  onOpenChange,
+  hideTrigger = false,
+  trigger,
+}: EditUserDialogProps) {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
   const [formKey, setFormKey] = useState(0)
   const formRef = useRef<HTMLFormElement>(null)
   const [state, formAction] = useActionState<UpdateUserFormState, FormData>(
     updateUserAction,
     INITIAL_UPDATE_USER_FORM_STATE,
   )
-
-  const isControlled = controlledOpen !== undefined
-  const open = isControlled ? controlledOpen : internalOpen
-  const setOpen = isControlled ? (controlledOnOpenChange ?? (() => {})) : setInternalOpen
+  const isControlled = typeof controlledOpen === 'boolean' && typeof onOpenChange === 'function'
+  const open = isControlled ? (controlledOpen as boolean) : uncontrolledOpen
+  const setOpen = useMemo(() => {
+    if (isControlled) {
+      return onOpenChange as (next: boolean) => void
+    }
+    return (next: boolean) => {
+      setUncontrolledOpen(next)
+    }
+  }, [isControlled, onOpenChange])
 
   useEffect(() => {
     if (state.status === 'success') {
@@ -50,7 +62,7 @@ export function EditUserDialog({
       formRef.current?.reset()
       setOpen(false)
     }
-  }, [state])
+  }, [setOpen, state])
 
   useEffect(() => {
     if (!open) {
@@ -70,16 +82,20 @@ export function EditUserDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 rounded-full border border-border/40 text-muted-foreground hover:text-primary"
-          aria-label={`Edytuj użytkownika ${user.username}`}
-        >
-          <Pencil className="size-4" aria-hidden />
-        </Button>
-      </DialogTrigger>
+      {hideTrigger ? null : (
+        <DialogTrigger asChild>
+          {trigger ?? (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full border border-border/40 text-muted-foreground hover:text-primary"
+              aria-label={`Edytuj użytkownika ${user.username}`}
+            >
+              <Pencil className="size-4" aria-hidden />
+            </Button>
+          )}
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Edytuj dane użytkownika</DialogTitle>

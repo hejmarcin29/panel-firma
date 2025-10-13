@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { requireSession } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 import { listClientFolders } from "@/lib/r2";
 import { FilesBrowser } from "./_components/files-browser";
 
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 };
 
 export default async function PlikiPage() {
-  await requireSession();
+  await requireRole(['ADMIN']);
   let folders: Awaited<ReturnType<typeof listClientFolders>> = [];
   let loadError: Error | null = null;
 

@@ -342,6 +342,9 @@ export const measurements = sqliteTable(
     orderId: text("order_id")
       .notNull()
       .references(() => orders.id, { onDelete: "cascade" }),
+    assignedMeasurerId: text("assigned_measurer_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
     measuredById: text("measured_by_id").references(() => users.id, {
       onDelete: "set null",
     }),
@@ -368,6 +371,9 @@ export const measurements = sqliteTable(
   },
   (table) => ({
     measurements_order_idx: index("measurements_order_idx").on(table.orderId),
+    measurements_assigned_measurer_idx: index("measurements_assigned_measurer_idx").on(
+      table.assignedMeasurerId
+    ),
     measurements_measured_by_idx: index("measurements_measured_by_idx").on(
       table.measuredById
     ),
@@ -730,6 +736,9 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   ownedOrders: many(orders, { relationName: "orderOwner" }),
   assignedOrders: many(orders, { relationName: "orderAssignedInstaller" }),
   orderStatusChanges: many(orderStatusHistory),
+  assignedMeasurements: many(measurements, {
+    relationName: "assignedMeasurements",
+  }),
   measurements: many(measurements, {
     relationName: "measurementMeasuredBy",
   }),
@@ -866,6 +875,11 @@ export const measurementsRelations = relations(measurements, ({ one, many }) => 
   order: one(orders, {
     fields: [measurements.orderId],
     references: [orders.id],
+  }),
+  assignedMeasurer: one(users, {
+    fields: [measurements.assignedMeasurerId],
+    references: [users.id],
+    relationName: "assignedMeasurements",
   }),
   measuredBy: one(users, {
     fields: [measurements.measuredById],

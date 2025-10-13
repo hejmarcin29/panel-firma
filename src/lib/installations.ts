@@ -293,7 +293,23 @@ export type InstallationsSnapshot = {
   }>;
 };
 
-export async function getInstallationsSnapshot(limit = 5): Promise<InstallationsSnapshot> {
+export type InstallationsFilters = {
+  assignedInstallerId?: string;
+  orderId?: string;
+};
+
+export async function getInstallationsSnapshot(limit = 5, filters?: InstallationsFilters): Promise<InstallationsSnapshot> {
+  // Buduj warunki filtrowania
+  const filterConditions = [];
+  if (filters?.assignedInstallerId) {
+    filterConditions.push(eq(installations.assignedInstallerId, filters.assignedInstallerId));
+  }
+  if (filters?.orderId) {
+    filterConditions.push(eq(installations.orderId, filters.orderId));
+  }
+
+  const baseWhere = filterConditions.length > 0 ? and(...filterConditions) : undefined;
+
   const [metricsRow] = await db
     .select({
       total: sql<number>`coalesce(count(*), 0)`,
@@ -302,7 +318,8 @@ export async function getInstallationsSnapshot(limit = 5): Promise<Installations
       completed: sql<number>`coalesce(sum(case when ${installations.status} = 'COMPLETED' then 1 else 0 end), 0)`,
       requiringAttention: sql<number>`coalesce(sum(case when ${installations.requiresAdminAttention} then 1 else 0 end), 0)`,
     })
-    .from(installations);
+    .from(installations)
+    .where(baseWhere);
 
   const distributionRows = await db
     .select({
@@ -311,6 +328,7 @@ export async function getInstallationsSnapshot(limit = 5): Promise<Installations
     })
     .from(installations)
     .innerJoin(orders, eq(installations.orderId, orders.id))
+    .where(baseWhere)
     .groupBy(orders.stage);
 
   const recentRows = await db
@@ -327,6 +345,7 @@ export async function getInstallationsSnapshot(limit = 5): Promise<Installations
     .from(installations)
     .leftJoin(orders, eq(installations.orderId, orders.id))
     .leftJoin(clients, eq(orders.clientId, clients.id))
+    .where(baseWhere)
     .orderBy(desc(installations.createdAt))
     .limit(limit);
 
@@ -362,7 +381,18 @@ export async function getInstallationsSnapshot(limit = 5): Promise<Installations
   return { metrics, recent, distribution };
 }
 
-export async function getInstallationsList(limit = 30): Promise<InstallationsListItem[]> {
+export async function getInstallationsList(limit = 30, filters?: InstallationsFilters): Promise<InstallationsListItem[]> {
+  // Buduj warunki filtrowania
+  const filterConditions = [];
+  if (filters?.assignedInstallerId) {
+    filterConditions.push(eq(installations.assignedInstallerId, filters.assignedInstallerId));
+  }
+  if (filters?.orderId) {
+    filterConditions.push(eq(installations.orderId, filters.orderId));
+  }
+
+  const baseWhere = filterConditions.length > 0 ? and(...filterConditions) : undefined;
+
   const rows = await db
     .select({
       id: installations.id,
@@ -389,6 +419,7 @@ export async function getInstallationsList(limit = 30): Promise<InstallationsLis
     .leftJoin(orders, eq(installations.orderId, orders.id))
     .leftJoin(clients, eq(orders.clientId, clients.id))
     .leftJoin(users, eq(installations.assignedInstallerId, users.id))
+    .where(baseWhere)
     .orderBy(desc(installations.createdAt))
     .limit(limit);
 
@@ -418,10 +449,10 @@ export type InstallationsDashboardData = {
   list: InstallationsListItem[];
 };
 
-export async function getInstallationsDashboardData(limit = 30): Promise<InstallationsDashboardData> {
+export async function getInstallationsDashboardData(limit = 30, filters?: InstallationsFilters): Promise<InstallationsDashboardData> {
   const [snapshot, list] = await Promise.all([
-    getInstallationsSnapshot(limit),
-    getInstallationsList(limit),
+    getInstallationsSnapshot(limit, filters),
+    getInstallationsList(limit, filters),
   ]);
 
   return { snapshot, list };

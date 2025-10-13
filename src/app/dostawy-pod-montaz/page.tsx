@@ -35,8 +35,14 @@ const formatDate = (value: Date | null | undefined) =>
   value ? format(value, "dd MMM yyyy", { locale: pl }) : null;
 
 export default async function InstallationDeliveriesPage() {
-  await requireSession();
-  const { snapshot, list } = await getInstallationDeliveriesDashboardData(60);
+  const session = await requireSession();
+  
+  // Dla MONTER: filtruj tylko dostawy związane z jego montażami
+  const deliveryFilters = session.user.role === 'MONTER' 
+    ? { assignedInstallerId: session.user.id }
+    : {};
+  
+  const { snapshot, list } = await getInstallationDeliveriesDashboardData(60, deliveryFilters);
 
   const now = new Date();
   const futureDeliveries = list
@@ -97,15 +103,17 @@ export default async function InstallationDeliveriesPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <Button
-              asChild
-              className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90"
-            >
-              <Link href="/montaze/nowa-dostawa">
-                <Truck className="mr-2 size-4" aria-hidden />
-                Dodaj dostawę pod montaż
-              </Link>
-            </Button>
+            {session.user.role === 'ADMIN' && (
+              <Button
+                asChild
+                className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90"
+              >
+                <Link href="/montaze/nowa-dostawa">
+                  <Truck className="mr-2 size-4" aria-hidden />
+                  Dodaj dostawę pod montaż
+                </Link>
+              </Button>
+            )}
             <Button
               variant="outline"
               asChild

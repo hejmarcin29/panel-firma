@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { type ColumnDef, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
+import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
 import { useRouter } from 'next/navigation'
 import { Filter, Search } from 'lucide-react'
 
@@ -26,9 +26,11 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import type { OrdersListItem } from '@/lib/orders'
+import type { UserRole } from '@/lib/user-roles'
+import { getOrdersColumns } from './columns'
 
 interface OrdersTableProps {
-  columns: ColumnDef<OrdersListItem>[]
+  userRole: UserRole
   data: OrdersListItem[]
 }
 
@@ -40,10 +42,13 @@ const MODE_FILTERS = [
 
 type ModeFilter = (typeof MODE_FILTERS)[number]['value']
 
-export function OrdersTable({ columns, data }: OrdersTableProps) {
+export function OrdersTable({ userRole, data }: OrdersTableProps) {
   const [query, setQuery] = React.useState('')
   const [modeFilter, setModeFilter] = React.useState<ModeFilter>('ALL')
   const router = useRouter()
+  
+  // Generuj kolumny na podstawie roli użytkownika
+  const columns = React.useMemo(() => getOrdersColumns(userRole), [userRole])
 
   const modeCounts = React.useMemo(
     () =>

@@ -138,6 +138,7 @@ export default async function RootLayout({
             user={{
               displayName,
               role: roleLabel,
+              rawRole: session.user.role,
               initials,
             }}
           >

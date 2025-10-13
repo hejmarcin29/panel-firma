@@ -1,16 +1,16 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
 
 import { requireRole } from "@/lib/auth";
-import { createUser, updateUser } from "@/lib/users";
-import { generateSecurePassword, hashPassword } from "@/lib/password";
-import { db } from "@db/index";
-import { users } from "@db/schema";
+import { changeUserPassword, createUser, updateUser } from "@/lib/users";
+import { sendPasswordChangedNotification } from "@/lib/email";
 import {
+  changeUserPasswordSchema,
   createUserSchema,
   updateUserSchema,
+  type ChangeUserPasswordFormErrors,
+  type ChangeUserPasswordFormState,
   type CreateUserFormErrors,
   type CreateUserFormState,
   type UpdateUserFormErrors,
@@ -135,6 +135,39 @@ function mapUpdateErrors(error: unknown): UpdateUserFormState {
   return { status: "error", message: "Nie udało się zaktualizować użytkownika." };
 }
 
+function mapChangePasswordErrors(error: unknown): ChangeUserPasswordFormState {
+  if (error instanceof Error && "issues" in error) {
+    const issues = (error as { issues?: Array<{ path: (string | number)[]; message: string }> }).issues;
+    if (Array.isArray(issues)) {
+      const errors: ChangeUserPasswordFormErrors = {};
+      for (const issue of issues) {
+        if (!issue.path || issue.path.length === 0) continue;
+        const fieldKey = issue.path[0];
+        if (typeof fieldKey !== "string") continue;
+        const key = fieldKey as keyof ChangeUserPasswordFormErrors;
+        if (!errors[key]) {
+          errors[key] = issue.message;
+        }
+      }
+      return { status: "error", message: "Popraw zaznaczone pola.", errors };
+    }
+  }
+
+  if (error instanceof Error) {
+    if (error.message.includes("Hasło")) {
+      return {
+        status: "error",
+        message: error.message,
+        errors: { password: error.message },
+      };
+    }
+
+    return { status: "error", message: error.message };
+  }
+
+  return { status: "error", message: "Nie udało się zmienić hasła." };
+}
+
 export async function createUserAction(
   _prevState: CreateUserFormState,
   formData: FormData,
@@ -252,60 +285,70 @@ export async function updateUserAction(
   return { status: "success", message: "Zmiany zostały zapisane." };
 }
 
-interface ResetPasswordState {
-  status: 'idle' | 'pending' | 'success' | 'error'
-  message?: string
-  newPassword?: string
-}
-
-export async function resetUserPasswordAction(
-  _prevState: ResetPasswordState,
+export async function changeUserPasswordAction(
+  _prevState: ChangeUserPasswordFormState,
   formData: FormData,
-): Promise<ResetPasswordState> {
+): Promise<ChangeUserPasswordFormState> {
   try {
-    await requireRole(["ADMIN"]);
+    const session = await requireRole(["ADMIN"]);
 
-    const userId = toTrimmedString(formData.get("userId"));
-    
-    if (!userId) {
+    const payload = {
+      userId: toTrimmedString(formData.get("userId")),
+      password: toTrimmedString(formData.get("password")),
+    };
+
+    const confirmPassword = toTrimmedString(formData.get("confirmPassword"));
+
+    if (!payload.userId) {
       return {
         status: "error",
-        message: "Nie podano ID użytkownika.",
+        message: "Brakuje identyfikatora użytkownika.",
+        errors: { userId: "Brakuje identyfikatora użytkownika." },
       };
     }
 
-    // Wygeneruj nowe hasło
-    const newPassword = generateSecurePassword();
-    const passwordHash = await hashPassword(newPassword);
+    if (!payload.password || !confirmPassword) {
+      return {
+        status: "error",
+        message: "Uzupełnij oba pola hasła.",
+        errors: {
+          password: "Podaj hasło.",
+          confirmPassword: "Potwierdź hasło.",
+        },
+      };
+    }
 
-    // Zaktualizuj hasło w bazie
-    const now = new Date();
-    await db
-      .update(users)
-      .set({
-        passwordHash,
-        updatedAt: now,
-      })
-      .where(eq(users.id, userId));
+    if (payload.password !== confirmPassword) {
+      return {
+        status: "error",
+        message: "Hasła nie są identyczne.",
+        errors: {
+          password: "Hasła nie są identyczne.",
+          confirmPassword: "Hasła nie są identyczne.",
+        },
+      };
+    }
+
+    const parsed = changeUserPasswordSchema.parse(payload);
+
+    const updated = await changeUserPassword(parsed);
+
+    if (updated?.email) {
+      try {
+        await sendPasswordChangedNotification({
+          to: updated.email,
+          username: updated.username ?? updated.email,
+          actorName: session.user.name ?? session.user.username,
+        });
+      } catch (notificationError) {
+        console.error("Nie udało się wysłać powiadomienia e-mail o zmianie hasła.", notificationError);
+      }
+    }
 
     revalidatePath("/uzytkownicy");
-
-    return {
-      status: "success",
-      message: "Nowe hasło zostało wygenerowane.",
-      newPassword,
-    };
   } catch (error) {
-    if (error instanceof Error) {
-      return {
-        status: "error",
-        message: error.message,
-      };
-    }
-
-    return {
-      status: "error",
-      message: "Nie udało się zresetować hasła.",
-    };
+    return mapChangePasswordErrors(error);
   }
+
+  return { status: "success", message: "Hasło zostało zaktualizowane." };
 }

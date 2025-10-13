@@ -35,8 +35,17 @@ const STAT_CARD_CLASSES: Record<'default' | 'accent' | 'success' | 'warning', st
 }
 
 export default async function MeasurementsPage() {
-  await requireSession();
-  const [snapshot, measurements] = await Promise.all([getMeasurementsSnapshot(), getMeasurementsList(40)])
+  const session = await requireSession();
+  
+  // Dla MONTER: filtruj tylko pomiary ze zleceń przypisanych do niego
+  const measurementFilters = session.user.role === 'MONTER' 
+    ? { assignedInstallerId: session.user.id }
+    : {};
+  
+  const [snapshot, measurements] = await Promise.all([
+    getMeasurementsSnapshot(6, measurementFilters), 
+    getMeasurementsList(40, measurementFilters)
+  ])
 
   const { metrics, recent, distribution } = snapshot
 

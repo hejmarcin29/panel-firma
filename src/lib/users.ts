@@ -8,8 +8,10 @@ import { userRoles, users, type UserRole } from "@db/schema";
 import { hashPassword } from "@/lib/password";
 import { userRoleLabels } from "@/lib/user-roles";
 import {
+  changeUserPasswordSchema,
   createUserSchema,
   updateUserSchema,
+  type ChangeUserPasswordInput,
   type CreateUserInput,
   type UpdateUserInput,
 } from "@/lib/users/schemas";
@@ -315,4 +317,23 @@ export async function updateUser(input: UpdateUserInput) {
 
     return updated;
   });
+}
+
+export async function changeUserPassword(input: ChangeUserPasswordInput) {
+  const parsed = changeUserPasswordSchema.parse(input);
+  const passwordHash = await hashPassword(parsed.password);
+  const updatedAt = new Date();
+
+  const updated = await db
+    .update(users)
+    .set({ passwordHash, updatedAt })
+    .where(eq(users.id, parsed.userId))
+    .returning()
+    .get();
+
+  if (!updated) {
+    throw new Error("Nie znaleziono użytkownika.");
+  }
+
+  return updated;
 }

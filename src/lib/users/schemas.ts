@@ -42,8 +42,14 @@ export const updateUserSchema = z.object({
     .optional(),
 });
 
+export const changeUserPasswordSchema = z.object({
+  userId: z.string().min(1, "Brakuje identyfikatora użytkownika."),
+  password: z.string().min(MIN_PASSWORD_LENGTH, `Hasło musi mieć co najmniej ${MIN_PASSWORD_LENGTH} znaków.`),
+});
+
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
+export type ChangeUserPasswordInput = z.infer<typeof changeUserPasswordSchema>;
 
 export type CreateUserFormErrors = Partial<
   Record<keyof CreateUserInput | "confirmPassword", string>
@@ -71,3 +77,10 @@ export type UpdateUserFormState =
   | { status: "idle" }
   | { status: "success"; message?: string }
   | { status: "error"; message?: string; errors?: UpdateUserFormErrors };
+
+export type ChangeUserPasswordFormErrors = Partial<Record<"password" | "confirmPassword" | "userId", string>>;
+
+export type ChangeUserPasswordFormState =
+  | { status: "idle" }
+  | { status: "success"; message?: string }
+  | { status: "error"; message?: string; errors?: ChangeUserPasswordFormErrors };

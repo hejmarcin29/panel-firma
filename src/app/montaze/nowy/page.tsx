@@ -1,10 +1,12 @@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { requireRole } from '@/lib/auth'
 import { installationStatusOptions } from '@/lib/installations/constants'
 import { listClientsForSelect } from '@/lib/clients'
 import { listOrdersForSelect } from '@/lib/orders'
 import { listUsersForSelect } from '@/lib/users'
 import { listProductsForSelect } from '@/lib/products'
+import { listPartnersForSelect } from '@/lib/partners'
 import { Building2, ClipboardList, Wrench } from 'lucide-react'
 
 import { NewInstallationForm } from './new-installation-form'
@@ -21,17 +23,20 @@ type NewInstallationPageProps = {
   }>
 }
 export default async function NewInstallationPage({ searchParams }: NewInstallationPageProps) {
+  await requireRole(['ADMIN'])
+  
   const resolvedSearchParams = searchParams ? await searchParams : undefined
   const preselectedClientId = resolvedSearchParams?.clientId ?? null
   const preselectedOrderId = resolvedSearchParams?.orderId ?? null
   const scope = resolvedSearchParams?.scope === 'baseboard' ? 'baseboard' : 'standard'
 
-  const [clients, orders, installers, panelProducts, baseboardProducts] = await Promise.all([
+  const [clients, orders, installers, panelProducts, baseboardProducts, partners] = await Promise.all([
     listClientsForSelect(),
     listOrdersForSelect({ stages: ['BEFORE_INSTALLATION', 'AWAITING_FINAL_PAYMENT', 'BEFORE_DELIVERY', 'RECEIVED', 'BEFORE_QUOTE', 'BEFORE_MEASUREMENT'] }),
     listUsersForSelect({ role: 'MONTER' }),
     listProductsForSelect({ types: ['PANEL'] }),
     listProductsForSelect({ types: ['BASEBOARD'] }),
+    listPartnersForSelect(),
   ])
 
   const statusOptions = installationStatusOptions
@@ -88,6 +93,7 @@ export default async function NewInstallationPage({ searchParams }: NewInstallat
 
       <NewInstallationForm
         clients={clients}
+        partners={partners.map((partner) => ({ id: partner.id, label: partner.label }))}
         orders={orders.map((order) => ({ id: order.id, label: order.label }))}
         installers={installers.map((installer) => ({ id: installer.id, label: installer.label }))}
         panelProducts={panelProducts.map((product) => ({ id: product.id, label: product.label }))}
