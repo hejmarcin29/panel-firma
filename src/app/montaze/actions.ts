@@ -7,7 +7,7 @@ import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { eq } from "drizzle-orm";
 
 import { db } from "@db/index";
-import { installations } from "@db/schema";
+import { installations, type DeliveryTimingType } from "@db/schema";
 
 import { requireRole } from "@/lib/auth";
 import { createDelivery } from "@/lib/deliveries";
@@ -24,6 +24,11 @@ import {
   type CreateDeliveryFormErrors,
   type CreateDeliveryFormState,
 } from "@/lib/deliveries/schemas";
+import { createMeasurement } from "@/lib/measurements";
+import {
+  createMeasurementSchema,
+  type CreateMeasurementInput,
+} from "@/lib/measurements/schemas";
 
 const CHECKBOX_FIELDS = [
   "handoverProtocolSigned",
@@ -41,6 +46,28 @@ const DATE_FIELDS = [
 ] as const;
 
 type DateField = (typeof DATE_FIELDS)[number];
+
+const MEASUREMENT_FIELDS = [
+  "scheduleMeasurement",
+  "measurementScheduledAt",
+  "measurementMeasuredById",
+  "measurementDeliveryTimingType",
+  "measurementDeliveryDaysBefore",
+  "measurementDeliveryDate",
+  "measurementAdditionalNotes",
+] as const;
+
+const MEASUREMENT_FIELD_SET = new Set<string>(MEASUREMENT_FIELDS);
+
+const measurementErrorFieldMap: Record<string, keyof CreateInstallationFormErrors> = {
+  orderId: "orderId",
+  measuredById: "measurementMeasuredById",
+  scheduledAt: "measurementScheduledAt",
+  deliveryTimingType: "measurementDeliveryTimingType",
+  deliveryDaysBefore: "measurementDeliveryDaysBefore",
+  deliveryDate: "measurementDeliveryDate",
+  additionalNotes: "measurementAdditionalNotes",
+};
 
 function toNullableString(value: FormDataEntryValue | null): string | null {
   if (typeof value !== "string") {
@@ -77,6 +104,28 @@ function toDate(value: FormDataEntryValue | null): Date | null {
     return null;
   }
   return parsed;
+}
+
+function toNullableNumber(value: FormDataEntryValue | null): number | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+  const parsed = Number(trimmed);
+  if (!Number.isFinite(parsed)) {
+    return Number.NaN;
+  }
+  return parsed;
+}
+
+function resolveDeliveryTimingType(value: FormDataEntryValue | null): DeliveryTimingType {
+  if (typeof value === "string" && value === "EXACT_DATE") {
+    return "EXACT_DATE";
+  }
+  return "DAYS_BEFORE";
 }
 
 function mapZodErrors(error: unknown): CreateInstallationFormState {
@@ -129,6 +178,31 @@ function mapDeliveryErrors(error: unknown): CreateDeliveryFormState {
   return { status: "error", message: "Nie udało się zapisać formularza." };
 }
 
+function mapMeasurementErrors(error: unknown): CreateInstallationFormState {
+  if (error instanceof Error && "issues" in error) {
+    const issues = (error as { issues?: Array<{ path: (string | number)[]; message: string }> }).issues;
+    if (issues && Array.isArray(issues)) {
+      const errors: CreateInstallationFormErrors = {};
+      for (const issue of issues) {
+        if (!issue.path || issue.path.length === 0) continue;
+        const fieldKey = issue.path[0];
+        if (typeof fieldKey !== "string") continue;
+        const mapped = measurementErrorFieldMap[fieldKey];
+        if (mapped) {
+          errors[mapped] = issue.message;
+        }
+      }
+      return { status: "error", message: "Nie udało się zaplanować pomiaru.", errors };
+    }
+  }
+
+  if (error instanceof Error) {
+    return { status: "error", message: error.message };
+  }
+
+  return { status: "error", message: "Nie udało się zaplanować pomiaru." };
+}
+
 export async function createInstallationAction(
   _prevState: CreateInstallationFormState,
   formData: FormData,
@@ -139,6 +213,10 @@ export async function createInstallationAction(
     const payload: Record<string, unknown> = {};
 
     for (const [name, value] of formData.entries()) {
+      if (MEASUREMENT_FIELD_SET.has(name)) {
+        continue;
+      }
+
       if (CHECKBOX_FIELDS.includes(name as CheckboxField)) {
         payload[name] = toBoolean(value);
         continue;
@@ -187,7 +265,64 @@ export async function createInstallationAction(
       orderId,
     };
 
+    let measurementInput: CreateMeasurementInput | null = null;
+    const scheduleMeasurement = toBoolean(formData.get("scheduleMeasurement"));
+
+    if (scheduleMeasurement) {
+      const deliveryTimingType = resolveDeliveryTimingType(formData.get("measurementDeliveryTimingType"));
+
+      const measurementData: CreateMeasurementInput = {
+        orderId,
+        measuredById: toNullableString(formData.get("measurementMeasuredById")) ?? null,
+        scheduledAt: toDate(formData.get("measurementScheduledAt")) ?? null,
+        measuredAt: null,
+        measuredFloorArea: null,
+        measuredBaseboardLength: null,
+        offcutPercent: null,
+        additionalNotes: toNullableString(formData.get("measurementAdditionalNotes")) ?? null,
+        panelProductId: parsed.panelProductId ?? null,
+        deliveryTimingType,
+        deliveryDaysBefore:
+          deliveryTimingType === "DAYS_BEFORE"
+            ? toNullableNumber(formData.get("measurementDeliveryDaysBefore"))
+            : null,
+        deliveryDate:
+          deliveryTimingType === "EXACT_DATE"
+            ? toDate(formData.get("measurementDeliveryDate")) ?? null
+            : null,
+      };
+
+      if (!measurementData.measuredById && parsed.assignedInstallerId) {
+        measurementData.measuredById = parsed.assignedInstallerId;
+      }
+
+      if (!measurementData.measuredById) {
+        return {
+          status: "error",
+          message: "Wskaż osobę odpowiedzialną za pomiar.",
+          errors: {
+            measurementMeasuredById: "Wymagamy przypisania ekipy do pomiaru, aby wysłać powiadomienie.",
+          },
+        };
+      }
+
+      try {
+        measurementInput = createMeasurementSchema.parse(measurementData);
+      } catch (error) {
+        return mapMeasurementErrors(error);
+      }
+    }
+
     const installation = await createInstallation(installationInput, session.user.id);
+
+    if (measurementInput) {
+      try {
+        await createMeasurement(measurementInput, session.user.id);
+        revalidatePath("/pomiary");
+      } catch (error) {
+        return mapMeasurementErrors(error);
+      }
+    }
 
     revalidatePath("/montaze");
     redirect(`/zlecenia/${installation.orderId}`);
@@ -212,6 +347,10 @@ export async function updateInstallationAction(
     const payload: Record<string, unknown> = {};
 
     for (const [name, value] of formData.entries()) {
+      if (MEASUREMENT_FIELD_SET.has(name)) {
+        continue;
+      }
+
       if (CHECKBOX_FIELDS.includes(name as CheckboxField)) {
         payload[name] = toBoolean(value);
         continue;

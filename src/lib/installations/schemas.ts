@@ -49,6 +49,13 @@ export type CreateInstallationFormErrors = Partial<Record<keyof CreateInstallati
   orderId?: string;
   clientId?: string;
   installationId?: string;
+  scheduleMeasurement?: string;
+  measurementScheduledAt?: string;
+  measurementMeasuredById?: string;
+  measurementDeliveryTimingType?: string;
+  measurementDeliveryDaysBefore?: string;
+  measurementDeliveryDate?: string;
+  measurementAdditionalNotes?: string;
 };
 
 export type CreateInstallationFormState =

@@ -4,7 +4,7 @@ import { useActionState, useEffect, useMemo, useState, type ChangeEvent } from '
 import { useFormStatus } from 'react-dom'
 import Link from 'next/link'
 import { format } from 'date-fns'
-import { ArrowLeft, CalendarClock, HardHat, Save } from 'lucide-react'
+import { ArrowLeft, CalendarClock, ClipboardSignature, HardHat, Save } from 'lucide-react'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -13,11 +13,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { AddClientDialog } from '@/components/clients/add-client-dialog'
+import { AddClientDialog, ADD_CLIENT_OPTION_VALUE } from '@/components/clients/add-client-dialog'
 
 import { INITIAL_INSTALLATION_FORM_STATE } from '../form-state'
 
-import type { InstallationStatus } from '@db/schema'
+import { deliveryTimingLabels } from '@/lib/measurements/constants'
+
+import type { DeliveryTimingType, InstallationStatus } from '@db/schema'
 import type { CreateInstallationFormErrors, CreateInstallationFormState } from '@/lib/installations/schemas'
 
 type InstallationFormAction = (
@@ -104,6 +106,20 @@ function formatDateInput(value?: Date | null) {
   }
 }
 
+function formatDateTimeInput(value?: Date | null) {
+  if (!value) {
+    return ''
+  }
+  try {
+    const date = new Date(value)
+    const offset = date.getTimezoneOffset()
+    const local = new Date(date.getTime() - offset * 60000)
+    return local.toISOString().slice(0, 16)
+  } catch {
+    return ''
+  }
+}
+
 type SubmitButtonProps = {
   idleLabel: string
   pendingLabel: string
@@ -144,6 +160,7 @@ export function InstallationForm({
   const initialClientId = initialValues?.clientId ?? defaultClientId ?? ''
   const [selectedClientId, setSelectedClientId] = useState<string>(initialClientId)
   const [clientsList, setClientsList] = useState<ClientOption[]>(clients)
+  const [isAddClientDialogOpen, setIsAddClientDialogOpen] = useState(false)
   
   const selectedClient = useMemo(
     () => clientsList.find((client) => client.id === selectedClientId) ?? null,
@@ -243,6 +260,30 @@ export function InstallationForm({
     setActualEndDate(event.target.value)
   }
 
+  const [assignedInstallerId, setAssignedInstallerId] = useState(initialValues?.assignedInstallerId ?? '')
+  const [measurementAssigneeId, setMeasurementAssigneeId] = useState(initialValues?.assignedInstallerId ?? '')
+  const [measurementAssigneeManuallySet, setMeasurementAssigneeManuallySet] = useState(false)
+  const [scheduleMeasurement, setScheduleMeasurement] = useState(false)
+  const [measurementTimingType, setMeasurementTimingType] = useState<DeliveryTimingType>('DAYS_BEFORE')
+  const [measurementScheduledAt, setMeasurementScheduledAt] = useState(() =>
+    formatDateTimeInput(initialValues?.scheduledStartAt ?? null),
+  )
+  const [measurementDeliveryDaysBefore, setMeasurementDeliveryDaysBefore] = useState('3')
+  const [measurementDeliveryDate, setMeasurementDeliveryDate] = useState('')
+  const [measurementNotes, setMeasurementNotes] = useState('')
+
+  useEffect(() => {
+    if (scheduleMeasurement && !measurementScheduledAt && scheduledStartDate) {
+      setMeasurementScheduledAt(`${scheduledStartDate}T09:00`)
+    }
+  }, [scheduleMeasurement, measurementScheduledAt, scheduledStartDate])
+
+  useEffect(() => {
+    if (!measurementAssigneeManuallySet) {
+      setMeasurementAssigneeId(assignedInstallerId)
+    }
+  }, [assignedInstallerId, measurementAssigneeManuallySet])
+
   const submitIdleLabel = submitLabel ?? (mode === 'create' ? 'Zaplanuj montaż' : 'Zapisz montaż')
   const submitPending = submitPendingLabel ?? 'Zapisywanie…'
   const defaultOrderValue = initialValues?.orderId ?? defaultOrderId ?? ''
@@ -273,6 +314,8 @@ export function InstallationForm({
                 onClientCreated={handleClientCreated}
                 triggerVariant="link"
                 triggerClassName="text-emerald-600 hover:text-emerald-700"
+                open={isAddClientDialogOpen}
+                onOpenChange={setIsAddClientDialogOpen}
               />
             ) : null}
           </div>
@@ -307,7 +350,13 @@ export function InstallationForm({
                 required
                 value={selectedClientId}
                 onChange={(event) => {
-                  setSelectedClientId(event.target.value)
+                  const value = event.target.value
+                  if (value === ADD_CLIENT_OPTION_VALUE) {
+                    setIsAddClientDialogOpen(true)
+                    event.target.value = selectedClientId
+                    return
+                  }
+                  setSelectedClientId(value)
                   setUseClientAddress(true)
                 }}
                 className="h-11 w-full rounded-xl border border-border/60 bg-background px-3 text-sm text-foreground shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
@@ -316,6 +365,7 @@ export function InstallationForm({
                 <option value="" disabled>
                   Wybierz klienta…
                 </option>
+                <option value={ADD_CLIENT_OPTION_VALUE}>➕ Dodaj nowego klienta</option>
                 {clientsList.map((client) => (
                   <option key={client.id} value={client.id}>
                     {client.label}
@@ -347,7 +397,8 @@ export function InstallationForm({
               <select
                 id="assignedInstallerId"
                 name="assignedInstallerId"
-                defaultValue={initialValues?.assignedInstallerId ?? ''}
+                value={assignedInstallerId}
+                onChange={(event) => setAssignedInstallerId(event.target.value)}
                 className="h-11 w-full rounded-xl border border-border/60 bg-background px-3 text-sm text-foreground shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
               >
                 <option value="">Wybierz montera</option>
@@ -428,6 +479,177 @@ export function InstallationForm({
           </div>
         </CardContent>
       </Card>
+
+      {mode === 'create' ? (
+        <Card className="border border-border/60 shadow-sm">
+          <CardHeader className="space-y-2">
+            <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+              <ClipboardSignature className="size-5 text-emerald-600" aria-hidden />
+              Pomiar i wizja lokalna
+            </CardTitle>
+            <CardDescription>
+              Zaznacz poniżej, jeśli chcesz od razu zaplanować wizję lokalną powiązaną z tym samym zleceniem.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <label className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/40 px-4 py-3 text-sm">
+              <input
+                type="checkbox"
+                name="scheduleMeasurement"
+                className="size-4 rounded border-border/70 text-emerald-500 focus:ring-emerald-500"
+                checked={scheduleMeasurement}
+                onChange={(event) => {
+                  const isChecked = event.target.checked
+                  setScheduleMeasurement(isChecked)
+                  if (!isChecked) {
+                    setMeasurementAssigneeManuallySet(false)
+                    setMeasurementAssigneeId(assignedInstallerId)
+                    return
+                  }
+
+                  if (!measurementAssigneeId && assignedInstallerId) {
+                    setMeasurementAssigneeId(assignedInstallerId)
+                  }
+                }}
+              />
+              <span className="flex flex-col">
+                <span className="text-foreground">Zaplanować pomiar i wizję lokalną</span>
+                <span className="text-xs text-muted-foreground">
+                  Utworzymy pomiar przypisany do tego samego zlecenia i powiadomimy zespół o nowym zadaniu.
+                </span>
+              </span>
+            </label>
+
+            {scheduleMeasurement ? (
+              <div className="space-y-6">
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="measurementScheduledAt">Planowany termin pomiaru</Label>
+                    <Input
+                      id="measurementScheduledAt"
+                      name="measurementScheduledAt"
+                      type="datetime-local"
+                      value={measurementScheduledAt}
+                      onChange={(event) => setMeasurementScheduledAt(event.target.value)}
+                      aria-invalid={errors.measurementScheduledAt ? 'true' : 'false'}
+                    />
+                    <FieldError message={errors.measurementScheduledAt} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="measurementMeasuredById">Pomiar wykona</Label>
+                    <select
+                      id="measurementMeasuredById"
+                      name="measurementMeasuredById"
+                      value={measurementAssigneeId}
+                      onChange={(event) => {
+                        setMeasurementAssigneeId(event.target.value)
+                        setMeasurementAssigneeManuallySet(true)
+                      }}
+                      className="h-11 w-full rounded-xl border border-border/60 bg-background px-3 text-sm text-foreground shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                    >
+                      <option value="">Nie wskazano</option>
+                      {installers.map((installer) => (
+                        <option key={installer.id} value={installer.id}>
+                          {installer.label}
+                        </option>
+                      ))}
+                    </select>
+                    <FieldError message={errors.measurementMeasuredById} />
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <span className="text-sm font-medium text-foreground">Plan dostawy materiałów</span>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {(Object.entries(deliveryTimingLabels) as Array<[DeliveryTimingType, string]>).map(([value, label]) => {
+                      const isActive = measurementTimingType === value
+                      return (
+                        <label
+                          key={value}
+                          className={`flex cursor-pointer items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-sm transition ${
+                            isActive
+                              ? 'border-emerald-500 bg-emerald-500/10 text-emerald-700 shadow-sm shadow-emerald-500/10'
+                              : 'border-border/60 bg-muted/30 text-muted-foreground hover:border-emerald-400/80 hover:bg-emerald-500/10 hover:text-emerald-700'
+                          }`}
+                        >
+                          <div className="flex flex-col gap-1">
+                            <span className="font-semibold">{label}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {value === 'DAYS_BEFORE'
+                                ? 'Podaj ile dni przed montażem materiały powinny dotrzeć.'
+                                : 'Wybierz dokładną datę dostawy materiałów.'}
+                            </span>
+                          </div>
+                          <input
+                            type="radio"
+                            name="measurementDeliveryTimingType"
+                            value={value}
+                            checked={measurementTimingType === value}
+                            onChange={() => {
+                              setMeasurementTimingType(value)
+                              if (value === 'DAYS_BEFORE') {
+                                setMeasurementDeliveryDate('')
+                                if (!measurementDeliveryDaysBefore) {
+                                  setMeasurementDeliveryDaysBefore('3')
+                                }
+                              } else {
+                                setMeasurementDeliveryDaysBefore('')
+                              }
+                            }}
+                            className="size-4"
+                          />
+                        </label>
+                      )
+                    })}
+                  </div>
+                  <FieldError message={errors.measurementDeliveryTimingType} />
+                </div>
+
+                {measurementTimingType === 'DAYS_BEFORE' ? (
+                  <div className="space-y-2">
+                    <Label htmlFor="measurementDeliveryDaysBefore">Dni przed montażem</Label>
+                    <Input
+                      id="measurementDeliveryDaysBefore"
+                      name="measurementDeliveryDaysBefore"
+                      type="number"
+                      min="0"
+                      value={measurementDeliveryDaysBefore}
+                      onChange={(event) => setMeasurementDeliveryDaysBefore(event.target.value)}
+                      aria-invalid={errors.measurementDeliveryDaysBefore ? 'true' : 'false'}
+                    />
+                    <FieldError message={errors.measurementDeliveryDaysBefore} />
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label htmlFor="measurementDeliveryDate">Data dostawy materiałów</Label>
+                    <Input
+                      id="measurementDeliveryDate"
+                      name="measurementDeliveryDate"
+                      type="date"
+                      value={measurementDeliveryDate}
+                      onChange={(event) => setMeasurementDeliveryDate(event.target.value)}
+                      aria-invalid={errors.measurementDeliveryDate ? 'true' : 'false'}
+                    />
+                    <FieldError message={errors.measurementDeliveryDate} />
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="measurementAdditionalNotes">Notatki dla zespołu pomiarowego</Label>
+                  <Textarea
+                    id="measurementAdditionalNotes"
+                    name="measurementAdditionalNotes"
+                    placeholder="Dodaj dodatkowe informacje logistyczne lub ustalenia z klientem."
+                    value={measurementNotes}
+                    onChange={(event) => setMeasurementNotes(event.target.value)}
+                  />
+                  <FieldError message={errors.measurementAdditionalNotes} />
+                </div>
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card className="border border-border/60 shadow-sm">
         <CardHeader className="space-y-2">

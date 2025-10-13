@@ -1,6 +1,6 @@
 'use client'
 
-import { type ChangeEvent, type ComponentProps, useActionState, useEffect, useRef, useState } from 'react'
+import { type ChangeEvent, type ComponentProps, useActionState, useCallback, useEffect, useRef, useState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { Building2, MapPin, Save, UserPlus2, X } from 'lucide-react'
 
@@ -27,12 +27,16 @@ export type SelectOption = {
   label: string
 }
 
+export const ADD_CLIENT_OPTION_VALUE = '__ADD_NEW_CLIENT__'
+
 type AddClientDialogProps = {
   partners: SelectOption[]
   onClientCreated?: (clientId: string, clientName: string) => void
   triggerVariant?: ComponentProps<typeof Button>['variant']
   triggerClassName?: string
   triggerLabel?: string
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 function FieldError({ message }: { message?: string }) {
@@ -59,8 +63,21 @@ export function AddClientDialog({
   triggerVariant = 'outline',
   triggerClassName,
   triggerLabel = 'Dodaj klienta',
+  open: controlledOpen,
+  onOpenChange,
 }: AddClientDialogProps) {
-  const [open, setOpen] = useState(false)
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false)
+  const isControlled = controlledOpen !== undefined
+  const open = isControlled ? controlledOpen : uncontrolledOpen
+  const handleOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      if (!isControlled) {
+        setUncontrolledOpen(nextOpen)
+      }
+      onOpenChange?.(nextOpen)
+    },
+    [isControlled, onOpenChange],
+  )
   const [state, action] = useActionState(createClientForDialogAction, INITIAL_CREATE_CLIENT_FORM_STATE)
   const errors = state.status === 'error' ? state.errors ?? {} : {}
   const [acquisitionSource, setAcquisitionSource] = useState<string>('')
@@ -81,17 +98,17 @@ export function AddClientDialog({
   // Po udanym zapisie: zamknij dialog i wywołaj callback
   useEffect(() => {
     if (state.status === 'success') {
-      setOpen(false)
+      handleOpenChange(false)
       onClientCreated?.(state.clientId, state.clientName)
       
       // Reset formularza
       formRef.current?.reset()
       setAcquisitionSource('')
     }
-  }, [state, onClientCreated])
+  }, [state, onClientCreated, handleOpenChange])
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button
           variant={triggerVariant}
@@ -251,7 +268,7 @@ export function AddClientDialog({
               type="button"
               variant="outline"
               className="gap-2 rounded-full"
-              onClick={() => setOpen(false)}
+              onClick={() => handleOpenChange(false)}
             >
               <X className="size-4" />
               Anuluj

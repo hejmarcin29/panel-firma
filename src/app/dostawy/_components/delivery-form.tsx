@@ -12,7 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { AddClientDialog } from '@/components/clients/add-client-dialog'
+import { AddClientDialog, ADD_CLIENT_OPTION_VALUE } from '@/components/clients/add-client-dialog'
 
 import { INITIAL_DELIVERY_FORM_STATE } from '../initial-state'
 
@@ -142,6 +142,7 @@ export function DeliveryForm({
   const initialClientId = initialValues?.clientId ?? defaultClientId ?? ''
   const [selectedClientId, setSelectedClientId] = useState<string>(initialClientId)
   const [clientsList, setClientsList] = useState<ClientOption[]>(clients)
+  const [isAddClientDialogOpen, setIsAddClientDialogOpen] = useState(false)
   
   const selectedClient = useMemo(
     () => clientsList.find((client) => client.id === selectedClientId) ?? null,
@@ -219,6 +220,8 @@ export function DeliveryForm({
                 onClientCreated={handleClientCreated}
                 triggerVariant="link"
                 triggerClassName="text-orange-600 hover:text-orange-700"
+                open={isAddClientDialogOpen}
+                onOpenChange={setIsAddClientDialogOpen}
               />
             ) : null}
           </div>
@@ -240,7 +243,13 @@ export function DeliveryForm({
                 required
                 value={selectedClientId}
                 onChange={(event) => {
-                  setSelectedClientId(event.target.value)
+                  const value = event.target.value
+                  if (value === ADD_CLIENT_OPTION_VALUE) {
+                    setIsAddClientDialogOpen(true)
+                    event.target.value = selectedClientId
+                    return
+                  }
+                  setSelectedClientId(value)
                   setUseClientAddress(true)
                 }}
                 className="h-11 w-full rounded-xl border border-border/60 bg-background px-3 text-sm text-foreground shadow-sm focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/30"
@@ -249,6 +258,7 @@ export function DeliveryForm({
                 <option value="" disabled>
                   Wybierz klienta…
                 </option>
+                <option value={ADD_CLIENT_OPTION_VALUE}>➕ Dodaj nowego klienta</option>
                 {clientsList.map((client) => (
                   <option key={client.id} value={client.id}>
                     {client.label}
