@@ -1,14 +1,10 @@
-﻿export const userRoles = ["ADMIN", "MONTER", "PARTNER"] as const;
+import { userRoles } from "@db/schema";
 
-export type UserRole = (typeof userRoles)[number];
+export const USER_ROLES = userRoles;
+export type UserRole = (typeof USER_ROLES)[number];
 
 export const userRoleLabels: Record<UserRole, string> = {
   ADMIN: "Administrator",
   MONTER: "Monter",
-  PARTNER: "Partner biznesowy",
+  SPRZEDAZ: "Sprzedaż",
 };
-
-export const userRoleOptions = userRoles.map((role) => ({
-  value: role,
-  label: userRoleLabels[role],
-}));

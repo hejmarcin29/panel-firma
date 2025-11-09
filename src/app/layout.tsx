@@ -1,152 +1,47 @@
-import type { Metadata } from "next";
-import { headers } from "next/headers";
+import { type Metadata, type Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-
-import { AppShell } from "@/components/navigation/app-shell";
-import { getCurrentSession } from "@/lib/auth";
-import { isPublicPath } from "@/lib/routes";
-import { userRoleLabels } from "@/lib/user-roles";
-
 import "./globals.css";
 
+import { ThemeProvider } from "@/components/theme-provider";
+import { cn } from "@/lib/utils";
+
 const geistSans = Geist({
-  variable: "--font-geist-sans",
+  variable: "--font-sans",
   subsets: ["latin"],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+  variable: "--font-mono",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Nowy panel",
-  description: "Minimalny start aplikacji – dodaj własne moduły i widoki.",
+  metadataBase: new URL("https://example.com"),
+  title: {
+    default: "Panel operacyjny",
+    template: "%s • Panel operacyjny",
+  },
+  description:
+    "Panel do zarządzania montażami i kanałem dropshipping paneli fotowoltaicznych.",
+  applicationName: "Panel operacyjny",
+  authors: [{ name: "Zespół operacyjny" }],
+  icons: [{ rel: "icon", url: "/favicon.ico" }],
+  keywords: ["montaże", "dropshipping", "panele", "panel SaaS"],
 };
 
-async function resolveCurrentPath(): Promise<string> {
-  const headerList = await headers();
+export const viewport: Viewport = {
+  themeColor: "#f5f3ff",
+};
 
-  const host = headerList.get("x-forwarded-host") ?? headerList.get("host") ?? "localhost";
-  const candidates = [
-    headerList.get("x-invoke-path"),
-    headerList.get("x-matched-path"),
-    headerList.get("x-request-path"),
-    headerList.get("x-forwarded-path"),
-  headerList.get("x-forwarded-url"),
-    headerList.get("x-original-url"),
-  headerList.get("x-original-path"),
-    headerList.get("request-url"),
-  headerList.get("x-middleware-pathname"),
-  headerList.get("x-next-pathname"),
-    headerList.get("x-pathname"),
-    headerList.get("x-forwarded-uri"),
-    headerList.get("x-original-uri"),
-    headerList.get("x-request-uri"),
-    headerList.get(":path"),
-    headerList.get("next-url"),
-    headerList.get("x-url"),
-    headerList.get("rsc-pathname"),
-    headerList.get("x-now-route-matches"),
-    headerList.get("traceparent"),
-  ];
-
-  for (const candidate of candidates) {
-    if (!candidate) continue;
-
-    if (candidate.startsWith("/")) {
-      const [rawPathname] = candidate.split("?");
-      const pathname = rawPathname || "/";
-      return normalizeAppPath(pathname);
-    }
-
-    try {
-      const parsed = new URL(candidate, `http://${host}`);
-      if (parsed.pathname) {
-        return normalizeAppPath(parsed.pathname);
-      }
-    } catch (error) {
-      void error;
-    }
-  }
-
-  return "/";
-}
-
-function normalizeAppPath(pathname: string): string {
-  if (pathname.startsWith("/_next/data/")) {
-    const segments = pathname.split("/");
-    if (segments.length >= 4) {
-      const rest = segments.slice(3).join("/");
-      const normalized = rest.endsWith(".json") ? rest.slice(0, -5) : rest;
-      return normalized.startsWith("/") ? normalized : `/${normalized}`;
-    }
-  }
-
-  if (pathname.startsWith("/_next/")) {
-    return pathname;
-  }
-
-  if (pathname === "") {
-    return "/";
-  }
-
-  return pathname;
-}
-
-function getUserInitials(name?: string | null, username?: string | null) {
-  if (name) {
-    const [first = "", second = ""] = name.trim().split(/\s+/);
-    if (first && second) {
-      return `${first[0]}${second[0]}`.toUpperCase();
-    }
-    if (first) {
-      return first.slice(0, 2).toUpperCase();
-    }
-  }
-
-  if (username) {
-    return username.slice(0, 2).toUpperCase();
-  }
-
-  return "U";
-}
-
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const currentPath = await resolveCurrentPath();
-  const isProtectedRoute = !isPublicPath(currentPath);
-  const session = await getCurrentSession();
-  
-  // Jeśli brak sesji, nie pokazuj nawigacji (niezależnie od ścieżki)
-  const shouldShowNavigation = isProtectedRoute && session !== null;
-  
-  const rawName = session?.user.name;
-  const rawUsername = session?.user.username;
-  const displayName = rawName ?? rawUsername ?? (shouldShowNavigation ? "Użytkownik" : "Gość");
-  const initials = getUserInitials(rawName ?? displayName, rawUsername);
-  const roleLabel = session?.user.role ? userRoleLabels[session.user.role as keyof typeof userRoleLabels] ?? session.user.role : null;
-
   return (
-    <html lang="pl">
-      <body className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-background text-foreground antialiased`}>
-        {shouldShowNavigation ? (
-          <AppShell
-            user={{
-              displayName,
-              role: roleLabel,
-              rawRole: session.user.role,
-              initials,
-            }}
-          >
-            {children}
-          </AppShell>
-        ) : (
-          children
-        )}
+    <html lang="pl" suppressHydrationWarning>
+      <body className={cn("min-h-screen bg-background", geistSans.variable, geistMono.variable)}>
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

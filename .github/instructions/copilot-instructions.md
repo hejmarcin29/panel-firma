@@ -1,70 +1,52 @@
-ls -al /srv
-find /srv -maxdepth 1 -type d -name "prime*"# Wskazówki dla AI w projekcie `appgit`
+# Wskazówki dla AI w projekcie `appgit`
 
-## Komunikacja i ton
-- Wszystkie komunikaty, odpowiedzi i aktualizacje kieruj do użytkownika wyłącznie po polsku, w przyjaznym i konkretnym tonie. Brak wyjątków od tej zasady.
-- Jeśli odpowiedź miałaby zawierać fragment w innym języku (np. cytat, kod), wyjaśnij go po polsku i zaznacz, że fragment jest w oryginale.
-- Unikaj zbędnego żargonu, stawiaj na zwięzłe podsumowania i jasno oznaczaj kolejne kroki.
+## Komunikacja
+- Wszelka komunikacja prowadzona jest po polsku, w tonie partnerskim i rzeczowym.
+- Fragmenty kodu lub cytaty w innym języku zostawiamy w oryginale – pamiętaj, by dodać krótkie objaśnienie po polsku.
 
-## Architektura i kontekst
-- Projekt stoi na **Next.js App Router 15.x**; dewelopersko używamy Turbopacka (`npm run dev`), a build produkcyjny uruchamiamy klasycznie (`npm run build`). Widoki znajdziesz w `src/app/**`, domyślnie z polskimi slugami (`/zlecenia`, `/uzytkownicy`, `/setup`, `/logowanie`).
-- Stylizacja opiera się o **Tailwind + shadcn/ui** (`src/components/ui/**`); trzymaj layouty na `gap-6`, karty na `rounded-2xl`/`border`/`p-6`, a dla większych modułów `rounded-3xl`.
-- Używamy aliasów `@/*`. Logika domenowa żyje w `src/lib/**`, komponenty UI w `src/components/**`, mocki w `src/data/**`.
-- Baza to **SQLite + Drizzle ORM** (`db/schema.ts`, `db/index.ts`); wszystkie wywołania DB wykonujemy po stronie serwera, komponenty klienckie nie importują `@db/index`. Role użytkowników definiujemy w `src/lib/user-roles.ts`, a `db/schema.ts` tylko je re-eksportuje.
-- Projektowe ustalenia i roadmapa są w `instructions.md` – traktuj je jak spec i aktualizuj Copilot, gdy pojawią się nowe sekcje.
+## Stos technologiczny
+- Aplikacja opiera się o **Next.js 15 (App Router)**, z pakietem `next-themes` do motywu.
+- Stylowanie realizujemy przez **Tailwind CSS 3.4** + **shadcn/ui** (`src/components/ui/**`). Komponenty mają miękkie krawędzie (`rounded-2xl`, w większych partiach `rounded-3xl`), spacing `gap-6`, pastelową paletę i jasny tryb jako domyślny.
+- Alias `@/*` wskazuje na `src`, dodatkowo mamy alias `@db` dla `db/index.ts` oraz `@db/*` dla schematów.
+- UI celuje w nowoczesny panel operacyjny 2025: jasne tło, pastelowe akcenty, miękkie cienie, dobre wskaźniki KPI (`TrendingUp`, `TrendingDown`).
+- Wszelkie wykresy budujemy na `@/components/ui/chart` (Recharts) – na razie mamy placeholdery tabel.
+
+## Domeny biznesowe
+- **Panel główny (`/panel`)** – dashboard KPI i statusów zamówień dropshipping.
+- **Dropshipping (`/dropshipping`)** – zamówienia magazynowe i wysyłki.
+- **Produkty (`/produkty`)** – przygotowanie pod katalog paneli i usług.
+- **Setup (`/setup`)** – jednorazowa konfiguracja pierwszego administratora po świeżej instalacji.
+
+## Baza danych i Drizzle
+- Używamy **Drizzle ORM (libSQL)**; klient znajduje się w `db/index.ts`, schemat w `db/schema.ts`, migracje w `./drizzle`.
+- Połączenie lokalne: `DATABASE_URL=file:./data/panel.db`. Polecenia Drizzle odpalamy przez `npm run db:push` / `npm run db:generate` / `npm run db:studio`.
+- Kluczowe tabele:
+  - `users`, `sessions` (sesje hashowane SHA-256, cookie `session`, TTL 30 dni).
+  - `clients`, `partners`, `products`, `orders`, `order_items`, `installations`, `shipments`, `order_status_history`, `inventory_snapshots`.
+  - Statusy zamówień: `NOWE`, `PLANOWANE`, `W_REALIZACJI`, `WYSŁANE`, `ZREALIZOWANE`, `ANULOWANE`.
+  - Role użytkowników: `ADMIN`, `MONTER`, `SPRZEDAZ` (etykiety w `src/lib/user-roles.ts`).
 
 ## Autoryzacja i sesje
-- Mamy własne sesje oparte na tabelach `users` i `sessions`; token (losowe 32B) wysyłamy w ciasteczku `session`, a w bazie trzymamy jego skrót SHA-256.
-- Hasła haszujemy przez `bcryptjs` i weryfikujemy `ensurePasswordPolicy`. Dostępne są `getCurrentSession()`, `getCurrentUser()`, `requireSession()` oraz `requireRole()` w `src/lib/auth.ts`.
-- Logowanie i wylogowanie obsługują route handlers `src/app/api/auth/login/route.ts` oraz `src/app/api/auth/logout/route.ts`.
-- `/setup` (server action w `src/app/setup/actions.ts`) zakłada pierwszego admina i ustawia sesję; `/logowanie` przekierowuje gotowego admina na `/zlecenia`.
-- **Middleware (`middleware.ts`)** automatycznie przekierowuje niezalogowanych użytkowników na `/logowanie` dla wszystkich stron oprócz publicznych (`/logowanie`, `/setup`, `/_next/*`, `/api/auth/*`).
-- **KAŻDA nowa chroniona strona** (`page.tsx`) MUSI zaczynać się od `await requireSession()` lub `await requireRole(['ADMIN'])` - middleware sprawdza tylko cookie, a `requireSession()` weryfikuje ważność sesji w bazie.
-- Tworząc nową publiczną trasę (dostępną bez logowania), dodaj ją do listy `PUBLIC_PATHS` w `middleware.ts`.
+- Hasła trzymamy jako `bcrypt` (`hashPassword`, `verifyPassword` w `src/lib/auth.ts`).
+- `createSession()` zapisuje skrót tokenu (SHA-256) i ustawia cookie `session` (httpOnly, sameSite=lax, secure w produkcji).
+- `requireSession()`/`requireRole()` walidują dostęp na warstwie serwera – każda chroniona strona (`(app)` group) wywołuje `await requireSession()` w layoucie.
+- `middleware.ts` pilnuje obecności cookie `session`; publiczne ścieżki: `/logowanie`, `/setup`, `/api/auth`.
 
 ## UI i UX
-- Celujemy w nowoczesny panel SaaS 2025: jasna paleta, pastelowe akcenty, miękkie cienie, szybkie skanowanie KPI.
-- Copy, nagłówki, komunikaty i URL-e pisz po polsku; dla starych angielskich slugów zakładamy przekierowania.
-- Korzystaj z gotowych komponentów shadcn (Card, Tabs, Badge, Dialog, Table itd.). Ikony dobieramy z `lucide-react`, a wykresy renderujemy przez helpery `@/components/ui/chart` (Recharts).
-- Każdą tabelę budujemy na TanStack React Table (`@tanstack/react-table`) z filtrami, sortowaniem i opcjonalną paginacją.
-- Zachowuj responsywność (grid/flex, breakpointy md/lg/xl), typografię `font-sans`, spacing: sekcje 24px, wnętrze kart 16px. Dodawaj wskaźniki trendów (`TrendingUp`/`TrendingDown`) i kolorowe badge dla zmian procentowych.
-- Na stronie `/zlecenia` sekcje „Przegląd montaży” i „Przegląd dostaw” renderują klikalne karty kierujące do szczegółów `/zlecenia/{orderId}`; zachowaj ten pattern linkowania i stany hover/focus przy dalszych zmianach layoutu.
-- Referencyjny layout dashboardu (sidebar + topbar + rząd kart KPI + sekcje analityczne jak na dostarczonym screenie) traktuj jako bazę – wszystkie nowe podstrony powinny dzielić ten sam styl kart, spacing i hierarchię nagłówków. Sidebar jest stały na desktopie, na mobile działa jako wysuwany panel.
+- Layout aplikacyjny w `AppShell` (`src/components/layout/app-shell.tsx`) – sidebar + topbar, mobile via `Sheet`.
+- Formy używają komponentów shadcn (`Input`, `Button`, `Label`), stany błędów sygnalizowane pastelową czerwienią.
+- Karty KPI (`Card`) i sekcje analityczne (`Tabs`, `Table`) mają spójny spacing i pastelowe highlighty (`bg-success/15`, `bg-destructive/10`).
+- Ikony: `lucide-react`. Wersja ciemna aktywowana przez `ThemeToggle`.
 
-## Struktura modułów i danych
-- **Zlecenia**: front w `src/app/zlecenia/**`, logika w `src/lib/orders.ts`, etapy w `src/lib/order-stage.ts`. Statusy przechodzą: *Przyjęto → Przed pomiarem → Przed wyceną → Oczekiwanie na zaliczkę → Przed dostawą → Przed montażem → Oczekiwanie na końcową → Koniec*. Samodzielne dostawy generują rekordy z `executionMode: 'DELIVERY_ONLY'` i numeracją `_Z_` zgodną z pozostałymi zleceniami (np. `2_Z_2`).
-- W szczegółach zlecenia ukrywamy zakładki i sekcje „Pomiary” oraz „Montaże”, jeżeli `executionMode === 'DELIVERY_ONLY'`; zachowaj tę logikę wraz z ewentualnymi refactorami widoku.
-- **Użytkownicy**: `src/app/uzytkownicy/**` + helpery `src/lib/users.ts`; etykiety ról w `src/lib/user-roles.ts` są bezpieczne dla klientów.
-- **Partnerzy, dostawy, pomiary, montaż, produkty** – kolejne moduły powielają układ: hero (tytuł + opis), 2–3 karty KPI, moduł analityczny (tabela/wykres) i listy szczegółowe.
-- Kluczowe encje Drizzle: `clients`, `products`, `orders`, `measurements`, `installations`, `deliveries`, `attachments`, `partner_status_history`. Relacje opieramy na `order_id` oraz identyfikatorach partnerów/klientów.
-- Role: *Admin* (pełny dostęp), *Monter* (własne zlecenia i raporty), *Partner* (przypisany portfel klientów/zleceń).
+## Workflow
+- Menedżer pakietów: **npm**. Po większych zmianach uruchamiamy `npm run lint`.
+- Dev server: `npm run dev` (Turbopack).
+- Przed wypchnięciem migracji upewnij się, że `data/panel.db` istnieje; dla świeżego środowiska odpal `npm run db:push`.
+- Codziennie aktualizujemy `instructions.md` po ustaleniach domenowych.
 
-## Konwencje implementacyjne
-- Server actions zaczynamy od `"use server"`, eksportujemy tylko async funkcje i przekazujemy je do formularzy `action={fn}`. Dane wejściowe to `FormData`.
-- Komponenty klienckie oznaczaj `"use client"`. Jeśli potrzebują stałych z warstwy serwera (np. role), wyciągnij je do osobnego modułu bez zależności od DB.
-- Logika domenowa (Drizzle, auth) zostaje po stronie serwera; komponenty `async` w App Routerze są OK, ale niech nie trafiają do bundla przeglądarki.
-- Dane mockowane trzymaj w `src/data/**` i opisuj w `instructions.md`. Alias `@/` wykorzystuj do importów.
-- App Router potrafi przekazać `params`/`searchParams` jako `Promise`; rozpakuj je (`const resolved = await params`) zanim użyjesz wartości na stronie.
-
-## Baza danych i migracje
-- Drizzle ORM + SQLite – schemat w `db/schema.ts`, klient z konfiguracją w `db/index.ts`.
-- Baza żyje w `./data/panel.db`; jeśli katalogu brakuje, utwórz go przed startem.
-- Migracje generujemy/uruchamiamy tylko przez `drizzle-kit` (`npx drizzle-kit push`), bez użycia Prisma.
-- Polecenia drizzle prowadzimy zawsze przez `npx drizzle-kit …`; nie używaj `pnpm drizzle-kit` ani globalnych skrótów, żeby uniknąć brakujących binarek.
-- Najnowsze zmiany: rozbudowana tabela `partners` (status, segment, region, archiwizacja, kontakt) + historia statusów, nowe modele `orders`, `order_status_history`, `measurement_adjustments`, `attachments`, uproszczone `measurements`, `installations`, `deliveries`, `tasks` spięte przez `order_id`.
-
-## Workflow deweloperski
-- Uruchomienie dev: `npm run dev` (Turbopack). Jeśli proces już działa, przed lintem/testami zatrzymaj go (`taskkill /F /IM node.exe` na Windows).
-- Po każdej większej zmianie odpal `npm run lint`; nie mamy osobnych testów, więc lint to główna walidacja.
-- Przy zmianach schematu usuń `data/panel.db` i wypchnij migracje `npx drizzle-kit push`.
-- Nowy ekran = nagłówek (tytuł + opis), karty KPI, moduł analityczny (tabela/wykres/lista) + mockowe dane, jeśli backend jeszcze nie dostarcza wartości.
-- Po każdej iteracji ważne ustalenia dopisujemy do `instructions.md`, a streszczenie trafia tutaj.
-- Gdy trzeba wyrównać historyczne numery zleceń dostawowych, odpal `node scripts/fix-delivery-order-numbers.mjs` – skrypt zamienia stare `_D_` na sekwencję `_Z_` bez ruszania pozostałych rekordów.
-- Deploy na VPS-ie robimy przez `docker compose build` + `docker compose up -d` wykorzystując przygotowany `Dockerfile`. Pamiętaj o pliku `.env` w katalogu repo (wystarczy pusty), bo compose wczytuje go domyślnie, oraz o wolumenie `./data:/app/data` dla bazy SQLite.
-
-## Najczęstsze pułapki
-- Błąd `Can't resolve 'fs'` oznacza, że komponent kliencki importuje moduł serwerowy – rozdziel dane i UI (patrz `userRoleLabels`).
-- Nie zostawiaj użytkownika bez ścieżki: brak admina → `/setup`, brak sesji → `/logowanie`; pamiętaj o aktualizacji listy publicznych tras.
-- Dodając tabele, doinstaluj i reużywaj TanStack React Table zamiast tworzyć własne implementacje.
-- Pilnuj stylów (`rounded-3xl`, `border`, spacing), bo niespójne karty wybijają z design systemu.
-- Server actions z `redirect()` zawsze przepuszczają wyjątek `NEXT_REDIRECT` dalej. W `catch` sprawdzaj `isRedirectError(error)` z `next/dist/client/components/redirect-error` i w razie true ponownie rzucaj błąd, zamiast zamieniać go na komunikat formularza.
+## TODO / Roadmapa MVP
+1. Przygotować seed startowy (np. skrypt Drizzle) i zasilić podstawowe dane testowe.
+2. CRUD klientów i partnerów (widoki list + formularze).
+3. Podpięcie realnych zapytań Drizzle (dashboard obecnie na mockach z `src/data/dashboard.ts`).
+4. Integracja statusów zamówień z historią (`order_status_history`).
+5. Kolejny krok: automatyzacja numeracji zamówień (prefiks `ORD-` / `DS-`).
