@@ -1,9 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-<<<<<<< HEAD
-  /* config options here */
-=======
   output: "standalone",
   // Ensure native modules remain external in RSC/route handlers (fixes Windows Turbopack errors)
   serverExternalPackages: ["better-sqlite3", "@node-rs/argon2"],
@@ -17,7 +14,6 @@ const nextConfig: NextConfig = {
       { source: "/dostawy", destination: "/checklist/dostawa", permanent: true },
     ];
   },
->>>>>>> dababeff8c8f75bf6fcf08091018b9a035607b77
 };
 
 export default nextConfig;
