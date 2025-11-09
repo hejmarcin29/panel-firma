@@ -311,3 +311,38 @@ export const dropshippingChecklistItems = sqliteTable("dropshipping_checklist_it
     .notNull()
     .default(sql`(unixepoch('now') * 1000)`),
 });
+
+export const incomingWpOrderStatuses = ["NEW", "IMPORTED", "DISCARDED"] as const;
+export type IncomingWpOrderStatus = (typeof incomingWpOrderStatuses)[number];
+
+export const incomingWpOrders = sqliteTable(
+  "incoming_wp_orders",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    wpOrderId: text("wp_order_id", { length: 64 }).notNull(),
+    wpOrderNumber: text("wp_order_number", { length: 64 }).notNull(),
+    wpStatus: text("wp_status", { length: 64 }).notNull().default("pending"),
+    status: text("status", { enum: incomingWpOrderStatuses }).notNull().default("NEW"),
+    customerName: text("customer_name", { length: 255 }),
+    customerEmail: text("customer_email", { length: 255 }),
+    totalNet: integer("total_net").notNull().default(0),
+    totalGross: integer("total_gross").notNull().default(0),
+    currency: text("currency", { length: 8 }).notNull().default("PLN"),
+    containsVinylPanels: integer("contains_vinyl_panels", { mode: "boolean" }).notNull().default(false),
+    categoriesJson: text("categories_json"),
+    rawPayload: text("raw_payload").notNull(),
+    receivedAt: integer("received_at", { mode: "timestamp_ms" })
+      .notNull()
+      .default(sql`(unixepoch('now') * 1000)`),
+    importedAt: integer("imported_at", { mode: "timestamp_ms" }),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .default(sql`(unixepoch('now') * 1000)`),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+      .notNull()
+      .default(sql`(unixepoch('now') * 1000)`),
+  },
+  (table) => ({
+    wpOrderIdIndex: uniqueIndex("incoming_wp_orders_wp_order_id_idx").on(table.wpOrderId),
+  }),
+);

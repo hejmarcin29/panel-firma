@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { ArrowRight, TrendingDown, TrendingUp } from "lucide-react";
+import { ArrowRight, Package, TrendingDown, TrendingUp } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,9 +20,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { kpis, dropshippingOrders } from "@/data/dashboard";
-import { cn } from "@/lib/utils";
+import { cn, formatPln } from "@/lib/utils";
+import { listPendingWpOrders } from "@/lib/wp-orders";
+function prettifyCategory(slug: string) {
+  return slug
+    .split("-")
+    .filter(Boolean)
+    .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1))
+    .join(" ");
+}
 
-export default function PanelPage() {
+export default async function PanelPage() {
+  const pendingWpOrders = await listPendingWpOrders();
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-2">
@@ -74,6 +83,70 @@ export default function PanelPage() {
             );
           })
         )}
+      </section>
+
+      <section className="grid gap-4">
+        <Card className="rounded-3xl border">
+          <CardHeader className="flex flex-col gap-1">
+            <CardTitle className="text-lg font-semibold">Nowe zamówienia z WordPress</CardTitle>
+            <CardDescription>
+              Reaguj na świeże zamówienia WooCommerce i przekształcaj je w zlecenia dropshipping w panelu.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            {pendingWpOrders.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-3 rounded-2xl bg-muted/20 px-6 py-10 text-center text-sm text-muted-foreground">
+                <Package className="h-8 w-8 text-muted-foreground/80" />
+                <p>Brak nowych zamówień do zaimportowania. Gdy tylko klient kupi panel winylowy, pojawi się tutaj.</p>
+              </div>
+            ) : (
+              <div className="grid gap-3">
+                {pendingWpOrders.map((order) => {
+                  const vinylBadge = order.containsVinylPanels ? (
+                    <Badge className="rounded-full bg-success/15 text-success">Panele winylowe</Badge>
+                  ) : null;
+
+                  return (
+                    <div
+                      key={order.id}
+                      className="flex flex-col gap-3 rounded-2xl border border-muted/60 bg-background/80 p-4 shadow-sm md:flex-row md:items-center md:justify-between"
+                    >
+                      <div className="flex flex-col gap-1 text-sm">
+                        <span className="text-xs uppercase tracking-wide text-muted-foreground">
+                          WooCommerce #{order.wpOrderNumber}
+                        </span>
+                        <span className="text-base font-semibold text-foreground">
+                          {order.customerName ?? "Nieznany klient"}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {order.customerEmail ?? "Brak e-maila"}
+                        </span>
+                        <div className="flex flex-wrap items-center gap-2 pt-2 text-xs text-muted-foreground">
+                          {vinylBadge}
+                          {order.categories.map((category) => (
+                            <Badge key={category} variant="outline" className="rounded-full px-2 py-0 text-[11px]">
+                              {prettifyCategory(category)}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-start gap-3 md:items-end">
+                        <span className="text-lg font-semibold text-foreground">{formatPln(order.totalGross)}</span>
+                        <div className="flex gap-2">
+                          <Button asChild variant="outline" className="rounded-2xl">
+                            <Link href={`/dropshipping/nowe?wpOrderId=${order.id}`} prefetch={false}>
+                              Przeglądnij / dodaj
+                            </Link>
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </section>
 
       <section className="grid gap-4">
