@@ -13,6 +13,12 @@
 - `.env.local` jest ignorowany przez git – trzymaj w nim wszystko, czego nie chcemy w repo (tokeny, klucze, prod/stage URL).
 - Next.js ładuje `.env.local` z wyższym priorytetem, więc nadpisuje wartości z `.env`.
 
+## shadcn/ui
+- Projekt ma zainicjalizowaną bibliotekę shadcn/ui (pełny zestaw komponentów w `src/components/ui`).
+- Nowe komponenty pobieramy poleceniem `npx shadcn@latest add <nazwa>` – CLI doda pliki i zależności.
+- Większość komponentów bazuje na Radix UI, dlatego pamiętaj o dostosowaniu importów (`@/components/ui/...`).
+- Temat wprowadzony do `src/app/globals.css` korzysta z CSS variables; w razie zmiany kolorystyki aktualizujemy je w jednym miejscu.
+
 ## Przydatne polecenia
 - `npm run dev` – lokalny serwer Next.js.
 - `npm run lint` – sprawdzenie lintem.
