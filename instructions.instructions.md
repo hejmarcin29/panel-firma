@@ -23,3 +23,10 @@
 - `npm run dev` – lokalny serwer Next.js.
 - `npm run lint` – sprawdzenie lintem.
 - `npm run db:studio` – podgląd danych i schematu przez Drizzle Studio.
+
+## Git Hooks & pre-push
+- Po sklonowaniu repo uruchom `npm run setup:hooks`, aby Git korzystał z katalogu `.githooks`.
+- Hak `pre-push` odpala `npm run lint`, `npm run build` i `npm run db:generate`; w razie błędu push jest blokowany.
+- Jeśli `db:generate` utworzy nowe migracje, commitnij je przed ponownym `git push`.
+- W razie potrzeby możesz pominąć hak ustawiając `SKIP_PRE_PUSH=1` dla pojedynczego polecenia (`SKIP_PRE_PUSH=1 git push`).
+- Pilnuj aktualnego `.env` – hak nie weryfikuje obecności zmiennych środowiskowych.

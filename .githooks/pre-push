@@ -1,0 +1,24 @@
+#!/bin/sh
+# Pre-push guard to run local checks before upstream push.
+set -e
+
+if [ "$SKIP_PRE_PUSH" = "1" ]; then
+  echo "pre-push: SKIP_PRE_PUSH=1, skipping checks."
+  exit 0
+fi
+
+echo "pre-push: npm run lint"
+npm run lint
+
+echo "pre-push: npm run build"
+npm run build
+
+echo "pre-push: npm run db:generate"
+npm run db:generate
+
+if [ -n "$(git status --porcelain drizzle)" ]; then
+  echo "pre-push: drizzle/ has uncommitted changes. Commit new migrations before pushing."
+  exit 1
+fi
+
+echo "pre-push: all checks passed."
