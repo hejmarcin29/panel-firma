@@ -126,14 +126,14 @@ export function OrdersOverviewClient({ initialOrders }: OrdersOverviewClientProp
 				</Button>
 			</div>
 
-			{pendingReviewCount > 0 ? (
-				<Alert className="border-amber-300 bg-amber-50 text-amber-900">
-					<AlertTitle>Do potwierdzenia: {pendingReviewCount}</AlertTitle>
-					<AlertDescription>
-						Nowe zamówienia z WooCommerce wymagają ręcznego zatwierdzenia przed dalszą realizacją.
-					</AlertDescription>
-				</Alert>
-			) : null}
+			<Alert className={cn('border-amber-300 text-amber-900', pendingReviewCount ? 'bg-amber-50' : 'bg-muted')}>
+				<AlertTitle>Do potwierdzenia: {pendingReviewCount}</AlertTitle>
+				<AlertDescription>
+					{pendingReviewCount > 0
+						? 'Nowe zamówienia z WooCommerce wymagają ręcznego zatwierdzenia przed dalszą realizacją.'
+						: 'Brak zamówień oczekujących na potwierdzenie.'}
+				</AlertDescription>
+			</Alert>
 
 			<div className="grid gap-6 lg:grid-cols-[minmax(0,420px)_1fr]">
 				<Card>
@@ -244,6 +244,12 @@ export function OrdersOverviewClient({ initialOrders }: OrdersOverviewClientProp
 										</p>
 									</div>
 								</div>
+
+								{selectedOrder.source === 'woocommerce' ? (
+									<p className="rounded-md border border-sky-200 bg-sky-50 px-4 py-2 text-sm text-sky-900">
+										To zamówienie zostało zaimportowane ze sklepu online (WooCommerce).
+									</p>
+								) : null}
 
 								{feedback ? (
 									<Alert
