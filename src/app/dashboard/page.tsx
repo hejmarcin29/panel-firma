@@ -14,7 +14,7 @@ export default async function DashboardPage() {
 			<div className="rounded-lg border bg-background p-6 shadow-sm">
 				<h2 className="text-xl font-medium">Następne kroki</h2>
 				<ul className="mt-4 list-disc space-y-2 pl-5 text-sm text-muted-foreground">
-					<li>Dodaj widoki zamówień oraz timeline statusów.</li>
+					<li>Zaprojektuj widgety sprzedażowe z kluczowymi KPI na stronie głównej.</li>
 					<li>Skonfiguruj integracje z WooCommerce, wfirma oraz Alior Bank.</li>
 					<li>Przygotuj moduł powiadomień e-mail dla klientów i hurtowni.</li>
 				</ul>

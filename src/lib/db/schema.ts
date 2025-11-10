@@ -5,7 +5,7 @@ import {
 	text,
 	uniqueIndex,
 } from 'drizzle-orm/sqlite-core';
-import { sql } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 
 export const userRoles = ['owner', 'operator'] as const;
 export const orderSources = ['woocommerce', 'manual'] as const;
@@ -346,4 +346,77 @@ export const integrationLogs = sqliteTable(
 			.default(sql`(strftime('%s','now') * 1000)`),
 	}
 );
+
+export const manualOrders = sqliteTable(
+	'manual_orders',
+	{
+		id: text('id').primaryKey(),
+		reference: text('reference').notNull(),
+		status: text('status').notNull(),
+		channel: text('channel').notNull(),
+		notes: text('notes'),
+		currency: text('currency').notNull().default('PLN'),
+		totalNet: integer('total_net', { mode: 'number' }).notNull(),
+		totalGross: integer('total_gross', { mode: 'number' }).notNull(),
+		billingName: text('billing_name').notNull(),
+		billingStreet: text('billing_street').notNull(),
+		billingPostalCode: text('billing_postal_code').notNull(),
+		billingCity: text('billing_city').notNull(),
+		billingPhone: text('billing_phone').notNull(),
+		billingEmail: text('billing_email').notNull(),
+		shippingSameAsBilling: integer('shipping_same_as_billing', { mode: 'boolean' })
+			.notNull()
+			.default(false),
+		shippingName: text('shipping_name'),
+		shippingStreet: text('shipping_street'),
+		shippingPostalCode: text('shipping_postal_code'),
+		shippingCity: text('shipping_city'),
+		shippingPhone: text('shipping_phone'),
+		shippingEmail: text('shipping_email'),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	},
+	(table) => ({
+		referenceIdx: uniqueIndex('manual_orders_reference_idx').on(table.reference),
+		createdAtIdx: index('manual_orders_created_at_idx').on(table.createdAt),
+	})
+);
+
+export const manualOrderItems = sqliteTable(
+	'manual_order_items',
+	{
+		id: text('id').primaryKey(),
+		orderId: text('order_id')
+			.notNull()
+			.references(() => manualOrders.id, { onDelete: 'cascade' }),
+		product: text('product').notNull(),
+		quantity: integer('quantity', { mode: 'number' }).notNull(),
+		unitPrice: integer('unit_price', { mode: 'number' }).notNull(),
+		vatRate: integer('vat_rate', { mode: 'number' }).notNull(),
+		unitPricePerSquareMeter: integer('unit_price_per_square_meter', { mode: 'number' }),
+		totalNet: integer('total_net', { mode: 'number' }).notNull(),
+		totalGross: integer('total_gross', { mode: 'number' }).notNull(),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	},
+	(table) => ({
+		orderIdx: index('manual_order_items_order_id_idx').on(table.orderId),
+	})
+);
+
+export const manualOrdersRelations = relations(manualOrders, ({ many }) => ({
+	items: many(manualOrderItems),
+}));
+
+export const manualOrderItemsRelations = relations(manualOrderItems, ({ one }) => ({
+	order: one(manualOrders, {
+		fields: [manualOrderItems.orderId],
+		references: [manualOrders.id],
+	}),
+}));
 

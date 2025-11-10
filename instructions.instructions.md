@@ -6,6 +6,7 @@
 - Sprawdź wygenerowaną migrację i gdy jest OK, zatwierdź ją w repozytorium razem ze zmianami w schemacie.
 - Aby od razu zaktualizować lokalną bazę, użyj `npm run db:migrate`. Dzięki temu inni członkowie zespołu i środowiska CI/CD mogą potem zreplayować te same migracje.
 - Gdy nie było zmian w schemacie podczas iteracji, migracji nie generujemy.
+- Nowe formularze i funkcjonalności od razu łączymy z bazą — żadnych tymczasowych `useState`/mocków, dane mają trafiać do SQLite.
 
 ## Zmienne środowiskowe
 - Plik `.env` jest wersjonowany i zawiera bezpieczne wartości domyślne (bez sekretów).

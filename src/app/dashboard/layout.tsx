@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 
 import Link from 'next/link';
 
+import { DashboardNav } from './_components/dashboard-nav';
 import { LogoutButton } from './_components/logout-button';
 import { logoutAction } from './actions';
 import { requireUser } from '@/lib/auth/session';
@@ -24,7 +25,10 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 					</div>
 				</div>
 			</header>
-			<main className="mx-auto w-full max-w-5xl px-6 py-10">{children}</main>
+			<main className="mx-auto w-full max-w-5xl px-6 py-10">
+				<DashboardNav />
+				{children}
+			</main>
 		</div>
 	);
 }
