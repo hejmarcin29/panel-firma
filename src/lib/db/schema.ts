@@ -1,9 +1,349 @@
-/**
- * Define your Drizzle ORM schema here.
- * Example:
- * export const users = sqliteTable('users', {
- *   id: integer('id').primaryKey({ autoIncrement: true }),
- *   name: text('name').notNull(),
- * });
- */
-export {};
+import {
+	index,
+	integer,
+	sqliteTable,
+	text,
+	uniqueIndex,
+} from 'drizzle-orm/sqlite-core';
+import { sql } from 'drizzle-orm';
+
+export const userRoles = ['owner', 'operator'] as const;
+export const orderSources = ['woocommerce', 'manual'] as const;
+export const orderStatuses = [
+	'order.received',
+	'order.pending_proforma',
+	'order.proforma_issued',
+	'order.awaiting_payment',
+	'order.paid',
+	'order.advance_invoice',
+	'order.forwarded_to_supplier',
+	'order.fulfillment_confirmed',
+	'order.final_invoice',
+	'order.closed',
+] as const;
+
+export const documentTypes = ['proforma', 'advance_invoice', 'final_invoice'] as const;
+export const documentStatuses = ['draft', 'issued', 'cancelled', 'voided', 'corrected'] as const;
+
+export const paymentStatuses = ['pending', 'matched', 'mismatch', 'refunded'] as const;
+export const paymentMatchedBy = ['auto', 'manual'] as const;
+
+export const supplierRequestStatuses = ['generated', 'sent', 'acknowledged', 'fulfilled', 'cancelled'] as const;
+
+export const notificationChannels = ['email'] as const;
+export const notificationStatuses = ['pending', 'sent', 'failed'] as const;
+
+export const integrationNames = ['woocommerce', 'wfirma', 'alior', 'email'] as const;
+export const integrationLogLevels = ['info', 'warning', 'error'] as const;
+
+export const supplierMessageDirections = ['sent', 'received'] as const;
+export const supplierMessageMediums = ['email', 'phone', 'note'] as const;
+
+export type UserRole = (typeof userRoles)[number];
+export type OrderStatus = (typeof orderStatuses)[number];
+export type OrderSource = (typeof orderSources)[number];
+export type DocumentType = (typeof documentTypes)[number];
+export type DocumentStatus = (typeof documentStatuses)[number];
+export type PaymentStatus = (typeof paymentStatuses)[number];
+export type SupplierRequestStatus = (typeof supplierRequestStatuses)[number];
+export type NotificationStatus = (typeof notificationStatuses)[number];
+export type SupplierMessageDirection = (typeof supplierMessageDirections)[number];
+export type SupplierMessageMedium = (typeof supplierMessageMediums)[number];
+
+export const users = sqliteTable(
+	'users',
+	{
+		id: text('id').primaryKey(),
+		email: text('email').notNull(),
+		passwordHash: text('password_hash').notNull(),
+		name: text('name'),
+		role: text('role').$type<UserRole>().notNull().default('operator'),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	},
+	(table) => ({
+		emailIdx: uniqueIndex('users_email_idx').on(table.email),
+	})
+);
+
+export const sessions = sqliteTable(
+	'sessions',
+	{
+		id: text('id').primaryKey(),
+		userId: text('user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		tokenHash: text('token_hash').notNull().unique(),
+		expiresAt: integer('expires_at', { mode: 'number' }).notNull(),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	},
+	(table) => ({
+		expiresIdx: index('sessions_expires_at_idx').on(table.expiresAt),
+	})
+);
+
+export const customers = sqliteTable(
+	'customers',
+	{
+		id: text('id').primaryKey(),
+		name: text('name').notNull(),
+		email: text('email'),
+		phone: text('phone'),
+		taxId: text('tax_id'),
+		billingStreet: text('billing_street'),
+		billingCity: text('billing_city'),
+		billingPostalCode: text('billing_postal_code'),
+		billingCountry: text('billing_country'),
+		shippingStreet: text('shipping_street'),
+		shippingCity: text('shipping_city'),
+		shippingPostalCode: text('shipping_postal_code'),
+		shippingCountry: text('shipping_country'),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	},
+	(table) => ({
+		emailIdx: uniqueIndex('customers_email_idx').on(table.email),
+		taxIdx: uniqueIndex('customers_tax_id_idx').on(table.taxId),
+	})
+);
+
+export const orders = sqliteTable(
+	'orders',
+	{
+		id: text('id').primaryKey(),
+		source: text('source').$type<OrderSource>().notNull(),
+		sourceOrderId: text('source_order_id'),
+		status: text('status').$type<OrderStatus>().notNull(),
+		customerId: text('customer_id').references(() => customers.id, {
+			onDelete: 'set null',
+		}),
+		// monetary values stored in minor units (e.g. grosze)
+		totalNet: integer('total_net', { mode: 'number' }).notNull(),
+		totalGross: integer('total_gross', { mode: 'number' }).notNull(),
+		currency: text('currency').notNull(),
+		expectedShipDate: integer('expected_ship_date', { mode: 'timestamp_ms' }),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	},
+	(table) => ({
+		statusIdx: index('orders_status_idx').on(table.status),
+		sourceIdx: index('orders_source_idx').on(table.source, table.sourceOrderId),
+		createdAtIdx: index('orders_created_at_idx').on(table.createdAt),
+	})
+);
+
+export const orderItems = sqliteTable(
+	'order_items',
+	{
+		id: text('id').primaryKey(),
+		orderId: text('order_id')
+			.notNull()
+			.references(() => orders.id, { onDelete: 'cascade' }),
+		sku: text('sku'),
+		name: text('name').notNull(),
+		quantity: integer('quantity').notNull(),
+		unitPrice: integer('unit_price', { mode: 'number' }).notNull(),
+		taxRate: integer('tax_rate', { mode: 'number' }).notNull(),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	},
+	(table) => ({
+		orderIdx: index('order_items_order_id_idx').on(table.orderId),
+	})
+);
+
+export const documents = sqliteTable(
+	'documents',
+	{
+		id: text('id').primaryKey(),
+		orderId: text('order_id')
+			.notNull()
+			.references(() => orders.id, { onDelete: 'cascade' }),
+		type: text('type').$type<DocumentType>().notNull(),
+		status: text('status').$type<DocumentStatus>().notNull(),
+		wfirmaId: integer('wfirma_id'),
+		number: text('number'),
+		issueDate: integer('issue_date', { mode: 'timestamp_ms' }),
+		pdfUrl: text('pdf_url'),
+		grossAmount: integer('gross_amount', { mode: 'number' }),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	},
+	(table) => ({
+		typeIdx: index('documents_type_idx').on(table.type),
+		wfirmaIdx: uniqueIndex('documents_wfirma_id_idx').on(table.wfirmaId),
+		statusIdx: index('documents_status_idx').on(table.status),
+	})
+);
+
+export const documentEvents = sqliteTable(
+	'document_events',
+	{
+		id: text('id').primaryKey(),
+		documentId: text('document_id')
+			.notNull()
+			.references(() => documents.id, { onDelete: 'cascade' }),
+		status: text('status').$type<DocumentStatus>().notNull(),
+		actorId: text('actor_id'),
+		note: text('note'),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	},
+	(table) => ({
+		documentIdx: index('document_events_document_id_idx').on(table.documentId),
+	})
+);
+
+export const payments = sqliteTable(
+	'payments',
+	{
+		id: text('id').primaryKey(),
+		orderId: text('order_id')
+			.notNull()
+			.references(() => orders.id, { onDelete: 'cascade' }),
+		status: text('status').$type<PaymentStatus>().notNull(),
+		amount: integer('amount', { mode: 'number' }).notNull(),
+		currency: text('currency').notNull(),
+		paymentDate: integer('payment_date', { mode: 'timestamp_ms' }),
+		bankOperationId: text('bank_operation_id').unique(),
+		rawReference: text('raw_reference'),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	},
+	(table) => ({
+		statusIdx: index('payments_status_idx').on(table.status),
+		paymentDateIdx: index('payments_payment_date_idx').on(table.paymentDate),
+	})
+);
+
+export const paymentMatches = sqliteTable(
+	'payment_matches',
+	{
+		id: text('id').primaryKey(),
+		paymentId: text('payment_id')
+			.notNull()
+			.references(() => payments.id, { onDelete: 'cascade' }),
+		confidenceScore: integer('confidence_score'),
+		matchedBy: text('matched_by').$type<(typeof paymentMatchedBy)[number]>().notNull(),
+		notes: text('notes'),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	}
+);
+
+export const supplierRequests = sqliteTable(
+	'supplier_requests',
+	{
+		id: text('id').primaryKey(),
+		orderId: text('order_id')
+			.notNull()
+			.references(() => orders.id, { onDelete: 'cascade' }),
+		status: text('status').$type<SupplierRequestStatus>().notNull(),
+		sentAt: integer('sent_at', { mode: 'timestamp_ms' }),
+		responseReceivedAt: integer('response_received_at', { mode: 'timestamp_ms' }),
+		carrier: text('carrier'),
+		trackingNumber: text('tracking_number'),
+		payload: text('payload'),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	},
+	(table) => ({
+		statusIdx: index('supplier_requests_status_idx').on(table.status),
+	})
+);
+
+export const supplierMessages = sqliteTable(
+	'supplier_messages',
+	{
+		id: text('id').primaryKey(),
+		supplierRequestId: text('supplier_request_id')
+			.notNull()
+			.references(() => supplierRequests.id, { onDelete: 'cascade' }),
+		direction: text('direction').$type<SupplierMessageDirection>().notNull(),
+		medium: text('medium').$type<SupplierMessageMedium>().notNull(),
+		subject: text('subject'),
+		body: text('body'),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	},
+	(table) => ({
+		supplierRequestIdx: index('supplier_messages_request_idx').on(table.supplierRequestId),
+	})
+);
+
+export const notifications = sqliteTable(
+	'notifications',
+	{
+		id: text('id').primaryKey(),
+		orderId: text('order_id').references(() => orders.id, { onDelete: 'set null' }),
+		channel: text('channel').$type<(typeof notificationChannels)[number]>().notNull(),
+		templateCode: text('template_code').notNull(),
+		recipient: text('recipient').notNull(),
+		status: text('status').$type<NotificationStatus>().notNull(),
+		sentAt: integer('sent_at', { mode: 'timestamp_ms' }),
+		providerMessageId: text('provider_message_id'),
+		error: text('error'),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	},
+	(table) => ({
+		orderIdx: index('notifications_order_id_idx').on(table.orderId),
+		templateIdx: index('notifications_template_code_idx').on(table.templateCode),
+	})
+);
+
+export const integrationLogs = sqliteTable(
+	'integration_logs',
+	{
+		id: text('id').primaryKey(),
+		integration: text('integration')
+			.$type<typeof integrationNames[number]>()
+			.notNull(),
+		level: text('level')
+			.$type<typeof integrationLogLevels[number]>()
+			.notNull(),
+		message: text('message').notNull(),
+		meta: text('meta'),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	}
+);
+
