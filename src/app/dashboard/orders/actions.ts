@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
 import { manualOrderItems, manualOrders } from '@/lib/db/schema';
@@ -283,4 +283,29 @@ export async function createManualOrder(payload: ManualOrderPayload): Promise<Or
 	revalidatePath('/dashboard/orders');
 
 	return created;
+}
+
+export async function confirmManualOrder(orderId: string): Promise<Order> {
+	const [updatedRow] = await db
+		.update(manualOrders)
+		.set({
+			requiresReview: false,
+			updatedAt: sql`(strftime('%s','now') * 1000)`,
+		})
+		.where(eq(manualOrders.id, orderId))
+		.returning({ id: manualOrders.id });
+
+	if (!updatedRow) {
+		throw new Error('Nie znaleziono zamówienia do potwierdzenia.');
+	}
+
+	const updated = await getManualOrderById(orderId);
+
+	if (!updated) {
+		throw new Error('Nie udało się odczytać potwierdzonego zamówienia.');
+	}
+
+	revalidatePath('/dashboard/orders');
+
+	return updated;
 }

@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
 	Card,
 	CardContent,
@@ -32,6 +33,7 @@ import {
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 
+import { confirmManualOrder } from './actions';
 import type { Order, OrderTimelineState } from './data';
 
 type OrdersOverviewClientProps = {
@@ -74,24 +76,64 @@ function formatDateTime(value: string) {
 }
 
 export function OrdersOverviewClient({ initialOrders }: OrdersOverviewClientProps) {
+	const [orders, setOrders] = useState<Order[]>(initialOrders);
 	const [selectedOrderId, setSelectedOrderId] = useState<string | null>(initialOrders[0]?.id ?? null);
+	const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+	const [isConfirming, startConfirmTransition] = useTransition();
 
 	const selectedOrder = useMemo(
-		() => initialOrders.find((order) => order.id === selectedOrderId) ?? null,
-		[initialOrders, selectedOrderId],
+		() => orders.find((order) => order.id === selectedOrderId) ?? null,
+		[orders, selectedOrderId],
 	);
+
+	const pendingReviewCount = useMemo(
+		() => orders.filter((order) => order.requiresReview).length,
+		[orders],
+	);
+
+	function handleSelect(id: string) {
+		setSelectedOrderId(id);
+		setFeedback(null);
+	}
+
+	function handleConfirm(orderId: string) {
+		setFeedback(null);
+		startConfirmTransition(async () => {
+			try {
+				const updated = await confirmManualOrder(orderId);
+				setOrders((previous) => previous.map((order) => (order.id === updated.id ? updated : order)));
+				setFeedback({ type: 'success', message: `Zamówienie ${updated.reference} zostało potwierdzone.` });
+			} catch (error) {
+				setFeedback({
+					type: 'error',
+					message: error instanceof Error ? error.message : 'Nie udało się potwierdzić zamówienia.',
+				});
+			}
+		});
+	}
 
 	return (
 		<section className="space-y-6">
 			<div className="flex flex-wrap items-start justify-between gap-3">
 				<div>
 					<h1 className="text-2xl font-semibold tracking-tight">Ręcznie dodane zamówienia</h1>
-					<p className="text-sm text-muted-foreground">Przeglądaj zamówienia utworzone w panelu administracyjnym.</p>
+					<p className="text-sm text-muted-foreground">
+						Przeglądaj zamówienia utworzone w panelu administracyjnym oraz zaimportowane z innych kanałów.
+					</p>
 				</div>
 				<Button asChild>
 					<Link href="/dashboard/orders/new">Dodaj zamówienie</Link>
 				</Button>
 			</div>
+
+			{pendingReviewCount > 0 ? (
+				<Alert className="border-amber-300 bg-amber-50 text-amber-900">
+					<AlertTitle>Do potwierdzenia: {pendingReviewCount}</AlertTitle>
+					<AlertDescription>
+						Nowe zamówienia z WooCommerce wymagają ręcznego zatwierdzenia przed dalszą realizacją.
+					</AlertDescription>
+				</Alert>
+			) : null}
 
 			<div className="grid gap-6 lg:grid-cols-[minmax(0,420px)_1fr]">
 				<Card>
@@ -100,7 +142,7 @@ export function OrdersOverviewClient({ initialOrders }: OrdersOverviewClientProp
 						<CardDescription>Wybierz zamówienie, aby zobaczyć wszystkie szczegóły.</CardDescription>
 					</CardHeader>
 					<CardContent>
-						{initialOrders.length ? (
+						{orders.length ? (
 							<ScrollArea className="max-h-[500px] pr-4">
 								<Table>
 									<TableHeader>
@@ -114,24 +156,31 @@ export function OrdersOverviewClient({ initialOrders }: OrdersOverviewClientProp
 										</TableRow>
 									</TableHeader>
 									<TableBody>
-										{initialOrders.map((order) => (
+										{orders.map((order) => (
 											<TableRow
 												key={order.id}
 												className={cn(
 													'cursor-pointer transition-colors',
 													selectedOrderId === order.id ? 'bg-muted' : 'hover:bg-muted/60',
+													order.requiresReview ? 'border-l-2 border-l-amber-400' : '',
 												)}
-												onClick={() => setSelectedOrderId(order.id)}
+												onClick={() => handleSelect(order.id)}
 												onKeyDown={(event) => {
 												if (event.key === 'Enter' || event.key === ' ') {
 													event.preventDefault();
-													setSelectedOrderId(order.id);
+													handleSelect(order.id);
 												}
 												}}
 												tabIndex={0}
 												role="button"
 											>
-												<TableCell className="font-medium">{order.reference}</TableCell>
+												<TableCell className="font-medium">
+													<div className="flex flex-wrap items-center gap-2">
+														<span>{order.reference}</span>
+														{order.source === 'woocommerce' ? <Badge variant="outline">WooCommerce</Badge> : null}
+														{order.requiresReview ? <Badge variant="destructive">Do potwierdzenia</Badge> : null}
+													</div>
+												</TableCell>
 												<TableCell>{order.customer}</TableCell>
 												<TableCell>{order.channel}</TableCell>
 												<TableCell>
@@ -178,9 +227,12 @@ export function OrdersOverviewClient({ initialOrders }: OrdersOverviewClientProp
 								<div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 									<div>
 										<h3 className="text-xl font-semibold">{selectedOrder.reference}</h3>
-										<p className="text-sm text-muted-foreground">
-											Kanał: {selectedOrder.channel} • Utworzono: {formatDateTime(selectedOrder.createdAt)}
-										</p>
+										<div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+											<p>
+												Kanał: {selectedOrder.channel} • Utworzono: {formatDateTime(selectedOrder.createdAt)}
+											</p>
+											<Badge variant="outline">{selectedOrder.source === 'woocommerce' ? 'WooCommerce' : 'Manualne'}</Badge>
+										</div>
 									</div>
 									<div className="flex flex-col gap-2 text-right">
 										<Badge className="ml-auto" variant="secondary">
@@ -192,6 +244,39 @@ export function OrdersOverviewClient({ initialOrders }: OrdersOverviewClientProp
 										</p>
 									</div>
 								</div>
+
+								{feedback ? (
+									<Alert
+										className={cn(
+											feedback.type === 'success'
+												? 'border-emerald-300 bg-emerald-50 text-emerald-900'
+												: 'border-destructive/50',
+										)}
+										variant={feedback.type === 'error' ? 'destructive' : 'default'}
+									>
+										<AlertTitle>{feedback.type === 'success' ? 'Potwierdzono' : 'Błąd'}</AlertTitle>
+										<AlertDescription>{feedback.message}</AlertDescription>
+									</Alert>
+								) : null}
+
+								{selectedOrder.requiresReview ? (
+									<div className="flex flex-col gap-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+										<div className="flex flex-col gap-1">
+											<span className="font-medium">Zamówienie czeka na potwierdzenie.</span>
+											<span>
+												Zweryfikuj dane klienta i pozycje. Po potwierdzeniu zamówienie trafi do dalszej obsługi.
+											</span>
+										</div>
+										<div className="flex flex-wrap gap-2">
+											<Button
+												onClick={() => handleConfirm(selectedOrder.id)}
+												disabled={isConfirming}
+											>
+												{isConfirming ? 'Potwierdzanie…' : 'Potwierdź zamówienie'}
+											</Button>
+										</div>
+									</div>
+								) : null}
 
 								<Separator />
 
