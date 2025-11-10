@@ -37,6 +37,8 @@ export type OrderTotals = {
 	totalGross: number;
 };
 
+export type ManualOrderSource = 'manual' | 'woocommerce';
+
 export type Order = {
 	id: string;
 	reference: string;
@@ -44,6 +46,9 @@ export type Order = {
 	channel: string;
 	status: string;
 	currency: string;
+	source: ManualOrderSource;
+	sourceOrderId: string | null;
+	requiresReview: boolean;
 	updatedAt: string;
 	createdAt: string;
 	statuses: OrderTimelineEntry[];
@@ -64,6 +69,9 @@ export type ManualOrderPayload = {
 	billing: OrderAddress;
 	shipping: OrderShipping;
 	items: OrderItemPayload[];
+	source?: ManualOrderSource;
+	sourceOrderId?: string | null;
+	requiresReview?: boolean;
 };
 
 export const initialOrders: Order[] = [];

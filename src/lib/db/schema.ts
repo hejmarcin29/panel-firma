@@ -356,6 +356,11 @@ export const manualOrders = sqliteTable(
 		channel: text('channel').notNull(),
 		notes: text('notes'),
 		currency: text('currency').notNull().default('PLN'),
+		source: text('source').$type<OrderSource>().notNull().default('manual'),
+		sourceOrderId: text('source_order_id'),
+		requiresReview: integer('requires_review', { mode: 'boolean' })
+			.notNull()
+			.default(false),
 		totalNet: integer('total_net', { mode: 'number' }).notNull(),
 		totalGross: integer('total_gross', { mode: 'number' }).notNull(),
 		billingName: text('billing_name').notNull(),
@@ -383,6 +388,7 @@ export const manualOrders = sqliteTable(
 	(table) => ({
 		referenceIdx: uniqueIndex('manual_orders_reference_idx').on(table.reference),
 		createdAtIdx: index('manual_orders_created_at_idx').on(table.createdAt),
+		requiresReviewIdx: index('manual_orders_requires_review_idx').on(table.requiresReview),
 	})
 );
 

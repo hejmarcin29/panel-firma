@@ -8,6 +8,7 @@ import { manualOrderItems, manualOrders } from '@/lib/db/schema';
 
 import type {
 	ManualOrderPayload,
+	ManualOrderSource,
 	Order,
 	OrderItem,
 	OrderItemPayload,
@@ -96,6 +97,9 @@ function mapOrderRow(row: ManualOrderRow & { items: ManualOrderItemRow[] }): Ord
 		channel: row.channel,
 		status: row.status,
 		currency: row.currency,
+		source: row.source as ManualOrderSource,
+		sourceOrderId: row.sourceOrderId ?? null,
+		requiresReview: Boolean(row.requiresReview),
 		createdAt,
 		updatedAt,
 		statuses: buildTimelineEntries(row.status, row.notes ?? '', createdAt),
@@ -230,6 +234,9 @@ export async function createManualOrder(payload: ManualOrderPayload): Promise<Or
 		channel: payload.channel,
 		notes: payload.notes,
 		currency: payload.currency,
+		source: payload.source ?? 'manual',
+		sourceOrderId: payload.sourceOrderId ?? null,
+		requiresReview: payload.requiresReview ?? false,
 		totalNet: toMinorUnits(orderTotals.net),
 		totalGross: toMinorUnits(orderTotals.gross),
 		billingName: billing.name,
