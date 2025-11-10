@@ -7,6 +7,12 @@
 - Aby od razu zaktualizować lokalną bazę, użyj `npm run db:migrate`. Dzięki temu inni członkowie zespołu i środowiska CI/CD mogą potem zreplayować te same migracje.
 - Gdy nie było zmian w schemacie podczas iteracji, migracji nie generujemy.
 
+## Zmienne środowiskowe
+- Plik `.env` jest wersjonowany i zawiera bezpieczne wartości domyślne (bez sekretów).
+- Po klonowaniu repo skopiuj `.env` do `.env.local` i uzupełnij sekrety oraz ustawienia specyficzne dla środowiska.
+- `.env.local` jest ignorowany przez git – trzymaj w nim wszystko, czego nie chcemy w repo (tokeny, klucze, prod/stage URL).
+- Next.js ładuje `.env.local` z wyższym priorytetem, więc nadpisuje wartości z `.env`.
+
 ## Przydatne polecenia
 - `npm run dev` – lokalny serwer Next.js.
 - `npm run lint` – sprawdzenie lintem.
