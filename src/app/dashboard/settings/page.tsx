@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { headers } from 'next/headers';
 import { desc, eq, sql } from 'drizzle-orm';
 
@@ -5,8 +6,10 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
 import { db } from '@/lib/db';
-import { integrationLogs, manualOrders } from '@/lib/db/schema';
+import { integrationLogs, manualOrders, wfirmaTokens } from '@/lib/db/schema';
+import { disconnectWfirmaIntegration } from './actions';
 import { WebhookSecretForm } from './_components/webhook-secret-form';
 
 type LogLevel = 'info' | 'warning' | 'error';
@@ -18,15 +21,17 @@ type LogRow = {
 	message: string;
 };
 
-function formatTimestamp(value: number | null | undefined) {
+function formatTimestamp(value: number | Date | null | undefined) {
 	if (!value) {
 		return 'brak';
 	}
 
+	const timestamp = value instanceof Date ? value.getTime() : value;
+
 	return new Intl.DateTimeFormat('pl-PL', {
 		dateStyle: 'short',
 		timeStyle: 'medium',
-	}).format(new Date(value));
+	}).format(new Date(timestamp));
 }
 
 function levelBadgeClass(level: LogLevel) {
@@ -41,7 +46,11 @@ function levelBadgeClass(level: LogLevel) {
 	}
 }
 
-export default async function SettingsPage() {
+type SettingsPageProps = {
+	searchParams?: Record<string, string | string[] | undefined>;
+};
+
+export default async function SettingsPage({ searchParams }: SettingsPageProps = {}) {
 	const headerList = await headers();
 	const forwardedProto = headerList.get('x-forwarded-proto');
 	const forwardedHost = headerList.get('x-forwarded-host');
@@ -91,6 +100,66 @@ export default async function SettingsPage() {
 
 	const lastEvent = logs[0] ?? null;
 
+	const [wfirmaRow] = await db
+		.select({
+			id: wfirmaTokens.id,
+			tenant: wfirmaTokens.tenant,
+			scope: wfirmaTokens.scope,
+			expiresAt: wfirmaTokens.expiresAt,
+			updatedAt: wfirmaTokens.updatedAt,
+		})
+		.from(wfirmaTokens)
+		.limit(1);
+
+	const wfirmaToken = wfirmaRow
+		? {
+			id: wfirmaRow.id,
+			tenant: wfirmaRow.tenant ?? '',
+			scope: wfirmaRow.scope ?? '',
+			expiresAt:
+				wfirmaRow.expiresAt instanceof Date
+					? wfirmaRow.expiresAt
+					: typeof wfirmaRow.expiresAt === 'number'
+						? new Date(wfirmaRow.expiresAt)
+						: null,
+			updatedAt:
+				wfirmaRow.updatedAt instanceof Date
+					? wfirmaRow.updatedAt
+					: typeof wfirmaRow.updatedAt === 'number'
+						? new Date(wfirmaRow.updatedAt)
+						: null,
+		}
+		: null;
+
+	const wfirmaScopes = wfirmaToken?.scope?.split(/[\s,]+/).filter(Boolean) ?? [];
+	const wfirmaStatus = wfirmaToken ? 'connected' : 'disconnected';
+	const wfirmaStatusBadgeClass =
+		wfirmaStatus === 'connected'
+			? 'bg-emerald-100 text-emerald-900 border-transparent'
+			: 'border border-dashed text-muted-foreground';
+	const wfirmaStatusLabel = wfirmaStatus === 'connected' ? 'Polaczono' : 'Brak polaczenia';
+
+	const wfirmaFlashParam = searchParams?.wfirma;
+	const wfirmaFlash = Array.isArray(wfirmaFlashParam) ? wfirmaFlashParam[0] : wfirmaFlashParam ?? null;
+
+	const wfirmaAlert = (() => {
+		if (wfirmaFlash === 'connected') {
+			return {
+				variant: 'default' as const,
+				title: 'Polaczenie z wFirma zakonczone sukcesem',
+				description: 'Token zostal zapisany. Mozesz przejsc do generowania dokumentow VAT.',
+			};
+		}
+		if (wfirmaFlash === 'error') {
+			return {
+				variant: 'destructive' as const,
+				title: 'Nie udalo sie polaczyc z wFirma',
+				description: 'Sprobuj ponownie. Jesli blad sie powtarza sprawdz konfiguracje WFIRMA_CLIENT_ID i WFIRMA_REDIRECT_URI.',
+			};
+		}
+		return null;
+	})();
+
 	return (
 		<div className="space-y-8">
 			<div className="space-y-2">
@@ -107,6 +176,13 @@ export default async function SettingsPage() {
 						Dodaj zmienna srodowiskowa <code>WOOCOMMERCE_WEBHOOK_SECRET</code> do pliku <code>.env.local</code> lub konfiguracji
 						serwisu, a nastepnie zrestartuj aplikacje.
 					</AlertDescription>
+				</Alert>
+			)}
+
+			{wfirmaAlert && (
+				<Alert variant={wfirmaAlert.variant}>
+					<AlertTitle>{wfirmaAlert.title}</AlertTitle>
+					<AlertDescription>{wfirmaAlert.description}</AlertDescription>
 				</Alert>
 			)}
 
@@ -163,6 +239,60 @@ export default async function SettingsPage() {
 								</dd>
 							</div>
 						</dl>
+					</CardContent>
+				</Card>
+
+				<Card>
+					<CardHeader>
+						<CardTitle>Integracja wFirma</CardTitle>
+						<CardDescription>Zarzadzaj autoryzacja OAuth i stanem polaczenia.</CardDescription>
+					</CardHeader>
+					<CardContent className="space-y-4">
+						<div className="flex flex-wrap items-center gap-2 text-sm">
+							<Badge className={wfirmaStatusBadgeClass}>{wfirmaStatusLabel}</Badge>
+							{wfirmaToken?.updatedAt && <span className="text-muted-foreground">Aktualizacja {formatTimestamp(wfirmaToken.updatedAt)}</span>}
+						</div>
+						{wfirmaToken ? (
+							<dl className="grid gap-3 text-sm">
+								<div>
+									<dt className="text-muted-foreground">Tenant</dt>
+									<dd className="font-mono text-xs break-all bg-muted px-3 py-2 rounded">{wfirmaToken.tenant}</dd>
+								</div>
+								<div>
+									<dt className="text-muted-foreground">Zakres</dt>
+									<dd className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+										{wfirmaScopes.length === 0
+											? 'brak'
+											: wfirmaScopes.map((scope) => (
+												<Badge key={scope} variant="secondary" className="font-medium">
+													{scope}
+												</Badge>
+											))}
+									</dd>
+								</div>
+								<div>
+									<dt className="text-muted-foreground">Wygasa</dt>
+									<dd>{wfirmaToken.expiresAt ? formatTimestamp(wfirmaToken.expiresAt) : 'czas nieokreslony'}</dd>
+								</div>
+							</dl>
+						) : (
+							<p className="text-sm text-muted-foreground">
+								Brak aktywnego tokena. Rozpocznij autoryzacje, aby system mogl wysylac dokumenty do wFirma.
+							</p>
+						)}
+						<div className="flex flex-wrap gap-2">
+							<Button asChild>
+								<Link href="/api/wfirma/authorize">{wfirmaToken ? 'Odswiez token' : 'Polacz z wFirma'}</Link>
+							</Button>
+							{wfirmaToken && (
+								<form action={disconnectWfirmaIntegration}>
+									<Button variant="outline" type="submit">Odlacz</Button>
+								</form>
+							)}
+						</div>
+						<p className="text-xs text-muted-foreground">
+							Po kliknieciu przekierujemy Cie do panelu wFirma w celu potwierdzenia dostepu.
+						</p>
 					</CardContent>
 				</Card>
 			</div>

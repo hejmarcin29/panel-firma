@@ -29,6 +29,13 @@
       "when": 1762782313063,
       "tag": "0003_productive_red_shift",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1762889088915,
+      "tag": "0004_pretty_shinko_yamashiro",
+      "breakpoints": true
     }
   ]
 }

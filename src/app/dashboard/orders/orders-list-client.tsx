@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { Input } from '@/components/ui/input';
@@ -60,6 +61,32 @@ function formatDateTime(value: string) {
 
 function includesQuery(value: string, query: string) {
   return value.toLowerCase().includes(query);
+}
+
+function computePackageArea(item: Order['items'][number]) {
+  if (!item.unitPricePerSquareMeter || item.unitPricePerSquareMeter <= 0) {
+    return null;
+  }
+
+  const area = item.unitPrice / item.unitPricePerSquareMeter;
+  return Number.isFinite(area) && area > 0 ? area : null;
+}
+
+function computeTotalArea(item: Order['items'][number]) {
+  const perPackage = computePackageArea(item);
+  if (perPackage === null) {
+    return null;
+  }
+
+  const total = perPackage * item.quantity;
+  return Number.isFinite(total) && total > 0 ? total : null;
+}
+
+function computeOrderSquareMeters(order: Order) {
+  return order.items.reduce((sum, item) => {
+    const total = computeTotalArea(item);
+    return sum + (total ?? 0);
+  }, 0);
 }
 
 export type OrdersListClientProps = {
@@ -172,7 +199,7 @@ export function OrdersListClient({ initialOrders }: OrdersListClientProps) {
         </CardHeader>
       </Card>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,2.3fr)_minmax(0,1fr)]">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(320px,1fr)]">
         <Card className="lg:order-1">
           <CardHeader>
             <CardTitle>Ostatnie zamówienia</CardTitle>
@@ -191,8 +218,8 @@ export function OrdersListClient({ initialOrders }: OrdersListClientProps) {
               </Empty>
             ) : (
               <>
-                <div className="hidden max-h-[600px] overflow-x-auto overflow-y-auto lg:block">
-                  <Table className="min-w-[960px]">
+                <div className="hidden lg:block">
+                  <Table className="w-full">
                     <TableHeader>
                       <TableRow>
                         <TableHead>Numer</TableHead>
@@ -201,7 +228,9 @@ export function OrdersListClient({ initialOrders }: OrdersListClientProps) {
                         <TableHead>Status</TableHead>
                         <TableHead>Źródło</TableHead>
                         <TableHead>Data</TableHead>
-                        <TableHead className="text-right">Kwota brutto</TableHead>
+                        <TableHead>Miasto</TableHead>
+                        <TableHead className="text-right">m²</TableHead>
+                        <TableHead className="text-right">Suma (brutto)</TableHead>
                         <TableHead className="text-right">Akcje</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -239,11 +268,23 @@ export function OrdersListClient({ initialOrders }: OrdersListClientProps) {
                             )}
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">{formatDateTime(order.createdAt)}</TableCell>
+                          <TableCell>{order.shipping.sameAsBilling ? order.billing.city : order.shipping.city}</TableCell>
+                          <TableCell className="text-right font-medium">
+                            {computeOrderSquareMeters(order).toLocaleString('pl-PL', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </TableCell>
                           <TableCell className="text-right font-medium">
                             {formatCurrency(order.totals.totalGross, order.currency)}
                           </TableCell>
                           <TableCell className="text-right">
-                            {order.requiresReview ? <ConfirmOrderButton orderId={order.id} /> : null}
+                            <div className="flex flex-col items-end gap-2">
+                              <Button asChild size="sm" variant="outline">
+                                <Link href={`/dashboard/orders/${order.id}`}>Szczegóły</Link>
+                              </Button>
+                              {order.requiresReview ? <ConfirmOrderButton orderId={order.id} /> : null}
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -288,13 +329,25 @@ export function OrdersListClient({ initialOrders }: OrdersListClientProps) {
                               {formatCurrency(order.totals.totalGross, order.currency)}
                             </p>
                           </div>
+                          <div>
+                            <p className="text-xs uppercase text-muted-foreground">Miasto dostawy</p>
+                            <p className="text-sm text-foreground">
+                              {order.shipping.sameAsBilling ? order.billing.city : order.shipping.city}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs uppercase text-muted-foreground">Łącznie m²</p>
+                            <p className="text-sm text-foreground">
+                              {computeOrderSquareMeters(order).toLocaleString('pl-PL', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              })}
+                            </p>
+                          </div>
                           <div className="flex flex-col gap-2">
-                            <Link
-                              href={`/dashboard/orders/${order.id}`}
-                              className="text-sm font-medium text-primary underline-offset-4 hover:underline"
-                            >
-                              Szczegóły zamówienia
-                            </Link>
+                            <Button asChild size="sm" variant="outline">
+                              <Link href={`/dashboard/orders/${order.id}`}>Szczegóły</Link>
+                            </Button>
                             {order.requiresReview ? <ConfirmOrderButton orderId={order.id} /> : null}
                           </div>
                         </div>

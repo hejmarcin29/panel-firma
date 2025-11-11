@@ -39,6 +39,16 @@ export type OrderTotals = {
 
 export type ManualOrderSource = 'manual' | 'woocommerce';
 
+export type OrderDocument = {
+	id: string;
+	type: string;
+	status: string;
+	number: string | null;
+	issueDate: string | null;
+	wfirmaId: number | null;
+	pdfUrl: string | null;
+};
+
 export type Order = {
 	id: string;
 	reference: string;

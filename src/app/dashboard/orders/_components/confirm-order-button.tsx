@@ -4,15 +4,17 @@ import { useTransition, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 import { confirmManualOrder } from '../actions';
 
 type ConfirmOrderButtonProps = {
   orderId: string;
   disabled?: boolean;
+  className?: string;
 };
 
-export function ConfirmOrderButton({ orderId, disabled = false }: ConfirmOrderButtonProps) {
+export function ConfirmOrderButton({ orderId, disabled = false, className }: ConfirmOrderButtonProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +37,7 @@ export function ConfirmOrderButton({ orderId, disabled = false }: ConfirmOrderBu
   };
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className={cn('flex flex-col gap-2', className)}>
       <Button onClick={handleConfirm} disabled={disabled || isPending}>
         {isPending ? 'Potwierdzanie...' : 'Potwierdz zamowienie'}
       </Button>
