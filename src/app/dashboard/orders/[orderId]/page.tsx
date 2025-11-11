@@ -22,6 +22,7 @@ import { requireUser } from '@/lib/auth/session';
 import { cn } from '@/lib/utils';
 
 import { getManualOrderById } from '../actions';
+import { ConfirmOrderButton } from '../_components/confirm-order-button';
 import type { Order, OrderTimelineState } from '../data';
 
 type OrderDetailsPageProps = {
@@ -64,6 +65,36 @@ function formatDate(date: string) {
 	}).format(new Date(date));
 }
 
+function formatNumber(value: number | null | undefined) {
+	if (value === null || value === undefined || Number.isNaN(value)) {
+		return '--';
+	}
+
+	return new Intl.NumberFormat('pl-PL', {
+		minimumFractionDigits: 2,
+		maximumFractionDigits: 2,
+	}).format(value);
+}
+
+function computePackageArea(item: Order['items'][number]) {
+	if (!item.unitPricePerSquareMeter || item.unitPricePerSquareMeter <= 0) {
+		return null;
+	}
+
+	const area = item.unitPrice / item.unitPricePerSquareMeter;
+	return Number.isFinite(area) && area > 0 ? area : null;
+}
+
+function computeTotalArea(item: Order['items'][number]) {
+	const perPackage = computePackageArea(item);
+	if (perPackage === null) {
+		return null;
+	}
+
+	const total = perPackage * item.quantity;
+	return Number.isFinite(total) && total > 0 ? total : null;
+}
+
 export default async function OrderDetailsPage({ params }: OrderDetailsPageProps) {
 	await requireUser();
 
@@ -78,6 +109,10 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageProps
 
 	const currentStatus = statuses.find((status) => status.state === 'current');
 	const completedSteps = statuses.filter((status) => status.state === 'completed').length;
+	const totalSquareMeters = order.items.reduce((sum, item) => {
+		const total = computeTotalArea(item);
+		return sum + (total ?? 0);
+	}, 0);
 
 	return (
 		<section className="space-y-10">
@@ -101,7 +136,11 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageProps
 						</p>
 					) : null}
 				</div>
-				<Badge variant="secondary">{order.status}</Badge>
+				<div className="flex flex-col items-end gap-3 text-right">
+					<Badge variant="secondary">{order.status}</Badge>
+					<p className="text-sm text-muted-foreground">Łącznie m2: {formatNumber(totalSquareMeters)}</p>
+					{order.requiresReview ? <ConfirmOrderButton orderId={order.id} /> : null}
+				</div>
 			</div>
 
 			<Card>
@@ -118,6 +157,12 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageProps
 						<div className="space-y-1">
 							<dt className="text-xs font-medium uppercase text-muted-foreground">Kanał</dt>
 							<dd className="text-sm text-foreground">{order.channel}</dd>
+						</div>
+						<div className="space-y-1">
+							<dt className="text-xs font-medium uppercase text-muted-foreground">Źródło</dt>
+							<dd className="text-sm text-foreground">
+								{order.source === 'woocommerce' ? 'WooCommerce' : 'Ręczne'}
+							</dd>
 						</div>
 						<div className="space-y-1">
 							<dt className="text-xs font-medium uppercase text-muted-foreground">E-mail</dt>
@@ -152,6 +197,10 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageProps
 						<div className="space-y-1">
 							<dt className="text-xs font-medium uppercase text-muted-foreground">Ostatnia aktualizacja</dt>
 							<dd className="text-sm text-foreground">{formatDate(order.updatedAt)}</dd>
+						</div>
+						<div className="space-y-1">
+							<dt className="text-xs font-medium uppercase text-muted-foreground">Łącznie m2</dt>
+							<dd className="text-sm text-foreground">{formatNumber(totalSquareMeters)}</dd>
 						</div>
 					</dl>
 				</CardContent>
@@ -201,7 +250,7 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageProps
 			<Card>
 				<CardHeader>
 					<CardTitle>Pozycje zamówienia</CardTitle>
-					<CardDescription>Szczegółowe informacje o produktach i stawkach VAT.</CardDescription>
+					<CardDescription>Szczegółowe informacje o produktach, metrach kwadratowych i stawkach VAT.</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<Table>
@@ -209,23 +258,32 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageProps
 							<TableRow>
 								<TableHead>Produkt</TableHead>
 								<TableHead>Ilość</TableHead>
+								<TableHead>M2 w op.</TableHead>
+								<TableHead>M2 łącznie</TableHead>
 								<TableHead>VAT</TableHead>
 								<TableHead>Cena netto</TableHead>
 								<TableHead className="text-right">Kwota brutto</TableHead>
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{order.items.map((item) => (
-								<TableRow key={item.id}>
-									<TableCell className="font-medium">{item.product}</TableCell>
-									<TableCell>{item.quantity}</TableCell>
-									<TableCell>{item.vatRate}%</TableCell>
-									<TableCell>{formatCurrency(item.unitPrice, order.currency)}</TableCell>
-									<TableCell className="text-right font-medium">
-										{formatCurrency(item.totalGross, order.currency)}
-									</TableCell>
-								</TableRow>
-							))}
+							{order.items.map((item) => {
+								const perPackageArea = computePackageArea(item);
+								const totalArea = computeTotalArea(item);
+
+								return (
+									<TableRow key={item.id}>
+										<TableCell className="font-medium">{item.product}</TableCell>
+										<TableCell>{formatNumber(item.quantity)}</TableCell>
+										<TableCell>{formatNumber(perPackageArea)}</TableCell>
+										<TableCell>{formatNumber(totalArea)}</TableCell>
+										<TableCell>{item.vatRate}%</TableCell>
+										<TableCell>{formatCurrency(item.unitPrice, order.currency)}</TableCell>
+										<TableCell className="text-right font-medium">
+											{formatCurrency(item.totalGross, order.currency)}
+										</TableCell>
+									</TableRow>
+								);
+							})}
 						</TableBody>
 					</Table>
 				</CardContent>
