@@ -44,6 +44,10 @@ function toVatUnits(value: number) {
 	return Math.round(value * VAT_SCALE);
 }
 
+function normalizePhone(value: string) {
+	return value.replace(/\D+/g, '');
+}
+
 function fromVatUnits(value: number) {
 	return value / VAT_SCALE;
 }
@@ -158,9 +162,11 @@ function validatePayload(payload: ManualOrderPayload) {
 		throw new Error('Adres rozliczeniowy musi być kompletny.');
 	}
 
-	if (!/^[0-9]{9}$/.test(payload.billing.phone)) {
-		throw new Error('Telefon rozliczeniowy musi mieć 9 cyfr.');
+	const normalizedBillingPhone = normalizePhone(payload.billing.phone);
+	if (normalizedBillingPhone.length < 9 || normalizedBillingPhone.length > 11) {
+		throw new Error('Telefon rozliczeniowy powinien miec od 9 do 11 cyfr.');
 	}
+	payload.billing.phone = normalizedBillingPhone;
 
 	if (!payload.billing.email.trim()) {
 		throw new Error('E-mail rozliczeniowy jest wymagany.');
@@ -177,9 +183,11 @@ function validatePayload(payload: ManualOrderPayload) {
 			throw new Error('Dane wysyłkowe muszą być kompletne.');
 		}
 
-		if (!/^[0-9]{9}$/.test(payload.shipping.phone)) {
-			throw new Error('Telefon wysyłkowy musi mieć 9 cyfr.');
+		const normalizedShippingPhone = normalizePhone(payload.shipping.phone);
+		if (normalizedShippingPhone.length < 9 || normalizedShippingPhone.length > 11) {
+			throw new Error('Telefon wysylkowy powinien miec od 9 do 11 cyfr.');
 		}
+		payload.shipping.phone = normalizedShippingPhone;
 	}
 
 	validateItems(payload.items);
