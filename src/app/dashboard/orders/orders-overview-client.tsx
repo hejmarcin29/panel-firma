@@ -48,7 +48,7 @@ const TIMELINE_STATE_LABELS: Record<OrderTimelineState, string> = {
 
 function formatCurrency(amount: number, currency: string) {
 	if (!Number.isFinite(amount)) {
-		return '—';
+		return '--';
 	}
 
 	try {
@@ -75,6 +75,36 @@ function formatDateTime(value: string) {
 	}).format(date);
 }
 
+function formatNumber(value: number | null | undefined) {
+	if (value === null || value === undefined || Number.isNaN(value)) {
+		return '--';
+	}
+
+	return new Intl.NumberFormat('pl-PL', {
+		minimumFractionDigits: 2,
+		maximumFractionDigits: 2,
+	}).format(value);
+}
+
+function computePackageArea(item: Order['items'][number]) {
+	if (!item.unitPricePerSquareMeter || item.unitPricePerSquareMeter <= 0) {
+		return null;
+	}
+
+	const area = item.unitPrice / item.unitPricePerSquareMeter;
+	return Number.isFinite(area) && area > 0 ? area : null;
+}
+
+function computeTotalArea(item: Order['items'][number]) {
+	const perPackage = computePackageArea(item);
+	if (perPackage === null) {
+		return null;
+	}
+
+	const total = perPackage * item.quantity;
+	return Number.isFinite(total) && total > 0 ? total : null;
+}
+
 export function OrdersOverviewClient({ initialOrders }: OrdersOverviewClientProps) {
 	const [orders, setOrders] = useState<Order[]>(initialOrders);
 	const [selectedOrderId, setSelectedOrderId] = useState<string | null>(initialOrders[0]?.id ?? null);
@@ -85,6 +115,17 @@ export function OrdersOverviewClient({ initialOrders }: OrdersOverviewClientProp
 		() => orders.find((order) => order.id === selectedOrderId) ?? null,
 		[orders, selectedOrderId],
 	);
+
+	const totalSquareMeters = useMemo(() => {
+		if (!selectedOrder) {
+			return 0;
+		}
+
+		return selectedOrder.items.reduce((sum, item) => {
+			const total = computeTotalArea(item);
+			return sum + (total ?? 0);
+		}, 0);
+	}, [selectedOrder]);
 
 	const pendingReviewCount = useMemo(
 		() => orders.filter((order) => order.requiresReview).length,
@@ -242,6 +283,9 @@ export function OrdersOverviewClient({ initialOrders }: OrdersOverviewClientProp
 										<p className="text-lg font-semibold">
 											{formatCurrency(selectedOrder.totals.totalGross, selectedOrder.currency)}
 										</p>
+										<p className="text-sm text-muted-foreground">
+											Lacznie m2: {formatNumber(totalSquareMeters)}
+										</p>
 									</div>
 								</div>
 
@@ -274,10 +318,7 @@ export function OrdersOverviewClient({ initialOrders }: OrdersOverviewClientProp
 											</span>
 										</div>
 										<div className="flex flex-wrap gap-2">
-											<Button
-												onClick={() => handleConfirm(selectedOrder.id)}
-												disabled={isConfirming}
-											>
+											<Button onClick={() => handleConfirm(selectedOrder.id)} disabled={isConfirming}>
 												{isConfirming ? 'Potwierdzanie…' : 'Potwierdź zamówienie'}
 											</Button>
 										</div>
@@ -292,24 +333,33 @@ export function OrdersOverviewClient({ initialOrders }: OrdersOverviewClientProp
 										<TableHeader>
 											<TableRow>
 												<TableHead>Produkt</TableHead>
-												<TableHead>Ilość</TableHead>
+												<TableHead>Ilosc</TableHead>
+												<TableHead>M2 w op.</TableHead>
+												<TableHead>M2 lacznie</TableHead>
 												<TableHead>Cena netto</TableHead>
 												<TableHead>VAT</TableHead>
 												<TableHead className="text-right">Brutto</TableHead>
 											</TableRow>
 										</TableHeader>
 										<TableBody>
-											{selectedOrder.items.map((item) => (
-												<TableRow key={item.id}>
-													<TableCell className="font-medium">{item.product}</TableCell>
-													<TableCell>{item.quantity}</TableCell>
-													<TableCell>{formatCurrency(item.unitPrice, selectedOrder.currency)}</TableCell>
-													<TableCell>{item.vatRate}%</TableCell>
-													<TableCell className="text-right font-medium">
-														{formatCurrency(item.totalGross, selectedOrder.currency)}
-													</TableCell>
-												</TableRow>
-											))}
+											{selectedOrder.items.map((item) => {
+												const perPackageArea = computePackageArea(item);
+												const totalArea = computeTotalArea(item);
+
+												return (
+													<TableRow key={item.id}>
+														<TableCell className="font-medium">{item.product}</TableCell>
+														<TableCell>{formatNumber(item.quantity)}</TableCell>
+														<TableCell>{formatNumber(perPackageArea)}</TableCell>
+														<TableCell>{formatNumber(totalArea)}</TableCell>
+														<TableCell>{formatCurrency(item.unitPrice, selectedOrder.currency)}</TableCell>
+														<TableCell>{item.vatRate}%</TableCell>
+														<TableCell className="text-right font-medium">
+															{formatCurrency(item.totalGross, selectedOrder.currency)}
+														</TableCell>
+													</TableRow>
+												);
+											})}
 										</TableBody>
 									</Table>
 								</div>
