@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { db } from '@/lib/db';
 import { integrationLogs, manualOrders } from '@/lib/db/schema';
+import { WebhookSecretForm } from './_components/webhook-secret-form';
 
 type LogLevel = 'info' | 'warning' | 'error';
 
@@ -16,14 +17,6 @@ type LogRow = {
 	level: LogLevel;
 	message: string;
 };
-
-function maskSecret(secret: string) {
-	if (secret.length <= 8) {
-		return `${secret[0] ?? ''}***${secret.at(-1) ?? ''}`;
-	}
-
-	return `${secret.slice(0, 4)}...${secret.slice(-4)}`;
-}
 
 function formatTimestamp(value: number | null | undefined) {
 	if (!value) {
@@ -64,7 +57,6 @@ export default async function SettingsPage() {
 
 	const webhookSecret = process.env.WOOCOMMERCE_WEBHOOK_SECRET ?? '';
 	const secretConfigured = Boolean(webhookSecret);
-	const maskedSecret = secretConfigured ? maskSecret(webhookSecret) : null;
 
 	const [pendingRow] = await db
 		.select({ count: sql<number>`count(*)` })
@@ -124,23 +116,18 @@ export default async function SettingsPage() {
 						<CardTitle>Webhook WooCommerce</CardTitle>
 						<CardDescription>Ustaw dane ponizej w panelu WordPress, aby zamowienia trafialy do systemu.</CardDescription>
 					</CardHeader>
-					<CardContent className="space-y-4">
+					<CardContent className="space-y-6">
+						<WebhookSecretForm initialSecret={webhookSecret} />
 						<dl className="grid gap-3 text-sm">
 							<div>
 								<dt className="text-muted-foreground">Adres URL dostawy</dt>
 								<dd className="font-mono text-xs break-all rounded bg-muted px-3 py-2">{webhookUrl}</dd>
 							</div>
-							<div>
-								<dt className="text-muted-foreground">Sekret webhooka</dt>
-								<dd className="font-mono text-xs break-all rounded bg-muted px-3 py-2">
-									{maskedSecret ?? 'brak - ustaw zmienna WOOCOMMERCE_WEBHOOK_SECRET'}
-								</dd>
-							</div>
 						</dl>
 						<ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
 							<li>Temat webhooka: <code>order.created</code></li>
 							<li>Wersja API: <code>WP REST API v3</code></li>
-							<li>W laczu SSL uzyj tego samego hosta, na ktorym dziala panel.</li>
+							<li>W pliku .env.local przechowujemy wpis <code>WOOCOMMERCE_WEBHOOK_SECRET=...</code>.</li>
 						</ul>
 					</CardContent>
 				</Card>
