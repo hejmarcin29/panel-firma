@@ -39,6 +39,9 @@ export const integrationLogLevels = ['info', 'warning', 'error'] as const;
 export const supplierMessageDirections = ['sent', 'received'] as const;
 export const supplierMessageMediums = ['email', 'phone', 'note'] as const;
 
+export const mailFolderKinds = ['inbox', 'sent', 'drafts', 'spam', 'trash', 'archive', 'custom'] as const;
+export const mailAccountStatuses = ['disabled', 'connected', 'disconnected', 'error'] as const;
+
 export type UserRole = (typeof userRoles)[number];
 export type OrderStatus = (typeof orderStatuses)[number];
 export type OrderSource = (typeof orderSources)[number];
@@ -49,6 +52,8 @@ export type SupplierRequestStatus = (typeof supplierRequestStatuses)[number];
 export type NotificationStatus = (typeof notificationStatuses)[number];
 export type SupplierMessageDirection = (typeof supplierMessageDirections)[number];
 export type SupplierMessageMedium = (typeof supplierMessageMediums)[number];
+export type MailFolderKind = (typeof mailFolderKinds)[number];
+export type MailAccountStatus = (typeof mailAccountStatuses)[number];
 
 export const users = sqliteTable(
 	'users',
@@ -439,6 +444,109 @@ export const manualOrderItems = sqliteTable(
 	})
 );
 
+export const mailAccounts = sqliteTable(
+	'mail_accounts',
+	{
+		id: text('id').primaryKey(),
+		displayName: text('display_name').notNull(),
+		email: text('email').notNull(),
+		provider: text('provider'),
+		status: text('status').$type<MailAccountStatus>().notNull().default('disabled'),
+		lastSyncAt: integer('last_sync_at', { mode: 'timestamp_ms' }),
+		nextSyncAt: integer('next_sync_at', { mode: 'timestamp_ms' }),
+		imapHost: text('imap_host'),
+		imapPort: integer('imap_port', { mode: 'number' }),
+		imapSecure: integer('imap_secure', { mode: 'boolean' }).notNull().default(true),
+		smtpHost: text('smtp_host'),
+		smtpPort: integer('smtp_port', { mode: 'number' }),
+		smtpSecure: integer('smtp_secure', { mode: 'boolean' }).notNull().default(true),
+		username: text('username').notNull(),
+		passwordSecret: text('password_secret'),
+		signature: text('signature'),
+		error: text('error'),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	},
+	(table) => ({
+		emailIdx: uniqueIndex('mail_accounts_email_idx').on(table.email),
+		statusIdx: index('mail_accounts_status_idx').on(table.status),
+	})
+);
+
+export const mailFolders = sqliteTable(
+	'mail_folders',
+	{
+		id: text('id').primaryKey(),
+		accountId: text('account_id')
+			.notNull()
+			.references(() => mailAccounts.id, { onDelete: 'cascade' }),
+		name: text('name').notNull(),
+		kind: text('kind').$type<MailFolderKind>().notNull().default('custom'),
+		remoteId: text('remote_id'),
+		path: text('path'),
+		sortOrder: integer('sort_order', { mode: 'number' }).default(0),
+		unreadCount: integer('unread_count', { mode: 'number' }).default(0),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	},
+	(table) => ({
+		accountIdx: index('mail_folders_account_id_idx').on(table.accountId),
+		remoteIdx: index('mail_folders_remote_id_idx').on(table.accountId, table.remoteId),
+		kindIdx: index('mail_folders_kind_idx').on(table.kind),
+	})
+);
+
+export const mailMessages = sqliteTable(
+	'mail_messages',
+	{
+		id: text('id').primaryKey(),
+		accountId: text('account_id')
+			.notNull()
+			.references(() => mailAccounts.id, { onDelete: 'cascade' }),
+		folderId: text('folder_id')
+			.notNull()
+			.references(() => mailFolders.id, { onDelete: 'cascade' }),
+		subject: text('subject'),
+		fromAddress: text('from_address'),
+		fromName: text('from_name'),
+		toRecipients: text('to_recipients'),
+		ccRecipients: text('cc_recipients'),
+		bccRecipients: text('bcc_recipients'),
+		replyTo: text('reply_to'),
+		snippet: text('snippet'),
+		textBody: text('text_body'),
+		htmlBody: text('html_body'),
+		messageId: text('message_id'),
+		threadId: text('thread_id'),
+		externalId: text('external_id'),
+		receivedAt: integer('received_at', { mode: 'timestamp_ms' }),
+		internalDate: integer('internal_date', { mode: 'timestamp_ms' }),
+		isRead: integer('is_read', { mode: 'boolean' }).notNull().default(false),
+		isStarred: integer('is_starred', { mode: 'boolean' }).notNull().default(false),
+		hasAttachments: integer('has_attachments', { mode: 'boolean' }).notNull().default(false),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	},
+	(table) => ({
+		accountIdx: index('mail_messages_account_id_idx').on(table.accountId),
+		folderIdx: index('mail_messages_folder_id_idx').on(table.folderId),
+		receivedIdx: index('mail_messages_received_at_idx').on(table.receivedAt),
+		messageIdIdx: uniqueIndex('mail_messages_message_id_idx').on(table.accountId, table.messageId),
+	})
+);
+
 export const manualOrdersRelations = relations(manualOrders, ({ many }) => ({
 	items: many(manualOrderItems),
 }));
@@ -447,6 +555,30 @@ export const manualOrderItemsRelations = relations(manualOrderItems, ({ one }) =
 	order: one(manualOrders, {
 		fields: [manualOrderItems.orderId],
 		references: [manualOrders.id],
+	}),
+}));
+
+export const mailAccountsRelations = relations(mailAccounts, ({ many }) => ({
+	folders: many(mailFolders),
+	messages: many(mailMessages),
+}));
+
+export const mailFoldersRelations = relations(mailFolders, ({ one, many }) => ({
+	account: one(mailAccounts, {
+		fields: [mailFolders.accountId],
+		references: [mailAccounts.id],
+	}),
+	messages: many(mailMessages),
+}));
+
+export const mailMessagesRelations = relations(mailMessages, ({ one }) => ({
+	account: one(mailAccounts, {
+		fields: [mailMessages.accountId],
+		references: [mailAccounts.id],
+	}),
+	folder: one(mailFolders, {
+		fields: [mailMessages.folderId],
+		references: [mailFolders.id],
 	}),
 }));
 

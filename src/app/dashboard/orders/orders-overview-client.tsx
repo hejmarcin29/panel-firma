@@ -184,60 +184,129 @@ export function OrdersOverviewClient({ initialOrders }: OrdersOverviewClientProp
 					</CardHeader>
 					<CardContent>
 						{orders.length ? (
-							<ScrollArea className="max-h-[500px] pr-4">
-								<Table>
-									<TableHeader>
-										<TableRow>
-											<TableHead>Numer</TableHead>
-											<TableHead>Klient</TableHead>
-											<TableHead>Kanał</TableHead>
-											<TableHead>Status</TableHead>
-											<TableHead className="text-right">Kwota brutto</TableHead>
-											<TableHead className="text-right">Data</TableHead>
-										</TableRow>
-									</TableHeader>
-									<TableBody>
-										{orders.map((order) => (
-											<TableRow
+							<>
+								<div className="hidden lg:block">
+									<ScrollArea className="max-h-[500px] pr-4">
+										<Table>
+											<TableHeader>
+												<TableRow>
+													<TableHead>Numer</TableHead>
+													<TableHead>Klient</TableHead>
+													<TableHead>Kanał</TableHead>
+													<TableHead>Status</TableHead>
+													<TableHead className="text-right">Kwota brutto</TableHead>
+													<TableHead className="text-right">Data</TableHead>
+												</TableRow>
+											</TableHeader>
+											<TableBody>
+												{orders.map((order) => (
+													<TableRow
+														key={order.id}
+														className={cn(
+															'cursor-pointer transition-colors',
+															selectedOrderId === order.id ? 'bg-muted' : 'hover:bg-muted/60',
+															order.requiresReview ? 'border-l-2 border-l-amber-400' : '',
+														)}
+														onClick={() => handleSelect(order.id)}
+														onKeyDown={(event) => {
+															if (event.key === 'Enter' || event.key === ' ') {
+																event.preventDefault();
+																handleSelect(order.id);
+															}
+														}}
+														tabIndex={0}
+														role="button"
+													>
+														<TableCell className="font-medium">
+															<div className="flex flex-wrap items-center gap-2">
+																<span>{order.reference}</span>
+																{order.source === 'woocommerce' ? <Badge variant="outline">WooCommerce</Badge> : null}
+																{order.requiresReview ? <Badge variant="destructive">Do potwierdzenia</Badge> : null}
+															</div>
+														</TableCell>
+														<TableCell>{order.customer}</TableCell>
+														<TableCell>{order.channel}</TableCell>
+														<TableCell>
+															<Badge variant="outline">{order.status}</Badge>
+														</TableCell>
+														<TableCell className="text-right font-medium">
+															{formatCurrency(order.totals.totalGross, order.currency)}
+														</TableCell>
+														<TableCell className="text-right text-sm text-muted-foreground">
+															{formatDateTime(order.createdAt)}
+														</TableCell>
+													</TableRow>
+												))}
+											</TableBody>
+										</Table>
+									</ScrollArea>
+								</div>
+
+								<div className="space-y-4 lg:hidden">
+									{orders.map((order) => {
+										const isSelected = selectedOrderId === order.id;
+
+										return (
+											<div
 												key={order.id}
 												className={cn(
-													'cursor-pointer transition-colors',
-													selectedOrderId === order.id ? 'bg-muted' : 'hover:bg-muted/60',
-													order.requiresReview ? 'border-l-2 border-l-amber-400' : '',
+													'space-y-3 rounded-lg border bg-background p-4 shadow-sm transition-colors',
+													isSelected ? 'border-primary ring-2 ring-primary/20' : 'hover:border-muted-foreground/40',
 												)}
 												onClick={() => handleSelect(order.id)}
 												onKeyDown={(event) => {
-												if (event.key === 'Enter' || event.key === ' ') {
-													event.preventDefault();
-													handleSelect(order.id);
-												}
+													if (event.key === 'Enter' || event.key === ' ') {
+														event.preventDefault();
+														handleSelect(order.id);
+													}
 												}}
 												tabIndex={0}
 												role="button"
+												aria-pressed={isSelected}
 											>
-												<TableCell className="font-medium">
-													<div className="flex flex-wrap items-center gap-2">
-														<span>{order.reference}</span>
-														{order.source === 'woocommerce' ? <Badge variant="outline">WooCommerce</Badge> : null}
-														{order.requiresReview ? <Badge variant="destructive">Do potwierdzenia</Badge> : null}
+												<div className="flex flex-col gap-3">
+													<div className="flex flex-wrap items-start justify-between gap-3">
+														<div>
+															<p className="text-base font-semibold text-foreground">{order.reference}</p>
+															<p className="text-sm text-muted-foreground">{formatDateTime(order.createdAt)}</p>
+														</div>
+														<div className="flex flex-col items-end gap-2">
+															<Badge variant="outline">{order.status}</Badge>
+															{order.requiresReview ? <Badge variant="destructive">Do potwierdzenia</Badge> : null}
+														</div>
 													</div>
-												</TableCell>
-												<TableCell>{order.customer}</TableCell>
-												<TableCell>{order.channel}</TableCell>
-												<TableCell>
-													<Badge variant="outline">{order.status}</Badge>
-												</TableCell>
-												<TableCell className="text-right font-medium">
-													{formatCurrency(order.totals.totalGross, order.currency)}
-												</TableCell>
-												<TableCell className="text-right text-sm text-muted-foreground">
-													{formatDateTime(order.createdAt)}
-												</TableCell>
-											</TableRow>
-										))}
-									</TableBody>
-								</Table>
-							</ScrollArea>
+													<div className="grid gap-2 text-sm">
+														<div>
+															<p className="text-xs uppercase text-muted-foreground">Klient</p>
+															<p className="font-medium text-foreground">{order.customer}</p>
+														</div>
+														<div className="flex flex-wrap gap-2">
+															<Badge variant="secondary">{order.channel}</Badge>
+															<Badge variant="secondary">
+																{order.source === 'woocommerce' ? 'WooCommerce' : 'Manualne'}
+															</Badge>
+														</div>
+														<div className="grid grid-cols-2 gap-3">
+															<div>
+																<p className="text-xs uppercase text-muted-foreground">Kwota brutto</p>
+																<p className="text-sm font-semibold">
+																	{formatCurrency(order.totals.totalGross, order.currency)}
+																</p>
+															</div>
+															<div>
+																<p className="text-xs uppercase text-muted-foreground">Źródło</p>
+																<p className="text-sm font-semibold text-foreground">
+																	{order.source === 'woocommerce' ? 'WooCommerce' : 'Ręczne'}
+																</p>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+										);
+									})}
+								</div>
+							</>
 						) : (
 							<Empty className="border border-dashed">
 								<EmptyHeader>

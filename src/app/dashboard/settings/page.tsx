@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { db } from '@/lib/db';
-import { integrationLogs, manualOrders, wfirmaTokens } from '@/lib/db/schema';
+import { integrationLogs, mailAccounts, manualOrders, wfirmaTokens } from '@/lib/db/schema';
 import { disconnectWfirmaIntegration } from './actions';
 import { WebhookSecretForm } from './_components/webhook-secret-form';
 
@@ -160,6 +160,33 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps =
 		return null;
 	})();
 
+	const mailRows = await db
+		.select({
+			id: mailAccounts.id,
+			displayName: mailAccounts.displayName,
+			email: mailAccounts.email,
+			status: mailAccounts.status,
+			lastSyncAt: mailAccounts.lastSyncAt,
+		})
+		.from(mailAccounts)
+		.orderBy(mailAccounts.displayName);
+
+	const mailAccountCount = mailRows.length;
+	const mailConnectedCount = mailRows.filter((row) => row.status === 'connected').length;
+
+	let latestMailSync: number | null = null;
+	for (const row of mailRows) {
+		const value =
+			row.lastSyncAt instanceof Date
+				? row.lastSyncAt.getTime()
+				: typeof row.lastSyncAt === 'number'
+					? row.lastSyncAt
+					: null;
+		if (value !== null && (latestMailSync === null || value > latestMailSync)) {
+			latestMailSync = value;
+		}
+	}
+
 	return (
 		<div className="space-y-8">
 			<div className="space-y-2">
@@ -205,6 +232,63 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps =
 							<li>Wersja API: <code>WP REST API v3</code></li>
 							<li>W pliku .env.local przechowujemy wpis <code>WOOCOMMERCE_WEBHOOK_SECRET=...</code>.</li>
 						</ul>
+					</CardContent>
+				</Card>
+
+				<Card>
+					<CardHeader>
+						<CardTitle>Poczta firmowa</CardTitle>
+						<CardDescription>Stan skrzynek pocztowych dostepnych w panelu.</CardDescription>
+					</CardHeader>
+					<CardContent className="space-y-4">
+						<dl className="grid gap-3 text-sm">
+							<div>
+								<dt className="text-muted-foreground">Liczba skrzynek</dt>
+								<dd className="text-base font-semibold">{mailAccountCount}</dd>
+							</div>
+							<div>
+								<dt className="text-muted-foreground">Aktywne polaczenia</dt>
+								<dd className="text-base font-semibold">{mailConnectedCount}</dd>
+							</div>
+							<div>
+								<dt className="text-muted-foreground">Ostatnia synchronizacja</dt>
+								<dd className="text-sm text-muted-foreground">
+									{latestMailSync ? formatTimestamp(latestMailSync) : 'Brak danych'}
+								</dd>
+							</div>
+						</dl>
+
+						{mailAccountCount === 0 ? (
+							<p className="text-sm text-muted-foreground">
+								Nie skonfigurowano jeszcze zadnej skrzynki. Dodaj konto w ustawieniach, aby odbierac i wysylac wiadomosci.
+							</p>
+						) : (
+							<ul className="space-y-2">
+								{mailRows.map((account) => (
+									<li key={account.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-muted/30 px-3 py-2">
+										<div className="space-y-1">
+											<p className="text-sm font-medium text-foreground">{account.displayName}</p>
+											<p className="text-xs text-muted-foreground">{account.email}</p>
+										</div>
+										<div className="flex items-center gap-2">
+											<Badge variant="secondary">{account.status}</Badge>
+											<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+												{account.lastSyncAt ? formatTimestamp(account.lastSyncAt) : 'bez synchronizacji'}
+											</span>
+										</div>
+									</li>
+								))}
+							</ul>
+						)}
+
+						<div className="flex flex-wrap gap-2">
+							<Button asChild>
+								<Link href="/dashboard/mail">Otworz skrzynke</Link>
+							</Button>
+							<Button asChild variant="outline">
+								<Link href="/dashboard/settings/mail">Konfiguracja</Link>
+							</Button>
+						</div>
 					</CardContent>
 				</Card>
 
