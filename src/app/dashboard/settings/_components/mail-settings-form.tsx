@@ -10,14 +10,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
-import { mailAccountStatuses, type MailAccountStatus } from '@/lib/db/schema';
 import type { MailAccountSettings } from '@/app/dashboard/mail/types';
-import { deleteMailAccount, upsertMailAccount } from '../mail/actions';
+import { deleteMailAccount, syncMailAccount, upsertMailAccount } from '../mail/actions';
 
 type MailSettingsFormProps = {
 	accounts: MailAccountSettings[];
@@ -28,7 +27,6 @@ type FormValues = {
 	displayName: string;
 	email: string;
 	provider: string;
-	status: MailAccountStatus;
 	imapHost: string;
 	imapPort: string;
 	imapSecure: 'true' | 'false';
@@ -49,7 +47,6 @@ function toFormValues(account: MailAccountSettings | null): FormValues {
 		displayName: account?.displayName ?? '',
 		email: account?.email ?? '',
 		provider: account?.provider ?? '',
-		status: account?.status ?? 'disabled',
 		imapHost: account?.imapHost ?? '',
 		imapPort: account?.imapPort ? String(account.imapPort) : '',
 		imapSecure: account?.imapSecure ? 'true' : 'false',
@@ -78,14 +75,18 @@ export function MailSettingsForm({ accounts }: MailSettingsFormProps) {
 	const [formValues, setFormValues] = useState<FormValues>(() => toFormValues(findAccount(accounts, accounts[0]?.id ?? null)));
 	const [deleteError, setDeleteError] = useState<string | null>(null);
 	const [isDeleting, startDeleteTransition] = useTransition();
+	const [isSyncing, startSyncTransition] = useTransition();
+	const [syncResult, setSyncResult] = useState<{ status: 'success' | 'error'; message: string } | null>(null);
 
 	const selectedAccount = useMemo(
 		() => (selectedAccountId === NEW_ACCOUNT_ID ? null : findAccount(accounts, selectedAccountId)),
 		[accounts, selectedAccountId],
 	);
 
+/* eslint-disable react-hooks/set-state-in-effect */
 	useEffect(() => {
 		setFormValues(toFormValues(selectedAccount));
+		setSyncResult(null);
 	}, [selectedAccount]);
 
 	useEffect(() => {
@@ -106,14 +107,17 @@ export function MailSettingsForm({ accounts }: MailSettingsFormProps) {
 			setPendingAccountId(null);
 		}
 	}, [accounts, pendingAccountId]);
+/* eslint-enable react-hooks/set-state-in-effect */
 
 	function handleSelect(accountId: string) {
 		setSelectedAccountId(accountId);
 		setDeleteError(null);
+		setSyncResult(null);
 	}
 
 	function handleChange(field: keyof FormValues, value: string) {
 		setFormValues((prev) => ({ ...prev, [field]: value }));
+		setSyncResult(null);
 	}
 
 	function handleDelete() {
@@ -122,6 +126,7 @@ export function MailSettingsForm({ accounts }: MailSettingsFormProps) {
 		}
 
 		setDeleteError(null);
+		setSyncResult(null);
 		startDeleteTransition(async () => {
 			try {
 				await deleteMailAccount(selectedAccountId);
@@ -129,6 +134,26 @@ export function MailSettingsForm({ accounts }: MailSettingsFormProps) {
 				setSelectedAccountId(NEW_ACCOUNT_ID);
 			} catch (error) {
 				setDeleteError(error instanceof Error ? error.message : 'Nie udalo sie usunac konta.');
+			}
+		});
+	}
+
+	function handleSync() {
+		if (!selectedAccount) {
+			return;
+		}
+
+		setSyncResult(null);
+		startSyncTransition(async () => {
+			try {
+				const result = await syncMailAccount(selectedAccount.id);
+				setSyncResult(result);
+				router.refresh();
+			} catch (error) {
+				setSyncResult({
+					status: 'error',
+					message: error instanceof Error ? error.message : 'Nie udalo sie wykonac testu polaczenia.',
+				});
 			}
 		});
 	}
@@ -209,9 +234,17 @@ export function MailSettingsForm({ accounts }: MailSettingsFormProps) {
 							</Alert>
 						) : null}
 
+						{syncResult ? (
+							<Alert variant={syncResult.status === 'error' ? 'destructive' : 'default'}>
+								<AlertTitle>
+									{syncResult.status === 'error' ? 'Test polaczenia nie powiodl sie' : 'Polaczenie przetestowane'}
+								</AlertTitle>
+								<AlertDescription>{syncResult.message}</AlertDescription>
+							</Alert>
+						) : null}
+
 						<form action={formAction} className="space-y-6">
 							<input type="hidden" name="accountId" value={formValues.accountId ?? ''} />
-							<input type="hidden" name="status" value={formValues.status} />
 							<input type="hidden" name="imapSecure" value={formValues.imapSecure} />
 							<input type="hidden" name="smtpSecure" value={formValues.smtpSecure} />
 
@@ -249,24 +282,6 @@ export function MailSettingsForm({ accounts }: MailSettingsFormProps) {
 										value={formValues.provider}
 										onChange={(event) => handleChange('provider', event.target.value)}
 									/>
-								</div>
-								<div className="space-y-2">
-									<Label>Status</Label>
-									<Select
-										value={formValues.status}
-										onValueChange={(value) => handleChange('status', value)}
-									>
-										<SelectTrigger>
-											<SelectValue placeholder="Wybierz status" />
-										</SelectTrigger>
-										<SelectContent>
-											{mailAccountStatuses.map((status) => (
-												<SelectItem key={status} value={status}>
-													{status}
-												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
 								</div>
 							</div>
 
@@ -397,14 +412,19 @@ export function MailSettingsForm({ accounts }: MailSettingsFormProps) {
 									{isSubmitting ? 'Zapisywanie…' : selectedAccount ? 'Zapisz zmiany' : 'Dodaj konto'}
 								</Button>
 								{selectedAccount ? (
-									<Button
-										type="button"
-										variant="destructive"
-										onClick={handleDelete}
-										disabled={isDeleting}
-									>
-										{isDeleting ? 'Usuwanie…' : 'Usun konto'}
-									</Button>
+									<>
+										<Button type="button" variant="secondary" onClick={handleSync} disabled={isSyncing}>
+											{isSyncing ? 'Sprawdzanie…' : 'Testuj polaczenie'}
+										</Button>
+										<Button
+											type="button"
+											variant="destructive"
+											onClick={handleDelete}
+											disabled={isDeleting}
+										>
+											{isDeleting ? 'Usuwanie…' : 'Usun konto'}
+										</Button>
+									</>
 								) : null}
 							</div>
 						</form>

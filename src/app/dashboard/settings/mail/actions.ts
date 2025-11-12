@@ -2,11 +2,14 @@
 
 import { revalidatePath } from 'next/cache';
 import { eq, sql } from 'drizzle-orm';
+import * as net from 'net';
+import * as tls from 'tls';
 import { z } from 'zod';
 
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
-import { mailAccountStatuses, mailAccounts, mailFolders, mailMessages } from '@/lib/db/schema';
+import { mailAccounts, mailFolders, mailMessages } from '@/lib/db/schema';
+import type { MailAccountStatus } from '@/lib/db/schema';
 
 import { fetchMailAccountsDetailed } from '@/app/dashboard/mail/queries';
 import type { MailAccountSettings } from '@/app/dashboard/mail/types';
@@ -18,12 +21,16 @@ type UpsertState = {
 	accountId?: string;
 };
 
+type SyncResult = {
+	status: 'success' | 'error';
+	message: string;
+};
+
 const schema = z.object({
 	accountId: z.string().uuid().optional().or(z.literal('')).transform((value) => value || undefined),
 	displayName: z.string().trim().min(1, 'Podaj nazwe konta.'),
 	email: z.string().trim().min(1, 'Podaj adres email.').email('Adres email jest niepoprawny.'),
 	provider: z.string().trim().optional(),
-	status: z.enum(mailAccountStatuses),
 	imapHost: z.string().trim().min(1, 'Podaj host IMAP.'),
 	imapPort: z.coerce
 		.number()
@@ -68,7 +75,6 @@ export async function upsertMailAccount(_: UpsertState, formData: FormData): Pro
 		displayName: formData.get('displayName'),
 		email: formData.get('email'),
 		provider: formData.get('provider'),
-		status: formData.get('status'),
 		imapHost: formData.get('imapHost'),
 		imapPort: formData.get('imapPort'),
 		imapSecure: formData.get('imapSecure') ?? 'false',
@@ -105,7 +111,7 @@ export async function upsertMailAccount(_: UpsertState, formData: FormData): Pro
 		displayName: data.displayName,
 		email: data.email,
 		provider: normalizeNullable(data.provider),
-		status: data.status,
+		status: 'disconnected' as MailAccountStatus,
 		imapHost: data.imapHost,
 		imapPort: data.imapPort,
 		imapSecure: data.imapSecure,
@@ -127,11 +133,14 @@ export async function upsertMailAccount(_: UpsertState, formData: FormData): Pro
 
 	const existing = accountId
 		? await db
-			.select({ id: mailAccounts.id })
+			.select({ id: mailAccounts.id, status: mailAccounts.status })
 			.from(mailAccounts)
 			.where(eq(mailAccounts.id, accountId))
 			.limit(1)
 		: [];
+
+	const baseStatus: MailAccountStatus = existing[0]?.status ?? 'disconnected';
+	values.status = baseStatus;
 
 	if (accountId && existing.length === 0) {
 		return {
@@ -178,4 +187,142 @@ export async function deleteMailAccount(accountId: string): Promise<void> {
 export async function getMailAccountSettings(): Promise<MailAccountSettings[]> {
 	await requireUser();
 	return fetchMailAccountsDetailed();
+}
+
+function testConnection(service: 'IMAP' | 'SMTP', host: string, port: number, secure: boolean): Promise<void> {
+	const timeoutMs = 7000;
+
+	return new Promise((resolve, reject) => {
+		let socket: net.Socket | tls.TLSSocket | null = null;
+
+		const cleanup = () => {
+			if (!socket) {
+				return;
+			}
+			socket.removeAllListeners();
+			socket.end();
+			socket.destroy();
+			socket = null;
+		};
+
+		const fail = (error: Error) => {
+			cleanup();
+			reject(new Error(`Nie udalo sie polaczyc z serwerem ${service}: ${error.message}`));
+		};
+
+		const handleTimeout = () => {
+			fail(new Error('Przekroczono czas oczekiwania.'));
+		};
+
+		const handleConnect = () => {
+			cleanup();
+			resolve();
+		};
+
+		if (secure) {
+			socket = tls.connect({ host, port, servername: host }, handleConnect);
+			socket.once('error', fail);
+		} else {
+			socket = net.connect({ host, port }, handleConnect);
+			socket.once('error', fail);
+		}
+
+		if (!socket) {
+			reject(new Error(`Nie udalo sie zainicjowac polaczenia z serwerem ${service}.`));
+			return;
+		}
+
+		socket.setTimeout(timeoutMs, handleTimeout);
+	});
+}
+
+export async function syncMailAccount(accountId: string): Promise<SyncResult> {
+	await requireUser();
+
+	if (!accountId) {
+		return {
+			status: 'error',
+			message: 'Brak identyfikatora konta.',
+		};
+	}
+
+	const [account] = await db
+		.select({
+			id: mailAccounts.id,
+			displayName: mailAccounts.displayName,
+			imapHost: mailAccounts.imapHost,
+			imapPort: mailAccounts.imapPort,
+			imapSecure: mailAccounts.imapSecure,
+			smtpHost: mailAccounts.smtpHost,
+			smtpPort: mailAccounts.smtpPort,
+			smtpSecure: mailAccounts.smtpSecure,
+		})
+		.from(mailAccounts)
+		.where(eq(mailAccounts.id, accountId))
+		.limit(1);
+
+	if (!account) {
+		return {
+			status: 'error',
+			message: 'Wybrane konto nie istnieje.',
+		};
+	}
+
+	if (!account.imapHost || !account.imapPort) {
+		return {
+			status: 'error',
+			message: 'Brakuje konfiguracji serwera IMAP. Zapisz poprawnie formularz i sprobuj ponownie.',
+		};
+	}
+
+	if (!account.smtpHost || !account.smtpPort) {
+		return {
+			status: 'error',
+			message: 'Brakuje konfiguracji serwera SMTP. Zapisz poprawnie formularz i sprobuj ponownie.',
+		};
+	}
+
+	try {
+		await testConnection('IMAP', account.imapHost, Number(account.imapPort), Boolean(account.imapSecure));
+		await testConnection('SMTP', account.smtpHost, Number(account.smtpPort), Boolean(account.smtpSecure));
+	} catch (error) {
+		const message = error instanceof Error ? error.message : 'Test polaczenia zakonczyl sie niepowodzeniem.';
+
+		await db
+			.update(mailAccounts)
+			.set({
+				status: 'error',
+				error: message,
+				nextSyncAt: null,
+				updatedAt: sql`(strftime('%s','now') * 1000)`,
+			})
+			.where(eq(mailAccounts.id, accountId));
+
+		revalidatePath('/dashboard/settings/mail');
+		revalidatePath('/dashboard/mail');
+
+		return {
+			status: 'error',
+			message,
+		};
+	}
+
+	await db
+		.update(mailAccounts)
+		.set({
+			status: 'connected',
+			error: null,
+			lastSyncAt: sql`(strftime('%s','now') * 1000)`,
+			nextSyncAt: sql`((strftime('%s','now') + 900) * 1000)`,
+			updatedAt: sql`(strftime('%s','now') * 1000)`,
+		})
+		.where(eq(mailAccounts.id, accountId));
+
+	revalidatePath('/dashboard/settings/mail');
+	revalidatePath('/dashboard/mail');
+
+	return {
+		status: 'success',
+		message: 'Polaczenie z serwerami IMAP i SMTP powiodlo sie. Zaplanowano kolejna synchronizacje.',
+	};
 }
