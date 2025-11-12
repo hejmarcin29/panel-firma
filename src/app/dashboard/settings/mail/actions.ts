@@ -2,10 +2,10 @@
 
 import { revalidatePath } from 'next/cache';
 import { eq, sql } from 'drizzle-orm';
-import type { SQL } from 'drizzle-orm';
 import { ImapFlow } from 'imapflow';
+import type { FetchMessageObject, ListResponse, MessageAddressObject } from 'imapflow';
 import { simpleParser } from 'mailparser';
-import type { AddressObject, ParsedMail } from 'mailparser';
+import type { AddressObject, ParsedMail, EmailAddress } from 'mailparser';
 import * as net from 'net';
 import * as tls from 'tls';
 import { z } from 'zod';
@@ -39,32 +39,6 @@ type SyncSummary = {
 const MAX_MESSAGES_PER_FOLDER = 50;
 const UPSERT_BATCH_SIZE = 10;
 const NEXT_SYNC_DELAY_SECONDS = 15 * 60;
-
-type ImapMailboxInfo = {
-	path: string;
-	name?: string;
-	flags?: Iterable<string> | string[] | Set<string> | null;
-	specialUse?: string | null;
-	specialUseFlag?: string | null;
-};
-
-type ImapFetchedMessage = {
-	uid?: number;
-	envelope?: {
-		subject?: string | null;
-		messageId?: string | null;
-		from?: AddressObject[] | null;
-		to?: AddressObject[] | null;
-		cc?: AddressObject[] | null;
-		bcc?: AddressObject[] | null;
-		replyTo?: AddressObject[] | null;
-		date?: Date | null;
-	};
-	flags?: Iterable<string> | string[] | Set<string> | null;
-	internalDate?: Date | null;
-	threadId?: string | number | null;
-	source?: Buffer | Uint8Array | string;
-};
 
 const schema = z.object({
 	accountId: z.string().uuid().optional().or(z.literal('')).transform((value) => value || undefined),
@@ -333,33 +307,34 @@ async function synchronizeAccount(client: ImapFlow, accountId: string): Promise<
 	}
 
 	const descriptors: FolderDescriptor[] = [];
-	const timestamp = sql`(strftime('%s','now') * 1000)`;
 
-	for await (const mailboxRaw of client.list()) {
-		const mailbox = mailboxRaw as ImapMailboxInfo;
-		const path = typeof mailbox.path === 'string' ? mailbox.path : null;
+	const mailboxes = await client.list();
+	for (const mailbox of mailboxes) {
+		const path = mailbox?.path ?? null;
 		if (!path) {
 			continue;
 		}
 
+		const timestamp = new Date();
 		const flags = normalizeFlags(mailbox.flags);
 		if (flags.has('\\NOSELECT')) {
 			continue;
 		}
 
-		const kind = resolveFolderKind(mailbox);
+		const kind = resolveFolderKind(mailbox, flags);
 		const sortOrder = resolveSortOrder(kind);
 		let unreadCount = 0;
 
 		try {
 			const status = await client.status(path, { unseen: true });
-			unreadCount = Number((status as { unseen?: number }).unseen ?? 0);
+			unreadCount = Number(status?.unseen ?? 0);
 		} catch {
 			unreadCount = 0;
 		}
 
 		const name = mailbox.name || path;
-		const existingId = folderMap.get(path);
+		const remoteKey = mailbox.specialUse || path;
+		const existingId = folderMap.get(remoteKey) ?? folderMap.get(path) ?? null;
 		const folderId = existingId ?? crypto.randomUUID();
 
 		if (existingId) {
@@ -368,7 +343,7 @@ async function synchronizeAccount(client: ImapFlow, accountId: string): Promise<
 				.set({
 					name,
 					kind,
-					remoteId: path,
+					remoteId: remoteKey,
 					path,
 					sortOrder,
 					unreadCount,
@@ -381,13 +356,16 @@ async function synchronizeAccount(client: ImapFlow, accountId: string): Promise<
 				accountId,
 				name,
 				kind,
-				remoteId: path,
+				remoteId: remoteKey,
 				path,
 				sortOrder,
 				unreadCount,
 				updatedAt: timestamp,
 			});
 		}
+
+		folderMap.set(remoteKey, folderId);
+		folderMap.set(path, folderId);
 
 		descriptors.push({
 			folderId,
@@ -414,12 +392,19 @@ async function synchronizeAccount(client: ImapFlow, accountId: string): Promise<
 
 async function synchronizeFolder(client: ImapFlow, accountId: string, folderId: string, path: string): Promise<number> {
 	const lock = await client.getMailboxLock(path);
-	const timestamp = sql`(strftime('%s','now') * 1000)`;
+	const timestamp = new Date();
 
 	try {
-		const mailbox = client.mailbox ?? {};
-		const total = typeof mailbox.exists === 'number' ? mailbox.exists : 0;
-		const unseen = typeof mailbox.unseen === 'number' ? mailbox.unseen : 0;
+		const mailboxInfo = client.mailbox;
+		const total = mailboxInfo && typeof mailboxInfo === 'object' ? mailboxInfo.exists : 0;
+		let unseen = 0;
+
+		try {
+			const status = await client.status(path, { unseen: true });
+			unseen = Number(status?.unseen ?? 0);
+		} catch {
+			unseen = 0;
+		}
 
 		await db
 			.update(mailFolders)
@@ -435,7 +420,7 @@ async function synchronizeFolder(client: ImapFlow, accountId: string, folderId: 
 		const batch: (typeof mailMessages.$inferInsert)[] = [];
 		let processed = 0;
 
-		for await (const messageRaw of client.fetch(
+		for await (const message of client.fetch(
 			{ seq: range },
 			{
 				envelope: true,
@@ -446,7 +431,6 @@ async function synchronizeFolder(client: ImapFlow, accountId: string, folderId: 
 				threadId: true,
 			},
 		)) {
-			const message = messageRaw as ImapFetchedMessage;
 			const record = await buildMessageRecord(accountId, folderId, message, timestamp);
 			if (!record) {
 				continue;
@@ -508,11 +492,11 @@ async function upsertMessages(records: (typeof mailMessages.$inferInsert)[]): Pr
 async function buildMessageRecord(
 	accountId: string,
 	folderId: string,
-	message: ImapFetchedMessage,
-	timestamp: SQL<unknown>,
+	message: FetchMessageObject,
+	timestamp: Date,
 ): Promise<(typeof mailMessages.$inferInsert) | null> {
-	const envelope = (message?.envelope ?? {}) as ImapFetchedMessage['envelope'];
-	const rawSource = message?.source as Buffer | Uint8Array | string | undefined;
+	const envelope = message.envelope ?? {};
+	const rawSource = message.source as Buffer | Uint8Array | string | undefined;
 	let parsed: ParsedMail | null = null;
 
 	if (rawSource) {
@@ -533,28 +517,28 @@ async function buildMessageRecord(
 		}
 	}
 
-	const messageId = normalizeMessageId(parsed?.messageId ?? envelope.messageId ?? (message?.uid ? `uid:${message.uid}` : null));
+	const messageId = normalizeMessageId(parsed?.messageId ?? envelope.messageId ?? (message.uid ? `uid:${message.uid}` : null));
 	if (!messageId) {
 		return null;
 	}
 
-	const envelopeFrom = Array.isArray(envelope?.from) ? envelope?.from : undefined;
-	const envelopeTo = Array.isArray(envelope?.to) ? envelope?.to : undefined;
-	const envelopeCc = Array.isArray(envelope?.cc) ? envelope?.cc : undefined;
-	const envelopeBcc = Array.isArray(envelope?.bcc) ? envelope?.bcc : undefined;
-	const envelopeReplyTo = Array.isArray(envelope?.replyTo) ? envelope?.replyTo : undefined;
+	const parsedFrom = extractMailparserAddresses(parsed?.from);
+	const parsedTo = extractMailparserAddresses(parsed?.to);
+	const parsedCc = extractMailparserAddresses(parsed?.cc);
+	const parsedBcc = extractMailparserAddresses(parsed?.bcc);
+	const parsedReplyTo = extractMailparserAddresses(parsed?.replyTo);
 
-	const from = extractAddress(parsed?.from?.value?.[0] ?? envelopeFrom?.[0]);
-	const toRecipients = collectAddresses(parsed?.to?.value, envelopeTo);
-	const ccRecipients = collectAddresses(parsed?.cc?.value, envelopeCc);
-	const bccRecipients = collectAddresses(parsed?.bcc?.value, envelopeBcc);
-	const replyTo = extractAddress(parsed?.replyTo?.value?.[0] ?? envelopeReplyTo?.[0]);
-	const flags = normalizeFlags(message?.flags);
-	const internalDate = toTimestamp(message?.internalDate);
+	const from = extractAddress(parsedFrom[0] ?? envelope.from?.[0]);
+	const toRecipients = collectAddresses(parsedTo, envelope.to);
+	const ccRecipients = collectAddresses(parsedCc, envelope.cc);
+	const bccRecipients = collectAddresses(parsedBcc, envelope.bcc);
+	const replyTo = extractAddress(parsedReplyTo[0] ?? envelope.replyTo?.[0]);
+	const flags = normalizeFlags(message.flags);
+	const internalDate = toDateValue(message.internalDate);
 	const receivedDate = parsed?.date ?? envelope?.date ?? null;
-	const receivedAt = toTimestamp(receivedDate) ?? internalDate;
+	const receivedAt = toDateValue(receivedDate) ?? internalDate;
 	const textBody = parsed?.text ?? null;
-	const htmlBody = parsed?.html ?? null;
+	const htmlBody = typeof parsed?.html === 'string' ? parsed.html : null;
 
 	return {
 		id: crypto.randomUUID(),
@@ -571,8 +555,8 @@ async function buildMessageRecord(
 		textBody,
 		htmlBody,
 		messageId,
-		threadId: message?.threadId ? String(message.threadId) : null,
-		externalId: message?.uid ? String(message.uid) : null,
+		threadId: message.threadId ? String(message.threadId) : null,
+		externalId: message.uid ? String(message.uid) : null,
 		receivedAt: receivedAt ?? null,
 		internalDate: internalDate ?? null,
 		isRead: flags.has('\\SEEN'),
@@ -582,21 +566,42 @@ async function buildMessageRecord(
 	};
 }
 
-function normalizeFlags(flags: Iterable<string> | string[] | Set<string> | null | undefined): Set<string> {
+function normalizeFlags(flags: Iterable<string> | null | undefined): Set<string> {
 	if (!flags) {
 		return new Set();
 	}
 
-	const entries = flags instanceof Set ? Array.from(flags) : Array.isArray(flags) ? flags : Array.from(flags);
-	return new Set(entries.map((flag) => (typeof flag === 'string' ? flag.toUpperCase() : '')).filter(Boolean));
+	const values = Array.from(flags);
+	return new Set(values.map((flag) => (typeof flag === 'string' ? flag.toUpperCase() : '')).filter(Boolean));
 }
 
-function resolveFolderKind(mailbox: ImapMailboxInfo): MailFolderKind {
+function resolveFolderKind(mailbox: ListResponse, flags: Set<string>): MailFolderKind {
 	const specialUse = typeof mailbox.specialUse === 'string' ? mailbox.specialUse.toUpperCase() : null;
-	const flag = typeof mailbox.specialUseFlag === 'string' ? mailbox.specialUseFlag.toUpperCase() : null;
 	const name = typeof mailbox.name === 'string' ? mailbox.name.toLowerCase() : '';
 
-	const lookup = specialUse ?? flag ?? '';
+	const fallbackFlag = () => {
+		if (flags.has('\\INBOX')) {
+			return '\\INBOX';
+		}
+		if (flags.has('\\SENT')) {
+			return '\\SENT';
+		}
+		if (flags.has('\\DRAFTS')) {
+			return '\\DRAFTS';
+		}
+		if (flags.has('\\JUNK')) {
+			return '\\JUNK';
+		}
+		if (flags.has('\\TRASH')) {
+			return '\\TRASH';
+		}
+		if (flags.has('\\ARCHIVE')) {
+			return '\\ARCHIVE';
+		}
+		return null;
+	};
+
+	const lookup = specialUse ?? fallbackFlag() ?? '';
 
 	switch (lookup) {
 		case '\\INBOX':
@@ -669,7 +674,27 @@ function serializeRecipients(recipients: string[]): string | null {
 	return JSON.stringify(recipients);
 }
 
-function collectAddresses(primary?: AddressObject[] | null, fallback?: AddressObject[] | null): string[] {
+type AddressLike = EmailAddress | MessageAddressObject;
+type AddressCollection = AddressLike[] | AddressLike | null | undefined;
+
+function extractMailparserAddresses(value?: AddressObject | AddressObject[] | null | undefined): EmailAddress[] {
+	if (!value) {
+		return [];
+	}
+
+	const items = Array.isArray(value) ? value : [value];
+	const result: EmailAddress[] = [];
+
+	for (const item of items) {
+		if (item && Array.isArray(item.value)) {
+			result.push(...item.value);
+		}
+	}
+
+	return result;
+}
+
+function collectAddresses(primary?: AddressCollection, fallback?: AddressCollection): string[] {
 	const primaryList = normalizeAddressList(primary);
 	if (primaryList.length > 0) {
 		return primaryList;
@@ -678,7 +703,7 @@ function collectAddresses(primary?: AddressObject[] | null, fallback?: AddressOb
 	return normalizeAddressList(fallback);
 }
 
-function normalizeAddressList(value?: AddressObject[] | AddressObject | null): string[] {
+function normalizeAddressList(value?: AddressCollection): string[] {
 	const items = Array.isArray(value) ? value : value ? [value] : [];
 	const result: string[] = [];
 
@@ -692,34 +717,38 @@ function normalizeAddressList(value?: AddressObject[] | AddressObject | null): s
 	return result;
 }
 
-function extractAddress(value?: AddressObject | null): { name: string | null; address: string | null } | null {
+function extractAddress(value?: AddressLike | null): { name: string | null; address: string | null } | null {
 	if (!value) {
 		return null;
 	}
 
 	const name = typeof value.name === 'string' && value.name.trim().length > 0 ? value.name.trim() : null;
-
-	if (typeof value.address === 'string' && value.address.trim().length > 0) {
-		return { name, address: value.address.trim() };
-	}
-
-	const mailbox = typeof value.mailbox === 'string' ? value.mailbox.trim() : '';
-	const host = typeof value.host === 'string' ? value.host.trim() : '';
-	if (mailbox && host) {
-		return { name, address: `${mailbox}@${host}` };
+	const directAddress = typeof value.address === 'string' && value.address.trim().length > 0 ? value.address.trim() : null;
+	if (directAddress) {
+		return { name, address: directAddress };
 	}
 
 	return null;
 }
 
-function toTimestamp(value: unknown): number | null {
+function toDateValue(value: unknown): Date | null {
 	if (value instanceof Date) {
 		const time = value.getTime();
-		return Number.isNaN(time) ? null : time;
+		return Number.isNaN(time) ? null : value;
+	}
+
+	if (typeof value === 'string') {
+		const parsed = new Date(value);
+		const time = parsed.getTime();
+		return Number.isNaN(time) ? null : parsed;
 	}
 
 	if (typeof value === 'number') {
-		return Number.isNaN(value) ? null : value;
+		if (Number.isNaN(value)) {
+			return null;
+		}
+		const parsed = new Date(value);
+		return Number.isNaN(parsed.getTime()) ? null : parsed;
 	}
 
 	return null;
