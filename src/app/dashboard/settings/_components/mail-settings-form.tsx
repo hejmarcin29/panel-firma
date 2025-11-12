@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
 
 import { mailAccountStatuses, type MailAccountStatus } from '@/lib/db/schema';
 import type { MailAccountSettings } from '@/app/dashboard/mail/types';
-import { deleteMailAccount, initialMailAccountState, upsertMailAccount } from '../mail/actions';
+import { deleteMailAccount, upsertMailAccount } from '../mail/actions';
 
 type MailSettingsFormProps = {
 	accounts: MailAccountSettings[];
@@ -41,6 +41,7 @@ type FormValues = {
 };
 
 const NEW_ACCOUNT_ID = '__new__';
+const INITIAL_ACTION_STATE = { status: 'idle' as const };
 
 function toFormValues(account: MailAccountSettings | null): FormValues {
 	return {
@@ -71,7 +72,7 @@ function findAccount(accounts: MailAccountSettings[], id: string | null): MailAc
 
 export function MailSettingsForm({ accounts }: MailSettingsFormProps) {
 	const router = useRouter();
-	const [state, formAction, isSubmitting] = useActionState(upsertMailAccount, initialMailAccountState);
+	const [state, formAction, isSubmitting] = useActionState(upsertMailAccount, INITIAL_ACTION_STATE);
 	const [pendingAccountId, setPendingAccountId] = useState<string | null>(null);
 	const [selectedAccountId, setSelectedAccountId] = useState<string>(accounts[0]?.id ?? NEW_ACCOUNT_ID);
 	const [formValues, setFormValues] = useState<FormValues>(() => toFormValues(findAccount(accounts, accounts[0]?.id ?? null)));

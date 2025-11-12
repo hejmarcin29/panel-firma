@@ -1,4 +1,4 @@
-'use server';
+"use server";
 
 import { revalidatePath } from 'next/cache';
 import { eq, sql } from 'drizzle-orm';
@@ -17,8 +17,6 @@ type UpsertState = {
 	errors?: Record<string, string>;
 	accountId?: string;
 };
-
-const initialState: UpsertState = { status: 'idle' };
 
 const schema = z.object({
 	accountId: z.string().uuid().optional().or(z.literal('')).transform((value) => value || undefined),
@@ -181,5 +179,3 @@ export async function getMailAccountSettings(): Promise<MailAccountSettings[]> {
 	await requireUser();
 	return fetchMailAccountsDetailed();
 }
-
-export { initialState as initialMailAccountState };
