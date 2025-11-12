@@ -126,7 +126,7 @@ export function OrderStatusTimeline({ orderId, entries, currentStatus }: OrderSt
 								<Button
 									type="button"
 									variant="ghost"
-									className="w-full justify-start p-0"
+									className="w-full justify-start p-0 h-auto items-stretch"
 									onClick={() => handleStatusChange(entry.statusKey)}
 									disabled={isPending}
 								>
