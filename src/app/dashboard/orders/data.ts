@@ -1,11 +1,19 @@
 export type OrderTimelineState = 'completed' | 'current' | 'pending';
 
+export type OrderTimelineTask = {
+	id: string;
+	label: string;
+	completed: boolean;
+};
+
 export type OrderTimelineEntry = {
 	id: string;
 	title: string;
 	description: string;
 	timestamp: string | null;
 	state: OrderTimelineState;
+	statusKey: string | null;
+	tasks: OrderTimelineTask[];
 };
 
 export type OrderItem = {

@@ -1,57 +1,75 @@
 import type { OrderTimelineEntry, OrderTimelineState } from './data';
 
-export const statusOptions = ['Nowe', 'W realizacji', 'Pakowanie', 'Wysłane', 'Dostarczone'] as const;
+export const statusOptions = [
+	'Zamówienie utworzone',
+	'Weryfikacja i płatność',
+	'Kompletacja zamówienia',
+	'Wydanie przewoźnikowi',
+	'Dostarczone do klienta',
+] as const;
+
+export type StatusOption = (typeof statusOptions)[number];
+
+const legacyStatusMap: Record<string, StatusOption> = {
+	Nowe: 'Weryfikacja i płatność',
+	'W realizacji': 'Kompletacja zamówienia',
+	Pakowanie: 'Kompletacja zamówienia',
+	'Wysłane': 'Wydanie przewoźnikowi',
+	'Dostarczone': 'Dostarczone do klienta',
+};
+
+export function normalizeStatus(status: string): StatusOption {
+	const trimmed = status.trim();
+	if (legacyStatusMap[trimmed]) {
+		return legacyStatusMap[trimmed];
+	}
+	if (statusOptions.includes(trimmed as StatusOption)) {
+		return trimmed as StatusOption;
+	}
+	return statusOptions[0];
+}
 export const channelOptions = ['Sklep online', 'Marketplace', 'Telefon', 'Showroom'] as const;
 
 const timelineStages = [
 	{
-		key: 'created',
+		key: 'Zamówienie utworzone',
 		title: 'Zamówienie utworzone',
 		description: 'Zamówienie zostało dodane ręcznie w panelu administratora.',
+		tasks: [] as string[],
 	},
 	{
-		key: 'Nowe',
+		key: 'Weryfikacja i płatność',
 		title: 'Weryfikacja i płatność',
 		description: 'Zespół weryfikuje płatność oraz kompletność danych klienta.',
+		tasks: ['Proforma wystawiona', 'Proforma wysłana', 'Zaliczkowa wysłana'],
 	},
 	{
-		key: 'W realizacji',
+		key: 'Kompletacja zamówienia',
 		title: 'Kompletacja zamówienia',
 		description: 'Magazyn przygotowuje zamówienie do wysyłki.',
+		tasks: ['Zamówienie przyjęte przez magazyn', 'Wysłane zamówienie'],
 	},
 	{
-		key: 'Pakowanie',
-		title: 'Pakowanie i kontrola jakości',
-		description: 'Pracownicy pakują towar i przygotowują listy przewozowe.',
-	},
-	{
-		key: 'Wysłane',
+		key: 'Wydanie przewoźnikowi',
 		title: 'Wydanie przewoźnikowi',
 		description: 'Zamówienie przekazano do przewoźnika wraz z numerem śledzenia.',
+		tasks: [] as string[],
 	},
 	{
-		key: 'Dostarczone',
+		key: 'Dostarczone do klienta',
 		title: 'Dostarczone do klienta',
 		description: 'Klient potwierdził odebranie przesyłki.',
+		tasks: ['Wystawiono fakturę końcową', 'Opłacono fakturę kosztową'],
 	},
 ] as const;
 
 export function buildTimelineEntries(status: string, notes: string, createdAt: string): OrderTimelineEntry[] {
-	const statusIndex = timelineStages.findIndex((stage) => stage.key === status);
-	const activeIndex = statusIndex === -1 ? 1 : Math.max(statusIndex, 1);
+	const normalizedStatus = normalizeStatus(status);
+	const statusIndex = timelineStages.findIndex((stage) => stage.key === normalizedStatus);
+	const activeIndex = statusIndex === -1 ? 0 : statusIndex;
 	const createdAtDate = new Date(createdAt);
 
 	const baseEntries: OrderTimelineEntry[] = timelineStages.map((stage, index) => {
-		if (stage.key === 'created') {
-			return {
-				id: 'stage-created',
-				title: stage.title,
-				description: stage.description,
-				timestamp: createdAtDate.toISOString(),
-				state: 'completed',
-			};
-		}
-
 		let state: OrderTimelineState = 'pending';
 		if (index < activeIndex) {
 			state = 'completed';
@@ -59,17 +77,26 @@ export function buildTimelineEntries(status: string, notes: string, createdAt: s
 			state = 'current';
 		}
 
-		const minutesOffset = activeIndex > index ? (activeIndex - index) * 20 : 0;
-		const timestamp = state === 'pending'
-			? null
-			: new Date(createdAtDate.getTime() - minutesOffset * 60 * 1000).toISOString();
+		let timestamp: string | null = null;
+		if (index === 0) {
+			timestamp = createdAtDate.toISOString();
+		} else if (state !== 'pending') {
+			const minutesOffset = activeIndex > index ? (activeIndex - index) * 20 : 0;
+			timestamp = new Date(createdAtDate.getTime() - minutesOffset * 60 * 1000).toISOString();
+		}
 
 		return {
-			id: `stage-${stage.key.toLowerCase().replace(/\s+/g, '-')}`,
+			id: `stage-${stage.key.toLowerCase().replace(/[^a-z0-9]+/gi, '-')}`,
 			title: stage.title,
 			description: stage.description,
 			timestamp,
 			state,
+			statusKey: stage.key,
+			tasks: stage.tasks.map((task) => ({
+				id: `${stage.key.toLowerCase().replace(/[^a-z0-9]+/gi, '-')}-${task.toLowerCase().replace(/[^a-z0-9]+/gi, '-')}`,
+				label: task,
+				completed: false,
+			})),
 		};
 	});
 
@@ -87,6 +114,8 @@ export function buildTimelineEntries(status: string, notes: string, createdAt: s
 						description: rawDescription || 'Brak dodatkowego opisu.',
 						timestamp: null,
 						state: 'pending' as const,
+						statusKey: null,
+						tasks: [],
 					};
 				})
 		: [];

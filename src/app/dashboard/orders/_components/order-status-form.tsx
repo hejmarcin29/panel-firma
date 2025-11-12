@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useMemo, useState, useTransition } from 'react';
+import { FormEvent, useEffect, useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 
 import { updateManualOrderStatus } from '../actions';
-import { statusOptions } from '../utils';
+import { normalizeStatus, statusOptions } from '../utils';
 
 type OrderStatusFormProps = {
 	orderId: string;
@@ -24,11 +24,12 @@ type OrderStatusFormProps = {
 
 export function OrderStatusForm({ orderId, currentStatus }: OrderStatusFormProps) {
 	const router = useRouter();
-	const allowedStatuses = useMemo(() => new Set(statusOptions), []);
-	const initialStatus = allowedStatuses.has(currentStatus as (typeof statusOptions)[number])
-		? currentStatus
-		: statusOptions[0];
-	const [selectedStatus, setSelectedStatus] = useState<string>(initialStatus);
+	const normalizedCurrentStatus = useMemo(() => normalizeStatus(currentStatus), [currentStatus]);
+	const [selectedStatus, setSelectedStatus] = useState<string>(normalizedCurrentStatus);
+
+	useEffect(() => {
+		setSelectedStatus(normalizedCurrentStatus);
+	}, [normalizedCurrentStatus]);
 	const [note, setNote] = useState('');
 	const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 	const [isPending, startTransition] = useTransition();
@@ -54,7 +55,7 @@ export function OrderStatusForm({ orderId, currentStatus }: OrderStatusFormProps
 	};
 
 	const nothingToUpdate =
-		selectedStatus === currentStatus && note.trim().length === 0;
+		selectedStatus === normalizedCurrentStatus && note.trim().length === 0;
 
 	return (
 		<form onSubmit={handleSubmit} className="w-full space-y-3">

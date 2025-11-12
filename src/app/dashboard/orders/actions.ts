@@ -19,7 +19,7 @@ import type {
 	OrderItemPayload,
 	OrderDocument,
 } from './data';
-import { buildTimelineEntries, statusOptions } from './utils';
+import { buildTimelineEntries, normalizeStatus, statusOptions } from './utils';
 
 const MONEY_SCALE = 100;
 const QUANTITY_SCALE = 1000;
@@ -123,7 +123,7 @@ function mapOrderRow(row: ManualOrderRow & { items: ManualOrderItemRow[] }): Ord
 		reference: row.reference,
 		customer: billing.name,
 		channel: row.channel,
-		status: row.status,
+		status: normalizeStatus(row.status),
 		currency: row.currency,
 		source: row.source as ManualOrderSource,
 		sourceOrderId: row.sourceOrderId ?? null,
@@ -262,7 +262,7 @@ export async function createManualOrder(payload: ManualOrderPayload): Promise<Or
 	const orderRecord: ManualOrderInsert = {
 		id,
 		reference: payload.reference,
-		status: payload.status,
+		status: normalizeStatus(payload.status),
 		channel: payload.channel,
 		notes: payload.notes,
 		currency: payload.currency,
@@ -353,12 +353,7 @@ export async function getOrderDocuments(orderId: string): Promise<OrderDocument[
 
 export async function updateManualOrderStatus(orderId: string, nextStatus: string, note?: string): Promise<Order> {
 	const user = await requireUser();
-	const normalizedStatus = nextStatus.trim();
-	const typedStatus = normalizedStatus as (typeof statusOptions)[number];
-
-	if (!statusOptions.includes(typedStatus)) {
-		throw new Error('Wybrany status zamówienia jest nieobsługiwany.');
-	}
+	const typedStatus = normalizeStatus(nextStatus);
 
 	const orderRow = await db.query.manualOrders.findFirst({
 		where: eq(manualOrders.id, orderId),
@@ -369,6 +364,7 @@ export async function updateManualOrderStatus(orderId: string, nextStatus: strin
 	}
 
 	const trimmedNote = note?.trim() ?? '';
+	const currentStatus = normalizeStatus(orderRow.status);
 	const shouldUnsetReview = Boolean(orderRow.requiresReview) && typedStatus !== statusOptions[0];
 	let combinedNotes = orderRow.notes ?? '';
 
@@ -383,7 +379,7 @@ export async function updateManualOrderStatus(orderId: string, nextStatus: strin
 	}
 
 	const noChange =
-		orderRow.status === typedStatus &&
+		currentStatus === typedStatus &&
 		!trimmedNote &&
 		!shouldUnsetReview;
 

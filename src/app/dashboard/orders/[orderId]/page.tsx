@@ -1,15 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import {
-	ArrowLeft,
-	CheckCircle2,
-	Circle,
-	CircleDot,
-	Mail,
-	Phone,
-	Warehouse,
-	type LucideIcon,
-} from 'lucide-react';
+import { ArrowLeft, Mail, Phone, Warehouse, type LucideIcon } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,37 +15,20 @@ import {
 	TableRow,
 } from '@/components/ui/table';
 import { requireUser } from '@/lib/auth/session';
-import { cn } from '@/lib/utils';
 import { getWfirmaToken } from '@/lib/wfirma/repository';
 
 import { getManualOrderById, getOrderDocuments } from '../actions';
 import { ConfirmOrderButton } from '../_components/confirm-order-button';
 import { IssueProformaButton } from '../_components/issue-proforma-button';
 import { OrderStatusForm } from '../_components/order-status-form';
-import type { Order, OrderTimelineState } from '../data';
+import { OrderStatusTimeline } from '../_components/order-status-timeline';
+import type { Order, OrderTimelineEntry, OrderDocument } from '../data';
+import { statusOptions } from '../utils';
 
 type OrderDetailsPageProps = {
 	params: Promise<{
 		orderId: string;
 	}>;
-};
-
-const iconByState: Record<OrderTimelineState, LucideIcon> = {
-	completed: CheckCircle2,
-	current: CircleDot,
-	pending: Circle,
-};
-
-const badgeVariantByState: Record<OrderTimelineState, 'default' | 'secondary' | 'outline'> = {
-	completed: 'secondary',
-	current: 'default',
-	pending: 'outline',
-};
-
-const stateLabel: Record<OrderTimelineState, string> = {
-	completed: 'Zrealizowane',
-	current: 'W toku',
-	pending: 'Oczekuje',
 };
 
 function formatCurrency(amount: number, currency: string) {
@@ -110,6 +84,85 @@ function computeOrderSquareMeters(order: Order) {
 	}, 0);
 }
 
+const statusIndexMap = statusOptions.reduce<Record<string, number>>((acc, status, index) => {
+	acc[status] = index;
+	return acc;
+}, {});
+
+function enhanceTimelineEntries(
+	entries: OrderTimelineEntry[],
+	documents: OrderDocument[],
+	currentStatus: string,
+): OrderTimelineEntry[] {
+	const currentStageIndex = statusIndexMap[currentStatus] ?? 0;
+
+	return entries.map((entry) => {
+		if (!entry.statusKey) {
+			return entry;
+		}
+
+		const enhancedTasks = entry.tasks.map((task) => ({
+			...task,
+			completed: computeTaskCompletion(
+				entry.statusKey as string,
+				task.label,
+				entry.state,
+				documents,
+				currentStageIndex,
+			),
+		}));
+
+		return {
+			...entry,
+			tasks: enhancedTasks,
+		};
+	});
+}
+
+function computeTaskCompletion(
+	statusKey: string,
+	taskLabel: string,
+	state: OrderTimelineEntry['state'],
+	documents: OrderDocument[],
+	currentStageIndex: number,
+): boolean {
+	const normalizedStatus = statusKey.toLowerCase();
+	const normalizedTask = taskLabel.toLowerCase();
+
+	const hasDocument = (type: string) =>
+		documents.some((document) => document.type === type && document.status !== 'cancelled');
+
+	const hasDocumentPdf = (type: string) =>
+		documents.some((document) => document.type === type && Boolean(document.pdfUrl));
+
+	if (normalizedStatus === 'weryfikacja i płatność') {
+		if (normalizedTask.includes('proforma') && normalizedTask.includes('wystaw')) {
+			return hasDocument('proforma');
+		}
+		if (normalizedTask.includes('proforma') && normalizedTask.includes('wysł')) {
+			return hasDocumentPdf('proforma');
+		}
+		if (normalizedTask.includes('zaliczk')) {
+			return hasDocument('advance_invoice');
+		}
+	}
+
+	if (normalizedStatus === 'kompletacja zamówienia') {
+		if (normalizedTask.includes('wysłane')) {
+			const shippingStageIndex = statusIndexMap['Wydanie przewoźnikowi'];
+			return typeof shippingStageIndex === 'number' ? currentStageIndex >= shippingStageIndex : state === 'completed';
+		}
+	}
+
+	if (normalizedStatus === 'dostarczone do klienta') {
+		if (normalizedTask.includes('faktur') && normalizedTask.includes('końcową')) {
+			return hasDocument('final_invoice');
+		}
+	}
+
+	return state === 'completed';
+}
+
 export default async function OrderDetailsPage({ params }: OrderDetailsPageProps) {
 	const { orderId } = await params;
 
@@ -122,12 +175,12 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageProps
 	}
 
 	const order: Order = orderData;
-	const statuses = order.statuses;
 	const [documents, wfirmaToken] = await Promise.all([getOrderDocuments(order.id), getWfirmaToken()]);
 	const hasWfirmaToken = Boolean(wfirmaToken);
 	const totalSquareMeters = computeOrderSquareMeters(order);
-	const completedSteps = statuses.filter((status) => status.state === 'completed').length;
-	const currentStatus = statuses.find((status) => status.state === 'current');
+	const statusesWithTasks = enhanceTimelineEntries(order.statuses, documents, order.status);
+	const completedSteps = statusesWithTasks.filter((status) => status.state === 'completed').length;
+	const currentStatus = statusesWithTasks.find((status) => status.state === 'current');
 
 	const deliveryCity = order.shipping.sameAsBilling ? order.billing.city : order.shipping.city;
 
@@ -187,7 +240,7 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageProps
 							<div>
 								<p className="text-xs uppercase text-muted-foreground">Postęp</p>
 								<p className="text-lg font-semibold text-foreground">
-									{completedSteps}/{statuses.length}
+									{completedSteps}/{statusesWithTasks.length}
 								</p>
 							</div>
 						</div>
@@ -255,40 +308,11 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageProps
 							<CardDescription>Śledź przebieg realizacji zamówienia.</CardDescription>
 						</CardHeader>
 						<CardContent>
-							<ol className="space-y-5">
-								{statuses.map((status) => {
-									const Icon = iconByState[status.state];
-
-									return (
-										<li key={status.id}>
-											<div className="flex flex-wrap items-center gap-3">
-												<span
-													className={cn(
-														'flex size-7 items-center justify-center rounded-full border',
-														{
-															'border-emerald-500 text-emerald-500': status.state === 'completed',
-															'border-primary text-primary': status.state === 'current',
-															'border-muted text-muted-foreground': status.state === 'pending',
-														},
-													)}
-												>
-													<Icon className="h-3.5 w-3.5" />
-												</span>
-												<div className="space-y-1">
-													<div className="flex flex-wrap items-center gap-2">
-														<p className="text-sm font-medium text-foreground">{status.title}</p>
-														<Badge variant={badgeVariantByState[status.state]}>{stateLabel[status.state]}</Badge>
-													</div>
-													<p className="text-sm text-muted-foreground">{status.description}</p>
-													<p className="text-xs text-muted-foreground">
-														{status.timestamp ? formatDate(status.timestamp) : 'Oczekuje na aktualizację'}
-													</p>
-												</div>
-											</div>
-										</li>
-									);
-								})}
-							</ol>
+							<OrderStatusTimeline
+								orderId={order.id}
+								entries={statusesWithTasks}
+								currentStatus={order.status}
+							/>
 						</CardContent>
 					</Card>
 
