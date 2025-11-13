@@ -1,19 +1,23 @@
 'use client';
 
-import { useActionState, useMemo, useState, useTransition } from 'react';
+import { useActionState, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
-import { getMailMessage, listMailFolders, listMailMessages, toggleMailMessageRead } from '../actions';
+import { getMailMessage, listMailFolders, listMailMessages, sendMail, toggleMailMessageRead } from '../actions';
+import type { SendMailState } from '../actions';
 import type { MailAccountSummary, MailFolderSummary, MailMessageSummary } from '../types';
 
 type MailClientProps = {
@@ -28,6 +32,7 @@ type ToggleFormState = {
 };
 
 const initialToggleState: ToggleFormState = { status: 'idle' };
+const initialSendState: SendMailState = { status: 'idle' };
 
 function formatDate(value: string | null) {
 	if (!value) {
@@ -71,12 +76,22 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
 	const [error, setError] = useState<string | null>(null);
 	const [isListing, startListingTransition] = useTransition();
 	const [isLoadingMessage, startMessageTransition] = useTransition();
+	const [isRefreshing, setIsRefreshing] = useState(false);
 	const [, toggleAction, isToggling] = useActionState(toggleMailMessageReadHandler, initialToggleState);
+	const [sendState, sendAction, isSending] = useActionState(sendMail, initialSendState);
+	const composeFormRef = useRef<HTMLFormElement>(null);
+	const [composeAccountId, setComposeAccountId] = useState<string | null>(accounts[0]?.id ?? null);
 
 	const selectedMessage = useMemo(
 		() => messages.find((message) => message.id === selectedMessageId) ?? null,
 		[messages, selectedMessageId],
 	);
+
+	useEffect(() => {
+		if (sendState.status === 'success') {
+			composeFormRef.current?.reset();
+		}
+	}, [sendState]);
 
 	async function toggleMailMessageReadHandler(
 		_prevState: ToggleFormState,
@@ -126,6 +141,7 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
 		}
 
 		setSelectedAccountId(accountId);
+		setComposeAccountId(accountId);
 		setSelectedFolderId(null);
 		setSelectedMessageId(null);
 		setMessages([]);
@@ -198,6 +214,47 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
 		});
 	}
 
+	async function handleRefresh() {
+		if (!selectedAccountId) {
+			return;
+		}
+
+		setIsRefreshing(true);
+		setError(null);
+
+		try {
+			const nextFolders = await listMailFolders(selectedAccountId);
+			setFolders(nextFolders);
+
+			const folderExists = selectedFolderId && nextFolders.some((folder) => folder.id === selectedFolderId);
+			const nextFolderId = folderExists ? selectedFolderId : nextFolders[0]?.id ?? null;
+			setSelectedFolderId(nextFolderId);
+
+			let nextMessages: MailMessageSummary[] = [];
+			if (nextFolderId) {
+				nextMessages = await listMailMessages({ accountId: selectedAccountId, folderId: nextFolderId });
+			}
+			setMessages(nextMessages);
+
+			const nextSelectedMessageId =
+				nextMessages.length > 0 && selectedMessageId && nextMessages.some((item) => item.id === selectedMessageId)
+					? selectedMessageId
+					: nextMessages[0]?.id ?? null;
+			setSelectedMessageId(nextSelectedMessageId);
+
+			const unreadTotal = nextFolders.reduce((total, folder) => total + (folder.unreadCount ?? 0), 0);
+			setAccountList((prev) =>
+				prev.map((account) =>
+					account.id === selectedAccountId ? { ...account, unreadCount: unreadTotal } : account,
+				),
+			);
+		} catch (refreshError) {
+			setError(refreshError instanceof Error ? refreshError.message : 'Nie udalo sie odswiezyc skrzynki.');
+		} finally {
+			setIsRefreshing(false);
+		}
+	}
+
 	return (
 		<section className="space-y-6">
 			<header className="flex flex-wrap items-center justify-between gap-3">
@@ -207,9 +264,25 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
 						Monitoruj korespondencje z klientami bez opuszczania panelu administracyjnego.
 					</p>
 				</div>
-				<Button asChild variant="outline">
-					<Link href="/dashboard/settings/mail">Konfiguracja kont</Link>
-				</Button>
+				<div className="flex flex-wrap items-center gap-2">
+					<Button
+						variant="outline"
+						onClick={handleRefresh}
+						disabled={isRefreshing || isListing || !selectedAccountId}
+					>
+						{isRefreshing ? (
+							<span className="flex items-center gap-2">
+								<Spinner className="size-4" />
+								<span>Odświeżanie…</span>
+							</span>
+						) : (
+							'Odśwież'
+						)}
+					</Button>
+					<Button asChild variant="outline">
+						<Link href="/dashboard/settings/mail">Konfiguracja kont</Link>
+					</Button>
+				</div>
 			</header>
 
 			{error && (
@@ -409,6 +482,114 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
 					) : (
 						<p className="text-sm text-muted-foreground">Wybierz wiadomosc, aby wyswietlic szczegoly.</p>
 					)}
+				</CardContent>
+			</Card>
+
+			<Card>
+				<CardHeader>
+					<CardTitle>Nowa wiadomosc</CardTitle>
+					<CardDescription>Wyslij e-mail bezpośrednio z panelu administracyjnego.</CardDescription>
+				</CardHeader>
+				<CardContent className="space-y-4">
+					{sendState.status === 'success' && sendState.message ? (
+						<Alert>
+							<AlertTitle>Sukces</AlertTitle>
+							<AlertDescription>{sendState.message}</AlertDescription>
+						</Alert>
+					) : null}
+					{sendState.status === 'error' && sendState.message ? (
+						<Alert variant="destructive">
+							<AlertTitle>Nie udalo sie wyslac wiadomosci</AlertTitle>
+							<AlertDescription>{sendState.message}</AlertDescription>
+						</Alert>
+					) : null}
+					<form
+						ref={composeFormRef}
+						action={sendAction}
+						encType="multipart/form-data"
+						className="space-y-4"
+					>
+						<div className="grid gap-4 sm:grid-cols-2">
+							<div className="space-y-1.5">
+								<Label htmlFor="accountId">Konto nadawcze</Label>
+								<select
+									id="accountId"
+									name="accountId"
+									value={composeAccountId ?? ''}
+									onChange={(event) => {
+										const value = event.target.value;
+										setComposeAccountId(value ? value : null);
+									}}
+									className={cn(
+										'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background',
+										'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
+									)}
+									disabled={isSending}
+									required
+								>
+									<option value="" disabled>
+										Wybierz konto
+									</option>
+									{accountList.map((account) => (
+										<option key={account.id} value={account.id}>
+											{account.displayName} ({account.email})
+										</option>
+									))}
+								</select>
+							</div>
+							<div className="space-y-1.5">
+								<Label htmlFor="subject">Temat</Label>
+								<Input id="subject" name="subject" placeholder="Np. Aktualizacja statusu zamowienia" disabled={isSending} />
+							</div>
+						</div>
+
+						<div className="space-y-1.5">
+							<Label htmlFor="to">Adresaci</Label>
+							<Input
+								id="to"
+								name="to"
+								placeholder="adres@example.com, drugi@example.com"
+								required
+								disabled={isSending}
+							/>
+							{sendState.errors?.to ? (
+								<p className="text-sm text-destructive">{sendState.errors.to}</p>
+							) : (
+								<p className="text-xs text-muted-foreground">Oddziel adresy przecinkiem, srednikiem lub nowa linia.</p>
+							)}
+						</div>
+
+						<div className="grid gap-4 sm:grid-cols-2">
+							<div className="space-y-1.5">
+								<Label htmlFor="cc">DW</Label>
+								<Input id="cc" name="cc" placeholder="(opcjonalnie)" disabled={isSending} />
+								{sendState.errors?.cc ? <p className="text-sm text-destructive">{sendState.errors.cc}</p> : null}
+							</div>
+							<div className="space-y-1.5">
+								<Label htmlFor="bcc">UDW</Label>
+								<Input id="bcc" name="bcc" placeholder="(opcjonalnie)" disabled={isSending} />
+								{sendState.errors?.bcc ? <p className="text-sm text-destructive">{sendState.errors.bcc}</p> : null}
+							</div>
+						</div>
+
+						<div className="space-y-1.5">
+							<Label htmlFor="body">Wiadomosc</Label>
+							<Textarea id="body" name="body" rows={8} placeholder="Wpisz tresc wiadomosci" required disabled={isSending} />
+							{sendState.errors?.body ? <p className="text-sm text-destructive">{sendState.errors.body}</p> : null}
+						</div>
+
+						<div className="space-y-1.5">
+							<Label htmlFor="attachments">Zalaczniki</Label>
+							<Input id="attachments" name="attachments" type="file" multiple disabled={isSending} />
+							<p className="text-xs text-muted-foreground">Maksymalnie 10 MB na plik, lacznie do 25 MB.</p>
+						</div>
+
+						<div className="flex items-center justify-end gap-3">
+							<Button type="submit" disabled={isSending || !composeAccountId}>
+								{isSending ? 'Wysylanie…' : 'Wyslij wiadomosc'}
+							</Button>
+						</div>
+					</form>
 				</CardContent>
 			</Card>
 		</section>
