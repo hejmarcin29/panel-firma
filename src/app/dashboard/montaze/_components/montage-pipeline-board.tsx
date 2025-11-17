@@ -77,7 +77,7 @@ function DraggableMontageCard({
   status: MontageStatus;
   disabled: boolean;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: montage.id,
     data: { status },
     disabled,
@@ -85,7 +85,6 @@ function DraggableMontageCard({
 
   const style: CSSProperties = {
     transform: transform ? CSS.Translate.toString(transform) : undefined,
-    transition: transition ?? undefined,
   };
 
   return (
