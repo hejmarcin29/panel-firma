@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { asc, desc } from 'drizzle-orm';
 
 import { CreateMontageForm } from './_components/create-montage-form';
@@ -111,6 +112,9 @@ export default async function MontazePage() {
 				<h1 className="text-2xl font-semibold">CRM montaże</h1>
 				<p className="text-sm text-muted-foreground">
 					Śledź status montaży, zapisuj notatki, załączaj zdjęcia i kontroluj checklistę zadań dla każdej realizacji.
+				</p>
+				<p className="text-xs text-muted-foreground">
+					Pliki trafiają do chmury R2 – <Link className="text-primary hover:underline" href="/dashboard/montaze/galeria">otwórz galerię</Link>, aby zobaczyć wszystkie materiały.
 				</p>
 			</div>
 

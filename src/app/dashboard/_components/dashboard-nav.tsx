@@ -9,6 +9,7 @@ const links = [
 	{ href: '/dashboard', label: 'Przegląd' },
 	{ href: '/dashboard/orders', label: 'Zamówienia' },
 	{ href: '/dashboard/montaze', label: 'Montaże' },
+	{ href: '/dashboard/montaze/galeria', label: 'Galeria' },
 	{ href: '/dashboard/mail', label: 'Poczta' },
 	{ href: '/dashboard/settings', label: 'Ustawienia' },
 ];

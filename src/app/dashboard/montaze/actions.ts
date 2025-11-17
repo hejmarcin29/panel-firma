@@ -13,8 +13,10 @@ import {
 	type MontageStatus,
 	montageStatuses,
 } from '@/lib/db/schema';
+import { uploadMontageObject } from '@/lib/r2/storage';
 
 const MONTAGE_DASHBOARD_PATH = '/dashboard/montaze';
+const MAX_ATTACHMENT_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
 
 function ensureStatus(value: string): MontageStatus {
 	if ((montageStatuses as readonly string[]).includes(value)) {
@@ -105,32 +107,57 @@ export async function addMontageNote({ montageId, content }: AddMontageNoteInput
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
 
-type AddMontageAttachmentInput = {
-	montageId: string;
-	url: string;
-	title?: string;
-};
-
-export async function addMontageAttachment({ montageId, url, title }: AddMontageAttachmentInput) {
+export async function addMontageAttachment(formData: FormData) {
 	const user = await requireUser();
-	const trimmedUrl = url.trim();
 
-	if (!trimmedUrl) {
-		throw new Error('Adres URL załącznika jest wymagany.');
+	const montageIdRaw = formData.get('montageId');
+	const titleRaw = formData.get('title');
+	const fileField = formData.get('file');
+
+	const montageId = typeof montageIdRaw === 'string' ? montageIdRaw.trim() : '';
+	const title = typeof titleRaw === 'string' ? titleRaw.trim() : '';
+
+	if (!montageId) {
+		throw new Error('Brakuje identyfikatora montaży.');
 	}
+
+	if (!(fileField instanceof File)) {
+		throw new Error('Wybierz plik do przesłania.');
+	}
+
+	if (fileField.size === 0) {
+		throw new Error('Plik jest pusty.');
+	}
+
+	if (fileField.size > MAX_ATTACHMENT_SIZE_BYTES) {
+		throw new Error('Plik jest zbyt duży. Maksymalny rozmiar to 25 MB.');
+	}
+
+	const montageRecord = await db.query.montages.findFirst({
+		where: (table, { eq }) => eq(table.id, montageId),
+	});
+
+	if (!montageRecord) {
+		throw new Error('Nie znaleziono montaży.');
+	}
+
+	const uploaded = await uploadMontageObject({
+		clientName: montageRecord.clientName,
+		file: fileField,
+	});
 
 	const now = new Date();
 
 	await db.insert(montageAttachments).values({
 		id: crypto.randomUUID(),
-		montageId,
-		url: trimmedUrl,
-		title: title?.trim() ?? null,
+		montageId: montageRecord.id,
+		title: title ? title : null,
+		url: uploaded.url,
 		uploadedBy: user.id,
 		createdAt: now,
 	});
 
-	await touchMontage(montageId);
+	await touchMontage(montageRecord.id);
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
 

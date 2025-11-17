@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition, FormEvent } from 'react';
+import { useState, useTransition, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { Badge } from '@/components/ui/badge';
@@ -107,7 +107,6 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 	const [attachmentError, setAttachmentError] = useState<string | null>(null);
 	const [noteContent, setNoteContent] = useState('');
 	const [taskTitle, setTaskTitle] = useState('');
-	const [attachmentUrl, setAttachmentUrl] = useState('');
 	const [attachmentTitle, setAttachmentTitle] = useState('');
 
 	const handleStatusChange = (value: MontageStatus) => {
@@ -161,12 +160,17 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 
 		startAttachmentTransition(async () => {
 			try {
-				await addMontageAttachment({
-					montageId: montage.id,
-					url: attachmentUrl,
-					title: attachmentTitle,
-				});
-				setAttachmentUrl('');
+				const formData = new FormData(event.currentTarget);
+				formData.set('title', attachmentTitle);
+				formData.set('montageId', montage.id);
+
+				const file = formData.get('file');
+				if (!(file instanceof File) || file.size === 0) {
+					throw new Error('Wybierz plik z dysku.');
+				}
+
+				await addMontageAttachment(formData);
+				event.currentTarget.reset();
 				setAttachmentTitle('');
 				router.refresh();
 			} catch (error) {
@@ -292,24 +296,28 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 							))}
 						</ul>
 					)}
-					<form onSubmit={submitAttachment} className="grid gap-2 md:grid-cols-[1fr_minmax(0,0.5fr)_auto]">
+					<form onSubmit={submitAttachment} className="grid gap-2 md:grid-cols-[minmax(0,1fr)_minmax(0,0.6fr)_auto]">
 						<Input
-							placeholder="Adres URL (np. link do zdjęcia w R2)"
-							value={attachmentUrl}
-							onChange={(event) => setAttachmentUrl(event.target.value)}
+							name="file"
+							type="file"
+							accept="image/*,application/pdf"
 							disabled={attachmentPending}
 							required
 						/>
 						<Input
+							name="title"
 							placeholder="Opis (opcjonalnie)"
 							value={attachmentTitle}
 							onChange={(event) => setAttachmentTitle(event.target.value)}
 							disabled={attachmentPending}
 						/>
 						<Button type="submit" size="sm" disabled={attachmentPending}>
-							{attachmentPending ? 'Dodawanie...' : 'Dodaj' }
+							{attachmentPending ? 'Dodawanie...' : 'Dodaj'}
 						</Button>
 					</form>
+					<p className="text-[11px] text-muted-foreground">
+						Pliki trafiają do chmury R2 w katalogu przypisanym do klienta.
+					</p>
 				</section>
 
 				<section className="space-y-3">
