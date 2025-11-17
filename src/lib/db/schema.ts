@@ -41,6 +41,7 @@ export const supplierMessageMediums = ['email', 'phone', 'note'] as const;
 
 export const mailFolderKinds = ['inbox', 'sent', 'drafts', 'spam', 'trash', 'archive', 'custom'] as const;
 export const mailAccountStatuses = ['disabled', 'connected', 'disconnected', 'error'] as const;
+export const montageStatuses = ['lead', 'before_measurement', 'before_first_payment', 'before_installation', 'before_final_invoice'] as const;
 
 export type UserRole = (typeof userRoles)[number];
 export type OrderStatus = (typeof orderStatuses)[number];
@@ -54,6 +55,7 @@ export type SupplierMessageDirection = (typeof supplierMessageDirections)[number
 export type SupplierMessageMedium = (typeof supplierMessageMediums)[number];
 export type MailFolderKind = (typeof mailFolderKinds)[number];
 export type MailAccountStatus = (typeof mailAccountStatuses)[number];
+export type MontageStatus = (typeof montageStatuses)[number];
 
 export const users = sqliteTable(
 	'users',
@@ -351,6 +353,125 @@ export const integrationLogs = sqliteTable(
 			.default(sql`(strftime('%s','now') * 1000)`),
 	}
 );
+
+export const montages = sqliteTable(
+	'montages',
+	{
+		id: text('id').primaryKey(),
+		clientName: text('client_name').notNull(),
+		contactPhone: text('contact_phone'),
+		contactEmail: text('contact_email'),
+		address: text('address'),
+		status: text('status').$type<MontageStatus>().notNull().default('lead'),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	},
+	(table) => ({
+		statusIdx: index('montages_status_idx').on(table.status),
+		updatedIdx: index('montages_updated_at_idx').on(table.updatedAt),
+	})
+);
+
+export const montageNotes = sqliteTable(
+	'montage_notes',
+	{
+		id: text('id').primaryKey(),
+		montageId: text('montage_id')
+			.notNull()
+			.references(() => montages.id, { onDelete: 'cascade' }),
+		content: text('content').notNull(),
+		createdBy: text('created_by').references(() => users.id, { onDelete: 'set null' }),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	},
+	(table) => ({
+		montageIdx: index('montage_notes_montage_id_idx').on(table.montageId),
+		createdAtIdx: index('montage_notes_created_at_idx').on(table.createdAt),
+	})
+);
+
+export const montageAttachments = sqliteTable(
+	'montage_attachments',
+	{
+		id: text('id').primaryKey(),
+		montageId: text('montage_id')
+			.notNull()
+			.references(() => montages.id, { onDelete: 'cascade' }),
+		title: text('title'),
+		url: text('url').notNull(),
+		uploadedBy: text('uploaded_by').references(() => users.id, { onDelete: 'set null' }),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	},
+	(table) => ({
+		montageIdx: index('montage_attachments_montage_id_idx').on(table.montageId),
+		createdAtIdx: index('montage_attachments_created_at_idx').on(table.createdAt),
+	})
+);
+
+export const montageTasks = sqliteTable(
+	'montage_tasks',
+	{
+		id: text('id').primaryKey(),
+		montageId: text('montage_id')
+			.notNull()
+			.references(() => montages.id, { onDelete: 'cascade' }),
+		title: text('title').notNull(),
+		completed: integer('completed', { mode: 'boolean' }).notNull().default(false),
+		orderIndex: integer('order_index'),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	},
+	(table) => ({
+		montageIdx: index('montage_tasks_montage_id_idx').on(table.montageId),
+		completedIdx: index('montage_tasks_completed_idx').on(table.completed),
+	})
+);
+
+export const montagesRelations = relations(montages, ({ many }) => ({
+	notes: many(montageNotes),
+	attachments: many(montageAttachments),
+	tasks: many(montageTasks),
+}));
+
+export const montageNotesRelations = relations(montageNotes, ({ one }) => ({
+	montage: one(montages, {
+		fields: [montageNotes.montageId],
+		references: [montages.id],
+	}),
+	author: one(users, {
+		fields: [montageNotes.createdBy],
+		references: [users.id],
+	}),
+}));
+
+export const montageAttachmentsRelations = relations(montageAttachments, ({ one }) => ({
+	montage: one(montages, {
+		fields: [montageAttachments.montageId],
+		references: [montages.id],
+	}),
+	uploader: one(users, {
+		fields: [montageAttachments.uploadedBy],
+		references: [users.id],
+	}),
+}));
+
+export const montageTasksRelations = relations(montageTasks, ({ one }) => ({
+	montage: one(montages, {
+		fields: [montageTasks.montageId],
+		references: [montages.id],
+	}),
+}));
 
 export const manualOrders = sqliteTable(
 	'manual_orders',

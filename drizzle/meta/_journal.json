@@ -57,6 +57,13 @@
       "when": 1763383378386,
       "tag": "0007_flowery_fantastic_four",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1763385656102,
+      "tag": "0008_bright_paper_doll",
+      "breakpoints": true
     }
   ]
 }
