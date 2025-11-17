@@ -13,6 +13,7 @@ import { getAppSetting, appSettingKeys } from '@/lib/settings';
 import { getWfirmaConfig, tryGetWfirmaConfig } from '@/lib/wfirma/config';
 import { WebhookSecretForm } from './_components/webhook-secret-form';
 import { WfirmaConfigForm } from './_components/wfirma-config-form';
+import { R2ConfigForm } from './_components/r2-config-form';
 
 type LogLevel = 'info' | 'warning' | 'error';
 
@@ -69,6 +70,12 @@ export default async function SettingsPage() {
 		wfirmaAppSecretSetting,
 		wfirmaAccessKeySetting,
 		wfirmaAccessSecretSetting,
+		r2AccountIdSetting,
+		r2AccessKeyIdSetting,
+		r2SecretAccessKeySetting,
+		r2BucketNameSetting,
+		r2EndpointSetting,
+		r2ApiTokenSetting,
 	] = await Promise.all([
 		getAppSetting(appSettingKeys.wooWebhookSecret),
 		getAppSetting(appSettingKeys.wfirmaTenant),
@@ -76,6 +83,12 @@ export default async function SettingsPage() {
 		getAppSetting(appSettingKeys.wfirmaAppSecret),
 		getAppSetting(appSettingKeys.wfirmaAccessKey),
 		getAppSetting(appSettingKeys.wfirmaAccessSecret),
+		getAppSetting(appSettingKeys.r2AccountId),
+		getAppSetting(appSettingKeys.r2AccessKeyId),
+		getAppSetting(appSettingKeys.r2SecretAccessKey),
+		getAppSetting(appSettingKeys.r2BucketName),
+		getAppSetting(appSettingKeys.r2Endpoint),
+		getAppSetting(appSettingKeys.r2ApiToken),
 	]);
 
 	const webhookSecret = webhookSecretSetting ?? '';
@@ -134,6 +147,18 @@ export default async function SettingsPage() {
 			? 'bg-emerald-100 text-emerald-900 border-transparent'
 			: 'border border-dashed text-muted-foreground';
 	const wfirmaStatusLabel = wfirmaConfig ? 'Skonfigurowano' : 'Brak konfiguracji';
+
+	const r2Configured = Boolean(
+		r2AccountIdSetting &&
+		r2AccessKeyIdSetting &&
+		r2SecretAccessKeySetting &&
+		r2BucketNameSetting &&
+		r2EndpointSetting,
+	);
+	const r2StatusBadgeClass = r2Configured
+		? 'bg-emerald-100 text-emerald-900 border-transparent'
+		: 'border border-dashed text-muted-foreground';
+	const r2StatusLabel = r2Configured ? 'Skonfigurowano' : 'Brak konfiguracji';
 
 	const mailRows = await db
 		.select({
@@ -324,6 +349,38 @@ export default async function SettingsPage() {
 								<li><code>WFIRMA_ACCESS_KEY</code> — klucz dostepowy generowany w panelu wFirma.</li>
 								<li><code>WFIRMA_ACCESS_SECRET</code> — sekretny klucz dostepowy przypisany do konta.</li>
 								<li><code>WFIRMA_TENANT</code> — subdomena (np. <code>nazwa</code> dla <code>nazwa.wfirma.pl</code>).</li>
+							</ul>
+						</div>
+					</CardContent>
+				</Card>
+
+				<Card>
+					<CardHeader>
+						<CardTitle>Cloudflare R2</CardTitle>
+						<CardDescription>Skonfiguruj magazyn do przechowywania zalacznikow klientow.</CardDescription>
+					</CardHeader>
+					<CardContent className="space-y-4">
+						<div className="flex flex-wrap items-center gap-2 text-sm">
+							<Badge className={r2StatusBadgeClass}>{r2StatusLabel}</Badge>
+							{r2BucketNameSetting ? <span className="text-muted-foreground">Bucket {r2BucketNameSetting}</span> : null}
+						</div>
+						<R2ConfigForm
+							initialAccountId={r2AccountIdSetting ?? ''}
+							initialAccessKeyId={r2AccessKeyIdSetting ?? ''}
+							initialSecretAccessKey={r2SecretAccessKeySetting ?? ''}
+							initialBucketName={r2BucketNameSetting ?? ''}
+							initialEndpoint={r2EndpointSetting ?? ''}
+							initialApiToken={r2ApiTokenSetting ?? ''}
+						/>
+						<div className="space-y-2 text-xs text-muted-foreground">
+							<p>
+								Trzymaj wartosci w bazie albo ustaw je w <code>.env.local</code> (zmienne <code>CLOUDFLARE_R2_*</code>).
+								Pole tokenu API jest opcjonalne i potrzebne tylko przy wywolaniach HTTP do Cloudflare.
+							</p>
+							<ul className="list-disc space-y-1 pl-5">
+								<li><code>Account ID</code> znajduje sie w Cloudflare R2.</li>
+								<li><code>Access Key ID</code> i <code>Secret Access Key</code> autoryzuja klienta S3.</li>
+								<li><code>Endpoint</code> powinien wskazywac region, np. <code>https://...r2.cloudflarestorage.com</code>.</li>
 							</ul>
 						</div>
 					</CardContent>

@@ -75,3 +75,62 @@ export async function updateWfirmaConfig({ tenant, appKey, appSecret, accessKey,
 	revalidatePath('/dashboard/settings');
 }
 
+type UpdateR2ConfigInput = {
+	accountId: string;
+	accessKeyId: string;
+	secretAccessKey: string;
+	bucketName: string;
+	endpoint: string;
+	apiToken: string;
+};
+
+export async function updateR2Config({ accountId, accessKeyId, secretAccessKey, bucketName, endpoint, apiToken }: UpdateR2ConfigInput) {
+	const user = await requireUser();
+	if (user.role !== 'owner') {
+		throw new Error('Tylko wlasciciel moze zmieniac konfiguracje integracji.');
+	}
+
+	const trimmedAccountId = accountId.trim();
+	const trimmedAccessKeyId = accessKeyId.trim();
+	const trimmedSecretAccessKey = secretAccessKey.trim();
+	const trimmedBucketName = bucketName.trim();
+	const trimmedEndpoint = endpoint.trim();
+	const trimmedApiToken = apiToken.trim();
+
+	if (!trimmedAccountId || !trimmedAccessKeyId || !trimmedSecretAccessKey || !trimmedBucketName || !trimmedEndpoint) {
+		throw new Error('Uzupelnij wszystkie wymagane pola konfiguracji R2.');
+	}
+
+	if (trimmedSecretAccessKey.length < 16) {
+		throw new Error('Sekretny klucz dostepowy powinien miec co najmniej 16 znakow.');
+	}
+
+	try {
+		const parsedEndpoint = new URL(trimmedEndpoint);
+		if (parsedEndpoint.protocol !== 'https:') {
+			throw new Error('Endpoint powinien korzystac z protokolu HTTPS.');
+		}
+	} catch (error) {
+		const message = error instanceof Error ? error.message : 'Niepoprawny adres endpointu R2.';
+		throw new Error(message);
+	}
+
+	await Promise.all([
+		setAppSetting({ key: appSettingKeys.r2AccountId, value: trimmedAccountId, userId: user.id }),
+		setAppSetting({ key: appSettingKeys.r2AccessKeyId, value: trimmedAccessKeyId, userId: user.id }),
+		setAppSetting({ key: appSettingKeys.r2SecretAccessKey, value: trimmedSecretAccessKey, userId: user.id }),
+		setAppSetting({ key: appSettingKeys.r2BucketName, value: trimmedBucketName, userId: user.id }),
+		setAppSetting({ key: appSettingKeys.r2Endpoint, value: trimmedEndpoint, userId: user.id }),
+		setAppSetting({ key: appSettingKeys.r2ApiToken, value: trimmedApiToken, userId: user.id }),
+	]);
+
+	process.env.CLOUDFLARE_R2_ACCOUNT_ID = trimmedAccountId;
+	process.env.CLOUDFLARE_R2_ACCESS_KEY_ID = trimmedAccessKeyId;
+	process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY = trimmedSecretAccessKey;
+	process.env.CLOUDFLARE_R2_BUCKET = trimmedBucketName;
+	process.env.CLOUDFLARE_R2_ENDPOINT = trimmedEndpoint;
+	process.env.CLOUDFLARE_R2_API_TOKEN = trimmedApiToken;
+
+	revalidatePath('/dashboard/settings');
+}
+

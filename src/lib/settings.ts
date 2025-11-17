@@ -12,6 +12,12 @@ export const appSettingKeys = {
 	wfirmaAppSecret: 'wfirma.app_secret',
 	wfirmaAccessKey: 'wfirma.access_key',
 	wfirmaAccessSecret: 'wfirma.access_secret',
+	r2AccountId: 'r2.account_id',
+	r2AccessKeyId: 'r2.access_key_id',
+	r2SecretAccessKey: 'r2.secret_access_key',
+	r2BucketName: 'r2.bucket_name',
+	r2Endpoint: 'r2.endpoint',
+	r2ApiToken: 'r2.api_token',
 } as const;
 
 export type AppSettingKey = (typeof appSettingKeys)[keyof typeof appSettingKeys];
@@ -41,6 +47,18 @@ function readEnvFallback(key: AppSettingKey): string | null {
 			return process.env.WFIRMA_ACCESS_KEY?.trim() || null;
 		case appSettingKeys.wfirmaAccessSecret:
 			return process.env.WFIRMA_ACCESS_SECRET?.trim() || null;
+		case appSettingKeys.r2AccountId:
+			return process.env.CLOUDFLARE_R2_ACCOUNT_ID?.trim() || null;
+		case appSettingKeys.r2AccessKeyId:
+			return process.env.CLOUDFLARE_R2_ACCESS_KEY_ID?.trim() || null;
+		case appSettingKeys.r2SecretAccessKey:
+			return process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY?.trim() || null;
+		case appSettingKeys.r2BucketName:
+			return process.env.CLOUDFLARE_R2_BUCKET?.trim() || null;
+		case appSettingKeys.r2Endpoint:
+			return process.env.CLOUDFLARE_R2_ENDPOINT?.trim() || null;
+		case appSettingKeys.r2ApiToken:
+			return process.env.CLOUDFLARE_R2_API_TOKEN?.trim() || null;
 		default:
 			return null;
 	}
