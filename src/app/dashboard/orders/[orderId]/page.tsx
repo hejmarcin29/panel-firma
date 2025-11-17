@@ -150,14 +150,15 @@ function computeTaskCompletion(
 		documents.some((document) => document.type === type && Boolean(document.pdfUrl));
 
 	if (normalizedStatus === 'weryfikacja i płatność') {
-		if (normalizedTask.includes('proforma') && normalizedTask.includes('wystaw')) {
-			return hasDocument('proforma');
+		if (
+			normalizedTask.includes('proforma') &&
+			normalizedTask.includes('wystaw') &&
+			normalizedTask.includes('wysł')
+		) {
+			return hasDocument('proforma') && hasDocumentPdf('proforma');
 		}
-		if (normalizedTask.includes('proforma') && normalizedTask.includes('wysł')) {
-			return hasDocumentPdf('proforma');
-		}
-		if (normalizedTask.includes('zaliczk')) {
-			return hasDocument('advance_invoice');
+		if (normalizedTask.includes('proforma') && normalizedTask.includes('opłac')) {
+			return state === 'completed';
 		}
 	}
 
@@ -190,7 +191,7 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageProps
 
 	const order: Order = orderData;
 	const documents = await getOrderDocuments(order.id);
-	const wfirmaConfig = tryGetWfirmaConfig();
+	const wfirmaConfig = await tryGetWfirmaConfig();
 	const hasWfirmaIntegration = Boolean(wfirmaConfig);
 	const totalSquareMeters = computeOrderSquareMeters(order);
 	const statusesWithTasks = enhanceTimelineEntries(

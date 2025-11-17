@@ -64,6 +64,13 @@
       "when": 1763385656102,
       "tag": "0008_bright_paper_doll",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1763391160063,
+      "tag": "0009_flaky_slapstick",
+      "breakpoints": true
     }
   ]
 }

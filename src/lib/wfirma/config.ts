@@ -1,31 +1,35 @@
 import 'server-only';
 
+import { getAppSetting, appSettingKeys } from '@/lib/settings';
+
 type WfirmaConfig = {
 	login: string;
 	apiKey: string;
 	tenant: string;
 };
 
-function requireEnv(name: string) {
-	const value = process.env[name];
+async function requireSetting(key: keyof typeof appSettingKeys, label: string) {
+	const value = await getAppSetting(appSettingKeys[key]);
 	if (!value || !value.trim()) {
-		throw new Error(`Brakuje konfiguracji ${name}. Dodaj ja do .env.local.`);
+		throw new Error(`Brakuje konfiguracji ${label}. Uzupelnij dane w ustawieniach panelu.`);
 	}
 
 	return value.trim();
 }
 
-export function getWfirmaConfig(): WfirmaConfig {
-	const login = requireEnv('WFIRMA_LOGIN');
-	const apiKey = requireEnv('WFIRMA_API_KEY');
-	const tenant = requireEnv('WFIRMA_TENANT');
+export async function getWfirmaConfig(): Promise<WfirmaConfig> {
+	const [login, apiKey, tenant] = await Promise.all([
+		requireSetting('wfirmaLogin', 'WFIRMA_LOGIN'),
+		requireSetting('wfirmaApiKey', 'WFIRMA_API_KEY'),
+		requireSetting('wfirmaTenant', 'WFIRMA_TENANT'),
+	]);
 
 	return { login, apiKey, tenant };
 }
 
-export function tryGetWfirmaConfig(): WfirmaConfig | null {
+export async function tryGetWfirmaConfig(): Promise<WfirmaConfig | null> {
 	try {
-		return getWfirmaConfig();
+		return await getWfirmaConfig();
 	} catch {
 		return null;
 	}

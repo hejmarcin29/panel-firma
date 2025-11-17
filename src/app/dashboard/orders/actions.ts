@@ -576,10 +576,10 @@ export async function issueProformaInvoice(orderId: string): Promise<OrderDocume
 
 	let config: WfirmaConfig;
 	try {
-		config = getWfirmaConfig();
+		config = await getWfirmaConfig();
 	} catch (configError) {
 		const details = configError instanceof Error ? configError.message : 'Brakuje konfiguracji wFirma.';
-		throw new Error(`${details} Uzupełnij WFIRMA_LOGIN, WFIRMA_API_KEY oraz WFIRMA_TENANT w pliku .env.local.`);
+		throw new Error(`${details} Uzupełnij WFIRMA_LOGIN, WFIRMA_API_KEY oraz WFIRMA_TENANT w ustawieniach panelu.`);
 	}
 	const payload = buildProformaPayload(order);
 
@@ -679,7 +679,7 @@ export async function issueProformaInvoice(orderId: string): Promise<OrderDocume
 		let message: string;
 		if (error instanceof WfirmaApiError) {
 			if (error.status === 401) {
-				message = 'wFirma odrzuciła login lub klucz API. Sprawdź WFIRMA_LOGIN i WFIRMA_API_KEY w konfiguracji.';
+				message = 'wFirma odrzuciła login lub klucz API. Sprawdź WFIRMA_LOGIN i WFIRMA_API_KEY w ustawieniach panelu.';
 			} else {
 				message = `wFirma: ${error.message}`;
 			}

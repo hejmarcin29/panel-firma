@@ -5,6 +5,7 @@ import { createHmac } from 'crypto';
 import { createManualOrder } from '@/app/dashboard/orders/actions';
 import { db } from '@/lib/db';
 import { integrationLogs } from '@/lib/db/schema';
+import { getAppSetting, appSettingKeys } from '@/lib/settings';
 import { mapWooOrderToManualOrderPayload } from '@/lib/woocommerce/map-order';
 import type { WooOrder } from '@/lib/woocommerce/types';
 
@@ -30,7 +31,7 @@ async function logIntegration(level: 'info' | 'warning' | 'error', message: stri
 }
 
 export async function POST(request: NextRequest) {
-	const secret = process.env.WOOCOMMERCE_WEBHOOK_SECRET;
+	const secret = await getAppSetting(appSettingKeys.wooWebhookSecret);
 	if (!secret) {
 		return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
 	}

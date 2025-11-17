@@ -354,6 +354,21 @@ export const integrationLogs = sqliteTable(
 	}
 );
 
+export const appSettings = sqliteTable(
+	'app_settings',
+	{
+		key: text('key').primaryKey(),
+		value: text('value').notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+		updatedBy: text('updated_by').references(() => users.id, { onDelete: 'set null' }),
+	},
+	(table) => ({
+		updatedAtIdx: index('app_settings_updated_at_idx').on(table.updatedAt),
+	})
+);
+
 export const montages = sqliteTable(
 	'montages',
 	{

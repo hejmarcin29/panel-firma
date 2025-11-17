@@ -41,7 +41,7 @@ const timelineStages = [
 		key: 'Weryfikacja i płatność',
 		title: 'Weryfikacja i płatność',
 		description: 'Zespół weryfikuje płatność oraz kompletność danych klienta.',
-		tasks: ['Proforma wystawiona', 'Proforma wysłana', 'Zaliczkowa wysłana'],
+		tasks: ['Proforma wystawiona i wysłana', 'Proforma opłacona'],
 	},
 	{
 		key: 'Kompletacja zamówienia',

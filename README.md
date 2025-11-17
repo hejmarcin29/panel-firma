@@ -22,10 +22,6 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 ## WooCommerce webhook
 
-Set the shared secret used to verify WooCommerce webhooks in your `.env.local`:
-
-```bash
-WOOCOMMERCE_WEBHOOK_SECRET=your-secret
-```
+Ustaw sekretny klucz webhooka w panelu **Ustawienia → Webhook WooCommerce**. Aplikacja zapisuje wartość w bazie danych, więc nie musisz edytować pliku `.env.local`.
 
 Point the WooCommerce webhook URL to `/api/woocommerce/webhook`. The payload is verified with HMAC SHA-256 before the order is imported.

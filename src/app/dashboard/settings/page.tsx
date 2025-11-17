@@ -9,8 +9,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { db } from '@/lib/db';
 import { integrationLogs, mailAccounts, manualOrders } from '@/lib/db/schema';
+import { getAppSetting, appSettingKeys } from '@/lib/settings';
 import { getWfirmaConfig, tryGetWfirmaConfig } from '@/lib/wfirma/config';
 import { WebhookSecretForm } from './_components/webhook-secret-form';
+import { WfirmaConfigForm } from './_components/wfirma-config-form';
 
 type LogLevel = 'info' | 'warning' | 'error';
 
@@ -60,7 +62,14 @@ export default async function SettingsPage() {
 	const webhookBase = configuredBaseUrl ?? `${protocol}://${host}`;
 	const webhookUrl = `${webhookBase.replace(/\/$/, '')}/api/woocommerce/webhook`;
 
-	const webhookSecret = process.env.WOOCOMMERCE_WEBHOOK_SECRET ?? '';
+	const [secretSetting, wfirmaLoginSetting, wfirmaApiKeySetting, wfirmaTenantSetting] = await Promise.all([
+		getAppSetting(appSettingKeys.wooWebhookSecret),
+		getAppSetting(appSettingKeys.wfirmaLogin),
+		getAppSetting(appSettingKeys.wfirmaApiKey),
+		getAppSetting(appSettingKeys.wfirmaTenant),
+	]);
+
+	const webhookSecret = secretSetting ?? '';
 	const secretConfigured = Boolean(webhookSecret);
 
 	const [pendingRow] = await db
@@ -96,17 +105,17 @@ export default async function SettingsPage() {
 
 	const lastEvent = logs[0] ?? null;
 
-	const wfirmaConfig = tryGetWfirmaConfig();
+	const wfirmaConfig = await tryGetWfirmaConfig();
 	let wfirmaConfigError: string | null = null;
 
 	if (!wfirmaConfig) {
 		try {
-			getWfirmaConfig();
+			await getWfirmaConfig();
 		} catch (configError) {
 			wfirmaConfigError =
 				configError instanceof Error
 					? configError.message
-					: 'Brakuje konfiguracji wFirma. Dodaj login, klucz API i tenant do .env.local.';
+					: 'Brakuje konfiguracji wFirma. Uzupelnij dane w ustawieniach panelu.';
 		}
 	}
 
@@ -157,8 +166,7 @@ export default async function SettingsPage() {
 				<Alert variant="destructive">
 					<AlertTitle>Brakuje sekretu webhooka</AlertTitle>
 					<AlertDescription>
-						Dodaj zmienna srodowiskowa <code>WOOCOMMERCE_WEBHOOK_SECRET</code> do pliku <code>.env.local</code> lub konfiguracji
-						serwisu, a nastepnie zrestartuj aplikacje.
+						Ustaw sekret w formularzu ponizej, aby aktywowac weryfikacje webhookow WooCommerce.
 					</AlertDescription>
 				</Alert>
 			)}
@@ -181,7 +189,7 @@ export default async function SettingsPage() {
 						<ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
 							<li>Temat webhooka: <code>order.created</code></li>
 							<li>Wersja API: <code>WP REST API v3</code></li>
-							<li>W pliku .env.local przechowujemy wpis <code>WOOCOMMERCE_WEBHOOK_SECRET=...</code>.</li>
+							<li>Sekret przechowywany jest w bazie danych i mozesz go zaktualizowac w tym panelu.</li>
 						</ul>
 					</CardContent>
 				</Card>
@@ -280,7 +288,7 @@ export default async function SettingsPage() {
 				<Card>
 					<CardHeader>
 						<CardTitle>Integracja wFirma</CardTitle>
-						<CardDescription>Skonfiguruj login i klucz API w zmiennych srodowiskowych.</CardDescription>
+						<CardDescription>Zarzadzaj danymi logowania do wFirma bezposrednio w panelu.</CardDescription>
 					</CardHeader>
 					<CardContent className="space-y-4">
 						<div className="flex flex-wrap items-center gap-2 text-sm">
@@ -289,24 +297,16 @@ export default async function SettingsPage() {
 								<span className="text-muted-foreground">Tenant {wfirmaConfig.tenant}</span>
 							) : null}
 						</div>
-						{wfirmaConfig ? (
-							<dl className="grid gap-3 text-sm">
-								<div>
-									<dt className="text-muted-foreground">Login API</dt>
-									<dd className="font-mono text-xs break-all rounded bg-muted px-3 py-2">{wfirmaConfig.login}</dd>
-								</div>
-								<div>
-									<dt className="text-muted-foreground">Tenant</dt>
-									<dd className="font-mono text-xs break-all rounded bg-muted px-3 py-2">{wfirmaConfig.tenant}</dd>
-								</div>
-							</dl>
-						) : (
-							<p className="text-sm text-muted-foreground">
-								{wfirmaConfigError ?? 'Dodaj wpisy WFIRMA_LOGIN, WFIRMA_API_KEY oraz WFIRMA_TENANT do pliku .env.local, a nastepnie zrestartuj aplikacje.'}
-							</p>
-						)}
+						{wfirmaConfigError ? (
+							<p className="text-xs text-destructive">{wfirmaConfigError}</p>
+						) : null}
+						<WfirmaConfigForm
+							initialLogin={wfirmaLoginSetting ?? ''}
+							initialApiKey={wfirmaApiKeySetting ?? ''}
+							initialTenant={wfirmaTenantSetting ?? ''}
+						/>
 						<div className="space-y-2 text-xs text-muted-foreground">
-							<p>Klucz API nie jest przechowywany w bazie danych — aktualizuj go w konfiguracji srodowiska.</p>
+							<p>Dane przechowujemy w bazie danych. Zmiana w formularzu od razu zastapi konfiguracje srodowiska.</p>
 							<ul className="list-disc space-y-1 pl-5">
 								<li><code>WFIRMA_LOGIN</code> — login lub adres e-mail uzywany w panelu wFirma.</li>
 								<li><code>WFIRMA_API_KEY</code> — klucz API wygenerowany w ustawieniach konta.</li>
