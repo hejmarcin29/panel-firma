@@ -384,6 +384,7 @@ export const manualOrders = sqliteTable(
 		status: text('status').notNull(),
 		channel: text('channel').notNull(),
 		notes: text('notes'),
+		timelineTaskOverrides: text('timeline_task_overrides'),
 		currency: text('currency').notNull().default('PLN'),
 		source: text('source').$type<OrderSource>().notNull().default('manual'),
 		sourceOrderId: text('source_order_id'),

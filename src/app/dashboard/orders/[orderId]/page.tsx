@@ -22,7 +22,7 @@ import { ConfirmOrderButton } from '../_components/confirm-order-button';
 import { IssueProformaButton } from '../_components/issue-proforma-button';
 import { OrderStatusForm } from '../_components/order-status-form';
 import { OrderStatusTimeline } from '../_components/order-status-timeline';
-import type { Order, OrderTimelineEntry, OrderDocument } from '../data';
+import type { Order, OrderTimelineEntry, OrderDocument, OrderTaskOverrides } from '../data';
 import { statusOptions } from '../utils';
 
 type OrderDetailsPageProps = {
@@ -93,6 +93,7 @@ function enhanceTimelineEntries(
 	entries: OrderTimelineEntry[],
 	documents: OrderDocument[],
 	currentStatus: string,
+	taskOverrides: OrderTaskOverrides,
 ): OrderTimelineEntry[] {
 	const currentStageIndex = statusIndexMap[currentStatus] ?? 0;
 
@@ -101,16 +102,29 @@ function enhanceTimelineEntries(
 			return entry;
 		}
 
-		const enhancedTasks = entry.tasks.map((task) => ({
-			...task,
-			completed: computeTaskCompletion(
+		const enhancedTasks = entry.tasks.map((task) => {
+			const autoCompleted = computeTaskCompletion(
 				entry.statusKey as string,
 				task.label,
 				entry.state,
 				documents,
 				currentStageIndex,
-			),
-		}));
+			);
+			const hasManualOverride = Object.prototype.hasOwnProperty.call(taskOverrides, task.id);
+			const manualOverride = hasManualOverride ? taskOverrides[task.id] : null;
+			const completed = hasManualOverride
+				? (manualOverride as boolean)
+				: autoCompleted;
+			const completionSource: 'auto' | 'manual' = hasManualOverride ? 'manual' : 'auto';
+
+			return {
+				...task,
+				completed,
+				autoCompleted,
+				manualOverride: hasManualOverride ? (manualOverride as boolean) : null,
+				completionSource,
+			};
+		});
 
 		return {
 			...entry,
@@ -178,7 +192,12 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageProps
 	const [documents, wfirmaToken] = await Promise.all([getOrderDocuments(order.id), getWfirmaToken()]);
 	const hasWfirmaToken = Boolean(wfirmaToken);
 	const totalSquareMeters = computeOrderSquareMeters(order);
-	const statusesWithTasks = enhanceTimelineEntries(order.statuses, documents, order.status);
+	const statusesWithTasks = enhanceTimelineEntries(
+		order.statuses,
+		documents,
+		order.status,
+		order.taskOverrides ?? {},
+	);
 	const completedSteps = statusesWithTasks.filter((status) => status.state === 'completed').length;
 	const currentStatus = statusesWithTasks.find((status) => status.state === 'current');
 

@@ -96,6 +96,9 @@ export function buildTimelineEntries(status: string, notes: string, createdAt: s
 				id: `${stage.key.toLowerCase().replace(/[^a-z0-9]+/gi, '-')}-${task.toLowerCase().replace(/[^a-z0-9]+/gi, '-')}`,
 				label: task,
 				completed: false,
+				autoCompleted: false,
+				manualOverride: null,
+				completionSource: 'auto',
 			})),
 		};
 	});

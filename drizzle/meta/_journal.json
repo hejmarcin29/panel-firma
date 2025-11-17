@@ -43,6 +43,13 @@
       "when": 1762934810105,
       "tag": "0005_dizzy_dreadnoughts",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1763381160196,
+      "tag": "0006_slippery_zaladane",
+      "breakpoints": true
     }
   ]
 }

@@ -60,6 +60,31 @@ function fromVatUnits(value: number) {
 	return value / VAT_SCALE;
 }
 
+function parseTaskOverrides(value: string | null | undefined): Record<string, boolean> {
+	if (!value) {
+		return {};
+	}
+
+	try {
+		const parsed = JSON.parse(value);
+		if (parsed && typeof parsed === 'object') {
+			return Object.entries(parsed as Record<string, unknown>).reduce<Record<string, boolean>>(
+				(acc, [key, rawValue]) => {
+					if (typeof rawValue === 'boolean') {
+						acc[key] = rawValue;
+					}
+					return acc;
+				},
+				{},
+			);
+		}
+	} catch {
+		// Ignore malformed JSON and fall back to empty overrides.
+	}
+
+	return {};
+}
+
 function mapDocumentRow(row: DocumentRow): OrderDocument {
 	const issueDate = row.issueDate
 		? new Date(row.issueDate instanceof Date ? row.issueDate : Number(row.issueDate)).toISOString()
@@ -94,6 +119,7 @@ function mapItemRow(row: ManualOrderItemRow): OrderItem {
 function mapOrderRow(row: ManualOrderRow & { items: ManualOrderItemRow[] }): Order {
 	const createdAt = new Date(row.createdAt ?? Date.now()).toISOString();
 	const updatedAt = new Date(row.updatedAt ?? row.createdAt ?? Date.now()).toISOString();
+	const taskOverrides = parseTaskOverrides(row.timelineTaskOverrides);
 
 	const billing = {
 		name: row.billingName,
@@ -138,6 +164,7 @@ function mapOrderRow(row: ManualOrderRow & { items: ManualOrderItemRow[] }): Ord
 			totalNet: fromMinorUnits(row.totalNet),
 			totalGross: fromMinorUnits(row.totalGross),
 		},
+		taskOverrides,
 	};
 }
 
@@ -349,6 +376,49 @@ export async function getOrderDocuments(orderId: string): Promise<OrderDocument[
 	});
 
 	return rows.map(mapDocumentRow);
+}
+
+export async function updateManualOrderTaskOverride(
+	orderId: string,
+	taskId: string,
+	completed: boolean | null,
+): Promise<void> {
+	await requireUser();
+
+	if (!taskId) {
+		throw new Error('Niepoprawny identyfikator zadania.');
+	}
+
+	const row = await db.query.manualOrders.findFirst({
+		columns: {
+			timelineTaskOverrides: true,
+		},
+		where: eq(manualOrders.id, orderId),
+	});
+
+	if (!row) {
+		throw new Error('Nie znaleziono zamówienia do aktualizacji zadań.');
+	}
+
+	const overrides = parseTaskOverrides(row.timelineTaskOverrides);
+
+	if (completed === null) {
+		delete overrides[taskId];
+	} else {
+		overrides[taskId] = completed;
+	}
+
+	const serialized = Object.keys(overrides).length === 0 ? null : JSON.stringify(overrides);
+
+	await db
+		.update(manualOrders)
+		.set({
+			timelineTaskOverrides: serialized,
+			updatedAt: new Date(),
+		})
+		.where(eq(manualOrders.id, orderId));
+
+	revalidatePath(`/dashboard/orders/${orderId}`);
 }
 
 export async function updateManualOrderStatus(orderId: string, nextStatus: string, note?: string): Promise<Order> {

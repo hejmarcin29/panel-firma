@@ -4,6 +4,9 @@ export type OrderTimelineTask = {
 	id: string;
 	label: string;
 	completed: boolean;
+	autoCompleted: boolean;
+	manualOverride: boolean | null;
+	completionSource: 'auto' | 'manual';
 };
 
 export type OrderTimelineEntry = {
@@ -15,6 +18,8 @@ export type OrderTimelineEntry = {
 	statusKey: string | null;
 	tasks: OrderTimelineTask[];
 };
+
+export type OrderTaskOverrides = Record<string, boolean>;
 
 export type OrderItem = {
 	id: string;
@@ -74,6 +79,7 @@ export type Order = {
 	billing: OrderAddress;
 	shipping: OrderShipping;
 	totals: OrderTotals;
+	taskOverrides: OrderTaskOverrides;
 };
 
 export type OrderItemPayload = Omit<OrderItem, 'id'>;

@@ -1,0 +1,1 @@
+ALTER TABLE `manual_orders` ADD `timeline_task_overrides` text;
