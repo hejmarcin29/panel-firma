@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-import { updateWooWebhookSecret } from '../actions';
+import { testWooWebhookSecret, updateWooWebhookSecret } from '../actions';
 
 type Props = {
   initialSecret: string;
@@ -23,6 +23,7 @@ export function WebhookSecretForm({ initialSecret }: Props) {
   const [secret, setSecret] = useState(initialSecret);
   const [result, setResult] = useState<ResultState>(null);
   const [isPending, startTransition] = useTransition();
+  const [isTesting, startTesting] = useTransition();
 
   useEffect(() => {
     setSecret(initialSecret);
@@ -51,6 +52,20 @@ export function WebhookSecretForm({ initialSecret }: Props) {
   const handleReset = () => {
     setSecret(initialSecret);
     setResult(null);
+  };
+
+  const handleTest = () => {
+    startTesting(() => {
+      testWooWebhookSecret()
+        .then((message) => {
+          setResult({ type: 'success', message });
+        })
+        .catch((error) => {
+          const message =
+            error instanceof Error ? error.message : 'Nie udalo sie przetestowac polaczenia.';
+          setResult({ type: 'error', message });
+        });
+    });
   };
 
   return (
@@ -91,6 +106,14 @@ export function WebhookSecretForm({ initialSecret }: Props) {
           disabled={isPending || secret === initialSecret}
         >
           Przywroc
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleTest}
+          disabled={isPending || isTesting}
+        >
+          {isTesting ? 'Sprawdzanie...' : 'Sprawdz polaczenie'}
         </Button>
       </div>
     </form>

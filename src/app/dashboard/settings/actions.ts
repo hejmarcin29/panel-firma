@@ -2,8 +2,14 @@
 
 import { revalidatePath } from 'next/cache';
 
+import { HeadBucketCommand } from '@aws-sdk/client-s3';
+
 import { requireUser } from '@/lib/auth/session';
-import { appSettingKeys, setAppSetting } from '@/lib/settings';
+import { appSettingKeys, getAppSetting, setAppSetting } from '@/lib/settings';
+import { createR2Client } from '@/lib/r2/client';
+import { getR2Config } from '@/lib/r2/config';
+import { callWfirmaApi, WfirmaApiError } from '@/lib/wfirma/client';
+import { getWfirmaConfig } from '@/lib/wfirma/config';
 
 export async function updateWooWebhookSecret(secret: string) {
 	const user = await requireUser();
@@ -28,6 +34,20 @@ export async function updateWooWebhookSecret(secret: string) {
 
 	process.env.WOOCOMMERCE_WEBHOOK_SECRET = trimmed;
 	revalidatePath('/dashboard/settings');
+}
+
+export async function testWooWebhookSecret() {
+	const user = await requireUser();
+	if (user.role !== 'owner') {
+		throw new Error('Tylko wlasciciel moze wykonywac test polaczenia.');
+	}
+
+	const secret = await getAppSetting(appSettingKeys.wooWebhookSecret);
+	if (!secret?.trim()) {
+		throw new Error('Sekret webhooka nie jest ustawiony. Zapisz go przed testem.');
+	}
+
+	return 'Sekret webhooka jest zapisany. Wyslij testowe zamowienie z WooCommerce, aby zweryfikowac webhook.';
 }
 
 type UpdateWfirmaConfigInput = {
@@ -73,6 +93,45 @@ export async function updateWfirmaConfig({ tenant, appKey, appSecret, accessKey,
 	process.env.WFIRMA_ACCESS_SECRET = trimmedAccessSecret;
 
 	revalidatePath('/dashboard/settings');
+}
+
+export async function testWfirmaConnection() {
+	const user = await requireUser();
+	if (user.role !== 'owner') {
+		throw new Error('Tylko wlasciciel moze wykonywac test polaczenia.');
+	}
+
+	const config = await getWfirmaConfig();
+
+	try {
+		const response = await callWfirmaApi<Record<string, unknown>>({
+			path: '/company/get',
+			tenant: config.tenant,
+			appKey: config.appKey,
+			appSecret: config.appSecret,
+			accessKey: config.accessKey,
+			accessSecret: config.accessSecret,
+		});
+
+		let companyLabel = 'wFirma';
+		if (response && typeof response === 'object') {
+			const container = response as Record<string, unknown>;
+			const company = (container.company ?? container.companies) as Record<string, unknown> | undefined;
+			const profile = company?.company ?? company;
+			const nameCandidate = profile && typeof profile === 'object' ? (profile as Record<string, unknown>).name : undefined;
+			if (typeof nameCandidate === 'string' && nameCandidate.trim()) {
+				companyLabel = nameCandidate.trim();
+			}
+		}
+
+		return `Polaczenie dziala. Odpowiedzial serwer ${companyLabel}.`;
+	} catch (error) {
+		if (error instanceof WfirmaApiError) {
+			const prefix = error.status ? `HTTP ${error.status}: ` : '';
+			throw new Error(`${prefix}${error.message}`);
+		}
+		throw error;
+	}
 }
 
 type UpdateR2ConfigInput = {
@@ -132,5 +191,23 @@ export async function updateR2Config({ accountId, accessKeyId, secretAccessKey, 
 	process.env.CLOUDFLARE_R2_API_TOKEN = trimmedApiToken;
 
 	revalidatePath('/dashboard/settings');
+}
+
+export async function testR2Connection() {
+	const user = await requireUser();
+	if (user.role !== 'owner') {
+		throw new Error('Tylko wlasciciel moze wykonywac test polaczenia.');
+	}
+
+	const config = await getR2Config();
+	const client = createR2Client(config);
+
+	try {
+		await client.send(new HeadBucketCommand({ Bucket: config.bucketName }));
+		return `Polaczenie dziala. Bucket ${config.bucketName} jest osiagalny.`;
+	} catch (error) {
+		const message = error instanceof Error ? error.message : 'Nie udalo sie polaczyc z bucketem.';
+		throw new Error(message);
+	}
 }
 

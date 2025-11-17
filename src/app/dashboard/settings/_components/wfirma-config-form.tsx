@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-import { updateWfirmaConfig } from '../actions';
+import { testWfirmaConnection, updateWfirmaConfig } from '../actions';
 
 type Props = {
 	initialTenant: string;
@@ -31,6 +31,7 @@ export function WfirmaConfigForm({ initialTenant, initialAppKey, initialAppSecre
 	const [accessSecret, setAccessSecret] = useState(initialAccessSecret);
 	const [result, setResult] = useState<ResultState>(null);
 	const [isPending, startTransition] = useTransition();
+	const [isTesting, startTesting] = useTransition();
 
 	useEffect(() => {
 		setTenant(initialTenant);
@@ -87,6 +88,19 @@ export function WfirmaConfigForm({ initialTenant, initialAppKey, initialAppSecre
 		setAccessKey(initialAccessKey);
 		setAccessSecret(initialAccessSecret);
 		setResult(null);
+	};
+
+	const handleTest = () => {
+		startTesting(() => {
+			testWfirmaConnection()
+				.then((message) => {
+					setResult({ type: 'success', message });
+				})
+				.catch((error) => {
+					const message = error instanceof Error ? error.message : 'Nie udalo sie przetestowac polaczenia.';
+					setResult({ type: 'error', message });
+				});
+		});
 	};
 
 	return (
@@ -190,6 +204,9 @@ export function WfirmaConfigForm({ initialTenant, initialAppKey, initialAppSecre
 					}
 				>
 					Przywroc
+				</Button>
+				<Button type="button" variant="outline" onClick={handleTest} disabled={isPending || isTesting}>
+					{isTesting ? 'Sprawdzanie...' : 'Sprawdz polaczenie'}
 				</Button>
 			</div>
 		</form>

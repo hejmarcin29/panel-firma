@@ -414,7 +414,7 @@ export function MailSettingsForm({ accounts }: MailSettingsFormProps) {
 								{selectedAccount ? (
 									<>
 										<Button type="button" variant="secondary" onClick={handleSync} disabled={isSyncing}>
-											{isSyncing ? 'Sprawdzanie…' : 'Testuj polaczenie'}
+											{isSyncing ? 'Sprawdzanie...' : 'Sprawdz polaczenie'}
 										</Button>
 										<Button
 											type="button"

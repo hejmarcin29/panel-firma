@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-import { updateR2Config } from '../actions';
+import { testR2Connection, updateR2Config } from '../actions';
 
 type Props = {
 	initialAccountId: string;
@@ -40,6 +40,7 @@ export function R2ConfigForm({
 	const [apiToken, setApiToken] = useState(initialApiToken);
 	const [result, setResult] = useState<ResultState>(null);
 	const [isPending, startTransition] = useTransition();
+	const [isTesting, startTesting] = useTransition();
 
 	useEffect(() => {
 		setAccountId(initialAccountId);
@@ -110,6 +111,19 @@ export function R2ConfigForm({
 		setEndpoint(initialEndpoint);
 		setApiToken(initialApiToken);
 		setResult(null);
+	};
+
+	const handleTest = () => {
+		startTesting(() => {
+			testR2Connection()
+				.then((message) => {
+					setResult({ type: 'success', message });
+				})
+				.catch((error) => {
+					const message = error instanceof Error ? error.message : 'Nie udalo sie przetestowac polaczenia.';
+					setResult({ type: 'error', message });
+				});
+		});
 	};
 
 	const isPristine =
@@ -229,6 +243,9 @@ export function R2ConfigForm({
 					disabled={isPending || isPristine}
 				>
 					Przywroc
+				</Button>
+				<Button type="button" variant="outline" onClick={handleTest} disabled={isPending || isTesting}>
+					{isTesting ? 'Sprawdzanie...' : 'Sprawdz polaczenie'}
 				</Button>
 			</div>
 		</form>
