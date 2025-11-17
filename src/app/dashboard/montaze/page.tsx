@@ -3,6 +3,7 @@ import { asc, desc } from 'drizzle-orm';
 
 import { CreateMontageForm } from './_components/create-montage-form';
 import { MontagePipelineCard } from './_components/montage-pipeline-card';
+import type { Montage } from './_components/montage-card';
 import { db } from '@/lib/db';
 import {
     montageAttachments,
@@ -67,19 +68,14 @@ export default async function MontazePage() {
         },
     });
 
-    const montagesData = montageRows.map((row) => ({
+    const montagesData: Montage[] = montageRows.map((row) => ({
         id: row.id,
-        customerName: row.customerName,
-        companyName: row.companyName,
+        clientName: row.clientName,
         contactEmail: row.contactEmail,
         contactPhone: row.contactPhone,
         address: row.address,
-        city: row.city,
-        postalCode: row.postalCode,
         status: row.status,
-        measurementDate: row.measurementDate,
-        installationDate: row.installationDate,
-        comments: row.comments,
+        createdAt: row.createdAt,
         updatedAt: row.updatedAt,
         notes: row.notes.map((note) => ({
             id: note.id,
@@ -95,7 +91,7 @@ export default async function MontazePage() {
         })),
         attachments: row.attachments.map((attachment) => ({
             id: attachment.id,
-            filename: attachment.filename,
+            title: attachment.title ?? null,
             url: attachment.url,
             createdAt: attachment.createdAt,
             uploader: attachment.uploader
