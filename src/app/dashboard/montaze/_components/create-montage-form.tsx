@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition, FormEvent } from 'react';
+import { useState, useTransition, type ChangeEvent, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
@@ -30,8 +30,10 @@ export function CreateMontageForm() {
 	const [error, setError] = useState<string | null>(null);
 	const [isPending, startTransition] = useTransition();
 
-	const handleChange = (key: keyof FormState) => (event: FormEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-		setForm((prev) => ({ ...prev, [key]: event.currentTarget.value }));
+	const handleInputChange = (key: keyof FormState) => (
+		event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+	) => {
+		setForm((prev) => ({ ...prev, [key]: event.target.value }));
 	};
 
 	const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -69,7 +71,7 @@ export function CreateMontageForm() {
 				<Input
 					id="montage-client"
 					value={form.clientName}
-					onChange={handleChange('clientName')}
+					onChange={handleInputChange('clientName')}
 					placeholder="np. Jan Kowalski / Firma"
 					required
 				/>
@@ -82,7 +84,7 @@ export function CreateMontageForm() {
 					<Input
 						id="montage-phone"
 						value={form.contactPhone}
-						onChange={handleChange('contactPhone')}
+						onChange={handleInputChange('contactPhone')}
 						placeholder="np. 600123123"
 					/>
 				</div>
@@ -94,7 +96,7 @@ export function CreateMontageForm() {
 						id="montage-email"
 						type="email"
 						value={form.contactEmail}
-						onChange={handleChange('contactEmail')}
+						onChange={handleInputChange('contactEmail')}
 						placeholder="np. biuro@example.pl"
 					/>
 				</div>
@@ -106,7 +108,7 @@ export function CreateMontageForm() {
 				<Textarea
 					id="montage-address"
 					value={form.address}
-					onChange={handleChange('address')}
+					onChange={handleInputChange('address')}
 					placeholder="Dodatkowe informacje o montażu"
 					rows={3}
 				/>
