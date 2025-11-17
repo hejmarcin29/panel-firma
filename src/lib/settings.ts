@@ -18,6 +18,7 @@ export const appSettingKeys = {
 	r2BucketName: 'r2.bucket_name',
 	r2Endpoint: 'r2.endpoint',
 	r2ApiToken: 'r2.api_token',
+	r2PublicBaseUrl: 'r2.public_base_url',
 } as const;
 
 export type AppSettingKey = (typeof appSettingKeys)[keyof typeof appSettingKeys];
@@ -59,6 +60,8 @@ function readEnvFallback(key: AppSettingKey): string | null {
 			return process.env.CLOUDFLARE_R2_ENDPOINT?.trim() || null;
 		case appSettingKeys.r2ApiToken:
 			return process.env.CLOUDFLARE_R2_API_TOKEN?.trim() || null;
+		case appSettingKeys.r2PublicBaseUrl:
+			return process.env.CLOUDFLARE_R2_PUBLIC_BASE_URL?.trim() || null;
 		default:
 			return null;
 	}

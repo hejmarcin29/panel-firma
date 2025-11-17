@@ -75,6 +75,7 @@ export default async function SettingsPage() {
 		r2SecretAccessKeySetting,
 		r2BucketNameSetting,
 		r2EndpointSetting,
+		r2PublicBaseUrlSetting,
 		r2ApiTokenSetting,
 	] = await Promise.all([
 		getAppSetting(appSettingKeys.wooWebhookSecret),
@@ -88,6 +89,7 @@ export default async function SettingsPage() {
 		getAppSetting(appSettingKeys.r2SecretAccessKey),
 		getAppSetting(appSettingKeys.r2BucketName),
 		getAppSetting(appSettingKeys.r2Endpoint),
+		getAppSetting(appSettingKeys.r2PublicBaseUrl),
 		getAppSetting(appSettingKeys.r2ApiToken),
 	]);
 
@@ -153,7 +155,8 @@ export default async function SettingsPage() {
 		r2AccessKeyIdSetting &&
 		r2SecretAccessKeySetting &&
 		r2BucketNameSetting &&
-		r2EndpointSetting,
+		r2EndpointSetting &&
+		r2PublicBaseUrlSetting,
 	);
 	const r2StatusBadgeClass = r2Configured
 		? 'bg-emerald-100 text-emerald-900 border-transparent'
@@ -370,6 +373,7 @@ export default async function SettingsPage() {
 							initialSecretAccessKey={r2SecretAccessKeySetting ?? ''}
 							initialBucketName={r2BucketNameSetting ?? ''}
 							initialEndpoint={r2EndpointSetting ?? ''}
+							initialPublicBaseUrl={r2PublicBaseUrlSetting ?? ''}
 							initialApiToken={r2ApiTokenSetting ?? ''}
 						/>
 						<div className="space-y-2 text-xs text-muted-foreground">
@@ -381,6 +385,7 @@ export default async function SettingsPage() {
 								<li><code>Account ID</code> znajduje sie w Cloudflare R2.</li>
 								<li><code>Access Key ID</code> i <code>Secret Access Key</code> autoryzuja klienta S3.</li>
 								<li><code>Endpoint</code> powinien wskazywac region, np. <code>https://...r2.cloudflarestorage.com</code>.</li>
+								<li><code>Publiczny URL</code> to adres <code>*.r2.dev</code>, ktory pokazujesz klientom (bez trailing <code>/</code>).</li>
 							</ul>
 						</div>
 					</CardContent>

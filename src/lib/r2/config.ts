@@ -8,6 +8,7 @@ export type R2Config = {
 	secretAccessKey: string;
 	bucketName: string;
 	endpoint: string;
+	publicBaseUrl: string;
 	apiToken: string | null;
 };
 
@@ -21,12 +22,13 @@ async function requireSetting(key: (typeof appSettingKeys)[keyof typeof appSetti
 }
 
 export async function getR2Config(): Promise<R2Config> {
-	const [accountId, accessKeyId, secretAccessKey, bucketName, endpoint, apiToken] = await Promise.all([
+	const [accountId, accessKeyId, secretAccessKey, bucketName, endpoint, publicBaseUrl, apiToken] = await Promise.all([
 		requireSetting(appSettingKeys.r2AccountId, 'CLOUDFLARE_R2_ACCOUNT_ID'),
 		requireSetting(appSettingKeys.r2AccessKeyId, 'CLOUDFLARE_R2_ACCESS_KEY_ID'),
 		requireSetting(appSettingKeys.r2SecretAccessKey, 'CLOUDFLARE_R2_SECRET_ACCESS_KEY'),
 		requireSetting(appSettingKeys.r2BucketName, 'CLOUDFLARE_R2_BUCKET'),
 		requireSetting(appSettingKeys.r2Endpoint, 'CLOUDFLARE_R2_ENDPOINT'),
+		requireSetting(appSettingKeys.r2PublicBaseUrl, 'CLOUDFLARE_R2_PUBLIC_BASE_URL'),
 		(async () => (await getAppSetting(appSettingKeys.r2ApiToken))?.trim() ?? null)(),
 	]);
 
@@ -36,6 +38,7 @@ export async function getR2Config(): Promise<R2Config> {
 		secretAccessKey,
 		bucketName,
 		endpoint,
+		publicBaseUrl: publicBaseUrl.replace(/\/$/, ''),
 		apiToken,
 	};
 }

@@ -15,6 +15,7 @@ type Props = {
 	initialSecretAccessKey: string;
 	initialBucketName: string;
 	initialEndpoint: string;
+	initialPublicBaseUrl: string;
 	initialApiToken: string;
 };
 
@@ -29,6 +30,7 @@ export function R2ConfigForm({
 	initialSecretAccessKey,
 	initialBucketName,
 	initialEndpoint,
+	initialPublicBaseUrl,
 	initialApiToken,
 }: Props) {
 	const router = useRouter();
@@ -37,6 +39,7 @@ export function R2ConfigForm({
 	const [secretAccessKey, setSecretAccessKey] = useState(initialSecretAccessKey);
 	const [bucketName, setBucketName] = useState(initialBucketName);
 	const [endpoint, setEndpoint] = useState(initialEndpoint);
+	const [publicBaseUrl, setPublicBaseUrl] = useState(initialPublicBaseUrl);
 	const [apiToken, setApiToken] = useState(initialApiToken);
 	const [result, setResult] = useState<ResultState>(null);
 	const [isPending, startTransition] = useTransition();
@@ -63,6 +66,10 @@ export function R2ConfigForm({
 	}, [initialEndpoint]);
 
 	useEffect(() => {
+		setPublicBaseUrl(initialPublicBaseUrl);
+	}, [initialPublicBaseUrl]);
+
+	useEffect(() => {
 		setApiToken(initialApiToken);
 	}, [initialApiToken]);
 
@@ -75,6 +82,7 @@ export function R2ConfigForm({
 		const nextSecretAccessKey = String(formData.get('r2-secret-access-key') ?? '').trim();
 		const nextBucketName = String(formData.get('r2-bucket-name') ?? '').trim();
 		const nextEndpoint = String(formData.get('r2-endpoint') ?? '').trim();
+		const nextPublicBaseUrl = String(formData.get('r2-public-base-url') ?? '').trim();
 		const nextApiToken = String(formData.get('r2-api-token') ?? '').trim();
 
 		startTransition(() => {
@@ -84,6 +92,7 @@ export function R2ConfigForm({
 				secretAccessKey: nextSecretAccessKey,
 				bucketName: nextBucketName,
 				endpoint: nextEndpoint,
+				publicBaseUrl: nextPublicBaseUrl,
 				apiToken: nextApiToken,
 			})
 				.then(() => {
@@ -93,6 +102,7 @@ export function R2ConfigForm({
 					setSecretAccessKey(nextSecretAccessKey);
 					setBucketName(nextBucketName);
 					setEndpoint(nextEndpoint);
+					setPublicBaseUrl(nextPublicBaseUrl.replace(/\/$/, ''));
 					setApiToken(nextApiToken);
 					router.refresh();
 				})
@@ -109,6 +119,7 @@ export function R2ConfigForm({
 		setSecretAccessKey(initialSecretAccessKey);
 		setBucketName(initialBucketName);
 		setEndpoint(initialEndpoint);
+		setPublicBaseUrl(initialPublicBaseUrl);
 		setApiToken(initialApiToken);
 		setResult(null);
 	};
@@ -132,6 +143,7 @@ export function R2ConfigForm({
 		secretAccessKey === initialSecretAccessKey &&
 		bucketName === initialBucketName &&
 		endpoint === initialEndpoint &&
+		publicBaseUrl === initialPublicBaseUrl &&
 		apiToken === initialApiToken;
 
 	return (
@@ -209,6 +221,21 @@ export function R2ConfigForm({
 					disabled={isPending}
 					placeholder="https://...r2.cloudflarestorage.com"
 				/>
+			</div>
+			<div className="space-y-2">
+				<Label htmlFor="r2-public-base-url">Publiczny URL (r2.dev)</Label>
+				<Input
+					id="r2-public-base-url"
+					name="r2-public-base-url"
+					type="url"
+					autoComplete="off"
+					spellCheck={false}
+					value={publicBaseUrl}
+					onChange={(event) => setPublicBaseUrl(event.target.value)}
+					disabled={isPending}
+					placeholder="https://twoj-bucket.r2.dev"
+				/>
+				<p className="text-[11px] text-muted-foreground">Adres widoczny publicznie bez koncowego ukośnika.</p>
 			</div>
 			<div className="space-y-2">
 				<Label htmlFor="r2-api-token">API Token (opcjonalnie)</Label>

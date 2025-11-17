@@ -2,144 +2,205 @@ import Link from 'next/link';
 import { asc, desc } from 'drizzle-orm';
 
 import { CreateMontageForm } from './_components/create-montage-form';
-import { MontageCard } from './_components/montage-card';
+import { MontagePipelineCard } from './_components/montage-pipeline-card';
 import { db } from '@/lib/db';
 import {
-	montageAttachments,
-	montageNotes,
-	montageTasks,
-	montageStatuses,
-	montages,
-	type MontageStatus,
+    montageAttachments,
+    montageNotes,
+    montageTasks,
+    montageStatuses,
+    montages,
+    type MontageStatus,
 } from '@/lib/db/schema';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 const statusLabels: Record<MontageStatus, { label: string; description: string }> = {
-	lead: {
-		label: 'Lead',
-		description: 'Nowe zapytanie, oczekuje na kontakt.',
-	},
-	before_measurement: {
-		label: 'Przed pomiarem',
-		description: 'Ustal termin i szczegóły pomiaru.',
-	},
-	before_first_payment: {
-		label: 'Przed 1. wpłatą',
-		description: 'Klient zaakceptował wycenę, czekamy na wpłatę.',
-	},
-	before_installation: {
-		label: 'Przed montażem',
-		description: 'Przygotuj ekipę i materiały do montażu.',
-	},
-	before_final_invoice: {
-		label: 'Przed FV i protokołem',
-		description: 'Czekamy na odbiór, fakturę końcową i protokół.',
-	},
+    lead: {
+        label: 'Lead',
+        description: 'Nowe zapytanie, oczekuje na kontakt.',
+    },
+    before_measurement: {
+        label: 'Przed pomiarem',
+        description: 'Ustal termin i szczegoly pomiaru.',
+    },
+    before_first_payment: {
+        label: 'Przed 1. wplata',
+        description: 'Klient zaakceptowal wycene, czekamy na wplate.',
+    },
+    before_installation: {
+        label: 'Przed montazem',
+        description: 'Przygotuj ekipe i materialy do montazu.',
+    },
+    before_final_invoice: {
+        label: 'Przed FV i protokolem',
+        description: 'Czekamy na odbior, fakture koncowa i protokol.',
+    },
 };
 
 const statusOptions = montageStatuses.map((value) => ({
-	value,
-	label: statusLabels[value].label,
-	description: statusLabels[value].description,
+    value,
+    label: statusLabels[value].label,
+    description: statusLabels[value].description,
 }));
 
 export default async function MontazePage() {
-	const montageRows = await db.query.montages.findMany({
-		orderBy: desc(montages.updatedAt),
-		with: {
-			notes: {
-				orderBy: desc(montageNotes.createdAt),
-				with: {
-					author: true,
-				},
-			},
-			attachments: {
-				orderBy: desc(montageAttachments.createdAt),
-				with: {
-					uploader: true,
-				},
-			},
-			tasks: {
-				orderBy: [asc(montageTasks.orderIndex), asc(montageTasks.createdAt)],
-			},
-		},
-	});
+    const montageRows = await db.query.montages.findMany({
+        orderBy: desc(montages.updatedAt),
+        with: {
+            notes: {
+                orderBy: desc(montageNotes.createdAt),
+                with: {
+                    author: true,
+                },
+            },
+            tasks: {
+                orderBy: asc(montageTasks.createdAt),
+            },
+            attachments: {
+                orderBy: desc(montageAttachments.createdAt),
+                with: {
+                    uploader: true,
+                },
+            },
+        },
+    });
 
-	const montagesData = montageRows.map((row) => ({
-		id: row.id,
-		clientName: row.clientName,
-		contactPhone: row.contactPhone ?? null,
-		contactEmail: row.contactEmail ?? null,
-		address: row.address ?? null,
-		status: row.status,
-		createdAt: row.createdAt,
-		updatedAt: row.updatedAt,
-		notes: row.notes.map((note) => ({
-			id: note.id,
-			content: note.content,
-			createdAt: note.createdAt,
-			author: note.author
-				? {
-					id: note.author.id,
-					name: note.author.name ?? null,
-					email: note.author.email,
-				}
-				: null,
-		})),
-		attachments: row.attachments.map((attachment) => ({
-			id: attachment.id,
-			title: attachment.title ?? null,
-			url: attachment.url,
-			createdAt: attachment.createdAt,
-			uploader: attachment.uploader
-				? {
-					id: attachment.uploader.id,
-					name: attachment.uploader.name ?? null,
-					email: attachment.uploader.email,
-				}
-				: null,
-		})),
-		tasks: row.tasks.map((task) => ({
-			id: task.id,
-			title: task.title,
-			completed: Boolean(task.completed),
-			updatedAt: task.updatedAt,
-		})),
-	}));
+    const montagesData = montageRows.map((row) => ({
+        id: row.id,
+        customerName: row.customerName,
+        companyName: row.companyName,
+        contactEmail: row.contactEmail,
+        contactPhone: row.contactPhone,
+        address: row.address,
+        city: row.city,
+        postalCode: row.postalCode,
+        status: row.status,
+        measurementDate: row.measurementDate,
+        installationDate: row.installationDate,
+        comments: row.comments,
+        updatedAt: row.updatedAt,
+        notes: row.notes.map((note) => ({
+            id: note.id,
+            content: note.content,
+            createdAt: note.createdAt,
+            author: note.author
+                ? {
+                      id: note.author.id,
+                      name: note.author.name ?? null,
+                      email: note.author.email,
+                  }
+                : null,
+        })),
+        attachments: row.attachments.map((attachment) => ({
+            id: attachment.id,
+            filename: attachment.filename,
+            url: attachment.url,
+            createdAt: attachment.createdAt,
+            uploader: attachment.uploader
+                ? {
+                      id: attachment.uploader.id,
+                      name: attachment.uploader.name ?? null,
+                      email: attachment.uploader.email,
+                  }
+                : null,
+        })),
+        tasks: row.tasks.map((task) => ({
+            id: task.id,
+            title: task.title,
+            completed: Boolean(task.completed),
+            updatedAt: task.updatedAt,
+        })),
+    }));
 
-	return (
-		<div className="space-y-10">
-			<div className="space-y-2">
-				<h1 className="text-2xl font-semibold">CRM montaże</h1>
-				<p className="text-sm text-muted-foreground">
-					Śledź status montaży, zapisuj notatki, załączaj zdjęcia i kontroluj checklistę zadań dla każdej realizacji.
-				</p>
-				<p className="text-xs text-muted-foreground">
-					Pliki trafiają do chmury R2 – <Link className="text-primary hover:underline" href="/dashboard/montaze/galeria">otwórz galerię</Link>, aby zobaczyć wszystkie materiały.
-				</p>
-			</div>
+    const totalMontages = montagesData.length;
+    const totalAttachments = montagesData.reduce((acc, montage) => acc + montage.attachments.length, 0);
+    const totalTasks = montagesData.reduce((acc, montage) => acc + montage.tasks.length, 0);
+    const completedTasks = montagesData.reduce(
+        (acc, montage) => acc + montage.tasks.filter((task) => task.completed).length,
+        0,
+    );
 
-			<section>
-				<h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Nowy montaż</h2>
-				<p className="mb-4 text-xs text-muted-foreground">
-					Dodaj klienta wraz z podstawowymi danymi, aby rozpocząć proces obsługi montaży.
-				</p>
-				<CreateMontageForm />
-			</section>
+    return (
+        <div className="space-y-10">
+            <section className="overflow-hidden rounded-3xl border bg-linear-to-br from-primary/5 via-background to-background p-8 shadow-sm">
+                <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="space-y-3">
+                        <h1 className="text-3xl font-semibold tracking-tight text-foreground">Panel montaze 2025</h1>
+                        <p className="max-w-2xl text-sm text-muted-foreground">
+                            Planowanie montazy, dokumentacja i komunikacja z klientem w jednym miejscu. Zarzadzaj pipeline, monitoruj postepy i zbieraj materialy bezposrednio w chmurze R2.
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                            Pliki trafiaja do Cloudflare R2 – <Link className="text-primary hover:underline" href="/dashboard/montaze/galeria">otworz galerie</Link>, aby zobaczyc wszystkie materialy.
+                        </p>
+                    </div>
+                    <div className="grid gap-3 text-xs text-muted-foreground">
+                        <span className="font-semibold text-foreground">Pipeline status</span>
+                        <div className="flex flex-wrap items-center gap-3">
+                            <Badge variant="secondary" className="rounded-full px-3 py-1 text-sm">{totalMontages} montazy</Badge>
+                            <Badge variant="outline" className="rounded-full px-3 py-1 text-sm">
+                                {completedTasks}/{totalTasks} zadan zakonczonych
+                            </Badge>
+                            <Badge variant="outline" className="rounded-full px-3 py-1 text-sm">{totalAttachments} plikow w R2</Badge>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-			<section className="space-y-6">
-				<h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Lista montaży</h2>
-				{montagesData.length === 0 ? (
-					<p className="text-sm text-muted-foreground">
-						Brak montaży w systemie. Dodaj pierwszą realizację, aby rozpocząć pracę z CRM.
-					</p>
-				) : (
-					<div className="grid gap-6">
-						{montagesData.map((montage) => (
-							<MontageCard key={montage.id} montage={montage} statusOptions={statusOptions} />
-						))}
-					</div>
-				)}
-			</section>
-		</div>
-	);
+            <section className="grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
+                <Card className="border border-dashed">
+                    <CardHeader>
+                        <CardTitle>Dodaj nowy montaz</CardTitle>
+                        <CardDescription>Zainicjuj lead i przekaz podstawowe dane kontaktowe klienta.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <CreateMontageForm />
+                    </CardContent>
+                </Card>
+                <div className="space-y-4">
+                    <div>
+                        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Pipeline montazy</h2>
+                        <p className="text-xs text-muted-foreground">
+                            Organizuj montaze wedlug statusu i otwieraj panel, aby dodac notatki, zadania lub pliki.
+                        </p>
+                    </div>
+                    <Separator />
+                    <div className="overflow-x-auto pb-6">
+                        <div className="flex min-w-full gap-4">
+                            {statusOptions.map((status) => {
+                                const items = montagesData.filter((montage) => montage.status === status.value);
+                                return (
+                                    <Card key={status.value} className="flex w-[280px] flex-col border border-border/70 bg-muted/20">
+                                        <CardHeader className="space-y-1">
+                                            <div className="flex items-center justify-between">
+                                                <CardTitle className="text-sm font-semibold text-foreground">{status.label}</CardTitle>
+                                                <Badge variant="secondary" className="rounded-full text-[11px] uppercase tracking-wide">
+                                                    {items.length}
+                                                </Badge>
+                                            </div>
+                                            <CardDescription className="text-xs text-muted-foreground">{status.description}</CardDescription>
+                                        </CardHeader>
+                                        <CardContent className="flex flex-1 flex-col gap-3">
+                                            {items.length === 0 ? (
+                                                <p className="text-xs text-muted-foreground">Brak montazy w tym etapie.</p>
+                                            ) : (
+                                                items.map((montage) => (
+                                                    <MontagePipelineCard
+                                                        key={montage.id}
+                                                        montage={montage}
+                                                        statusOptions={statusOptions}
+                                                    />
+                                                ))
+                                            )}
+                                        </CardContent>
+                                    </Card>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    );
 }

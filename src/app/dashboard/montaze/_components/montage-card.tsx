@@ -24,7 +24,7 @@ import type { MontageStatus } from '@/lib/db/schema';
 
 type TimestampValue = number | Date | null | undefined;
 
-type MontageNote = {
+export type MontageNote = {
 	id: string;
 	content: string;
 	createdAt: TimestampValue;
@@ -35,7 +35,7 @@ type MontageNote = {
 	} | null;
 };
 
-type MontageAttachment = {
+export type MontageAttachment = {
 	id: string;
 	title: string | null;
 	url: string;
@@ -47,14 +47,14 @@ type MontageAttachment = {
 	} | null;
 };
 
-type MontageTask = {
+export type MontageTask = {
 	id: string;
 	title: string;
 	completed: boolean;
 	updatedAt: TimestampValue;
 };
 
-type Montage = {
+export type Montage = {
 	id: string;
 	clientName: string;
 	contactPhone: string | null;
@@ -68,7 +68,7 @@ type Montage = {
 	tasks: MontageTask[];
 };
 
-type StatusOption = {
+export type StatusOption = {
 	value: MontageStatus;
 	label: string;
 	description: string;

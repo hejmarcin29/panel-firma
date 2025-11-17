@@ -140,10 +140,11 @@ type UpdateR2ConfigInput = {
 	secretAccessKey: string;
 	bucketName: string;
 	endpoint: string;
+	publicBaseUrl: string;
 	apiToken: string;
 };
 
-export async function updateR2Config({ accountId, accessKeyId, secretAccessKey, bucketName, endpoint, apiToken }: UpdateR2ConfigInput) {
+export async function updateR2Config({ accountId, accessKeyId, secretAccessKey, bucketName, endpoint, publicBaseUrl, apiToken }: UpdateR2ConfigInput) {
 	const user = await requireUser();
 	if (user.role !== 'owner') {
 		throw new Error('Tylko wlasciciel moze zmieniac konfiguracje integracji.');
@@ -154,9 +155,10 @@ export async function updateR2Config({ accountId, accessKeyId, secretAccessKey, 
 	const trimmedSecretAccessKey = secretAccessKey.trim();
 	const trimmedBucketName = bucketName.trim();
 	const trimmedEndpoint = endpoint.trim();
+	const trimmedPublicBaseUrl = publicBaseUrl.trim();
 	const trimmedApiToken = apiToken.trim();
 
-	if (!trimmedAccountId || !trimmedAccessKeyId || !trimmedSecretAccessKey || !trimmedBucketName || !trimmedEndpoint) {
+	if (!trimmedAccountId || !trimmedAccessKeyId || !trimmedSecretAccessKey || !trimmedBucketName || !trimmedEndpoint || !trimmedPublicBaseUrl) {
 		throw new Error('Uzupelnij wszystkie wymagane pola konfiguracji R2.');
 	}
 
@@ -174,12 +176,25 @@ export async function updateR2Config({ accountId, accessKeyId, secretAccessKey, 
 		throw new Error(message);
 	}
 
+	let sanitizedPublicBaseUrl = trimmedPublicBaseUrl.replace(/\/$/, '');
+	try {
+		const parsedPublicBaseUrl = new URL(trimmedPublicBaseUrl);
+		if (parsedPublicBaseUrl.protocol !== 'https:') {
+			throw new Error('Publiczny adres R2.dev powinien korzystac z protokolu HTTPS.');
+		}
+		sanitizedPublicBaseUrl = parsedPublicBaseUrl.toString().replace(/\/$/, '');
+	} catch (error) {
+		const message = error instanceof Error ? error.message : 'Niepoprawny publiczny adres R2.dev.';
+		throw new Error(message);
+	}
+
 	await Promise.all([
 		setAppSetting({ key: appSettingKeys.r2AccountId, value: trimmedAccountId, userId: user.id }),
 		setAppSetting({ key: appSettingKeys.r2AccessKeyId, value: trimmedAccessKeyId, userId: user.id }),
 		setAppSetting({ key: appSettingKeys.r2SecretAccessKey, value: trimmedSecretAccessKey, userId: user.id }),
 		setAppSetting({ key: appSettingKeys.r2BucketName, value: trimmedBucketName, userId: user.id }),
 		setAppSetting({ key: appSettingKeys.r2Endpoint, value: trimmedEndpoint, userId: user.id }),
+		setAppSetting({ key: appSettingKeys.r2PublicBaseUrl, value: sanitizedPublicBaseUrl, userId: user.id }),
 		setAppSetting({ key: appSettingKeys.r2ApiToken, value: trimmedApiToken, userId: user.id }),
 	]);
 
@@ -188,6 +203,7 @@ export async function updateR2Config({ accountId, accessKeyId, secretAccessKey, 
 	process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY = trimmedSecretAccessKey;
 	process.env.CLOUDFLARE_R2_BUCKET = trimmedBucketName;
 	process.env.CLOUDFLARE_R2_ENDPOINT = trimmedEndpoint;
+	process.env.CLOUDFLARE_R2_PUBLIC_BASE_URL = sanitizedPublicBaseUrl;
 	process.env.CLOUDFLARE_R2_API_TOKEN = trimmedApiToken;
 
 	revalidatePath('/dashboard/settings');

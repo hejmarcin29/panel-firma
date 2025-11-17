@@ -26,13 +26,13 @@ function buildObjectKey(folder: string, filename: string): string {
 	return `${MONTAGE_ROOT_PREFIX}/${folder}/${timestamp}-${filename}`;
 }
 
-function buildPublicUrl(endpoint: string, bucket: string, key: string): string {
-	const normalizedEndpoint = endpoint.replace(/\/?$/, '');
+function buildPublicUrl(publicBaseUrl: string, key: string): string {
+	const normalizedBase = publicBaseUrl.replace(/\/?$/, '');
 	const encodedKey = key
 		.split('/')
 		.map((segment) => encodeURIComponent(segment))
 		.join('/');
-	return `${normalizedEndpoint}/${bucket}/${encodedKey}`;
+	return `${normalizedBase}/${encodedKey}`;
 }
 
 export type UploadedObjectInfo = {
@@ -63,7 +63,7 @@ export async function uploadMontageObject(params: {
 
 	await client.send(new PutObjectCommand(putParams));
 
-	const url = buildPublicUrl(config.endpoint, config.bucketName, key);
+	const url = buildPublicUrl(config.publicBaseUrl, key);
 
 	return {
 		key,
@@ -89,14 +89,14 @@ export async function listMontageObjects(): Promise<GalleryObject[]> {
 	const results: GalleryObject[] = [];
 	let continuationToken: string | undefined = undefined;
 
-		do {
-			const response = (await client.send(
+	do {
+		const response = (await client.send(
 			new ListObjectsV2Command({
 				Bucket: config.bucketName,
 				Prefix: `${MONTAGE_ROOT_PREFIX}/`,
 				ContinuationToken: continuationToken,
-				}),
-			)) as ListObjectsV2CommandOutput;
+			}),
+		)) as ListObjectsV2CommandOutput;
 
 		for (const item of response.Contents ?? []) {
 			const key = item.Key;
@@ -107,7 +107,7 @@ export async function listMontageObjects(): Promise<GalleryObject[]> {
 			const pathSegments = key.split('/');
 			const name = pathSegments[pathSegments.length - 1] ?? key;
 			const folder = pathSegments.slice(0, -1).join('/');
-			const url = buildPublicUrl(config.endpoint, config.bucketName, key);
+			const url = buildPublicUrl(config.publicBaseUrl, key);
 			const previewUrl = await getSignedUrl(
 				client,
 				new GetObjectCommand({ Bucket: config.bucketName, Key: key }),
