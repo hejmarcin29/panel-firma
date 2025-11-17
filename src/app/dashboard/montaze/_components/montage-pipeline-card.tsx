@@ -52,7 +52,7 @@ export function MontagePipelineCard({ montage, statusOptions }: Props) {
 
 	return (
 		<Dialog>
-			<Card className="group border border-border/60 bg-linear-to-br from-background via-background to-muted shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
+			<Card className="group w-full border border-border/60 bg-linear-to-br from-background via-background to-muted shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
 				<CardHeader className="space-y-3">
 					<div className="flex items-start justify-between gap-3">
 						<div className="flex items-center gap-3">

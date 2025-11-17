@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { asc, desc } from 'drizzle-orm';
 
 import { CreateMontageForm } from './_components/create-montage-form';
-import { MontagePipelineCard } from './_components/montage-pipeline-card';
+import { MontagePipelineBoard } from './_components/montage-pipeline-board';
 import type { Montage } from './_components/montage-card';
 import { db } from '@/lib/db';
 import {
@@ -162,39 +162,7 @@ export default async function MontazePage() {
                         </p>
                     </div>
                     <Separator />
-                    <div className="overflow-x-auto pb-6">
-                        <div className="flex min-w-full gap-4">
-                            {statusOptions.map((status) => {
-                                const items = montagesData.filter((montage) => montage.status === status.value);
-                                return (
-                                    <Card key={status.value} className="flex w-[280px] flex-col border border-border/70 bg-muted/20">
-                                        <CardHeader className="space-y-1">
-                                            <div className="flex items-center justify-between">
-                                                <CardTitle className="text-sm font-semibold text-foreground">{status.label}</CardTitle>
-                                                <Badge variant="secondary" className="rounded-full text-[11px] uppercase tracking-wide">
-                                                    {items.length}
-                                                </Badge>
-                                            </div>
-                                            <CardDescription className="text-xs text-muted-foreground">{status.description}</CardDescription>
-                                        </CardHeader>
-                                        <CardContent className="flex flex-1 flex-col gap-3">
-                                            {items.length === 0 ? (
-                                                <p className="text-xs text-muted-foreground">Brak montazy w tym etapie.</p>
-                                            ) : (
-                                                items.map((montage) => (
-                                                    <MontagePipelineCard
-                                                        key={montage.id}
-                                                        montage={montage}
-                                                        statusOptions={statusOptions}
-                                                    />
-                                                ))
-                                            )}
-                                        </CardContent>
-                                    </Card>
-                                );
-                            })}
-                        </div>
-                    </div>
+                    <MontagePipelineBoard montages={montagesData} statusOptions={statusOptions} />
                 </div>
             </section>
         </div>
