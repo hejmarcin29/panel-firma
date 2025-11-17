@@ -62,14 +62,23 @@ export default async function SettingsPage() {
 	const webhookBase = configuredBaseUrl ?? `${protocol}://${host}`;
 	const webhookUrl = `${webhookBase.replace(/\/$/, '')}/api/woocommerce/webhook`;
 
-	const [secretSetting, wfirmaLoginSetting, wfirmaApiKeySetting, wfirmaTenantSetting] = await Promise.all([
+	const [
+		webhookSecretSetting,
+		wfirmaTenantSetting,
+		wfirmaAppKeySetting,
+		wfirmaAppSecretSetting,
+		wfirmaAccessKeySetting,
+		wfirmaAccessSecretSetting,
+	] = await Promise.all([
 		getAppSetting(appSettingKeys.wooWebhookSecret),
-		getAppSetting(appSettingKeys.wfirmaLogin),
-		getAppSetting(appSettingKeys.wfirmaApiKey),
 		getAppSetting(appSettingKeys.wfirmaTenant),
+		getAppSetting(appSettingKeys.wfirmaAppKey),
+		getAppSetting(appSettingKeys.wfirmaAppSecret),
+		getAppSetting(appSettingKeys.wfirmaAccessKey),
+		getAppSetting(appSettingKeys.wfirmaAccessSecret),
 	]);
 
-	const webhookSecret = secretSetting ?? '';
+	const webhookSecret = webhookSecretSetting ?? '';
 	const secretConfigured = Boolean(webhookSecret);
 
 	const [pendingRow] = await db
@@ -301,15 +310,19 @@ export default async function SettingsPage() {
 							<p className="text-xs text-destructive">{wfirmaConfigError}</p>
 						) : null}
 						<WfirmaConfigForm
-							initialLogin={wfirmaLoginSetting ?? ''}
-							initialApiKey={wfirmaApiKeySetting ?? ''}
 							initialTenant={wfirmaTenantSetting ?? ''}
+							initialAppKey={wfirmaAppKeySetting ?? ''}
+							initialAppSecret={wfirmaAppSecretSetting ?? ''}
+							initialAccessKey={wfirmaAccessKeySetting ?? ''}
+							initialAccessSecret={wfirmaAccessSecretSetting ?? ''}
 						/>
 						<div className="space-y-2 text-xs text-muted-foreground">
 							<p>Dane przechowujemy w bazie danych. Zmiana w formularzu od razu zastapi konfiguracje srodowiska.</p>
 							<ul className="list-disc space-y-1 pl-5">
-								<li><code>WFIRMA_LOGIN</code> — login lub adres e-mail uzywany w panelu wFirma.</li>
-								<li><code>WFIRMA_API_KEY</code> — klucz API wygenerowany w ustawieniach konta.</li>
+								<li><code>WFIRMA_APP_KEY</code> — publiczny identyfikator aplikacji OAuth.</li>
+								<li><code>WFIRMA_APP_SECRET</code> — sekretny klucz aplikacji OAuth.</li>
+								<li><code>WFIRMA_ACCESS_KEY</code> — klucz dostepowy generowany w panelu wFirma.</li>
+								<li><code>WFIRMA_ACCESS_SECRET</code> — sekretny klucz dostepowy przypisany do konta.</li>
 								<li><code>WFIRMA_TENANT</code> — subdomena (np. <code>nazwa</code> dla <code>nazwa.wfirma.pl</code>).</li>
 							</ul>
 						</div>

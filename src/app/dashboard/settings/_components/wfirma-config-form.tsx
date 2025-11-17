@@ -10,9 +10,11 @@ import { Label } from '@/components/ui/label';
 import { updateWfirmaConfig } from '../actions';
 
 type Props = {
-	initialLogin: string;
-	initialApiKey: string;
 	initialTenant: string;
+	initialAppKey: string;
+	initialAppSecret: string;
+	initialAccessKey: string;
+	initialAccessSecret: string;
 };
 
 type ResultState = {
@@ -20,41 +22,55 @@ type ResultState = {
 	message: string;
 } | null;
 
-export function WfirmaConfigForm({ initialLogin, initialApiKey, initialTenant }: Props) {
+export function WfirmaConfigForm({ initialTenant, initialAppKey, initialAppSecret, initialAccessKey, initialAccessSecret }: Props) {
 	const router = useRouter();
-	const [login, setLogin] = useState(initialLogin);
-	const [apiKey, setApiKey] = useState(initialApiKey);
 	const [tenant, setTenant] = useState(initialTenant);
+	const [appKey, setAppKey] = useState(initialAppKey);
+	const [appSecret, setAppSecret] = useState(initialAppSecret);
+	const [accessKey, setAccessKey] = useState(initialAccessKey);
+	const [accessSecret, setAccessSecret] = useState(initialAccessSecret);
 	const [result, setResult] = useState<ResultState>(null);
 	const [isPending, startTransition] = useTransition();
-
-	useEffect(() => {
-		setLogin(initialLogin);
-	}, [initialLogin]);
-
-	useEffect(() => {
-		setApiKey(initialApiKey);
-	}, [initialApiKey]);
 
 	useEffect(() => {
 		setTenant(initialTenant);
 	}, [initialTenant]);
 
+	useEffect(() => {
+		setAppKey(initialAppKey);
+	}, [initialAppKey]);
+
+	useEffect(() => {
+		setAppSecret(initialAppSecret);
+	}, [initialAppSecret]);
+
+	useEffect(() => {
+		setAccessKey(initialAccessKey);
+	}, [initialAccessKey]);
+
+	useEffect(() => {
+		setAccessSecret(initialAccessSecret);
+	}, [initialAccessSecret]);
+
 	const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 
 		const formData = new FormData(event.currentTarget);
-		const nextLogin = String(formData.get('wfirma-login') ?? '').trim();
-		const nextApiKey = String(formData.get('wfirma-api-key') ?? '').trim();
 		const nextTenant = String(formData.get('wfirma-tenant') ?? '').trim();
+		const nextAppKey = String(formData.get('wfirma-app-key') ?? '').trim();
+		const nextAppSecret = String(formData.get('wfirma-app-secret') ?? '').trim();
+		const nextAccessKey = String(formData.get('wfirma-access-key') ?? '').trim();
+		const nextAccessSecret = String(formData.get('wfirma-access-secret') ?? '').trim();
 
 		startTransition(() => {
-			updateWfirmaConfig({ login: nextLogin, apiKey: nextApiKey, tenant: nextTenant })
+			updateWfirmaConfig({ tenant: nextTenant, appKey: nextAppKey, appSecret: nextAppSecret, accessKey: nextAccessKey, accessSecret: nextAccessSecret })
 				.then(() => {
 					setResult({ type: 'success', message: 'Konfiguracja wFirma zostala zapisana.' });
-					setLogin(nextLogin);
-					setApiKey(nextApiKey);
 					setTenant(nextTenant);
+					setAppKey(nextAppKey);
+					setAppSecret(nextAppSecret);
+					setAccessKey(nextAccessKey);
+					setAccessSecret(nextAccessSecret);
 					router.refresh();
 				})
 				.catch((error) => {
@@ -65,29 +81,17 @@ export function WfirmaConfigForm({ initialLogin, initialApiKey, initialTenant }:
 	};
 
 	const handleReset = () => {
-		setLogin(initialLogin);
-		setApiKey(initialApiKey);
 		setTenant(initialTenant);
+		setAppKey(initialAppKey);
+		setAppSecret(initialAppSecret);
+		setAccessKey(initialAccessKey);
+		setAccessSecret(initialAccessSecret);
 		setResult(null);
 	};
 
 	return (
 		<form onSubmit={handleSubmit} className="space-y-4">
 			<div className="grid gap-4 md:grid-cols-2">
-				<div className="space-y-2">
-					<Label htmlFor="wfirma-login">Login lub e-mail</Label>
-					<Input
-						id="wfirma-login"
-						name="wfirma-login"
-						type="text"
-						autoComplete="off"
-						spellCheck={false}
-						value={login}
-						onChange={(event) => setLogin(event.target.value)}
-						disabled={isPending}
-						placeholder="np. owner@example.com"
-					/>
-				</div>
 				<div className="space-y-2">
 					<Label htmlFor="wfirma-tenant">Tenant (subdomena)</Label>
 					<Input
@@ -102,19 +106,63 @@ export function WfirmaConfigForm({ initialLogin, initialApiKey, initialTenant }:
 						placeholder="np. nazwa"
 					/>
 				</div>
+				<div className="space-y-2">
+					<Label htmlFor="wfirma-app-key">App key</Label>
+					<Input
+						id="wfirma-app-key"
+						name="wfirma-app-key"
+						type="text"
+						autoComplete="off"
+						spellCheck={false}
+						value={appKey}
+						onChange={(event) => setAppKey(event.target.value)}
+						disabled={isPending}
+						placeholder="Wklej klucz aplikacji"
+					/>
+				</div>
+			</div>
+			<div className="grid gap-4 md:grid-cols-2">
+				<div className="space-y-2">
+					<Label htmlFor="wfirma-app-secret">Secret key</Label>
+					<Input
+						id="wfirma-app-secret"
+						name="wfirma-app-secret"
+						type="password"
+						autoComplete="off"
+						spellCheck={false}
+						value={appSecret}
+						onChange={(event) => setAppSecret(event.target.value)}
+						disabled={isPending}
+						placeholder="Sekretny klucz aplikacji"
+					/>
+				</div>
+				<div className="space-y-2">
+					<Label htmlFor="wfirma-access-key">Access key</Label>
+					<Input
+						id="wfirma-access-key"
+						name="wfirma-access-key"
+						type="text"
+						autoComplete="off"
+						spellCheck={false}
+						value={accessKey}
+						onChange={(event) => setAccessKey(event.target.value)}
+						disabled={isPending}
+						placeholder="Klucz dostepowy"
+					/>
+				</div>
 			</div>
 			<div className="space-y-2">
-				<Label htmlFor="wfirma-api-key">Klucz API</Label>
+				<Label htmlFor="wfirma-access-secret">Access secret</Label>
 				<Input
-					id="wfirma-api-key"
-					name="wfirma-api-key"
+					id="wfirma-access-secret"
+					name="wfirma-access-secret"
 					type="password"
 					autoComplete="off"
 					spellCheck={false}
-					value={apiKey}
-					onChange={(event) => setApiKey(event.target.value)}
+					value={accessSecret}
+					onChange={(event) => setAccessSecret(event.target.value)}
 					disabled={isPending}
-					placeholder="Wklej klucz API z panelu wFirma"
+					placeholder="Sekretny klucz dostepowy"
 				/>
 			</div>
 			{result && (
@@ -130,7 +178,16 @@ export function WfirmaConfigForm({ initialLogin, initialApiKey, initialTenant }:
 					type="button"
 					variant="secondary"
 					onClick={handleReset}
-					disabled={isPending || (login === initialLogin && apiKey === initialApiKey && tenant === initialTenant)}
+					disabled={
+						isPending ||
+						(
+							tenant === initialTenant &&
+							appKey === initialAppKey &&
+							appSecret === initialAppSecret &&
+							accessKey === initialAccessKey &&
+							accessSecret === initialAccessSecret
+						)
+					}
 				>
 					Przywroc
 				</Button>

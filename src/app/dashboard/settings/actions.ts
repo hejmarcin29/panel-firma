@@ -31,38 +31,46 @@ export async function updateWooWebhookSecret(secret: string) {
 }
 
 type UpdateWfirmaConfigInput = {
-	login: string;
-	apiKey: string;
 	tenant: string;
+	appKey: string;
+	appSecret: string;
+	accessKey: string;
+	accessSecret: string;
 };
 
-export async function updateWfirmaConfig({ login, apiKey, tenant }: UpdateWfirmaConfigInput) {
+export async function updateWfirmaConfig({ tenant, appKey, appSecret, accessKey, accessSecret }: UpdateWfirmaConfigInput) {
 	const user = await requireUser();
 	if (user.role !== 'owner') {
 		throw new Error('Tylko wlasciciel moze zmieniac konfiguracje integracji.');
 	}
 
-	const trimmedLogin = login.trim();
-	const trimmedKey = apiKey.trim();
 	const trimmedTenant = tenant.trim();
+	const trimmedAppKey = appKey.trim();
+	const trimmedAppSecret = appSecret.trim();
+	const trimmedAccessKey = accessKey.trim();
+	const trimmedAccessSecret = accessSecret.trim();
 
-	if (!trimmedLogin || !trimmedKey || !trimmedTenant) {
-		throw new Error('Wszystkie pola musza byc wypelnione.');
+	if (!trimmedTenant || !trimmedAppKey || !trimmedAppSecret || !trimmedAccessKey || !trimmedAccessSecret) {
+		throw new Error('Uzupelnij wszystkie pola konfiguracji wFirma.');
 	}
 
-	if (trimmedKey.length < 16) {
-		throw new Error('Klucz API powinien miec co najmniej 16 znakow.');
+	if (trimmedAppSecret.length < 16 || trimmedAccessSecret.length < 16) {
+		throw new Error('Sekret aplikacji i sekret dostepowy powinny miec co najmniej 16 znakow.');
 	}
 
 	await Promise.all([
-		setAppSetting({ key: appSettingKeys.wfirmaLogin, value: trimmedLogin, userId: user.id }),
-		setAppSetting({ key: appSettingKeys.wfirmaApiKey, value: trimmedKey, userId: user.id }),
 		setAppSetting({ key: appSettingKeys.wfirmaTenant, value: trimmedTenant, userId: user.id }),
+		setAppSetting({ key: appSettingKeys.wfirmaAppKey, value: trimmedAppKey, userId: user.id }),
+		setAppSetting({ key: appSettingKeys.wfirmaAppSecret, value: trimmedAppSecret, userId: user.id }),
+		setAppSetting({ key: appSettingKeys.wfirmaAccessKey, value: trimmedAccessKey, userId: user.id }),
+		setAppSetting({ key: appSettingKeys.wfirmaAccessSecret, value: trimmedAccessSecret, userId: user.id }),
 	]);
 
-	process.env.WFIRMA_LOGIN = trimmedLogin;
-	process.env.WFIRMA_API_KEY = trimmedKey;
 	process.env.WFIRMA_TENANT = trimmedTenant;
+	process.env.WFIRMA_APP_KEY = trimmedAppKey;
+	process.env.WFIRMA_APP_SECRET = trimmedAppSecret;
+	process.env.WFIRMA_ACCESS_KEY = trimmedAccessKey;
+	process.env.WFIRMA_ACCESS_SECRET = trimmedAccessSecret;
 
 	revalidatePath('/dashboard/settings');
 }

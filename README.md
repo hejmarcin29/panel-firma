@@ -24,4 +24,6 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 Ustaw sekretny klucz webhooka w panelu **Ustawienia → Webhook WooCommerce**. Aplikacja zapisuje wartość w bazie danych, więc nie musisz edytować pliku `.env.local`.
 
+Do integracji z wFirma wpisz w panelu wartości dla `WFIRMA_TENANT`, `WFIRMA_APP_KEY`, `WFIRMA_APP_SECRET`, `WFIRMA_ACCESS_KEY` i `WFIRMA_ACCESS_SECRET`. Te dane są przechowywane w bazie i używane do podpisywania żądań OAuth 1.0a.
+
 Point the WooCommerce webhook URL to `/api/woocommerce/webhook`. The payload is verified with HMAC SHA-256 before the order is imported.

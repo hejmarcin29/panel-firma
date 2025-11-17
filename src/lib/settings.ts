@@ -7,9 +7,11 @@ import { appSettings } from './db/schema';
 
 export const appSettingKeys = {
 	wooWebhookSecret: 'woocommerce.webhook_secret',
-	wfirmaLogin: 'wfirma.login',
-	wfirmaApiKey: 'wfirma.api_key',
 	wfirmaTenant: 'wfirma.tenant',
+	wfirmaAppKey: 'wfirma.app_key',
+	wfirmaAppSecret: 'wfirma.app_secret',
+	wfirmaAccessKey: 'wfirma.access_key',
+	wfirmaAccessSecret: 'wfirma.access_secret',
 } as const;
 
 export type AppSettingKey = (typeof appSettingKeys)[keyof typeof appSettingKeys];
@@ -29,12 +31,16 @@ function readEnvFallback(key: AppSettingKey): string | null {
 	switch (key) {
 		case appSettingKeys.wooWebhookSecret:
 			return process.env.WOOCOMMERCE_WEBHOOK_SECRET?.trim() || null;
-		case appSettingKeys.wfirmaLogin:
-			return process.env.WFIRMA_LOGIN?.trim() || null;
-		case appSettingKeys.wfirmaApiKey:
-			return process.env.WFIRMA_API_KEY?.trim() || null;
 		case appSettingKeys.wfirmaTenant:
 			return process.env.WFIRMA_TENANT?.trim() || null;
+		case appSettingKeys.wfirmaAppKey:
+			return process.env.WFIRMA_APP_KEY?.trim() || null;
+		case appSettingKeys.wfirmaAppSecret:
+			return process.env.WFIRMA_APP_SECRET?.trim() || null;
+		case appSettingKeys.wfirmaAccessKey:
+			return process.env.WFIRMA_ACCESS_KEY?.trim() || null;
+		case appSettingKeys.wfirmaAccessSecret:
+			return process.env.WFIRMA_ACCESS_SECRET?.trim() || null;
 		default:
 			return null;
 	}

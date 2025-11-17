@@ -1,15 +1,17 @@
 import 'server-only';
 
-import { getAppSetting, appSettingKeys } from '@/lib/settings';
+import { getAppSetting, appSettingKeys, type AppSettingKey } from '@/lib/settings';
 
 type WfirmaConfig = {
-	login: string;
-	apiKey: string;
 	tenant: string;
+	appKey: string;
+	appSecret: string;
+	accessKey: string;
+	accessSecret: string;
 };
 
-async function requireSetting(key: keyof typeof appSettingKeys, label: string) {
-	const value = await getAppSetting(appSettingKeys[key]);
+async function requireSetting(key: AppSettingKey, label: string) {
+	const value = await getAppSetting(key);
 	if (!value || !value.trim()) {
 		throw new Error(`Brakuje konfiguracji ${label}. Uzupelnij dane w ustawieniach panelu.`);
 	}
@@ -18,13 +20,15 @@ async function requireSetting(key: keyof typeof appSettingKeys, label: string) {
 }
 
 export async function getWfirmaConfig(): Promise<WfirmaConfig> {
-	const [login, apiKey, tenant] = await Promise.all([
-		requireSetting('wfirmaLogin', 'WFIRMA_LOGIN'),
-		requireSetting('wfirmaApiKey', 'WFIRMA_API_KEY'),
-		requireSetting('wfirmaTenant', 'WFIRMA_TENANT'),
+	const [tenant, appKey, appSecret, accessKey, accessSecret] = await Promise.all([
+		requireSetting(appSettingKeys.wfirmaTenant, 'WFIRMA_TENANT'),
+		requireSetting(appSettingKeys.wfirmaAppKey, 'WFIRMA_APP_KEY'),
+		requireSetting(appSettingKeys.wfirmaAppSecret, 'WFIRMA_APP_SECRET'),
+		requireSetting(appSettingKeys.wfirmaAccessKey, 'WFIRMA_ACCESS_KEY'),
+		requireSetting(appSettingKeys.wfirmaAccessSecret, 'WFIRMA_ACCESS_SECRET'),
 	]);
 
-	return { login, apiKey, tenant };
+	return { tenant, appKey, appSecret, accessKey, accessSecret };
 }
 
 export async function tryGetWfirmaConfig(): Promise<WfirmaConfig | null> {
