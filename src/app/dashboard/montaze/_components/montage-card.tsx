@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition, ChangeEvent, FormEvent } from 'react';
+import { useState, useTransition, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { Badge } from '@/components/ui/badge';

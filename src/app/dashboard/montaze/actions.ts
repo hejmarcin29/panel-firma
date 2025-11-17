@@ -180,4 +180,3 @@ export async function toggleMontageTask({ taskId, montageId, completed }: Toggle
 	await touchMontage(montageId);
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
-*** End of File
