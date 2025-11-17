@@ -10,7 +10,6 @@ import { useRouter } from "next/navigation";
 import { CheckCircle2, Circle, CircleDot } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 import {
@@ -89,6 +88,13 @@ export function OrderStatusTimeline({
 
   const stopPropagation = (event: SyntheticEvent) => {
     event.stopPropagation();
+  };
+
+  const handleStatusInteraction = (nextStatus: string | null) => {
+    if (isStatusPending || isTaskPending) {
+      return;
+    }
+    handleStatusChange(nextStatus);
   };
 
   const handleTaskChange = (
@@ -247,15 +253,27 @@ export function OrderStatusTimeline({
           return (
             <li key={entry.id}>
               {isActionable ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="w-full justify-start p-0 h-auto items-stretch"
-                  onClick={() => handleStatusChange(entry.statusKey)}
-                  disabled={isStatusPending || isTaskPending}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => handleStatusInteraction(entry.statusKey)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      handleStatusInteraction(entry.statusKey);
+                    }
+                  }}
+                  aria-disabled={isStatusPending || isTaskPending}
+                  className={cn(
+                    "w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+                    {
+                      "pointer-events-none opacity-60":
+                        isStatusPending || isTaskPending,
+                    },
+                  )}
                 >
                   {content}
-                </Button>
+                </div>
               ) : (
                 <div>{content}</div>
               )}

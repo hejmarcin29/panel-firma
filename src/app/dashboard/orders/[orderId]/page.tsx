@@ -15,7 +15,7 @@ import {
 	TableRow,
 } from '@/components/ui/table';
 import { requireUser } from '@/lib/auth/session';
-import { getWfirmaToken } from '@/lib/wfirma/repository';
+import { tryGetWfirmaConfig } from '@/lib/wfirma/config';
 
 import { getManualOrderById, getOrderDocuments } from '../actions';
 import { ConfirmOrderButton } from '../_components/confirm-order-button';
@@ -189,8 +189,9 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageProps
 	}
 
 	const order: Order = orderData;
-	const [documents, wfirmaToken] = await Promise.all([getOrderDocuments(order.id), getWfirmaToken()]);
-	const hasWfirmaToken = Boolean(wfirmaToken);
+	const documents = await getOrderDocuments(order.id);
+	const wfirmaConfig = tryGetWfirmaConfig();
+	const hasWfirmaIntegration = Boolean(wfirmaConfig);
 	const totalSquareMeters = computeOrderSquareMeters(order);
 	const statusesWithTasks = enhanceTimelineEntries(
 		order.statuses,
@@ -444,7 +445,7 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageProps
 							</Button>
 							<Separator className="my-2" />
 							<OrderStatusForm orderId={order.id} currentStatus={order.status} />
-							<IssueProformaButton orderId={order.id} hasWfirmaToken={hasWfirmaToken} className="w-full" />
+							<IssueProformaButton orderId={order.id} isWfirmaConfigured={hasWfirmaIntegration} className="w-full" />
 						</CardContent>
 					</Card>
 				</div>

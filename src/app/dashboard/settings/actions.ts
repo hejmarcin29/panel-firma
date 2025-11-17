@@ -3,8 +3,6 @@
 import { revalidatePath } from 'next/cache';
 
 import { requireUser } from '@/lib/auth/session';
-import { getWfirmaConfig } from '@/lib/wfirma/config';
-import { appendWfirmaLog, deleteWfirmaTokens } from '@/lib/wfirma/repository';
 
 import { constants as fsConstants } from 'fs';
 import { access, readFile, writeFile } from 'fs/promises';
@@ -82,34 +80,3 @@ export async function updateWooWebhookSecret(secret: string) {
   revalidatePath('/dashboard/settings');
 }
 
-export async function disconnectWfirmaIntegration() {
-  const user = await requireUser();
-  if (user.role !== 'owner') {
-    throw new Error('Tylko wlasciciel moze zarzadzac integracja wFirma.');
-  }
-
-  await deleteWfirmaTokens();
-
-  try {
-    const config = getWfirmaConfig();
-    await appendWfirmaLog({
-      level: 'warning',
-      message: 'Uzytkownik rozlaczyl integracje wFirma',
-      meta: {
-        userId: user.id,
-        tenant: config.tenant,
-      },
-    });
-  } catch (error) {
-    await appendWfirmaLog({
-      level: 'warning',
-      message: 'Uzytkownik rozlaczyl integracje wFirma (bez konfiguracji env)',
-      meta: {
-        userId: user.id,
-        error: error instanceof Error ? error.message : String(error),
-      },
-    });
-  }
-
-  revalidatePath('/dashboard/settings');
-}

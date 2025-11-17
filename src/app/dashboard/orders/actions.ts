@@ -7,9 +7,8 @@ import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
 import { documents, manualOrderItems, manualOrders } from '@/lib/db/schema';
 import { callWfirmaApi, WfirmaApiError } from '@/lib/wfirma/client';
-import { getWfirmaConfig } from '@/lib/wfirma/config';
-import { appendWfirmaLog, getWfirmaToken, upsertWfirmaToken } from '@/lib/wfirma/repository';
-import { refreshToken } from '@/lib/wfirma/oauth';
+import { getWfirmaConfig, type WfirmaConfig } from '@/lib/wfirma/config';
+import { appendWfirmaLog } from '@/lib/wfirma/repository';
 
 import type {
 	ManualOrderPayload,
@@ -575,56 +574,24 @@ export async function issueProformaInvoice(orderId: string): Promise<OrderDocume
 		throw new Error('Nie znaleziono zamówienia.');
 	}
 
-	const tokenRow = await getWfirmaToken();
-	if (!tokenRow) {
-		throw new Error('Najpierw połącz konto wFirma w ustawieniach.');
+	let config: WfirmaConfig;
+	try {
+		config = getWfirmaConfig();
+	} catch (configError) {
+		const details = configError instanceof Error ? configError.message : 'Brakuje konfiguracji wFirma.';
+		throw new Error(`${details} Uzupełnij WFIRMA_LOGIN, WFIRMA_API_KEY oraz WFIRMA_TENANT w pliku .env.local.`);
 	}
-
-	const config = getWfirmaConfig();
 	const payload = buildProformaPayload(order);
 
-	const performRequest = async (accessToken: string) =>
-		callWfirmaApi<Record<string, unknown>>({
+	try {
+		const response = await callWfirmaApi<Record<string, unknown>>({
 			method: 'POST',
 			path: '/invoices/proforma/create',
 			body: payload,
-			accessToken,
+			login: config.login,
+			apiKey: config.apiKey,
 			tenant: config.tenant,
 		});
-
-	try {
-		let response: Record<string, unknown>;
-
-		try {
-			response = await performRequest(tokenRow.accessToken);
-		} catch (initialError) {
-			if (!(initialError instanceof WfirmaApiError)) {
-				throw initialError;
-			}
-
-			const authError: WfirmaApiError = initialError;
-
-			if (authError.status !== 401 || !tokenRow.refreshToken) {
-				throw authError;
-			}
-
-			const refreshed = await refreshToken({
-				refreshToken: tokenRow.refreshToken,
-				clientId: config.clientId,
-				clientSecret: config.clientSecret,
-			});
-			const expiresAt = refreshed.expires_in ? Date.now() + refreshed.expires_in * 1000 : null;
-			await upsertWfirmaToken({
-				tenant: config.tenant,
-				accessToken: refreshed.access_token,
-				refreshToken: refreshed.refresh_token ?? tokenRow.refreshToken,
-				tokenType: refreshed.token_type ?? tokenRow.tokenType ?? 'Bearer',
-				scope: refreshed.scope ?? tokenRow.scope ?? null,
-				expiresAt,
-				createdBy: tokenRow.createdBy ?? user.id,
-			});
-			response = await performRequest(refreshed.access_token);
-		}
 
 		const invoice = extractInvoiceFromResponse(response) ?? {};
 		const wfirmaIdRaw = invoice.id ?? invoice.invoice_id ?? null;
@@ -711,8 +678,11 @@ export async function issueProformaInvoice(orderId: string): Promise<OrderDocume
 	} catch (error) {
 		let message: string;
 		if (error instanceof WfirmaApiError) {
-			const wfirmaError: WfirmaApiError = error;
-			message = `wFirma: ${wfirmaError.message}`;
+			if (error.status === 401) {
+				message = 'wFirma odrzuciła login lub klucz API. Sprawdź WFIRMA_LOGIN i WFIRMA_API_KEY w konfiguracji.';
+			} else {
+				message = `wFirma: ${error.message}`;
+			}
 		} else if (error instanceof Error) {
 			message = error.message;
 		} else {

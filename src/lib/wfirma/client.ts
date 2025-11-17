@@ -13,7 +13,8 @@ type RequestOptions = {
 	method?: RequestMethod;
 	path: string;
 	body?: unknown;
-	accessToken: string;
+	login: string;
+	apiKey: string;
 	tenant: string;
 };
 
@@ -21,12 +22,14 @@ export async function callWfirmaApi<T>({
 	method = 'GET',
 	path,
 	body,
-	accessToken,
+	login,
+	apiKey,
 	tenant,
 }: RequestOptions): Promise<T> {
 	const normalizedPath = path.startsWith('/') ? path : `/${path}`;
 	const baseUrl = `https://${tenant}.wfirma.pl/api/v2`;
 	const url = `${baseUrl}${normalizedPath}`;
+	const authHeader = Buffer.from(`${login}:${apiKey}`, 'utf8').toString('base64');
 
 	let response: Response;
 
@@ -34,7 +37,7 @@ export async function callWfirmaApi<T>({
 		response = await fetch(url, {
 			method,
 			headers: {
-				Authorization: `Bearer ${accessToken}`,
+				Authorization: `Basic ${authHeader}`,
 				'Content-Type': 'application/json',
 				Accept: 'application/json',
 				'User-Agent': 'panel-firma-integrator/1.0',

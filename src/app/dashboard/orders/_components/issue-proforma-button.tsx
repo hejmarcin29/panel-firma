@@ -10,14 +10,14 @@ import { issueProformaInvoice } from '../actions';
 
 type IssueProformaButtonProps = {
 	orderId: string;
-	hasWfirmaToken: boolean;
+	isWfirmaConfigured: boolean;
 	disabled?: boolean;
 	className?: string;
 };
 
 export function IssueProformaButton({
 	orderId,
-	hasWfirmaToken,
+	isWfirmaConfigured,
 	disabled = false,
 	className,
 }: IssueProformaButtonProps) {
@@ -26,7 +26,7 @@ export function IssueProformaButton({
 	const [isPending, startTransition] = useTransition();
 
 	const handleClick = () => {
-		if (disabled || !hasWfirmaToken || isPending) {
+		if (disabled || !isWfirmaConfigured || isPending) {
 			return;
 		}
 
@@ -47,12 +47,12 @@ export function IssueProformaButton({
 
 	return (
 		<div className={cn('flex flex-col gap-2', className)}>
-			<Button onClick={handleClick} disabled={disabled || !hasWfirmaToken || isPending}>
+			<Button onClick={handleClick} disabled={disabled || !isWfirmaConfigured || isPending}>
 				{isPending ? 'Wystawianie...' : 'Wystaw proformę'}
 			</Button>
-			{!hasWfirmaToken ? (
+			{!isWfirmaConfigured ? (
 				<p className="text-xs text-muted-foreground">
-					Połącz integrację wFirma w ustawieniach, aby wystawiać dokumenty.
+					Uzupełnij ustawienia wFirma (login, klucz API, tenant), aby wystawiać dokumenty.
 				</p>
 			) : null}
 			{feedback ? (

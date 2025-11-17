@@ -8,8 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { db } from '@/lib/db';
-import { integrationLogs, mailAccounts, manualOrders, wfirmaTokens } from '@/lib/db/schema';
-import { disconnectWfirmaIntegration } from './actions';
+import { integrationLogs, mailAccounts, manualOrders } from '@/lib/db/schema';
+import { getWfirmaConfig, tryGetWfirmaConfig } from '@/lib/wfirma/config';
 import { WebhookSecretForm } from './_components/webhook-secret-form';
 
 type LogLevel = 'info' | 'warning' | 'error';
@@ -46,11 +46,7 @@ function levelBadgeClass(level: LogLevel) {
 	}
 }
 
-type SettingsPageProps = {
-	searchParams?: Record<string, string | string[] | undefined>;
-};
-
-export default async function SettingsPage({ searchParams }: SettingsPageProps = {}) {
+export default async function SettingsPage() {
 	const headerList = await headers();
 	const forwardedProto = headerList.get('x-forwarded-proto');
 	const forwardedHost = headerList.get('x-forwarded-host');
@@ -100,65 +96,26 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps =
 
 	const lastEvent = logs[0] ?? null;
 
-	const [wfirmaRow] = await db
-		.select({
-			id: wfirmaTokens.id,
-			tenant: wfirmaTokens.tenant,
-			scope: wfirmaTokens.scope,
-			expiresAt: wfirmaTokens.expiresAt,
-			updatedAt: wfirmaTokens.updatedAt,
-		})
-		.from(wfirmaTokens)
-		.limit(1);
+	const wfirmaConfig = tryGetWfirmaConfig();
+	let wfirmaConfigError: string | null = null;
 
-	const wfirmaToken = wfirmaRow
-		? {
-			id: wfirmaRow.id,
-			tenant: wfirmaRow.tenant ?? '',
-			scope: wfirmaRow.scope ?? '',
-			expiresAt:
-				wfirmaRow.expiresAt instanceof Date
-					? wfirmaRow.expiresAt
-					: typeof wfirmaRow.expiresAt === 'number'
-						? new Date(wfirmaRow.expiresAt)
-						: null,
-			updatedAt:
-				wfirmaRow.updatedAt instanceof Date
-					? wfirmaRow.updatedAt
-					: typeof wfirmaRow.updatedAt === 'number'
-						? new Date(wfirmaRow.updatedAt)
-						: null,
+	if (!wfirmaConfig) {
+		try {
+			getWfirmaConfig();
+		} catch (configError) {
+			wfirmaConfigError =
+				configError instanceof Error
+					? configError.message
+					: 'Brakuje konfiguracji wFirma. Dodaj login, klucz API i tenant do .env.local.';
 		}
-		: null;
+	}
 
-	const wfirmaScopes = wfirmaToken?.scope?.split(/[\s,]+/).filter(Boolean) ?? [];
-	const wfirmaStatus = wfirmaToken ? 'connected' : 'disconnected';
+	const wfirmaStatus = wfirmaConfig ? 'configured' : 'missing';
 	const wfirmaStatusBadgeClass =
-		wfirmaStatus === 'connected'
+		wfirmaStatus === 'configured'
 			? 'bg-emerald-100 text-emerald-900 border-transparent'
 			: 'border border-dashed text-muted-foreground';
-	const wfirmaStatusLabel = wfirmaStatus === 'connected' ? 'Polaczono' : 'Brak polaczenia';
-
-	const wfirmaFlashParam = searchParams?.wfirma;
-	const wfirmaFlash = Array.isArray(wfirmaFlashParam) ? wfirmaFlashParam[0] : wfirmaFlashParam ?? null;
-
-	const wfirmaAlert = (() => {
-		if (wfirmaFlash === 'connected') {
-			return {
-				variant: 'default' as const,
-				title: 'Polaczenie z wFirma zakonczone sukcesem',
-				description: 'Token zostal zapisany. Mozesz przejsc do generowania dokumentow VAT.',
-			};
-		}
-		if (wfirmaFlash === 'error') {
-			return {
-				variant: 'destructive' as const,
-				title: 'Nie udalo sie polaczyc z wFirma',
-				description: 'Sprobuj ponownie. Jesli blad sie powtarza sprawdz konfiguracje WFIRMA_CLIENT_ID i WFIRMA_REDIRECT_URI.',
-			};
-		}
-		return null;
-	})();
+	const wfirmaStatusLabel = wfirmaConfig ? 'Skonfigurowano' : 'Brak konfiguracji';
 
 	const mailRows = await db
 		.select({
@@ -206,12 +163,6 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps =
 				</Alert>
 			)}
 
-			{wfirmaAlert && (
-				<Alert variant={wfirmaAlert.variant}>
-					<AlertTitle>{wfirmaAlert.title}</AlertTitle>
-					<AlertDescription>{wfirmaAlert.description}</AlertDescription>
-				</Alert>
-			)}
 
 			<div className="grid gap-6 lg:grid-cols-2">
 				<Card>
@@ -329,54 +280,39 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps =
 				<Card>
 					<CardHeader>
 						<CardTitle>Integracja wFirma</CardTitle>
-						<CardDescription>Zarzadzaj autoryzacja OAuth i stanem polaczenia.</CardDescription>
+						<CardDescription>Skonfiguruj login i klucz API w zmiennych srodowiskowych.</CardDescription>
 					</CardHeader>
 					<CardContent className="space-y-4">
 						<div className="flex flex-wrap items-center gap-2 text-sm">
 							<Badge className={wfirmaStatusBadgeClass}>{wfirmaStatusLabel}</Badge>
-							{wfirmaToken?.updatedAt && <span className="text-muted-foreground">Aktualizacja {formatTimestamp(wfirmaToken.updatedAt)}</span>}
+							{wfirmaConfig?.tenant ? (
+								<span className="text-muted-foreground">Tenant {wfirmaConfig.tenant}</span>
+							) : null}
 						</div>
-						{wfirmaToken ? (
+						{wfirmaConfig ? (
 							<dl className="grid gap-3 text-sm">
 								<div>
+									<dt className="text-muted-foreground">Login API</dt>
+									<dd className="font-mono text-xs break-all rounded bg-muted px-3 py-2">{wfirmaConfig.login}</dd>
+								</div>
+								<div>
 									<dt className="text-muted-foreground">Tenant</dt>
-									<dd className="font-mono text-xs break-all bg-muted px-3 py-2 rounded">{wfirmaToken.tenant}</dd>
-								</div>
-								<div>
-									<dt className="text-muted-foreground">Zakres</dt>
-									<dd className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-										{wfirmaScopes.length === 0
-											? 'brak'
-											: wfirmaScopes.map((scope) => (
-												<Badge key={scope} variant="secondary" className="font-medium">
-													{scope}
-												</Badge>
-											))}
-									</dd>
-								</div>
-								<div>
-									<dt className="text-muted-foreground">Wygasa</dt>
-									<dd>{wfirmaToken.expiresAt ? formatTimestamp(wfirmaToken.expiresAt) : 'czas nieokreslony'}</dd>
+									<dd className="font-mono text-xs break-all rounded bg-muted px-3 py-2">{wfirmaConfig.tenant}</dd>
 								</div>
 							</dl>
 						) : (
 							<p className="text-sm text-muted-foreground">
-								Brak aktywnego tokena. Rozpocznij autoryzacje, aby system mogl wysylac dokumenty do wFirma.
+								{wfirmaConfigError ?? 'Dodaj wpisy WFIRMA_LOGIN, WFIRMA_API_KEY oraz WFIRMA_TENANT do pliku .env.local, a nastepnie zrestartuj aplikacje.'}
 							</p>
 						)}
-						<div className="flex flex-wrap gap-2">
-							<Button asChild>
-								<Link href="/api/wfirma/authorize">{wfirmaToken ? 'Odswiez token' : 'Polacz z wFirma'}</Link>
-							</Button>
-							{wfirmaToken && (
-								<form action={disconnectWfirmaIntegration}>
-									<Button variant="outline" type="submit">Odlacz</Button>
-								</form>
-							)}
+						<div className="space-y-2 text-xs text-muted-foreground">
+							<p>Klucz API nie jest przechowywany w bazie danych — aktualizuj go w konfiguracji srodowiska.</p>
+							<ul className="list-disc space-y-1 pl-5">
+								<li><code>WFIRMA_LOGIN</code> — login lub adres e-mail uzywany w panelu wFirma.</li>
+								<li><code>WFIRMA_API_KEY</code> — klucz API wygenerowany w ustawieniach konta.</li>
+								<li><code>WFIRMA_TENANT</code> — subdomena (np. <code>nazwa</code> dla <code>nazwa.wfirma.pl</code>).</li>
+							</ul>
 						</div>
-						<p className="text-xs text-muted-foreground">
-							Po kliknieciu przekierujemy Cie do panelu wFirma w celu potwierdzenia dostepu.
-						</p>
 					</CardContent>
 				</Card>
 			</div>
@@ -405,7 +341,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps =
 										<TableCell>
 											<Badge className={levelBadgeClass(log.level)}>{log.level}</Badge>
 										</TableCell>
-										<TableCell className="max-w-[28rem] whitespace-normal text-xs">
+										<TableCell className="max-w-md whitespace-normal text-xs">
 											{log.message}
 										</TableCell>
 									</TableRow>

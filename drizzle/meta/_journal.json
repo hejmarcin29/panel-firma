@@ -50,6 +50,13 @@
       "when": 1763381160196,
       "tag": "0006_slippery_zaladane",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1763383378386,
+      "tag": "0007_flowery_fantastic_four",
+      "breakpoints": true
     }
   ]
 }

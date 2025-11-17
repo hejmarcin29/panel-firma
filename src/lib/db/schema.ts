@@ -352,30 +352,6 @@ export const integrationLogs = sqliteTable(
 	}
 );
 
-export const wfirmaTokens = sqliteTable(
-	'wfirma_tokens',
-	{
-		id: text('id').primaryKey(),
-		tenant: text('tenant').notNull(),
-		accessToken: text('access_token').notNull(),
-		refreshToken: text('refresh_token'),
-		tokenType: text('token_type'),
-		scope: text('scope'),
-		expiresAt: integer('expires_at', { mode: 'timestamp_ms' }),
-		createdBy: text('created_by').references(() => users.id, { onDelete: 'set null' }),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
-		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
-	},
-	(table) => ({
-		tenantIdx: uniqueIndex('wfirma_tokens_tenant_idx').on(table.tenant),
-		expiresIdx: index('wfirma_tokens_expires_at_idx').on(table.expiresAt),
-	})
-);
-
 export const manualOrders = sqliteTable(
 	'manual_orders',
 	{
