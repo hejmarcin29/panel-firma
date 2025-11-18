@@ -117,6 +117,9 @@ export default async function MontazePage() {
     const montagesData: Montage[] = montageRows.map((row) => {
         const billingAddress = row.billingAddress ?? row.address;
         const installationAddress = row.installationAddress ?? row.address;
+        const billingCity = row.billingCity ?? null;
+        const installationCity = row.installationCity ?? null;
+        const scheduledInstallationAt = row.scheduledInstallationAt ?? null;
 
         return {
         id: row.id,
@@ -125,6 +128,9 @@ export default async function MontazePage() {
         contactPhone: row.contactPhone,
         billingAddress: billingAddress,
         installationAddress: installationAddress,
+        billingCity,
+        installationCity,
+        scheduledInstallationAt,
         materialDetails: row.materialDetails,
         status: row.status,
         createdAt: row.createdAt,

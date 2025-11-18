@@ -6,6 +6,14 @@ import { CheckCircle2Icon, ClockIcon, FileIcon, MessageSquareIcon, PaperclipIcon
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from '@/components/ui/dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,7 +22,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-
 import {
 	addMontageAttachment,
 	addMontageNote,
@@ -27,85 +34,14 @@ import {
 } from '../actions';
 import type { MontageStatus } from '@/lib/db/schema';
 
-type TimestampValue = number | Date | null | undefined;
-
-export type MontageAttachment = {
-	id: string;
-	title: string | null;
-	url: string;
-	createdAt: TimestampValue;
-	noteId: string | null;
-	uploader?: {
-		id: string;
-		name: string | null;
-		email: string;
-	} | null;
-};
-
-export type MontageNote = {
-	id: string;
-	content: string;
-	createdAt: TimestampValue;
-	author?: {
-		id: string;
-		name: string | null;
-		email: string;
-	} | null;
-	attachments: MontageAttachment[];
-};
-
-export type MontageTask = {
-	id: string;
-	title: string;
-	completed: boolean;
-	updatedAt: TimestampValue;
-};
-
-export type MontageChecklistItem = {
-	id: string;
-	templateId: string;
-	label: string;
-	allowAttachment: boolean;
-	completed: boolean;
-	orderIndex: number;
-	createdAt: TimestampValue;
-	updatedAt: TimestampValue;
-	attachment: MontageAttachment | null;
-};
-
-export type Montage = {
-	id: string;
-	clientName: string;
-	contactPhone: string | null;
-	contactEmail: string | null;
-	billingAddress: string | null;
-	installationAddress: string | null;
-	materialDetails: string | null;
-	status: MontageStatus;
-	createdAt: TimestampValue;
-	updatedAt: TimestampValue;
-	notes: MontageNote[];
-	attachments: MontageAttachment[];
-	checklistItems: MontageChecklistItem[];
-	tasks: MontageTask[];
-};
-export type StatusOption = {
-	value: MontageStatus;
-	label: string;
-	description: string;
-};
-
-type MontageCardProps = {
-	montage: Montage;
-	statusOptions: StatusOption[];
-};
+type TimestampValue = Date | number | string | null | undefined;
 
 function formatTimestamp(value: TimestampValue) {
 	if (!value) {
 		return 'brak daty';
 	}
 
-	const date = value instanceof Date ? value : new Date(Number(value));
+	const date = value instanceof Date ? value : new Date(typeof value === 'number' ? value : Number(value));
 
 	if (Number.isNaN(date.getTime())) {
 		return 'brak daty';
@@ -181,6 +117,7 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 	const [noteAttachmentTitle, setNoteAttachmentTitle] = useState('');
 	const [taskTitle, setTaskTitle] = useState('');
 	const [attachmentTitle, setAttachmentTitle] = useState('');
+	const [attachmentsDialogOpen, setAttachmentsDialogOpen] = useState(false);
 	const [materialsDraft, setMaterialsDraft] = useState(montage.materialDetails ?? '');
 	const [materialsError, setMaterialsError] = useState<string | null>(null);
 	const [materialsFeedback, setMaterialsFeedback] = useState<string | null>(null);
@@ -194,7 +131,22 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 	const checklistProgressLabel = totalChecklistItems > 0 ? `${completedChecklistItems}/${totalChecklistItems}` : '0/0';
 	const billingAddress = montage.billingAddress ?? '';
 	const installationAddress = montage.installationAddress ?? '';
-	const addressesMatch = Boolean(billingAddress) && billingAddress === installationAddress;
+	const billingCity = montage.billingCity ?? '';
+	const installationCity = montage.installationCity ?? '';
+	const addressesMatch = Boolean(billingAddress && installationAddress)
+		&& billingAddress === installationAddress
+		&& (billingCity || '') === (installationCity || '');
+	const scheduledInstallationDate = (() => {
+		const value = montage.scheduledInstallationAt;
+		if (!value) {
+			return null;
+		}
+		const date = value instanceof Date ? value : new Date(typeof value === 'number' ? value : Number(value));
+		if (Number.isNaN(date.getTime())) {
+			return null;
+		}
+		return new Intl.DateTimeFormat('pl-PL', { dateStyle: 'long' }).format(date);
+	})();
 
 	useEffect(() => {
 		setMaterialsDraft(montage.materialDetails ?? '');
@@ -438,6 +390,10 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 									<p className="font-medium text-foreground">{montage.contactEmail}</p>
 								</div>
 							) : null}
+							<div className="rounded-xl border border-border/60 bg-muted/20 px-3 py-2">
+								<p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">Planowany montaż</p>
+								<p className="font-medium text-foreground">{scheduledInstallationDate ?? 'Brak terminu'}</p>
+							</div>
 						</div>
 						<form onSubmit={submitMaterials} className="space-y-3 rounded-xl border border-border/60 bg-muted/10 p-4">
 							<div className="flex flex-wrap items-center justify-between gap-3">
@@ -473,12 +429,14 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 								<p className="whitespace-pre-wrap text-sm text-foreground/90">
 									{billingAddress ? billingAddress : 'Brak danych'}
 								</p>
+								<p className="text-xs text-muted-foreground/80">{billingCity ? billingCity : 'Miasto nieznane'}</p>
 							</div>
 							<div className="rounded-xl border border-border/60 bg-muted/15 px-3 py-2">
 								<p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">Adres montażu</p>
 								<p className="whitespace-pre-wrap text-sm text-foreground/90">
 									{installationAddress ? installationAddress : 'Brak danych'}
 								</p>
+								<p className="text-xs text-muted-foreground/80">{installationCity ? installationCity : 'Miasto nieznane'}</p>
 								{addressesMatch && billingAddress ? (
 									<p className="mt-1 text-[11px] text-muted-foreground/80">Adres jak na fakturze</p>
 								) : null}
@@ -534,36 +492,6 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 						<p className="text-sm font-medium text-foreground">{formatTimestamp(latestActivityTimestamp)}</p>
 						<p className="text-xs text-muted-foreground">Automatycznie aktualizowane</p>
 					</div>
-				</div>
-				<div className="space-y-3">
-					<p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Oś aktywności</p>
-					{timelineEvents.length === 0 ? (
-						<p className="text-sm text-muted-foreground">Brak zarejestrowanej aktywności dla tego montażu.</p>
-					) : (
-						<div className="max-h-72 overflow-y-auto pr-1">
-							<ul className="space-y-3 pr-1">
-								{timelineEvents.map((event) => {
-									const visuals = timelineVisuals[event.type];
-									const Icon = visuals.icon;
-									return (
-										<li
-											key={event.id}
-											className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3"
-										>
-											<div className={cn('flex h-9 w-9 items-center justify-center rounded-full', visuals.className)}>
-												<Icon className="size-4" />
-											</div>
-											<div className="space-y-1">
-												<p className="text-xs font-semibold text-muted-foreground">{event.label}</p>
-												<p className="text-sm text-foreground">{event.description}</p>
-												<p className="text-[11px] text-muted-foreground">{formatTimestamp(event.timestamp)}</p>
-											</div>
-										</li>
-									);
-								})}
-							</ul>
-						</div>
-					)}
 				</div>
 			</CardHeader>
 			<CardContent className="space-y-8 pb-10 pt-0">
@@ -644,7 +572,7 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 															: 'Dodaj załącznik'}
 												</Button>
 											</form>
-											{checklistAttachmentError?.id === item.id ? (
+											{checklistAttachmentError && checklistAttachmentError.id === item.id ? (
 												<span className="text-xs text-destructive">{checklistAttachmentError.message}</span>
 											) : null}
 										</div>
@@ -801,97 +729,228 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 						</form>
 					</TabsContent>
 				</Tabs>
+				<section className="space-y-4 rounded-2xl border border-border/60 bg-muted/10 p-5">
+					<div className="flex flex-wrap items-center justify-between gap-3">
+						<div>
+							<p className="text-xs uppercase tracking-wide text-muted-foreground">Oś aktywności</p>
+							<h3 className="text-base font-semibold text-foreground">Historia zdarzeń</h3>
+						</div>
+						<span className="text-xs text-muted-foreground">Automatycznie generowana z notatek, zadań i załączników.</span>
+					</div>
+					{timelineEvents.length === 0 ? (
+						<p className="text-sm text-muted-foreground">Brak zarejestrowanej aktywności dla tego montażu.</p>
+					) : (
+						<div className="max-h-80 overflow-y-auto pr-1">
+							<ul className="space-y-3 pr-1">
+								{timelineEvents.map((event) => {
+									const visuals = timelineVisuals[event.type];
+									const Icon = visuals.icon;
+									return (
+										<li
+											key={event.id}
+											className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3"
+										>
+											<div className={cn('flex h-9 w-9 items-center justify-center rounded-full', visuals.className)}>
+												<Icon className="size-4" />
+											</div>
+											<div className="space-y-1">
+												<p className="text-xs font-semibold text-muted-foreground">{event.label}</p>
+												<p className="text-sm text-foreground">{event.description}</p>
+												<p className="text-[11px] text-muted-foreground">{formatTimestamp(event.timestamp)}</p>
+											</div>
+										</li>
+									);
+								})}
+							</ul>
+						</div>
+					)}
+				</section>
 				<section className="space-y-4 rounded-2xl border border-border/60 bg-muted/5 p-5">
 					<div className="flex flex-wrap items-center justify-between gap-3">
 						<div>
 							<p className="text-xs uppercase tracking-wide text-muted-foreground">Załączniki</p>
 							<h3 className="text-base font-semibold text-foreground">Biblioteka klienta</h3>
+							<p className="text-xs text-muted-foreground">Łącznie plików: {montage.attachments.length}</p>
 						</div>
-						{attachmentError ? <span className="text-xs text-destructive">{attachmentError}</span> : null}
+						<Dialog open={attachmentsDialogOpen} onOpenChange={setAttachmentsDialogOpen}>
+							<DialogTrigger asChild>
+								<Button variant="outline" size="sm">Załączniki</Button>
+							</DialogTrigger>
+							<DialogContent className="max-w-4xl">
+								<DialogHeader>
+									<DialogTitle>Pliki powiązane z montażem</DialogTitle>
+									<DialogDescription>
+										Przeglądaj materiały, które trafiły do chmury R2, oraz dodaj nowe pliki dla zespołu.
+									</DialogDescription>
+								</DialogHeader>
+								<div className="space-y-5">
+									{attachmentError ? <span className="text-xs text-destructive">{attachmentError}</span> : null}
+									{montage.attachments.length === 0 ? (
+										<p className="text-sm text-muted-foreground">Brak załączonych materiałów. Dodaj pierwszy plik, aby udostępnić ekipie.</p>
+									) : (
+										<div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+											{montage.attachments.map((attachment) => {
+												const image = isImageAttachment(attachment);
+												return (
+													<a
+														key={attachment.id}
+														href={attachment.url}
+														target="_blank"
+														rel="noopener noreferrer"
+														className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border/60 bg-muted/10 transition hover:border-primary/60 hover:shadow-lg"
+													>
+														<div className="relative h-36 overflow-hidden bg-background">
+															{image ? (
+																<>
+																	{/* eslint-disable-next-line @next/next/no-img-element -- Cloud R2 attachments lack Next.js loader configuration */}
+																	<img
+																		src={attachment.url}
+																		alt={attachmentDisplayName(attachment)}
+																		className="h-full w-full object-cover transition group-hover:scale-105"
+																		loading="lazy"
+																	/>
+																</>
+															) : (
+																<div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground">
+																	<FileIcon className="size-8" />
+																	<span className="text-[11px] uppercase tracking-wide">
+																		{attachment.url.split('.').pop()?.split('?')[0] ?? 'plik'}
+																	</span>
+																</div>
+															)}
+														</div>
+														<div className="flex flex-1 flex-col gap-1 px-4 py-3 text-left">
+															<span className="line-clamp-2 font-medium text-foreground">
+																{attachmentDisplayName(attachment)}
+															</span>
+															<p className="text-xs text-muted-foreground">
+																Dodano {formatTimestamp(attachment.createdAt)}
+																{attachment.uploader ? ` • ${attachment.uploader.name ?? attachment.uploader.email}` : ''}
+															</p>
+															{attachment.noteId ? (
+																<span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+																	<PaperclipIcon className="size-3.5" />
+																	Powiązano z notatką
+																</span>
+															) : null}
+														</div>
+													</a>
+											);
+										})}
+									</div>
+								)}
+								<form
+									onSubmit={submitAttachment}
+									className="flex flex-col gap-3 rounded-2xl border border-dashed border-border/70 bg-muted/10 p-4 sm:flex-row sm:flex-wrap sm:items-center"
+								>
+									<Input
+										name="file"
+										type="file"
+										accept="image/*,application/pdf"
+										disabled={attachmentPending}
+										required
+										className="min-w-[220px] flex-1"
+									/>
+									<Input
+										name="title"
+										placeholder="Opis (opcjonalnie)"
+										value={attachmentTitle}
+										onChange={(event) => setAttachmentTitle(event.target.value)}
+										disabled={attachmentPending}
+										className="min-w-[180px] flex-1"
+									/>
+									<Button type="submit" size="sm" disabled={attachmentPending} className="sm:ml-auto">
+										{attachmentPending ? 'Dodawanie...' : 'Dodaj plik'}
+									</Button>
+								</form>
+								<p className="text-[11px] text-muted-foreground">
+									Pliki trafiają bezpośrednio do chmury R2 w katalogu przypisanym do klienta.
+								</p>
+							</div>
+						</DialogContent>
+						</Dialog>
 					</div>
-					{montage.attachments.length === 0 ? (
-						<p className="text-sm text-muted-foreground">Brak załączonych materiałów. Dodaj pierwszy plik, aby udostępnić ekipie.</p>
-					) : (
-						<div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-							{montage.attachments.map((attachment) => {
-								const image = isImageAttachment(attachment);
-								return (
-									<a
-										key={attachment.id}
-										href={attachment.url}
-										target="_blank"
-										rel="noopener noreferrer"
-										className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border/60 bg-muted/10 transition hover:border-primary/60 hover:shadow-lg"
-									>
-										<div className="relative h-36 overflow-hidden bg-background">
-											{image ? (
-												<>
-													{/* eslint-disable-next-line @next/next/no-img-element -- Cloud R2 attachments lack Next.js loader configuration */}
-													<img
-														src={attachment.url}
-														alt={attachmentDisplayName(attachment)}
-														className="h-full w-full object-cover transition group-hover:scale-105"
-														loading="lazy"
-													/>
-												</>
-											) : (
-												<div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground">
-													<FileIcon className="size-8" />
-													<span className="text-[11px] uppercase tracking-wide">
-														{attachment.url.split('.').pop()?.split('?')[0] ?? 'plik'}
-													</span>
-												</div>
-											)}
-										</div>
-										<div className="flex flex-1 flex-col gap-1 px-4 py-3 text-left">
-											<span className="line-clamp-2 font-medium text-foreground">
-												{attachmentDisplayName(attachment)}
-											</span>
-											<p className="text-xs text-muted-foreground">
-												Dodano {formatTimestamp(attachment.createdAt)}
-												{attachment.uploader ? ` • ${attachment.uploader.name ?? attachment.uploader.email}` : ''}
-											</p>
-											{attachment.noteId ? (
-												<span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-													<PaperclipIcon className="size-3.5" />
-													Powiązano z notatką
-												</span>
-											) : null}
-										</div>
-									</a>
-								);
-							})}
-						</div>
-					)}
-					<form
-						onSubmit={submitAttachment}
-						className="flex flex-col gap-3 rounded-2xl border border-dashed border-border/70 bg-muted/10 p-4 sm:flex-row sm:flex-wrap sm:items-center"
-					>
-						<Input
-							name="file"
-							type="file"
-							accept="image/*,application/pdf"
-							disabled={attachmentPending}
-							required
-							className="min-w-[220px] flex-1"
-						/>
-						<Input
-							name="title"
-							placeholder="Opis (opcjonalnie)"
-							value={attachmentTitle}
-							onChange={(event) => setAttachmentTitle(event.target.value)}
-							disabled={attachmentPending}
-							className="min-w-[180px] flex-1"
-						/>
-						<Button type="submit" size="sm" disabled={attachmentPending} className="sm:ml-auto">
-							{attachmentPending ? 'Dodawanie...' : 'Dodaj plik'}
-						</Button>
-					</form>
-					<p className="text-[11px] text-muted-foreground">
-						Pliki trafiają bezpośrednio do chmury R2 w katalogu przypisanym do klienta.
+					{attachmentError ? <span className="text-xs text-destructive">{attachmentError}</span> : null}
+					<p className="text-sm text-muted-foreground">
+						Kliknij „Załączniki”, aby zobaczyć i zarządzać materiałami przesłanymi dla tego montażu.
 					</p>
 				</section>
 			</CardContent>
 		</Card>
 	);
 }
+
+type MontageAttachment = {
+	id: string;
+	title: string | null;
+	url: string;
+	createdAt: TimestampValue;
+	noteId: string | null;
+	uploader: {
+		id: string;
+		name: string | null;
+		email: string;
+	} | null;
+};
+
+type MontageNote = {
+	id: string;
+	content: string;
+	createdAt: TimestampValue;
+	author: {
+		id: string;
+		name: string | null;
+		email: string;
+	} | null;
+	attachments: MontageAttachment[];
+};
+
+type MontageTask = {
+	id: string;
+	title: string;
+	completed: boolean;
+	updatedAt: TimestampValue;
+};
+
+type MontageChecklistItem = {
+	id: string;
+	templateId: string | null;
+	label: string;
+	allowAttachment: boolean;
+	completed: boolean;
+	orderIndex: number;
+	createdAt: TimestampValue;
+	updatedAt: TimestampValue;
+	attachment: MontageAttachment | null;
+};
+
+export type Montage = {
+	id: string;
+	clientName: string;
+	contactEmail: string | null;
+	contactPhone: string | null;
+	billingAddress: string | null;
+	installationAddress: string | null;
+	billingCity: string | null;
+	installationCity: string | null;
+	scheduledInstallationAt: TimestampValue;
+	materialDetails: string | null;
+	status: MontageStatus;
+	createdAt: TimestampValue;
+	updatedAt: TimestampValue;
+	notes: MontageNote[];
+	attachments: MontageAttachment[];
+	tasks: MontageTask[];
+	checklistItems: MontageChecklistItem[];
+};
+
+export type StatusOption = {
+	value: MontageStatus;
+	label: string;
+	description: string;
+};
+
+type MontageCardProps = {
+	montage: Montage;
+	statusOptions: StatusOption[];
+};

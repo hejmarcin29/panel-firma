@@ -102,6 +102,9 @@ type CreateMontageInput = {
 	contactEmail?: string;
 	billingAddress?: string;
 	installationAddress?: string;
+	billingCity?: string;
+	installationCity?: string;
+	scheduledInstallationDate?: string;
 	materialDetails?: string;
 };
 
@@ -111,6 +114,9 @@ export async function createMontage({
 	contactEmail,
 	billingAddress,
 	installationAddress,
+	billingCity,
+	installationCity,
+	scheduledInstallationDate,
 	materialDetails,
 }: CreateMontageInput) {
 	await requireUser();
@@ -125,17 +131,32 @@ export async function createMontage({
 	const templates = await getMontageChecklistTemplates();
 	const normalizedBilling = billingAddress?.trim() ? billingAddress.trim() : null;
 	const normalizedInstallation = installationAddress?.trim() ? installationAddress.trim() : null;
+	const normalizedBillingCity = billingCity?.trim() ? billingCity.trim() : null;
+	const normalizedInstallationCity = installationCity?.trim() ? installationCity.trim() : null;
 	const normalizedMaterialDetails = materialDetails?.trim() ? materialDetails.trim() : null;
 	const fallbackAddress = normalizedInstallation ?? normalizedBilling;
+	const fallbackCity = normalizedInstallationCity ?? normalizedBillingCity;
+	const fallbackAddressLine = [fallbackAddress, fallbackCity].filter(Boolean).join(', ') || null;
+
+	let scheduledInstallationAt: Date | null = null;
+	if (scheduledInstallationDate) {
+		const parsed = new Date(`${scheduledInstallationDate}T00:00:00`);
+		if (!Number.isNaN(parsed.getTime())) {
+			scheduledInstallationAt = parsed;
+		}
+	}
 
 	await db.insert(montages).values({
 		id: montageId,
 		clientName: trimmedName,
 		contactPhone: contactPhone?.trim() ?? null,
 		contactEmail: contactEmail?.trim() ?? null,
-		address: fallbackAddress,
+		address: fallbackAddressLine,
 		billingAddress: normalizedBilling,
 		installationAddress: normalizedInstallation,
+		billingCity: normalizedBillingCity,
+		installationCity: normalizedInstallationCity,
+		scheduledInstallationAt,
 		materialDetails: normalizedMaterialDetails,
 		status: 'lead',
 		createdAt: now,
