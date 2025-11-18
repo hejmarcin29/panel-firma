@@ -4,7 +4,9 @@ import { useState, useTransition, type ChangeEvent, type FormEvent } from 'react
 import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
 import { createMontage } from '../actions';
@@ -13,7 +15,8 @@ type FormState = {
 	clientName: string;
 	contactPhone: string;
 	contactEmail: string;
-	address: string;
+	billingAddress: string;
+	installationAddress: string;
 	materialDetails: string;
 };
 
@@ -21,21 +24,45 @@ const initialState: FormState = {
 	clientName: '',
 	contactPhone: '',
 	contactEmail: '',
-	address: '',
+	billingAddress: '',
+	installationAddress: '',
 	materialDetails: '',
 };
 
-export function CreateMontageForm() {
+type CreateMontageFormProps = {
+	onSuccess?: () => void;
+};
+
+export function CreateMontageForm({ onSuccess }: CreateMontageFormProps) {
 	const router = useRouter();
 	const [form, setForm] = useState<FormState>(initialState);
 	const [feedback, setFeedback] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [isPending, startTransition] = useTransition();
+ 	const [sameAsBilling, setSameAsBilling] = useState(true);
 
 	const handleInputChange = (key: keyof FormState) => (
 		event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
 	) => {
-		setForm((prev) => ({ ...prev, [key]: event.target.value }));
+		const value = event.target.value;
+		setForm((prev) => {
+			const next = { ...prev, [key]: value };
+			if (key === 'billingAddress' && sameAsBilling) {
+				next.installationAddress = value;
+			}
+			return next;
+		});
+	};
+
+	const handleInstallationChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
+		setForm((prev) => ({ ...prev, installationAddress: event.target.value }));
+	};
+
+	const toggleSameAsBilling = (checked: boolean) => {
+		setSameAsBilling(checked);
+		if (checked) {
+			setForm((prev) => ({ ...prev, installationAddress: prev.billingAddress }));
+		}
 	};
 
 	const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -49,11 +76,14 @@ export function CreateMontageForm() {
 					clientName: form.clientName,
 					contactPhone: form.contactPhone,
 					contactEmail: form.contactEmail,
-					address: form.address,
+					billingAddress: form.billingAddress,
+					installationAddress: form.installationAddress,
 					materialDetails: form.materialDetails,
 				});
 				setForm(initialState);
+				setSameAsBilling(true);
 				setFeedback('Dodano nowy montaż.');
+				onSuccess?.();
 				router.refresh();
 			} catch (submissionError) {
 				const message =
@@ -68,9 +98,7 @@ export function CreateMontageForm() {
 	return (
 		<form onSubmit={handleSubmit} className="space-y-4 rounded-xl border bg-background p-4 shadow-sm">
 			<div>
-				<label htmlFor="montage-client" className="block text-sm font-medium text-foreground">
-					Klient
-				</label>
+				<Label htmlFor="montage-client">Klient</Label>
 				<Input
 					id="montage-client"
 					value={form.clientName}
@@ -81,9 +109,7 @@ export function CreateMontageForm() {
 			</div>
 			<div className="grid gap-4 md:grid-cols-2">
 				<div>
-					<label htmlFor="montage-phone" className="block text-sm font-medium text-foreground">
-						Telefon kontaktowy
-					</label>
+					<Label htmlFor="montage-phone">Telefon kontaktowy</Label>
 					<Input
 						id="montage-phone"
 						value={form.contactPhone}
@@ -92,9 +118,7 @@ export function CreateMontageForm() {
 					/>
 				</div>
 				<div>
-					<label htmlFor="montage-email" className="block text-sm font-medium text-foreground">
-						E-mail
-					</label>
+					<Label htmlFor="montage-email">E-mail</Label>
 					<Input
 						id="montage-email"
 						type="email"
@@ -104,22 +128,40 @@ export function CreateMontageForm() {
 					/>
 				</div>
 			</div>
-			<div>
-				<label htmlFor="montage-address" className="block text-sm font-medium text-foreground">
-					Adres / opis lokalizacji
-				</label>
-				<Textarea
-					id="montage-address"
-					value={form.address}
-					onChange={handleInputChange('address')}
-					placeholder="Dodatkowe informacje o montażu"
-					rows={3}
-				/>
+			<div className="grid gap-4 md:grid-cols-2">
+				<div className="space-y-2">
+					<Label htmlFor="montage-billing-address">Adres do faktury</Label>
+					<Textarea
+						id="montage-billing-address"
+						value={form.billingAddress}
+						onChange={handleInputChange('billingAddress')}
+						placeholder="np. ul. Wiosenna 12, 00-001 Warszawa"
+						rows={3}
+					/>
+				</div>
+				<div className="space-y-2">
+					<div className="flex items-center gap-2">
+						<Checkbox
+							id="montage-installation-same"
+							checked={sameAsBilling}
+							onCheckedChange={(checked) => toggleSameAsBilling(Boolean(checked))}
+						/>
+						<Label htmlFor="montage-installation-same" className="text-sm font-medium">
+							Adres montażu taki sam jak do faktury
+						</Label>
+					</div>
+					<Textarea
+						id="montage-installation-address"
+						value={form.installationAddress}
+						onChange={handleInstallationChange}
+						placeholder="np. ul. Letnia 8/2, 00-001 Warszawa"
+						rows={3}
+						disabled={sameAsBilling}
+					/>
+				</div>
 			</div>
 			<div>
-				<label htmlFor="montage-material" className="block text-sm font-medium text-foreground">
-					Materiały i ilości
-				</label>
+				<Label htmlFor="montage-material">Materiały i ilości</Label>
 				<Textarea
 					id="montage-material"
 					value={form.materialDetails}

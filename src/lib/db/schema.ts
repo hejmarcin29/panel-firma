@@ -377,6 +377,8 @@ export const montages = sqliteTable(
 		contactPhone: text('contact_phone'),
 		contactEmail: text('contact_email'),
 		address: text('address'),
+		billingAddress: text('billing_address'),
+		installationAddress: text('installation_address'),
 		materialDetails: text('material_details'),
 		status: text('status').$type<MontageStatus>().notNull().default('lead'),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' })

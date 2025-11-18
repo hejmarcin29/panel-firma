@@ -78,7 +78,8 @@ export type Montage = {
 	clientName: string;
 	contactPhone: string | null;
 	contactEmail: string | null;
-	address: string | null;
+	billingAddress: string | null;
+	installationAddress: string | null;
 	materialDetails: string | null;
 	status: MontageStatus;
 	createdAt: TimestampValue;
@@ -191,6 +192,9 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 	const completedChecklistItems = montage.checklistItems.filter((item) => item.completed).length;
 	const currentStatusOption = statusOptions.find((option) => option.value === montage.status) ?? null;
 	const checklistProgressLabel = totalChecklistItems > 0 ? `${completedChecklistItems}/${totalChecklistItems}` : '0/0';
+	const billingAddress = montage.billingAddress ?? '';
+	const installationAddress = montage.installationAddress ?? '';
+	const addressesMatch = Boolean(billingAddress) && billingAddress === installationAddress;
 
 	useEffect(() => {
 		setMaterialsDraft(montage.materialDetails ?? '');
@@ -229,8 +233,7 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 			})),
 	]
 		.filter((event) => Boolean(event.timestamp))
-		.sort((a, b) => getTimeValue(b.timestamp) - getTimeValue(a.timestamp))
-		.slice(0, 6);
+		.sort((a, b) => getTimeValue(b.timestamp) - getTimeValue(a.timestamp));
 
 	const timelineVisuals: Record<TimelineEventType, { icon: ElementType; className: string }> = {
 		note: { icon: MessageSquareIcon, className: 'bg-primary/15 text-primary' },
@@ -421,9 +424,6 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 							<CardDescription className="text-sm text-muted-foreground">
 								Utworzono {formatTimestamp(montage.createdAt)} • Aktualizacja {formatTimestamp(montage.updatedAt)}
 							</CardDescription>
-							{montage.address ? (
-								<p className="text-sm text-muted-foreground/90">{montage.address}</p>
-							) : null}
 						</div>
 						<div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
 							{montage.contactPhone ? (
@@ -467,6 +467,23 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 								</Button>
 							</div>
 						</form>
+						<div className="grid gap-3 sm:grid-cols-2">
+							<div className="rounded-xl border border-border/60 bg-muted/15 px-3 py-2">
+								<p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">Adres faktury</p>
+								<p className="whitespace-pre-wrap text-sm text-foreground/90">
+									{billingAddress ? billingAddress : 'Brak danych'}
+								</p>
+							</div>
+							<div className="rounded-xl border border-border/60 bg-muted/15 px-3 py-2">
+								<p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">Adres montażu</p>
+								<p className="whitespace-pre-wrap text-sm text-foreground/90">
+									{installationAddress ? installationAddress : 'Brak danych'}
+								</p>
+								{addressesMatch && billingAddress ? (
+									<p className="mt-1 text-[11px] text-muted-foreground/80">Adres jak na fakturze</p>
+								) : null}
+							</div>
+						</div>
 					</div>
 					<div className="flex flex-col items-start gap-3 sm:items-end">
 						{currentStatusOption ? (
@@ -480,7 +497,7 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 							onValueChange={(value) => handleStatusChange(value as MontageStatus)}
 							disabled={statusPending}
 						>
-							<SelectTrigger className="min-w-[240px]" aria-label="Zmień status montaży">
+							<SelectTrigger className="min-w-60" aria-label="Zmień status montaży">
 								<SelectValue placeholder="Wybierz status" />
 							</SelectTrigger>
 							<SelectContent className="max-h-[340px]">
@@ -523,27 +540,29 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 					{timelineEvents.length === 0 ? (
 						<p className="text-sm text-muted-foreground">Brak zarejestrowanej aktywności dla tego montażu.</p>
 					) : (
-						<ul className="space-y-3">
-							{timelineEvents.map((event) => {
-								const visuals = timelineVisuals[event.type];
-								const Icon = visuals.icon;
-								return (
-									<li
-										key={event.id}
-										className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3"
-									>
-										<div className={cn('flex h-9 w-9 items-center justify-center rounded-full', visuals.className)}>
-											<Icon className="size-4" />
-										</div>
-										<div className="space-y-1">
-											<p className="text-xs font-semibold text-muted-foreground">{event.label}</p>
-											<p className="text-sm text-foreground">{event.description}</p>
-											<p className="text-[11px] text-muted-foreground">{formatTimestamp(event.timestamp)}</p>
-										</div>
-									</li>
-								);
-							})}
-						</ul>
+						<div className="max-h-72 overflow-y-auto pr-1">
+							<ul className="space-y-3 pr-1">
+								{timelineEvents.map((event) => {
+									const visuals = timelineVisuals[event.type];
+									const Icon = visuals.icon;
+									return (
+										<li
+											key={event.id}
+											className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3"
+										>
+											<div className={cn('flex h-9 w-9 items-center justify-center rounded-full', visuals.className)}>
+												<Icon className="size-4" />
+											</div>
+											<div className="space-y-1">
+												<p className="text-xs font-semibold text-muted-foreground">{event.label}</p>
+												<p className="text-sm text-foreground">{event.description}</p>
+												<p className="text-[11px] text-muted-foreground">{formatTimestamp(event.timestamp)}</p>
+											</div>
+										</li>
+									);
+								})}
+							</ul>
+						</div>
 					)}
 				</div>
 			</CardHeader>

@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { asc, desc } from 'drizzle-orm';
 
-import { CreateMontageForm } from './_components/create-montage-form';
 import { MontagePipelineBoard } from './_components/montage-pipeline-board';
+import { CreateMontageDialog } from './_components/create-montage-dialog';
 import type { Montage } from './_components/montage-card';
 import { db } from '@/lib/db';
 import {
@@ -14,7 +14,6 @@ import {
     montages,
     type MontageStatus,
 } from '@/lib/db/schema';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { tryGetR2Config } from '@/lib/r2/config';
@@ -115,12 +114,17 @@ export default async function MontazePage() {
         },
     });
 
-    const montagesData: Montage[] = montageRows.map((row) => ({
+    const montagesData: Montage[] = montageRows.map((row) => {
+        const billingAddress = row.billingAddress ?? row.address;
+        const installationAddress = row.installationAddress ?? row.address;
+
+        return {
         id: row.id,
         clientName: row.clientName,
         contactEmail: row.contactEmail,
         contactPhone: row.contactPhone,
-        address: row.address,
+        billingAddress: billingAddress,
+        installationAddress: installationAddress,
         materialDetails: row.materialDetails,
         status: row.status,
         createdAt: row.createdAt,
@@ -197,7 +201,8 @@ export default async function MontazePage() {
             completed: Boolean(task.completed),
             updatedAt: task.updatedAt,
         })),
-    }));
+    };
+    });
 
     const totalMontages = montagesData.length;
     const totalAttachments = montagesData.reduce((acc, montage) => acc + montage.attachments.length, 0);
@@ -210,15 +215,18 @@ export default async function MontazePage() {
     return (
         <div className="space-y-10">
             <section className="overflow-hidden rounded-3xl border bg-linear-to-br from-primary/5 via-background to-background p-8 shadow-sm">
-                <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="space-y-3">
-                        <h1 className="text-3xl font-semibold tracking-tight text-foreground">Panel montaze 2025</h1>
-                        <p className="max-w-2xl text-sm text-muted-foreground">
-                            Planowanie montazy, dokumentacja i komunikacja z klientem w jednym miejscu. Zarzadzaj pipeline, monitoruj postepy i zbieraj materialy bezposrednio w chmurze R2.
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                            Pliki trafiaja do Cloudflare R2 – <Link className="text-primary hover:underline" href="/dashboard/montaze/galeria">otworz galerie</Link>, aby zobaczyc wszystkie materialy.
-                        </p>
+                <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="space-y-4">
+                        <div className="space-y-3">
+                            <h1 className="text-3xl font-semibold tracking-tight text-foreground">Panel montaze 2025</h1>
+                            <p className="max-w-2xl text-sm text-muted-foreground">
+                                Planowanie montazy, dokumentacja i komunikacja z klientem w jednym miejscu. Zarzadzaj pipeline, monitoruj postepy i zbieraj materialy bezposrednio w chmurze R2.
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                                Pliki trafiaja do Cloudflare R2 – <Link className="text-primary hover:underline" href="/dashboard/montaze/galeria">otworz galerie</Link>, aby zobaczyc wszystkie materialy.
+                            </p>
+                        </div>
+                        <CreateMontageDialog />
                     </div>
                     <div className="grid gap-3 text-xs text-muted-foreground">
                         <span className="font-semibold text-foreground">Pipeline status</span>
@@ -233,26 +241,15 @@ export default async function MontazePage() {
                 </div>
             </section>
 
-            <section className="grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
-                <Card className="border border-dashed">
-                    <CardHeader>
-                        <CardTitle>Dodaj nowy montaz</CardTitle>
-                        <CardDescription>Zainicjuj lead i przekaz podstawowe dane kontaktowe klienta.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <CreateMontageForm />
-                    </CardContent>
-                </Card>
-                <div className="space-y-4">
-                    <div>
-                        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Pipeline montazy</h2>
-                        <p className="text-xs text-muted-foreground">
-                            Organizuj montaze wedlug statusu i otwieraj panel, aby dodac notatki, zadania lub pliki.
-                        </p>
-                    </div>
-                    <Separator />
-                    <MontagePipelineBoard montages={montagesData} statusOptions={statusOptions} />
+            <section className="space-y-4">
+                <div>
+                    <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Pipeline montazy</h2>
+                    <p className="text-xs text-muted-foreground">
+                        Organizuj montaze wedlug statusu i otwieraj panel, aby dodac notatki, zadania lub pliki.
+                    </p>
                 </div>
+                <Separator />
+                <MontagePipelineBoard montages={montagesData} statusOptions={statusOptions} />
             </section>
         </div>
     );

@@ -56,6 +56,9 @@ export function MontagePipelineCard({ montage, statusOptions }: Props) {
 	const totalTasks = montage.tasks.length;
 	const hasAttachments = montage.attachments.length > 0;
 	const latestUpdate = formatTimestamp(montage.updatedAt);
+	const billingAddress = montage.billingAddress;
+	const installationAddress = montage.installationAddress;
+	const addressPreview = installationAddress || billingAddress;
 
 	return (
 		<Sheet>
@@ -77,8 +80,8 @@ export function MontagePipelineCard({ montage, statusOptions }: Props) {
 							{hasAttachments ? `${montage.attachments.length} pl.` : 'brak plikow'}
 						</Badge>
 					</div>
-					{montage.address ? (
-						<p className="text-xs text-muted-foreground line-clamp-2">{montage.address}</p>
+					{addressPreview ? (
+						<p className="text-xs text-muted-foreground line-clamp-2">{addressPreview}</p>
 					) : null}
 				</CardHeader>
 				<CardContent className="space-y-4">

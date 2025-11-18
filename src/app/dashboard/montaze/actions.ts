@@ -100,11 +100,19 @@ type CreateMontageInput = {
 	clientName: string;
 	contactPhone?: string;
 	contactEmail?: string;
-	address?: string;
+	billingAddress?: string;
+	installationAddress?: string;
 	materialDetails?: string;
 };
 
-export async function createMontage({ clientName, contactPhone, contactEmail, address, materialDetails }: CreateMontageInput) {
+export async function createMontage({
+	clientName,
+	contactPhone,
+	contactEmail,
+	billingAddress,
+	installationAddress,
+	materialDetails,
+}: CreateMontageInput) {
 	await requireUser();
 
 	const trimmedName = clientName.trim();
@@ -115,14 +123,20 @@ export async function createMontage({ clientName, contactPhone, contactEmail, ad
 	const now = new Date();
 	const montageId = crypto.randomUUID();
 	const templates = await getMontageChecklistTemplates();
+	const normalizedBilling = billingAddress?.trim() ? billingAddress.trim() : null;
+	const normalizedInstallation = installationAddress?.trim() ? installationAddress.trim() : null;
+	const normalizedMaterialDetails = materialDetails?.trim() ? materialDetails.trim() : null;
+	const fallbackAddress = normalizedInstallation ?? normalizedBilling;
 
 	await db.insert(montages).values({
 		id: montageId,
 		clientName: trimmedName,
 		contactPhone: contactPhone?.trim() ?? null,
 		contactEmail: contactEmail?.trim() ?? null,
-		address: address?.trim() ?? null,
-		materialDetails: materialDetails?.trim() ? materialDetails.trim() : null,
+		address: fallbackAddress,
+		billingAddress: normalizedBilling,
+		installationAddress: normalizedInstallation,
+		materialDetails: normalizedMaterialDetails,
 		status: 'lead',
 		createdAt: now,
 		updatedAt: now,
