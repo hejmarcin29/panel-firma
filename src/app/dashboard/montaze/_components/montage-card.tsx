@@ -344,7 +344,12 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 									{montage.attachments.map((attachment) => (
 										<li key={attachment.id} className="rounded-xl border border-border/60 bg-muted/20 p-3">
 											<div className="space-y-1">
-												<a href={attachment.url} target="_blank" rel="noopener noreferrer" className="font-medium text-primary hover:underline">
+												<a
+													href={attachment.url}
+													target="_blank"
+													rel="noopener noreferrer"
+													className="wrap-break-word text-pretty font-medium text-primary hover:underline"
+												>
 													{attachment.title ? attachment.title : attachment.url}
 												</a>
 												<p className="text-xs text-muted-foreground">

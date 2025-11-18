@@ -111,7 +111,7 @@ export function MontagePipelineCard({ montage, statusOptions }: Props) {
 			</Card>
 			<SheetContent
 				side="right"
-				className="h-full w-full border-l bg-background sm:max-w-[420px] md:max-w-[560px] lg:max-w-[720px] xl:max-w-[860px]"
+				className="h-full w-full max-w-full border-l bg-background sm:max-w-[420px] md:max-w-[560px] lg:max-w-[660px] xl:max-w-[760px] 2xl:max-w-[860px]"
 			>
 				<SheetHeader className="gap-2 px-6 pt-6">
 					<SheetTitle className="text-base font-semibold">Panel montazu</SheetTitle>
@@ -119,7 +119,7 @@ export function MontagePipelineCard({ montage, statusOptions }: Props) {
 						Szczegoly klienta, zadania i dokumenty dostepne w jednym miejscu. Wszystkie zmiany zapisujemy od razu w bazie.
 					</SheetDescription>
 				</SheetHeader>
-				<div className="flex-1 overflow-y-auto px-6 pb-10">
+				<div className="flex-1 overflow-y-auto overflow-x-hidden px-6 pb-10">
 					<MontageCard montage={montage} statusOptions={statusOptions} />
 				</div>
 			</SheetContent>
