@@ -309,39 +309,23 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 												</div>
 												<p className="whitespace-pre-wrap leading-relaxed text-foreground">{note.content}</p>
 												{hasAttachments ? (
-													<div className="mt-3 grid gap-2 sm:grid-cols-2">
-														{note.attachments.map((attachment) => {
-															const image = isImageAttachment(attachment);
-															return (
+													<ul className="mt-3 space-y-2 text-xs">
+														{note.attachments.map((attachment) => (
+															<li key={attachment.id}>
 																<a
-																	key={attachment.id}
 																	href={attachment.url}
 																	target="_blank"
 																	rel="noopener noreferrer"
-																	className="group overflow-hidden rounded-lg border border-border/60 bg-background transition hover:border-primary/60"
+																	className="group flex items-center gap-2 rounded-lg border border-border/60 bg-background px-3 py-2 transition hover:border-primary/60"
 																>
-																	<div className="relative flex h-28 items-center justify-center overflow-hidden bg-muted">
-																		{image ? (
-																			<>
-																				{/* eslint-disable-next-line @next/next/no-img-element -- Cloud R2 attachments lack Next.js loader configuration */}
-																				<img
-																					src={attachment.url}
-																					alt={attachmentDisplayName(attachment)}
-																					className="h-full w-full object-cover transition group-hover:scale-110"
-																					loading="lazy"
-																				/>
-																			</>
-																		) : (
-																			<FileIcon className="size-7 text-muted-foreground" />
-																		)}
-																	</div>
-																	<div className="px-3 py-2 text-xs text-muted-foreground">
+																	<FileIcon className="size-4 text-muted-foreground transition group-hover:text-primary" />
+																	<span className="truncate text-foreground group-hover:text-primary">
 																		{attachmentDisplayName(attachment)}
-																	</div>
+																	</span>
 																</a>
-															);
-														})}
-													</div>
+															</li>
+														))}
+													</ul>
 												) : null}
 											</li>
 										);
@@ -418,122 +402,122 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 								</Button>
 							</form>
 						</section>
-					</div>
+				</div>
 
-					<div className="space-y-6">
-						<section className="space-y-3">
-							<div className="flex items-start justify-between gap-3">
-								<h3 className="text-sm font-semibold">Załączniki</h3>
-								{attachmentError ? <span className="text-xs text-destructive">{attachmentError}</span> : null}
+				<div className="space-y-6">
+					<section className="space-y-3 rounded-xl border border-border/60 bg-muted/20 p-4">
+						<h3 className="text-sm font-semibold">Podsumowanie etapu</h3>
+						<dl className="grid gap-3 text-xs text-muted-foreground sm:grid-cols-2">
+							<div>
+								<dt className="font-medium text-foreground">Wszystkie zadania</dt>
+								<dd>{montage.tasks.length}</dd>
 							</div>
-							{montage.attachments.length === 0 ? (
-								<p className="text-xs text-muted-foreground">Brak załączonych materiałów.</p>
-							) : (
-								<div className="grid gap-3 text-sm sm:grid-cols-2">
-									{montage.attachments.map((attachment) => {
-										const image = isImageAttachment(attachment);
-										return (
-											<a
-												key={attachment.id}
-												href={attachment.url}
-												target="_blank"
-												rel="noopener noreferrer"
-												className="group flex flex-col overflow-hidden rounded-xl border border-border/60 bg-muted/20 transition hover:border-primary/60 hover:shadow-sm"
-											>
-												<div className="relative flex h-40 items-center justify-center overflow-hidden bg-background">
-													{image ? (
-														<>
-															{/* eslint-disable-next-line @next/next/no-img-element -- Cloud R2 attachments lack Next.js loader configuration */}
-															<img
-																src={attachment.url}
-																alt={attachmentDisplayName(attachment)}
-																className="h-full w-full object-cover transition group-hover:scale-105"
-																loading="lazy"
-															/>
-														</>
-													) : (
-														<div className="flex flex-col items-center gap-2 text-muted-foreground">
-															<FileIcon className="size-8" />
-															<span className="text-[11px] uppercase tracking-wide">
-																{attachment.url.split('.').pop()?.split('?')[0] ?? 'plik'}
-															</span>
-														</div>
-													)}
-												</div>
-												<div className="flex flex-1 flex-col gap-1 px-4 py-3 text-left">
-													<span className="wrap-break-word text-pretty font-medium text-primary">
-														{attachmentDisplayName(attachment)}
-													</span>
-													<p className="text-xs text-muted-foreground">
-														Dodano {formatTimestamp(attachment.createdAt)}
-														{attachment.uploader ? ` • ${attachment.uploader.name ?? attachment.uploader.email}` : ''}
-													</p>
-													{attachment.noteId ? (
-														<span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-															<PaperclipIcon className="size-3.5" />
-															Powiązano z notatką
-														</span>
-													) : null}
-												</div>
-											</a>
-										);
-									})}
-								</div>
-							)}
-							<form
-								onSubmit={submitAttachment}
-								className="flex flex-col gap-2 rounded-xl border border-dashed border-border/70 bg-muted/10 p-3 sm:flex-row sm:flex-wrap sm:items-center"
-							>
-								<Input
-									name="file"
-									type="file"
-									accept="image/*,application/pdf"
-									disabled={attachmentPending}
-									required
-									className="min-w-[220px] flex-1"
-								/>
-								<Input
-									name="title"
-									placeholder="Opis (opcjonalnie)"
-									value={attachmentTitle}
-									onChange={(event) => setAttachmentTitle(event.target.value)}
-									disabled={attachmentPending}
-									className="min-w-[180px] flex-1"
-								/>
-								<Button type="submit" size="sm" disabled={attachmentPending} className="sm:ml-auto">
-									{attachmentPending ? 'Dodawanie...' : 'Dodaj'}
-								</Button>
-							</form>
-							<p className="text-[11px] text-muted-foreground">
-								Pliki trafiają bezpośrednio do chmury R2 w katalogu przypisanym do klienta.
-							</p>
-						</section>
+							<div>
+								<dt className="font-medium text-foreground">Zadania wykonane</dt>
+								<dd>{completedTasks}</dd>
+							</div>
+							<div>
+								<dt className="font-medium text-foreground">Notatki</dt>
+								<dd>{montage.notes.length}</dd>
+							</div>
+							<div>
+								<dt className="font-medium text-foreground">Załączniki</dt>
+								<dd>{montage.attachments.length}</dd>
+							</div>
+						</dl>
+						<p className="text-xs text-muted-foreground">
+							Wszystkie zmiany zapisują się automatycznie po dodaniu lub aktualizacji danych.
+						</p>
+					</section>
 
-						<section className="space-y-3 rounded-xl border border-border/60 bg-muted/20 p-4">
-							<h3 className="text-sm font-semibold">Podsumowanie etapu</h3>
-							<dl className="grid gap-3 text-xs text-muted-foreground sm:grid-cols-2">
-								<div>
-									<dt className="font-medium text-foreground">Wszystkie zadania</dt>
-									<dd>{montage.tasks.length}</dd>
-								</div>
-								<div>
-									<dt className="font-medium text-foreground">Zadania wykonane</dt>
-									<dd>{completedTasks}</dd>
-								</div>
-								<div>
-									<dt className="font-medium text-foreground">Notatki</dt>
-									<dd>{montage.notes.length}</dd>
-								</div>
-								<div>
-									<dt className="font-medium text-foreground">Załączniki</dt>
-									<dd>{montage.attachments.length}</dd>
-								</div>
-							</dl>
-							<p className="text-xs text-muted-foreground">
-								Wszystkie zmiany zapisują się automatycznie po dodaniu lub aktualizacji danych.
-							</p>
-						</section>
-					</div>
+					<section className="space-y-3">
+						<div className="flex items-start justify-between gap-3">
+							<h3 className="text-sm font-semibold">Załączniki</h3>
+							{attachmentError ? <span className="text-xs text-destructive">{attachmentError}</span> : null}
+						</div>
+						{montage.attachments.length === 0 ? (
+							<p className="text-xs text-muted-foreground">Brak załączonych materiałów.</p>
+						) : (
+							<div className="grid gap-3 text-sm sm:grid-cols-2">
+								{montage.attachments.map((attachment) => {
+									const image = isImageAttachment(attachment);
+									return (
+										<a
+											key={attachment.id}
+											href={attachment.url}
+											target="_blank"
+											rel="noopener noreferrer"
+											className="group flex flex-col overflow-hidden rounded-xl border border-border/60 bg-muted/20 transition hover:border-primary/60 hover:shadow-sm"
+										>
+											<div className="relative flex h-40 items-center justify-center overflow-hidden bg-background">
+												{image ? (
+													<>
+														{/* eslint-disable-next-line @next/next/no-img-element -- Cloud R2 attachments lack Next.js loader configuration */}
+														<img
+															src={attachment.url}
+															alt={attachmentDisplayName(attachment)}
+															className="h-full w-full object-cover transition group-hover:scale-105"
+															loading="lazy"
+														/>
+													</>
+												) : (
+													<div className="flex flex-col items-center gap-2 text-muted-foreground">
+														<FileIcon className="size-8" />
+														<span className="text-[11px] uppercase tracking-wide">
+															{attachment.url.split('.').pop()?.split('?')[0] ?? 'plik'}
+														</span>
+													</div>
+												)}
+											</div>
+											<div className="flex flex-1 flex-col gap-1 px-4 py-3 text-left">
+												<span className="wrap-break-word text-pretty font-medium text-primary">
+													{attachmentDisplayName(attachment)}
+												</span>
+												<p className="text-xs text-muted-foreground">
+													Dodano {formatTimestamp(attachment.createdAt)}
+													{attachment.uploader ? ` • ${attachment.uploader.name ?? attachment.uploader.email}` : ''}
+												</p>
+												{attachment.noteId ? (
+													<span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+														<PaperclipIcon className="size-3.5" />
+														Powiązano z notatką
+													</span>
+												) : null}
+											</div>
+										</a>
+									);
+								})}
+							</div>
+						)}
+						<form
+							onSubmit={submitAttachment}
+							className="flex flex-col gap-2 rounded-xl border border-dashed border-border/70 bg-muted/10 p-3 sm:flex-row sm:flex-wrap sm:items-center"
+						>
+							<Input
+								name="file"
+								type="file"
+								accept="image/*,application/pdf"
+								disabled={attachmentPending}
+								required
+								className="min-w-[220px] flex-1"
+							/>
+							<Input
+								name="title"
+								placeholder="Opis (opcjonalnie)"
+								value={attachmentTitle}
+								onChange={(event) => setAttachmentTitle(event.target.value)}
+								disabled={attachmentPending}
+								className="min-w-[180px] flex-1"
+							/>
+							<Button type="submit" size="sm" disabled={attachmentPending} className="sm:ml-auto">
+								{attachmentPending ? 'Dodawanie...' : 'Dodaj'}
+							</Button>
+						</form>
+						<p className="text-[11px] text-muted-foreground">
+							Pliki trafiają bezpośrednio do chmury R2 w katalogu przypisanym do klienta.
+						</p>
+					</section>
+				</div>
 				</div>
 			</CardContent>
 		</Card>
