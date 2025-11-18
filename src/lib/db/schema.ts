@@ -417,6 +417,9 @@ export const montageAttachments = sqliteTable(
 		montageId: text('montage_id')
 			.notNull()
 			.references(() => montages.id, { onDelete: 'cascade' }),
+		noteId: text('note_id').references(() => montageNotes.id, {
+			onDelete: 'set null',
+		}),
 		title: text('title'),
 		url: text('url').notNull(),
 		uploadedBy: text('uploaded_by').references(() => users.id, { onDelete: 'set null' }),
@@ -426,6 +429,7 @@ export const montageAttachments = sqliteTable(
 	},
 	(table) => ({
 		montageIdx: index('montage_attachments_montage_id_idx').on(table.montageId),
+		noteIdx: index('montage_attachments_note_id_idx').on(table.noteId),
 		createdAtIdx: index('montage_attachments_created_at_idx').on(table.createdAt),
 	})
 );
@@ -459,7 +463,7 @@ export const montagesRelations = relations(montages, ({ many }) => ({
 	tasks: many(montageTasks),
 }));
 
-export const montageNotesRelations = relations(montageNotes, ({ one }) => ({
+export const montageNotesRelations = relations(montageNotes, ({ one, many }) => ({
 	montage: one(montages, {
 		fields: [montageNotes.montageId],
 		references: [montages.id],
@@ -468,6 +472,7 @@ export const montageNotesRelations = relations(montageNotes, ({ one }) => ({
 		fields: [montageNotes.createdBy],
 		references: [users.id],
 	}),
+	attachments: many(montageAttachments),
 }));
 
 export const montageAttachmentsRelations = relations(montageAttachments, ({ one }) => ({
@@ -478,6 +483,10 @@ export const montageAttachmentsRelations = relations(montageAttachments, ({ one 
 	uploader: one(users, {
 		fields: [montageAttachments.uploadedBy],
 		references: [users.id],
+	}),
+	note: one(montageNotes, {
+		fields: [montageAttachments.noteId],
+		references: [montageNotes.id],
 	}),
 }));
 

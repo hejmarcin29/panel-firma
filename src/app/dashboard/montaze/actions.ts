@@ -18,6 +18,65 @@ import { uploadMontageObject } from '@/lib/r2/storage';
 const MONTAGE_DASHBOARD_PATH = '/dashboard/montaze';
 const MAX_ATTACHMENT_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
 
+async function getMontageOrThrow(montageId: string) {
+	const montageRecord = await db.query.montages.findFirst({
+		where: (table, { eq }) => eq(table.id, montageId),
+	});
+
+	if (!montageRecord) {
+		throw new Error('Nie znaleziono montaży.');
+	}
+
+	return montageRecord;
+}
+
+function ensureValidAttachmentFile(file: File) {
+	if (!(file instanceof File)) {
+		throw new Error('Wybierz plik do przesłania.');
+	}
+
+	if (file.size === 0) {
+		throw new Error('Plik jest pusty.');
+	}
+
+	if (file.size > MAX_ATTACHMENT_SIZE_BYTES) {
+		throw new Error('Plik jest zbyt duży. Maksymalny rozmiar to 25 MB.');
+	}
+}
+
+async function createMontageAttachment({
+	montage,
+	file,
+	uploadedBy,
+	title,
+	noteId,
+}: {
+	montage: typeof montages.$inferSelect;
+	file: File;
+	uploadedBy: string;
+	title: string | null;
+	noteId?: string | null;
+}) {
+	ensureValidAttachmentFile(file);
+
+	const uploaded = await uploadMontageObject({
+		clientName: montage.clientName,
+		file,
+	});
+
+	const now = new Date();
+
+	await db.insert(montageAttachments).values({
+		id: crypto.randomUUID(),
+		montageId: montage.id,
+		noteId: noteId ?? null,
+		title,
+		url: uploaded.url,
+		uploadedBy,
+		createdAt: now,
+	});
+}
+
 function ensureStatus(value: string): MontageStatus {
 	if ((montageStatuses as readonly string[]).includes(value)) {
 		return value as MontageStatus;
@@ -80,85 +139,51 @@ export async function updateMontageStatus({ montageId, status }: UpdateMontageSt
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
 
-type AddMontageNoteInput = {
-	montageId: string;
-	content: string;
-};
-
-export async function addMontageNote({ montageId, content }: AddMontageNoteInput) {
+export async function addMontageNote(formData: FormData) {
 	const user = await requireUser();
-	const trimmed = content.trim();
 
-	if (!trimmed) {
-		throw new Error('Notatka nie może być pusta.');
-	}
+const montageIdRaw = formData.get('montageId');
+const contentRaw = formData.get('content');
+const attachmentTitleRaw = formData.get('attachmentTitle');
+const fileField = formData.get('attachment');
 
-	const now = new Date();
+const montageId = typeof montageIdRaw === 'string' ? montageIdRaw.trim() : '';
+const content = typeof contentRaw === 'string' ? contentRaw.trim() : '';
+const attachmentTitle = typeof attachmentTitleRaw === 'string' ? attachmentTitleRaw.trim() : '';
 
-	await db.insert(montageNotes).values({
-		id: crypto.randomUUID(),
-		montageId,
-		content: trimmed,
-		createdBy: user.id,
-		createdAt: now,
-	});
-
-	await touchMontage(montageId);
-	revalidatePath(MONTAGE_DASHBOARD_PATH);
+if (!montageId) {
+	throw new Error('Brakuje identyfikatora montaży.');
 }
 
-export async function addMontageAttachment(formData: FormData) {
-	const user = await requireUser();
+if (!content) {
+	throw new Error('Notatka nie może być pusta.');
+}
 
-	const montageIdRaw = formData.get('montageId');
-	const titleRaw = formData.get('title');
-	const fileField = formData.get('file');
+const montageRecord = await getMontageOrThrow(montageId);
 
-	const montageId = typeof montageIdRaw === 'string' ? montageIdRaw.trim() : '';
-	const title = typeof titleRaw === 'string' ? titleRaw.trim() : '';
+const now = new Date();
+const noteId = crypto.randomUUID();
 
-	if (!montageId) {
-		throw new Error('Brakuje identyfikatora montaży.');
-	}
+await db.insert(montageNotes).values({
+	id: noteId,
+	montageId: montageRecord.id,
+	content,
+	createdBy: user.id,
+	createdAt: now,
+});
 
-	if (!(fileField instanceof File)) {
-		throw new Error('Wybierz plik do przesłania.');
-	}
-
-	if (fileField.size === 0) {
-		throw new Error('Plik jest pusty.');
-	}
-
-	if (fileField.size > MAX_ATTACHMENT_SIZE_BYTES) {
-		throw new Error('Plik jest zbyt duży. Maksymalny rozmiar to 25 MB.');
-	}
-
-	const montageRecord = await db.query.montages.findFirst({
-		where: (table, { eq }) => eq(table.id, montageId),
-	});
-
-	if (!montageRecord) {
-		throw new Error('Nie znaleziono montaży.');
-	}
-
-	const uploaded = await uploadMontageObject({
-		clientName: montageRecord.clientName,
+if (fileField instanceof File && fileField.size > 0) {
+	await createMontageAttachment({
+		montage: montageRecord,
 		file: fileField,
-	});
-
-	const now = new Date();
-
-	await db.insert(montageAttachments).values({
-		id: crypto.randomUUID(),
-		montageId: montageRecord.id,
-		title: title ? title : null,
-		url: uploaded.url,
 		uploadedBy: user.id,
-		createdAt: now,
+		title: attachmentTitle ? attachmentTitle : null,
+		noteId,
 	});
+}
 
-	await touchMontage(montageRecord.id);
-	revalidatePath(MONTAGE_DASHBOARD_PATH);
+await touchMontage(montageRecord.id);
+revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
 
 type AddMontageTaskInput = {
@@ -205,5 +230,39 @@ export async function toggleMontageTask({ taskId, montageId, completed }: Toggle
 		.where(and(eq(montageTasks.id, taskId), eq(montageTasks.montageId, montageId)));
 
 	await touchMontage(montageId);
+	revalidatePath(MONTAGE_DASHBOARD_PATH);
+}
+
+export async function addMontageAttachment(formData: FormData) {
+	const user = await requireUser();
+
+	const montageIdRaw = formData.get('montageId');
+	const titleRaw = formData.get('title');
+	const noteIdRaw = formData.get('noteId');
+	const fileField = formData.get('file');
+
+	const montageId = typeof montageIdRaw === 'string' ? montageIdRaw.trim() : '';
+	const title = typeof titleRaw === 'string' ? titleRaw.trim() : '';
+	const noteId = typeof noteIdRaw === 'string' ? noteIdRaw.trim() : '';
+
+	if (!montageId) {
+		throw new Error('Brakuje identyfikatora montaży.');
+	}
+
+	if (!(fileField instanceof File)) {
+		throw new Error('Wybierz plik do przesłania.');
+	}
+
+	const montageRecord = await getMontageOrThrow(montageId);
+
+	await createMontageAttachment({
+		montage: montageRecord,
+		file: fileField,
+		uploadedBy: user.id,
+		title: title ? title : null,
+		noteId: noteId || null,
+	});
+
+	await touchMontage(montageRecord.id);
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 }

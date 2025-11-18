@@ -54,6 +54,12 @@ export default async function MontazePage() {
                 orderBy: desc(montageNotes.createdAt),
                 with: {
                     author: true,
+                    attachments: {
+                        orderBy: desc(montageAttachments.createdAt),
+                        with: {
+                            uploader: true,
+                        },
+                    },
                 },
             },
             tasks: {
@@ -88,12 +94,27 @@ export default async function MontazePage() {
                       email: note.author.email,
                   }
                 : null,
+            attachments: note.attachments?.map((attachment) => ({
+                id: attachment.id,
+                title: attachment.title ?? null,
+                url: attachment.url,
+                createdAt: attachment.createdAt,
+                noteId: attachment.noteId ?? null,
+                uploader: attachment.uploader
+                    ? {
+                          id: attachment.uploader.id,
+                          name: attachment.uploader.name ?? null,
+                          email: attachment.uploader.email,
+                      }
+                    : null,
+            })) ?? [],
         })),
         attachments: row.attachments.map((attachment) => ({
             id: attachment.id,
             title: attachment.title ?? null,
             url: attachment.url,
             createdAt: attachment.createdAt,
+            noteId: attachment.noteId ?? null,
             uploader: attachment.uploader
                 ? {
                       id: attachment.uploader.id,
