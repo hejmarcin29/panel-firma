@@ -16,6 +16,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { tryGetR2Config } from '@/lib/r2/config';
 
 const statusLabels: Record<MontageStatus, { label: string; description: string }> = {
     lead: {
@@ -46,7 +47,36 @@ const statusOptions = montageStatuses.map((value) => ({
     description: statusLabels[value].description,
 }));
 
+function normalizeAttachmentUrl(rawUrl: string, publicBaseUrl: string | null): string {
+    if (!publicBaseUrl) {
+        return rawUrl;
+    }
+
+    try {
+        const candidate = new URL(rawUrl);
+        const base = new URL(publicBaseUrl.endsWith('/') ? publicBaseUrl : `${publicBaseUrl}/`);
+
+        const sameHost = candidate.host === base.host;
+        const basePath = base.pathname.endsWith('/') ? base.pathname : `${base.pathname}/`;
+        const alreadyNormalized = sameHost && candidate.pathname.startsWith(basePath);
+        if (alreadyNormalized) {
+            return rawUrl;
+        }
+
+        const normalizedPath = candidate.pathname.replace(/^\/+/, '');
+        const resolved = new URL(normalizedPath, base);
+        resolved.search = candidate.search;
+        resolved.hash = candidate.hash;
+        return resolved.toString();
+    } catch {
+        return rawUrl;
+    }
+}
+
 export default async function MontazePage() {
+    const r2Config = await tryGetR2Config();
+    const publicBaseUrl = r2Config?.publicBaseUrl ?? null;
+
     const montageRows = await db.query.montages.findMany({
         orderBy: desc(montages.updatedAt),
         with: {
@@ -97,7 +127,7 @@ export default async function MontazePage() {
             attachments: note.attachments?.map((attachment) => ({
                 id: attachment.id,
                 title: attachment.title ?? null,
-                url: attachment.url,
+                url: normalizeAttachmentUrl(attachment.url, publicBaseUrl),
                 createdAt: attachment.createdAt,
                 noteId: attachment.noteId ?? null,
                 uploader: attachment.uploader
@@ -112,7 +142,7 @@ export default async function MontazePage() {
         attachments: row.attachments.map((attachment) => ({
             id: attachment.id,
             title: attachment.title ?? null,
-            url: attachment.url,
+            url: normalizeAttachmentUrl(attachment.url, publicBaseUrl),
             createdAt: attachment.createdAt,
             noteId: attachment.noteId ?? null,
             uploader: attachment.uploader
