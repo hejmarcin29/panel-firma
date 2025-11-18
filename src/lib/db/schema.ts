@@ -377,6 +377,7 @@ export const montages = sqliteTable(
 		contactPhone: text('contact_phone'),
 		contactEmail: text('contact_email'),
 		address: text('address'),
+		materialDetails: text('material_details'),
 		status: text('status').$type<MontageStatus>().notNull().default('lead'),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' })
 			.notNull()
@@ -434,6 +435,38 @@ export const montageAttachments = sqliteTable(
 	})
 );
 
+export const montageChecklistItems = sqliteTable(
+	'montage_checklist_items',
+	{
+		id: text('id').primaryKey(),
+		montageId: text('montage_id')
+			.notNull()
+			.references(() => montages.id, { onDelete: 'cascade' }),
+		templateId: text('template_id').notNull(),
+		label: text('label').notNull(),
+		allowAttachment: integer('allow_attachment', { mode: 'boolean' })
+			.notNull()
+			.default(false),
+		attachmentId: text('attachment_id').references(() => montageAttachments.id, {
+			onDelete: 'set null',
+		}),
+		completed: integer('completed', { mode: 'boolean' })
+			.notNull()
+			.default(false),
+		orderIndex: integer('order_index', { mode: 'number' }).notNull(),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	},
+	(table) => ({
+		montageIdx: index('montage_checklist_items_montage_id_idx').on(table.montageId),
+		completedIdx: index('montage_checklist_items_completed_idx').on(table.completed),
+	})
+);
+
 export const montageTasks = sqliteTable(
 	'montage_tasks',
 	{
@@ -460,6 +493,7 @@ export const montageTasks = sqliteTable(
 export const montagesRelations = relations(montages, ({ many }) => ({
 	notes: many(montageNotes),
 	attachments: many(montageAttachments),
+	checklistItems: many(montageChecklistItems),
 	tasks: many(montageTasks),
 }));
 
@@ -487,6 +521,17 @@ export const montageAttachmentsRelations = relations(montageAttachments, ({ one 
 	note: one(montageNotes, {
 		fields: [montageAttachments.noteId],
 		references: [montageNotes.id],
+	}),
+}));
+
+export const montageChecklistItemsRelations = relations(montageChecklistItems, ({ one }) => ({
+	montage: one(montages, {
+		fields: [montageChecklistItems.montageId],
+		references: [montages.id],
+	}),
+	attachment: one(montageAttachments, {
+		fields: [montageChecklistItems.attachmentId],
+		references: [montageAttachments.id],
 	}),
 }));
 

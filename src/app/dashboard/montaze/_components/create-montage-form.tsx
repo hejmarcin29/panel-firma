@@ -14,6 +14,7 @@ type FormState = {
 	contactPhone: string;
 	contactEmail: string;
 	address: string;
+	materialDetails: string;
 };
 
 const initialState: FormState = {
@@ -21,6 +22,7 @@ const initialState: FormState = {
 	contactPhone: '',
 	contactEmail: '',
 	address: '',
+	materialDetails: '',
 };
 
 export function CreateMontageForm() {
@@ -48,6 +50,7 @@ export function CreateMontageForm() {
 					contactPhone: form.contactPhone,
 					contactEmail: form.contactEmail,
 					address: form.address,
+					materialDetails: form.materialDetails,
 				});
 				setForm(initialState);
 				setFeedback('Dodano nowy montaż.');
@@ -110,6 +113,18 @@ export function CreateMontageForm() {
 					value={form.address}
 					onChange={handleInputChange('address')}
 					placeholder="Dodatkowe informacje o montażu"
+					rows={3}
+				/>
+			</div>
+			<div>
+				<label htmlFor="montage-material" className="block text-sm font-medium text-foreground">
+					Materiały i ilości
+				</label>
+				<Textarea
+					id="montage-material"
+					value={form.materialDetails}
+					onChange={handleInputChange('materialDetails')}
+					placeholder="np. Rolety dzień-noc — 4 szt., Markiza tarasowa — 1 szt."
 					rows={3}
 				/>
 			</div>

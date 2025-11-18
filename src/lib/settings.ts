@@ -19,6 +19,7 @@ export const appSettingKeys = {
 	r2Endpoint: 'r2.endpoint',
 	r2ApiToken: 'r2.api_token',
 	r2PublicBaseUrl: 'r2.public_base_url',
+	montageChecklist: 'montage.checklist',
 } as const;
 
 export type AppSettingKey = (typeof appSettingKeys)[keyof typeof appSettingKeys];

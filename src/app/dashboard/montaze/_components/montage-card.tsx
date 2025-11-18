@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useTransition, type ElementType, type FormEvent } from 'react';
+import { useEffect, useState, useTransition, type ChangeEvent, type ElementType, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { CheckCircle2Icon, ClockIcon, FileIcon, MessageSquareIcon, PaperclipIcon } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -19,8 +19,11 @@ import {
 	addMontageAttachment,
 	addMontageNote,
 	addMontageTask,
+	toggleMontageChecklistItem,
 	toggleMontageTask,
+	updateMontageMaterialDetails,
 	updateMontageStatus,
+	uploadChecklistAttachment,
 } from '../actions';
 import type { MontageStatus } from '@/lib/db/schema';
 
@@ -58,17 +61,31 @@ export type MontageTask = {
 	updatedAt: TimestampValue;
 };
 
+export type MontageChecklistItem = {
+	id: string;
+	templateId: string;
+	label: string;
+	allowAttachment: boolean;
+	completed: boolean;
+	orderIndex: number;
+	createdAt: TimestampValue;
+	updatedAt: TimestampValue;
+	attachment: MontageAttachment | null;
+};
+
 export type Montage = {
 	id: string;
 	clientName: string;
 	contactPhone: string | null;
 	contactEmail: string | null;
 	address: string | null;
+	materialDetails: string | null;
 	status: MontageStatus;
 	createdAt: TimestampValue;
 	updatedAt: TimestampValue;
 	notes: MontageNote[];
 	attachments: MontageAttachment[];
+	checklistItems: MontageChecklistItem[];
 	tasks: MontageTask[];
 };
 export type StatusOption = {
@@ -115,7 +132,7 @@ function attachmentDisplayName(attachment: MontageAttachment) {
 	return segments[segments.length - 1] ?? url;
 }
 
-type TimelineEventType = 'note' | 'attachment' | 'task' | 'task-completed';
+type TimelineEventType = 'note' | 'attachment' | 'task' | 'task-completed' | 'milestone';
 
 type TimelineEvent = {
 	id: string;
@@ -149,16 +166,35 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 	const [notePending, startNoteTransition] = useTransition();
 	const [taskPending, startTaskTransition] = useTransition();
 	const [attachmentPending, startAttachmentTransition] = useTransition();
+	const [materialsPending, startMaterialsTransition] = useTransition();
+	const [checklistPending, startChecklistTransition] = useTransition();
+	const [checklistAttachmentPending, startChecklistAttachmentTransition] = useTransition();
 	const [noteError, setNoteError] = useState<string | null>(null);
 	const [taskError, setTaskError] = useState<string | null>(null);
 	const [attachmentError, setAttachmentError] = useState<string | null>(null);
+	const [checklistError, setChecklistError] = useState<string | null>(null);
+	const [checklistPendingId, setChecklistPendingId] = useState<string | null>(null);
+	const [checklistAttachmentError, setChecklistAttachmentError] = useState<{ id: string; message: string } | null>(null);
+	const [checklistAttachmentPendingId, setChecklistAttachmentPendingId] = useState<string | null>(null);
 	const [noteContent, setNoteContent] = useState('');
 	const [noteAttachmentTitle, setNoteAttachmentTitle] = useState('');
 	const [taskTitle, setTaskTitle] = useState('');
 	const [attachmentTitle, setAttachmentTitle] = useState('');
+	const [materialsDraft, setMaterialsDraft] = useState(montage.materialDetails ?? '');
+	const [materialsError, setMaterialsError] = useState<string | null>(null);
+	const [materialsFeedback, setMaterialsFeedback] = useState<string | null>(null);
+
 	const completedTasks = montage.tasks.filter((task) => task.completed).length;
 	const totalTasks = montage.tasks.length;
 	const openTasks = Math.max(totalTasks - completedTasks, 0);
+	const totalChecklistItems = montage.checklistItems.length;
+	const completedChecklistItems = montage.checklistItems.filter((item) => item.completed).length;
+	const currentStatusOption = statusOptions.find((option) => option.value === montage.status) ?? null;
+	const checklistProgressLabel = totalChecklistItems > 0 ? `${completedChecklistItems}/${totalChecklistItems}` : '0/0';
+
+	useEffect(() => {
+		setMaterialsDraft(montage.materialDetails ?? '');
+	}, [montage.materialDetails]);
 
 	const timelineEvents: TimelineEvent[] = [
 		...montage.notes.map((note) => ({
@@ -182,6 +218,15 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 			label: task.completed ? 'Zadanie zrealizowane' : 'Aktualizacja zadania',
 			description: previewText(task.title, 80),
 		})),
+		...montage.checklistItems
+			.filter((item) => item.completed)
+			.map((item) => ({
+				id: `checklist-${item.id}`,
+				type: 'milestone' as const,
+				timestamp: item.updatedAt,
+				label: 'Zamknięto etap',
+				description: previewText(item.label, 80),
+			})),
 	]
 		.filter((event) => Boolean(event.timestamp))
 		.sort((a, b) => getTimeValue(b.timestamp) - getTimeValue(a.timestamp))
@@ -192,6 +237,7 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 		attachment: { icon: PaperclipIcon, className: 'bg-amber-500/15 text-amber-600 dark:text-amber-200' },
 		task: { icon: ClockIcon, className: 'bg-sky-500/15 text-sky-600 dark:text-sky-300' },
 		'task-completed': { icon: CheckCircle2Icon, className: 'bg-emerald-500/15 text-emerald-500' },
+		milestone: { icon: CheckCircle2Icon, className: 'bg-violet-500/15 text-violet-600 dark:text-violet-200' },
 	};
 
 	const latestActivityTimestamp = timelineEvents[0]?.timestamp ?? montage.updatedAt;
@@ -203,6 +249,80 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 				router.refresh();
 			} catch (error) {
 				console.error(error);
+			}
+		});
+	};
+
+	const handleMaterialsChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
+		setMaterialsDraft(event.target.value);
+		if (materialsFeedback) {
+			setMaterialsFeedback(null);
+		}
+		if (materialsError) {
+			setMaterialsError(null);
+		}
+	};
+
+	const submitMaterials = (event: FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+		setMaterialsError(null);
+		setMaterialsFeedback(null);
+
+		const value = materialsDraft;
+
+		startMaterialsTransition(async () => {
+			try {
+				await updateMontageMaterialDetails({ montageId: montage.id, materialDetails: value });
+				setMaterialsFeedback('Zapisano informacje o materiałach.');
+				router.refresh();
+			} catch (error) {
+				const message =
+					error instanceof Error ? error.message : 'Nie udało się zapisać informacji o materiałach.';
+				setMaterialsError(message);
+			}
+		});
+	};
+
+	const handleChecklistToggle = (itemId: string, nextValue: boolean) => {
+		setChecklistError(null);
+		setChecklistPendingId(itemId);
+
+		startChecklistTransition(async () => {
+			try {
+				await toggleMontageChecklistItem({ montageId: montage.id, itemId, completed: nextValue });
+				router.refresh();
+			} catch (error) {
+				const message =
+					error instanceof Error ? error.message : 'Nie udało się zaktualizować listy kontrolnej.';
+				setChecklistError(message);
+			} finally {
+				setChecklistPendingId(null);
+			}
+		});
+	};
+
+	const submitChecklistAttachment = (itemId: string) => (event: FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+		setChecklistAttachmentError(null);
+
+		const form = event.currentTarget;
+		const formData = new FormData(form);
+		formData.set('montageId', montage.id);
+		formData.set('itemId', itemId);
+
+		setChecklistAttachmentPendingId(itemId);
+
+		startChecklistAttachmentTransition(async () => {
+			try {
+				await uploadChecklistAttachment(formData);
+				form.reset();
+				router.refresh();
+			} catch (error) {
+				const message =
+					error instanceof Error ? error.message : 'Nie udało się dodać załącznika.';
+				setChecklistAttachmentError({ id: itemId, message });
+			} finally {
+				setChecklistAttachmentPendingId(null);
 			}
 		});
 	};
@@ -291,14 +411,14 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 
 	return (
 		<Card className="h-full border bg-background shadow-sm sm:rounded-2xl">
-			<CardHeader className="gap-6 border-b border-border/60 pb-8">
-				<div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
-					<div className="space-y-4">
+			<CardHeader className="space-y-8 border-b border-border/60 pb-8">
+				<div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
+					<div className="space-y-6">
 						<div className="space-y-2">
 							<CardTitle className="text-2xl font-semibold text-foreground lg:text-3xl">
 								{montage.clientName}
 							</CardTitle>
-							<CardDescription className="text-sm">
+							<CardDescription className="text-sm text-muted-foreground">
 								Utworzono {formatTimestamp(montage.createdAt)} • Aktualizacja {formatTimestamp(montage.updatedAt)}
 							</CardDescription>
 							{montage.address ? (
@@ -319,15 +439,48 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 								</div>
 							) : null}
 						</div>
+						<form onSubmit={submitMaterials} className="space-y-3 rounded-xl border border-border/60 bg-muted/10 p-4">
+							<div className="flex flex-wrap items-center justify-between gap-3">
+								<div className="space-y-1">
+									<Label className="text-xs uppercase tracking-wide text-muted-foreground">Materiały i ilości</Label>
+									<p className="text-xs text-muted-foreground">
+										Zapisz co zostało zamówione, aby ekipa była gotowa do montażu.
+									</p>
+								</div>
+								{materialsFeedback ? <span className="text-xs text-emerald-600">{materialsFeedback}</span> : null}
+							</div>
+							<Textarea
+								value={materialsDraft}
+								onChange={handleMaterialsChange}
+								placeholder="np. Rolety dzień-noc — 4 szt., Markiza tarasowa — 1 szt."
+								rows={3}
+								disabled={materialsPending}
+							/>
+							<div className="flex flex-wrap items-center justify-between gap-3">
+								{materialsError ? (
+									<span className="text-xs text-destructive">{materialsError}</span>
+								) : (
+									<span className="text-xs text-muted-foreground">Informacja widoczna dla całego zespołu.</span>
+								)}
+								<Button type="submit" size="sm" disabled={materialsPending}>
+									{materialsPending ? 'Zapisywanie...' : 'Zapisz materiały'}
+								</Button>
+							</div>
+						</form>
 					</div>
-					<div className="flex flex-col items-start gap-2 sm:items-end">
-						<Label className="text-xs uppercase tracking-wide text-muted-foreground">Status</Label>
+					<div className="flex flex-col items-start gap-3 sm:items-end">
+						{currentStatusOption ? (
+							<Badge variant="secondary" className="rounded-full px-3 py-1 text-[11px] uppercase tracking-wide text-muted-foreground">
+								{currentStatusOption.label}
+							</Badge>
+						) : null}
+						<Label className="text-xs uppercase tracking-wide text-muted-foreground">Status pipeline</Label>
 						<Select
 							defaultValue={montage.status}
 							onValueChange={(value) => handleStatusChange(value as MontageStatus)}
 							disabled={statusPending}
 						>
-							<SelectTrigger className="min-w-[220px]" aria-label="Zmień status montaży">
+							<SelectTrigger className="min-w-[240px]" aria-label="Zmień status montaży">
 								<SelectValue placeholder="Wybierz status" />
 							</SelectTrigger>
 							<SelectContent className="max-h-[340px]">
@@ -355,31 +508,29 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 						<p className="text-xs text-muted-foreground">Pliki w chmurze</p>
 					</div>
 					<div className="rounded-xl border border-border/60 bg-muted/20 px-4 py-3">
-						<p className="text-[11px] uppercase tracking-wide text-muted-foreground">Zadania</p>
-						<p className="text-xl font-semibold text-foreground">
-							{completedTasks}/{totalTasks}
-						</p>
-						<p className="text-xs text-muted-foreground">Ukończone zadań</p>
+						<p className="text-[11px] uppercase tracking-wide text-muted-foreground">Lista kontrolna</p>
+						<p className="text-xl font-semibold text-foreground">{checklistProgressLabel}</p>
+						<p className="text-xs text-muted-foreground">Zadania: {completedTasks}/{totalTasks}</p>
 					</div>
 					<div className="rounded-xl border border-border/60 bg-muted/20 px-4 py-3">
 						<p className="text-[11px] uppercase tracking-wide text-muted-foreground">Ostatnia aktywność</p>
 						<p className="text-sm font-medium text-foreground">{formatTimestamp(latestActivityTimestamp)}</p>
-						<p className="text-xs text-muted-foreground">Automatycznie odświeżane</p>
+						<p className="text-xs text-muted-foreground">Automatycznie aktualizowane</p>
 					</div>
 				</div>
-				<div className="space-y-2">
+				<div className="space-y-3">
 					<p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Oś aktywności</p>
 					{timelineEvents.length === 0 ? (
 						<p className="text-sm text-muted-foreground">Brak zarejestrowanej aktywności dla tego montażu.</p>
 					) : (
-						<div className="flex gap-3 overflow-x-auto pb-2">
+						<ul className="space-y-3">
 							{timelineEvents.map((event) => {
 								const visuals = timelineVisuals[event.type];
 								const Icon = visuals.icon;
 								return (
-									<div
+									<li
 										key={event.id}
-										className="flex min-w-[220px] items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3"
+										className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3"
 									>
 										<div className={cn('flex h-9 w-9 items-center justify-center rounded-full', visuals.className)}>
 											<Icon className="size-4" />
@@ -389,14 +540,101 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 											<p className="text-sm text-foreground">{event.description}</p>
 											<p className="text-[11px] text-muted-foreground">{formatTimestamp(event.timestamp)}</p>
 										</div>
-									</div>
+									</li>
 								);
 							})}
-						</div>
+						</ul>
 					)}
 				</div>
 			</CardHeader>
-			<CardContent className="flex-1 space-y-8 pb-32 pt-0">
+			<CardContent className="space-y-8 pb-10 pt-0">
+				<section className="space-y-4 rounded-2xl border border-border/60 bg-muted/10 p-5">
+					<div className="flex flex-wrap items-center justify-between gap-3">
+						<h3 className="text-sm font-semibold text-foreground">Lista kontrolna montażu</h3>
+						<div className="text-xs text-muted-foreground">{checklistProgressLabel} etapów zamkniętych</div>
+					</div>
+					{checklistError ? <span className="text-xs text-destructive">{checklistError}</span> : null}
+					{montage.checklistItems.length === 0 ? (
+						<p className="text-sm text-muted-foreground">Brak pozycji na liście kontrolnej. Dodaj je w ustawieniach panelu.</p>
+					) : (
+						<ul className="space-y-4">
+							{montage.checklistItems.map((item) => (
+								<li key={item.id} className="space-y-4 rounded-2xl border border-border/60 bg-background p-4 shadow-sm">
+									<div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+										<label className="flex items-start gap-3 text-sm font-medium text-foreground">
+											<Checkbox
+												checked={item.completed}
+												onCheckedChange={(value) => handleChecklistToggle(item.id, Boolean(value))}
+												disabled={checklistPending || checklistPendingId === item.id}
+											/>
+											<div className="space-y-1">
+												<p>{item.label}</p>
+												{item.allowAttachment ? (
+													<span className="text-xs text-muted-foreground">Załącznik potwierdzający etap jest dostępny.</span>
+												) : null}
+											</div>
+										</label>
+										<div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+											<span>Aktualizacja: {formatTimestamp(item.updatedAt)}</span>
+											{item.completed ? <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-emerald-700">Zakończono</span> : null}
+										</div>
+									</div>
+									{item.allowAttachment ? (
+										<div className="space-y-3 rounded-xl border border-dashed border-border/70 bg-muted/10 p-4">
+											{item.attachment ? (
+												<a
+													href={item.attachment.url}
+													target="_blank"
+													rel="noopener noreferrer"
+													className="group flex items-center gap-2 rounded-lg border border-border/60 bg-background px-3 py-2 text-sm transition hover:border-primary/60"
+												>
+													<FileIcon className="size-4 text-muted-foreground transition group-hover:text-primary" />
+													<span className="truncate text-foreground group-hover:text-primary">
+														{attachmentDisplayName(item.attachment)}
+													</span>
+												</a>
+											) : (
+												<p className="text-xs text-muted-foreground">Brak załącznika dla tego etapu.</p>
+											)}
+											<form onSubmit={submitChecklistAttachment(item.id)} className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+												<input type="hidden" name="montageId" defaultValue={montage.id} />
+												<input type="hidden" name="itemId" defaultValue={item.id} />
+												<Input
+													name="file"
+													type="file"
+													accept="image/*,application/pdf"
+													required
+													disabled={checklistAttachmentPending && checklistAttachmentPendingId === item.id}
+													className="flex-1"
+												/>
+												<Input
+													name="title"
+													placeholder="Opis (opcjonalnie)"
+													disabled={checklistAttachmentPending && checklistAttachmentPendingId === item.id}
+													className="flex-1"
+												/>
+												<Button
+													type="submit"
+													size="sm"
+													disabled={checklistAttachmentPending && checklistAttachmentPendingId === item.id}
+												>
+													{checklistAttachmentPending && checklistAttachmentPendingId === item.id
+														? 'Wysyłanie...'
+														: item.attachment
+															? 'Zmień załącznik'
+															: 'Dodaj załącznik'}
+												</Button>
+											</form>
+											{checklistAttachmentError?.id === item.id ? (
+												<span className="text-xs text-destructive">{checklistAttachmentError.message}</span>
+											) : null}
+										</div>
+									) : null}
+								</li>
+							))}
+						</ul>
+					)}
+				</section>
 				<Tabs defaultValue="notes" className="flex flex-col gap-6">
 					<div className="flex flex-wrap items-center justify-between gap-3">
 						<TabsList>
@@ -415,6 +653,7 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 						</TabsList>
 						<div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
 							<span>Do wykonania: {openTasks}</span>
+							<span>Checklist: {checklistProgressLabel}</span>
 							<span>Załączników: {montage.attachments.length}</span>
 						</div>
 					</div>
@@ -543,20 +782,18 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 						</form>
 					</TabsContent>
 				</Tabs>
-			</CardContent>
-			<CardFooter className="sticky bottom-0 z-20 flex-col gap-4 border-t border-border/60 bg-background/95 px-6 py-6 backdrop-blur !items-start">
-				<div className="flex w-full flex-wrap items-center justify-between gap-3">
-					<div>
-						<p className="text-xs uppercase tracking-wide text-muted-foreground">Załączniki</p>
-						<h3 className="text-base font-semibold text-foreground">Biblioteka klienta</h3>
+				<section className="space-y-4 rounded-2xl border border-border/60 bg-muted/5 p-5">
+					<div className="flex flex-wrap items-center justify-between gap-3">
+						<div>
+							<p className="text-xs uppercase tracking-wide text-muted-foreground">Załączniki</p>
+							<h3 className="text-base font-semibold text-foreground">Biblioteka klienta</h3>
+						</div>
+						{attachmentError ? <span className="text-xs text-destructive">{attachmentError}</span> : null}
 					</div>
-					{attachmentError ? <span className="text-xs text-destructive">{attachmentError}</span> : null}
-				</div>
-				{montage.attachments.length === 0 ? (
-					<p className="text-sm text-muted-foreground">Brak załączonych materiałów. Dodaj pierwszy plik, aby udostępnić ekipie.</p>
-				) : (
-					<div className="w-full overflow-x-auto pb-2">
-						<div className="flex gap-3">
+					{montage.attachments.length === 0 ? (
+						<p className="text-sm text-muted-foreground">Brak załączonych materiałów. Dodaj pierwszy plik, aby udostępnić ekipie.</p>
+					) : (
+						<div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
 							{montage.attachments.map((attachment) => {
 								const image = isImageAttachment(attachment);
 								return (
@@ -565,7 +802,7 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 										href={attachment.url}
 										target="_blank"
 										rel="noopener noreferrer"
-										className="group flex w-[220px] shrink-0 flex-col overflow-hidden rounded-2xl border border-border/60 bg-muted/10 transition hover:border-primary/60 hover:shadow-lg"
+										className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border/60 bg-muted/10 transition hover:border-primary/60 hover:shadow-lg"
 									>
 										<div className="relative h-36 overflow-hidden bg-background">
 											{image ? (
@@ -606,36 +843,36 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 								);
 							})}
 						</div>
-					</div>
-				)}
-				<form
-					onSubmit={submitAttachment}
-					className="flex w-full flex-col gap-3 rounded-2xl border border-dashed border-border/70 bg-muted/10 p-4 sm:flex-row sm:flex-wrap sm:items-center"
-				>
-					<Input
-						name="file"
-						type="file"
-						accept="image/*,application/pdf"
-						disabled={attachmentPending}
-						required
-						className="min-w-[220px] flex-1"
-					/>
-					<Input
-						name="title"
-						placeholder="Opis (opcjonalnie)"
-						value={attachmentTitle}
-						onChange={(event) => setAttachmentTitle(event.target.value)}
-						disabled={attachmentPending}
-						className="min-w-[180px] flex-1"
-					/>
-					<Button type="submit" size="sm" disabled={attachmentPending} className="sm:ml-auto">
-						{attachmentPending ? 'Dodawanie...' : 'Dodaj plik'}
-					</Button>
-				</form>
-				<p className="text-[11px] text-muted-foreground">
-					Pliki trafiają bezpośrednio do chmury R2 w katalogu przypisanym do klienta.
-				</p>
-			</CardFooter>
+					)}
+					<form
+						onSubmit={submitAttachment}
+						className="flex flex-col gap-3 rounded-2xl border border-dashed border-border/70 bg-muted/10 p-4 sm:flex-row sm:flex-wrap sm:items-center"
+					>
+						<Input
+							name="file"
+							type="file"
+							accept="image/*,application/pdf"
+							disabled={attachmentPending}
+							required
+							className="min-w-[220px] flex-1"
+						/>
+						<Input
+							name="title"
+							placeholder="Opis (opcjonalnie)"
+							value={attachmentTitle}
+							onChange={(event) => setAttachmentTitle(event.target.value)}
+							disabled={attachmentPending}
+							className="min-w-[180px] flex-1"
+						/>
+						<Button type="submit" size="sm" disabled={attachmentPending} className="sm:ml-auto">
+							{attachmentPending ? 'Dodawanie...' : 'Dodaj plik'}
+						</Button>
+					</form>
+					<p className="text-[11px] text-muted-foreground">
+						Pliki trafiają bezpośrednio do chmury R2 w katalogu przypisanym do klienta.
+					</p>
+				</section>
+			</CardContent>
 		</Card>
 	);
 }

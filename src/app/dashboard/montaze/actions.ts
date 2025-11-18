@@ -7,6 +7,7 @@ import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
 import {
 	montageAttachments,
+	montageChecklistItems,
 	montageNotes,
 	montageTasks,
 	montages,
@@ -14,6 +15,7 @@ import {
 	montageStatuses,
 } from '@/lib/db/schema';
 import { uploadMontageObject } from '@/lib/r2/storage';
+import { getMontageChecklistTemplates } from '@/lib/montaze/checklist';
 
 const MONTAGE_DASHBOARD_PATH = '/dashboard/montaze';
 const MAX_ATTACHMENT_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
@@ -56,7 +58,7 @@ async function createMontageAttachment({
 	uploadedBy: string;
 	title: string | null;
 	noteId?: string | null;
-}) {
+}): Promise<string> {
 	ensureValidAttachmentFile(file);
 
 	const uploaded = await uploadMontageObject({
@@ -65,9 +67,10 @@ async function createMontageAttachment({
 	});
 
 	const now = new Date();
+	const attachmentId = crypto.randomUUID();
 
 	await db.insert(montageAttachments).values({
-		id: crypto.randomUUID(),
+		id: attachmentId,
 		montageId: montage.id,
 		noteId: noteId ?? null,
 		title,
@@ -75,6 +78,8 @@ async function createMontageAttachment({
 		uploadedBy,
 		createdAt: now,
 	});
+
+	return attachmentId;
 }
 
 function ensureStatus(value: string): MontageStatus {
@@ -96,9 +101,10 @@ type CreateMontageInput = {
 	contactPhone?: string;
 	contactEmail?: string;
 	address?: string;
+	materialDetails?: string;
 };
 
-export async function createMontage({ clientName, contactPhone, contactEmail, address }: CreateMontageInput) {
+export async function createMontage({ clientName, contactPhone, contactEmail, address, materialDetails }: CreateMontageInput) {
 	await requireUser();
 
 	const trimmedName = clientName.trim();
@@ -107,17 +113,36 @@ export async function createMontage({ clientName, contactPhone, contactEmail, ad
 	}
 
 	const now = new Date();
+	const montageId = crypto.randomUUID();
+	const templates = await getMontageChecklistTemplates();
 
 	await db.insert(montages).values({
-		id: crypto.randomUUID(),
+		id: montageId,
 		clientName: trimmedName,
 		contactPhone: contactPhone?.trim() ?? null,
 		contactEmail: contactEmail?.trim() ?? null,
 		address: address?.trim() ?? null,
+		materialDetails: materialDetails?.trim() ? materialDetails.trim() : null,
 		status: 'lead',
 		createdAt: now,
 		updatedAt: now,
 	});
+
+	if (templates.length > 0) {
+		await db.insert(montageChecklistItems).values(
+			templates.map((template, index) => ({
+				id: crypto.randomUUID(),
+				montageId,
+				templateId: template.id,
+				label: template.label,
+				allowAttachment: template.allowAttachment,
+				completed: false,
+				orderIndex: index,
+				createdAt: now,
+				updatedAt: now,
+			}))
+		);
+	}
 
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
@@ -172,18 +197,18 @@ await db.insert(montageNotes).values({
 	createdAt: now,
 });
 
-if (fileField instanceof File && fileField.size > 0) {
-	await createMontageAttachment({
+	if (fileField instanceof File && fileField.size > 0) {
+		await createMontageAttachment({
 		montage: montageRecord,
 		file: fileField,
 		uploadedBy: user.id,
 		title: attachmentTitle ? attachmentTitle : null,
 		noteId,
-	});
-}
+		});
+	}
 
-await touchMontage(montageRecord.id);
-revalidatePath(MONTAGE_DASHBOARD_PATH);
+	await touchMontage(montageRecord.id);
+	revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
 
 type AddMontageTaskInput = {
@@ -264,5 +289,106 @@ export async function addMontageAttachment(formData: FormData) {
 	});
 
 	await touchMontage(montageRecord.id);
+	revalidatePath(MONTAGE_DASHBOARD_PATH);
+}
+
+type ToggleMontageChecklistInput = {
+	itemId: string;
+	montageId: string;
+	completed: boolean;
+};
+
+export async function toggleMontageChecklistItem({ itemId, montageId, completed }: ToggleMontageChecklistInput) {
+	await requireUser();
+
+	const [item] = await db
+		.select({ id: montageChecklistItems.id })
+		.from(montageChecklistItems)
+		.where(and(eq(montageChecklistItems.id, itemId), eq(montageChecklistItems.montageId, montageId)))
+		.limit(1);
+
+	if (!item) {
+		throw new Error('Nie znaleziono elementu listy kontrolnej.');
+	}
+
+	await db
+		.update(montageChecklistItems)
+		.set({ completed, updatedAt: new Date() })
+		.where(eq(montageChecklistItems.id, itemId));
+
+	await touchMontage(montageId);
+	revalidatePath(MONTAGE_DASHBOARD_PATH);
+}
+
+type UpdateMontageMaterialsInput = {
+	montageId: string;
+	materialDetails: string;
+};
+
+export async function updateMontageMaterialDetails({ montageId, materialDetails }: UpdateMontageMaterialsInput) {
+	await requireUser();
+
+	const sanitized = materialDetails.trim();
+
+	await db
+		.update(montages)
+		.set({ materialDetails: sanitized ? sanitized : null, updatedAt: new Date() })
+		.where(eq(montages.id, montageId));
+
+	revalidatePath(MONTAGE_DASHBOARD_PATH);
+}
+
+export async function uploadChecklistAttachment(formData: FormData) {
+	const user = await requireUser();
+
+	const montageIdRaw = formData.get('montageId');
+	const itemIdRaw = formData.get('itemId');
+	const titleRaw = formData.get('title');
+	const fileField = formData.get('file');
+
+	const montageId = typeof montageIdRaw === 'string' ? montageIdRaw.trim() : '';
+	const itemId = typeof itemIdRaw === 'string' ? itemIdRaw.trim() : '';
+	const title = typeof titleRaw === 'string' ? titleRaw.trim() : '';
+
+	if (!montageId || !itemId) {
+		throw new Error('Brakuje danych listy kontrolnej.');
+	}
+
+	if (!(fileField instanceof File)) {
+		throw new Error('Wybierz plik do przesłania.');
+	}
+
+	const [item] = await db
+		.select({
+			id: montageChecklistItems.id,
+			allowAttachment: montageChecklistItems.allowAttachment,
+		})
+		.from(montageChecklistItems)
+		.where(and(eq(montageChecklistItems.id, itemId), eq(montageChecklistItems.montageId, montageId)))
+		.limit(1);
+
+	if (!item) {
+		throw new Error('Nie znaleziono elementu listy kontrolnej.');
+	}
+
+	if (!item.allowAttachment) {
+		throw new Error('Załącznik nie jest dostępny dla tego elementu.');
+	}
+
+	const montageRecord = await getMontageOrThrow(montageId);
+	const attachmentId = await createMontageAttachment({
+		montage: montageRecord,
+		file: fileField,
+		uploadedBy: user.id,
+		title: title ? title : null,
+		noteId: null,
+	});
+
+	await db
+		.update(montageChecklistItems)
+		.set({ attachmentId, updatedAt: new Date() })
+		.where(eq(montageChecklistItems.id, itemId));
+
+	await touchMontage(montageId);
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 }

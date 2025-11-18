@@ -7,6 +7,7 @@ import type { Montage } from './_components/montage-card';
 import { db } from '@/lib/db';
 import {
     montageAttachments,
+    montageChecklistItems,
     montageNotes,
     montageTasks,
     montageStatuses,
@@ -95,6 +96,16 @@ export default async function MontazePage() {
             tasks: {
                 orderBy: asc(montageTasks.createdAt),
             },
+            checklistItems: {
+                orderBy: asc(montageChecklistItems.orderIndex),
+                with: {
+                    attachment: {
+                        with: {
+                            uploader: true,
+                        },
+                    },
+                },
+            },
             attachments: {
                 orderBy: desc(montageAttachments.createdAt),
                 with: {
@@ -110,6 +121,7 @@ export default async function MontazePage() {
         contactEmail: row.contactEmail,
         contactPhone: row.contactPhone,
         address: row.address,
+        materialDetails: row.materialDetails,
         status: row.status,
         createdAt: row.createdAt,
         updatedAt: row.updatedAt,
@@ -138,6 +150,32 @@ export default async function MontazePage() {
                       }
                     : null,
             })) ?? [],
+        })),
+        checklistItems: row.checklistItems.map((item) => ({
+            id: item.id,
+            templateId: item.templateId,
+            label: item.label,
+            allowAttachment: Boolean(item.allowAttachment),
+            completed: Boolean(item.completed),
+            orderIndex: Number(item.orderIndex ?? 0),
+            createdAt: item.createdAt,
+            updatedAt: item.updatedAt,
+            attachment: item.attachment
+                ? {
+                      id: item.attachment.id,
+                      title: item.attachment.title ?? null,
+                      url: normalizeAttachmentUrl(item.attachment.url, publicBaseUrl),
+                      createdAt: item.attachment.createdAt,
+                      noteId: item.attachment.noteId ?? null,
+                      uploader: item.attachment.uploader
+                          ? {
+                                id: item.attachment.uploader.id,
+                                name: item.attachment.uploader.name ?? null,
+                                email: item.attachment.uploader.email,
+                            }
+                          : null,
+                  }
+                : null,
         })),
         attachments: row.attachments.map((attachment) => ({
             id: attachment.id,
