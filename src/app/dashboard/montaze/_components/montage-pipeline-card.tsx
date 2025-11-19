@@ -37,6 +37,27 @@ function formatTimestamp(value: Montage['updatedAt']) {
 	);
 }
 
+function formatScheduleDate(value: Montage['scheduledInstallationAt']) {
+	if (!value) {
+		return null;
+	}
+
+	const date =
+		value instanceof Date
+			? value
+			: typeof value === 'number'
+				? new Date(value)
+				: typeof value === 'string'
+					? new Date(value)
+					: null;
+
+	if (!date || Number.isNaN(date.getTime())) {
+		return null;
+	}
+
+	return new Intl.DateTimeFormat('pl-PL', { dateStyle: 'medium' }).format(date);
+}
+
 function initials(name: string) {
 	const matches = name
 		.split(/\s+/)
@@ -58,7 +79,9 @@ export function MontagePipelineCard({ montage, statusOptions }: Props) {
 	const latestUpdate = formatTimestamp(montage.updatedAt);
 	const billingAddress = montage.billingAddress;
 	const installationAddress = montage.installationAddress;
-	const addressPreview = installationAddress || billingAddress;
+	const addressLine = installationAddress || billingAddress;
+	const cityLine = montage.installationCity || montage.billingCity || null;
+	const scheduledDate = useMemo(() => formatScheduleDate(montage.scheduledInstallationAt), [montage.scheduledInstallationAt]);
 
 	return (
 		<Sheet>
@@ -80,8 +103,11 @@ export function MontagePipelineCard({ montage, statusOptions }: Props) {
 							{hasAttachments ? `${montage.attachments.length} pl.` : 'brak plikow'}
 						</Badge>
 					</div>
-					{addressPreview ? (
-						<p className="text-xs text-muted-foreground line-clamp-2">{addressPreview}</p>
+					{addressLine || cityLine ? (
+						<div className="space-y-1">
+							{addressLine ? <p className="text-xs text-muted-foreground line-clamp-2">{addressLine}</p> : null}
+							{cityLine ? <p className="text-xs font-medium text-foreground/80">Miasto: {cityLine}</p> : null}
+						</div>
 					) : null}
 				</CardHeader>
 				<CardContent className="space-y-4">
@@ -95,6 +121,9 @@ export function MontagePipelineCard({ montage, statusOptions }: Props) {
 						</Badge>
 						<Badge variant="secondary" className="rounded-full px-2">
 							{montage.notes.length} not.
+						</Badge>
+						<Badge variant="outline" className="rounded-full px-2">
+							Termin: {scheduledDate ?? 'brak'}
 						</Badge>
 					</div>
 					<Separator />

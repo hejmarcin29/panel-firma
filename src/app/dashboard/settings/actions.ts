@@ -52,45 +52,37 @@ export async function testWooWebhookSecret() {
 
 type UpdateWfirmaConfigInput = {
 	tenant: string;
-	appKey: string;
-	appSecret: string;
 	accessKey: string;
-	accessSecret: string;
+	secretKey: string;
 };
 
-export async function updateWfirmaConfig({ tenant, appKey, appSecret, accessKey, accessSecret }: UpdateWfirmaConfigInput) {
+export async function updateWfirmaConfig({ tenant, accessKey, secretKey }: UpdateWfirmaConfigInput) {
 	const user = await requireUser();
 	if (user.role !== 'owner') {
 		throw new Error('Tylko wlasciciel moze zmieniac konfiguracje integracji.');
 	}
 
 	const trimmedTenant = tenant.trim();
-	const trimmedAppKey = appKey.trim();
-	const trimmedAppSecret = appSecret.trim();
 	const trimmedAccessKey = accessKey.trim();
-	const trimmedAccessSecret = accessSecret.trim();
+	const trimmedSecretKey = secretKey.trim();
 
-	if (!trimmedTenant || !trimmedAppKey || !trimmedAppSecret || !trimmedAccessKey || !trimmedAccessSecret) {
+	if (!trimmedTenant || !trimmedAccessKey || !trimmedSecretKey) {
 		throw new Error('Uzupelnij wszystkie pola konfiguracji wFirma.');
 	}
 
-	if (trimmedAppSecret.length < 16 || trimmedAccessSecret.length < 16) {
-		throw new Error('Sekret aplikacji i sekret dostepowy powinny miec co najmniej 16 znakow.');
+	if (trimmedSecretKey.length < 16) {
+		throw new Error('Sekretny klucz API powinien miec co najmniej 16 znakow.');
 	}
 
 	await Promise.all([
 		setAppSetting({ key: appSettingKeys.wfirmaTenant, value: trimmedTenant, userId: user.id }),
-		setAppSetting({ key: appSettingKeys.wfirmaAppKey, value: trimmedAppKey, userId: user.id }),
-		setAppSetting({ key: appSettingKeys.wfirmaAppSecret, value: trimmedAppSecret, userId: user.id }),
 		setAppSetting({ key: appSettingKeys.wfirmaAccessKey, value: trimmedAccessKey, userId: user.id }),
-		setAppSetting({ key: appSettingKeys.wfirmaAccessSecret, value: trimmedAccessSecret, userId: user.id }),
+		setAppSetting({ key: appSettingKeys.wfirmaSecretKey, value: trimmedSecretKey, userId: user.id }),
 	]);
 
 	process.env.WFIRMA_TENANT = trimmedTenant;
-	process.env.WFIRMA_APP_KEY = trimmedAppKey;
-	process.env.WFIRMA_APP_SECRET = trimmedAppSecret;
 	process.env.WFIRMA_ACCESS_KEY = trimmedAccessKey;
-	process.env.WFIRMA_ACCESS_SECRET = trimmedAccessSecret;
+	process.env.WFIRMA_SECRET_KEY = trimmedSecretKey;
 
 	revalidatePath('/dashboard/settings');
 }
@@ -107,10 +99,8 @@ export async function testWfirmaConnection() {
 		const response = await callWfirmaApi<Record<string, unknown>>({
 			path: '/company/get',
 			tenant: config.tenant,
-			appKey: config.appKey,
-			appSecret: config.appSecret,
 			accessKey: config.accessKey,
-			accessSecret: config.accessSecret,
+			secretKey: config.secretKey,
 		});
 
 		let companyLabel = 'wFirma';

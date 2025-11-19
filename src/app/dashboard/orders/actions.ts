@@ -579,7 +579,7 @@ export async function issueProformaInvoice(orderId: string): Promise<OrderDocume
 		config = await getWfirmaConfig();
 	} catch (configError) {
 		const details = configError instanceof Error ? configError.message : 'Brakuje konfiguracji wFirma.';
-		throw new Error(`${details} Uzupełnij WFIRMA_APP_KEY, WFIRMA_APP_SECRET, WFIRMA_ACCESS_KEY, WFIRMA_ACCESS_SECRET oraz WFIRMA_TENANT w ustawieniach panelu.`);
+		throw new Error(`${details} Uzupelnij WFIRMA_TENANT, WFIRMA_ACCESS_KEY oraz WFIRMA_SECRET_KEY w ustawieniach panelu.`);
 	}
 	const payload = buildProformaPayload(order);
 
@@ -589,10 +589,8 @@ export async function issueProformaInvoice(orderId: string): Promise<OrderDocume
 			path: '/invoices/proforma/create',
 			body: payload,
 			tenant: config.tenant,
-			appKey: config.appKey,
-			appSecret: config.appSecret,
 			accessKey: config.accessKey,
-			accessSecret: config.accessSecret,
+			secretKey: config.secretKey,
 		});
 
 		const invoice = extractInvoiceFromResponse(response) ?? {};
@@ -681,7 +679,7 @@ export async function issueProformaInvoice(orderId: string): Promise<OrderDocume
 		let message: string;
 		if (error instanceof WfirmaApiError) {
 			if (error.status === 401) {
-				message = 'wFirma odrzuciła klucze OAuth. Sprawdź WFIRMA_APP_KEY, WFIRMA_APP_SECRET, WFIRMA_ACCESS_KEY i WFIRMA_ACCESS_SECRET w ustawieniach panelu.';
+				message = 'wFirma odrzucila klucze API. Sprawdz WFIRMA_ACCESS_KEY i WFIRMA_SECRET_KEY w ustawieniach panelu.';
 			} else {
 				message = `wFirma: ${error.message}`;
 			}

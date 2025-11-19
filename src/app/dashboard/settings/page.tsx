@@ -66,10 +66,8 @@ export default async function SettingsPage() {
 	const [
 		webhookSecretSetting,
 		wfirmaTenantSetting,
-		wfirmaAppKeySetting,
-		wfirmaAppSecretSetting,
 		wfirmaAccessKeySetting,
-		wfirmaAccessSecretSetting,
+		wfirmaSecretKeySetting,
 		r2AccountIdSetting,
 		r2AccessKeyIdSetting,
 		r2SecretAccessKeySetting,
@@ -80,10 +78,8 @@ export default async function SettingsPage() {
 	] = await Promise.all([
 		getAppSetting(appSettingKeys.wooWebhookSecret),
 		getAppSetting(appSettingKeys.wfirmaTenant),
-		getAppSetting(appSettingKeys.wfirmaAppKey),
-		getAppSetting(appSettingKeys.wfirmaAppSecret),
 		getAppSetting(appSettingKeys.wfirmaAccessKey),
-		getAppSetting(appSettingKeys.wfirmaAccessSecret),
+		getAppSetting(appSettingKeys.wfirmaSecretKey),
 		getAppSetting(appSettingKeys.r2AccountId),
 		getAppSetting(appSettingKeys.r2AccessKeyId),
 		getAppSetting(appSettingKeys.r2SecretAccessKey),
@@ -339,18 +335,14 @@ export default async function SettingsPage() {
 						) : null}
 						<WfirmaConfigForm
 							initialTenant={wfirmaTenantSetting ?? ''}
-							initialAppKey={wfirmaAppKeySetting ?? ''}
-							initialAppSecret={wfirmaAppSecretSetting ?? ''}
 							initialAccessKey={wfirmaAccessKeySetting ?? ''}
-							initialAccessSecret={wfirmaAccessSecretSetting ?? ''}
+							initialSecretKey={wfirmaSecretKeySetting ?? ''}
 						/>
 						<div className="space-y-2 text-xs text-muted-foreground">
 							<p>Dane przechowujemy w bazie danych. Zmiana w formularzu od razu zastapi konfiguracje srodowiska.</p>
 							<ul className="list-disc space-y-1 pl-5">
-								<li><code>WFIRMA_APP_KEY</code> — publiczny identyfikator aplikacji OAuth.</li>
-								<li><code>WFIRMA_APP_SECRET</code> — sekretny klucz aplikacji OAuth.</li>
-								<li><code>WFIRMA_ACCESS_KEY</code> — klucz dostepowy generowany w panelu wFirma.</li>
-								<li><code>WFIRMA_ACCESS_SECRET</code> — sekretny klucz dostepowy przypisany do konta.</li>
+								<li><code>WFIRMA_ACCESS_KEY</code> — klucz API wygenerowany w panelu wFirma.</li>
+								<li><code>WFIRMA_SECRET_KEY</code> — sekretny klucz API przypisany do konta.</li>
 								<li><code>WFIRMA_TENANT</code> — subdomena (np. <code>nazwa</code> dla <code>nazwa.wfirma.pl</code>).</li>
 							</ul>
 						</div>

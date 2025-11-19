@@ -16,7 +16,10 @@ type FormState = {
 	contactPhone: string;
 	contactEmail: string;
 	billingAddress: string;
+	billingCity: string;
 	installationAddress: string;
+	installationCity: string;
+	scheduledInstallationDate: string;
 	materialDetails: string;
 };
 
@@ -25,7 +28,10 @@ const initialState: FormState = {
 	contactPhone: '',
 	contactEmail: '',
 	billingAddress: '',
+	billingCity: '',
 	installationAddress: '',
+	installationCity: '',
+	scheduledInstallationDate: '',
 	materialDetails: '',
 };
 
@@ -39,7 +45,7 @@ export function CreateMontageForm({ onSuccess }: CreateMontageFormProps) {
 	const [feedback, setFeedback] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [isPending, startTransition] = useTransition();
- 	const [sameAsBilling, setSameAsBilling] = useState(true);
+	const [sameAsBilling, setSameAsBilling] = useState(true);
 
 	const handleInputChange = (key: keyof FormState) => (
 		event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -47,21 +53,26 @@ export function CreateMontageForm({ onSuccess }: CreateMontageFormProps) {
 		const value = event.target.value;
 		setForm((prev) => {
 			const next = { ...prev, [key]: value };
-			if (key === 'billingAddress' && sameAsBilling) {
-				next.installationAddress = value;
+			if (sameAsBilling) {
+				if (key === 'billingAddress') {
+					next.installationAddress = value;
+				}
+				if (key === 'billingCity') {
+					next.installationCity = value;
+				}
 			}
 			return next;
 		});
 	};
 
-	const handleInstallationChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
-		setForm((prev) => ({ ...prev, installationAddress: event.target.value }));
-	};
-
 	const toggleSameAsBilling = (checked: boolean) => {
 		setSameAsBilling(checked);
 		if (checked) {
-			setForm((prev) => ({ ...prev, installationAddress: prev.billingAddress }));
+			setForm((prev) => ({
+				...prev,
+				installationAddress: prev.billingAddress,
+				installationCity: prev.billingCity,
+			}));
 		}
 	};
 
@@ -77,7 +88,10 @@ export function CreateMontageForm({ onSuccess }: CreateMontageFormProps) {
 					contactPhone: form.contactPhone,
 					contactEmail: form.contactEmail,
 					billingAddress: form.billingAddress,
+					billingCity: form.billingCity,
 					installationAddress: form.installationAddress,
+					installationCity: form.installationCity,
+					scheduledInstallationDate: form.scheduledInstallationDate || undefined,
 					materialDetails: form.materialDetails,
 				});
 				setForm(initialState);
@@ -129,7 +143,7 @@ export function CreateMontageForm({ onSuccess }: CreateMontageFormProps) {
 				</div>
 			</div>
 			<div className="grid gap-4 md:grid-cols-2">
-				<div className="space-y-2">
+				<div className="space-y-3">
 					<Label htmlFor="montage-billing-address">Adres do faktury</Label>
 					<Textarea
 						id="montage-billing-address"
@@ -138,8 +152,17 @@ export function CreateMontageForm({ onSuccess }: CreateMontageFormProps) {
 						placeholder="np. ul. Wiosenna 12, 00-001 Warszawa"
 						rows={3}
 					/>
+					<div className="space-y-1">
+						<Label htmlFor="montage-billing-city">Miasto (faktura)</Label>
+						<Input
+							id="montage-billing-city"
+							value={form.billingCity}
+							onChange={handleInputChange('billingCity')}
+							placeholder="np. Warszawa"
+						/>
+					</div>
 				</div>
-				<div className="space-y-2">
+				<div className="space-y-3">
 					<div className="flex items-center gap-2">
 						<Checkbox
 							id="montage-installation-same"
@@ -153,10 +176,31 @@ export function CreateMontageForm({ onSuccess }: CreateMontageFormProps) {
 					<Textarea
 						id="montage-installation-address"
 						value={form.installationAddress}
-						onChange={handleInstallationChange}
+						onChange={handleInputChange('installationAddress')}
 						placeholder="np. ul. Letnia 8/2, 00-001 Warszawa"
 						rows={3}
 						disabled={sameAsBilling}
+					/>
+					<div className="space-y-1">
+						<Label htmlFor="montage-installation-city">Miasto montażu</Label>
+						<Input
+							id="montage-installation-city"
+							value={form.installationCity}
+							onChange={handleInputChange('installationCity')}
+							placeholder="np. Warszawa"
+							disabled={sameAsBilling}
+						/>
+					</div>
+				</div>
+			</div>
+			<div className="grid gap-4 md:grid-cols-2">
+				<div>
+					<Label htmlFor="montage-schedule-date">Przewidywany termin montażu</Label>
+					<Input
+						id="montage-schedule-date"
+						type="date"
+						value={form.scheduledInstallationDate}
+						onChange={handleInputChange('scheduledInstallationDate')}
 					/>
 				</div>
 			</div>

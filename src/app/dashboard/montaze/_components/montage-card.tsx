@@ -391,7 +391,7 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 								</div>
 							) : null}
 							<div className="rounded-xl border border-border/60 bg-muted/20 px-3 py-2">
-								<p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">Planowany montaż</p>
+								<p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">Przewidywany termin montażu</p>
 								<p className="font-medium text-foreground">{scheduledInstallationDate ?? 'Brak terminu'}</p>
 							</div>
 						</div>
@@ -429,14 +429,14 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 								<p className="whitespace-pre-wrap text-sm text-foreground/90">
 									{billingAddress ? billingAddress : 'Brak danych'}
 								</p>
-								<p className="text-xs text-muted-foreground/80">{billingCity ? billingCity : 'Miasto nieznane'}</p>
+								<p className="text-xs text-muted-foreground/80">{billingCity ? `Miasto: ${billingCity}` : 'Miasto nieznane'}</p>
 							</div>
 							<div className="rounded-xl border border-border/60 bg-muted/15 px-3 py-2">
 								<p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">Adres montażu</p>
 								<p className="whitespace-pre-wrap text-sm text-foreground/90">
 									{installationAddress ? installationAddress : 'Brak danych'}
 								</p>
-								<p className="text-xs text-muted-foreground/80">{installationCity ? installationCity : 'Miasto nieznane'}</p>
+								<p className="text-xs text-muted-foreground/80">{installationCity ? `Miasto: ${installationCity}` : 'Miasto nieznane'}</p>
 								{addressesMatch && billingAddress ? (
 									<p className="mt-1 text-[11px] text-muted-foreground/80">Adres jak na fakturze</p>
 								) : null}
@@ -683,6 +683,42 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 								{notePending ? 'Zapisywanie...' : 'Dodaj notatkę'}
 							</Button>
 						</form>
+						<div className="space-y-4 rounded-2xl border border-border/60 bg-muted/10 p-5">
+							<div className="flex flex-wrap items-center justify-between gap-3">
+								<div>
+									<p className="text-xs uppercase tracking-wide text-muted-foreground">Oś aktywności</p>
+									<h3 className="text-base font-semibold text-foreground">Historia zdarzeń</h3>
+								</div>
+								<span className="text-xs text-muted-foreground">Automatycznie generowana z notatek, zadań i załączników.</span>
+							</div>
+							{timelineEvents.length === 0 ? (
+								<p className="text-sm text-muted-foreground">Brak zarejestrowanej aktywności dla tego montażu.</p>
+							) : (
+								<div className="max-h-80 overflow-y-auto pr-1">
+									<ul className="space-y-3 pr-1">
+										{timelineEvents.map((event) => {
+											const visuals = timelineVisuals[event.type];
+											const Icon = visuals.icon;
+											return (
+												<li
+													key={event.id}
+													className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3"
+												>
+													<div className={cn('flex h-9 w-9 items-center justify-center rounded-full', visuals.className)}>
+														<Icon className="size-4" />
+													</div>
+													<div className="space-y-1">
+														<p className="text-xs font-semibold text-muted-foreground">{event.label}</p>
+														<p className="text-sm text-foreground">{event.description}</p>
+														<p className="text-[11px] text-muted-foreground">{formatTimestamp(event.timestamp)}</p>
+													</div>
+												</li>
+											);
+										})}
+									</ul>
+								</div>
+							)}
+						</div>
 					</TabsContent>
 					<TabsContent value="tasks" className="space-y-5">
 						{taskError ? <span className="text-xs text-destructive">{taskError}</span> : null}
@@ -729,42 +765,6 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 						</form>
 					</TabsContent>
 				</Tabs>
-				<section className="space-y-4 rounded-2xl border border-border/60 bg-muted/10 p-5">
-					<div className="flex flex-wrap items-center justify-between gap-3">
-						<div>
-							<p className="text-xs uppercase tracking-wide text-muted-foreground">Oś aktywności</p>
-							<h3 className="text-base font-semibold text-foreground">Historia zdarzeń</h3>
-						</div>
-						<span className="text-xs text-muted-foreground">Automatycznie generowana z notatek, zadań i załączników.</span>
-					</div>
-					{timelineEvents.length === 0 ? (
-						<p className="text-sm text-muted-foreground">Brak zarejestrowanej aktywności dla tego montażu.</p>
-					) : (
-						<div className="max-h-80 overflow-y-auto pr-1">
-							<ul className="space-y-3 pr-1">
-								{timelineEvents.map((event) => {
-									const visuals = timelineVisuals[event.type];
-									const Icon = visuals.icon;
-									return (
-										<li
-											key={event.id}
-											className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3"
-										>
-											<div className={cn('flex h-9 w-9 items-center justify-center rounded-full', visuals.className)}>
-												<Icon className="size-4" />
-											</div>
-											<div className="space-y-1">
-												<p className="text-xs font-semibold text-muted-foreground">{event.label}</p>
-												<p className="text-sm text-foreground">{event.description}</p>
-												<p className="text-[11px] text-muted-foreground">{formatTimestamp(event.timestamp)}</p>
-											</div>
-										</li>
-									);
-								})}
-							</ul>
-						</div>
-					)}
-				</section>
 				<section className="space-y-4 rounded-2xl border border-border/60 bg-muted/5 p-5">
 					<div className="flex flex-wrap items-center justify-between gap-3">
 						<div>

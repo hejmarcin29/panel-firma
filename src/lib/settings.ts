@@ -8,10 +8,8 @@ import { appSettings } from './db/schema';
 export const appSettingKeys = {
 	wooWebhookSecret: 'woocommerce.webhook_secret',
 	wfirmaTenant: 'wfirma.tenant',
-	wfirmaAppKey: 'wfirma.app_key',
-	wfirmaAppSecret: 'wfirma.app_secret',
 	wfirmaAccessKey: 'wfirma.access_key',
-	wfirmaAccessSecret: 'wfirma.access_secret',
+	wfirmaSecretKey: 'wfirma.secret_key',
 	r2AccountId: 'r2.account_id',
 	r2AccessKeyId: 'r2.access_key_id',
 	r2SecretAccessKey: 'r2.secret_access_key',
@@ -41,14 +39,10 @@ function readEnvFallback(key: AppSettingKey): string | null {
 			return process.env.WOOCOMMERCE_WEBHOOK_SECRET?.trim() || null;
 		case appSettingKeys.wfirmaTenant:
 			return process.env.WFIRMA_TENANT?.trim() || null;
-		case appSettingKeys.wfirmaAppKey:
-			return process.env.WFIRMA_APP_KEY?.trim() || null;
-		case appSettingKeys.wfirmaAppSecret:
-			return process.env.WFIRMA_APP_SECRET?.trim() || null;
 		case appSettingKeys.wfirmaAccessKey:
 			return process.env.WFIRMA_ACCESS_KEY?.trim() || null;
-		case appSettingKeys.wfirmaAccessSecret:
-			return process.env.WFIRMA_ACCESS_SECRET?.trim() || null;
+		case appSettingKeys.wfirmaSecretKey:
+			return process.env.WFIRMA_SECRET_KEY?.trim() || null;
 		case appSettingKeys.r2AccountId:
 			return process.env.CLOUDFLARE_R2_ACCOUNT_ID?.trim() || null;
 		case appSettingKeys.r2AccessKeyId:
