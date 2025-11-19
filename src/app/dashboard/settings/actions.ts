@@ -52,22 +52,28 @@ export async function testWooWebhookSecret() {
 
 type UpdateWfirmaConfigInput = {
 	tenant: string;
+	appKey: string;
 	accessKey: string;
 	secretKey: string;
 };
 
-export async function updateWfirmaConfig({ tenant, accessKey, secretKey }: UpdateWfirmaConfigInput) {
+export async function updateWfirmaConfig({ tenant, appKey, accessKey, secretKey }: UpdateWfirmaConfigInput) {
 	const user = await requireUser();
 	if (user.role !== 'owner') {
 		throw new Error('Tylko wlasciciel moze zmieniac konfiguracje integracji.');
 	}
 
 	const trimmedTenant = tenant.trim();
+	const trimmedAppKey = appKey.trim();
 	const trimmedAccessKey = accessKey.trim();
 	const trimmedSecretKey = secretKey.trim();
 
-	if (!trimmedTenant || !trimmedAccessKey || !trimmedSecretKey) {
+	if (!trimmedTenant || !trimmedAppKey || !trimmedAccessKey || !trimmedSecretKey) {
 		throw new Error('Uzupelnij wszystkie pola konfiguracji wFirma.');
+	}
+
+	if (trimmedAppKey.length < 8) {
+		throw new Error('Klucz aplikacji powinien miec co najmniej 8 znakow.');
 	}
 
 	if (trimmedSecretKey.length < 16) {
@@ -76,11 +82,13 @@ export async function updateWfirmaConfig({ tenant, accessKey, secretKey }: Updat
 
 	await Promise.all([
 		setAppSetting({ key: appSettingKeys.wfirmaTenant, value: trimmedTenant, userId: user.id }),
+		setAppSetting({ key: appSettingKeys.wfirmaAppKey, value: trimmedAppKey, userId: user.id }),
 		setAppSetting({ key: appSettingKeys.wfirmaAccessKey, value: trimmedAccessKey, userId: user.id }),
 		setAppSetting({ key: appSettingKeys.wfirmaSecretKey, value: trimmedSecretKey, userId: user.id }),
 	]);
 
 	process.env.WFIRMA_TENANT = trimmedTenant;
+	process.env.WFIRMA_APP_KEY = trimmedAppKey;
 	process.env.WFIRMA_ACCESS_KEY = trimmedAccessKey;
 	process.env.WFIRMA_SECRET_KEY = trimmedSecretKey;
 
@@ -99,6 +107,7 @@ export async function testWfirmaConnection() {
 		const response = await callWfirmaApi<Record<string, unknown>>({
 			path: '/company/get',
 			tenant: config.tenant,
+			appKey: config.appKey,
 			accessKey: config.accessKey,
 			secretKey: config.secretKey,
 		});

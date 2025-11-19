@@ -11,6 +11,7 @@ import { testWfirmaConnection, updateWfirmaConfig } from '../actions';
 
 type Props = {
 	initialTenant: string;
+	initialAppKey: string;
 	initialAccessKey: string;
 	initialSecretKey: string;
 };
@@ -20,9 +21,10 @@ type ResultState = {
 	message: string;
 } | null;
 
-export function WfirmaConfigForm({ initialTenant, initialAccessKey, initialSecretKey }: Props) {
+export function WfirmaConfigForm({ initialTenant, initialAppKey, initialAccessKey, initialSecretKey }: Props) {
 	const router = useRouter();
 	const [tenant, setTenant] = useState(initialTenant);
+	const [appKey, setAppKey] = useState(initialAppKey);
 	const [accessKey, setAccessKey] = useState(initialAccessKey);
 	const [secretKey, setSecretKey] = useState(initialSecretKey);
 	const [result, setResult] = useState<ResultState>(null);
@@ -32,6 +34,10 @@ export function WfirmaConfigForm({ initialTenant, initialAccessKey, initialSecre
 	useEffect(() => {
 		setTenant(initialTenant);
 	}, [initialTenant]);
+
+	useEffect(() => {
+		setAppKey(initialAppKey);
+	}, [initialAppKey]);
 
 	useEffect(() => {
 		setAccessKey(initialAccessKey);
@@ -46,14 +52,16 @@ export function WfirmaConfigForm({ initialTenant, initialAccessKey, initialSecre
 
 		const formData = new FormData(event.currentTarget);
 		const nextTenant = String(formData.get('wfirma-tenant') ?? '').trim();
+		const nextAppKey = String(formData.get('wfirma-app-key') ?? '').trim();
 		const nextAccessKey = String(formData.get('wfirma-access-key') ?? '').trim();
 		const nextSecretKey = String(formData.get('wfirma-secret-key') ?? '').trim();
 
 		startTransition(() => {
-			updateWfirmaConfig({ tenant: nextTenant, accessKey: nextAccessKey, secretKey: nextSecretKey })
+			updateWfirmaConfig({ tenant: nextTenant, appKey: nextAppKey, accessKey: nextAccessKey, secretKey: nextSecretKey })
 				.then(() => {
 					setResult({ type: 'success', message: 'Konfiguracja wFirma zostala zapisana.' });
 					setTenant(nextTenant);
+					setAppKey(nextAppKey);
 					setAccessKey(nextAccessKey);
 					setSecretKey(nextSecretKey);
 					router.refresh();
@@ -67,6 +75,7 @@ export function WfirmaConfigForm({ initialTenant, initialAccessKey, initialSecre
 
 	const handleReset = () => {
 		setTenant(initialTenant);
+		setAppKey(initialAppKey);
 		setAccessKey(initialAccessKey);
 		setSecretKey(initialSecretKey);
 		setResult(null);
@@ -103,6 +112,20 @@ export function WfirmaConfigForm({ initialTenant, initialAccessKey, initialSecre
 					/>
 				</div>
 				<div className="space-y-2">
+					<Label htmlFor="wfirma-app-key">App key</Label>
+					<Input
+						id="wfirma-app-key"
+						name="wfirma-app-key"
+						type="text"
+						autoComplete="off"
+						spellCheck={false}
+						value={appKey}
+						onChange={(event) => setAppKey(event.target.value)}
+						disabled={isPending}
+						placeholder="Klucz aplikacji (appKey)"
+					/>
+				</div>
+				<div className="space-y-2">
 					<Label htmlFor="wfirma-access-key">Access key</Label>
 					<Input
 						id="wfirma-access-key"
@@ -113,7 +136,7 @@ export function WfirmaConfigForm({ initialTenant, initialAccessKey, initialSecre
 						value={accessKey}
 						onChange={(event) => setAccessKey(event.target.value)}
 						disabled={isPending}
-						placeholder="Klucz API"
+						placeholder="Klucz API (accessKey)"
 					/>
 				</div>
 				<div className="space-y-2">
@@ -127,7 +150,7 @@ export function WfirmaConfigForm({ initialTenant, initialAccessKey, initialSecre
 						value={secretKey}
 						onChange={(event) => setSecretKey(event.target.value)}
 						disabled={isPending}
-						placeholder="Sekretny klucz API"
+						placeholder="Sekretny klucz API (secretKey)"
 					/>
 				</div>
 			</div>
@@ -148,6 +171,7 @@ export function WfirmaConfigForm({ initialTenant, initialAccessKey, initialSecre
 						isPending ||
 						(
 							tenant === initialTenant &&
+							appKey === initialAppKey &&
 							accessKey === initialAccessKey &&
 							secretKey === initialSecretKey
 						)

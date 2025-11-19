@@ -16,6 +16,7 @@ type RequestOptions = {
 	path: string;
 	body?: unknown;
 	tenant: string;
+	appKey: string;
 	accessKey: string;
 	secretKey: string;
 };
@@ -25,6 +26,7 @@ export async function callWfirmaApi<T>({
 	path,
 	body,
 	tenant,
+	appKey,
 	accessKey,
 	secretKey,
 }: RequestOptions): Promise<T> {
@@ -36,11 +38,12 @@ export async function callWfirmaApi<T>({
 	const hasBody = typeof body !== 'undefined' && body !== null;
 	const serializedBody = hasBody ? JSON.stringify(body) : undefined;
 
-	const credentials = Buffer.from(`${accessKey}:${secretKey}`, 'utf8').toString('base64');
-
 	const url = rawQuery ? `${urlWithoutQuery}?${rawQuery}` : urlWithoutQuery;
 	const headers: Record<string, string> = {
-		Authorization: `Basic ${credentials}`,
+		Authorization: `Basic ${Buffer.from(`${accessKey}:${secretKey}`, 'utf8').toString('base64')}`,
+		appKey,
+		accessKey,
+		secretKey,
 		Accept: 'application/json',
 		'User-Agent': 'panel-firma-integrator/1.0',
 	};

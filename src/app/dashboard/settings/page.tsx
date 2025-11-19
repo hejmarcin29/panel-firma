@@ -66,6 +66,7 @@ export default async function SettingsPage() {
 	const [
 		webhookSecretSetting,
 		wfirmaTenantSetting,
+		wfirmaAppKeySetting,
 		wfirmaAccessKeySetting,
 		wfirmaSecretKeySetting,
 		r2AccountIdSetting,
@@ -78,6 +79,7 @@ export default async function SettingsPage() {
 	] = await Promise.all([
 		getAppSetting(appSettingKeys.wooWebhookSecret),
 		getAppSetting(appSettingKeys.wfirmaTenant),
+		getAppSetting(appSettingKeys.wfirmaAppKey),
 		getAppSetting(appSettingKeys.wfirmaAccessKey),
 		getAppSetting(appSettingKeys.wfirmaSecretKey),
 		getAppSetting(appSettingKeys.r2AccountId),
@@ -335,12 +337,14 @@ export default async function SettingsPage() {
 						) : null}
 						<WfirmaConfigForm
 							initialTenant={wfirmaTenantSetting ?? ''}
+							initialAppKey={wfirmaAppKeySetting ?? ''}
 							initialAccessKey={wfirmaAccessKeySetting ?? ''}
 							initialSecretKey={wfirmaSecretKeySetting ?? ''}
 						/>
 						<div className="space-y-2 text-xs text-muted-foreground">
 							<p>Dane przechowujemy w bazie danych. Zmiana w formularzu od razu zastapi konfiguracje srodowiska.</p>
 							<ul className="list-disc space-y-1 pl-5">
+								<li><code>WFIRMA_APP_KEY</code> — klucz aplikacji nadany przez wFirma i udostepniony po zgloszeniu integracji.</li>
 								<li><code>WFIRMA_ACCESS_KEY</code> — klucz API wygenerowany w panelu wFirma.</li>
 								<li><code>WFIRMA_SECRET_KEY</code> — sekretny klucz API przypisany do konta.</li>
 								<li><code>WFIRMA_TENANT</code> — subdomena (np. <code>nazwa</code> dla <code>nazwa.wfirma.pl</code>).</li>
