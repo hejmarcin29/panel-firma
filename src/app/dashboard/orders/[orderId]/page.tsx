@@ -26,9 +26,9 @@ import type { Order, OrderTimelineEntry, OrderDocument, OrderTaskOverrides } fro
 import { statusOptions } from '../utils';
 
 type OrderDetailsPageParams = {
-	params: {
+	params: Promise<{
 		orderId: string;
-	};
+	}>;
 };
 
 function formatCurrency(amount: number, currency: string) {
@@ -177,7 +177,7 @@ function computeTaskCompletion(
 }
 
 export default async function OrderDetailsPage({ params }: OrderDetailsPageParams) {
-	const { orderId } = params;
+	const { orderId } = await params;
 
 	await requireUser();
 
