@@ -223,15 +223,6 @@ export default async function MontazePage() {
             <section className="overflow-hidden rounded-3xl border bg-linear-to-br from-primary/5 via-background to-background p-8 shadow-sm">
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
                     <div className="space-y-4">
-                        <div className="space-y-3">
-                            <h1 className="text-3xl font-semibold tracking-tight text-foreground">Panel montaze 2025</h1>
-                            <p className="max-w-2xl text-sm text-muted-foreground">
-                                Planowanie montazy, dokumentacja i komunikacja z klientem w jednym miejscu. Zarzadzaj pipeline, monitoruj postepy i zbieraj materialy bezposrednio w chmurze R2.
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                                Pliki trafiaja do Cloudflare R2 – <Link className="text-primary hover:underline" href="/dashboard/montaze/galeria">otworz galerie</Link>, aby zobaczyc wszystkie materialy.
-                            </p>
-                        </div>
                         <CreateMontageDialog />
                     </div>
                     <div className="grid gap-3 text-xs text-muted-foreground">

@@ -25,10 +25,10 @@ import { OrderStatusTimeline } from '../_components/order-status-timeline';
 import type { Order, OrderTimelineEntry, OrderDocument, OrderTaskOverrides } from '../data';
 import { statusOptions } from '../utils';
 
-type OrderDetailsPageProps = {
-	params: Promise<{
+type OrderDetailsPageParams = {
+	params: {
 		orderId: string;
-	}>;
+	};
 };
 
 function formatCurrency(amount: number, currency: string) {
@@ -112,9 +112,7 @@ function enhanceTimelineEntries(
 			);
 			const hasManualOverride = Object.prototype.hasOwnProperty.call(taskOverrides, task.id);
 			const manualOverride = hasManualOverride ? taskOverrides[task.id] : null;
-			const completed = hasManualOverride
-				? (manualOverride as boolean)
-				: autoCompleted;
+			const completed = hasManualOverride ? (manualOverride as boolean) : autoCompleted;
 			const completionSource: 'auto' | 'manual' = hasManualOverride ? 'manual' : 'auto';
 
 			return {
@@ -178,8 +176,8 @@ function computeTaskCompletion(
 	return state === 'completed';
 }
 
-export default async function OrderDetailsPage({ params }: OrderDetailsPageProps) {
-	const { orderId } = await params;
+export default async function OrderDetailsPage({ params }: OrderDetailsPageParams) {
+	const { orderId } = params;
 
 	await requireUser();
 
@@ -207,7 +205,7 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageProps
 
 	return (
 		<section className="space-y-8">
-			<div className="flex items-center justify-between gap-4">
+			<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 				<Link
 					href="/dashboard/orders"
 					className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -215,28 +213,27 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageProps
 					<ArrowLeft className="h-4 w-4" />
 					Powrót
 				</Link>
-				<div className="flex items-center gap-3">
-					<Button asChild variant="outline" size="sm">
+				<div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+					<Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
 						<Link href={`/dashboard/orders/${order.id}/print`}>Drukuj</Link>
 					</Button>
-					<Button asChild variant="outline" size="sm">
+					<Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
 						<Link href={`mailto:${order.billing.email}`}>Wyślij e-mail</Link>
 					</Button>
 				</div>
 			</div>
 
 			<div className="rounded-2xl border bg-background p-6 shadow-sm">
-				<div className="flex flex-wrap items-start justify-between gap-6">
+				<div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
 					<div className="space-y-3">
 						<div className="flex items-center gap-3">
 							<h1 className="text-3xl font-semibold tracking-tight">{order.reference}</h1>
 							<Badge variant="secondary">{order.status}</Badge>
 						</div>
 						<p className="max-w-xl text-sm text-muted-foreground">
-							Kanał: <span className="font-medium text-foreground">{order.channel}</span> • Źródło:
-							{' '}
+							Kanał: <span className="font-medium text-foreground">{order.channel}</span> • Źródło: {' '}
 							<span className="font-medium text-foreground">
-								{order.source === 'woocommerce' ? 'WooCommerce' : 'Ręczne' }
+								{order.source === 'woocommerce' ? 'WooCommerce' : 'Ręczne'}
 							</span>{' '}
 							• Utworzone: <span className="font-medium text-foreground">{formatDate(order.createdAt)}</span>
 						</p>
@@ -246,8 +243,8 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageProps
 							</p>
 						) : null}
 					</div>
-					<div className="flex flex-col items-end gap-3">
-						<div className="flex flex-wrap justify-end gap-3 text-right">
+					<div className="flex flex-col gap-3 lg:items-end">
+						<div className="flex flex-wrap gap-3 text-left lg:justify-end lg:text-right">
 							<div>
 								<p className="text-xs uppercase text-muted-foreground">Suma brutto</p>
 								<p className="text-lg font-semibold text-foreground">
@@ -269,7 +266,7 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageProps
 					</div>
 				</div>
 				<Separator className="my-6" />
-				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+				<div className="grid gap-4 min-[360px]:grid-cols-2 lg:grid-cols-4">
 					<QuickStat label="Klient" value={order.billing.name} />
 					<QuickStat label="Miasto dostawy" value={deliveryCity} />
 					<QuickStat label="Telefon" value={order.billing.phone} icon={Phone} />
@@ -285,7 +282,12 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageProps
 							<CardDescription>Szczegółowe informacje o produktach i metrach kwadratowych.</CardDescription>
 						</CardHeader>
 						<CardContent>
-							<div className="overflow-x-auto">
+							<div className="space-y-4 md:hidden">
+								{order.items.map((item) => (
+									<OrderItemCard key={item.id} item={item} currency={order.currency} />
+								))}
+							</div>
+							<div className="hidden overflow-x-auto md:block">
 								<Table>
 									<TableHeader>
 										<TableRow>
@@ -346,44 +348,51 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageProps
 							{documents.length === 0 ? (
 								<p className="text-sm text-muted-foreground">Brak wystawionych dokumentów.</p>
 							) : (
-								<div className="overflow-x-auto">
-									<Table>
-										<TableHeader>
-											<TableRow>
-												<TableHead>Typ</TableHead>
-												<TableHead>Numer</TableHead>
-												<TableHead>Status</TableHead>
-												<TableHead>Data</TableHead>
-												<TableHead className="text-right">Akcje</TableHead>
-											</TableRow>
-										</TableHeader>
-										<TableBody>
-											{documents.map((document) => (
-												<TableRow key={document.id}>
-													<TableCell className="font-medium capitalize">{document.type}</TableCell>
-													<TableCell>{document.number ?? '—'}</TableCell>
-													<TableCell>
-														<Badge variant="outline">{document.status}</Badge>
-													</TableCell>
-													<TableCell>
-														{document.issueDate ? formatDate(document.issueDate) : '—'}
-													</TableCell>
-													<TableCell className="text-right">
-														{document.pdfUrl ? (
-															<Button asChild size="sm" variant="outline">
-																<Link href={document.pdfUrl} target="_blank" rel="noreferrer">
-																	Pobierz PDF
-																</Link>
-															</Button>
-														) : (
-															<span className="text-xs text-muted-foreground">Brak pliku</span>
-														)}
-													</TableCell>
+								<>
+									<div className="space-y-4 md:hidden">
+										{documents.map((document) => (
+											<DocumentCard key={document.id} document={document} />
+										))}
+									</div>
+									<div className="hidden overflow-x-auto md:block">
+										<Table>
+											<TableHeader>
+												<TableRow>
+													<TableHead>Typ</TableHead>
+													<TableHead>Numer</TableHead>
+													<TableHead>Status</TableHead>
+													<TableHead>Data</TableHead>
+													<TableHead className="text-right">Akcje</TableHead>
 												</TableRow>
-											))}
-										</TableBody>
-									</Table>
-								</div>
+											</TableHeader>
+											<TableBody>
+												{documents.map((document) => (
+													<TableRow key={document.id}>
+														<TableCell className="font-medium capitalize">{document.type}</TableCell>
+														<TableCell>{document.number ?? '—'}</TableCell>
+														<TableCell>
+															<Badge variant="outline">{document.status}</Badge>
+														</TableCell>
+														<TableCell>
+															{document.issueDate ? formatDate(document.issueDate) : '—'}
+														</TableCell>
+														<TableCell className="text-right">
+															{document.pdfUrl ? (
+																<Button asChild size="sm" variant="outline">
+																	<Link href={document.pdfUrl} target="_blank" rel="noreferrer">
+																		Pobierz PDF
+																	</Link>
+																</Button>
+															) : (
+																<span className="text-xs text-muted-foreground">Brak pliku</span>
+															)}
+														</TableCell>
+													</TableRow>
+												))}
+											</TableBody>
+										</Table>
+									</div>
+								</>
 							)}
 						</CardContent>
 					</Card>
@@ -429,7 +438,7 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageProps
 						</CardContent>
 					</Card>
 
-					<Card className="sticky top-6">
+					<Card className="lg:sticky lg:top-6">
 						<CardHeader>
 							<CardTitle>Szybkie akcje</CardTitle>
 							<CardDescription>Najczęściej wykonywane operacje.</CardDescription>
@@ -452,6 +461,85 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageProps
 				</div>
 			</div>
 		</section>
+	);
+}
+
+type OrderItemCardProps = {
+	item: Order['items'][number];
+	currency: string;
+};
+
+function OrderItemCard({ item, currency }: OrderItemCardProps) {
+	const perPackageArea = computePackageArea(item);
+	const totalArea = computeTotalArea(item);
+
+	return (
+		<div className="rounded-xl border bg-muted/40 p-4">
+			<div className="flex flex-col gap-1">
+				<p className="text-sm font-medium text-foreground">{item.product}</p>
+				<span className="text-xs text-muted-foreground">VAT {item.vatRate}%</span>
+			</div>
+			<dl className="mt-3 grid grid-cols-2 gap-3 text-xs">
+				<div className="space-y-1">
+					<dt className="text-muted-foreground">Ilość</dt>
+					<dd className="font-semibold text-foreground">{formatNumber(item.quantity)}</dd>
+				</div>
+				<div className="space-y-1">
+					<dt className="text-muted-foreground">M² w op.</dt>
+					<dd className="font-semibold text-foreground">{formatNumber(perPackageArea)}</dd>
+				</div>
+				<div className="space-y-1">
+					<dt className="text-muted-foreground">M² łącznie</dt>
+					<dd className="font-semibold text-foreground">{formatNumber(totalArea)}</dd>
+				</div>
+				<div className="space-y-1">
+					<dt className="text-muted-foreground">Cena netto</dt>
+					<dd className="font-semibold text-foreground">{formatCurrency(item.unitPrice, currency)}</dd>
+				</div>
+				<div className="col-span-2 space-y-1">
+					<dt className="text-muted-foreground">Kwota brutto</dt>
+					<dd className="text-base font-semibold text-foreground">{formatCurrency(item.totalGross, currency)}</dd>
+				</div>
+			</dl>
+		</div>
+	);
+}
+
+type DocumentCardProps = {
+	document: OrderDocument;
+};
+
+function DocumentCard({ document }: DocumentCardProps) {
+	return (
+		<div className="rounded-xl border bg-muted/40 p-4">
+			<div className="flex items-center justify-between gap-2">
+				<p className="text-sm font-medium capitalize text-foreground">{document.type}</p>
+				<Badge variant="outline">{document.status}</Badge>
+			</div>
+			<dl className="mt-3 grid grid-cols-2 gap-3 text-xs">
+				<div className="space-y-1">
+					<dt className="text-muted-foreground">Numer</dt>
+					<dd className="font-semibold text-foreground">{document.number ?? '—'}</dd>
+				</div>
+				<div className="space-y-1">
+					<dt className="text-muted-foreground">Data</dt>
+					<dd className="font-semibold text-foreground">
+						{document.issueDate ? formatDate(document.issueDate) : '—'}
+					</dd>
+				</div>
+			</dl>
+			<div className="mt-3">
+				{document.pdfUrl ? (
+					<Button asChild size="sm" variant="outline" className="w-full">
+						<Link href={document.pdfUrl} target="_blank" rel="noreferrer">
+							Pobierz PDF
+						</Link>
+					</Button>
+				) : (
+					<span className="text-xs text-muted-foreground">Brak pliku</span>
+				)}
+			</div>
+		</div>
 	);
 }
 
