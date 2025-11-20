@@ -204,69 +204,83 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageParam
 	const deliveryCity = order.shipping.sameAsBilling ? order.billing.city : order.shipping.city;
 
 	return (
-		<section className="space-y-8">
-			<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+		<section className="space-y-4">
+			<div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
 				<Link
 					href="/dashboard/orders"
-					className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+					className="inline-flex items-center gap-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
 				>
 					<ArrowLeft className="h-4 w-4" />
 					Powrót
 				</Link>
-				<div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-					<Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
+				<div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+					<Button
+						asChild
+						variant="outline"
+						size="sm"
+						className="h-8 px-3 text-xs"
+					>
 						<Link href={`/dashboard/orders/${order.id}/print`}>Drukuj</Link>
 					</Button>
-					<Button asChild variant="outline" size="sm" className="w-full sm:w-auto">
+					<Button
+						asChild
+						variant="outline"
+						size="sm"
+						className="h-8 px-3 text-xs"
+					>
 						<Link href={`mailto:${order.billing.email}`}>Wyślij e-mail</Link>
 					</Button>
 				</div>
 			</div>
 
-			<div className="rounded-2xl border bg-background p-6 shadow-sm">
-				<div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-					<div className="space-y-3">
-						<div className="flex items-center gap-3">
-							<h1 className="text-3xl font-semibold tracking-tight">{order.reference}</h1>
-							<Badge variant="secondary">{order.status}</Badge>
+			<div className="rounded-lg border bg-background p-4 shadow-sm">
+				<div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+					<div className="space-y-2">
+						<div className="flex flex-wrap items-center gap-2">
+							<h1 className="text-2xl font-semibold leading-tight tracking-tight">{order.reference}</h1>
+							<Badge variant="secondary" className="px-2 py-0 text-[11px]">
+								{order.status}
+							</Badge>
 						</div>
-						<p className="max-w-xl text-sm text-muted-foreground">
-							Kanał: <span className="font-medium text-foreground">{order.channel}</span> • Źródło: {' '}
+						<p className="max-w-xl text-xs text-muted-foreground">
+							Kanał: <span className="font-medium text-foreground">{order.channel}</span> • Źródło:{' '}
 							<span className="font-medium text-foreground">
 								{order.source === 'woocommerce' ? 'WooCommerce' : 'Ręczne'}
 							</span>{' '}
 							• Utworzone: <span className="font-medium text-foreground">{formatDate(order.createdAt)}</span>
 						</p>
 						{currentStatus ? (
-							<p className="text-xs text-muted-foreground">
+							<p className="text-[11px] text-muted-foreground">
 								Aktualny krok: <span className="font-medium text-foreground">{currentStatus.title}</span>
 							</p>
 						) : null}
 					</div>
-					<div className="flex flex-col gap-3 lg:items-end">
-						<div className="flex flex-wrap gap-3 text-left lg:justify-end lg:text-right">
-							<div>
-								<p className="text-xs uppercase text-muted-foreground">Suma brutto</p>
-								<p className="text-lg font-semibold text-foreground">
+					<div className="flex flex-col gap-2 text-right">
+						<div className="grid grid-cols-3 gap-2 text-left sm:text-right">
+							<div className="space-y-1">
+								<p className="text-[10px] uppercase text-muted-foreground">Suma brutto</p>
+								<p className="text-sm font-semibold text-foreground">
 									{formatCurrency(order.totals.totalGross, order.currency)}
 								</p>
 							</div>
-							<div>
-								<p className="text-xs uppercase text-muted-foreground">Łącznie m²</p>
-								<p className="text-lg font-semibold text-foreground">{formatNumber(totalSquareMeters)}</p>
+							<div className="space-y-1">
+								<p className="text-[10px] uppercase text-muted-foreground">Łącznie m²</p>
+								<p className="text-sm font-semibold text-foreground">{formatNumber(totalSquareMeters)}</p>
 							</div>
-							<div>
-								<p className="text-xs uppercase text-muted-foreground">Postęp</p>
-								<p className="text-lg font-semibold text-foreground">
+							<div className="space-y-1">
+								<p className="text-[10px] uppercase text-muted-foreground">Postęp</p>
+								<p className="text-sm font-semibold text-foreground">
 									{completedSteps}/{statusesWithTasks.length}
 								</p>
 							</div>
 						</div>
-						{order.requiresReview ? <ConfirmOrderButton orderId={order.id} /> : null}
+						{order.requiresReview ? (
+							<ConfirmOrderButton orderId={order.id} className="h-8 px-3 text-xs" />
+						) : null}
 					</div>
 				</div>
-				<Separator className="my-6" />
-				<div className="grid gap-4 min-[360px]:grid-cols-2 lg:grid-cols-4">
+				<Separator className="my-3" />
+				<div className="grid gap-2 min-[360px]:grid-cols-2 lg:grid-cols-4">
 					<QuickStat label="Klient" value={order.billing.name} />
 					<QuickStat label="Miasto dostawy" value={deliveryCity} />
 					<QuickStat label="Telefon" value={order.billing.phone} icon={Phone} />
@@ -274,15 +288,17 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageParam
 				</div>
 			</div>
 
-			<div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
-				<div className="space-y-6">
-					<Card>
-						<CardHeader>
-							<CardTitle>Pozycje zamówienia</CardTitle>
-							<CardDescription>Szczegółowe informacje o produktach i metrach kwadratowych.</CardDescription>
+			<div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
+				<div className="space-y-4">
+					<Card className="rounded-lg">
+						<CardHeader className="space-y-1 px-4 py-3">
+							<CardTitle className="text-base">Pozycje zamówienia</CardTitle>
+							<CardDescription className="text-xs">
+								Szczegółowe informacje o produktach i metrach kwadratowych.
+							</CardDescription>
 						</CardHeader>
-						<CardContent>
-							<div className="space-y-4 md:hidden">
+						<CardContent className="px-4 pb-4 pt-0">
+							<div className="space-y-3 md:hidden">
 								{order.items.map((item) => (
 									<OrderItemCard key={item.id} item={item} currency={order.currency} />
 								))}
@@ -291,13 +307,13 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageParam
 								<Table>
 									<TableHeader>
 										<TableRow>
-											<TableHead>Produkt</TableHead>
-											<TableHead>Ilość</TableHead>
-											<TableHead>M² w op.</TableHead>
-											<TableHead>M² łącznie</TableHead>
-											<TableHead>VAT</TableHead>
-											<TableHead>Cena netto</TableHead>
-											<TableHead className="text-right">Kwota brutto</TableHead>
+											<TableHead className="py-2 text-[11px]">Produkt</TableHead>
+											<TableHead className="py-2 text-[11px]">Ilość</TableHead>
+											<TableHead className="py-2 text-[11px]">M² w op.</TableHead>
+											<TableHead className="py-2 text-[11px]">M² łącznie</TableHead>
+											<TableHead className="py-2 text-[11px]">VAT</TableHead>
+											<TableHead className="py-2 text-[11px]">Cena netto</TableHead>
+											<TableHead className="py-2 text-right text-[11px]">Kwota brutto</TableHead>
 										</TableRow>
 									</TableHeader>
 									<TableBody>
@@ -307,13 +323,15 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageParam
 
 											return (
 												<TableRow key={item.id}>
-													<TableCell className="font-medium">{item.product}</TableCell>
-													<TableCell>{formatNumber(item.quantity)}</TableCell>
-													<TableCell>{formatNumber(perPackageArea)}</TableCell>
-													<TableCell>{formatNumber(totalArea)}</TableCell>
-													<TableCell>{item.vatRate}%</TableCell>
-													<TableCell>{formatCurrency(item.unitPrice, order.currency)}</TableCell>
-													<TableCell className="text-right font-medium">
+													<TableCell className="py-2 text-xs font-medium">{item.product}</TableCell>
+													<TableCell className="py-2 text-xs">{formatNumber(item.quantity)}</TableCell>
+													<TableCell className="py-2 text-xs">{formatNumber(perPackageArea)}</TableCell>
+													<TableCell className="py-2 text-xs">{formatNumber(totalArea)}</TableCell>
+													<TableCell className="py-2 text-xs">{item.vatRate}%</TableCell>
+													<TableCell className="py-2 text-xs">
+														{formatCurrency(item.unitPrice, order.currency)}
+													</TableCell>
+													<TableCell className="py-2 text-right text-xs font-semibold">
 														{formatCurrency(item.totalGross, order.currency)}
 													</TableCell>
 												</TableRow>
@@ -325,12 +343,12 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageParam
 						</CardContent>
 					</Card>
 
-					<Card>
-						<CardHeader>
-							<CardTitle>Historia statusów</CardTitle>
-							<CardDescription>Śledź przebieg realizacji zamówienia.</CardDescription>
+					<Card className="rounded-lg">
+						<CardHeader className="space-y-1 px-4 py-3">
+							<CardTitle className="text-base">Historia statusów</CardTitle>
+							<CardDescription className="text-xs">Śledź przebieg realizacji zamówienia.</CardDescription>
 						</CardHeader>
-						<CardContent>
+						<CardContent className="px-4 pb-4 pt-0">
 							<OrderStatusTimeline
 								orderId={order.id}
 								entries={statusesWithTasks}
@@ -339,17 +357,17 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageParam
 						</CardContent>
 					</Card>
 
-					<Card>
-						<CardHeader>
-							<CardTitle>Dokumenty</CardTitle>
-							<CardDescription>Lista proform i faktur powiązanych z zamówieniem.</CardDescription>
+					<Card className="rounded-lg">
+						<CardHeader className="space-y-1 px-4 py-3">
+							<CardTitle className="text-base">Dokumenty</CardTitle>
+							<CardDescription className="text-xs">Lista proform i faktur powiązanych z zamówieniem.</CardDescription>
 						</CardHeader>
-						<CardContent>
+						<CardContent className="px-4 pb-4 pt-0">
 							{documents.length === 0 ? (
-								<p className="text-sm text-muted-foreground">Brak wystawionych dokumentów.</p>
+								<p className="text-xs text-muted-foreground">Brak wystawionych dokumentów.</p>
 							) : (
 								<>
-									<div className="space-y-4 md:hidden">
+									<div className="space-y-3 md:hidden">
 										{documents.map((document) => (
 											<DocumentCard key={document.id} document={document} />
 										))}
@@ -358,36 +376,38 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageParam
 										<Table>
 											<TableHeader>
 												<TableRow>
-													<TableHead>Typ</TableHead>
-													<TableHead>Numer</TableHead>
-													<TableHead>Status</TableHead>
-													<TableHead>Data</TableHead>
-													<TableHead className="text-right">Akcje</TableHead>
+													<TableHead className="py-2 text-[11px]">Typ</TableHead>
+													<TableHead className="py-2 text-[11px]">Numer</TableHead>
+													<TableHead className="py-2 text-[11px]">Status</TableHead>
+													<TableHead className="py-2 text-[11px]">Data</TableHead>
+													<TableHead className="py-2 text-right text-[11px]">Akcje</TableHead>
 												</TableRow>
 											</TableHeader>
 											<TableBody>
 												{documents.map((document) => (
 													<TableRow key={document.id}>
-														<TableCell className="font-medium capitalize">{document.type}</TableCell>
-														<TableCell>{document.number ?? '—'}</TableCell>
-														<TableCell>
-															<Badge variant="outline">{document.status}</Badge>
+														<TableCell className="py-2 text-xs font-medium capitalize">{document.type}</TableCell>
+														<TableCell className="py-2 text-xs">{document.number ?? '—'}</TableCell>
+														<TableCell className="py-2 text-xs">
+															<Badge variant="outline" className="px-2 py-0 text-[10px]">
+																{document.status}
+															</Badge>
 														</TableCell>
-														<TableCell>
+														<TableCell className="py-2 text-xs">
 															{document.issueDate ? formatDate(document.issueDate) : '—'}
 														</TableCell>
-														<TableCell className="text-right">
+														<TableCell className="py-2 text-right text-xs">
 															{document.pdfUrl ? (
-																<Button asChild size="sm" variant="outline">
+																<Button asChild size="sm" variant="outline" className="h-8 px-3 text-xs">
 																	<Link href={document.pdfUrl} target="_blank" rel="noreferrer">
 																		Pobierz PDF
 																	</Link>
 																</Button>
 															) : (
-																<span className="text-xs text-muted-foreground">Brak pliku</span>
+																<span className="text-[10px] text-muted-foreground">Brak pliku</span>
 															)}
 														</TableCell>
-													</TableRow>
+												</TableRow>
 												))}
 											</TableBody>
 										</Table>
@@ -398,13 +418,13 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageParam
 					</Card>
 				</div>
 
-				<div className="space-y-6">
-					<Card>
-						<CardHeader>
-							<CardTitle>Dane rozliczeniowe</CardTitle>
-							<CardDescription>Informacje niezbędne do faktury.</CardDescription>
+				<div className="space-y-4">
+					<Card className="rounded-lg">
+						<CardHeader className="space-y-1 px-4 py-3">
+							<CardTitle className="text-base">Dane rozliczeniowe</CardTitle>
+							<CardDescription className="text-xs">Informacje niezbędne do faktury.</CardDescription>
 						</CardHeader>
-						<CardContent>
+						<CardContent className="px-4 pb-4 pt-0">
 							<AddressBlock
 								title="Faktura"
 								name={order.billing.name}
@@ -416,14 +436,14 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageParam
 						</CardContent>
 					</Card>
 
-					<Card>
-						<CardHeader>
-							<CardTitle>Dostawa</CardTitle>
-							<CardDescription>Kontakt dla kuriera i adres wysyłki.</CardDescription>
+					<Card className="rounded-lg">
+						<CardHeader className="space-y-1 px-4 py-3">
+							<CardTitle className="text-base">Dostawa</CardTitle>
+							<CardDescription className="text-xs">Kontakt dla kuriera i adres wysyłki.</CardDescription>
 						</CardHeader>
-						<CardContent>
+						<CardContent className="px-4 pb-4 pt-0">
 							{order.shipping.sameAsBilling ? (
-								<p className="text-sm text-muted-foreground">Dane identyczne jak do faktury.</p>
+								<p className="text-xs text-muted-foreground">Dane identyczne jak do faktury.</p>
 							) : (
 								<AddressBlock
 									title="Adres wysyłki"
@@ -438,24 +458,35 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageParam
 						</CardContent>
 					</Card>
 
-					<Card className="lg:sticky lg:top-6">
-						<CardHeader>
-							<CardTitle>Szybkie akcje</CardTitle>
-							<CardDescription>Najczęściej wykonywane operacje.</CardDescription>
+					<Card className="rounded-lg lg:sticky lg:top-4">
+						<CardHeader className="space-y-1 px-4 py-3">
+							<CardTitle className="text-base">Szybkie akcje</CardTitle>
+							<CardDescription className="text-xs">Najczęściej wykonywane operacje.</CardDescription>
 						</CardHeader>
-						<CardContent className="flex flex-col gap-3">
-							<Button variant="outline" asChild>
-								<Link href={`tel:${order.billing.phone}`}>Zadzwoń do klienta</Link>
-							</Button>
-							<Button variant="outline" asChild>
-								<Link href={`mailto:${order.billing.email}`}>Wyślij e-mail</Link>
-							</Button>
-							<Button variant="ghost" className="justify-start" asChild>
-								<Link href={`/dashboard/orders/${order.id}/notes`}>Dodaj notatkę</Link>
-							</Button>
-							<Separator className="my-2" />
-							<OrderStatusForm orderId={order.id} currentStatus={order.status} />
-							<IssueProformaButton orderId={order.id} isWfirmaConfigured={hasWfirmaIntegration} className="w-full" />
+						<CardContent className="px-4 pb-4 pt-0">
+							<div className="grid grid-cols-2 gap-2">
+								<Button variant="outline" asChild className="h-8 px-3 text-xs">
+									<Link href={`tel:${order.billing.phone}`}>Zadzwoń</Link>
+								</Button>
+								<Button variant="outline" asChild className="h-8 px-3 text-xs">
+									<Link href={`mailto:${order.billing.email}`}>E-mail</Link>
+								</Button>
+								<Button variant="ghost" className="h-8 justify-center px-3 text-xs" asChild>
+									<Link href={`/dashboard/orders/${order.id}/notes`}>Notatka</Link>
+								</Button>
+								<Button variant="ghost" className="h-8 justify-center px-3 text-xs" asChild>
+									<Link href={`/dashboard/orders/${order.id}/print`}>Drukuj</Link>
+								</Button>
+							</div>
+							<Separator className="my-3" />
+							<div className="space-y-2">
+								<OrderStatusForm orderId={order.id} currentStatus={order.status} />
+							</div>
+							<IssueProformaButton
+								orderId={order.id}
+								isWfirmaConfigured={hasWfirmaIntegration}
+								className="h-8 w-full px-3 text-xs"
+							/>
 						</CardContent>
 					</Card>
 				</div>
@@ -474,12 +505,12 @@ function OrderItemCard({ item, currency }: OrderItemCardProps) {
 	const totalArea = computeTotalArea(item);
 
 	return (
-		<div className="rounded-xl border bg-muted/40 p-4">
+		<div className="rounded-lg border bg-muted/40 p-3">
 			<div className="flex flex-col gap-1">
 				<p className="text-sm font-medium text-foreground">{item.product}</p>
-				<span className="text-xs text-muted-foreground">VAT {item.vatRate}%</span>
+				<span className="text-[11px] text-muted-foreground">VAT {item.vatRate}%</span>
 			</div>
-			<dl className="mt-3 grid grid-cols-2 gap-3 text-xs">
+			<dl className="mt-3 grid grid-cols-2 gap-3 text-[11px]">
 				<div className="space-y-1">
 					<dt className="text-muted-foreground">Ilość</dt>
 					<dd className="font-semibold text-foreground">{formatNumber(item.quantity)}</dd>
@@ -498,7 +529,7 @@ function OrderItemCard({ item, currency }: OrderItemCardProps) {
 				</div>
 				<div className="col-span-2 space-y-1">
 					<dt className="text-muted-foreground">Kwota brutto</dt>
-					<dd className="text-base font-semibold text-foreground">{formatCurrency(item.totalGross, currency)}</dd>
+					<dd className="text-sm font-semibold text-foreground">{formatCurrency(item.totalGross, currency)}</dd>
 				</div>
 			</dl>
 		</div>
@@ -511,12 +542,14 @@ type DocumentCardProps = {
 
 function DocumentCard({ document }: DocumentCardProps) {
 	return (
-		<div className="rounded-xl border bg-muted/40 p-4">
+		<div className="rounded-lg border bg-muted/40 p-3">
 			<div className="flex items-center justify-between gap-2">
 				<p className="text-sm font-medium capitalize text-foreground">{document.type}</p>
-				<Badge variant="outline">{document.status}</Badge>
+				<Badge variant="outline" className="px-2 py-0 text-[10px]">
+					{document.status}
+				</Badge>
 			</div>
-			<dl className="mt-3 grid grid-cols-2 gap-3 text-xs">
+			<dl className="mt-3 grid grid-cols-2 gap-3 text-[11px]">
 				<div className="space-y-1">
 					<dt className="text-muted-foreground">Numer</dt>
 					<dd className="font-semibold text-foreground">{document.number ?? '—'}</dd>
@@ -530,13 +563,13 @@ function DocumentCard({ document }: DocumentCardProps) {
 			</dl>
 			<div className="mt-3">
 				{document.pdfUrl ? (
-					<Button asChild size="sm" variant="outline" className="w-full">
+					<Button asChild size="sm" variant="outline" className="h-8 w-full px-3 text-xs">
 						<Link href={document.pdfUrl} target="_blank" rel="noreferrer">
 							Pobierz PDF
 						</Link>
 					</Button>
 				) : (
-					<span className="text-xs text-muted-foreground">Brak pliku</span>
+					<span className="text-[10px] text-muted-foreground">Brak pliku</span>
 				)}
 			</div>
 		</div>
@@ -545,9 +578,9 @@ function DocumentCard({ document }: DocumentCardProps) {
 
 function QuickStat({ label, value, icon: Icon }: { label: string; value: string; icon?: LucideIcon }) {
 	return (
-		<div className="rounded-xl border bg-muted/40 p-4">
-			<p className="text-xs font-semibold uppercase text-muted-foreground">{label}</p>
-			<div className="mt-1 flex items-center gap-2 text-sm font-medium text-foreground">
+		<div className="rounded-lg border bg-muted/30 p-3">
+			<p className="text-[10px] font-semibold uppercase text-muted-foreground">{label}</p>
+			<div className="mt-1 flex items-center gap-2 text-xs font-medium text-foreground">
 				{Icon ? <Icon className="h-4 w-4" /> : null}
 				<span className="truncate">{value}</span>
 			</div>
@@ -567,12 +600,12 @@ type AddressBlockProps = {
 
 function AddressBlock({ title, name, street, city, phone, email, icon: Icon }: AddressBlockProps) {
 	return (
-		<div className="space-y-3">
+		<div className="space-y-2">
 			<div className="flex items-center gap-2 text-sm font-semibold text-foreground">
 				{Icon ? <Icon className="h-4 w-4 text-muted-foreground" /> : null}
 				<span>{title}</span>
 			</div>
-			<div className="space-y-1 text-sm text-muted-foreground">
+			<div className="space-y-1 text-xs text-muted-foreground">
 				<p className="font-medium text-foreground">{name}</p>
 				<p>{street}</p>
 				<p>{city}</p>
