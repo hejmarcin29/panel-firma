@@ -1,18 +1,27 @@
 'use client';
 
-import { useEffect, useState, useTransition, type ChangeEvent, type ElementType, type FormEvent } from 'react';
+import { useEffect, useRef, useState, useTransition, type ChangeEvent, type ElementType, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2Icon, ClockIcon, FileIcon, MessageSquareIcon, PaperclipIcon } from 'lucide-react';
+import { CheckCircle2Icon, ChevronDown, ClockIcon, FileIcon, MessageSquareIcon, PaperclipIcon, Plus } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+	Sheet,
+	SheetContent,
+	SheetDescription,
+	SheetHeader,
+	SheetTitle,
+	SheetTrigger,
+} from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import {
 	addMontageNote,
@@ -25,6 +34,7 @@ import {
 } from '../actions';
 import { summarizeMaterialDetails } from '../utils';
 import type { MontageStatus } from '@/lib/db/schema';
+import { useIsMobile } from '@/hooks/use-mobile';
 import type { Montage, MontageAttachment, StatusOption, TimestampValue } from '../types';
 
 function formatTimestamp(value: TimestampValue) {
@@ -103,6 +113,17 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 	const [materialsDraft, setMaterialsDraft] = useState(montage.materialDetails ?? '');
 	const [materialsError, setMaterialsError] = useState<string | null>(null);
 	const [materialsFeedback, setMaterialsFeedback] = useState<string | null>(null);
+	const isMobile = useIsMobile();
+	const [activeTab, setActiveTab] = useState<'notes' | 'tasks'>('notes');
+	const [quickInfoOpen, setQuickInfoOpen] = useState(true);
+	const [actionSheetOpen, setActionSheetOpen] = useState(false);
+	const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const quickInfoSectionRef = useRef<HTMLDivElement | null>(null);
+	const noteFormRef = useRef<HTMLFormElement | null>(null);
+	const taskFormRef = useRef<HTMLFormElement | null>(null);
+	const noteTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+	const taskInputRef = useRef<HTMLInputElement | null>(null);
+	const materialsTextareaRef = useRef<HTMLTextAreaElement | null>(null);
 
 	const completedTasks = montage.tasks.filter((task) => task.completed).length;
 	const totalTasks = montage.tasks.length;
@@ -136,6 +157,25 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 	useEffect(() => {
 		setMaterialsDraft(montage.materialDetails ?? '');
 	}, [montage.materialDetails]);
+
+	useEffect(() => {
+		setQuickInfoOpen(!isMobile);
+	}, [isMobile]);
+
+	useEffect(() => {
+		if (!isMobile) {
+			setActionSheetOpen(false);
+		}
+	}, [isMobile]);
+
+	useEffect(
+		() => () => {
+			if (focusTimeoutRef.current) {
+				clearTimeout(focusTimeoutRef.current);
+			}
+		},
+		[],
+	);
 
 	const timelineEvents: TimelineEvent[] = [
 		...montage.notes.map((note) => ({
@@ -174,6 +214,105 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 
 	const latestActivityTimestamp = timelineEvents[0]?.timestamp ?? montage.updatedAt;
 
+	const renderQuickInfoDetails = () => (
+		<>
+			<div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+				{montage.contactPhone ? (
+					<div className="rounded-xl border border-border/60 bg-muted/20 px-3 py-2">
+						<p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">Telefon</p>
+						<p className="font-medium text-foreground">{montage.contactPhone}</p>
+					</div>
+				) : null}
+				{montage.contactEmail ? (
+					<div className="rounded-xl border border-border/60 bg-muted/20 px-3 py-2">
+						<p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">E-mail</p>
+						<p className="font-medium text-foreground">{montage.contactEmail}</p>
+					</div>
+				) : null}
+				<div className="rounded-xl border border-border/60 bg-muted/20 px-3 py-2">
+					<p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">Przewidywany termin montażu</p>
+					<p className="font-medium text-foreground">{scheduledInstallationDate ?? 'Brak terminu'}</p>
+				</div>
+			</div>
+			<form
+				onSubmit={submitMaterials}
+				className="space-y-2.5 rounded-xl border border-border/60 bg-muted/10 p-3.5"
+			>
+				<div className="flex flex-wrap items-center justify-between gap-3">
+					<div className="space-y-1">
+						<Label className="text-xs uppercase tracking-wide text-muted-foreground">Materiały i ilości</Label>
+						<p className="text-xs text-muted-foreground">
+							Zapisz co zostało zamówione, aby ekipa była gotowa do montażu.
+						</p>
+					</div>
+					{materialsFeedback ? <span className="text-xs text-emerald-600">{materialsFeedback}</span> : null}
+				</div>
+				<Textarea
+					ref={materialsTextareaRef}
+					value={materialsDraft}
+					onChange={handleMaterialsChange}
+					placeholder="np. Rolety dzień-noc — 4 szt., Markiza tarasowa — 1 szt."
+					rows={3}
+					disabled={materialsPending}
+				/>
+				<div className="flex flex-wrap items-center justify-between gap-3">
+					{materialsError ? (
+						<span className="text-xs text-destructive">{materialsError}</span>
+					) : (
+						<span className="text-xs text-muted-foreground">Informacja widoczna dla całego zespołu.</span>
+					)}
+					<Button type="submit" size="sm" disabled={materialsPending}>
+						{materialsPending ? 'Zapisywanie...' : 'Zapisz materiały'}
+					</Button>
+				</div>
+			</form>
+			<div className="grid gap-3 sm:grid-cols-2">
+				<div className="rounded-xl border border-border/60 bg-muted/15 px-3 py-2">
+					<p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">Adres faktury</p>
+					<p className="whitespace-pre-wrap text-sm text-foreground/90">{billingAddress ? billingAddress : 'Brak danych'}</p>
+					<p className="text-xs text-muted-foreground/80">{billingCity ? `Miasto: ${billingCity}` : 'Miasto nieznane'}</p>
+				</div>
+				<div className="rounded-xl border border-border/60 bg-muted/15 px-3 py-2">
+					<p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">Adres montażu</p>
+					<p className="whitespace-pre-wrap text-sm text-foreground/90">{installationAddress ? installationAddress : 'Brak danych'}</p>
+					<p className="text-xs text-muted-foreground/80">{installationCity ? `Miasto: ${installationCity}` : 'Miasto nieznane'}</p>
+					{addressesMatch && billingAddress ? (
+						<p className="mt-1 text-[11px] text-muted-foreground/80">Adres jak na fakturze</p>
+					) : null}
+				</div>
+			</div>
+		</>
+	);
+
+	const handleQuickAction = (action: 'note' | 'task' | 'materials') => {
+		if (action === 'note') {
+			setActiveTab('notes');
+		} else if (action === 'task') {
+			setActiveTab('tasks');
+		} else if (action === 'materials') {
+			setQuickInfoOpen(true);
+		}
+
+		setActionSheetOpen(false);
+
+		if (focusTimeoutRef.current) {
+			clearTimeout(focusTimeoutRef.current);
+		}
+
+		focusTimeoutRef.current = setTimeout(() => {
+			if (action === 'note') {
+				noteFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+				noteTextareaRef.current?.focus();
+			} else if (action === 'task') {
+				taskFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+				taskInputRef.current?.focus();
+			} else if (action === 'materials') {
+				quickInfoSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+				materialsTextareaRef.current?.focus();
+			}
+		}, 220);
+	};
+
 	const handleStatusChange = (value: MontageStatus) => {
 		startStatusTransition(async () => {
 			try {
@@ -195,43 +334,43 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 		}
 	};
 
-		const submitMaterials = (event: FormEvent<HTMLFormElement>) => {
-			event.preventDefault();
-			setMaterialsError(null);
-			setMaterialsFeedback(null);
+	const submitMaterials = (event: FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+		setMaterialsError(null);
+		setMaterialsFeedback(null);
 
-			const value = materialsDraft;
+		const value = materialsDraft;
 
-			startMaterialsTransition(async () => {
-				try {
-					await updateMontageMaterialDetails({ montageId: montage.id, materialDetails: value });
-					setMaterialsFeedback('Zapisano informacje o materiałach.');
-					router.refresh();
-				} catch (error) {
-					const message =
-						error instanceof Error ? error.message : 'Nie udało się zapisać informacji o materiałach.';
-					setMaterialsError(message);
-				}
-			});
-		};
+		startMaterialsTransition(async () => {
+			try {
+				await updateMontageMaterialDetails({ montageId: montage.id, materialDetails: value });
+				setMaterialsFeedback('Zapisano informacje o materiałach.');
+				router.refresh();
+			} catch (error) {
+				const message =
+					error instanceof Error ? error.message : 'Nie udało się zapisać informacji o materiałach.';
+				setMaterialsError(message);
+			}
+		});
+	};
 
-		const handleChecklistToggle = (itemId: string, nextValue: boolean) => {
-			setChecklistError(null);
-			setChecklistPendingId(itemId);
+	const handleChecklistToggle = (itemId: string, nextValue: boolean) => {
+		setChecklistError(null);
+		setChecklistPendingId(itemId);
 
-			startChecklistTransition(async () => {
-				try {
-					await toggleMontageChecklistItem({ montageId: montage.id, itemId, completed: nextValue });
-					router.refresh();
-				} catch (error) {
-					const message =
-						error instanceof Error ? error.message : 'Nie udało się zaktualizować listy kontrolnej.';
-					setChecklistError(message);
-				} finally {
-					setChecklistPendingId(null);
-				}
-			});
-		};
+		startChecklistTransition(async () => {
+			try {
+				await toggleMontageChecklistItem({ montageId: montage.id, itemId, completed: nextValue });
+				router.refresh();
+			} catch (error) {
+				const message =
+					error instanceof Error ? error.message : 'Nie udało się zaktualizować listy kontrolnej.';
+				setChecklistError(message);
+			} finally {
+				setChecklistPendingId(null);
+			}
+		});
+	};
 
 	const submitChecklistAttachment = (itemId: string) => (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
@@ -318,7 +457,7 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 		<Card className="h-full border bg-background shadow-sm sm:rounded-2xl">
 			<CardHeader className="space-y-5 border-b border-border/60 pb-6">
 				<div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-					<div className="space-y-4">
+					<div className="flex-1 space-y-4">
 						<div className="space-y-2">
 							<CardTitle className="text-2xl font-semibold text-foreground lg:text-3xl">
 								{montage.clientName}
@@ -327,71 +466,32 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 								Utworzono {formatTimestamp(montage.createdAt)} • Aktualizacja {formatTimestamp(montage.updatedAt)}
 							</CardDescription>
 						</div>
-						<div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-							{montage.contactPhone ? (
-								<div className="rounded-xl border border-border/60 bg-muted/20 px-3 py-2">
-									<p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">Telefon</p>
-									<p className="font-medium text-foreground">{montage.contactPhone}</p>
-								</div>
-							) : null}
-							{montage.contactEmail ? (
-								<div className="rounded-xl border border-border/60 bg-muted/20 px-3 py-2">
-									<p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">E-mail</p>
-									<p className="font-medium text-foreground">{montage.contactEmail}</p>
-								</div>
-							) : null}
-							<div className="rounded-xl border border-border/60 bg-muted/20 px-3 py-2">
-								<p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">Przewidywany termin montażu</p>
-								<p className="font-medium text-foreground">{scheduledInstallationDate ?? 'Brak terminu'}</p>
-							</div>
-						</div>
-						<form onSubmit={submitMaterials} className="space-y-2.5 rounded-xl border border-border/60 bg-muted/10 p-3.5">
-							<div className="flex flex-wrap items-center justify-between gap-3">
-								<div className="space-y-1">
-									<Label className="text-xs uppercase tracking-wide text-muted-foreground">Materiały i ilości</Label>
-									<p className="text-xs text-muted-foreground">
-										Zapisz co zostało zamówione, aby ekipa była gotowa do montażu.
-									</p>
-								</div>
-								{materialsFeedback ? <span className="text-xs text-emerald-600">{materialsFeedback}</span> : null}
-							</div>
-							<Textarea
-								value={materialsDraft}
-								onChange={handleMaterialsChange}
-								placeholder="np. Rolety dzień-noc — 4 szt., Markiza tarasowa — 1 szt."
-								rows={3}
-								disabled={materialsPending}
-							/>
-							<div className="flex flex-wrap items-center justify-between gap-3">
-								{materialsError ? (
-									<span className="text-xs text-destructive">{materialsError}</span>
-								) : (
-									<span className="text-xs text-muted-foreground">Informacja widoczna dla całego zespołu.</span>
-								)}
-								<Button type="submit" size="sm" disabled={materialsPending}>
-									{materialsPending ? 'Zapisywanie...' : 'Zapisz materiały'}
-								</Button>
-							</div>
-						</form>
-						<div className="grid gap-3 sm:grid-cols-2">
-							<div className="rounded-xl border border-border/60 bg-muted/15 px-3 py-2">
-								<p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">Adres faktury</p>
-								<p className="whitespace-pre-wrap text-sm text-foreground/90">
-									{billingAddress ? billingAddress : 'Brak danych'}
-								</p>
-								<p className="text-xs text-muted-foreground/80">{billingCity ? `Miasto: ${billingCity}` : 'Miasto nieznane'}</p>
-							</div>
-							<div className="rounded-xl border border-border/60 bg-muted/15 px-3 py-2">
-								<p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">Adres montażu</p>
-								<p className="whitespace-pre-wrap text-sm text-foreground/90">
-									{installationAddress ? installationAddress : 'Brak danych'}
-								</p>
-								<p className="text-xs text-muted-foreground/80">{installationCity ? `Miasto: ${installationCity}` : 'Miasto nieznane'}</p>
-								{addressesMatch && billingAddress ? (
-									<p className="mt-1 text-[11px] text-muted-foreground/80">Adres jak na fakturze</p>
-								) : null}
-							</div>
-						</div>
+						{isMobile ? (
+							<Collapsible open={quickInfoOpen} onOpenChange={setQuickInfoOpen} className="rounded-2xl border border-border/60 bg-muted/10">
+								<CollapsibleTrigger asChild>
+									<button
+										type="button"
+										aria-expanded={quickInfoOpen}
+										className="flex w-full items-center justify-between gap-3 rounded-2xl px-3.5 py-2 text-left text-sm font-semibold text-foreground"
+									>
+										<span className="flex flex-col">
+											<span>Szybkie informacje</span>
+											<span className="text-xs font-normal text-muted-foreground">
+												{hasMaterials ? materialsQuickSummary : 'Dodaj materiały, aby przygotować ekipę.'}
+											</span>
+										</span>
+										<ChevronDown className={cn('size-4 transition-transform', quickInfoOpen ? 'rotate-180' : 'rotate-0')} />
+									</button>
+								</CollapsibleTrigger>
+								<CollapsibleContent className="space-y-3 px-3.5 pb-3.5 pt-1.5">
+									<div ref={quickInfoSectionRef} className="space-y-3.5">
+										{renderQuickInfoDetails()}
+									</div>
+								</CollapsibleContent>
+							</Collapsible>
+						) : (
+							<div className="space-y-3.5">{renderQuickInfoDetails()}</div>
+						)}
 					</div>
 					<div className="flex flex-col items-start gap-2.5 sm:items-end">
 						{currentStatusOption ? (
@@ -448,7 +548,7 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 					</div>
 				</div>
 			</CardHeader>
-			<CardContent className="space-y-4 pb-8 pt-0">
+			<CardContent className={cn('space-y-4 pt-0', isMobile ? 'pb-24' : 'pb-8')}>
 				<section className="space-y-3.5 rounded-2xl border border-border/60 bg-muted/10 p-4">
 					<div className="flex flex-wrap items-center justify-between gap-2.5">
 						<h3 className="text-sm font-semibold text-foreground">Lista kontrolna montażu</h3>
@@ -536,7 +636,7 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 						</ul>
 					)}
 				</section>
-				<Tabs defaultValue="notes" className="flex flex-col gap-4">
+				<Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'notes' | 'tasks')} className="flex flex-col gap-4">
 					<div className="flex flex-wrap items-center justify-between gap-2.5">
 						<TabsList>
 							<TabsTrigger value="notes">
@@ -609,8 +709,13 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 								})}
 							</ul>
 						)}
-						<form onSubmit={submitNote} className="space-y-2.5 rounded-xl border border-border/60 bg-background p-3.5 shadow-sm">
+						<form
+							onSubmit={submitNote}
+							ref={noteFormRef}
+							className="space-y-2.5 rounded-xl border border-border/60 bg-background p-3.5 shadow-sm"
+						>
 							<Textarea
+								ref={noteTextareaRef}
 								value={noteContent}
 								onChange={(event) => setNoteContent(event.target.value)}
 								placeholder="Dodaj notatkę dla ekipy montażowej"
@@ -703,9 +808,11 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 						)}
 						<form
 							onSubmit={submitTask}
+							ref={taskFormRef}
 							className="flex flex-col gap-2.5 rounded-xl border border-dashed border-border/70 bg-muted/15 p-3.5 shadow-sm sm:flex-row sm:items-end"
 						>
 							<Input
+								ref={taskInputRef}
 								placeholder="Dodaj zadanie (np. zamówienie materiału)"
 								value={taskTitle}
 								onChange={(event) => setTaskTitle(event.target.value)}
@@ -719,7 +826,56 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 						</form>
 					</TabsContent>
 				</Tabs>
-			</CardContent>
+					{isMobile ? (
+						<Sheet open={actionSheetOpen} onOpenChange={setActionSheetOpen}>
+							<SheetTrigger asChild>
+								<Button
+									type="button"
+									size="icon"
+									className="fixed bottom-24 right-4 z-30 h-12 w-12 rounded-full shadow-lg shadow-primary/40 sm:hidden"
+									aria-label="Szybkie działania"
+								>
+									<Plus className="size-5" />
+								</Button>
+							</SheetTrigger>
+							<SheetContent side="bottom" className="space-y-5 pb-6">
+								<SheetHeader>
+									<SheetTitle>Szybkie działania</SheetTitle>
+									<SheetDescription>Wybierz czynność, aby skupić widok na odpowiednim miejscu karty.</SheetDescription>
+								</SheetHeader>
+								<div className="grid gap-3">
+									<Button
+										type="button"
+										variant="secondary"
+										className="justify-start gap-2"
+										onClick={() => handleQuickAction('note')}
+									>
+										<MessageSquareIcon className="size-4" />
+										Dodaj notatkę
+									</Button>
+									<Button
+										type="button"
+										variant="secondary"
+										className="justify-start gap-2"
+										onClick={() => handleQuickAction('task')}
+									>
+										<CheckCircle2Icon className="size-4" />
+										Dodaj zadanie
+									</Button>
+									<Button
+										type="button"
+										variant="secondary"
+										className="justify-start gap-2"
+										onClick={() => handleQuickAction('materials')}
+									>
+										<PaperclipIcon className="size-4" />
+										Edytuj materiały
+									</Button>
+								</div>
+							</SheetContent>
+						</Sheet>
+					) : null}
+				</CardContent>
 		</Card>
 	);
 }
