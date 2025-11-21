@@ -15,7 +15,8 @@ import {
 	SheetTrigger,
 } from '@/components/ui/sheet';
 
-import { MontageCard, type Montage, type StatusOption } from './montage-card';
+import { MontageCard } from './montage-card';
+import type { Montage, StatusOption } from '../types';
 
 function countCompleted(tasks: Montage['tasks']): number {
 	return tasks.filter((task) => task.completed).length;
