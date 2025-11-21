@@ -1,6 +1,8 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
+
+import Link from 'next/link';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,6 +16,7 @@ import {
 	SheetTitle,
 	SheetTrigger,
 } from '@/components/ui/sheet';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 import { MontageCard } from './montage-card';
 import type { Montage, StatusOption } from '../types';
@@ -74,6 +77,7 @@ type Props = {
 };
 
 export function MontagePipelineCard({ montage, statusOptions }: Props) {
+	const isMobile = useIsMobile();
 	const completedTasks = useMemo(() => countCompleted(montage.tasks), [montage.tasks]);
 	const totalTasks = montage.tasks.length;
 	const hasAttachments = montage.attachments.length > 0;
@@ -84,64 +88,78 @@ export function MontagePipelineCard({ montage, statusOptions }: Props) {
 	const cityLine = montage.installationCity || montage.billingCity || null;
 	const scheduledDate = useMemo(() => formatScheduleDate(montage.scheduledInstallationAt), [montage.scheduledInstallationAt]);
 
+	const renderCard = (cta: ReactNode) => (
+		<Card className="group w-full border border-border/60 bg-linear-to-br from-background via-background to-muted shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
+			<CardHeader className="space-y-4">
+				<div className="flex items-start justify-between gap-3">
+					<div className="flex items-center gap-3">
+						<div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+							{initials(montage.clientName)}
+						</div>
+						<div className="space-y-1">
+							<CardTitle className="text-base font-semibold leading-tight text-foreground">
+								{montage.clientName}
+							</CardTitle>
+							<CardDescription className="text-xs text-muted-foreground">Aktualizacja: {latestUpdate}</CardDescription>
+						</div>
+					</div>
+					<Badge variant={hasAttachments ? 'default' : 'outline'} className="rounded-full text-[11px] uppercase tracking-wide">
+						{hasAttachments ? `${montage.attachments.length} pl.` : 'brak plikow'}
+					</Badge>
+				</div>
+				{addressLine || cityLine ? (
+					<div className="space-y-1">
+						{addressLine ? <p className="text-xs text-muted-foreground line-clamp-2">{addressLine}</p> : null}
+						{cityLine ? <p className="text-xs font-medium text-foreground/80">Miasto: {cityLine}</p> : null}
+					</div>
+				) : null}
+			</CardHeader>
+			<CardContent className="space-y-4">
+				<div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+					{montage.contactPhone ? <span>tel. {montage.contactPhone}</span> : null}
+					{montage.contactEmail ? <span>{montage.contactEmail}</span> : null}
+				</div>
+				<div className="flex flex-wrap items-center gap-2 text-xs">
+					<Badge variant="secondary" className="rounded-full px-2">
+						{totalTasks === 0 ? 'Brak zadan' : `${completedTasks}/${totalTasks} zadan`}
+					</Badge>
+					<Badge variant="secondary" className="rounded-full px-2">
+						{montage.notes.length} not.
+					</Badge>
+					<Badge variant="outline" className="rounded-full px-2">
+						Termin: {scheduledDate ?? 'brak'}
+					</Badge>
+				</div>
+				<Separator />
+				<div className="flex items-center justify-between">
+					<div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-muted-foreground">
+						<span>Pliki</span>
+						<span className="h-1 w-1 rounded-full bg-muted-foreground/60" />
+						<span>{montage.attachments.length}</span>
+					</div>
+					{cta}
+				</div>
+			</CardContent>
+		</Card>
+	);
+
+	if (isMobile) {
+		return renderCard(
+			<Button size="sm" variant="outline" asChild>
+				<Link href={`/dashboard/montaze/${montage.id}`}>Otworz panel</Link>
+			</Button>,
+		);
+	}
+
 	return (
 		<Sheet>
-			<Card className="group w-full border border-border/60 bg-linear-to-br from-background via-background to-muted shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
-				<CardHeader className="space-y-4">
-					<div className="flex items-start justify-between gap-3">
-						<div className="flex items-center gap-3">
-							<div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-								{initials(montage.clientName)}
-							</div>
-							<div className="space-y-1">
-								<CardTitle className="text-base font-semibold leading-tight text-foreground">
-									{montage.clientName}
-								</CardTitle>
-								<CardDescription className="text-xs text-muted-foreground">Aktualizacja: {latestUpdate}</CardDescription>
-							</div>
-						</div>
-						<Badge variant={hasAttachments ? 'default' : 'outline'} className="rounded-full text-[11px] uppercase tracking-wide">
-							{hasAttachments ? `${montage.attachments.length} pl.` : 'brak plikow'}
-						</Badge>
-					</div>
-					{addressLine || cityLine ? (
-						<div className="space-y-1">
-							{addressLine ? <p className="text-xs text-muted-foreground line-clamp-2">{addressLine}</p> : null}
-							{cityLine ? <p className="text-xs font-medium text-foreground/80">Miasto: {cityLine}</p> : null}
-						</div>
-					) : null}
-				</CardHeader>
-				<CardContent className="space-y-4">
-					<div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-						{montage.contactPhone ? <span>tel. {montage.contactPhone}</span> : null}
-						{montage.contactEmail ? <span>{montage.contactEmail}</span> : null}
-					</div>
-					<div className="flex flex-wrap items-center gap-2 text-xs">
-						<Badge variant="secondary" className="rounded-full px-2">
-							{totalTasks === 0 ? 'Brak zadan' : `${completedTasks}/${totalTasks} zadan`}
-						</Badge>
-						<Badge variant="secondary" className="rounded-full px-2">
-							{montage.notes.length} not.
-						</Badge>
-						<Badge variant="outline" className="rounded-full px-2">
-							Termin: {scheduledDate ?? 'brak'}
-						</Badge>
-					</div>
-					<Separator />
-					<div className="flex items-center justify-between">
-						<div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-muted-foreground">
-							<span>Pliki</span>
-							<span className="h-1 w-1 rounded-full bg-muted-foreground/60" />
-							<span>{montage.attachments.length}</span>
-						</div>
-						<SheetTrigger asChild>
-							<Button size="sm" variant="outline">
-								Otworz panel
-							</Button>
-						</SheetTrigger>
-					</div>
-				</CardContent>
-			</Card>
+			{renderCard(
+				<SheetTrigger asChild>
+					<Button size="sm" variant="outline">
+						Otworz panel
+					</Button>
+				</SheetTrigger>,
+			)}
 			<SheetContent
 				side="right"
 				className="h-full w-full max-w-full border-l bg-background sm:max-w-[420px] md:max-w-[560px] lg:max-w-[660px] xl:max-w-[760px] 2xl:max-w-[860px]"

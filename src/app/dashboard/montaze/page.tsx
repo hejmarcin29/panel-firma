@@ -173,14 +173,14 @@ export default async function MontazePage() {
                 </aside>
 
                 <section className="space-y-3">
-                    <div className="flex items-center justify-between">
-                        <div className="space-y-1">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="hidden space-y-1 sm:block">
                             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Pipeline montaży</h2>
                             <p className="text-xs text-muted-foreground">
                                 Zarządzaj etapami, przeciągając karty pomiędzy kolumnami.
                             </p>
                         </div>
-                        <Tabs defaultValue="kanban" className="space-y-2">
+                        <Tabs defaultValue="kanban" className="w-full space-y-2 sm:w-auto">
                             <TabsList className="grid grid-cols-3 rounded-md bg-muted/60 p-0.5">
                                 {tabs.map((tab) => (
                                     <TabsTrigger
