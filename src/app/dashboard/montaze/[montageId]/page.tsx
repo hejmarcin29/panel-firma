@@ -17,7 +17,7 @@ import { tryGetR2Config } from '@/lib/r2/config';
 import { MontageCard } from '../_components/montage-card';
 import { statusOptions } from '../constants';
 import type { Montage } from '../types';
-import { formatScheduleDate, formatRelativeDate, mapMontageRow, type MontageRow } from '../utils';
+import { formatScheduleDate, formatRelativeDate, mapMontageRow, summarizeMaterialDetails, type MontageRow } from '../utils';
 
 type MontageDetailsPageParams = {
     params: Promise<{
@@ -29,6 +29,7 @@ function buildSummary(montage: Montage) {
     const totalTasks = montage.tasks.length;
     const completedTasks = montage.tasks.filter((task) => task.completed).length;
     const openTasks = Math.max(totalTasks - completedTasks, 0);
+    const materialsSummary = summarizeMaterialDetails(montage.materialDetails, 120);
 
     return [
         {
@@ -48,8 +49,8 @@ function buildSummary(montage: Montage) {
             value: String(openTasks),
         },
         {
-            label: 'Załączniki',
-            value: String(montage.attachments.length),
+            label: 'Materiały',
+            value: materialsSummary,
         },
     ];
 }
@@ -134,9 +135,9 @@ export default async function MontageDetailsPage({ params }: MontageDetailsPageP
                     </div>
                     <div className="space-y-2">
                         {summary.map((item) => (
-                            <div key={item.label} className="flex items-center justify-between text-xs">
-                                <span>{item.label}</span>
-                                <span className="font-semibold text-foreground">{item.value}</span>
+                            <div key={item.label} className="space-y-0.5">
+                                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{item.label}</p>
+                                <p className="text-sm font-semibold text-foreground leading-snug">{item.value}</p>
                             </div>
                         ))}
                     </div>

@@ -6,14 +6,6 @@ import { CheckCircle2Icon, ClockIcon, FileIcon, MessageSquareIcon, PaperclipIcon
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from '@/components/ui/dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,7 +15,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import {
-	addMontageAttachment,
 	addMontageNote,
 	addMontageTask,
 	toggleMontageChecklistItem,
@@ -32,6 +23,7 @@ import {
 	updateMontageStatus,
 	uploadChecklistAttachment,
 } from '../actions';
+import { summarizeMaterialDetails } from '../utils';
 import type { MontageStatus } from '@/lib/db/schema';
 import type { Montage, MontageAttachment, StatusOption, TimestampValue } from '../types';
 
@@ -52,11 +44,6 @@ function formatTimestamp(value: TimestampValue) {
 	}).format(date);
 }
 
-function isImageAttachment(attachment: MontageAttachment) {
-	const target = attachment.title ?? attachment.url;
-	return /\.(png|jpe?g|webp|gif|svg)$/i.test(target.split('?')[0] ?? '');
-}
-
 function attachmentDisplayName(attachment: MontageAttachment) {
 	if (attachment.title) {
 		return attachment.title;
@@ -68,7 +55,7 @@ function attachmentDisplayName(attachment: MontageAttachment) {
 	return segments[segments.length - 1] ?? url;
 }
 
-type TimelineEventType = 'note' | 'attachment' | 'task' | 'task-completed' | 'milestone';
+type TimelineEventType = 'note' | 'task' | 'task-completed' | 'milestone';
 
 type TimelineEvent = {
 	id: string;
@@ -101,13 +88,11 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 	const [statusPending, startStatusTransition] = useTransition();
 	const [notePending, startNoteTransition] = useTransition();
 	const [taskPending, startTaskTransition] = useTransition();
-	const [attachmentPending, startAttachmentTransition] = useTransition();
 	const [materialsPending, startMaterialsTransition] = useTransition();
 	const [checklistPending, startChecklistTransition] = useTransition();
 	const [checklistAttachmentPending, startChecklistAttachmentTransition] = useTransition();
 	const [noteError, setNoteError] = useState<string | null>(null);
 	const [taskError, setTaskError] = useState<string | null>(null);
-	const [attachmentError, setAttachmentError] = useState<string | null>(null);
 	const [checklistError, setChecklistError] = useState<string | null>(null);
 	const [checklistPendingId, setChecklistPendingId] = useState<string | null>(null);
 	const [checklistAttachmentError, setChecklistAttachmentError] = useState<{ id: string; message: string } | null>(null);
@@ -115,8 +100,6 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 	const [noteContent, setNoteContent] = useState('');
 	const [noteAttachmentTitle, setNoteAttachmentTitle] = useState('');
 	const [taskTitle, setTaskTitle] = useState('');
-	const [attachmentTitle, setAttachmentTitle] = useState('');
-	const [attachmentsDialogOpen, setAttachmentsDialogOpen] = useState(false);
 	const [materialsDraft, setMaterialsDraft] = useState(montage.materialDetails ?? '');
 	const [materialsError, setMaterialsError] = useState<string | null>(null);
 	const [materialsFeedback, setMaterialsFeedback] = useState<string | null>(null);
@@ -146,6 +129,9 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 		}
 		return new Intl.DateTimeFormat('pl-PL', { dateStyle: 'long' }).format(date);
 	})();
+	const materialsSummary = summarizeMaterialDetails(montage.materialDetails, 160);
+	const materialsQuickSummary = summarizeMaterialDetails(montage.materialDetails, 60);
+	const hasMaterials = Boolean(montage.materialDetails?.trim());
 
 	useEffect(() => {
 		setMaterialsDraft(montage.materialDetails ?? '');
@@ -158,13 +144,6 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 			timestamp: note.createdAt,
 			label: 'Dodano notatkę',
 			description: previewText(note.content, 90),
-		})),
-		...montage.attachments.map((attachment) => ({
-			id: `attachment-${attachment.id}`,
-			type: 'attachment' as const,
-			timestamp: attachment.createdAt,
-			label: attachment.noteId ? 'Załącznik do notatki' : 'Dodano załącznik',
-			description: previewText(attachmentDisplayName(attachment), 60),
 		})),
 		...montage.tasks.map((task) => ({
 			id: `task-${task.id}`,
@@ -188,7 +167,6 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 
 	const timelineVisuals: Record<TimelineEventType, { icon: ElementType; className: string }> = {
 		note: { icon: MessageSquareIcon, className: 'bg-primary/15 text-primary' },
-		attachment: { icon: PaperclipIcon, className: 'bg-amber-500/15 text-amber-600 dark:text-amber-200' },
 		task: { icon: ClockIcon, className: 'bg-sky-500/15 text-sky-600 dark:text-sky-300' },
 		'task-completed': { icon: CheckCircle2Icon, className: 'bg-emerald-500/15 text-emerald-500' },
 		milestone: { icon: CheckCircle2Icon, className: 'bg-violet-500/15 text-violet-600 dark:text-violet-200' },
@@ -217,43 +195,43 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 		}
 	};
 
-	const submitMaterials = (event: FormEvent<HTMLFormElement>) => {
-		event.preventDefault();
-		setMaterialsError(null);
-		setMaterialsFeedback(null);
+		const submitMaterials = (event: FormEvent<HTMLFormElement>) => {
+			event.preventDefault();
+			setMaterialsError(null);
+			setMaterialsFeedback(null);
 
-		const value = materialsDraft;
+			const value = materialsDraft;
 
-		startMaterialsTransition(async () => {
-			try {
-				await updateMontageMaterialDetails({ montageId: montage.id, materialDetails: value });
-				setMaterialsFeedback('Zapisano informacje o materiałach.');
-				router.refresh();
-			} catch (error) {
-				const message =
-					error instanceof Error ? error.message : 'Nie udało się zapisać informacji o materiałach.';
-				setMaterialsError(message);
-			}
-		});
-	};
+			startMaterialsTransition(async () => {
+				try {
+					await updateMontageMaterialDetails({ montageId: montage.id, materialDetails: value });
+					setMaterialsFeedback('Zapisano informacje o materiałach.');
+					router.refresh();
+				} catch (error) {
+					const message =
+						error instanceof Error ? error.message : 'Nie udało się zapisać informacji o materiałach.';
+					setMaterialsError(message);
+				}
+			});
+		};
 
-	const handleChecklistToggle = (itemId: string, nextValue: boolean) => {
-		setChecklistError(null);
-		setChecklistPendingId(itemId);
+		const handleChecklistToggle = (itemId: string, nextValue: boolean) => {
+			setChecklistError(null);
+			setChecklistPendingId(itemId);
 
-		startChecklistTransition(async () => {
-			try {
-				await toggleMontageChecklistItem({ montageId: montage.id, itemId, completed: nextValue });
-				router.refresh();
-			} catch (error) {
-				const message =
-					error instanceof Error ? error.message : 'Nie udało się zaktualizować listy kontrolnej.';
-				setChecklistError(message);
-			} finally {
-				setChecklistPendingId(null);
-			}
-		});
-	};
+			startChecklistTransition(async () => {
+				try {
+					await toggleMontageChecklistItem({ montageId: montage.id, itemId, completed: nextValue });
+					router.refresh();
+				} catch (error) {
+					const message =
+						error instanceof Error ? error.message : 'Nie udało się zaktualizować listy kontrolnej.';
+					setChecklistError(message);
+				} finally {
+					setChecklistPendingId(null);
+				}
+			});
+		};
 
 	const submitChecklistAttachment = (itemId: string) => (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
@@ -319,33 +297,6 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 				const message =
 					error instanceof Error ? error.message : 'Nie udało się dodać zadania.';
 				setTaskError(message);
-			}
-		});
-	};
-
-	const submitAttachment = (event: FormEvent<HTMLFormElement>) => {
-		event.preventDefault();
-		setAttachmentError(null);
-
-		startAttachmentTransition(async () => {
-			try {
-				const formData = new FormData(event.currentTarget);
-				formData.set('title', attachmentTitle);
-				formData.set('montageId', montage.id);
-
-				const file = formData.get('file');
-				if (!(file instanceof File) || file.size === 0) {
-					throw new Error('Wybierz plik z dysku.');
-				}
-
-				await addMontageAttachment(formData);
-				event.currentTarget.reset();
-				setAttachmentTitle('');
-				router.refresh();
-			} catch (error) {
-				const message =
-					error instanceof Error ? error.message : 'Nie udało się dodać załącznika.';
-				setAttachmentError(message);
 			}
 		});
 	};
@@ -477,9 +428,13 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 						<p className="text-xs text-muted-foreground">Łącznie wpisów</p>
 					</div>
 					<div className="rounded-xl border border-border/60 bg-muted/20 px-3.5 py-2.5">
-						<p className="text-[11px] uppercase tracking-wide text-muted-foreground">Załączniki</p>
-						<p className="text-xl font-semibold text-foreground">{montage.attachments.length}</p>
-						<p className="text-xs text-muted-foreground">Pliki w chmurze</p>
+						<p className="text-[11px] uppercase tracking-wide text-muted-foreground">Materiały</p>
+						<p className="text-sm font-semibold text-foreground leading-snug line-clamp-3 min-h-14">
+							{materialsSummary}
+						</p>
+						<p className="text-xs text-muted-foreground">
+							{hasMaterials ? 'Opis widoczny dla zespołu' : 'Dodaj materiały, aby przygotować ekipę.'}
+						</p>
 					</div>
 					<div className="rounded-xl border border-border/60 bg-muted/20 px-3.5 py-2.5">
 						<p className="text-[11px] uppercase tracking-wide text-muted-foreground">Lista kontrolna</p>
@@ -600,7 +555,7 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 						<div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
 							<span>Do wykonania: {openTasks}</span>
 							<span>Checklist: {checklistProgressLabel}</span>
-							<span>Załączników: {montage.attachments.length}</span>
+							<span>Materiały: {hasMaterials ? materialsQuickSummary : 'brak'}</span>
 						</div>
 					</div>
 					<TabsContent value="notes" className="space-y-3.5">
@@ -688,7 +643,7 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 									<p className="text-xs uppercase tracking-wide text-muted-foreground">Oś aktywności</p>
 									<h3 className="text-base font-semibold text-foreground">Historia zdarzeń</h3>
 								</div>
-								<span className="text-xs text-muted-foreground">Automatycznie generowana z notatek, zadań i załączników.</span>
+								<span className="text-xs text-muted-foreground">Automatycznie generowana z notatek, zadań i listy kontrolnej.</span>
 							</div>
 							{timelineEvents.length === 0 ? (
 								<p className="text-sm text-muted-foreground">Brak zarejestrowanej aktywności dla tego montażu.</p>
@@ -764,116 +719,6 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 						</form>
 					</TabsContent>
 				</Tabs>
-				<section className="space-y-3 rounded-2xl border border-border/60 bg-muted/5 p-4">
-					<div className="flex flex-wrap items-center justify-between gap-2.5">
-						<div>
-							<p className="text-xs uppercase tracking-wide text-muted-foreground">Załączniki</p>
-							<h3 className="text-base font-semibold text-foreground">Biblioteka klienta</h3>
-							<p className="text-xs text-muted-foreground">Łącznie plików: {montage.attachments.length}</p>
-						</div>
-						<Dialog open={attachmentsDialogOpen} onOpenChange={setAttachmentsDialogOpen}>
-							<DialogTrigger asChild>
-								<Button variant="outline" size="sm">Załączniki</Button>
-							</DialogTrigger>
-							<DialogContent className="max-w-4xl">
-								<DialogHeader>
-									<DialogTitle>Pliki powiązane z montażem</DialogTitle>
-									<DialogDescription>
-										Przeglądaj materiały, które trafiły do chmury R2, oraz dodaj nowe pliki dla zespołu.
-									</DialogDescription>
-								</DialogHeader>
-								<div className="space-y-4">
-									{attachmentError ? <span className="text-xs text-destructive">{attachmentError}</span> : null}
-									{montage.attachments.length === 0 ? (
-										<p className="text-sm text-muted-foreground">Brak załączonych materiałów. Dodaj pierwszy plik, aby udostępnić ekipie.</p>
-									) : (
-										<div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
-											{montage.attachments.map((attachment) => {
-												const image = isImageAttachment(attachment);
-												return (
-													<a
-														key={attachment.id}
-														href={attachment.url}
-														target="_blank"
-														rel="noopener noreferrer"
-														className="group flex h-full flex-col overflow-hidden rounded-xl border border-border/60 bg-muted/10 transition hover:border-primary/60 hover:shadow-lg"
-													>
-														<div className="relative h-36 overflow-hidden bg-background">
-															{image ? (
-																<>
-																	{/* eslint-disable-next-line @next/next/no-img-element -- Cloud R2 attachments lack Next.js loader configuration */}
-																	<img
-																		src={attachment.url}
-																		alt={attachmentDisplayName(attachment)}
-																		className="h-full w-full object-cover transition group-hover:scale-105"
-																		loading="lazy"
-																	/>
-																</>
-															) : (
-																<div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground">
-																	<FileIcon className="size-8" />
-																	<span className="text-[11px] uppercase tracking-wide">
-																		{attachment.url.split('.').pop()?.split('?')[0] ?? 'plik'}
-																	</span>
-																</div>
-															)}
-														</div>
-														<div className="flex flex-1 flex-col gap-1 px-3.5 py-2.5 text-left">
-															<span className="line-clamp-2 font-medium text-foreground">
-																{attachmentDisplayName(attachment)}
-															</span>
-															<p className="text-xs text-muted-foreground">
-																Dodano {formatTimestamp(attachment.createdAt)}
-																{attachment.uploader ? ` • ${attachment.uploader.name ?? attachment.uploader.email}` : ''}
-															</p>
-															{attachment.noteId ? (
-																<span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-																	<PaperclipIcon className="size-3.5" />
-																	Powiązano z notatką
-																</span>
-															) : null}
-														</div>
-													</a>
-											);
-										})}
-									</div>
-								)}
-								<form
-									onSubmit={submitAttachment}
-									className="flex flex-col gap-2.5 rounded-xl border border-dashed border-border/70 bg-muted/10 p-3.5 sm:flex-row sm:flex-wrap sm:items-center"
-								>
-									<Input
-										name="file"
-										type="file"
-										accept="image/*,application/pdf"
-										disabled={attachmentPending}
-										required
-										className="min-w-[220px] flex-1"
-									/>
-									<Input
-										name="title"
-										placeholder="Opis (opcjonalnie)"
-										value={attachmentTitle}
-										onChange={(event) => setAttachmentTitle(event.target.value)}
-										disabled={attachmentPending}
-										className="min-w-[180px] flex-1"
-									/>
-									<Button type="submit" size="sm" disabled={attachmentPending} className="sm:ml-auto">
-										{attachmentPending ? 'Dodawanie...' : 'Dodaj plik'}
-									</Button>
-								</form>
-								<p className="text-[11px] text-muted-foreground">
-									Pliki trafiają bezpośrednio do chmury R2 w katalogu przypisanym do klienta.
-								</p>
-							</div>
-						</DialogContent>
-						</Dialog>
-					</div>
-					{attachmentError ? <span className="text-xs text-destructive">{attachmentError}</span> : null}
-					<p className="text-sm text-muted-foreground">
-						Kliknij „Załączniki”, aby zobaczyć i zarządzać materiałami przesłanymi dla tego montażu.
-					</p>
-				</section>
 			</CardContent>
 		</Card>
 	);

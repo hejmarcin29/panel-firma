@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { MontagePipelineBoard } from './_components/montage-pipeline-board';
 import { CreateMontageDialog } from './_components/create-montage-dialog';
 import { statusOptions } from './constants';
-import { formatRelativeDate, formatScheduleDate, mapMontageRow, type MontageRow } from './utils';
+import { formatRelativeDate, formatScheduleDate, mapMontageRow, summarizeMaterialDetails, type MontageRow } from './utils';
 import type { Montage } from './types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -67,13 +67,13 @@ export default async function MontazePage() {
     const montagesData: Montage[] = montageRows.map((row) => mapMontageRow(row as MontageRow, publicBaseUrl));
 
     const totalMontages = montagesData.length;
-    const totalAttachments = montagesData.reduce((acc, montage) => acc + montage.attachments.length, 0);
     const totalTasks = montagesData.reduce((acc, montage) => acc + montage.tasks.length, 0);
     const completedTasks = montagesData.reduce(
         (acc, montage) => acc + montage.tasks.filter((task) => task.completed).length,
         0,
     );
     const openTasks = Math.max(totalTasks - completedTasks, 0);
+    const montagesWithMaterials = montagesData.filter((montage) => montage.materialDetails?.trim()).length;
 
     const parseTimestamp = (value: Montage['updatedAt']) => {
         if (!value) {
@@ -165,8 +165,8 @@ export default async function MontazePage() {
                                 <span className="font-semibold text-foreground">{openTasks}</span>
                             </div>
                             <div className="flex justify-between">
-                                <span>Załączniki w R2</span>
-                                <span className="font-semibold text-foreground">{totalAttachments}</span>
+                                <span>Opisane materiały</span>
+                                <span className="font-semibold text-foreground">{montagesWithMaterials}</span>
                             </div>
                         </CardContent>
                     </Card>
@@ -233,6 +233,8 @@ export default async function MontazePage() {
                                 priorityList.map((montage) => {
                                     const schedule = formatScheduleDate(montage.scheduledInstallationAt);
                                     const relative = formatRelativeDate(montage.updatedAt);
+                                    const materials = summarizeMaterialDetails(montage.materialDetails, 80);
+                                    const hasMaterials = Boolean(montage.materialDetails?.trim());
                                     return (
                                         <div key={montage.id} className="rounded-md border border-border/60 p-2">
                                             <div className="flex items-center justify-between">
@@ -246,6 +248,9 @@ export default async function MontazePage() {
                                                 <span className="h-1 w-1 rounded-full bg-muted-foreground/60" />
                                                 <span>Aktualizacja: {relative}</span>
                                             </div>
+                                            {hasMaterials ? (
+                                                <p className="mt-1 line-clamp-2 text-[11px] font-medium text-foreground">Materiały: {materials}</p>
+                                            ) : null}
                                             <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
                                                 <span>{montage.tasks.filter((task) => !task.completed).length} otw. zadań</span>
                                                 <Button asChild variant="link" className="h-auto px-0 text-[11px]">

@@ -190,3 +190,27 @@ export function formatScheduleDate(value: Montage['scheduledInstallationAt']) {
 
 	return new Intl.DateTimeFormat('pl-PL', { dateStyle: 'medium' }).format(date);
 }
+
+export function summarizeMaterialDetails(value: Montage['materialDetails'], maxLength = 80) {
+	if (!value) {
+		return 'Brak materiałów';
+	}
+
+	const normalized = value
+		.split(/\r?\n+/)
+		.map((segment) => segment.trim())
+		.filter(Boolean)
+		.join(', ')
+		.replace(/\s{2,}/g, ' ')
+		.trim();
+
+	if (!normalized) {
+		return 'Brak materiałów';
+	}
+
+	if (normalized.length <= maxLength) {
+		return normalized;
+	}
+
+	return `${normalized.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`;
+}

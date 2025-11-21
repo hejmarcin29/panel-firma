@@ -20,6 +20,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 
 import { MontageCard } from './montage-card';
 import type { Montage, StatusOption } from '../types';
+import { summarizeMaterialDetails } from '../utils';
 
 function countCompleted(tasks: Montage['tasks']): number {
 	return tasks.filter((task) => task.completed).length;
@@ -80,7 +81,11 @@ export function MontagePipelineCard({ montage, statusOptions }: Props) {
 	const isMobile = useIsMobile();
 	const completedTasks = useMemo(() => countCompleted(montage.tasks), [montage.tasks]);
 	const totalTasks = montage.tasks.length;
-	const hasAttachments = montage.attachments.length > 0;
+	const materialsSummary = useMemo(
+		() => summarizeMaterialDetails(montage.materialDetails, 72),
+		[montage.materialDetails],
+	);
+	const hasMaterials = Boolean(montage.materialDetails?.trim());
 	const latestUpdate = formatTimestamp(montage.updatedAt);
 	const billingAddress = montage.billingAddress;
 	const installationAddress = montage.installationAddress;
@@ -103,8 +108,8 @@ export function MontagePipelineCard({ montage, statusOptions }: Props) {
 							<CardDescription className="text-xs text-muted-foreground">Aktualizacja: {latestUpdate}</CardDescription>
 						</div>
 					</div>
-					<Badge variant={hasAttachments ? 'default' : 'outline'} className="rounded-full text-[11px] uppercase tracking-wide">
-						{hasAttachments ? `${montage.attachments.length} pl.` : 'brak plikow'}
+					<Badge variant={hasMaterials ? 'default' : 'outline'} className="rounded-full text-[11px] uppercase tracking-wide">
+						{hasMaterials ? 'materiały' : 'brak materiałów'}
 					</Badge>
 				</div>
 				{addressLine || cityLine ? (
@@ -131,11 +136,10 @@ export function MontagePipelineCard({ montage, statusOptions }: Props) {
 					</Badge>
 				</div>
 				<Separator />
-				<div className="flex items-center justify-between">
-					<div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-muted-foreground">
-						<span>Pliki</span>
-						<span className="h-1 w-1 rounded-full bg-muted-foreground/60" />
-						<span>{montage.attachments.length}</span>
+				<div className="flex items-center justify-between gap-3">
+					<div className="flex-1 text-xs text-muted-foreground">
+						<p className="text-[11px] uppercase tracking-wide">Materiały</p>
+						<p className="mt-1 line-clamp-2 text-sm font-medium text-foreground">{materialsSummary}</p>
 					</div>
 					{cta}
 				</div>
@@ -167,7 +171,7 @@ export function MontagePipelineCard({ montage, statusOptions }: Props) {
 				<SheetHeader className="gap-2 px-6 pt-6">
 					<SheetTitle className="text-base font-semibold">Panel montazu</SheetTitle>
 					<SheetDescription className="text-sm text-muted-foreground">
-						Szczegoly klienta, zadania i dokumenty dostepne w jednym miejscu. Wszystkie zmiany zapisujemy od razu w bazie.
+						Szczegoly klienta, zadania i materiały dostepne w jednym miejscu. Wszystkie zmiany zapisujemy od razu w bazie.
 					</SheetDescription>
 				</SheetHeader>
 				<div className="flex-1 overflow-y-auto overflow-x-hidden px-6 pb-10">
