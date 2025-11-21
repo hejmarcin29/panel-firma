@@ -153,6 +153,15 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 	const materialsSummary = summarizeMaterialDetails(montage.materialDetails, 160);
 	const materialsQuickSummary = summarizeMaterialDetails(montage.materialDetails, 60);
 	const hasMaterials = Boolean(montage.materialDetails?.trim());
+	const contactEntries = [
+		montage.contactPhone
+			? { key: 'phone', label: 'Telefon', value: montage.contactPhone, muted: false }
+			: null,
+		montage.contactEmail
+			? { key: 'email', label: 'E-mail', value: montage.contactEmail, muted: false }
+			: null,
+		{ key: 'date', label: 'Termin montażu', value: scheduledInstallationDate ?? 'Brak terminu', muted: !scheduledInstallationDate },
+	].filter(Boolean) as Array<{ key: string; label: string; value: string; muted: boolean }>;
 
 	useEffect(() => {
 		setMaterialsDraft(montage.materialDetails ?? '');
@@ -216,24 +225,6 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 
 	const renderQuickInfoDetails = () => (
 		<>
-			<div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-				{montage.contactPhone ? (
-					<div className="rounded-xl border border-border/60 bg-muted/20 px-3 py-2">
-						<p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">Telefon</p>
-						<p className="font-medium text-foreground">{montage.contactPhone}</p>
-					</div>
-				) : null}
-				{montage.contactEmail ? (
-					<div className="rounded-xl border border-border/60 bg-muted/20 px-3 py-2">
-						<p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">E-mail</p>
-						<p className="font-medium text-foreground">{montage.contactEmail}</p>
-					</div>
-				) : null}
-				<div className="rounded-xl border border-border/60 bg-muted/20 px-3 py-2">
-					<p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">Przewidywany termin montażu</p>
-					<p className="font-medium text-foreground">{scheduledInstallationDate ?? 'Brak terminu'}</p>
-				</div>
-			</div>
 			<form
 				onSubmit={submitMaterials}
 				className="space-y-2.5 rounded-xl border border-border/60 bg-muted/10 p-3.5"
@@ -266,18 +257,18 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 					</Button>
 				</div>
 			</form>
-			<div className="grid gap-3 sm:grid-cols-2">
-				<div className="rounded-xl border border-border/60 bg-muted/15 px-3 py-2">
-					<p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">Adres faktury</p>
+			<div className="grid gap-2.5 sm:grid-cols-2">
+				<div className="rounded-lg border border-border/50 bg-muted/20 px-3 py-2">
+					<p className="text-[11px] uppercase tracking-wide text-muted-foreground/70">Adres faktury</p>
 					<p className="whitespace-pre-wrap text-sm text-foreground/90">{billingAddress ? billingAddress : 'Brak danych'}</p>
-					<p className="text-xs text-muted-foreground/80">{billingCity ? `Miasto: ${billingCity}` : 'Miasto nieznane'}</p>
+					<p className="text-xs text-muted-foreground/70">{billingCity ? `Miasto: ${billingCity}` : 'Miasto nieznane'}</p>
 				</div>
-				<div className="rounded-xl border border-border/60 bg-muted/15 px-3 py-2">
-					<p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">Adres montażu</p>
+				<div className="rounded-lg border border-border/50 bg-muted/20 px-3 py-2">
+					<p className="text-[11px] uppercase tracking-wide text-muted-foreground/70">Adres montażu</p>
 					<p className="whitespace-pre-wrap text-sm text-foreground/90">{installationAddress ? installationAddress : 'Brak danych'}</p>
-					<p className="text-xs text-muted-foreground/80">{installationCity ? `Miasto: ${installationCity}` : 'Miasto nieznane'}</p>
+					<p className="text-xs text-muted-foreground/70">{installationCity ? `Miasto: ${installationCity}` : 'Miasto nieznane'}</p>
 					{addressesMatch && billingAddress ? (
-						<p className="mt-1 text-[11px] text-muted-foreground/80">Adres jak na fakturze</p>
+						<p className="mt-1 text-[11px] text-muted-foreground/70">Adres jak na fakturze</p>
 					) : null}
 				</div>
 			</div>
@@ -465,6 +456,26 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 							<CardDescription className="text-sm text-muted-foreground">
 								Utworzono {formatTimestamp(montage.createdAt)} • Aktualizacja {formatTimestamp(montage.updatedAt)}
 							</CardDescription>
+							{contactEntries.length ? (
+								<div className="flex flex-wrap gap-2 pt-1">
+									{contactEntries.map((entry) => (
+										<div
+											key={entry.key}
+											className="flex items-center gap-1 rounded-full border border-border/60 bg-muted/20 px-3 py-1.5"
+										>
+											<span className="text-[10px] uppercase tracking-wide text-muted-foreground/80">{entry.label}</span>
+											<span
+												className={cn(
+													'text-xs font-medium',
+													entry.muted ? 'text-muted-foreground/70' : 'text-foreground',
+												)}
+											>
+												{entry.value}
+											</span>
+										</div>
+									))}
+								</div>
+							) : null}
 						</div>
 						{isMobile ? (
 							<Collapsible open={quickInfoOpen} onOpenChange={setQuickInfoOpen} className="rounded-2xl border border-border/60 bg-muted/10">
