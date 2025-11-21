@@ -3,8 +3,7 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { listMontageObjects } from '@/lib/r2/storage';
-import type { GalleryObject } from '@/lib/r2/storage';
+import { listMontageObjects, type GalleryObject } from '@/lib/r2/storage';
 import { tryGetR2Config } from '@/lib/r2/config';
 
 function formatBytes(bytes: number): string {
@@ -38,6 +37,18 @@ function isImageKey(key: string): boolean {
 	return /\.(png|jpe?g|gif|bmp|webp|avif)$/i.test(key);
 }
 
+function formatFileCount(count: number): string {
+	if (count === 1) {
+		return '1 plik';
+	}
+
+	if (count >= 2 && count <= 4) {
+		return `${count} pliki`;
+	}
+
+	return `${count} plików`;
+}
+
 function formatCategoryLabel(segment: string): string {
 	const withoutSuffix = segment.replace(/_montaz$/i, '');
 	const words = withoutSuffix
@@ -52,47 +63,61 @@ function formatCategoryLabel(segment: string): string {
 	return words.join(' ');
 }
 
-function groupByCategory(objects: GalleryObject[]) {
-	const grouped = new Map<
-		string,
-		{
-			label: string;
-			items: GalleryObject[];
-			latest: number;
-		}
-	>();
+type GalleryCategory = {
+	key: string;
+	label: string;
+	items: GalleryObject[];
+	latest: Date | null;
+	latestTimestamp: number;
+	fullPath: string;
+};
+
+function groupByCategory(objects: GalleryObject[]): GalleryCategory[] {
+	const grouped = new Map<string, GalleryCategory>();
 
 	for (const object of objects) {
 		const segments = object.folder.split('/').filter(Boolean);
 		const categoryKey = segments[segments.length - 1] ?? 'inne';
 		const label = formatCategoryLabel(categoryKey);
-		const lastModified = object.lastModified ? object.lastModified.getTime() : 0;
+		const lastModifiedTimestamp = object.lastModified ? object.lastModified.getTime() : 0;
 		const existing = grouped.get(categoryKey);
 
 		if (existing) {
 			existing.items.push(object);
-			existing.latest = Math.max(existing.latest, lastModified);
+			if (lastModifiedTimestamp > existing.latestTimestamp) {
+				existing.latestTimestamp = lastModifiedTimestamp;
+				existing.latest = object.lastModified ?? existing.latest;
+			}
 		} else {
 			grouped.set(categoryKey, {
+				key: categoryKey,
 				label,
 				items: [object],
-				latest: lastModified,
+				latest: object.lastModified ?? null,
+				latestTimestamp: lastModifiedTimestamp,
+				fullPath: object.folder,
 			});
 		}
 	}
 
-	return Array.from(grouped.entries())
-		.map(([key, value]) => ({ key, ...value }))
-		.sort((a, b) => {
-			if (b.latest !== a.latest) {
-				return b.latest - a.latest;
-			}
+	const categories = Array.from(grouped.values());
 
-			return a.label.localeCompare(b.label, 'pl', { sensitivity: 'base' });
-		});
+	categories.sort((a, b) => {
+		if (b.latestTimestamp !== a.latestTimestamp) {
+			return b.latestTimestamp - a.latestTimestamp;
+		}
+
+		return a.label.localeCompare(b.label, 'pl', { sensitivity: 'base' });
+	});
+
+	return categories;
 }
 
-async function GalleryContent() {
+type GalleryContentProps = {
+	selectedFolderKey?: string;
+};
+
+async function GalleryContent({ selectedFolderKey }: GalleryContentProps) {
 	const config = await tryGetR2Config();
 
 	if (!config) {
@@ -125,79 +150,140 @@ async function GalleryContent() {
 
 	const categories = groupByCategory(objects);
 
-	return (
-		<div className="space-y-6">
-			{categories.map((category) => (
-				<section key={category.key} className="space-y-3">
-					<header className="flex items-baseline justify-between">
-						<h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-							{category.label}
-						</h2>
-						<span className="text-[11px] text-muted-foreground">{category.items.length} plików</span>
-					</header>
-					<div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-						{category.items.map((object) => {
-							const isImage = isImageKey(object.name);
-							const relativeFolder = object.folder.split('/').slice(1, -1).join('/');
+	if (!selectedFolderKey) {
+		return (
+			<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+				{categories.map((category) => (
+					<Card key={category.key} className="transition-colors hover:border-primary/70">
+						<CardHeader className="space-y-1 px-4 py-3">
+							<CardTitle className="text-base">{category.label}</CardTitle>
+							<CardDescription className="text-xs text-muted-foreground">
+								{formatFileCount(category.items.length)}
+							</CardDescription>
+						</CardHeader>
+						<CardContent className="space-y-3 px-4 pb-4 pt-0">
+							<div className="flex items-center justify-between text-[11px] text-muted-foreground">
+								<span>Ostatnia aktualizacja</span>
+								<span>{formatDate(category.latest)}</span>
+							</div>
+							<Link
+								href={`?folder=${encodeURIComponent(category.key)}`}
+								className="inline-flex items-center text-xs font-medium text-primary hover:underline"
+							>
+								Otwórz folder
+							</Link>
+						</CardContent>
+					</Card>
+				))}
+			</div>
+		);
+	}
 
-							return (
-								<Card key={object.key} className="overflow-hidden">
-									{isImage ? (
-										<div className="relative h-56 w-full bg-muted">
-											{/* eslint-disable-next-line @next/next/no-img-element */}
-											<img
-												src={object.previewUrl}
-												alt={object.name}
-												loading="lazy"
-												className="h-full w-full object-cover"
-											/>
-										</div>
-									) : (
-										<div className="flex h-56 w-full items-center justify-center bg-muted text-sm text-muted-foreground">
-											<span>{object.name}</span>
-										</div>
-									)}
-									<CardContent className="space-y-2 p-4">
-										<div className="space-y-1">
-											<h3 className="text-sm font-semibold text-foreground">{object.name}</h3>
-											{relativeFolder ? (
-												<p className="text-[11px] uppercase text-muted-foreground">{relativeFolder}</p>
-											) : null}
-										</div>
-										<div className="flex flex-wrap justify-between text-xs text-muted-foreground">
-											<span>{formatBytes(object.size)}</span>
-											<span>{formatDate(object.lastModified)}</span>
-										</div>
-										<div className="flex items-center gap-2 text-xs">
-											<Link
-													href={object.previewUrl}
-													target="_blank"
-													rel="noopener noreferrer"
-													className="text-primary hover:underline"
-												>
-													Podgląd
-												</Link>
-											<Link
-													href={object.url}
-													target="_blank"
-													rel="noopener noreferrer"
-													className="text-primary hover:underline"
-												>
-													Pobierz
-												</Link>
-										</div>
-									</CardContent>
-								</Card>
-							);
-						})}
-					</div>
-				</section>
-			))}
+	const selectedCategory = categories.find((category) => category.key === selectedFolderKey);
+
+	if (!selectedCategory) {
+		return (
+			<Card>
+				<CardHeader>
+					<CardTitle>Nie znaleziono folderu</CardTitle>
+					<CardDescription>
+						Wybrany folder nie istnieje. Wróć do listy i wybierz inny katalog z montaży.
+					</CardDescription>
+				</CardHeader>
+				<CardContent>
+					<Link href="/dashboard/montaze/galeria" className="text-xs font-medium text-primary hover:underline">
+						Powrót do listy folderów
+					</Link>
+				</CardContent>
+			</Card>
+		);
+	}
+
+	const items = [...selectedCategory.items].sort((a, b) => {
+		const timeA = a.lastModified ? a.lastModified.getTime() : 0;
+		const timeB = b.lastModified ? b.lastModified.getTime() : 0;
+		return timeB - timeA;
+	});
+
+	return (
+		<div className="space-y-4">
+			<div className="flex items-center justify-between">
+				<Link href="/dashboard/montaze/galeria" className="text-xs font-medium text-primary hover:underline">
+					← Powrót do folderów
+				</Link>
+				<span className="text-[11px] text-muted-foreground">{formatFileCount(items.length)}</span>
+			</div>
+			<header className="space-y-1">
+				<h2 className="text-lg font-semibold text-foreground">{selectedCategory.label}</h2>
+				<p className="text-xs text-muted-foreground">
+					Ostatnia aktualizacja: {formatDate(selectedCategory.latest)}
+				</p>
+			</header>
+			<div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+				{items.map((object) => {
+					const isImage = isImageKey(object.name);
+
+					return (
+						<Card key={object.key} className="overflow-hidden">
+							{isImage ? (
+								<div className="relative h-56 w-full bg-muted">
+									{/* eslint-disable-next-line @next/next/no-img-element */}
+									<img
+										src={object.previewUrl}
+										alt={object.name}
+										loading="lazy"
+										className="h-full w-full object-cover"
+									/>
+								</div>
+							) : (
+								<div className="flex h-56 w-full items-center justify-center bg-muted text-sm text-muted-foreground">
+									<span>{object.name}</span>
+								</div>
+							)}
+							<CardContent className="space-y-2 p-4">
+								<div className="space-y-1">
+									<h3 className="text-sm font-semibold text-foreground">{object.name}</h3>
+								</div>
+								<div className="flex flex-wrap justify-between text-xs text-muted-foreground">
+									<span>{formatBytes(object.size)}</span>
+									<span>{formatDate(object.lastModified)}</span>
+								</div>
+								<div className="flex items-center gap-2 text-xs">
+									<Link
+										href={object.previewUrl}
+										target="_blank"
+										rel="noopener noreferrer"
+										className="text-primary hover:underline"
+									>
+										Podgląd
+									</Link>
+									<Link
+										href={object.url}
+										target="_blank"
+										rel="noopener noreferrer"
+										className="text-primary hover:underline"
+									>
+										Pobierz
+									</Link>
+								</div>
+							</CardContent>
+						</Card>
+					);
+				})}
+			</div>
 		</div>
 	);
 }
 
-export default function MontageGalleryPage() {
+type MontageGalleryPageProps = {
+	searchParams?: {
+		folder?: string;
+	};
+};
+
+export default function MontageGalleryPage({ searchParams }: MontageGalleryPageProps) {
+	const folderParam = typeof searchParams?.folder === 'string' ? searchParams.folder : undefined;
+
 	return (
 		<div className="space-y-8">
 			<header className="space-y-2">
@@ -206,15 +292,17 @@ export default function MontageGalleryPage() {
 					Przeglądaj wszystkie pliki przesłane do Cloudflare R2 podczas obsługi montaży. Pliki są grupowane według klienta.
 				</p>
 			</header>
-			<Suspense fallback={
-				<Card>
-					<CardHeader>
-						<CardTitle>Ładowanie galerii</CardTitle>
-						<CardDescription>Odbieramy listę plików z R2...</CardDescription>
-					</CardHeader>
-				</Card>
-			}>
-				<GalleryContent />
+			<Suspense
+				fallback={
+					<Card>
+						<CardHeader>
+							<CardTitle>Ładowanie galerii</CardTitle>
+							<CardDescription>Odbieramy listę plików z R2...</CardDescription>
+						</CardHeader>
+					</Card>
+				}
+			>
+				<GalleryContent selectedFolderKey={folderParam} />
 			</Suspense>
 		</div>
 	);
