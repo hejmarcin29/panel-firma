@@ -180,7 +180,7 @@ export default async function MontazePage() {
                                 Zarządzaj etapami, przeciągając karty pomiędzy kolumnami.
                             </p>
                         </div>
-                        <Tabs defaultValue="kanban" className="max-w-[220px]">
+                        <Tabs defaultValue="kanban" className="space-y-2">
                             <TabsList className="grid grid-cols-3 rounded-md bg-muted/60 p-0.5">
                                 {tabs.map((tab) => (
                                     <TabsTrigger
