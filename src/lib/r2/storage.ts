@@ -14,6 +14,7 @@ import { getR2Config } from './config';
 import { sanitizeFilename, slugify } from '@/lib/strings';
 
 export const MONTAGE_ROOT_PREFIX = 'montaze';
+export const ORDER_ROOT_PREFIX = 'zamowienia';
 
 function buildMontageFolder(clientName: string): string {
 	const base = slugify(clientName || 'klient');
@@ -21,9 +22,17 @@ function buildMontageFolder(clientName: string): string {
 	return `${safeBase}_montaz`;
 }
 
-function buildObjectKey(folder: string, filename: string): string {
+function buildOrderFolder(customerName: string): string {
+	const base = slugify(customerName || 'klient');
+	const safeBase = base || 'klient';
+	return `${safeBase}/dokumenty`;
+}
+
+function buildObjectKey(root: string, folder: string, filename: string): string {
 	const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-	return `${MONTAGE_ROOT_PREFIX}/${folder}/${timestamp}-${filename}`;
+	const normalizedFolder = folder.replace(/^\/+|\/+$/g, '');
+	const prefix = normalizedFolder ? `${root}/${normalizedFolder}` : root;
+	return `${prefix}/${timestamp}-${filename}`;
 }
 
 function buildPublicUrl(publicBaseUrl: string, key: string): string {
@@ -51,7 +60,38 @@ export async function uploadMontageObject(params: {
 
 	const filename = sanitizeFilename(file.name || 'zalacznik');
 	const folder = buildMontageFolder(clientName);
-	const key = buildObjectKey(folder, filename);
+	const key = buildObjectKey(MONTAGE_ROOT_PREFIX, folder, filename);
+	const buffer = Buffer.from(await file.arrayBuffer());
+
+	const putParams: PutObjectCommandInput = {
+		Bucket: config.bucketName,
+		Key: key,
+		Body: buffer,
+		ContentType: file.type || 'application/octet-stream',
+	};
+
+	await client.send(new PutObjectCommand(putParams));
+
+	const url = buildPublicUrl(config.publicBaseUrl, key);
+
+	return {
+		key,
+		url,
+		bytes: buffer.byteLength,
+	};
+}
+
+export async function uploadOrderDocumentObject(params: {
+	customerName: string;
+	file: File;
+}): Promise<UploadedObjectInfo> {
+	const { customerName, file } = params;
+	const config = await getR2Config();
+	const client = createR2Client(config);
+
+	const filename = sanitizeFilename(file.name || 'zalacznik');
+	const folder = buildOrderFolder(customerName);
+	const key = buildObjectKey(ORDER_ROOT_PREFIX, folder, filename);
 	const buffer = Buffer.from(await file.arrayBuffer());
 
 	const putParams: PutObjectCommandInput = {

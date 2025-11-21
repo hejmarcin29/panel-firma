@@ -22,6 +22,7 @@ import { ConfirmOrderButton } from '../_components/confirm-order-button';
 import { IssueProformaButton } from '../_components/issue-proforma-button';
 import { OrderStatusForm } from '../_components/order-status-form';
 import { OrderStatusTimeline } from '../_components/order-status-timeline';
+import { OrderAttachments } from '../_components/order-attachments';
 import type { Order, OrderTimelineEntry, OrderDocument, OrderTaskOverrides } from '../data';
 import { statusOptions } from '../utils';
 
@@ -362,58 +363,62 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageParam
 							<CardTitle className="text-base">Dokumenty</CardTitle>
 							<CardDescription className="text-xs">Lista proform i faktur powiązanych z zamówieniem.</CardDescription>
 						</CardHeader>
-						<CardContent className="px-4 pb-4 pt-0">
-							{documents.length === 0 ? (
-								<p className="text-xs text-muted-foreground">Brak wystawionych dokumentów.</p>
-							) : (
-								<>
-									<div className="space-y-3 md:hidden">
-										{documents.map((document) => (
-											<DocumentCard key={document.id} document={document} />
-										))}
-									</div>
-									<div className="hidden overflow-x-auto md:block">
-										<Table>
-											<TableHeader>
-												<TableRow>
-													<TableHead className="py-2 text-[11px]">Typ</TableHead>
-													<TableHead className="py-2 text-[11px]">Numer</TableHead>
-													<TableHead className="py-2 text-[11px]">Status</TableHead>
-													<TableHead className="py-2 text-[11px]">Data</TableHead>
-													<TableHead className="py-2 text-right text-[11px]">Akcje</TableHead>
-												</TableRow>
-											</TableHeader>
-											<TableBody>
-												{documents.map((document) => (
-													<TableRow key={document.id}>
-														<TableCell className="py-2 text-xs font-medium capitalize">{document.type}</TableCell>
-														<TableCell className="py-2 text-xs">{document.number ?? '—'}</TableCell>
-														<TableCell className="py-2 text-xs">
-															<Badge variant="outline" className="px-2 py-0 text-[10px]">
-																{document.status}
-															</Badge>
-														</TableCell>
-														<TableCell className="py-2 text-xs">
-															{document.issueDate ? formatDate(document.issueDate) : '—'}
-														</TableCell>
-														<TableCell className="py-2 text-right text-xs">
-															{document.pdfUrl ? (
-																<Button asChild size="sm" variant="outline" className="h-8 px-3 text-xs">
-																	<Link href={document.pdfUrl} target="_blank" rel="noreferrer">
-																		Pobierz PDF
-																	</Link>
+						<CardContent className="space-y-4 px-4 pb-4 pt-0">
+							<div>
+								{documents.length === 0 ? (
+									<p className="text-xs text-muted-foreground">Brak wystawionych dokumentów.</p>
+								) : (
+									<>
+										<div className="space-y-3 md:hidden">
+											{documents.map((document) => (
+												<DocumentCard key={document.id} document={document} />
+											))}
+										</div>
+										<div className="hidden overflow-x-auto md:block">
+											<Table>
+												<TableHeader>
+													<TableRow>
+														<TableHead className="py-2 text-[11px]">Typ</TableHead>
+														<TableHead className="py-2 text-[11px]">Numer</TableHead>
+														<TableHead className="py-2 text-[11px]">Status</TableHead>
+														<TableHead className="py-2 text-[11px]">Data</TableHead>
+														<TableHead className="py-2 text-right text-[11px]">Akcje</TableHead>
+													</TableRow>
+												</TableHeader>
+												<TableBody>
+													{documents.map((document) => (
+														<TableRow key={document.id}>
+															<TableCell className="py-2 text-xs font-medium capitalize">{document.type}</TableCell>
+															<TableCell className="py-2 text-xs">{document.number ?? '—'}</TableCell>
+															<TableCell className="py-2 text-xs">
+																<Badge variant="outline" className="px-2 py-0 text-[10px]">
+																	{document.status}
+																</Badge>
+															</TableCell>
+															<TableCell className="py-2 text-xs">
+																{document.issueDate ? formatDate(document.issueDate) : '—'}
+															</TableCell>
+															<TableCell className="py-2 text-right text-xs">
+																{document.pdfUrl ? (
+																	<Button asChild size="sm" variant="outline" className="h-8 px-3 text-xs">
+																		<Link href={document.pdfUrl} target="_blank" rel="noreferrer">
+																			Pobierz PDF
+																		</Link>
 																</Button>
-															) : (
-																<span className="text-[10px] text-muted-foreground">Brak pliku</span>
-															)}
-														</TableCell>
-												</TableRow>
-												))}
-											</TableBody>
-										</Table>
-									</div>
-								</>
-							)}
+																) : (
+																	<span className="text-[10px] text-muted-foreground">Brak pliku</span>
+																)}
+															</TableCell>
+														</TableRow>
+													))}
+												</TableBody>
+											</Table>
+										</div>
+									</>
+								)}
+							</div>
+							<Separator className="my-1" />
+							<OrderAttachments orderId={order.id} customerName={order.billing.name} attachments={order.attachments} />
 						</CardContent>
 					</Card>
 				</div>

@@ -25,6 +25,11 @@
 - Formularze i listy trzymamy możliwie w jednej kolumnie gapu `2–3`, a odstępy między sekcjami redukujemy do `space-y-4` lub mniej.
 - Przed dodaniem nowych widoków porównaj spacing z widokami zamówień i maili, żeby utrzymać jednolitą gęstość interfejsu.
 
+## Przechowywanie załączników
+- Załączniki do zamówień zapisujemy w R2 pod ścieżką `zamowienia/<slug_imie_nazwisko>/dokumenty` (slug z imienia i nazwiska klienta lub `klient` jako fallback).
+- Załączniki do montaży zostawiamy w dotychczasowym formacie `montaze/<slug_imie_nazwisko>_montaz`.
+- Nazwy plików zawsze sanitizujemy (`sanitizeFilename`) i pilnujemy limitu 25 MB na pojedynczy upload.
+
 ## Przydatne polecenia
 - `npm run dev` – lokalny serwer Next.js.
 - `npm run lint` – sprawdzenie lintem.

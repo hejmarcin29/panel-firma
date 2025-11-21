@@ -5,10 +5,11 @@ import { desc, eq } from 'drizzle-orm';
 
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
-import { documents, manualOrderItems, manualOrders } from '@/lib/db/schema';
+import { documents, manualOrderItems, manualOrders, orderAttachments } from '@/lib/db/schema';
 import { callWfirmaApi, WfirmaApiError } from '@/lib/wfirma/client';
 import { getWfirmaConfig, type WfirmaConfig } from '@/lib/wfirma/config';
 import { appendWfirmaLog } from '@/lib/wfirma/repository';
+import { uploadOrderDocumentObject } from '@/lib/r2/storage';
 
 import type {
 	ManualOrderPayload,
@@ -17,12 +18,14 @@ import type {
 	OrderItem,
 	OrderItemPayload,
 	OrderDocument,
+ 	OrderAttachment,
 } from './data';
 import { buildTimelineEntries, normalizeStatus, statusOptions } from './utils';
 
 const MONEY_SCALE = 100;
 const QUANTITY_SCALE = 1000;
 const VAT_SCALE = 100;
+const MAX_ORDER_ATTACHMENT_SIZE_BYTES = 25 * 1024 * 1024;
 
 type ManualOrderRow = typeof manualOrders.$inferSelect;
 type ManualOrderItemRow = typeof manualOrderItems.$inferSelect;
@@ -30,6 +33,15 @@ type ManualOrderInsert = typeof manualOrders.$inferInsert;
 type ManualOrderItemInsert = typeof manualOrderItems.$inferInsert;
 type DocumentRow = typeof documents.$inferSelect;
 type DocumentInsert = typeof documents.$inferInsert;
+type OrderAttachmentRow = typeof orderAttachments.$inferSelect;
+type OrderAttachmentInsert = typeof orderAttachments.$inferInsert;
+type OrderAttachmentRowWithUploader = OrderAttachmentRow & {
+	uploader: {
+		id: string;
+		name: string | null;
+		email: string;
+	} | null;
+};
 
 function toMinorUnits(value: number) {
 	return Math.round(value * MONEY_SCALE);
@@ -84,6 +96,20 @@ function parseTaskOverrides(value: string | null | undefined): Record<string, bo
 	return {};
 }
 
+function ensureValidOrderAttachmentFile(file: File) {
+	if (!(file instanceof File)) {
+		throw new Error('Wybierz plik do przesłania.');
+	}
+
+	if (file.size === 0) {
+		throw new Error('Plik jest pusty.');
+	}
+
+	if (file.size > MAX_ORDER_ATTACHMENT_SIZE_BYTES) {
+		throw new Error('Plik jest zbyt duży. Maksymalny rozmiar to 25 MB.');
+	}
+}
+
 function mapDocumentRow(row: DocumentRow): OrderDocument {
 	const issueDate = row.issueDate
 		? new Date(row.issueDate instanceof Date ? row.issueDate : Number(row.issueDate)).toISOString()
@@ -115,7 +141,32 @@ function mapItemRow(row: ManualOrderItemRow): OrderItem {
 	};
 }
 
-function mapOrderRow(row: ManualOrderRow & { items: ManualOrderItemRow[] }): Order {
+function mapAttachmentRow(row: OrderAttachmentRowWithUploader): OrderAttachment {
+	const createdAt = row.createdAt
+		? new Date(row.createdAt instanceof Date ? row.createdAt : Number(row.createdAt)).toISOString()
+		: new Date().toISOString();
+
+	return {
+		id: row.id,
+		title: row.title ?? null,
+		url: row.url,
+		createdAt,
+		uploader: row.uploader
+			? {
+				id: row.uploader.id,
+				name: row.uploader.name ?? null,
+				email: row.uploader.email,
+			}
+			: null,
+	};
+}
+
+function mapOrderRow(
+	row: ManualOrderRow & {
+		items: ManualOrderItemRow[];
+		attachments: OrderAttachmentRowWithUploader[];
+	},
+): Order {
 	const createdAt = new Date(row.createdAt ?? Date.now()).toISOString();
 	const updatedAt = new Date(row.updatedAt ?? row.createdAt ?? Date.now()).toISOString();
 	const taskOverrides = parseTaskOverrides(row.timelineTaskOverrides);
@@ -164,6 +215,7 @@ function mapOrderRow(row: ManualOrderRow & { items: ManualOrderItemRow[] }): Ord
 			totalGross: fromMinorUnits(row.totalGross),
 		},
 		taskOverrides,
+		attachments: row.attachments.map(mapAttachmentRow),
 	};
 }
 
@@ -248,6 +300,18 @@ export async function getManualOrderById(id: string): Promise<Order | null> {
 		where: eq(manualOrders.id, id),
 		with: {
 			items: true,
+			attachments: {
+				orderBy: desc(orderAttachments.createdAt),
+				with: {
+					uploader: {
+						columns: {
+							id: true,
+							name: true,
+							email: true,
+						},
+					},
+				},
+			},
 		},
 	});
 
@@ -263,6 +327,18 @@ export async function getManualOrders(): Promise<Order[]> {
 		orderBy: desc(manualOrders.createdAt),
 		with: {
 			items: true,
+			attachments: {
+				orderBy: desc(orderAttachments.createdAt),
+				with: {
+					uploader: {
+						columns: {
+							id: true,
+							name: true,
+							email: true,
+						},
+					},
+				},
+			},
 		},
 	});
 
@@ -375,6 +451,64 @@ export async function getOrderDocuments(orderId: string): Promise<OrderDocument[
 	});
 
 	return rows.map(mapDocumentRow);
+}
+
+export async function addOrderAttachment(formData: FormData): Promise<void> {
+	const user = await requireUser();
+
+	const orderIdRaw = formData.get('orderId');
+	const titleRaw = formData.get('title');
+	const fileField = formData.get('file');
+
+	const orderId = typeof orderIdRaw === 'string' ? orderIdRaw.trim() : '';
+	const title = typeof titleRaw === 'string' ? titleRaw.trim() : '';
+
+	if (!orderId) {
+		throw new Error('Brakuje identyfikatora zamówienia.');
+	}
+
+	if (!(fileField instanceof File)) {
+		throw new Error('Wybierz plik do przesłania.');
+	}
+
+	ensureValidOrderAttachmentFile(fileField);
+
+	const orderRecord = await db.query.manualOrders.findFirst({
+		columns: {
+			id: true,
+			billingName: true,
+		},
+		where: eq(manualOrders.id, orderId),
+	});
+
+	if (!orderRecord) {
+		throw new Error('Nie znaleziono zamówienia.');
+	}
+
+	const uploaded = await uploadOrderDocumentObject({
+		customerName: orderRecord.billingName,
+		file: fileField,
+	});
+
+	const now = new Date();
+	const attachmentRecord: OrderAttachmentInsert = {
+		id: crypto.randomUUID(),
+		orderId: orderRecord.id,
+		title: title ? title : null,
+		url: uploaded.url,
+		uploadedBy: user.id,
+		createdAt: now,
+	};
+
+	await db.insert(orderAttachments).values(attachmentRecord);
+
+	await db
+		.update(manualOrders)
+		.set({ updatedAt: now })
+		.where(eq(manualOrders.id, orderRecord.id));
+
+	revalidatePath(`/dashboard/orders/${orderRecord.id}`);
+	revalidatePath('/dashboard/orders');
 }
 
 export async function updateManualOrderTaskOverride(

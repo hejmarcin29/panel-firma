@@ -136,25 +136,25 @@ export default async function MontazePage() {
         createdAt: row.createdAt,
         updatedAt: row.updatedAt,
         notes: row.notes.map((note) => ({
-            id: note.id,
+            id: note.id as string,
             content: note.content,
             createdAt: note.createdAt,
             author: note.author
                 ? {
-                      id: note.author.id,
+                      id: note.author.id as string,
                       name: note.author.name ?? null,
                       email: note.author.email,
                   }
                 : null,
             attachments: note.attachments?.map((attachment) => ({
-                id: attachment.id,
+                id: attachment.id as string,
                 title: attachment.title ?? null,
-                url: normalizeAttachmentUrl(attachment.url, publicBaseUrl),
+                url: normalizeAttachmentUrl(attachment.url as string, publicBaseUrl),
                 createdAt: attachment.createdAt,
-                noteId: attachment.noteId ?? null,
+                noteId: (attachment.noteId as string | null) ?? null,
                 uploader: attachment.uploader
                     ? {
-                          id: attachment.uploader.id,
+                          id: attachment.uploader.id as string,
                           name: attachment.uploader.name ?? null,
                           email: attachment.uploader.email,
                       }
@@ -162,7 +162,7 @@ export default async function MontazePage() {
             })) ?? [],
         })),
         checklistItems: row.checklistItems.map((item) => ({
-            id: item.id,
+            id: item.id as string,
             templateId: item.templateId,
             label: item.label,
             allowAttachment: Boolean(item.allowAttachment),
@@ -172,14 +172,14 @@ export default async function MontazePage() {
             updatedAt: item.updatedAt,
             attachment: item.attachment
                 ? {
-                      id: item.attachment.id,
+                      id: item.attachment.id as string,
                       title: item.attachment.title ?? null,
-                      url: normalizeAttachmentUrl(item.attachment.url, publicBaseUrl),
+                      url: normalizeAttachmentUrl(item.attachment.url as string, publicBaseUrl),
                       createdAt: item.attachment.createdAt,
-                      noteId: item.attachment.noteId ?? null,
+                      noteId: (item.attachment.noteId as string | null) ?? null,
                       uploader: item.attachment.uploader
                           ? {
-                                id: item.attachment.uploader.id,
+                                id: item.attachment.uploader.id as string,
                                 name: item.attachment.uploader.name ?? null,
                                 email: item.attachment.uploader.email,
                             }
@@ -188,21 +188,21 @@ export default async function MontazePage() {
                 : null,
         })),
         attachments: row.attachments.map((attachment) => ({
-            id: attachment.id,
+            id: attachment.id as string,
             title: attachment.title ?? null,
-            url: normalizeAttachmentUrl(attachment.url, publicBaseUrl),
+            url: normalizeAttachmentUrl(attachment.url as string, publicBaseUrl),
             createdAt: attachment.createdAt,
-            noteId: attachment.noteId ?? null,
+            noteId: (attachment.noteId as string | null) ?? null,
             uploader: attachment.uploader
                 ? {
-                      id: attachment.uploader.id,
+                      id: attachment.uploader.id as string,
                       name: attachment.uploader.name ?? null,
                       email: attachment.uploader.email,
                   }
                 : null,
         })),
         tasks: row.tasks.map((task) => ({
-            id: task.id,
+            id: task.id as string,
             title: task.title,
             completed: Boolean(task.completed),
             updatedAt: task.updatedAt,

@@ -62,6 +62,18 @@ export type OrderDocument = {
 	pdfUrl: string | null;
 };
 
+export type OrderAttachment = {
+	id: string;
+	title: string | null;
+	url: string;
+	createdAt: string;
+	uploader: {
+		id: string;
+		name: string | null;
+		email: string;
+	} | null;
+};
+
 export type Order = {
 	id: string;
 	reference: string;
@@ -80,6 +92,7 @@ export type Order = {
 	shipping: OrderShipping;
 	totals: OrderTotals;
 	taskOverrides: OrderTaskOverrides;
+	attachments: OrderAttachment[];
 };
 
 export type OrderItemPayload = Omit<OrderItem, 'id'>;

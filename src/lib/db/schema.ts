@@ -593,6 +593,26 @@ export const manualOrders = sqliteTable(
 	})
 );
 
+export const orderAttachments = sqliteTable(
+	'order_attachments',
+	{
+		id: text('id').primaryKey(),
+		orderId: text('order_id')
+			.notNull()
+			.references(() => manualOrders.id, { onDelete: 'cascade' }),
+		title: text('title'),
+		url: text('url').notNull(),
+		uploadedBy: text('uploaded_by').references(() => users.id, { onDelete: 'set null' }),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	},
+	(table) => ({
+		orderIdx: index('order_attachments_order_id_idx').on(table.orderId),
+		createdAtIdx: index('order_attachments_created_at_idx').on(table.createdAt),
+	})
+);
+
 export const manualOrderItems = sqliteTable(
 	'manual_order_items',
 	{
@@ -721,12 +741,24 @@ export const mailMessages = sqliteTable(
 
 export const manualOrdersRelations = relations(manualOrders, ({ many }) => ({
 	items: many(manualOrderItems),
+	attachments: many(orderAttachments),
 }));
 
 export const manualOrderItemsRelations = relations(manualOrderItems, ({ one }) => ({
 	order: one(manualOrders, {
 		fields: [manualOrderItems.orderId],
 		references: [manualOrders.id],
+	}),
+}));
+
+export const orderAttachmentsRelations = relations(orderAttachments, ({ one }) => ({
+	order: one(manualOrders, {
+		fields: [orderAttachments.orderId],
+		references: [manualOrders.id],
+	}),
+	uploader: one(users, {
+		fields: [orderAttachments.uploadedBy],
+		references: [users.id],
 	}),
 }));
 
