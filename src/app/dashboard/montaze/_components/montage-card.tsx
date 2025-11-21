@@ -33,8 +33,7 @@ import {
 	uploadChecklistAttachment,
 } from '../actions';
 import type { MontageStatus } from '@/lib/db/schema';
-
-type TimestampValue = Date | number | string | null | undefined;
+import type { Montage, MontageAttachment, StatusOption, TimestampValue } from '../types';
 
 function formatTimestamp(value: TimestampValue) {
 	if (!value) {
@@ -879,76 +878,6 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 		</Card>
 	);
 }
-
-type MontageAttachment = {
-	id: string;
-	title: string | null;
-	url: string;
-	createdAt: TimestampValue;
-	noteId: string | null;
-	uploader: {
-		id: string;
-		name: string | null;
-		email: string;
-	} | null;
-};
-
-type MontageNote = {
-	id: string;
-	content: string;
-	createdAt: TimestampValue;
-	author: {
-		id: string;
-		name: string | null;
-		email: string;
-	} | null;
-	attachments: MontageAttachment[];
-};
-
-type MontageTask = {
-	id: string;
-	title: string;
-	completed: boolean;
-	updatedAt: TimestampValue;
-};
-
-type MontageChecklistItem = {
-	id: string;
-	templateId: string | null;
-	label: string;
-	allowAttachment: boolean;
-	completed: boolean;
-	orderIndex: number;
-	createdAt: TimestampValue;
-	updatedAt: TimestampValue;
-	attachment: MontageAttachment | null;
-};
-
-export type Montage = {
-	id: string;
-	clientName: string;
-	contactEmail: string | null;
-	contactPhone: string | null;
-	billingAddress: string | null;
-	installationAddress: string | null;
-	billingCity: string | null;
-	installationCity: string | null;
-	scheduledInstallationAt: TimestampValue;
-	materialDetails: string | null;
-	status: MontageStatus;
-	createdAt: TimestampValue;
-	updatedAt: TimestampValue;
-	notes: MontageNote[];
-	attachments: MontageAttachment[];
-	tasks: MontageTask[];
-	checklistItems: MontageChecklistItem[];
-};
-
-export type StatusOption = {
-	value: MontageStatus;
-	label: string;
-	description: string;
-};
 
 type MontageCardProps = {
 	montage: Montage;
