@@ -15,11 +15,9 @@ import {
 	TableRow,
 } from '@/components/ui/table';
 import { requireUser } from '@/lib/auth/session';
-import { tryGetWfirmaConfig } from '@/lib/wfirma/config';
 
 import { getManualOrderById, getOrderDocuments } from '../actions';
 import { ConfirmOrderButton } from '../_components/confirm-order-button';
-import { IssueProformaButton } from '../_components/issue-proforma-button';
 import { OrderStatusForm } from '../_components/order-status-form';
 import { OrderStatusTimeline } from '../_components/order-status-timeline';
 import { OrderAttachments } from '../_components/order-attachments';
@@ -190,8 +188,6 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageParam
 
 	const order: Order = orderData;
 	const documents = await getOrderDocuments(order.id);
-	const wfirmaConfig = await tryGetWfirmaConfig();
-	const hasWfirmaIntegration = Boolean(wfirmaConfig);
 	const totalSquareMeters = computeOrderSquareMeters(order);
 	const statusesWithTasks = enhanceTimelineEntries(
 		order.statuses,
@@ -493,11 +489,6 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageParam
 							<div className="space-y-2">
 								<OrderStatusForm orderId={order.id} currentStatus={order.status} />
 							</div>
-							<IssueProformaButton
-								orderId={order.id}
-								isWfirmaConfigured={hasWfirmaIntegration}
-								className="h-8 w-full px-3 text-xs"
-							/>
 						</CardContent>
 					</Card>
 				</div>

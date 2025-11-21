@@ -8,8 +8,6 @@ import { requireUser } from '@/lib/auth/session';
 import { appSettingKeys, getAppSetting, setAppSetting } from '@/lib/settings';
 import { createR2Client } from '@/lib/r2/client';
 import { getR2Config } from '@/lib/r2/config';
-import { callWfirmaApi, WfirmaApiError } from '@/lib/wfirma/client';
-import { getWfirmaConfig } from '@/lib/wfirma/config';
 
 export async function updateWooWebhookSecret(secret: string) {
 	const user = await requireUser();
@@ -48,89 +46,6 @@ export async function testWooWebhookSecret() {
 	}
 
 	return 'Sekret webhooka jest zapisany. Wyslij testowe zamowienie z WooCommerce, aby zweryfikowac webhook.';
-}
-
-type UpdateWfirmaConfigInput = {
-	tenant: string;
-	appKey: string;
-	accessKey: string;
-	secretKey: string;
-};
-
-export async function updateWfirmaConfig({ tenant, appKey, accessKey, secretKey }: UpdateWfirmaConfigInput) {
-	const user = await requireUser();
-	if (user.role !== 'owner') {
-		throw new Error('Tylko wlasciciel moze zmieniac konfiguracje integracji.');
-	}
-
-	const trimmedTenant = tenant.trim();
-	const trimmedAppKey = appKey.trim();
-	const trimmedAccessKey = accessKey.trim();
-	const trimmedSecretKey = secretKey.trim();
-
-	if (!trimmedTenant || !trimmedAppKey || !trimmedAccessKey || !trimmedSecretKey) {
-		throw new Error('Uzupelnij wszystkie pola konfiguracji wFirma.');
-	}
-
-	if (trimmedAppKey.length < 8) {
-		throw new Error('Klucz aplikacji powinien miec co najmniej 8 znakow.');
-	}
-
-	if (trimmedSecretKey.length < 16) {
-		throw new Error('Sekretny klucz API powinien miec co najmniej 16 znakow.');
-	}
-
-	await Promise.all([
-		setAppSetting({ key: appSettingKeys.wfirmaTenant, value: trimmedTenant, userId: user.id }),
-		setAppSetting({ key: appSettingKeys.wfirmaAppKey, value: trimmedAppKey, userId: user.id }),
-		setAppSetting({ key: appSettingKeys.wfirmaAccessKey, value: trimmedAccessKey, userId: user.id }),
-		setAppSetting({ key: appSettingKeys.wfirmaSecretKey, value: trimmedSecretKey, userId: user.id }),
-	]);
-
-	process.env.WFIRMA_TENANT = trimmedTenant;
-	process.env.WFIRMA_APP_KEY = trimmedAppKey;
-	process.env.WFIRMA_ACCESS_KEY = trimmedAccessKey;
-	process.env.WFIRMA_SECRET_KEY = trimmedSecretKey;
-
-	revalidatePath('/dashboard/settings');
-}
-
-export async function testWfirmaConnection() {
-	const user = await requireUser();
-	if (user.role !== 'owner') {
-		throw new Error('Tylko wlasciciel moze wykonywac test polaczenia.');
-	}
-
-	const config = await getWfirmaConfig();
-
-	try {
-		const response = await callWfirmaApi<Record<string, unknown>>({
-			path: '/company/get',
-			tenant: config.tenant,
-			appKey: config.appKey,
-			accessKey: config.accessKey,
-			secretKey: config.secretKey,
-		});
-
-		let companyLabel = 'wFirma';
-		if (response && typeof response === 'object') {
-			const container = response as Record<string, unknown>;
-			const company = (container.company ?? container.companies) as Record<string, unknown> | undefined;
-			const profile = company?.company ?? company;
-			const nameCandidate = profile && typeof profile === 'object' ? (profile as Record<string, unknown>).name : undefined;
-			if (typeof nameCandidate === 'string' && nameCandidate.trim()) {
-				companyLabel = nameCandidate.trim();
-			}
-		}
-
-		return `Polaczenie dziala. Odpowiedzial serwer ${companyLabel}.`;
-	} catch (error) {
-		if (error instanceof WfirmaApiError) {
-			const prefix = error.status ? `HTTP ${error.status}: ` : '';
-			throw new Error(`${prefix}${error.message}`);
-		}
-		throw error;
-	}
 }
 
 type UpdateR2ConfigInput = {

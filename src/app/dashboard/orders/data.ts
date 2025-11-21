@@ -58,7 +58,6 @@ export type OrderDocument = {
 	status: string;
 	number: string | null;
 	issueDate: string | null;
-	wfirmaId: number | null;
 	pdfUrl: string | null;
 };
 

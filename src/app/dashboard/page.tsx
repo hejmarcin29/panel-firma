@@ -15,7 +15,7 @@ export default async function DashboardPage() {
 				<h2 className="text-xl font-medium">Następne kroki</h2>
 				<ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm text-muted-foreground">
 					<li>Zaprojektuj widgety sprzedażowe z kluczowymi KPI na stronie głównej.</li>
-					<li>Skonfiguruj integracje z WooCommerce, wfirma oraz Alior Bank.</li>
+					<li>Skonfiguruj integracje z WooCommerce oraz Alior Bank.</li>
 					<li>Przygotuj moduł powiadomień e-mail dla klientów i hurtowni.</li>
 				</ul>
 			</div>

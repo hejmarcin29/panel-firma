@@ -6,9 +6,6 @@ import { desc, eq } from 'drizzle-orm';
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
 import { documents, manualOrderItems, manualOrders, orderAttachments } from '@/lib/db/schema';
-import { callWfirmaApi, WfirmaApiError } from '@/lib/wfirma/client';
-import { getWfirmaConfig, type WfirmaConfig } from '@/lib/wfirma/config';
-import { appendWfirmaLog } from '@/lib/wfirma/repository';
 import { uploadOrderDocumentObject } from '@/lib/r2/storage';
 
 import type {
@@ -18,7 +15,7 @@ import type {
 	OrderItem,
 	OrderItemPayload,
 	OrderDocument,
- 	OrderAttachment,
+	OrderAttachment,
 } from './data';
 import { buildTimelineEntries, normalizeStatus, statusOptions } from './utils';
 
@@ -32,7 +29,6 @@ type ManualOrderItemRow = typeof manualOrderItems.$inferSelect;
 type ManualOrderInsert = typeof manualOrders.$inferInsert;
 type ManualOrderItemInsert = typeof manualOrderItems.$inferInsert;
 type DocumentRow = typeof documents.$inferSelect;
-type DocumentInsert = typeof documents.$inferInsert;
 type OrderAttachmentRow = typeof orderAttachments.$inferSelect;
 type OrderAttachmentInsert = typeof orderAttachments.$inferInsert;
 type OrderAttachmentRowWithUploader = OrderAttachmentRow & {
@@ -121,7 +117,6 @@ function mapDocumentRow(row: DocumentRow): OrderDocument {
 		status: row.status,
 		number: row.number ?? null,
 		issueDate,
-		wfirmaId: typeof row.wfirmaId === 'number' ? row.wfirmaId : null,
 		pdfUrl: row.pdfUrl ?? null,
 	};
 }
@@ -625,215 +620,3 @@ export async function updateManualOrderStatus(orderId: string, nextStatus: strin
 	return updated;
 }
 
-type ProformaPayload = Record<string, unknown>;
-
-function formatMoney(value: number) {
-	return value.toFixed(2);
-}
-
-function formatQuantity(value: number) {
-	return value.toFixed(3);
-}
-
-function buildProformaPayload(order: Order): ProformaPayload {
-	const issueDate = new Date();
-	const paymentDue = new Date(issueDate.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-	return {
-		invoice: {
-			type: 'proforma',
-			name: `Zamówienie ${order.reference}`,
-			description: `Proforma dla zamówienia ${order.reference}`,
-			issue_date: issueDate.toISOString().slice(0, 10),
-			sale_date: issueDate.toISOString().slice(0, 10),
-			payment_date: paymentDue.toISOString().slice(0, 10),
-			paymentmethod: 'transfer',
-			currency: order.currency,
-			contractor: {
-				name: order.billing.name,
-				street: order.billing.street,
-				zip: order.billing.postalCode,
-				city: order.billing.city,
-				country: 'PL',
-				email: order.billing.email,
-				phone: order.billing.phone,
-			},
-			positions: {
-				position: order.items.map((item, index) => ({
-					name: item.product,
-					description: null,
-					order: index + 1,
-					unit: 'szt',
-					quantity: formatQuantity(item.quantity),
-					price: formatMoney(item.unitPrice),
-					vat: item.vatRate,
-					total: formatMoney(item.totalGross),
-				})),
-			},
-		},
-	};
-}
-
-function extractInvoiceFromResponse(payload: unknown) {
-	if (payload && typeof payload === 'object') {
-		const container = payload as Record<string, unknown>;
-		if (container.invoice && typeof container.invoice === 'object') {
-			return container.invoice as Record<string, unknown>;
-		}
-		if (container.invoices && typeof container.invoices === 'object') {
-			const invoices = container.invoices as Record<string, unknown>;
-			if (invoices.invoice && typeof invoices.invoice === 'object') {
-				return invoices.invoice as Record<string, unknown>;
-			}
-		}
-	}
-	return null;
-}
-
-function parseNumeric(value: unknown) {
-	if (typeof value === 'number') {
-		return Number.isFinite(value) ? value : null;
-	}
-	if (typeof value === 'string') {
-		const parsed = Number(value.replace(/[^0-9.-]/g, ''));
-		return Number.isFinite(parsed) ? parsed : null;
-	}
-	return null;
-}
-
-export async function issueProformaInvoice(orderId: string): Promise<OrderDocument> {
-	const user = await requireUser();
-	const order = await getManualOrderById(orderId);
-
-	if (!order) {
-		throw new Error('Nie znaleziono zamówienia.');
-	}
-
-	let config: WfirmaConfig;
-	try {
-		config = await getWfirmaConfig();
-	} catch (configError) {
-		const details = configError instanceof Error ? configError.message : 'Brakuje konfiguracji wFirma.';
-		throw new Error(`${details} Uzupelnij WFIRMA_TENANT, WFIRMA_APP_KEY, WFIRMA_ACCESS_KEY oraz WFIRMA_SECRET_KEY w ustawieniach panelu.`);
-	}
-	const payload = buildProformaPayload(order);
-
-	try {
-		const response = await callWfirmaApi<Record<string, unknown>>({
-			method: 'POST',
-			path: '/invoices/proforma/create',
-			body: payload,
-			tenant: config.tenant,
-			appKey: config.appKey,
-			accessKey: config.accessKey,
-			secretKey: config.secretKey,
-		});
-
-		const invoice = extractInvoiceFromResponse(response) ?? {};
-		const wfirmaIdRaw = invoice.id ?? invoice.invoice_id ?? null;
-		const wfirmaId = parseNumeric(wfirmaIdRaw);
-		const number =
-			typeof invoice.number === 'string'
-				? invoice.number
-				: typeof invoice.fullnumber === 'string'
-					? invoice.fullnumber
-					: null;
-		const pdfUrl =
-			typeof invoice.print_url === 'string'
-				? invoice.print_url
-				: typeof invoice.pdf_url === 'string'
-					? invoice.pdf_url
-					: null;
-		const issueDateStr =
-			typeof invoice.issue_date === 'string'
-				? invoice.issue_date
-				: typeof invoice.date === 'string'
-					? invoice.date
-					: null;
-		const issueDateMs = issueDateStr ? Date.parse(issueDateStr) : Date.now();
-		const resolvedIssueDate = Number.isFinite(issueDateMs) ? new Date(issueDateMs) : null;
-
-		const docValues: DocumentInsert = {
-			id: crypto.randomUUID(),
-			orderId,
-			type: 'proforma',
-			status: 'issued',
-			wfirmaId: wfirmaId ?? null,
-			number,
-			issueDate: resolvedIssueDate,
-			pdfUrl,
-			grossAmount: toMinorUnits(order.totals.totalGross),
-		};
-
-		const insertQuery = db
-			.insert(documents)
-			.values(docValues);
-
-		if (wfirmaId !== null) {
-			await insertQuery.onConflictDoUpdate({
-				target: documents.wfirmaId,
-				set: {
-					status: 'issued',
-					number,
-					pdfUrl,
-					issueDate: docValues.issueDate,
-					grossAmount: docValues.grossAmount,
-					updatedAt: new Date(),
-				},
-			});
-		} else {
-			await insertQuery;
-		}
-
-		await appendWfirmaLog({
-			level: 'info',
-			message: 'Wystawiono fakturę proforma w wFirma',
-			meta: {
-				orderId,
-				wfirmaId,
-				number,
-				userId: user.id,
-			},
-		});
-
-		revalidatePath('/dashboard/orders');
-		revalidatePath(`/dashboard/orders/${orderId}`);
-
-		const [savedRow] = await db
-			.select()
-			.from(documents)
-			.where(eq(documents.orderId, orderId))
-			.orderBy(desc(documents.createdAt))
-			.limit(1);
-
-		if (!savedRow) {
-			throw new Error('Wystawiono proformę, ale nie udało się zapisać dokumentu w bazie.');
-		}
-
-		return mapDocumentRow(savedRow);
-	} catch (error) {
-		let message: string;
-		if (error instanceof WfirmaApiError) {
-			if (error.status === 401) {
-				message = 'wFirma odrzucila klucze API. Sprawdz WFIRMA_APP_KEY, WFIRMA_ACCESS_KEY oraz WFIRMA_SECRET_KEY w ustawieniach panelu.';
-			} else {
-				message = `wFirma: ${error.message}`;
-			}
-		} else if (error instanceof Error) {
-			message = error.message;
-		} else {
-			message = 'Nieznany błąd podczas wystawiania proformy.';
-		}
-
-		await appendWfirmaLog({
-			level: 'error',
-			message: 'Nie udało się wystawić proformy w wFirma',
-			meta: {
-				orderId,
-				error: message,
-			},
-		});
-
-		throw new Error(message);
-	}
-}

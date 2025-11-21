@@ -33,7 +33,7 @@ export const supplierRequestStatuses = ['generated', 'sent', 'acknowledged', 'fu
 export const notificationChannels = ['email'] as const;
 export const notificationStatuses = ['pending', 'sent', 'failed'] as const;
 
-export const integrationNames = ['woocommerce', 'wfirma', 'alior', 'email'] as const;
+export const integrationNames = ['woocommerce', 'alior', 'email'] as const;
 export const integrationLogLevels = ['info', 'warning', 'error'] as const;
 
 export const supplierMessageDirections = ['sent', 'received'] as const;
@@ -186,7 +186,6 @@ export const documents = sqliteTable(
 			.references(() => orders.id, { onDelete: 'cascade' }),
 		type: text('type').$type<DocumentType>().notNull(),
 		status: text('status').$type<DocumentStatus>().notNull(),
-		wfirmaId: integer('wfirma_id'),
 		number: text('number'),
 		issueDate: integer('issue_date', { mode: 'timestamp_ms' }),
 		pdfUrl: text('pdf_url'),
@@ -200,7 +199,6 @@ export const documents = sqliteTable(
 	},
 	(table) => ({
 		typeIdx: index('documents_type_idx').on(table.type),
-		wfirmaIdx: uniqueIndex('documents_wfirma_id_idx').on(table.wfirmaId),
 		statusIdx: index('documents_status_idx').on(table.status),
 	})
 );

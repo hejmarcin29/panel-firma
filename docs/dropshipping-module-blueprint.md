@@ -7,13 +7,13 @@
 | --- | --- | --- | --- | --- | --- |
 | 01 | `order.received` | Zamówienie przyjęte | Import z WooCommerce API / ręczne dodanie operatora | Tworzenie zamówienia, numer wewnętrzny, mapowanie pozycji | E-mail do operatora: nowe zamówienie (opcjonalnie do klienta potwierdzenie)|
 | 02 | `order.pending_proforma` | Przygotowanie proformy | Operator rozpoczyna proces; zamówienie kompletne | Generowanie draftu proformy, weryfikacja danych klienta | Brak (ew. powiadomienie wewnętrzne)|
-| 03 | `order.proforma_issued` | Proforma wystawiona | Klik "Wystaw proformę" → API wfirma | Zapis ID dokumentu, numer, PDF; link w panelu | E-mail do klienta z proformą + instrukcje płatności |
+| 03 | `order.proforma_issued` | Proforma wystawiona | Operator potwierdza wystawienie proformy w panelu | Zapis numeru dokumentu, kwoty, linku do PDF dodanego ręcznie | E-mail do klienta z proformą + instrukcje płatności |
 | 04 | `order.awaiting_payment` | Oczekiwanie na płatność | Automatycznie po 03 | Monitorowanie płatności (Alior API), ustawienie deadline | Automatyczne przypomnienie po X dniach |
 | 05 | `order.paid` | Opłacone | Alior API match przelewu / ręczne potwierdzenie | Zapis identyfikatora transakcji, kwoty, daty | E-mail do klienta: potwierdzenie płatności |
-| 06 | `order.advance_invoice` | FV zaliczkowa wystawiona | Operator zatwierdza wystawienie w panelu | API wfirma wystawia FV zaliczkową (często 100%); zapis ID, PDF | Kopia e-mail do klienta (ew. BCC księgowość) |
+| 06 | `order.advance_invoice` | FV zaliczkowa wystawiona | Operator potwierdza wystawienie w zewnętrznym systemie księgowym | Zapis numeru faktury zaliczkowej, daty i linku do PDF | Kopia e-mail do klienta (ew. BCC księgowość) |
 | 07 | `order.forwarded_to_supplier` | Zamówienie przekazane hurtowni | Operator używa akcji "Wyślij do hurtowni" | Generowanie szczegółów zamówienia, wysyłka e-mail do hurtowni | E-mail do hurtowni + do klienta status "W realizacji" |
 | 08 | `order.fulfillment_confirmed` | Wysyłka potwierdzona | Hurtownia odpisuje (ręcznie) / link potwierdzający / import pliku | Aktualizacja numeru przesyłki, przewoźnik, data wysyłki | E-mail do klienta z numerem śledzenia |
-| 09 | `order.final_invoice` | Faktura końcowa wystawiona | Operator zatwierdza po otrzymaniu potwierdzenia wysyłki | API wfirma: faktura końcowa, rozliczenie zaliczki | E-mail do klienta z finalną FV |
+| 09 | `order.final_invoice` | Faktura końcowa wystawiona | Operator zatwierdza po otrzymaniu potwierdzenia wysyłki | Zapis numeru faktury końcowej oraz załączenie PDF | E-mail do klienta z finalną FV |
 | 10 | `order.closed` | Zamówienie zamknięte | Automatycznie po 09 + zakończone wysyłki | Archiwizacja, raporty | Brak (opcjonalny e-mail z prośbą o opinię) |
 
 ### 1.2 Dokumenty i Ich Statusy
@@ -21,7 +21,7 @@
 - `advance_invoice`: `issued`, `voided`
 - `final_invoice`: `issued`, `corrected`
 
-Każdy dokument przechowuje: ID z wfirma, numer, kwoty netto/brutto, walutę, datę wystawienia, link do PDF.
+Każdy dokument przechowuje: opcjonalne ID zewnętrzne, numer, kwoty netto/brutto, walutę, datę wystawienia, link do PDF.
 
 ### 1.3 Płatności (Alior)
 - Matchowanie na podstawie numeru proformy w tytule przelewu lub kwoty + NIP.
@@ -42,24 +42,17 @@ Każdy dokument przechowuje: ID z wfirma, numer, kwoty netto/brutto, walutę, da
 - **Mapowanie**: do encji `Order` + `OrderItem`.
 - **Ręczne dodawanie**: formularz w panelu odwzorowuje te same pola.
 
-### 2.2 wfirma
-- **Endpointy**: tworzenie proformy, faktury zaliczkowej, faktury końcowej, pobieranie dokumentu PDF.
-- **Autoryzacja**: OAuth2 + token odświeżania, przechowywany szyfrowany.
-- **Dane wysyłane**: dane kontrahenta, produkty z zamówienia, numer zamówienia jako opis, terminy płatności.
-- **Odpowiedź**: ID dokumentu, numer, link do PDF.
-- **Retry**: exponential backoff, log błędów.
-
-### 2.3 Alior Bank API
+### 2.2 Alior Bank API
 - **Zakres**: pobranie historii transakcji, webhook dla nowych operacji.
 - **Polityka danych**: przechowujemy wyłącznie niezbędne pola (data, kwota, tytuł, nadawca, numer rachunku).
 - **Matchowanie**: heurystyka + ręczne przypisanie przez operatora w widoku płatności.
 
-### 2.4 E-mail (SMTP / provider transakcyjny)
+### 2.3 E-mail (SMTP / provider transakcyjny)
 - **Szablony**: Markdown/HTML przechowywany w bazie, rendering server-side.
 - **Logi**: status wysyłki, ID wiadomości, timestamp, adresaci.
 - **Integracja**: provider z API (np. MailerSend) lub własny SMTP.
 
-### 2.5 Hurtownia
+### 2.4 Hurtownia
 - **Wyjście**: e-mail + załącznik PDF/CSV, w przyszłości API.
 - **Wymagane pola**: dane klienta, adres wysyłki, numer telefonu, lista produktów (SKU, ilość), uwagi.
 - **Zwrotnie**: numer przesyłki, przewoźnik, status wysyłki (ręczne wprowadzenie lub link potwierdzający).
@@ -76,7 +69,7 @@ Każdy dokument przechowuje: ID z wfirma, numer, kwoty netto/brutto, walutę, da
 
 ### 3.2 Dokumenty
 - `documents`
-  - `id`, `order_id`, `type` ("proforma", "advance_invoice", "final_invoice"), `status`, `wfirma_id`, `number`, `issue_date`, `pdf_url`, `gross_amount`.
+  - `id`, `order_id`, `type` ("proforma", "advance_invoice", "final_invoice"), `status`, `number`, `issue_date`, `pdf_url`, `gross_amount`.
 - `document_events`
   - log zmian statusu, timestamp, user_id.
 
@@ -96,7 +89,7 @@ Każdy dokument przechowuje: ID z wfirma, numer, kwoty netto/brutto, walutę, da
 - `notifications`
   - `id`, `order_id`, `channel`, `template_code`, `recipient`, `status`, `sent_at`, `provider_message_id`.
 - `integration_logs`
-  - `id`, `integration` ("woocommerce", "wfirma", "alior", "email"), `level`, `message`, `meta`, `created_at`.
+  - `id`, `integration` ("woocommerce", "alior", "email"), `level`, `message`, `meta`, `created_at`.
 
 ## 4. UX Outline
 
@@ -122,7 +115,7 @@ Każdy dokument przechowuje: ID z wfirma, numer, kwoty netto/brutto, walutę, da
 - Każde zadanie łączy się z konkretnym zamówieniem i sugeruje następną akcję.
 
 ### 4.5 Konfiguracja Integracji
-- Zakładki: WooCommerce, wfirma, Alior, E-mail.
+- Zakładki: WooCommerce, Alior, E-mail.
 - Formularze z polami API key/token, test połączenia, log ostatnich błędów.
 - Wspólna sekcja harmonogramów (np. częstotliwość synchronizacji).
 
@@ -193,66 +186,7 @@ Każdy dokument przechowuje: ID z wfirma, numer, kwoty netto/brutto, walutę, da
 - Walidacja: webhook podpisany secret key, retry policy (WooCommerce 5 prób).
 - Transformacja: mapowanie `billing`/`shipping` na osobne pola + wyprowadzenie `tax_id`.
 
-### 6.2 Panel → wfirma (Proforma `POST /invoices/proforma`)
-```json
-{
-  "invoice": {
-    "kind": "proforma",
-    "issue_date": "2024-05-21",
-    "payment_date": "2024-05-24",
-    "payment_kind": "transfer",
-    "client_id": 9981,
-    "client": {
-      "name": "Jan Kowalski",
-      "tax_id": "5213456789",
-      "street": "ul. Kwiatowa 10",
-      "city": "Warszawa",
-      "postal": "00-001",
-      "country": "PL"
-    },
-    "description": "Zamówienie DROPS-2024-00021",
-    "items": [
-      {
-        "name": "Zestaw startowy",
-        "quantity": 1,
-        "unit": "szt",
-        "price_net": 1055.19,
-        "tax": 23,
-        "price_gross": 1299.00
-      }
-    ],
-    "total": 1299.00,
-    "currency": "PLN"
-  }
-}
-```
-
-- Odpowiedź (200):
-```json
-{
-  "invoice": {
-    "id": 561231,
-    "fullnumber": "PF/05/2024/213",
-    "url": "https://app.wfirma.pl/documents/561231.pdf"
-  }
-}
-```
-- Błędy (4xx/5xx) logowane w `integration_logs` z payloadem (bez danych wrażliwych).
-
-### 6.3 wfirma → Panel (Webhooks dokumentów)
-- Event `document.issued` → uzupełnienie statusu dokumentu oraz numeru.
-- Payload minimalny:
-```json
-{
-  "event": "document.issued",
-  "document_id": 561231,
-  "document_type": "proforma",
-  "fullnumber": "PF/05/2024/213",
-  "issue_date": "2024-05-21"
-}
-```
-
-### 6.4 Alior Bank → Panel (Webhook nowej płatności)
+### 6.2 Alior Bank → Panel (Webhook nowej płatności)
 ```json
 {
   "transaction": {
@@ -311,7 +245,7 @@ Każdy dokument przechowuje: ID z wfirma, numer, kwoty netto/brutto, walutę, da
 - `documents`
   - PK: `id`
   - FK: `order_id`
-  - Indeksy: `documents_type_idx`, `documents_wfirma_id_key` (unique), `documents_status_idx`.
+  - Indeksy: `documents_type_idx`, `documents_status_idx`.
 - `document_events`
   - PK: `id`
   - FK: `document_id`
