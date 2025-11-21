@@ -219,26 +219,26 @@ export default async function MontazePage() {
     );
 
     return (
-        <div className="space-y-10">
-            <section className="overflow-hidden rounded-3xl border bg-linear-to-br from-primary/5 via-background to-background p-8 shadow-sm">
-                <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="space-y-4">
+        <div className="space-y-6">
+            <section className="overflow-hidden rounded-2xl border bg-linear-to-br from-primary/5 via-background to-background p-6 shadow-sm">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="space-y-3">
                         <CreateMontageDialog />
                     </div>
-                    <div className="grid gap-3 text-xs text-muted-foreground">
+                    <div className="grid gap-2 text-xs text-muted-foreground">
                         <span className="font-semibold text-foreground">Pipeline status</span>
-                        <div className="flex flex-wrap items-center gap-3">
-                            <Badge variant="secondary" className="rounded-full px-3 py-1 text-sm">{totalMontages} montazy</Badge>
-                            <Badge variant="outline" className="rounded-full px-3 py-1 text-sm">
+                        <div className="flex flex-wrap items-center gap-2.5">
+                            <Badge variant="secondary" className="rounded-full px-3 py-0.5 text-xs">{totalMontages} montazy</Badge>
+                            <Badge variant="outline" className="rounded-full px-3 py-0.5 text-xs">
                                 {completedTasks}/{totalTasks} zadan zakonczonych
                             </Badge>
-                            <Badge variant="outline" className="rounded-full px-3 py-1 text-sm">{totalAttachments} plikow w R2</Badge>
+                            <Badge variant="outline" className="rounded-full px-3 py-0.5 text-xs">{totalAttachments} plikow w R2</Badge>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <section className="space-y-4">
+            <section className="space-y-3">
                 <div>
                     <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Pipeline montazy</h2>
                     <p className="text-xs text-muted-foreground">

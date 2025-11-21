@@ -19,6 +19,12 @@
 - Większość komponentów bazuje na Radix UI, dlatego pamiętaj o dostosowaniu importów (`@/components/ui/...`).
 - Temat wprowadzony do `src/app/globals.css` korzysta z CSS variables; w razie zmiany kolorystyki aktualizujemy je w jednym miejscu.
 
+## Kompaktowy interfejs panelu
+- Dashboard prowadzimy w gęstszej siatce: domyślnie używamy mniejszych odstępów (`px-3.5`, `py-3`, `space-y-2.5`) i unikamy dużych marginesów (`p-6`+).
+- Komponenty współdzielone (np. `Card`) powinny zachowywać spójne, zwarte paddingi, tak aby zmiany propagowały się globalnie.
+- Formularze i listy trzymamy możliwie w jednej kolumnie gapu `2–3`, a odstępy między sekcjami redukujemy do `space-y-4` lub mniej.
+- Przed dodaniem nowych widoków porównaj spacing z widokami zamówień i maili, żeby utrzymać jednolitą gęstość interfejsu.
+
 ## Przydatne polecenia
 - `npm run dev` – lokalny serwer Next.js.
 - `npm run lint` – sprawdzenie lintem.

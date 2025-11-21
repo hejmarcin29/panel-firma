@@ -13,7 +13,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 	return (
 		<div className="min-h-screen bg-muted">
 			<header className="border-b bg-background">
-				<div className="mx-auto flex w-full max-w-[1600px] items-center justify-between px-6 py-4">
+				<div className="mx-auto flex w-full max-w-[1600px] items-center justify-between px-5 py-3">
 					<Link href="/dashboard" className="text-lg font-semibold">
 						Panel firmy
 					</Link>
@@ -25,7 +25,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 					</div>
 				</div>
 			</header>
-			<main className="mx-auto w-full max-w-[1600px] px-6 py-10">
+			<main className="mx-auto w-full max-w-[1600px] px-5 py-8">
 				<DashboardNav />
 				{children}
 			</main>

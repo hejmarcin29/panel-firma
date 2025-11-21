@@ -366,9 +366,9 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 
 	return (
 		<Card className="h-full border bg-background shadow-sm sm:rounded-2xl">
-			<CardHeader className="space-y-8 border-b border-border/60 pb-8">
-				<div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
-					<div className="space-y-6">
+			<CardHeader className="space-y-5 border-b border-border/60 pb-6">
+				<div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+					<div className="space-y-4">
 						<div className="space-y-2">
 							<CardTitle className="text-2xl font-semibold text-foreground lg:text-3xl">
 								{montage.clientName}
@@ -377,7 +377,7 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 								Utworzono {formatTimestamp(montage.createdAt)} • Aktualizacja {formatTimestamp(montage.updatedAt)}
 							</CardDescription>
 						</div>
-						<div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+						<div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
 							{montage.contactPhone ? (
 								<div className="rounded-xl border border-border/60 bg-muted/20 px-3 py-2">
 									<p className="text-[11px] uppercase tracking-wide text-muted-foreground/80">Telefon</p>
@@ -395,7 +395,7 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 								<p className="font-medium text-foreground">{scheduledInstallationDate ?? 'Brak terminu'}</p>
 							</div>
 						</div>
-						<form onSubmit={submitMaterials} className="space-y-3 rounded-xl border border-border/60 bg-muted/10 p-4">
+						<form onSubmit={submitMaterials} className="space-y-2.5 rounded-xl border border-border/60 bg-muted/10 p-3.5">
 							<div className="flex flex-wrap items-center justify-between gap-3">
 								<div className="space-y-1">
 									<Label className="text-xs uppercase tracking-wide text-muted-foreground">Materiały i ilości</Label>
@@ -443,7 +443,7 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 							</div>
 						</div>
 					</div>
-					<div className="flex flex-col items-start gap-3 sm:items-end">
+					<div className="flex flex-col items-start gap-2.5 sm:items-end">
 						{currentStatusOption ? (
 							<Badge variant="secondary" className="rounded-full px-3 py-1 text-[11px] uppercase tracking-wide text-muted-foreground">
 								{currentStatusOption.label}
@@ -471,32 +471,32 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 						</Select>
 					</div>
 				</div>
-				<div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-					<div className="rounded-xl border border-border/60 bg-muted/20 px-4 py-3">
+				<div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
+					<div className="rounded-xl border border-border/60 bg-muted/20 px-3.5 py-2.5">
 						<p className="text-[11px] uppercase tracking-wide text-muted-foreground">Notatki</p>
 						<p className="text-xl font-semibold text-foreground">{montage.notes.length}</p>
 						<p className="text-xs text-muted-foreground">Łącznie wpisów</p>
 					</div>
-					<div className="rounded-xl border border-border/60 bg-muted/20 px-4 py-3">
+					<div className="rounded-xl border border-border/60 bg-muted/20 px-3.5 py-2.5">
 						<p className="text-[11px] uppercase tracking-wide text-muted-foreground">Załączniki</p>
 						<p className="text-xl font-semibold text-foreground">{montage.attachments.length}</p>
 						<p className="text-xs text-muted-foreground">Pliki w chmurze</p>
 					</div>
-					<div className="rounded-xl border border-border/60 bg-muted/20 px-4 py-3">
+					<div className="rounded-xl border border-border/60 bg-muted/20 px-3.5 py-2.5">
 						<p className="text-[11px] uppercase tracking-wide text-muted-foreground">Lista kontrolna</p>
 						<p className="text-xl font-semibold text-foreground">{checklistProgressLabel}</p>
 						<p className="text-xs text-muted-foreground">Zadania: {completedTasks}/{totalTasks}</p>
 					</div>
-					<div className="rounded-xl border border-border/60 bg-muted/20 px-4 py-3">
+					<div className="rounded-xl border border-border/60 bg-muted/20 px-3.5 py-2.5">
 						<p className="text-[11px] uppercase tracking-wide text-muted-foreground">Ostatnia aktywność</p>
 						<p className="text-sm font-medium text-foreground">{formatTimestamp(latestActivityTimestamp)}</p>
 						<p className="text-xs text-muted-foreground">Automatycznie aktualizowane</p>
 					</div>
 				</div>
 			</CardHeader>
-			<CardContent className="space-y-8 pb-10 pt-0">
-				<section className="space-y-4 rounded-2xl border border-border/60 bg-muted/10 p-5">
-					<div className="flex flex-wrap items-center justify-between gap-3">
+			<CardContent className="space-y-4 pb-8 pt-0">
+				<section className="space-y-3.5 rounded-2xl border border-border/60 bg-muted/10 p-4">
+					<div className="flex flex-wrap items-center justify-between gap-2.5">
 						<h3 className="text-sm font-semibold text-foreground">Lista kontrolna montażu</h3>
 						<div className="text-xs text-muted-foreground">{checklistProgressLabel} etapów zamkniętych</div>
 					</div>
@@ -504,11 +504,11 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 					{montage.checklistItems.length === 0 ? (
 						<p className="text-sm text-muted-foreground">Brak pozycji na liście kontrolnej. Dodaj je w ustawieniach panelu.</p>
 					) : (
-						<ul className="space-y-4">
+						<ul className="space-y-2.5">
 							{montage.checklistItems.map((item) => (
-								<li key={item.id} className="space-y-4 rounded-2xl border border-border/60 bg-background p-4 shadow-sm">
-									<div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-										<label className="flex items-start gap-3 text-sm font-medium text-foreground">
+								<li key={item.id} className="space-y-2.5 rounded-xl border border-border/60 bg-background p-3.5 shadow-sm">
+									<div className="flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between">
+										<label className="flex items-start gap-2 text-sm font-medium text-foreground">
 											<Checkbox
 												checked={item.completed}
 												onCheckedChange={(value) => handleChecklistToggle(item.id, Boolean(value))}
@@ -527,7 +527,7 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 										</div>
 									</div>
 									{item.allowAttachment ? (
-										<div className="space-y-3 rounded-xl border border-dashed border-border/70 bg-muted/10 p-4">
+										<div className="space-y-2.5 rounded-xl border border-dashed border-border/70 bg-muted/10 p-3.5">
 											{item.attachment ? (
 												<a
 													href={item.attachment.url}
@@ -543,7 +543,7 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 											) : (
 												<p className="text-xs text-muted-foreground">Brak załącznika dla tego etapu.</p>
 											)}
-											<form onSubmit={submitChecklistAttachment(item.id)} className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+											<form onSubmit={submitChecklistAttachment(item.id)} className="flex flex-col gap-2 md:flex-row md:items-center md:gap-2.5">
 												<input type="hidden" name="montageId" defaultValue={montage.id} />
 												<input type="hidden" name="itemId" defaultValue={item.id} />
 												<Input
@@ -582,8 +582,8 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 						</ul>
 					)}
 				</section>
-				<Tabs defaultValue="notes" className="flex flex-col gap-6">
-					<div className="flex flex-wrap items-center justify-between gap-3">
+				<Tabs defaultValue="notes" className="flex flex-col gap-4">
+					<div className="flex flex-wrap items-center justify-between gap-2.5">
 						<TabsList>
 							<TabsTrigger value="notes">
 								Notatki
@@ -604,19 +604,19 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 							<span>Załączników: {montage.attachments.length}</span>
 						</div>
 					</div>
-					<TabsContent value="notes" className="space-y-5">
+					<TabsContent value="notes" className="space-y-3.5">
 						{noteError ? <span className="text-xs text-destructive">{noteError}</span> : null}
 						{montage.notes.length === 0 ? (
-							<div className="rounded-xl border border-dashed border-border/70 bg-muted/20 p-6 text-sm text-muted-foreground">
+							<div className="rounded-xl border border-dashed border-border/70 bg-muted/20 p-4 text-sm text-muted-foreground">
 								Brak notatek. Dodaj pierwszą informację, aby zainicjować timeline.
 							</div>
 						) : (
-							<ul className="space-y-3">
+							<ul className="space-y-2.5">
 								{montage.notes.map((note) => {
 									const hasAttachments = note.attachments.length > 0;
 									return (
-										<li key={note.id} className="rounded-2xl border border-border/60 bg-background p-4 shadow-sm">
-											<div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
+										<li key={note.id} className="rounded-xl border border-border/60 bg-background p-3.5 shadow-sm">
+											<div className="flex flex-wrap items-center justify-between gap-2.5 text-xs text-muted-foreground">
 												<div className="flex flex-wrap items-center gap-2">
 													<Badge variant="secondary">{formatTimestamp(note.createdAt)}</Badge>
 													{note.author ? (
@@ -655,7 +655,7 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 								})}
 							</ul>
 						)}
-						<form onSubmit={submitNote} className="space-y-3 rounded-2xl border border-border/60 bg-background p-4 shadow-sm">
+						<form onSubmit={submitNote} className="space-y-2.5 rounded-xl border border-border/60 bg-background p-3.5 shadow-sm">
 							<Textarea
 								value={noteContent}
 								onChange={(event) => setNoteContent(event.target.value)}
@@ -683,7 +683,7 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 								{notePending ? 'Zapisywanie...' : 'Dodaj notatkę'}
 							</Button>
 						</form>
-						<div className="space-y-4 rounded-2xl border border-border/60 bg-muted/10 p-5">
+						<div className="space-y-3.5 rounded-2xl border border-border/60 bg-muted/10 p-4">
 							<div className="flex flex-wrap items-center justify-between gap-3">
 								<div>
 									<p className="text-xs uppercase tracking-wide text-muted-foreground">Oś aktywności</p>
@@ -720,16 +720,16 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 							)}
 						</div>
 					</TabsContent>
-					<TabsContent value="tasks" className="space-y-5">
+					<TabsContent value="tasks" className="space-y-4">
 						{taskError ? <span className="text-xs text-destructive">{taskError}</span> : null}
 						{montage.tasks.length === 0 ? (
-							<div className="rounded-xl border border-dashed border-border/70 bg-muted/20 p-6 text-sm text-muted-foreground">
+							<div className="rounded-xl border border-dashed border-border/70 bg-muted/20 p-5 text-sm text-muted-foreground">
 								Brak zadań. Dodaj elementy do checklisty, aby zaplanować kolejne kroki.
 							</div>
 						) : (
 							<ul className="space-y-3">
 								{montage.tasks.map((task) => (
-									<li key={task.id} className="rounded-2xl border border-border/60 bg-muted/15 p-4 shadow-sm">
+									<li key={task.id} className="rounded-xl border border-border/60 bg-muted/15 p-3.5 shadow-sm">
 										<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 											<label className="flex items-center gap-2 text-sm">
 												<Checkbox
@@ -744,12 +744,12 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 											<span className="text-xs text-muted-foreground">Aktualizacja: {formatTimestamp(task.updatedAt)}</span>
 										</div>
 									</li>
-								))}
+							))}
 							</ul>
 						)}
 						<form
 							onSubmit={submitTask}
-							className="flex flex-col gap-3 rounded-2xl border border-dashed border-border/70 bg-muted/15 p-4 shadow-sm sm:flex-row sm:items-end"
+							className="flex flex-col gap-2.5 rounded-xl border border-dashed border-border/70 bg-muted/15 p-3.5 shadow-sm sm:flex-row sm:items-end"
 						>
 							<Input
 								placeholder="Dodaj zadanie (np. zamówienie materiału)"
@@ -765,8 +765,8 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 						</form>
 					</TabsContent>
 				</Tabs>
-				<section className="space-y-4 rounded-2xl border border-border/60 bg-muted/5 p-5">
-					<div className="flex flex-wrap items-center justify-between gap-3">
+				<section className="space-y-3 rounded-2xl border border-border/60 bg-muted/5 p-4">
+					<div className="flex flex-wrap items-center justify-between gap-2.5">
 						<div>
 							<p className="text-xs uppercase tracking-wide text-muted-foreground">Załączniki</p>
 							<h3 className="text-base font-semibold text-foreground">Biblioteka klienta</h3>
@@ -783,12 +783,12 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 										Przeglądaj materiały, które trafiły do chmury R2, oraz dodaj nowe pliki dla zespołu.
 									</DialogDescription>
 								</DialogHeader>
-								<div className="space-y-5">
+								<div className="space-y-4">
 									{attachmentError ? <span className="text-xs text-destructive">{attachmentError}</span> : null}
 									{montage.attachments.length === 0 ? (
 										<p className="text-sm text-muted-foreground">Brak załączonych materiałów. Dodaj pierwszy plik, aby udostępnić ekipie.</p>
 									) : (
-										<div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+										<div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
 											{montage.attachments.map((attachment) => {
 												const image = isImageAttachment(attachment);
 												return (
@@ -797,7 +797,7 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 														href={attachment.url}
 														target="_blank"
 														rel="noopener noreferrer"
-														className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border/60 bg-muted/10 transition hover:border-primary/60 hover:shadow-lg"
+														className="group flex h-full flex-col overflow-hidden rounded-xl border border-border/60 bg-muted/10 transition hover:border-primary/60 hover:shadow-lg"
 													>
 														<div className="relative h-36 overflow-hidden bg-background">
 															{image ? (
@@ -819,7 +819,7 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 																</div>
 															)}
 														</div>
-														<div className="flex flex-1 flex-col gap-1 px-4 py-3 text-left">
+														<div className="flex flex-1 flex-col gap-1 px-3.5 py-2.5 text-left">
 															<span className="line-clamp-2 font-medium text-foreground">
 																{attachmentDisplayName(attachment)}
 															</span>
@@ -841,7 +841,7 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 								)}
 								<form
 									onSubmit={submitAttachment}
-									className="flex flex-col gap-3 rounded-2xl border border-dashed border-border/70 bg-muted/10 p-4 sm:flex-row sm:flex-wrap sm:items-center"
+									className="flex flex-col gap-2.5 rounded-xl border border-dashed border-border/70 bg-muted/10 p-3.5 sm:flex-row sm:flex-wrap sm:items-center"
 								>
 									<Input
 										name="file"

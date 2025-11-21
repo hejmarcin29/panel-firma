@@ -440,15 +440,15 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
   const activeFilterLabel = QUICK_FILTERS.find((filter) => filter.key === quickFilter)?.label ?? 'Wszystkie';
 
   return (
-    <section className="space-y-6">
-      <header className="flex flex-wrap items-center justify-between gap-3">
+    <section className="space-y-4">
+      <header className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Poczta firmowa</h1>
+          <h1 className="text-xl font-semibold tracking-tight">Poczta firmowa</h1>
           <p className="text-sm text-muted-foreground">
             Monitoruj korespondencję z klientami bez opuszczania panelu administracyjnego.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
           <Button
             variant="outline"
             onClick={handleRefresh}
@@ -476,10 +476,10 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
         </Alert>
       )}
 
-      <div className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
+      <div className="grid gap-4 xl:grid-cols-[400px_minmax(0,1fr)]">
         <Card className="flex h-full flex-col">
-          <CardHeader className="space-y-4">
-            <div className="flex flex-wrap items-start justify-between gap-3">
+          <CardHeader className="space-y-3.5">
+            <div className="flex flex-wrap items-start justify-between gap-2.5">
               <div className="space-y-1">
                 <CardTitle>Wiadomości</CardTitle>
                 <CardDescription>
@@ -505,7 +505,7 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
               </Button>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-1.5">
               {accountList.length > 1 ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -557,7 +557,7 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
               ) : null}
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-1.5">
               {QUICK_FILTERS.map((filter) => (
                 <Button
                   key={filter.key}
@@ -762,7 +762,7 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
                   </pre>
                 )}
               </CardContent>
-              <CardFooter className="flex flex-wrap items-center gap-2">
+              <CardFooter className="flex flex-wrap items-center gap-1.5">
                 <form action={toggleAction}>
                   <input type="hidden" name="messageId" value={selectedMessage.id} />
                   <input type="hidden" name="read" value={(!selectedMessage.isRead).toString()} />
@@ -792,7 +792,7 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
           <CardTitle>Nowa wiadomość</CardTitle>
           <CardDescription>Wyślij e-mail bezpośrednio z panelu administracyjnego.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3.5">
           {sendState.status === 'success' && sendState.message ? (
             <Alert>
               <AlertTitle>Sukces</AlertTitle>
@@ -809,9 +809,9 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
             ref={composeFormRef}
             action={sendAction}
             encType="multipart/form-data"
-            className="space-y-4"
+            className="space-y-3.5"
           >
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="accountId">Konto nadawcze</Label>
                 <select
@@ -861,7 +861,7 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
               )}
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="cc">DW</Label>
                 <Input id="cc" name="cc" placeholder="(opcjonalnie)" disabled={isSending} />

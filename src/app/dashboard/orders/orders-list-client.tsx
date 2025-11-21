@@ -129,15 +129,15 @@ export function OrdersListClient({ initialOrders }: OrdersListClientProps) {
   }, [initialOrders, normalizedQuery, sourceFilter, statusFilter]);
 
   return (
-    <section className="space-y-8">
+    <section className="space-y-5">
       <Card>
-        <CardHeader className="space-y-6">
+        <CardHeader className="space-y-4">
           <div>
             <CardTitle>Zamówienia</CardTitle>
             <CardDescription>Filtruj po statusie, źródle oraz wyszukaj numer lub klienta.</CardDescription>
           </div>
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)]">
-            <div className="flex flex-col gap-2">
+          <div className="grid gap-3 lg:grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)]">
+            <div className="flex flex-col gap-1.5">
               <span className="text-xs font-medium uppercase text-muted-foreground">Wyszukaj</span>
               <Input
                 value={search}
@@ -145,8 +145,8 @@ export function OrdersListClient({ initialOrders }: OrdersListClientProps) {
                 placeholder="Szukaj numeru, klienta lub kanału"
               />
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="flex flex-col gap-2">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="flex flex-col gap-1.5">
                 <span className="text-xs font-medium uppercase text-muted-foreground">Status</span>
                 <ToggleGroup
                   type="single"
@@ -156,21 +156,21 @@ export function OrdersListClient({ initialOrders }: OrdersListClientProps) {
                       setStatusFilter(value as StatusFilterValue);
                     }
                   }}
-                  className="w-full flex-wrap justify-start gap-2"
+                  className="w-full flex-wrap justify-start gap-1.5"
                   size="sm"
                 >
                   {STATUS_FILTERS.map((filter) => (
                     <ToggleGroupItem
                       key={filter.value}
                       value={filter.value}
-                      className="flex-1 min-w-[9rem] text-center"
+                        className="flex-1 min-w-36 text-center"
                     >
                       {filter.label}
                     </ToggleGroupItem>
                   ))}
                 </ToggleGroup>
               </div>
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-1.5">
                 <span className="text-xs font-medium uppercase text-muted-foreground">Źródło</span>
                 <ToggleGroup
                   type="single"
@@ -180,14 +180,14 @@ export function OrdersListClient({ initialOrders }: OrdersListClientProps) {
                       setSourceFilter(value as SourceFilterValue);
                     }
                   }}
-                  className="w-full flex-wrap justify-start gap-2"
+                  className="w-full flex-wrap justify-start gap-1.5"
                   size="sm"
                 >
                   {SOURCE_FILTERS.map((filter) => (
                     <ToggleGroupItem
                       key={filter.value}
                       value={filter.value}
-                      className="flex-1 min-w-[9rem] text-center"
+                        className="flex-1 min-w-36 text-center"
                     >
                       {filter.label}
                     </ToggleGroupItem>
@@ -199,7 +199,7 @@ export function OrdersListClient({ initialOrders }: OrdersListClientProps) {
         </CardHeader>
       </Card>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(320px,1fr)]">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(320px,1fr)]">
         <Card className="lg:order-1">
           <CardHeader>
             <CardTitle>Ostatnie zamówienia</CardTitle>
@@ -207,7 +207,7 @@ export function OrdersListClient({ initialOrders }: OrdersListClientProps) {
           </CardHeader>
           <CardContent>
             {filteredOrders.length === 0 ? (
-              <Empty className="py-12">
+              <Empty className="py-8">
                 <EmptyHeader>
                   <EmptyMedia>
                     <span className="text-2xl">🔍</span>
@@ -292,51 +292,51 @@ export function OrdersListClient({ initialOrders }: OrdersListClientProps) {
                   </Table>
                 </div>
 
-                <div className="space-y-4 lg:hidden">
+                <div className="space-y-3 lg:hidden">
                   {filteredOrders.map((order) => (
-                    <div key={order.id} className="space-y-3 rounded-lg border bg-background p-4 shadow-sm">
-                      <div className="flex items-start justify-between gap-3">
+                    <div key={order.id} className="space-y-2.5 rounded-lg border bg-background p-3.5 shadow-sm">
+                      <div className="flex items-start justify-between gap-2.5">
                         <div className="space-y-1">
                           <Link
                             href={`/dashboard/orders/${order.id}`}
-                            className="text-base font-medium text-primary underline-offset-4 hover:underline"
+                            className="text-sm font-semibold text-primary underline-offset-4 hover:underline"
                           >
                             {order.reference}
                           </Link>
-                          <p className="text-sm text-muted-foreground">{formatDateTime(order.createdAt)}</p>
+                          <p className="text-xs text-muted-foreground">{formatDateTime(order.createdAt)}</p>
                         </div>
-                        <div className="flex flex-col items-end gap-2">
+                        <div className="flex flex-col items-end gap-1.5">
                           <Badge variant="outline">{order.status}</Badge>
                           {order.requiresReview ? <Badge variant="destructive">Do potwierdzenia</Badge> : null}
                         </div>
                       </div>
-                      <div className="grid gap-2 text-sm">
+                      <div className="grid gap-1.5 text-xs">
                         <div>
-                          <p className="text-xs uppercase text-muted-foreground">Klient</p>
-                          <p className="font-medium text-foreground">{order.customer}</p>
-                          <p className="text-xs text-muted-foreground">{order.billing.email}</p>
+                          <p className="text-[10px] uppercase text-muted-foreground">Klient</p>
+                          <p className="text-sm font-medium text-foreground">{order.customer}</p>
+                          <p className="text-[11px] text-muted-foreground">{order.billing.email}</p>
                         </div>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-1.5 text-xs">
                           <Badge variant="secondary">{order.channel}</Badge>
                           <Badge variant="secondary">
                             {order.source === 'woocommerce' ? 'WooCommerce' : 'Ręczne'}
                           </Badge>
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           <div>
-                            <p className="text-xs uppercase text-muted-foreground">Kwota brutto</p>
+                            <p className="text-[10px] uppercase text-muted-foreground">Kwota brutto</p>
                             <p className="text-sm font-semibold text-foreground">
                               {formatCurrency(order.totals.totalGross, order.currency)}
                             </p>
                           </div>
                           <div>
-                            <p className="text-xs uppercase text-muted-foreground">Miasto dostawy</p>
+                            <p className="text-[10px] uppercase text-muted-foreground">Miasto dostawy</p>
                             <p className="text-sm text-foreground">
                               {order.shipping.sameAsBilling ? order.billing.city : order.shipping.city}
                             </p>
                           </div>
                           <div>
-                            <p className="text-xs uppercase text-muted-foreground">Łącznie m²</p>
+                            <p className="text-[10px] uppercase text-muted-foreground">Łącznie m²</p>
                             <p className="text-sm text-foreground">
                               {computeOrderSquareMeters(order).toLocaleString('pl-PL', {
                                 minimumFractionDigits: 2,
@@ -344,7 +344,7 @@ export function OrdersListClient({ initialOrders }: OrdersListClientProps) {
                               })}
                             </p>
                           </div>
-                          <div className="flex flex-col gap-2">
+                          <div className="flex flex-col gap-1.5">
                             <Button asChild size="sm" variant="outline">
                               <Link href={`/dashboard/orders/${order.id}`}>Szczegóły</Link>
                             </Button>
@@ -366,18 +366,18 @@ export function OrdersListClient({ initialOrders }: OrdersListClientProps) {
             <CardDescription>Szybki stan zamówień do potwierdzenia oraz według źródeł.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
-              <div className="rounded-lg border bg-muted/40 p-4">
-                <p className="text-xs font-medium uppercase text-muted-foreground">Łącznie</p>
-                <p className="text-2xl font-semibold">{initialOrders.length}</p>
+            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+              <div className="rounded-lg border bg-muted/40 p-3.5">
+                <p className="text-[11px] font-medium uppercase text-muted-foreground">Łącznie</p>
+                <p className="text-xl font-semibold">{initialOrders.length}</p>
               </div>
-              <div className="rounded-lg border bg-muted/40 p-4">
-                <p className="text-xs font-medium uppercase text-muted-foreground">Do potwierdzenia</p>
-                <p className="text-2xl font-semibold">{reviewCount}</p>
+              <div className="rounded-lg border bg-muted/40 p-3.5">
+                <p className="text-[11px] font-medium uppercase text-muted-foreground">Do potwierdzenia</p>
+                <p className="text-xl font-semibold">{reviewCount}</p>
               </div>
-              <div className="rounded-lg border bg-muted/40 p-4">
-                <p className="text-xs font-medium uppercase text-muted-foreground">WooCommerce</p>
-                <p className="text-2xl font-semibold">
+              <div className="rounded-lg border bg-muted/40 p-3.5">
+                <p className="text-[11px] font-medium uppercase text-muted-foreground">WooCommerce</p>
+                <p className="text-xl font-semibold">
                   {initialOrders.filter((order) => order.source === 'woocommerce').length}
                 </p>
               </div>

@@ -298,7 +298,7 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageParam
 							</CardDescription>
 						</CardHeader>
 						<CardContent className="px-4 pb-4 pt-0">
-							<div className="space-y-3 md:hidden">
+							<div className="space-y-2 md:hidden">
 								{order.items.map((item) => (
 									<OrderItemCard key={item.id} item={item} currency={order.currency} />
 								))}
@@ -505,31 +505,31 @@ function OrderItemCard({ item, currency }: OrderItemCardProps) {
 	const totalArea = computeTotalArea(item);
 
 	return (
-		<div className="rounded-lg border bg-muted/40 p-3">
-			<div className="flex flex-col gap-1">
-				<p className="text-sm font-medium text-foreground">{item.product}</p>
-				<span className="text-[11px] text-muted-foreground">VAT {item.vatRate}%</span>
+		<div className="rounded-md border border-border/60 bg-muted/20 p-2.5">
+			<div className="flex flex-col gap-0.5">
+				<p className="text-[13px] font-semibold leading-tight text-foreground">{item.product}</p>
+				<span className="text-[10px] text-muted-foreground">VAT {item.vatRate}%</span>
 			</div>
-			<dl className="mt-3 grid grid-cols-2 gap-3 text-[11px]">
-				<div className="space-y-1">
+			<dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-2 text-[10px]">
+				<div className="space-y-0.5">
 					<dt className="text-muted-foreground">Ilość</dt>
-					<dd className="font-semibold text-foreground">{formatNumber(item.quantity)}</dd>
+					<dd className="text-xs font-semibold text-foreground">{formatNumber(item.quantity)}</dd>
 				</div>
-				<div className="space-y-1">
+				<div className="space-y-0.5">
 					<dt className="text-muted-foreground">M² w op.</dt>
-					<dd className="font-semibold text-foreground">{formatNumber(perPackageArea)}</dd>
+					<dd className="text-xs font-semibold text-foreground">{formatNumber(perPackageArea)}</dd>
 				</div>
-				<div className="space-y-1">
+				<div className="space-y-0.5">
 					<dt className="text-muted-foreground">M² łącznie</dt>
-					<dd className="font-semibold text-foreground">{formatNumber(totalArea)}</dd>
+					<dd className="text-xs font-semibold text-foreground">{formatNumber(totalArea)}</dd>
 				</div>
-				<div className="space-y-1">
+				<div className="space-y-0.5">
 					<dt className="text-muted-foreground">Cena netto</dt>
-					<dd className="font-semibold text-foreground">{formatCurrency(item.unitPrice, currency)}</dd>
+					<dd className="text-xs font-semibold text-foreground">{formatCurrency(item.unitPrice, currency)}</dd>
 				</div>
-				<div className="col-span-2 space-y-1">
+				<div className="col-span-2 space-y-0.5">
 					<dt className="text-muted-foreground">Kwota brutto</dt>
-					<dd className="text-sm font-semibold text-foreground">{formatCurrency(item.totalGross, currency)}</dd>
+					<dd className="text-[13px] font-semibold text-foreground">{formatCurrency(item.totalGross, currency)}</dd>
 				</div>
 			</dl>
 		</div>
