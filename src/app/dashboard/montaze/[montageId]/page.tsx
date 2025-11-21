@@ -4,7 +4,6 @@ import { notFound } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
 import {
@@ -108,55 +107,43 @@ export default async function MontageDetailsPage({ params }: MontageDetailsPageP
     const summary = buildSummary(montage);
 
     return (
-        <section className="space-y-4">
-            <div className="flex items-center justify-between gap-3">
+        <section className="mx-auto w-full max-w-[920px] space-y-4 px-3 pb-8 sm:px-6">
+            <div className="flex items-center gap-2">
                 <Button asChild size="sm" variant="outline" className="h-8 px-3 text-xs">
                     <Link href="/dashboard/montaze">Powrót</Link>
                 </Button>
             </div>
 
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(260px,1fr)]">
-                <div className="space-y-4">
-                    <MontageCard montage={montage} statusOptions={statusOptions} />
-                </div>
-                <aside className="space-y-3">
-                    <Card className="border-border/70">
-                        <CardHeader className="space-y-1 py-3">
-                            <CardTitle className="text-sm font-semibold">Klient</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-2 py-0 text-xs text-muted-foreground">
-                            <div className="space-y-1 text-foreground">
-                                <p className="font-semibold">{montage.clientName}</p>
-                                {montage.installationAddress ? (
-                                    <p className="text-xs text-muted-foreground">{montage.installationAddress}</p>
-                                ) : null}
-                                {montage.installationCity ? (
-                                    <p className="text-xs text-muted-foreground">{montage.installationCity}</p>
-                                ) : null}
+            <Card className="border-border/70">
+                <CardHeader className="space-y-1 pb-2">
+                    <CardTitle className="text-sm font-semibold">Szybkie informacje</CardTitle>
+                </CardHeader>
+                <CardContent className="grid gap-3 py-0 text-xs text-muted-foreground sm:grid-cols-2">
+                    <div className="space-y-1 text-foreground">
+                        <p className="font-semibold">{montage.clientName}</p>
+                        {montage.installationAddress ? (
+                            <p className="text-xs text-muted-foreground">{montage.installationAddress}</p>
+                        ) : null}
+                        {montage.installationCity ? (
+                            <p className="text-xs text-muted-foreground">{montage.installationCity}</p>
+                        ) : null}
+                        <div className="mt-1 space-y-1">
+                            {montage.contactPhone ? <p className="text-xs">tel. {montage.contactPhone}</p> : null}
+                            {montage.contactEmail ? <p className="text-xs">{montage.contactEmail}</p> : null}
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        {summary.map((item) => (
+                            <div key={item.label} className="flex items-center justify-between text-xs">
+                                <span>{item.label}</span>
+                                <span className="font-semibold text-foreground">{item.value}</span>
                             </div>
-                            <Separator className="my-2" />
-                            <div className="space-y-1">
-                                {montage.contactPhone ? <p>tel. {montage.contactPhone}</p> : null}
-                                {montage.contactEmail ? <p>{montage.contactEmail}</p> : null}
-                            </div>
-                        </CardContent>
-                    </Card>
+                        ))}
+                    </div>
+                </CardContent>
+            </Card>
 
-                    <Card className="border-border/70">
-                        <CardHeader className="space-y-1 py-3">
-                            <CardTitle className="text-sm font-semibold">Podsumowanie</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-2 py-0 text-xs text-muted-foreground">
-                            {summary.map((item) => (
-                                <div key={item.label} className="flex items-center justify-between text-xs">
-                                    <span>{item.label}</span>
-                                    <span className="font-semibold text-foreground">{item.value}</span>
-                                </div>
-                            ))}
-                        </CardContent>
-                    </Card>
-                </aside>
-            </div>
+            <MontageCard montage={montage} statusOptions={statusOptions} />
         </section>
     );
 }
