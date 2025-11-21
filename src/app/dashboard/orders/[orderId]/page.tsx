@@ -280,6 +280,12 @@ export default async function OrderDetailsPage({ params }: OrderDetailsPageParam
 						) : null}
 					</div>
 				</div>
+				{order.customerNote ? (
+					<div className="mt-3 rounded-md border border-primary/40 bg-primary/5 p-3">
+						<p className="text-[10px] font-semibold uppercase text-primary">Dodatkowe informacje od klienta</p>
+						<p className="mt-2 whitespace-pre-line text-xs text-foreground">{order.customerNote}</p>
+					</div>
+				) : null}
 				<Separator className="my-3" />
 				<div className="grid gap-2 min-[360px]:grid-cols-2 lg:grid-cols-4">
 					<QuickStat label="Klient" value={order.billing.name} />

@@ -84,6 +84,7 @@ export type Order = {
 	source: ManualOrderSource;
 	sourceOrderId: string | null;
 	requiresReview: boolean;
+	customerNote: string | null;
 	updatedAt: string;
 	createdAt: string;
 	statuses: OrderTimelineEntry[];

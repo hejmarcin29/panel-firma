@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { asc, desc } from 'drizzle-orm';
 
 import { MontagePipelineBoard } from './_components/montage-pipeline-board';

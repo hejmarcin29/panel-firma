@@ -204,6 +204,7 @@ function mapOrderRow(
 		source: row.source as ManualOrderSource,
 		sourceOrderId: row.sourceOrderId ?? null,
 		requiresReview: Boolean(row.requiresReview),
+		customerNote: row.notes?.trim() ? row.notes.trim() : null,
 		createdAt,
 		updatedAt,
 		statuses: buildTimelineEntries(row.status, row.notes ?? '', createdAt),
