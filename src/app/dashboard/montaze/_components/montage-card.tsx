@@ -642,32 +642,6 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 								Utworzono {formatTimestamp(montage.createdAt)} • Aktualizacja {formatTimestamp(montage.updatedAt)}
 							</CardDescription>
 						</div>
-						{isMobile ? (
-							<Collapsible open={quickInfoOpen} onOpenChange={setQuickInfoOpen} className="rounded-2xl border border-border/60 bg-muted/10">
-								<CollapsibleTrigger asChild>
-									<button
-										type="button"
-										aria-expanded={quickInfoOpen}
-										className="flex w-full items-center justify-between gap-3 rounded-2xl px-3.5 py-2 text-left text-sm font-semibold text-foreground"
-									>
-										<span className="flex flex-col">
-											<span>Szybkie informacje</span>
-											<span className="text-xs font-normal text-muted-foreground">
-												{hasMaterials ? materialsQuickSummary : 'Dodaj materiały, aby przygotować ekipę.'}
-											</span>
-										</span>
-										<ChevronDown className={cn('size-4 transition-transform', quickInfoOpen ? 'rotate-180' : 'rotate-0')} />
-									</button>
-								</CollapsibleTrigger>
-								<CollapsibleContent className="space-y-3 px-3.5 pb-3.5 pt-1.5">
-									<div ref={quickInfoSectionRef} className="space-y-3.5">
-										{renderQuickInfoDetails()}
-									</div>
-								</CollapsibleContent>
-							</Collapsible>
-						) : (
-							<div className="space-y-3.5">{renderQuickInfoDetails()}</div>
-						)}
 					</div>
 					<div className="flex flex-col items-start gap-2.5 sm:items-end">
 						{currentStatusOption ? (
@@ -725,18 +699,41 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 				</div>
 			</CardHeader>
 			<CardContent className={cn('space-y-4 pt-0', isMobile ? 'pb-24' : 'pb-8')}>
+				{isMobile ? (
+					<Collapsible open={quickInfoOpen} onOpenChange={setQuickInfoOpen} className="rounded-2xl border border-border/60 bg-muted/10">
+						<CollapsibleTrigger asChild>
+							<button
+								type="button"
+								aria-expanded={quickInfoOpen}
+								className="flex w-full items-center justify-between gap-3 rounded-2xl px-3.5 py-2 text-left text-sm font-semibold text-foreground"
+							>
+								<span className="flex flex-col">
+									<span>Szybkie informacje</span>
+									<span className="text-xs font-normal text-muted-foreground">
+										{hasMaterials ? materialsQuickSummary : 'Dodaj materiały, aby przygotować ekipę.'}
+									</span>
+								</span>
+								<ChevronDown className={cn('size-4 transition-transform', quickInfoOpen ? 'rotate-180' : 'rotate-0')} />
+							</button>
+						</CollapsibleTrigger>
+						<CollapsibleContent className="space-y-3 px-3.5 pb-3.5 pt-1.5">
+							<div ref={quickInfoSectionRef} className="space-y-3.5">
+								{renderQuickInfoDetails()}
+							</div>
+						</CollapsibleContent>
+					</Collapsible>
+				) : (
+					<div ref={quickInfoSectionRef} className="space-y-3.5">
+						{renderQuickInfoDetails()}
+					</div>
+				)}
 				<Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as DetailTab)} className="space-y-4">
-					<TabsList
-						className={cn(
-							'rounded-xl bg-muted/60 p-1 text-xs font-medium',
-							isMobile ? 'grid grid-cols-2 gap-1.5' : 'flex flex-wrap gap-2'
-						)}
-					>
+					<TabsList className="flex w-full flex-wrap items-center gap-1.5 rounded-xl bg-muted/60 p-1 text-xs font-medium sm:flex-nowrap">
 						{detailTabs.map((tab) => (
 							<TabsTrigger
 								key={tab.id}
 								value={tab.id}
-								className="rounded-lg px-3 py-1.5 text-xs transition data-[state=active]:bg-background data-[state=active]:shadow-sm"
+								className="flex-1 min-w-[136px] justify-center whitespace-nowrap rounded-lg px-3 py-1.5 text-xs transition data-[state=active]:bg-background data-[state=active]:shadow-sm sm:flex-none sm:min-w-0"
 							>
 								{tab.label}
 							</TabsTrigger>
