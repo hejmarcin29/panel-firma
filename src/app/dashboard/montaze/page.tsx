@@ -116,7 +116,7 @@ export default async function MontazePage() {
 
     return (
         <div className="space-y-4">
-            <div className="grid gap-3 lg:grid-cols-[260px_minmax(0,1fr)_240px] xl:grid-cols-[280px_minmax(0,1fr)_260px]">
+            <div className="grid gap-3 lg:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)]">
                 <aside className="space-y-3">
                     <Card className="border-border/70">
                         <CardHeader className="space-y-2 p-3">
@@ -172,115 +172,117 @@ export default async function MontazePage() {
                     </Card>
                 </aside>
 
-                <section className="space-y-3">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="hidden space-y-1 sm:block">
-                            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Pipeline montaży</h2>
-                            <p className="text-xs text-muted-foreground">
-                                Zarządzaj etapami, przeciągając karty pomiędzy kolumnami.
-                            </p>
+                <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_260px]">
+                    <section className="space-y-3">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="hidden space-y-1 sm:block">
+                                <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Pipeline montaży</h2>
+                                <p className="text-xs text-muted-foreground">
+                                    Zarządzaj etapami, przeciągając karty pomiędzy kolumnami.
+                                </p>
+                            </div>
+                            <Tabs defaultValue="kanban" className="w-full space-y-2 sm:w-auto">
+                                <TabsList className="grid grid-cols-3 rounded-md bg-muted/60 p-0.5">
+                                    {tabs.map((tab) => (
+                                        <TabsTrigger
+                                            key={tab.id}
+                                            value={tab.id}
+                                            className="px-2 py-1 text-[11px]"
+                                            disabled={tab.id !== 'kanban'}
+                                        >
+                                            {tab.label}
+                                        </TabsTrigger>
+                                    ))}
+                                </TabsList>
+                                <TabsContent value="kanban" className="mt-0">
+                                    <Card className="border-border/70">
+                                        <CardContent className="space-y-3 p-3">
+                                            <MontagePipelineBoard montages={montagesData} statusOptions={statusOptions} />
+                                        </CardContent>
+                                    </Card>
+                                </TabsContent>
+                                <TabsContent value="lista" className="mt-0 min-h-[120px]">
+                                    <Card className="border-dashed border-border/60">
+                                        <CardContent className="flex h-full items-center justify-center p-4 text-xs text-muted-foreground">
+                                            Widok listy w przygotowaniu.
+                                        </CardContent>
+                                    </Card>
+                                </TabsContent>
+                                <TabsContent value="kalendarz" className="mt-0 min-h-[120px]">
+                                    <Card className="border-dashed border-border/60">
+                                        <CardContent className="flex h-full items-center justify-center p-4 text-xs text-muted-foreground">
+                                            Widok kalendarza dostępny w kolejnej iteracji.
+                                        </CardContent>
+                                    </Card>
+                                </TabsContent>
+                            </Tabs>
                         </div>
-                        <Tabs defaultValue="kanban" className="w-full space-y-2 sm:w-auto">
-                            <TabsList className="grid grid-cols-3 rounded-md bg-muted/60 p-0.5">
-                                {tabs.map((tab) => (
-                                    <TabsTrigger
-                                        key={tab.id}
-                                        value={tab.id}
-                                        className="px-2 py-1 text-[11px]"
-                                        disabled={tab.id !== 'kanban'}
-                                    >
-                                        {tab.label}
-                                    </TabsTrigger>
+                    </section>
+
+                    <aside className="space-y-3">
+                        <Card className="border-border/70">
+                            <CardHeader className="space-y-1 p-3">
+                                <CardTitle className="text-sm font-semibold">Priorytety</CardTitle>
+                                <CardDescription className="text-xs text-muted-foreground">
+                                    Najbliższe montaże i elementy wymagające uwagi.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-2 p-3 pt-0 text-xs">
+                                {priorityList.length === 0 ? (
+                                    <p className="text-muted-foreground">Brak aktywnych montaży.</p>
+                                ) : (
+                                    priorityList.map((montage) => {
+                                        const schedule = formatScheduleDate(montage.scheduledInstallationAt);
+                                        const relative = formatRelativeDate(montage.updatedAt);
+                                        const materials = summarizeMaterialDetails(montage.materialDetails, 80);
+                                        const hasMaterials = Boolean(montage.materialDetails?.trim());
+                                        return (
+                                            <div key={montage.id} className="rounded-md border border-border/60 p-2">
+                                                <div className="flex items-center justify-between">
+                                                    <p className="text-xs font-semibold text-foreground line-clamp-1">{montage.clientName}</p>
+                                                    <Badge variant="outline" className="px-1.5 py-0 text-[10px] uppercase">
+                                                        {montage.status}
+                                                    </Badge>
+                                                </div>
+                                                <div className="flex flex-wrap items-center gap-1 text-[11px] text-muted-foreground">
+                                                    {schedule ? <span>Termin: {schedule}</span> : <span>Do zaplanowania</span>}
+                                                    <span className="h-1 w-1 rounded-full bg-muted-foreground/60" />
+                                                    <span>Aktualizacja: {relative}</span>
+                                                </div>
+                                                {hasMaterials ? (
+                                                    <p className="mt-1 line-clamp-2 text-[11px] font-medium text-foreground">Materiały: {materials}</p>
+                                                ) : null}
+                                                <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
+                                                    <span>{montage.tasks.filter((task) => !task.completed).length} otw. zadań</span>
+                                                    <Button asChild variant="link" className="h-auto px-0 text-[11px]">
+                                                        <Link href={`/dashboard/montaze/${montage.id}`}>Szczegóły</Link>
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        <Card className="border-border/70">
+                            <CardHeader className="space-y-1 p-3">
+                                <CardTitle className="text-sm font-semibold">Przegląd kontaktów</CardTitle>
+                                <CardDescription className="text-xs text-muted-foreground">
+                                    Ostatnio aktualizowane leady.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-2 p-3 pt-0 text-xs text-muted-foreground">
+                                {montagesData.slice(0, 4).map((montage) => (
+                                    <div key={montage.id} className="flex items-center justify-between">
+                                        <span className="line-clamp-1 text-foreground">{montage.clientName}</span>
+                                        <span>{formatRelativeDate(montage.updatedAt)}</span>
+                                    </div>
                                 ))}
-                            </TabsList>
-                            <TabsContent value="kanban" className="mt-0">
-                                <Card className="border-border/70">
-                                    <CardContent className="space-y-3 p-3">
-                                        <MontagePipelineBoard montages={montagesData} statusOptions={statusOptions} />
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-                            <TabsContent value="lista" className="mt-0 min-h-[120px]">
-                                <Card className="border-dashed border-border/60">
-                                    <CardContent className="flex h-full items-center justify-center p-4 text-xs text-muted-foreground">
-                                        Widok listy w przygotowaniu.
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-                            <TabsContent value="kalendarz" className="mt-0 min-h-[120px]">
-                                <Card className="border-dashed border-border/60">
-                                    <CardContent className="flex h-full items-center justify-center p-4 text-xs text-muted-foreground">
-                                        Widok kalendarza dostępny w kolejnej iteracji.
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-                        </Tabs>
-                    </div>
-                </section>
-
-                <aside className="space-y-3">
-                    <Card className="border-border/70">
-                        <CardHeader className="space-y-1 p-3">
-                            <CardTitle className="text-sm font-semibold">Priorytety</CardTitle>
-                            <CardDescription className="text-xs text-muted-foreground">
-                                Najbliższe montaże i elementy wymagające uwagi.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-2 p-3 pt-0 text-xs">
-                            {priorityList.length === 0 ? (
-                                <p className="text-muted-foreground">Brak aktywnych montaży.</p>
-                            ) : (
-                                priorityList.map((montage) => {
-                                    const schedule = formatScheduleDate(montage.scheduledInstallationAt);
-                                    const relative = formatRelativeDate(montage.updatedAt);
-                                    const materials = summarizeMaterialDetails(montage.materialDetails, 80);
-                                    const hasMaterials = Boolean(montage.materialDetails?.trim());
-                                    return (
-                                        <div key={montage.id} className="rounded-md border border-border/60 p-2">
-                                            <div className="flex items-center justify-between">
-                                                <p className="text-xs font-semibold text-foreground line-clamp-1">{montage.clientName}</p>
-                                                <Badge variant="outline" className="px-1.5 py-0 text-[10px] uppercase">
-                                                    {montage.status}
-                                                </Badge>
-                                            </div>
-                                            <div className="flex flex-wrap items-center gap-1 text-[11px] text-muted-foreground">
-                                                {schedule ? <span>Termin: {schedule}</span> : <span>Do zaplanowania</span>}
-                                                <span className="h-1 w-1 rounded-full bg-muted-foreground/60" />
-                                                <span>Aktualizacja: {relative}</span>
-                                            </div>
-                                            {hasMaterials ? (
-                                                <p className="mt-1 line-clamp-2 text-[11px] font-medium text-foreground">Materiały: {materials}</p>
-                                            ) : null}
-                                            <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
-                                                <span>{montage.tasks.filter((task) => !task.completed).length} otw. zadań</span>
-                                                <Button asChild variant="link" className="h-auto px-0 text-[11px]">
-                                                    <Link href={`/dashboard/montaze/${montage.id}`}>Szczegóły</Link>
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    );
-                                })
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    <Card className="border-border/70">
-                        <CardHeader className="space-y-1 p-3">
-                            <CardTitle className="text-sm font-semibold">Przegląd kontaktów</CardTitle>
-                            <CardDescription className="text-xs text-muted-foreground">
-                                Ostatnio aktualizowane leady.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-2 p-3 pt-0 text-xs text-muted-foreground">
-                            {montagesData.slice(0, 4).map((montage) => (
-                                <div key={montage.id} className="flex items-center justify-between">
-                                    <span className="line-clamp-1 text-foreground">{montage.clientName}</span>
-                                    <span>{formatRelativeDate(montage.updatedAt)}</span>
-                                </div>
-                            ))}
-                        </CardContent>
-                    </Card>
-                </aside>
+                            </CardContent>
+                        </Card>
+                    </aside>
+                </div>
             </div>
 
             <Separator />
