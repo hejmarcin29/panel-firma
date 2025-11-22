@@ -728,12 +728,12 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 					</div>
 				)}
 				<Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as DetailTab)} className="space-y-4">
-					<TabsList className="flex w-full flex-wrap items-center gap-1.5 rounded-xl bg-muted/60 p-1 text-xs font-medium sm:flex-nowrap">
+					<TabsList className="grid grid-cols-2 gap-1.5 rounded-xl bg-muted/60 p-1 text-xs font-medium sm:flex sm:flex-wrap sm:items-center sm:gap-2">
 						{detailTabs.map((tab) => (
 							<TabsTrigger
 								key={tab.id}
 								value={tab.id}
-								className="flex-1 min-w-[136px] justify-center whitespace-nowrap rounded-lg px-3 py-1.5 text-xs transition data-[state=active]:bg-background data-[state=active]:shadow-sm sm:flex-none sm:min-w-0"
+								className="w-full items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 text-xs transition data-[state=active]:bg-background data-[state=active]:shadow-sm sm:w-auto"
 							>
 								{tab.label}
 							</TabsTrigger>
