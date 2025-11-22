@@ -114,16 +114,26 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 	const [materialsError, setMaterialsError] = useState<string | null>(null);
 	const [materialsFeedback, setMaterialsFeedback] = useState<string | null>(null);
 	const isMobile = useIsMobile();
-	const [activeTab, setActiveTab] = useState<'notes' | 'tasks'>('notes');
+	const detailTabs = [
+		{ id: 'overview', label: 'Przegląd' },
+		{ id: 'materials', label: 'Materiały' },
+		{ id: 'checklist', label: 'Checklist' },
+		{ id: 'notes', label: 'Notatki' },
+		{ id: 'tasks', label: 'Zadania' },
+		{ id: 'timeline', label: 'Aktywność' },
+	] as const;
+	type DetailTab = (typeof detailTabs)[number]['id'];
+	const [activeTab, setActiveTab] = useState<DetailTab>('overview');
 	const [quickInfoOpen, setQuickInfoOpen] = useState(true);
 	const [actionSheetOpen, setActionSheetOpen] = useState(false);
 	const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const quickInfoSectionRef = useRef<HTMLDivElement | null>(null);
 	const noteFormRef = useRef<HTMLFormElement | null>(null);
 	const taskFormRef = useRef<HTMLFormElement | null>(null);
 	const noteTextareaRef = useRef<HTMLTextAreaElement | null>(null);
 	const taskInputRef = useRef<HTMLInputElement | null>(null);
 	const materialsTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+	const materialsSectionRef = useRef<HTMLDivElement | null>(null);
+	const quickInfoSectionRef = useRef<HTMLDivElement | null>(null);
 
 	const completedTasks = montage.tasks.filter((task) => task.completed).length;
 	const totalTasks = montage.tasks.length;
@@ -225,38 +235,22 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 
 	const renderQuickInfoDetails = () => (
 		<>
-			<form
-				onSubmit={submitMaterials}
-				className="space-y-2.5 rounded-xl border border-border/60 bg-muted/10 p-3.5"
-			>
-				<div className="flex flex-wrap items-center justify-between gap-3">
-					<div className="space-y-1">
-						<Label className="text-xs uppercase tracking-wide text-muted-foreground">Materiały i ilości</Label>
-						<p className="text-xs text-muted-foreground">
-							Zapisz co zostało zamówione, aby ekipa była gotowa do montażu.
+			<div className="rounded-xl border border-border/60 bg-muted/10 p-3.5">
+				<div className="flex items-center justify-between gap-2">
+					<div>
+						<p className="text-[11px] uppercase tracking-wide text-muted-foreground">Materiały</p>
+						<p className="mt-1 text-sm font-medium text-foreground">
+							{hasMaterials ? materialsQuickSummary : 'Brak dodanych materiałów.'}
 						</p>
 					</div>
-					{materialsFeedback ? <span className="text-xs text-emerald-600">{materialsFeedback}</span> : null}
-				</div>
-				<Textarea
-					ref={materialsTextareaRef}
-					value={materialsDraft}
-					onChange={handleMaterialsChange}
-					placeholder="np. Rolety dzień-noc — 4 szt., Markiza tarasowa — 1 szt."
-					rows={3}
-					disabled={materialsPending}
-				/>
-				<div className="flex flex-wrap items-center justify-between gap-3">
-					{materialsError ? (
-						<span className="text-xs text-destructive">{materialsError}</span>
-					) : (
-						<span className="text-xs text-muted-foreground">Informacja widoczna dla całego zespołu.</span>
-					)}
-					<Button type="submit" size="sm" disabled={materialsPending}>
-						{materialsPending ? 'Zapisywanie...' : 'Zapisz materiały'}
+					<Button type="button" size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setActiveTab('materials')}>
+						Edytuj
 					</Button>
 				</div>
-			</form>
+				<p className="mt-2 text-xs text-muted-foreground">
+					Opis materiałów jest współdzielony z zespołem i pomaga ekipie przygotować montaż.
+				</p>
+			</div>
 			<div className="grid gap-2.5 sm:grid-cols-2">
 				<div className="rounded-lg border border-border/50 bg-muted/20 px-3 py-2">
 					<p className="text-[11px] uppercase tracking-wide text-muted-foreground/70">Adres faktury</p>
@@ -280,8 +274,8 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 			setActiveTab('notes');
 		} else if (action === 'task') {
 			setActiveTab('tasks');
-		} else if (action === 'materials') {
-			setQuickInfoOpen(true);
+		} else {
+			setActiveTab('materials');
 		}
 
 		setActionSheetOpen(false);
@@ -297,8 +291,8 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 			} else if (action === 'task') {
 				taskFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 				taskInputRef.current?.focus();
-			} else if (action === 'materials') {
-				quickInfoSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			} else {
+				materialsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 				materialsTextareaRef.current?.focus();
 			}
 		}, 220);
@@ -560,116 +554,206 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 				</div>
 			</CardHeader>
 			<CardContent className={cn('space-y-4 pt-0', isMobile ? 'pb-24' : 'pb-8')}>
-				<section className="space-y-3.5 rounded-2xl border border-border/60 bg-muted/10 p-4">
-					<div className="flex flex-wrap items-center justify-between gap-2.5">
-						<h3 className="text-sm font-semibold text-foreground">Lista kontrolna montażu</h3>
-						<div className="text-xs text-muted-foreground">{checklistProgressLabel} etapów zamkniętych</div>
-					</div>
-					{checklistError ? <span className="text-xs text-destructive">{checklistError}</span> : null}
-					{montage.checklistItems.length === 0 ? (
-						<p className="text-sm text-muted-foreground">Brak pozycji na liście kontrolnej. Dodaj je w ustawieniach panelu.</p>
-					) : (
-						<ul className="space-y-2.5">
-							{montage.checklistItems.map((item) => (
-								<li key={item.id} className="space-y-2.5 rounded-xl border border-border/60 bg-background p-3.5 shadow-sm">
-									<div className="flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between">
-										<label className="flex items-start gap-2 text-sm font-medium text-foreground">
-											<Checkbox
-												checked={item.completed}
-												onCheckedChange={(value) => handleChecklistToggle(item.id, Boolean(value))}
-												disabled={checklistPending || checklistPendingId === item.id}
-											/>
-											<div className="space-y-1">
-												<p>{item.label}</p>
-												{item.allowAttachment ? (
-													<span className="text-xs text-muted-foreground">Załącznik potwierdzający etap jest dostępny.</span>
-												) : null}
-											</div>
-										</label>
-										<div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-											<span>Aktualizacja: {formatTimestamp(item.updatedAt)}</span>
-											{item.completed ? <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-emerald-700">Zakończono</span> : null}
-										</div>
-									</div>
-									{item.allowAttachment ? (
-										<div className="space-y-2.5 rounded-xl border border-dashed border-border/70 bg-muted/10 p-3.5">
-											{item.attachment ? (
-												<a
-													href={item.attachment.url}
-													target="_blank"
-													rel="noopener noreferrer"
-													className="group flex items-center gap-2 rounded-lg border border-border/60 bg-background px-3 py-2 text-sm transition hover:border-primary/60"
-												>
-													<FileIcon className="size-4 text-muted-foreground transition group-hover:text-primary" />
-													<span className="truncate text-foreground group-hover:text-primary">
-														{attachmentDisplayName(item.attachment)}
-													</span>
-												</a>
-											) : (
-												<p className="text-xs text-muted-foreground">Brak załącznika dla tego etapu.</p>
-											)}
-											<form onSubmit={submitChecklistAttachment(item.id)} className="flex flex-col gap-2 md:flex-row md:items-center md:gap-2.5">
-												<input type="hidden" name="montageId" defaultValue={montage.id} />
-												<input type="hidden" name="itemId" defaultValue={item.id} />
-												<Input
-													name="file"
-													type="file"
-													accept="image/*,application/pdf"
-													required
-													disabled={checklistAttachmentPending && checklistAttachmentPendingId === item.id}
-													className="flex-1"
-												/>
-												<Input
-													name="title"
-													placeholder="Opis (opcjonalnie)"
-													disabled={checklistAttachmentPending && checklistAttachmentPendingId === item.id}
-													className="flex-1"
-												/>
-												<Button
-													type="submit"
-													size="sm"
-													disabled={checklistAttachmentPending && checklistAttachmentPendingId === item.id}
-												>
-													{checklistAttachmentPending && checklistAttachmentPendingId === item.id
-														? 'Wysyłanie...'
-														: item.attachment
-															? 'Zmień załącznik'
-															: 'Dodaj załącznik'}
-												</Button>
-											</form>
-											{checklistAttachmentError && checklistAttachmentError.id === item.id ? (
-												<span className="text-xs text-destructive">{checklistAttachmentError.message}</span>
-											) : null}
-										</div>
-									) : null}
-								</li>
-							))}
-						</ul>
-					)}
-				</section>
-				<Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'notes' | 'tasks')} className="flex flex-col gap-4">
-					<div className="flex flex-wrap items-center justify-between gap-2.5">
-						<TabsList>
-							<TabsTrigger value="notes">
-								Notatki
-								<span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
-									{montage.notes.length}
-								</span>
+				<Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as DetailTab)} className="space-y-4">
+					<TabsList
+						className={cn(
+							'rounded-xl bg-muted/60 p-1 text-xs font-medium',
+							isMobile ? 'grid grid-cols-2 gap-1.5' : 'flex flex-wrap gap-2'
+						)}
+					>
+						{detailTabs.map((tab) => (
+							<TabsTrigger
+								key={tab.id}
+								value={tab.id}
+								className="rounded-lg px-3 py-1.5 text-xs transition data-[state=active]:bg-background data-[state=active]:shadow-sm"
+							>
+								{tab.label}
 							</TabsTrigger>
-							<TabsTrigger value="tasks">
-								Zadania
-								<span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
-									{totalTasks}
-								</span>
-							</TabsTrigger>
-						</TabsList>
-						<div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-							<span>Do wykonania: {openTasks}</span>
-							<span>Checklist: {checklistProgressLabel}</span>
-							<span>Materiały: {hasMaterials ? materialsQuickSummary : 'brak'}</span>
+						))}
+					</TabsList>
+					<TabsContent value="overview" className="space-y-3">
+						<div className="grid gap-3 sm:grid-cols-2">
+							<div className="rounded-2xl border border-border/60 bg-muted/10 p-4">
+								<p className="text-[11px] uppercase tracking-wide text-muted-foreground">Materiały i ilości</p>
+								<p className="mt-2 text-sm font-medium text-foreground">
+									{hasMaterials ? materialsSummary : 'Brak opisu materiałów.'}
+								</p>
+								<div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+									<span>Widoczne dla całej ekipy.</span>
+									<Button type="button" size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setActiveTab('materials')}>
+										Przejdź do edycji
+									</Button>
+								</div>
+							</div>
+							<div className="rounded-2xl border border-border/60 bg-muted/10 p-4">
+								<p className="text-[11px] uppercase tracking-wide text-muted-foreground">Checklist i zadania</p>
+								<p className="mt-2 text-sm font-semibold text-foreground">{checklistProgressLabel} etapów ukończonych</p>
+								<p className="text-xs text-muted-foreground">Otwarte zadania: {openTasks}</p>
+								<Button type="button" size="sm" variant="ghost" className="mt-3 h-7 px-2 text-xs" onClick={() => setActiveTab('checklist')}>
+									Zarządzaj listą
+								</Button>
+							</div>
 						</div>
-					</div>
-					<TabsContent value="notes" className="space-y-3.5">
+						<div className="rounded-2xl border border-border/60 bg-muted/10 p-4">
+							<div className="flex flex-wrap items-center justify-between gap-2">
+								<div>
+									<p className="text-[11px] uppercase tracking-wide text-muted-foreground">Ostatnia aktywność</p>
+									<h3 className="text-sm font-semibold text-foreground">Historia skrócona</h3>
+								</div>
+								<Button type="button" size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setActiveTab('timeline')}>
+									Zobacz wszystko
+								</Button>
+							</div>
+							{timelineEvents.length === 0 ? (
+								<p className="text-sm text-muted-foreground">Brak zarejestrowanej aktywności dla tego montażu.</p>
+							) : (
+								<ul className="mt-3 space-y-2">
+									{timelineEvents.slice(0, 3).map((event) => {
+										const visuals = timelineVisuals[event.type];
+										const Icon = visuals.icon;
+										return (
+											<li
+												key={event.id}
+												className="flex items-start gap-2 rounded-xl border border-border/60 bg-background/80 px-3 py-2"
+											>
+												<div className={cn('flex h-8 w-8 items-center justify-center rounded-full', visuals.className)}>
+													<Icon className="size-4" />
+												</div>
+												<div className="space-y-0.5">
+													<p className="text-xs font-semibold text-muted-foreground">{event.label}</p>
+													<p className="text-sm text-foreground">{event.description}</p>
+													<p className="text-[11px] text-muted-foreground">{formatTimestamp(event.timestamp)}</p>
+												</div>
+											</li>
+										);
+									})}
+								</ul>
+							)}
+						</div>
+					</TabsContent>
+					<TabsContent value="materials" className="space-y-3">
+						<div ref={materialsSectionRef} className="space-y-3 rounded-2xl border border-border/60 bg-muted/10 p-4">
+							<div className="flex flex-wrap items-center justify-between gap-3">
+								<div className="space-y-1">
+									<Label className="text-xs uppercase tracking-wide text-muted-foreground">Materiały i ilości</Label>
+									<p className="text-xs text-muted-foreground">
+										Zapisz co zostało zamówione, aby ekipa była gotowa do montażu.
+									</p>
+								</div>
+								{materialsFeedback ? <span className="text-xs text-emerald-600">{materialsFeedback}</span> : null}
+							</div>
+							<form onSubmit={submitMaterials} className="space-y-3">
+								<Textarea
+									ref={materialsTextareaRef}
+									value={materialsDraft}
+									onChange={handleMaterialsChange}
+									placeholder="np. Rolety dzień-noc — 4 szt., Markiza tarasowa — 1 szt."
+									rows={4}
+									disabled={materialsPending}
+								/>
+								<div className="flex flex-wrap items-center justify-between gap-3">
+									{materialsError ? (
+										<span className="text-xs text-destructive">{materialsError}</span>
+									) : (
+										<span className="text-xs text-muted-foreground">Informacja widoczna dla całego zespołu.</span>
+									)}
+									<Button type="submit" size="sm" disabled={materialsPending}>
+										{materialsPending ? 'Zapisywanie...' : 'Zapisz materiały'}
+									</Button>
+								</div>
+							</form>
+						</div>
+					</TabsContent>
+					<TabsContent value="checklist" className="space-y-3">
+						<div className="space-y-3.5 rounded-2xl border border-border/60 bg-muted/10 p-4">
+							<div className="flex flex-wrap items-center justify-between gap-2.5">
+								<h3 className="text-sm font-semibold text-foreground">Lista kontrolna montażu</h3>
+								<div className="text-xs text-muted-foreground">{checklistProgressLabel} etapów zamkniętych</div>
+							</div>
+							{checklistError ? <span className="text-xs text-destructive">{checklistError}</span> : null}
+							{montage.checklistItems.length === 0 ? (
+								<p className="text-sm text-muted-foreground">Brak pozycji na liście kontrolnej. Dodaj je w ustawieniach panelu.</p>
+							) : (
+								<ul className="space-y-2.5">
+									{montage.checklistItems.map((item) => (
+										<li key={item.id} className="space-y-2.5 rounded-xl border border-border/60 bg-background p-3.5 shadow-sm">
+											<div className="flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between">
+												<label className="flex items-start gap-2 text-sm font-medium text-foreground">
+													<Checkbox
+														checked={item.completed}
+														onCheckedChange={(value) => handleChecklistToggle(item.id, Boolean(value))}
+														disabled={checklistPending || checklistPendingId === item.id}
+													/>
+													<div className="space-y-1">
+														<p>{item.label}</p>
+														{item.allowAttachment ? (
+															<span className="text-xs text-muted-foreground">Załącznik potwierdzający etap jest dostępny.</span>
+														) : null}
+													</div>
+												</label>
+												<div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+													<span>Aktualizacja: {formatTimestamp(item.updatedAt)}</span>
+													{item.completed ? <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-emerald-700">Zakończono</span> : null}
+												</div>
+											</div>
+											{item.allowAttachment ? (
+												<div className="space-y-2.5 rounded-xl border border-dashed border-border/70 bg-muted/10 p-3.5">
+													{item.attachment ? (
+														<a
+															href={item.attachment.url}
+															target="_blank"
+															rel="noopener noreferrer"
+															className="group flex items-center gap-2 rounded-lg border border-border/60 bg-background px-3 py-2 text-sm transition hover:border-primary/60"
+														>
+															<FileIcon className="size-4 text-muted-foreground transition group-hover:text-primary" />
+															<span className="truncate text-foreground group-hover:text-primary">
+																{attachmentDisplayName(item.attachment)}
+															</span>
+														</a>
+													) : (
+														<p className="text-xs text-muted-foreground">Brak załącznika dla tego etapu.</p>
+													)}
+													<form onSubmit={submitChecklistAttachment(item.id)} className="flex flex-col gap-2 md:flex-row md:items-center md:gap-2.5">
+														<input type="hidden" name="montageId" defaultValue={montage.id} />
+														<input type="hidden" name="itemId" defaultValue={item.id} />
+														<Input
+															name="file"
+															type="file"
+															accept="image/*,application/pdf"
+															required
+															disabled={checklistAttachmentPending && checklistAttachmentPendingId === item.id}
+															className="flex-1"
+														/>
+														<Input
+															name="title"
+															placeholder="Opis (opcjonalnie)"
+															disabled={checklistAttachmentPending && checklistAttachmentPendingId === item.id}
+															className="flex-1"
+														/>
+														<Button
+																type="submit"
+																size="sm"
+																disabled={checklistAttachmentPending && checklistAttachmentPendingId === item.id}
+															>
+																{checklistAttachmentPending && checklistAttachmentPendingId === item.id
+																	? 'Wysyłanie...'
+																	: item.attachment
+																		? 'Zmień załącznik'
+																		: 'Dodaj załącznik'}
+															</Button>
+														</form>
+														{checklistAttachmentError && checklistAttachmentError.id === item.id ? (
+															<span className="text-xs text-destructive">{checklistAttachmentError.message}</span>
+														) : null}
+												</div>
+											) : null}
+									</li>
+								))}
+							</ul>
+							)}
+						</div>
+					</TabsContent>
+					<TabsContent value="notes" className="space-y-3">
 						{noteError ? <span className="text-xs text-destructive">{noteError}</span> : null}
 						{montage.notes.length === 0 ? (
 							<div className="rounded-xl border border-dashed border-border/70 bg-muted/20 p-4 text-sm text-muted-foreground">
@@ -687,18 +771,18 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 													{note.author ? (
 														<span className="font-medium text-foreground/80">{note.author.name ?? note.author.email}</span>
 													) : null}
-												</div>
-												{hasAttachments ? (
-													<span className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
-														<PaperclipIcon className="size-3.5" />
-														{note.attachments.length}
-													</span>
-												) : null}
 											</div>
-											<p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-foreground">{note.content}</p>
 											{hasAttachments ? (
-												<ul className="mt-3 space-y-2 text-xs">
-													{note.attachments.map((attachment) => (
+												<span className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
+													<PaperclipIcon className="size-3.5" />
+													{note.attachments.length}
+												</span>
+											) : null}
+										</div>
+										<p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-foreground">{note.content}</p>
+										{hasAttachments ? (
+											<ul className="mt-3 space-y-2 text-xs">
+												{note.attachments.map((attachment) => (
 														<li key={attachment.id}>
 															<a
 																href={attachment.url}
@@ -713,10 +797,10 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 															</a>
 														</li>
 													))}
-												</ul>
-											) : null}
-										</li>
-									);
+											</ul>
+										) : null}
+									</li>
+								);
 								})}
 							</ul>
 						)}
@@ -753,6 +837,54 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 								{notePending ? 'Zapisywanie...' : 'Dodaj notatkę'}
 							</Button>
 						</form>
+					</TabsContent>
+					<TabsContent value="tasks" className="space-y-3">
+						{taskError ? <span className="text-xs text-destructive">{taskError}</span> : null}
+						{montage.tasks.length === 0 ? (
+							<div className="rounded-xl border border-dashed border-border/70 bg-muted/20 p-5 text-sm text-muted-foreground">
+								Brak zadań. Dodaj elementy do checklisty, aby zaplanować kolejne kroki.
+							</div>
+						) : (
+							<ul className="space-y-3">
+								{montage.tasks.map((task) => (
+									<li key={task.id} className="rounded-xl border border-border/60 bg-muted/15 p-3.5 shadow-sm">
+										<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+											<label className="flex items-center gap-2 text-sm">
+												<Checkbox
+													checked={task.completed}
+													onCheckedChange={(value) => toggleTask(task.id, Boolean(value))}
+													disabled={taskPending}
+												/>
+												<span className={cn('leading-none', task.completed ? 'line-through text-muted-foreground' : 'text-foreground')}>
+													{task.title}
+												</span>
+											</label>
+											<span className="text-xs text-muted-foreground">Aktualizacja: {formatTimestamp(task.updatedAt)}</span>
+										</div>
+									</li>
+								))}
+							</ul>
+						)}
+						<form
+							onSubmit={submitTask}
+							ref={taskFormRef}
+							className="flex flex-col gap-2.5 rounded-xl border border-dashed border-border/70 bg-muted/15 p-3.5 shadow-sm sm:flex-row sm:items-end"
+						>
+							<Input
+								ref={taskInputRef}
+								placeholder="Dodaj zadanie (np. zamówienie materiału)"
+								value={taskTitle}
+								onChange={(event) => setTaskTitle(event.target.value)}
+								disabled={taskPending}
+								required
+								className="flex-1"
+							/>
+							<Button type="submit" size="sm" disabled={taskPending} className="sm:w-auto">
+								{taskPending ? 'Dodawanie...' : 'Dodaj zadanie'}
+							</Button>
+						</form>
+					</TabsContent>
+					<TabsContent value="timeline" className="space-y-3">
 						<div className="space-y-3.5 rounded-2xl border border-border/60 bg-muted/10 p-4">
 							<div className="flex flex-wrap items-center justify-between gap-3">
 								<div>
@@ -764,7 +896,7 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 							{timelineEvents.length === 0 ? (
 								<p className="text-sm text-muted-foreground">Brak zarejestrowanej aktywności dla tego montażu.</p>
 							) : (
-								<div className="max-h-80 overflow-y-auto pr-1">
+								<div className="max-h-96 overflow-y-auto pr-1">
 									<ul className="space-y-3 pr-1">
 										{timelineEvents.map((event) => {
 											const visuals = timelineVisuals[event.type];
@@ -790,103 +922,57 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 							)}
 						</div>
 					</TabsContent>
-					<TabsContent value="tasks" className="space-y-4">
-						{taskError ? <span className="text-xs text-destructive">{taskError}</span> : null}
-						{montage.tasks.length === 0 ? (
-							<div className="rounded-xl border border-dashed border-border/70 bg-muted/20 p-5 text-sm text-muted-foreground">
-								Brak zadań. Dodaj elementy do checklisty, aby zaplanować kolejne kroki.
-							</div>
-						) : (
-							<ul className="space-y-3">
-								{montage.tasks.map((task) => (
-									<li key={task.id} className="rounded-xl border border-border/60 bg-muted/15 p-3.5 shadow-sm">
-										<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-											<label className="flex items-center gap-2 text-sm">
-												<Checkbox
-													checked={task.completed}
-													onCheckedChange={(value) => toggleTask(task.id, Boolean(value))}
-													disabled={taskPending}
-												/>
-												<span className={cn('leading-none', task.completed ? 'line-through text-muted-foreground' : 'text-foreground')}>
-													{task.title}
-												</span>
-											</label>
-											<span className="text-xs text-muted-foreground">Aktualizacja: {formatTimestamp(task.updatedAt)}</span>
-										</div>
-									</li>
-							))}
-							</ul>
-						)}
-						<form
-							onSubmit={submitTask}
-							ref={taskFormRef}
-							className="flex flex-col gap-2.5 rounded-xl border border-dashed border-border/70 bg-muted/15 p-3.5 shadow-sm sm:flex-row sm:items-end"
-						>
-							<Input
-								ref={taskInputRef}
-								placeholder="Dodaj zadanie (np. zamówienie materiału)"
-								value={taskTitle}
-								onChange={(event) => setTaskTitle(event.target.value)}
-								disabled={taskPending}
-								required
-								className="flex-1"
-							/>
-							<Button type="submit" size="sm" disabled={taskPending} className="sm:w-auto">
-								{taskPending ? 'Dodawanie...' : 'Dodaj zadanie'}
-							</Button>
-						</form>
-					</TabsContent>
 				</Tabs>
-					{isMobile ? (
-						<Sheet open={actionSheetOpen} onOpenChange={setActionSheetOpen}>
-							<SheetTrigger asChild>
+				{isMobile ? (
+					<Sheet open={actionSheetOpen} onOpenChange={setActionSheetOpen}>
+						<SheetTrigger asChild>
+							<Button
+								type="button"
+								size="icon"
+								className="fixed bottom-24 right-4 z-30 h-12 w-12 rounded-full shadow-lg shadow-primary/40 sm:hidden"
+								aria-label="Szybkie działania"
+							>
+								<Plus className="size-5" />
+							</Button>
+						</SheetTrigger>
+						<SheetContent side="bottom" className="space-y-5 pb-6">
+							<SheetHeader>
+								<SheetTitle>Szybkie działania</SheetTitle>
+								<SheetDescription>Wybierz czynność, aby skupić widok na odpowiednim miejscu karty.</SheetDescription>
+							</SheetHeader>
+							<div className="grid gap-3">
 								<Button
 									type="button"
-									size="icon"
-									className="fixed bottom-24 right-4 z-30 h-12 w-12 rounded-full shadow-lg shadow-primary/40 sm:hidden"
-									aria-label="Szybkie działania"
+									variant="secondary"
+									className="justify-start gap-2"
+									onClick={() => handleQuickAction('note')}
 								>
-									<Plus className="size-5" />
+									<MessageSquareIcon className="size-4" />
+									Dodaj notatkę
 								</Button>
-							</SheetTrigger>
-							<SheetContent side="bottom" className="space-y-5 pb-6">
-								<SheetHeader>
-									<SheetTitle>Szybkie działania</SheetTitle>
-									<SheetDescription>Wybierz czynność, aby skupić widok na odpowiednim miejscu karty.</SheetDescription>
-								</SheetHeader>
-								<div className="grid gap-3">
-									<Button
-										type="button"
-										variant="secondary"
-										className="justify-start gap-2"
-										onClick={() => handleQuickAction('note')}
-									>
-										<MessageSquareIcon className="size-4" />
-										Dodaj notatkę
-									</Button>
-									<Button
-										type="button"
-										variant="secondary"
-										className="justify-start gap-2"
-										onClick={() => handleQuickAction('task')}
-									>
-										<CheckCircle2Icon className="size-4" />
-										Dodaj zadanie
-									</Button>
-									<Button
-										type="button"
-										variant="secondary"
-										className="justify-start gap-2"
-										onClick={() => handleQuickAction('materials')}
-									>
-										<PaperclipIcon className="size-4" />
-										Edytuj materiały
-									</Button>
-								</div>
-							</SheetContent>
-						</Sheet>
-					) : null}
-				</CardContent>
+								<Button
+									type="button"
+									variant="secondary"
+									className="justify-start gap-2"
+									onClick={() => handleQuickAction('task')}
+								>
+									<CheckCircle2Icon className="size-4" />
+									Dodaj zadanie
+								</Button>
+								<Button
+									type="button"
+									variant="secondary"
+									className="justify-start gap-2"
+									onClick={() => handleQuickAction('materials')}
+								>
+									<PaperclipIcon className="size-4" />
+									Edytuj materiały
+								</Button>
+							</div>
+						</SheetContent>
+					</Sheet>
+				) : null}
+			</CardContent>
 		</Card>
 	);
 }
