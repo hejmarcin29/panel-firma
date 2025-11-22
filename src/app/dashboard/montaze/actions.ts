@@ -199,6 +199,84 @@ export async function updateMontageStatus({ montageId, status }: UpdateMontageSt
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
 
+type UpdateMontageContactDetailsInput = {
+	montageId: string;
+	clientName: string;
+	contactPhone?: string;
+	contactEmail?: string;
+	scheduledInstallationDate?: string;
+	billingAddress?: string;
+	billingCity?: string;
+	installationAddress?: string;
+	installationCity?: string;
+};
+
+export async function updateMontageContactDetails({
+	montageId,
+	clientName,
+	contactPhone,
+	contactEmail,
+	scheduledInstallationDate,
+	billingAddress,
+	billingCity,
+	installationAddress,
+	installationCity,
+}: UpdateMontageContactDetailsInput) {
+	await requireUser();
+
+	const trimmedName = clientName.trim();
+	if (!trimmedName) {
+		throw new Error('Podaj nazwę klienta.');
+	}
+
+	const normalize = (value: string | undefined) => {
+		const trimmed = value?.trim() ?? '';
+		return trimmed ? trimmed : null;
+	};
+
+	const normalizedPhone = normalize(contactPhone);
+	const normalizedEmail = normalize(contactEmail);
+	if (normalizedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+		throw new Error('Podaj prawidłowy adres e-mail.');
+	}
+
+	const normalizedBillingAddress = normalize(billingAddress);
+	const normalizedInstallationAddress = normalize(installationAddress);
+	const normalizedBillingCity = normalize(billingCity);
+	const normalizedInstallationCity = normalize(installationCity);
+
+	let scheduledInstallationAt: Date | null = null;
+	if (scheduledInstallationDate && scheduledInstallationDate.trim()) {
+		const parsed = new Date(`${scheduledInstallationDate}T00:00:00`);
+		if (Number.isNaN(parsed.getTime())) {
+			throw new Error('Podaj prawidłową datę montażu.');
+		}
+		scheduledInstallationAt = parsed;
+	}
+
+	const fallbackAddress = normalizedInstallationAddress ?? normalizedBillingAddress;
+	const fallbackCity = normalizedInstallationCity ?? normalizedBillingCity;
+	const combinedAddress = [fallbackAddress, fallbackCity].filter(Boolean).join(', ') || null;
+
+	await db
+		.update(montages)
+		.set({
+			clientName: trimmedName,
+			contactPhone: normalizedPhone,
+			contactEmail: normalizedEmail,
+			billingAddress: normalizedBillingAddress,
+			installationAddress: normalizedInstallationAddress,
+			billingCity: normalizedBillingCity,
+			installationCity: normalizedInstallationCity,
+			address: combinedAddress,
+			scheduledInstallationAt,
+			updatedAt: new Date(),
+		})
+		.where(eq(montages.id, montageId));
+
+	revalidatePath(MONTAGE_DASHBOARD_PATH);
+}
+
 export async function addMontageNote(formData: FormData) {
 	const user = await requireUser();
 

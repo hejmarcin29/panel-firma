@@ -2,7 +2,19 @@
 
 import { useEffect, useRef, useState, useTransition, type ChangeEvent, type ElementType, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2Icon, ChevronDown, ClockIcon, FileIcon, MessageSquareIcon, PaperclipIcon, Plus } from 'lucide-react';
+import {
+	CalendarDays,
+	CheckCircle2Icon,
+	ChevronDown,
+	ClockIcon,
+	FileIcon,
+	Mail,
+	MessageSquareIcon,
+	PaperclipIcon,
+	Phone,
+	Plus,
+	User,
+} from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -29,6 +41,7 @@ import {
 	toggleMontageChecklistItem,
 	toggleMontageTask,
 	updateMontageMaterialDetails,
+	updateMontageContactDetails,
 	updateMontageStatus,
 	uploadChecklistAttachment,
 } from '../actions';
@@ -52,6 +65,20 @@ function formatTimestamp(value: TimestampValue) {
 		dateStyle: 'short',
 		timeStyle: 'short',
 	}).format(date);
+}
+
+function formatDateInputValue(value: TimestampValue) {
+	if (!value) {
+		return '';
+	}
+
+	const date = value instanceof Date ? value : new Date(typeof value === 'number' ? value : Number(value));
+
+	if (Number.isNaN(date.getTime())) {
+		return '';
+	}
+
+	return date.toISOString().slice(0, 10);
 }
 
 function attachmentDisplayName(attachment: MontageAttachment) {
@@ -99,10 +126,12 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 	const [notePending, startNoteTransition] = useTransition();
 	const [taskPending, startTaskTransition] = useTransition();
 	const [materialsPending, startMaterialsTransition] = useTransition();
+	const [contactPending, startContactTransition] = useTransition();
 	const [checklistPending, startChecklistTransition] = useTransition();
 	const [checklistAttachmentPending, startChecklistAttachmentTransition] = useTransition();
 	const [noteError, setNoteError] = useState<string | null>(null);
 	const [taskError, setTaskError] = useState<string | null>(null);
+	const [contactError, setContactError] = useState<string | null>(null);
 	const [checklistError, setChecklistError] = useState<string | null>(null);
 	const [checklistPendingId, setChecklistPendingId] = useState<string | null>(null);
 	const [checklistAttachmentError, setChecklistAttachmentError] = useState<{ id: string; message: string } | null>(null);
@@ -113,9 +142,21 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 	const [materialsDraft, setMaterialsDraft] = useState(montage.materialDetails ?? '');
 	const [materialsError, setMaterialsError] = useState<string | null>(null);
 	const [materialsFeedback, setMaterialsFeedback] = useState<string | null>(null);
+	const [contactFeedback, setContactFeedback] = useState<string | null>(null);
+	const [contactDraft, setContactDraft] = useState<ContactDraft>(() => ({
+		clientName: montage.clientName ?? '',
+		contactPhone: montage.contactPhone ?? '',
+		contactEmail: montage.contactEmail ?? '',
+		scheduledInstallationDate: formatDateInputValue(montage.scheduledInstallationAt),
+		billingAddress: montage.billingAddress ?? '',
+		billingCity: montage.billingCity ?? '',
+		installationAddress: montage.installationAddress ?? '',
+		installationCity: montage.installationCity ?? '',
+	}));
 	const isMobile = useIsMobile();
 	const detailTabs = [
 		{ id: 'overview', label: 'Przegląd' },
+		{ id: 'contact', label: 'Dane kontaktowe' },
 		{ id: 'materials', label: 'Materiały' },
 		{ id: 'checklist', label: 'Checklist' },
 		{ id: 'notes', label: 'Notatki' },
@@ -123,6 +164,16 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 		{ id: 'timeline', label: 'Aktywność' },
 	] as const;
 	type DetailTab = (typeof detailTabs)[number]['id'];
+	type ContactDraft = {
+		clientName: string;
+		contactPhone: string;
+		contactEmail: string;
+		scheduledInstallationDate: string;
+		billingAddress: string;
+		billingCity: string;
+		installationAddress: string;
+		installationCity: string;
+	};
 	const [activeTab, setActiveTab] = useState<DetailTab>('overview');
 	const [quickInfoOpen, setQuickInfoOpen] = useState(true);
 	const [actionSheetOpen, setActionSheetOpen] = useState(false);
@@ -134,6 +185,8 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 	const materialsTextareaRef = useRef<HTMLTextAreaElement | null>(null);
 	const materialsSectionRef = useRef<HTMLDivElement | null>(null);
 	const quickInfoSectionRef = useRef<HTMLDivElement | null>(null);
+	const contactFormRef = useRef<HTMLFormElement | null>(null);
+	const contactNameInputRef = useRef<HTMLInputElement | null>(null);
 
 	const completedTasks = montage.tasks.filter((task) => task.completed).length;
 	const totalTasks = montage.tasks.length;
@@ -149,6 +202,9 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 	const addressesMatch = Boolean(billingAddress && installationAddress)
 		&& billingAddress === installationAddress
 		&& (billingCity || '') === (installationCity || '');
+	const draftAddressesMatch = Boolean(contactDraft.billingAddress.trim() && contactDraft.installationAddress.trim())
+		&& contactDraft.billingAddress.trim() === contactDraft.installationAddress.trim()
+		&& (contactDraft.billingCity.trim() || '') === (contactDraft.installationCity.trim() || '');
 	const scheduledInstallationDate = (() => {
 		const value = montage.scheduledInstallationAt;
 		if (!value) {
@@ -163,19 +219,31 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 	const materialsSummary = summarizeMaterialDetails(montage.materialDetails, 160);
 	const materialsQuickSummary = summarizeMaterialDetails(montage.materialDetails, 60);
 	const hasMaterials = Boolean(montage.materialDetails?.trim());
-	const contactEntries = [
-		montage.contactPhone
-			? { key: 'phone', label: 'Telefon', value: montage.contactPhone, muted: false }
-			: null,
-		montage.contactEmail
-			? { key: 'email', label: 'E-mail', value: montage.contactEmail, muted: false }
-			: null,
-		{ key: 'date', label: 'Termin montażu', value: scheduledInstallationDate ?? 'Brak terminu', muted: !scheduledInstallationDate },
-	].filter(Boolean) as Array<{ key: string; label: string; value: string; muted: boolean }>;
-
 	useEffect(() => {
 		setMaterialsDraft(montage.materialDetails ?? '');
 	}, [montage.materialDetails]);
+
+	useEffect(() => {
+		setContactDraft({
+			clientName: montage.clientName ?? '',
+			contactPhone: montage.contactPhone ?? '',
+			contactEmail: montage.contactEmail ?? '',
+			scheduledInstallationDate: formatDateInputValue(montage.scheduledInstallationAt),
+			billingAddress: montage.billingAddress ?? '',
+			billingCity: montage.billingCity ?? '',
+			installationAddress: montage.installationAddress ?? '',
+			installationCity: montage.installationCity ?? '',
+		});
+	}, [
+		montage.billingAddress,
+		montage.billingCity,
+		montage.clientName,
+		montage.contactEmail,
+		montage.contactPhone,
+		montage.installationAddress,
+		montage.installationCity,
+		montage.scheduledInstallationAt,
+	]);
 
 	useEffect(() => {
 		setQuickInfoOpen(!isMobile);
@@ -236,46 +304,124 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 	const renderQuickInfoDetails = () => (
 		<>
 			<div className="rounded-xl border border-border/60 bg-muted/10 p-3.5">
-				<div className="flex items-center justify-between gap-2">
+				<div className="flex items-start justify-between gap-2">
+					<div className="space-y-2">
+						<p className="text-[11px] uppercase tracking-wide text-muted-foreground">Kontakt i termin</p>
+						<ul className="space-y-1.5 text-sm">
+							<li className="flex items-center gap-2 text-foreground">
+								<User className="size-3.5 text-muted-foreground" />
+								<span>{montage.clientName}</span>
+							</li>
+							<li className="flex items-center gap-2">
+								<Phone className="size-3.5 text-muted-foreground" />
+								<span
+									className={cn(
+										'text-sm',
+										montage.contactPhone ? 'text-foreground' : 'text-muted-foreground/70',
+									)}
+								>
+									{montage.contactPhone ? montage.contactPhone : 'Brak telefonu'}
+								</span>
+							</li>
+							<li className="flex items-center gap-2">
+								<Mail className="size-3.5 text-muted-foreground" />
+								<span
+									className={cn(
+										'text-sm',
+										montage.contactEmail ? 'text-foreground' : 'text-muted-foreground/70',
+									)}
+								>
+									{montage.contactEmail ? montage.contactEmail : 'Brak adresu e-mail'}
+								</span>
+							</li>
+							<li className="flex items-center gap-2">
+								<CalendarDays className="size-3.5 text-muted-foreground" />
+								<span
+									className={cn(
+										'text-sm',
+										scheduledInstallationDate ? 'text-foreground' : 'text-muted-foreground/70',
+									)}
+								>
+									{scheduledInstallationDate ?? 'Brak terminu montażu'}
+								</span>
+							</li>
+						</ul>
+					</div>
+					<Button
+						type="button"
+						size="sm"
+						variant="ghost"
+						className="h-8 text-xs"
+						onClick={() => handleQuickAction('contact')}
+					>
+						Edytuj dane
+					</Button>
+				</div>
+				<p className="mt-2 text-xs text-muted-foreground">
+					Dane są widoczne dla zespołu i można je modyfikować w zakładce „Dane kontaktowe”.
+				</p>
+			</div>
+			<div className="rounded-xl border border-border/60 bg-muted/10 p-3.5">
+				<div className="flex items-start justify-between gap-2">
 					<div>
 						<p className="text-[11px] uppercase tracking-wide text-muted-foreground">Materiały</p>
 						<p className="mt-1 text-sm font-medium text-foreground">
 							{hasMaterials ? materialsQuickSummary : 'Brak dodanych materiałów.'}
 						</p>
 					</div>
-					<Button type="button" size="sm" variant="ghost" className="h-8 text-xs" onClick={() => setActiveTab('materials')}>
-						Edytuj
+					<Button type="button" size="sm" variant="ghost" className="h-8 text-xs" onClick={() => handleQuickAction('materials')}>
+						Przejdź do edycji
 					</Button>
 				</div>
 				<p className="mt-2 text-xs text-muted-foreground">
 					Opis materiałów jest współdzielony z zespołem i pomaga ekipie przygotować montaż.
 				</p>
 			</div>
-			<div className="grid gap-2.5 sm:grid-cols-2">
-				<div className="rounded-lg border border-border/50 bg-muted/20 px-3 py-2">
-					<p className="text-[11px] uppercase tracking-wide text-muted-foreground/70">Adres faktury</p>
-					<p className="whitespace-pre-wrap text-sm text-foreground/90">{billingAddress ? billingAddress : 'Brak danych'}</p>
-					<p className="text-xs text-muted-foreground/70">{billingCity ? `Miasto: ${billingCity}` : 'Miasto nieznane'}</p>
+			<div className="rounded-xl border border-border/60 bg-muted/10 p-3.5">
+				<div className="flex items-start justify-between gap-2">
+					<div>
+						<p className="text-[11px] uppercase tracking-wide text-muted-foreground">Adresy</p>
+						<p className="text-xs text-muted-foreground">Wykorzystywane na dokumentach i do planowania trasy.</p>
+					</div>
+					<Button type="button" size="sm" variant="ghost" className="h-8 text-xs" onClick={() => handleQuickAction('contact')}>
+						Zmień adresy
+					</Button>
 				</div>
-				<div className="rounded-lg border border-border/50 bg-muted/20 px-3 py-2">
-					<p className="text-[11px] uppercase tracking-wide text-muted-foreground/70">Adres montażu</p>
-					<p className="whitespace-pre-wrap text-sm text-foreground/90">{installationAddress ? installationAddress : 'Brak danych'}</p>
-					<p className="text-xs text-muted-foreground/70">{installationCity ? `Miasto: ${installationCity}` : 'Miasto nieznane'}</p>
-					{addressesMatch && billingAddress ? (
-						<p className="mt-1 text-[11px] text-muted-foreground/70">Adres jak na fakturze</p>
-					) : null}
+				<div className="mt-3 grid gap-2.5 sm:grid-cols-2">
+					<div className="rounded-lg border border-border/50 bg-muted/20 px-3 py-2">
+						<p className="text-[11px] uppercase tracking-wide text-muted-foreground/70">Adres faktury</p>
+						<p className="whitespace-pre-wrap text-sm text-foreground/90">{billingAddress ? billingAddress : 'Brak danych'}</p>
+						<p className="text-xs text-muted-foreground/70">{billingCity ? `Miasto: ${billingCity}` : 'Miasto nieznane'}</p>
+					</div>
+					<div className="rounded-lg border border-border/50 bg-muted/20 px-3 py-2">
+						<p className="text-[11px] uppercase tracking-wide text-muted-foreground/70">Adres montażu</p>
+						<p className="whitespace-pre-wrap text-sm text-foreground/90">{installationAddress ? installationAddress : 'Brak danych'}</p>
+						<p className="text-xs text-muted-foreground/70">{installationCity ? `Miasto: ${installationCity}` : 'Miasto nieznane'}</p>
+						{addressesMatch && billingAddress ? (
+							<p className="mt-1 text-[11px] text-muted-foreground/70">Adres jak na fakturze</p>
+						) : null}
+					</div>
 				</div>
 			</div>
 		</>
 	);
 
-	const handleQuickAction = (action: 'note' | 'task' | 'materials') => {
-		if (action === 'note') {
-			setActiveTab('notes');
-		} else if (action === 'task') {
-			setActiveTab('tasks');
-		} else {
-			setActiveTab('materials');
+	const handleQuickAction = (action: 'note' | 'task' | 'materials' | 'contact') => {
+		switch (action) {
+			case 'note':
+				setActiveTab('notes');
+				break;
+			case 'task':
+				setActiveTab('tasks');
+				break;
+			case 'materials':
+				setActiveTab('materials');
+				break;
+			case 'contact':
+				setActiveTab('contact');
+				break;
+			default:
+				setActiveTab('overview');
 		}
 
 		setActionSheetOpen(false);
@@ -291,9 +437,12 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 			} else if (action === 'task') {
 				taskFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 				taskInputRef.current?.focus();
-			} else {
+			} else if (action === 'materials') {
 				materialsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 				materialsTextareaRef.current?.focus();
+			} else if (action === 'contact') {
+				contactFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+				contactNameInputRef.current?.focus();
 			}
 		}, 220);
 	};
@@ -335,6 +484,48 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 				const message =
 					error instanceof Error ? error.message : 'Nie udało się zapisać informacji o materiałach.';
 				setMaterialsError(message);
+			}
+		});
+	};
+
+	const handleContactFieldChange = (field: keyof ContactDraft) => (
+		event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+	) => {
+		if (contactError) {
+			setContactError(null);
+		}
+		if (contactFeedback) {
+			setContactFeedback(null);
+		}
+		const value = event.target.value;
+		setContactDraft((previous) => ({ ...previous, [field]: value }));
+	};
+
+	const submitContactDetails = (event: FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+		setContactError(null);
+		setContactFeedback(null);
+
+		const payload = contactDraft;
+
+		startContactTransition(async () => {
+			try {
+				await updateMontageContactDetails({
+					montageId: montage.id,
+					clientName: payload.clientName,
+					contactPhone: payload.contactPhone,
+					contactEmail: payload.contactEmail,
+					scheduledInstallationDate: payload.scheduledInstallationDate,
+					billingAddress: payload.billingAddress,
+					billingCity: payload.billingCity,
+					installationAddress: payload.installationAddress,
+					installationCity: payload.installationCity,
+				});
+				setContactFeedback('Zapisano dane kontaktowe.');
+				router.refresh();
+			} catch (error) {
+				const message = error instanceof Error ? error.message : 'Nie udało się zapisać danych kontaktowych.';
+				setContactError(message);
 			}
 		});
 	};
@@ -450,26 +641,6 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 							<CardDescription className="text-sm text-muted-foreground">
 								Utworzono {formatTimestamp(montage.createdAt)} • Aktualizacja {formatTimestamp(montage.updatedAt)}
 							</CardDescription>
-							{contactEntries.length ? (
-								<div className="flex flex-wrap gap-2 pt-1">
-									{contactEntries.map((entry) => (
-										<div
-											key={entry.key}
-											className="flex items-center gap-1 rounded-full border border-border/60 bg-muted/20 px-3 py-1.5"
-										>
-											<span className="text-[10px] uppercase tracking-wide text-muted-foreground/80">{entry.label}</span>
-											<span
-												className={cn(
-													'text-xs font-medium',
-													entry.muted ? 'text-muted-foreground/70' : 'text-foreground',
-												)}
-											>
-												{entry.value}
-											</span>
-										</div>
-									))}
-								</div>
-							) : null}
 						</div>
 						{isMobile ? (
 							<Collapsible open={quickInfoOpen} onOpenChange={setQuickInfoOpen} className="rounded-2xl border border-border/60 bg-muted/10">
@@ -630,6 +801,122 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 								</ul>
 							)}
 						</div>
+					</TabsContent>
+					<TabsContent value="contact" className="space-y-3">
+						<form
+							onSubmit={submitContactDetails}
+							ref={contactFormRef}
+							className="space-y-3 rounded-2xl border border-border/60 bg-muted/10 p-4"
+						>
+							<div className="flex flex-wrap items-center justify-between gap-3">
+								<div className="space-y-1">
+									<Label className="text-xs uppercase tracking-wide text-muted-foreground">Dane klienta i adresy</Label>
+									<p className="text-xs text-muted-foreground">
+										Aktualizuj informacje kontaktowe, adresowe oraz planowany termin montażu.
+									</p>
+								</div>
+								{contactFeedback ? <span className="text-xs text-emerald-600">{contactFeedback}</span> : null}
+							</div>
+							{contactError ? <span className="text-xs text-destructive">{contactError}</span> : null}
+							<div className="grid gap-3 md:grid-cols-2">
+								<div className="space-y-1.5">
+									<Label htmlFor="contact-client-name">Imię i nazwisko / firma</Label>
+									<Input
+										id="contact-client-name"
+										ref={contactNameInputRef}
+										value={contactDraft.clientName}
+										onChange={handleContactFieldChange('clientName')}
+										disabled={contactPending}
+										required
+									/>
+								</div>
+								<div className="space-y-1.5">
+									<Label htmlFor="contact-phone">Telefon</Label>
+									<Input
+										id="contact-phone"
+										value={contactDraft.contactPhone}
+										onChange={handleContactFieldChange('contactPhone')}
+										disabled={contactPending}
+										placeholder="np. +48 600 000 000"
+									/>
+								</div>
+								<div className="space-y-1.5">
+									<Label htmlFor="contact-email">E-mail</Label>
+									<Input
+										id="contact-email"
+										type="email"
+										value={contactDraft.contactEmail}
+										onChange={handleContactFieldChange('contactEmail')}
+										disabled={contactPending}
+										placeholder="np. klient@firma.pl"
+									/>
+								</div>
+								<div className="space-y-1.5">
+									<Label htmlFor="contact-installation-date">Termin montażu</Label>
+									<Input
+										id="contact-installation-date"
+										type="date"
+										value={contactDraft.scheduledInstallationDate}
+										onChange={handleContactFieldChange('scheduledInstallationDate')}
+										disabled={contactPending}
+									/>
+								</div>
+							</div>
+							<div className="grid gap-3 md:grid-cols-2">
+								<div className="space-y-2 rounded-xl border border-border/60 bg-background/60 p-3">
+									<div className="space-y-1.5">
+										<Label htmlFor="contact-billing-address">Adres faktury</Label>
+										<Textarea
+											id="contact-billing-address"
+											value={contactDraft.billingAddress}
+											onChange={handleContactFieldChange('billingAddress')}
+											disabled={contactPending}
+											rows={3}
+										/>
+									</div>
+									<div className="space-y-1.5">
+										<Label htmlFor="contact-billing-city">Miasto</Label>
+										<Input
+											id="contact-billing-city"
+											value={contactDraft.billingCity}
+											onChange={handleContactFieldChange('billingCity')}
+											disabled={contactPending}
+											placeholder="np. Warszawa"
+										/>
+									</div>
+								</div>
+								<div className="space-y-2 rounded-xl border border-border/60 bg-background/60 p-3">
+									<div className="space-y-1.5">
+										<Label htmlFor="contact-installation-address">Adres montażu</Label>
+										<Textarea
+											id="contact-installation-address"
+											value={contactDraft.installationAddress}
+											onChange={handleContactFieldChange('installationAddress')}
+											disabled={contactPending}
+											rows={3}
+										/>
+									</div>
+									<div className="space-y-1.5">
+										<Label htmlFor="contact-installation-city">Miasto</Label>
+										<Input
+											id="contact-installation-city"
+											value={contactDraft.installationCity}
+											onChange={handleContactFieldChange('installationCity')}
+											disabled={contactPending}
+											placeholder="np. Kraków"
+										/>
+									</div>
+									{draftAddressesMatch && contactDraft.installationAddress ? (
+										<p className="text-[11px] text-muted-foreground">Adres może pokrywać się z danymi faktury.</p>
+									) : null}
+								</div>
+							</div>
+							<div className="flex flex-wrap items-center justify-end gap-3">
+								<Button type="submit" size="sm" disabled={contactPending}>
+									{contactPending ? 'Zapisywanie...' : 'Zapisz dane'}
+								</Button>
+							</div>
+						</form>
 					</TabsContent>
 					<TabsContent value="materials" className="space-y-3">
 						<div ref={materialsSectionRef} className="space-y-3 rounded-2xl border border-border/60 bg-muted/10 p-4">
@@ -949,6 +1236,15 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 								>
 									<MessageSquareIcon className="size-4" />
 									Dodaj notatkę
+								</Button>
+								<Button
+									type="button"
+									variant="secondary"
+									className="justify-start gap-2"
+									onClick={() => handleQuickAction('contact')}
+								>
+									<User className="size-4" />
+									Edytuj dane kontaktowe
 								</Button>
 								<Button
 									type="button"
