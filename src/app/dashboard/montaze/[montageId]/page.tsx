@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
 import {
@@ -16,44 +15,13 @@ import { tryGetR2Config } from '@/lib/r2/config';
 
 import { MontageCard } from '../_components/montage-card';
 import { statusOptions } from '../constants';
-import type { Montage } from '../types';
-import { formatScheduleDate, formatRelativeDate, mapMontageRow, summarizeMaterialDetails, type MontageRow } from '../utils';
+import { mapMontageRow, type MontageRow } from '../utils';
 
 type MontageDetailsPageParams = {
     params: Promise<{
         montageId: string;
     }>;
 };
-
-function buildSummary(montage: Montage) {
-    const totalTasks = montage.tasks.length;
-    const completedTasks = montage.tasks.filter((task) => task.completed).length;
-    const openTasks = Math.max(totalTasks - completedTasks, 0);
-    const materialsSummary = summarizeMaterialDetails(montage.materialDetails, 120);
-
-    return [
-        {
-            label: 'Status',
-            value: montage.status,
-        },
-        {
-            label: 'Aktualizacja',
-            value: formatRelativeDate(montage.updatedAt),
-        },
-        {
-            label: 'Termin',
-            value: formatScheduleDate(montage.scheduledInstallationAt) ?? 'Brak',
-        },
-        {
-            label: 'Zadania otwarte',
-            value: String(openTasks),
-        },
-        {
-            label: 'Materiały',
-            value: materialsSummary,
-        },
-    ];
-}
 
 export default async function MontageDetailsPage({ params }: MontageDetailsPageParams) {
     const { montageId } = await params;
@@ -105,8 +73,6 @@ export default async function MontageDetailsPage({ params }: MontageDetailsPageP
     }
 
     const montage = mapMontageRow(montageRow as MontageRow, publicBaseUrl);
-    const summary = buildSummary(montage);
-
     return (
         <section className="mx-auto w-full max-w-[920px] space-y-4 px-3 pb-8 sm:px-6">
             <div className="flex items-center gap-2">
@@ -114,35 +80,6 @@ export default async function MontageDetailsPage({ params }: MontageDetailsPageP
                     <Link href="/dashboard/montaze">Powrót</Link>
                 </Button>
             </div>
-
-            <Card className="border-border/70">
-                <CardHeader className="space-y-1 pb-2">
-                    <CardTitle className="text-sm font-semibold">Szybkie informacje</CardTitle>
-                </CardHeader>
-                <CardContent className="grid gap-3 py-0 text-xs text-muted-foreground sm:grid-cols-2">
-                    <div className="space-y-1 text-foreground">
-                        <p className="font-semibold">{montage.clientName}</p>
-                        {montage.installationAddress ? (
-                            <p className="text-xs text-muted-foreground">{montage.installationAddress}</p>
-                        ) : null}
-                        {montage.installationCity ? (
-                            <p className="text-xs text-muted-foreground">{montage.installationCity}</p>
-                        ) : null}
-                        <div className="mt-1 space-y-1">
-                            {montage.contactPhone ? <p className="text-xs">tel. {montage.contactPhone}</p> : null}
-                            {montage.contactEmail ? <p className="text-xs">{montage.contactEmail}</p> : null}
-                        </div>
-                    </div>
-                    <div className="space-y-2">
-                        {summary.map((item) => (
-                            <div key={item.label} className="space-y-0.5">
-                                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{item.label}</p>
-                                <p className="text-sm font-semibold text-foreground leading-snug">{item.value}</p>
-                            </div>
-                        ))}
-                    </div>
-                </CardContent>
-            </Card>
 
             <MontageCard montage={montage} statusOptions={statusOptions} />
         </section>
