@@ -9,9 +9,10 @@ interface SettingsViewProps {
   logs: React.ReactNode;
   integrations: React.ReactNode;
   storage: React.ReactNode;
+  montageSettings: React.ReactNode;
 }
 
-export function SettingsView({ children, mailSettings, logs, integrations, storage }: SettingsViewProps) {
+export function SettingsView({ children, mailSettings, logs, integrations, storage, montageSettings }: SettingsViewProps) {
   return (
     <div className="space-y-6">
       <div>
@@ -35,6 +36,10 @@ export function SettingsView({ children, mailSettings, logs, integrations, stora
             <Mail className="h-4 w-4" />
             Poczta
           </TabsTrigger>
+          <TabsTrigger value="montage" className="gap-2">
+            <Activity className="h-4 w-4" />
+            Montaże
+          </TabsTrigger>
           <TabsTrigger value="storage" className="gap-2">
             <Database className="h-4 w-4" />
             Magazyn plików
@@ -55,6 +60,10 @@ export function SettingsView({ children, mailSettings, logs, integrations, stora
 
         <TabsContent value="mail" className="space-y-4">
           {mailSettings}
+        </TabsContent>
+
+        <TabsContent value="montage" className="space-y-4">
+          {montageSettings}
         </TabsContent>
 
         <TabsContent value="storage" className="space-y-4">

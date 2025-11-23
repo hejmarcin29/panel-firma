@@ -8,6 +8,7 @@ import { requireUser } from '@/lib/auth/session';
 import { appSettingKeys, getAppSetting, setAppSetting } from '@/lib/settings';
 import { createR2Client } from '@/lib/r2/client';
 import { getR2Config } from '@/lib/r2/config';
+import { setMontageChecklistTemplates, type MontageChecklistTemplate } from '@/lib/montaze/checklist';
 
 export async function updateWooWebhookSecret(secret: string) {
 	const user = await requireUser();
@@ -139,5 +140,15 @@ export async function testR2Connection() {
 		const message = error instanceof Error ? error.message : 'Nie udalo sie polaczyc z bucketem.';
 		throw new Error(message);
 	}
+}
+
+export async function updateMontageChecklistTemplatesAction(templates: MontageChecklistTemplate[]) {
+	const user = await requireUser();
+	if (user.role !== 'owner') {
+		throw new Error('Tylko właściciel może zmieniać szablony etapów.');
+	}
+
+	await setMontageChecklistTemplates({ templates, userId: user.id });
+	revalidatePath('/dashboard/settings');
 }
 

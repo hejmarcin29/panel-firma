@@ -433,11 +433,6 @@ export async function toggleMontageChecklistItem({ itemId, montageId, completed 
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
 
-type UpdateMontageMaterialsInput = {
-	montageId: string;
-	materialDetails: string;
-};
-
 export async function updateMontageMaterialDetails({ montageId, materialDetails }: UpdateMontageMaterialsInput) {
 	await requireUser();
 
@@ -542,6 +537,56 @@ export async function initializeMontageChecklist(montageId: string) {
 			updatedAt: now,
 		}))
 	);
+
+	await touchMontage(montageId);
+	revalidatePath(MONTAGE_DASHBOARD_PATH);
+}
+
+export async function addMontageChecklistItem({ montageId, label, allowAttachment }: { montageId: string; label: string; allowAttachment: boolean }) {
+	await requireUser();
+	await getMontageOrThrow(montageId);
+
+	// Get max order index
+	const maxOrder = await db
+		.select({ maxOrder: sql<number>`max(${montageChecklistItems.orderIndex})` })
+		.from(montageChecklistItems)
+		.where(eq(montageChecklistItems.montageId, montageId))
+		.then(res => res[0]?.maxOrder ?? -1);
+
+	await db.insert(montageChecklistItems).values({
+		id: crypto.randomUUID(),
+		montageId,
+		templateId: 'custom',
+		label,
+		allowAttachment,
+		completed: false,
+		orderIndex: maxOrder + 1,
+		createdAt: new Date(),
+		updatedAt: new Date(),
+	});
+
+	await touchMontage(montageId);
+	revalidatePath(MONTAGE_DASHBOARD_PATH);
+}
+
+export async function deleteMontageChecklistItem({ montageId, itemId }: { montageId: string; itemId: string }) {
+	await requireUser();
+	await getMontageOrThrow(montageId);
+
+	await db.delete(montageChecklistItems)
+		.where(and(eq(montageChecklistItems.id, itemId), eq(montageChecklistItems.montageId, montageId)));
+
+	await touchMontage(montageId);
+	revalidatePath(MONTAGE_DASHBOARD_PATH);
+}
+
+export async function updateMontageChecklistItemLabel({ montageId, itemId, label }: { montageId: string; itemId: string; label: string }) {
+	await requireUser();
+	await getMontageOrThrow(montageId);
+
+	await db.update(montageChecklistItems)
+		.set({ label, updatedAt: new Date() })
+		.where(and(eq(montageChecklistItems.id, itemId), eq(montageChecklistItems.montageId, montageId)));
 
 	await touchMontage(montageId);
 	revalidatePath(MONTAGE_DASHBOARD_PATH);

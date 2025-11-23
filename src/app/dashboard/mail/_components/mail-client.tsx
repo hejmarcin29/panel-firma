@@ -574,14 +574,14 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
             {/* Body */}
             <div className="min-h-[200px]">
               {selectedMessage.htmlBody ? (
-                 <div className="rounded-md border bg-white p-4 overflow-hidden">
+                 <div className="rounded-md border bg-white p-4 overflow-x-auto max-w-full">
                    <div 
-                     className="prose prose-sm max-w-none dark:prose-invert"
+                     className="prose prose-sm max-w-none text-black"
                      dangerouslySetInnerHTML={{ __html: selectedMessage.htmlBody }}
                    />
                  </div>
               ) : (
-                <div className="whitespace-pre-wrap text-sm leading-relaxed font-mono bg-muted/20 p-4 rounded-md">
+                <div className="whitespace-pre-wrap text-sm leading-relaxed font-mono bg-muted/20 p-4 rounded-md overflow-x-auto">
                   {selectedMessage.textBody || selectedMessage.snippet || "Brak treści wiadomości."}
                 </div>
               )}
