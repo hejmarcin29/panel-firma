@@ -9,6 +9,7 @@ import { relations, sql } from 'drizzle-orm';
 
 export const userRoles = ['owner', 'operator'] as const;
 export const orderSources = ['woocommerce', 'manual'] as const;
+export const orderTypes = ['production', 'sample'] as const;
 export const orderStatuses = [
 	'order.received',
 	'order.pending_proforma',
@@ -46,6 +47,7 @@ export const montageStatuses = ['lead', 'before_measurement', 'before_first_paym
 export type UserRole = (typeof userRoles)[number];
 export type OrderStatus = (typeof orderStatuses)[number];
 export type OrderSource = (typeof orderSources)[number];
+export type OrderType = (typeof orderTypes)[number];
 export type DocumentType = (typeof documentTypes)[number];
 export type DocumentStatus = (typeof documentStatuses)[number];
 export type PaymentStatus = (typeof paymentStatuses)[number];
@@ -556,6 +558,7 @@ export const manualOrders = sqliteTable(
 		timelineTaskOverrides: text('timeline_task_overrides'),
 		currency: text('currency').notNull().default('PLN'),
 		source: text('source').$type<OrderSource>().notNull().default('manual'),
+		type: text('type').$type<OrderType>().notNull().default('production'),
 		sourceOrderId: text('source_order_id'),
 		requiresReview: integer('requires_review', { mode: 'boolean' })
 			.notNull()
@@ -588,6 +591,7 @@ export const manualOrders = sqliteTable(
 		referenceIdx: uniqueIndex('manual_orders_reference_idx').on(table.reference),
 		createdAtIdx: index('manual_orders_created_at_idx').on(table.createdAt),
 		requiresReviewIdx: index('manual_orders_requires_review_idx').on(table.requiresReview),
+		typeIdx: index('manual_orders_type_idx').on(table.type),
 	})
 );
 

@@ -197,6 +197,7 @@ function mapOrderRow(
 		status: normalizeStatus(row.status),
 		currency: row.currency,
 		source: row.source as ManualOrderSource,
+		type: (row.type ?? 'production') as 'production' | 'sample',
 		sourceOrderId: row.sourceOrderId ?? null,
 		requiresReview: Boolean(row.requiresReview),
 		customerNote: row.notes?.trim() ? row.notes.trim() : null,
@@ -365,6 +366,7 @@ export async function createManualOrder(payload: ManualOrderPayload): Promise<Or
 		notes: payload.notes,
 		currency: payload.currency,
 		source: payload.source ?? 'manual',
+		type: payload.type ?? 'production',
 		sourceOrderId: payload.sourceOrderId ?? null,
 		requiresReview: payload.requiresReview ?? false,
 		totalNet: toMinorUnits(orderTotals.net),
@@ -415,11 +417,12 @@ export async function createManualOrder(payload: ManualOrderPayload): Promise<Or
 	return created;
 }
 
-export async function confirmManualOrder(orderId: string): Promise<Order> {
+export async function confirmManualOrder(orderId: string, type: 'production' | 'sample' = 'production'): Promise<Order> {
 	const [updatedRow] = await db
 		.update(manualOrders)
 		.set({
 			requiresReview: false,
+			type,
 			updatedAt: new Date(),
 		})
 		.where(eq(manualOrders.id, orderId))

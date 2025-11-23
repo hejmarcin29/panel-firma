@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -201,7 +202,7 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
   const [folders, setFolders] = useState(initialFolders);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(initialFolders[0]?.id ?? null);
   const [messages, setMessages] = useState(initialMessages);
-  const [selectedMessageId, setSelectedMessageId] = useState<string | null>(initialMessages[0]?.id ?? null);
+  const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const normalizedSearch = useMemo(() => searchTerm.trim().toLowerCase(), [searchTerm]);
   const [quickFilter, setQuickFilter] = useState<QuickFilterKey>('all');
@@ -262,8 +263,9 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
       return;
     }
 
-    if (!selectedMessageId || !filteredMessages.some((message) => message.id === selectedMessageId)) {
-      setSelectedMessageId(filteredMessages[0].id);
+    // If selected message is no longer in the list, deselect it.
+    if (selectedMessageId && !filteredMessages.some((message) => message.id === selectedMessageId)) {
+      setSelectedMessageId(null);
     }
   }, [filteredMessages, selectedMessageId]);
 
@@ -477,7 +479,7 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
       )}
 
       <div className="grid gap-4 xl:grid-cols-[400px_minmax(0,1fr)]">
-        <Card className="flex h-full flex-col">
+        <Card className={cn("flex h-full flex-col", selectedMessageId ? "hidden xl:flex" : "flex")}>
           <CardHeader className="space-y-3.5">
             <div className="flex flex-wrap items-start justify-between gap-2.5">
               <div className="space-y-1">
@@ -708,14 +710,25 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
           </CardContent>
         </Card>
 
-        <Card className="flex h-full flex-col">
-          <CardHeader>
-            <CardTitle>Podgląd</CardTitle>
-            <CardDescription>
-              {selectedMessage
-                ? `Wiadomość z folderu ${activeFolder?.name ?? 'nieznany folder'}.`
-                : 'Wybierz wiadomość, aby wyświetlić szczegóły.'}
-            </CardDescription>
+        <Card className={cn("flex h-full flex-col", selectedMessageId ? "flex" : "hidden xl:flex")}>
+          <CardHeader className="flex flex-row items-start gap-4 space-y-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="xl:hidden shrink-0 -ml-2"
+              onClick={() => setSelectedMessageId(null)}
+            >
+              <ArrowLeft className="h-5 w-5" />
+              <span className="sr-only">Wróć</span>
+            </Button>
+            <div className="space-y-1.5">
+              <CardTitle>Podgląd</CardTitle>
+              <CardDescription>
+                {selectedMessage
+                  ? `Wiadomość z folderu ${activeFolder?.name ?? 'nieznany folder'}.`
+                  : 'Wybierz wiadomość, aby wyświetlić szczegóły.'}
+              </CardDescription>
+            </div>
           </CardHeader>
           {selectedMessage ? (
             <>

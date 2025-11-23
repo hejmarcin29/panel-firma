@@ -51,6 +51,7 @@ export type OrderTotals = {
 };
 
 export type ManualOrderSource = 'manual' | 'woocommerce';
+export type ManualOrderType = 'production' | 'sample';
 
 export type OrderDocument = {
 	id: string;
@@ -81,6 +82,7 @@ export type Order = {
 	status: string;
 	currency: string;
 	source: ManualOrderSource;
+	type: ManualOrderType;
 	sourceOrderId: string | null;
 	requiresReview: boolean;
 	customerNote: string | null;
@@ -107,6 +109,7 @@ export type ManualOrderPayload = {
 	shipping: OrderShipping;
 	items: OrderItemPayload[];
 	source?: ManualOrderSource;
+	type?: ManualOrderType;
 	sourceOrderId?: string | null;
 	requiresReview?: boolean;
 };

@@ -41,6 +41,7 @@ type ManualOrderDraft = {
 	reference: string;
 	status: string;
 	channel: string;
+	type: 'production' | 'sample';
 	currency: string;
 	notes: string;
 	billing: {
@@ -91,6 +92,7 @@ function createInitialDraft(): ManualOrderDraft {
 		reference: '',
 		status: statusOptions[0] ?? 'Nowe',
 		channel: channelOptions[0] ?? 'Sklep online',
+		type: 'production',
 		currency: 'PLN',
 		notes: '',
 		billing: {
@@ -305,6 +307,7 @@ export function ManualOrderFormClient() {
 			reference: draft.reference.trim(),
 			status: draft.status,
 			channel: draft.channel,
+			type: draft.type,
 			notes: draft.notes.trim(),
 			currency: draft.currency.trim().toUpperCase() || 'PLN',
 			billing: {
@@ -410,6 +413,23 @@ export function ManualOrderFormClient() {
 												{option}
 											</SelectItem>
 										))}
+									</SelectContent>
+								</Select>
+							</div>
+							<div className="space-y-2">
+								<Label>Typ zamówienia</Label>
+								<Select
+									value={draft.type}
+									onValueChange={(value) =>
+										setDraft((previous) => ({ ...previous, type: value as 'production' | 'sample' }))
+									}
+								>
+									<SelectTrigger>
+										<SelectValue placeholder="Wybierz typ" />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="production">Paleta</SelectItem>
+										<SelectItem value="sample">Próbki</SelectItem>
 									</SelectContent>
 								</Select>
 							</div>
