@@ -539,8 +539,8 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
         </div>
 
         {/* Content */}
-        <ScrollArea className="flex-1">
-          <div className="p-6 space-y-6">
+        <ScrollArea className="flex-1 w-full">
+          <div className="p-6 space-y-6 max-w-full">
             {/* Sender Info */}
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
@@ -572,11 +572,11 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
             <Separator />
             
             {/* Body */}
-            <div className="min-h-[200px]">
+            <div className="min-h-[200px] w-full max-w-full">
               {selectedMessage.htmlBody ? (
-                 <div className="rounded-md border bg-white p-4 overflow-x-auto max-w-full">
+                 <div className="rounded-md border bg-white p-4 overflow-x-auto w-full max-w-[calc(100vw-3rem)] lg:max-w-full">
                    <div 
-                     className="prose prose-sm max-w-none text-black"
+                     className="prose prose-sm max-w-none text-black min-w-0"
                      dangerouslySetInnerHTML={{ __html: selectedMessage.htmlBody }}
                    />
                  </div>

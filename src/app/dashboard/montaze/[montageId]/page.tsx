@@ -92,11 +92,11 @@ export default async function MontageDetailsPage({ params }: MontageDetailsPageP
 
                 <div className="space-y-6">
                     <Tabs defaultValue="workflow" className="w-full">
-                        <TabsList className="grid w-full grid-cols-4">
-                            <TabsTrigger value="workflow">Przebieg</TabsTrigger>
-                            <TabsTrigger value="tasks">Zadania</TabsTrigger>
-                            <TabsTrigger value="gallery">Galeria</TabsTrigger>
-                            <TabsTrigger value="log">Dziennik</TabsTrigger>
+                        <TabsList className="flex w-full overflow-x-auto md:grid md:grid-cols-4">
+                            <TabsTrigger value="workflow" className="flex-1">Przebieg</TabsTrigger>
+                            <TabsTrigger value="tasks" className="flex-1">Zadania</TabsTrigger>
+                            <TabsTrigger value="gallery" className="flex-1">Galeria</TabsTrigger>
+                            <TabsTrigger value="log" className="flex-1">Dziennik</TabsTrigger>
                         </TabsList>
                         <TabsContent value="workflow" className="mt-6">
                             <MontageWorkflowTab montage={montage} />

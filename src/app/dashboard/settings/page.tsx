@@ -173,28 +173,30 @@ export default async function SettingsPage() {
 						{logs.length === 0 ? (
 							<p className="text-sm text-muted-foreground">Brak logow dla integracji WooCommerce.</p>
 						) : (
-							<Table>
-								<TableHeader>
-									<TableRow>
-										<TableHead>Data</TableHead>
-										<TableHead>Poziom</TableHead>
-										<TableHead>Opis</TableHead>
-									</TableRow>
-								</TableHeader>
-								<TableBody>
-									{logs.map((log) => (
-										<TableRow key={log.id}>
-											<TableCell>{formatTimestamp(log.createdAt)}</TableCell>
-											<TableCell>
-												<Badge className={levelBadgeClass(log.level)}>{log.level}</Badge>
-											</TableCell>
-											<TableCell className="max-w-md whitespace-normal text-xs">
-												{log.message}
-											</TableCell>
+							<div className="overflow-x-auto">
+								<Table>
+									<TableHeader>
+										<TableRow>
+											<TableHead>Data</TableHead>
+											<TableHead>Poziom</TableHead>
+											<TableHead>Opis</TableHead>
 										</TableRow>
-									))}
-								</TableBody>
-							</Table>
+									</TableHeader>
+									<TableBody>
+										{logs.map((log) => (
+											<TableRow key={log.id}>
+												<TableCell>{formatTimestamp(log.createdAt)}</TableCell>
+												<TableCell>
+													<Badge className={levelBadgeClass(log.level)}>{log.level}</Badge>
+												</TableCell>
+												<TableCell className="max-w-md whitespace-normal text-xs">
+													{log.message}
+												</TableCell>
+											</TableRow>
+										))}
+									</TableBody>
+								</Table>
+							</div>
 						)}
 					</CardContent>
 				</Card>
