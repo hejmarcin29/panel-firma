@@ -728,7 +728,7 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 					</div>
 				)}
 				<Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as DetailTab)} className="space-y-4">
-					<TabsList className="grid grid-cols-2 gap-1.5 rounded-xl bg-muted/60 p-1 text-xs font-medium sm:flex sm:flex-wrap sm:items-center sm:gap-2">
+					<TabsList className="grid h-auto grid-cols-2 gap-1.5 rounded-xl bg-muted/60 p-1 text-xs font-medium sm:flex sm:flex-wrap sm:items-center sm:gap-2">
 						{detailTabs.map((tab) => (
 							<TabsTrigger
 								key={tab.id}
