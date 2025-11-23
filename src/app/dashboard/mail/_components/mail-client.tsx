@@ -405,7 +405,27 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
     <div className="flex flex-col h-full">
       <div className="p-4 border-b space-y-4">
         <div className="flex items-center justify-between gap-2">
-          <h1 className="text-xl font-bold truncate">{activeFolder?.name || "Wiadomości"}</h1>
+          <div className="flex items-center gap-2 overflow-hidden">
+            {/* Tablet Folder Trigger (visible only on MD screens) */}
+            <div className="hidden md:block lg:hidden">
+               <DropdownMenu>
+                 <DropdownMenuTrigger asChild>
+                   <Button variant="ghost" size="icon" className="-ml-2">
+                     <Inbox className="h-4 w-4" />
+                   </Button>
+                 </DropdownMenuTrigger>
+                 <DropdownMenuContent align="start" className="w-[200px]">
+                   {folders.map(f => (
+                     <DropdownMenuItem key={f.id} onClick={() => handleSelectFolder(f.id)}>
+                       {f.name}
+                       {f.unreadCount > 0 && <span className="ml-auto text-xs">{f.unreadCount}</span>}
+                     </DropdownMenuItem>
+                   ))}
+                 </DropdownMenuContent>
+               </DropdownMenu>
+            </div>
+            <h1 className="text-xl font-bold truncate">{activeFolder?.name || "Wiadomości"}</h1>
+          </div>
           <Button size="sm" onClick={handleCompose} className="shrink-0">
             <Plus className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Nowa</span>
@@ -437,7 +457,7 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
                 key={msg.id}
                 onClick={() => handleSelectMessage(msg.id)}
                 className={cn(
-                  "flex flex-col items-start gap-2 p-4 text-left hover:bg-accent/50 transition-colors",
+                  "flex w-full flex-col items-start gap-2 p-4 text-left hover:bg-accent/50 transition-colors",
                   selectedMessageId === msg.id && "bg-accent",
                   !msg.isRead && "bg-muted/30"
                 )}
@@ -600,7 +620,7 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
         // Mobile Layout
         <div className="flex flex-col h-[calc(100vh-4rem)]">
           {selectedMessageId ? (
-            <div className="fixed inset-0 z-50 bg-background flex flex-col animate-in slide-in-from-right-full duration-200">
+            <div className="flex flex-col h-full animate-in slide-in-from-right-10 duration-200 bg-background">
               <MessageDetail />
             </div>
           ) : (
@@ -637,7 +657,7 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
         // Desktop Layout
         <div className="h-[calc(100vh-4rem)] border rounded-lg overflow-hidden bg-background shadow-sm">
           <ResizablePanelGroup direction="horizontal">
-            <ResizablePanel defaultSize={20} minSize={15} maxSize={25} className="hidden md:block border-r bg-muted/10">
+            <ResizablePanel defaultSize={20} minSize={15} maxSize={25} className="hidden lg:block border-r bg-muted/10">
               <FolderList />
             </ResizablePanel>
             <ResizableHandle />
