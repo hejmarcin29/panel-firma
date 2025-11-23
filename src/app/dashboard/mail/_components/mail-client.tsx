@@ -24,6 +24,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 
 import { getMailMessage, listMailFolders, listMailMessages, sendMail, toggleMailMessageRead } from '../actions';
+import { syncMailAccount } from '../../settings/mail/actions';
 import type { SendMailState } from '../actions';
 import type { MailAccountSummary, MailFolderSummary, MailMessageSummary } from '../types';
 
@@ -368,7 +369,7 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
       try {
         const nextMessages = await listMailMessages({ accountId: selectedAccountId, folderId });
         setMessages(nextMessages);
-        setSelectedMessageId(nextMessages[0]?.id ?? null);
+        setSelectedMessageId(null);
         setLastRefreshAt(new Date());
       } catch (listError) {
         setError(listError instanceof Error ? listError.message : 'Nie udało się pobrać wiadomości.');
@@ -404,6 +405,11 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
     setError(null);
 
     try {
+      const syncResult = await syncMailAccount(selectedAccountId);
+      if (syncResult.status === 'error') {
+        throw new Error(syncResult.message ?? 'Błąd synchronizacji.');
+      }
+
       const nextFolders = await listMailFolders(selectedAccountId);
       setFolders(nextFolders);
 
@@ -420,7 +426,7 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
       const nextSelectedMessageId =
         nextMessages.length > 0 && selectedMessageId && nextMessages.some((item) => item.id === selectedMessageId)
           ? selectedMessageId
-          : nextMessages[0]?.id ?? null;
+          : null;
       setSelectedMessageId(nextSelectedMessageId);
 
       const unreadTotal = nextFolders.reduce((total, folder) => total + (folder.unreadCount ?? 0), 0);
