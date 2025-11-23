@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link';
 import { 
   ArrowLeft, 
   Search, 
@@ -9,27 +8,21 @@ import {
   Mail, 
   Inbox, 
   Send, 
-  Archive, 
   Trash2, 
   MoreVertical,
   Paperclip,
-  Star,
   User,
   Plus,
   Reply,
-  Forward,
-  MoreHorizontal,
-  X
+  Forward
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import {
@@ -63,7 +56,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 
 import { getMailMessage, listMailFolders, listMailMessages, sendMail, toggleMailMessageRead } from '../actions';
 import { syncMailAccount } from '../../settings/mail/actions';
-import type { SendMailState } from '../actions';
 import type { MailAccountSummary, MailFolderSummary, MailMessageSummary } from '../types';
 
 // --- Types & Helpers ---
@@ -235,7 +227,7 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
   const isMobile = useIsMobile();
   
   // State
-  const [selectedAccountId, setSelectedAccountId] = React.useState<string | null>(accounts[0]?.id ?? null);
+  const [selectedAccountId] = React.useState<string | null>(accounts[0]?.id ?? null);
   const [folders, setFolders] = React.useState(initialFolders);
   const [selectedFolderId, setSelectedFolderId] = React.useState<string | null>(initialFolders[0]?.id ?? null);
   const [messages, setMessages] = React.useState(initialMessages);
@@ -249,13 +241,9 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
 
   // Transitions
   const [isListing, startListing] = React.useTransition();
-  const [isLoadingMessage, startLoadingMessage] = React.useTransition();
+  const [, startLoadingMessage] = React.useTransition();
 
   // Derived State
-  const activeAccount = React.useMemo(() => 
-    accounts.find(a => a.id === selectedAccountId), 
-  [accounts, selectedAccountId]);
-
   const activeFolder = React.useMemo(() => 
     folders.find(f => f.id === selectedFolderId), 
   [folders, selectedFolderId]);
@@ -295,9 +283,8 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
         const nextMessages = await listMailMessages({ accountId: selectedAccountId, folderId: selectedFolderId });
         setMessages(nextMessages);
       }
-    } catch (err) {
+    } catch (_) {
       toast.error("Wystąpił błąd podczas odświeżania");
-      console.error(err);
     } finally {
       setIsRefreshing(false);
     }
