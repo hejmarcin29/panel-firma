@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
 import {
@@ -13,9 +14,16 @@ import {
 } from '@/lib/db/schema';
 import { tryGetR2Config } from '@/lib/r2/config';
 
-import { MontageCard } from '../_components/montage-card';
 import { statusOptions } from '../constants';
 import { mapMontageRow, type MontageRow } from '../utils';
+
+import { MontageHeader } from './_components/montage-header';
+import { MontageClientCard } from './_components/montage-client-card';
+import { MontageMaterialCard } from './_components/montage-material-card';
+import { MontageWorkflowTab } from './_components/montage-workflow-tab';
+import { MontageTasksTab } from './_components/montage-tasks-tab';
+import { MontageGalleryTab } from './_components/montage-gallery-tab';
+import { MontageLogTab } from './_components/montage-log-tab';
 
 type MontageDetailsPageParams = {
     params: Promise<{
@@ -73,15 +81,40 @@ export default async function MontageDetailsPage({ params }: MontageDetailsPageP
     }
 
     const montage = mapMontageRow(montageRow as MontageRow, publicBaseUrl);
-    return (
-        <section className="mx-auto w-full max-w-[920px] space-y-4 px-3 pb-8 sm:px-6">
-            <div className="flex items-center gap-2">
-                <Button asChild size="sm" variant="outline" className="h-8 px-3 text-xs">
-                    <Link href="/dashboard/montaze">Powrót</Link>
-                </Button>
-            </div>
 
-            <MontageCard montage={montage} statusOptions={statusOptions} />
-        </section>
+    return (
+        <div className="flex min-h-screen flex-col bg-muted/10">
+            <MontageHeader montage={montage} statusOptions={statusOptions} />
+            
+            <main className="container mx-auto grid gap-6 p-4 md:grid-cols-[350px_1fr] lg:grid-cols-[400px_1fr] lg:p-8">
+                <div className="space-y-6">
+                    <MontageClientCard montage={montage} />
+                    <MontageMaterialCard montage={montage} />
+                </div>
+
+                <div className="space-y-6">
+                    <Tabs defaultValue="workflow" className="w-full">
+                        <TabsList className="grid w-full grid-cols-4">
+                            <TabsTrigger value="workflow">Przebieg</TabsTrigger>
+                            <TabsTrigger value="tasks">Zadania</TabsTrigger>
+                            <TabsTrigger value="gallery">Galeria</TabsTrigger>
+                            <TabsTrigger value="log">Dziennik</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="workflow" className="mt-6">
+                            <MontageWorkflowTab montage={montage} />
+                        </TabsContent>
+                        <TabsContent value="tasks" className="mt-6">
+                            <MontageTasksTab montage={montage} />
+                        </TabsContent>
+                        <TabsContent value="gallery" className="mt-6">
+                            <MontageGalleryTab montage={montage} />
+                        </TabsContent>
+                        <TabsContent value="log" className="mt-6">
+                            <MontageLogTab montage={montage} />
+                        </TabsContent>
+                    </Tabs>
+                </div>
+            </main>
+        </div>
     );
 }
