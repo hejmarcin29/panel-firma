@@ -283,7 +283,7 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
         const nextMessages = await listMailMessages({ accountId: selectedAccountId, folderId: selectedFolderId });
         setMessages(nextMessages);
       }
-    } catch (_) {
+    } catch {
       toast.error("Wystąpił błąd podczas odświeżania");
     } finally {
       setIsRefreshing(false);
@@ -301,7 +301,7 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
         if (!selectedAccountId) return;
         const msgs = await listMailMessages({ accountId: selectedAccountId, folderId });
         setMessages(msgs);
-      } catch (err) {
+      } catch {
         toast.error("Nie udało się pobrać wiadomości");
       }
     });
