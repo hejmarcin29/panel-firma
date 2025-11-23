@@ -25,6 +25,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { ConfirmOrderButton } from './_components/confirm-order-button';
 import { OrdersStats } from './_components/orders-stats';
@@ -115,11 +122,31 @@ export function OrdersListClient({ initialOrders }: OrdersListClientProps) {
   const [sourceFilter, setSourceFilter] = useState<SourceFilterValue>('all');
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('all');
+  const [selectedMonth, setSelectedMonth] = useState<string>('all');
+
+  const availableMonths = useMemo(() => {
+    const months = new Set<string>();
+    initialOrders.forEach(order => {
+      const date = new Date(order.createdAt);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      months.add(key);
+    });
+    return Array.from(months).sort().reverse();
+  }, [initialOrders]);
+
+  const ordersFilteredByDate = useMemo(() => {
+    if (selectedMonth === 'all') return initialOrders;
+    return initialOrders.filter(order => {
+      const date = new Date(order.createdAt);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      return key === selectedMonth;
+    });
+  }, [initialOrders, selectedMonth]);
 
   const filteredOrders = useMemo(() => {
     const query = search.toLowerCase().trim();
     
-    return initialOrders.filter((order) => {
+    return ordersFilteredByDate.filter((order) => {
       // Tab filtering
       if (activeTab === 'active') {
         if (order.status === 'order.closed' || order.status === 'cancelled') return false;
@@ -141,7 +168,7 @@ export function OrdersListClient({ initialOrders }: OrdersListClientProps) {
         includesQuery(order.billing.phone, query)
       );
     });
-  }, [initialOrders, statusFilter, sourceFilter, search, activeTab]);
+  }, [ordersFilteredByDate, statusFilter, sourceFilter, search, activeTab]);
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -152,15 +179,35 @@ export function OrdersListClient({ initialOrders }: OrdersListClientProps) {
             Zarządzaj zamówieniami i śledź ich status.
           </p>
         </div>
-        <Button asChild>
-          <Link href="/dashboard/orders/new">
-            <Plus className="mr-2 h-4 w-4" />
-            Nowe zamówienie
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Wybierz miesiąc" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Wszystkie miesiące</SelectItem>
+              {availableMonths.map((month) => {
+                const [year, monthNum] = month.split('-');
+                const date = new Date(parseInt(year), parseInt(monthNum) - 1);
+                const label = new Intl.DateTimeFormat('pl-PL', { month: 'long', year: 'numeric' }).format(date);
+                return (
+                  <SelectItem key={month} value={month} className="capitalize">
+                    {label}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+          <Button asChild>
+            <Link href="/dashboard/orders/new">
+              <Plus className="mr-2 h-4 w-4" />
+              Nowe zamówienie
+            </Link>
+          </Button>
+        </div>
       </div>
 
-      <OrdersStats orders={initialOrders} />
+      <OrdersStats orders={ordersFilteredByDate} />
 
       <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
         <div className="flex items-center justify-between">
