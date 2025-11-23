@@ -505,3 +505,44 @@ export async function uploadChecklistAttachment(formData: FormData) {
 	await touchMontage(montageId);
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
+
+export async function initializeMontageChecklist(montageId: string) {
+	await requireUser();
+
+	const montageRecord = await getMontageOrThrow(montageId);
+	const templates = await getMontageChecklistTemplates();
+
+	if (templates.length === 0) {
+		throw new Error('Brak zdefiniowanych szablonów listy kontrolnej.');
+	}
+
+	const now = new Date();
+
+	// Check if items already exist to avoid duplicates
+	const existingCount = await db
+		.select({ count: sql<number>`count(*)` })
+		.from(montageChecklistItems)
+		.where(eq(montageChecklistItems.montageId, montageId))
+		.then(res => res[0]?.count ?? 0);
+
+	if (existingCount > 0) {
+		return; // Already initialized
+	}
+
+	await db.insert(montageChecklistItems).values(
+		templates.map((template, index) => ({
+			id: crypto.randomUUID(),
+			montageId: montageRecord.id,
+			templateId: template.id,
+			label: template.label,
+			allowAttachment: template.allowAttachment,
+			completed: false,
+			orderIndex: index,
+			createdAt: now,
+			updatedAt: now,
+		}))
+	);
+
+	await touchMontage(montageId);
+	revalidatePath(MONTAGE_DASHBOARD_PATH);
+}

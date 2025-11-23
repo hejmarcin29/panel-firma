@@ -1,13 +1,13 @@
 "use client";
 
-import { CheckCircle2, Circle, Upload, FileText } from "lucide-react";
+import { CheckCircle2, Circle, Upload, FileText, RefreshCw } from "lucide-react";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { toggleMontageChecklistItem, uploadChecklistAttachment } from "../../actions";
+import { toggleMontageChecklistItem, uploadChecklistAttachment, initializeMontageChecklist } from "../../actions";
 import type { Montage } from "../../types";
 
 export function MontageWorkflowTab({ montage }: { montage: Montage }) {
@@ -33,6 +33,31 @@ export function MontageWorkflowTab({ montage }: { montage: Montage }) {
           router.refresh();
       });
   };
+
+  const handleInitialize = () => {
+    startTransition(async () => {
+        await initializeMontageChecklist(montage.id);
+        router.refresh();
+    });
+  };
+
+  if (montage.checklistItems.length === 0) {
+      return (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="mb-4 rounded-full bg-muted p-4">
+                  <CheckCircle2 className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="mb-2 text-lg font-semibold">Brak etapów przebiegu</h3>
+              <p className="mb-6 text-sm text-muted-foreground max-w-sm">
+                  Ten montaż nie ma jeszcze zdefiniowanych etapów realizacji. Możesz wygenerować domyślną listę kontrolną.
+              </p>
+              <Button onClick={handleInitialize} disabled={pending}>
+                  {pending ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                  Wygeneruj przebieg
+              </Button>
+          </div>
+      );
+  }
 
   return (
     <div className="space-y-6 py-4">
