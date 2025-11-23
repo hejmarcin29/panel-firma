@@ -14,7 +14,12 @@ import {
   MoreVertical,
   Paperclip,
   Star,
-  User
+  User,
+  Plus,
+  Reply,
+  Forward,
+  MoreHorizontal,
+  X
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -25,6 +30,16 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -35,7 +50,14 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -50,6 +72,13 @@ type MailClientProps = {
   accounts: MailAccountSummary[];
   initialFolders: MailFolderSummary[];
   initialMessages: MailMessageSummary[];
+};
+
+type ComposeDefaults = {
+  accountId?: string;
+  to?: string;
+  subject?: string;
+  body?: string;
 };
 
 function parseDate(value: string | null): Date | null {
@@ -83,6 +112,123 @@ function formatFullDate(value: string | null) {
   }).format(date);
 }
 
+// --- Compose Dialog Component ---
+
+function ComposeDialog({ 
+  open, 
+  onOpenChange, 
+  accounts, 
+  defaults 
+}: { 
+  open: boolean; 
+  onOpenChange: (open: boolean) => void; 
+  accounts: MailAccountSummary[];
+  defaults?: ComposeDefaults;
+}) {
+  const [state, formAction, isPending] = React.useActionState(sendMail, { status: 'idle' });
+  const formRef = React.useRef<HTMLFormElement>(null);
+
+  // Reset form when dialog opens/closes or defaults change
+  React.useEffect(() => {
+    if (open && formRef.current) {
+      formRef.current.reset();
+    }
+  }, [open, defaults]);
+
+  // Handle success
+  React.useEffect(() => {
+    if (state.status === 'success') {
+      toast.success("Wiadomość została wysłana");
+      onOpenChange(false);
+    } else if (state.status === 'error') {
+      toast.error(state.message || "Błąd wysyłania wiadomości");
+    }
+  }, [state, onOpenChange]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="p-6 pb-2">
+          <DialogTitle>Nowa wiadomość</DialogTitle>
+          <DialogDescription>Wypełnij formularz, aby wysłać wiadomość e-mail.</DialogDescription>
+        </DialogHeader>
+        <ScrollArea className="flex-1 max-h-[600px]">
+          <form ref={formRef} action={formAction} className="space-y-4 p-6 pt-2">
+            <div className="grid gap-2">
+              <Label htmlFor="accountId">Konto nadawcze</Label>
+              <div className="relative">
+                <select
+                  id="accountId"
+                  name="accountId"
+                  defaultValue={defaults?.accountId || accounts[0]?.id}
+                  className={cn(
+                    "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+                  )}
+                >
+                  {accounts.map(acc => (
+                    <option key={acc.id} value={acc.id}>
+                      {acc.displayName} ({acc.email})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="to">Do</Label>
+              <Input id="to" name="to" placeholder="adres@example.com" defaultValue={defaults?.to} required />
+              {state.errors?.to && <p className="text-xs text-destructive">{state.errors.to}</p>}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="cc">DW</Label>
+                <Input id="cc" name="cc" placeholder="Opcjonalnie" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="bcc">UDW</Label>
+                <Input id="bcc" name="bcc" placeholder="Opcjonalnie" />
+              </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="subject">Temat</Label>
+              <Input id="subject" name="subject" placeholder="Temat wiadomości" defaultValue={defaults?.subject} />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="body">Treść</Label>
+              <Textarea 
+                id="body" 
+                name="body" 
+                placeholder="Wpisz treść wiadomości..." 
+                className="min-h-[200px]" 
+                defaultValue={defaults?.body}
+                required 
+              />
+              {state.errors?.body && <p className="text-xs text-destructive">{state.errors.body}</p>}
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="attachments">Załączniki</Label>
+              <Input id="attachments" name="attachments" type="file" multiple className="cursor-pointer" />
+              <p className="text-[10px] text-muted-foreground">Max 25MB łącznie.</p>
+            </div>
+
+            <DialogFooter className="pt-4">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Anuluj</Button>
+              <Button type="submit" disabled={isPending}>
+                {isPending ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                Wyślij
+              </Button>
+            </DialogFooter>
+          </form>
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // --- Main Component ---
 
 export function MailClient({ accounts, initialFolders, initialMessages }: MailClientProps) {
@@ -96,6 +242,10 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
   const [selectedMessageId, setSelectedMessageId] = React.useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState('');
+  
+  // Compose State
+  const [isComposeOpen, setIsComposeOpen] = React.useState(false);
+  const [composeDefaults, setComposeDefaults] = React.useState<ComposeDefaults | undefined>(undefined);
 
   // Transitions
   const [isListing, startListing] = React.useTransition();
@@ -175,19 +325,15 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
     
     setSelectedMessageId(messageId);
     
-    // Mark as read logic could go here or inside the effect
     startLoadingMessage(async () => {
       try {
         const fullMsg = await getMailMessage(messageId);
         if (fullMsg) {
           setMessages(prev => prev.map(m => m.id === fullMsg.id ? fullMsg : m));
           
-          // If unread, mark as read
           if (!fullMsg.isRead) {
              await toggleMailMessageRead(messageId, true);
-             // Update local state to reflect read status immediately
              setMessages(prev => prev.map(m => m.id === messageId ? { ...m, isRead: true } : m));
-             // Update folder count locally
              setFolders(prev => prev.map(f => 
                f.id === fullMsg.folderId ? { ...f, unreadCount: Math.max(0, (f.unreadCount || 0) - 1) } : f
              ));
@@ -199,30 +345,58 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
     });
   };
 
+  const handleCompose = () => {
+    setComposeDefaults({ accountId: selectedAccountId ?? undefined });
+    setIsComposeOpen(true);
+  };
+
+  const handleReply = (msg: MailMessageSummary) => {
+    setComposeDefaults({
+      accountId: msg.accountId,
+      to: msg.from.address || "",
+      subject: msg.subject?.startsWith("Re:") ? msg.subject : `Re: ${msg.subject || "Bez tematu"}`,
+      body: `\n\n\n--- Oryginalna wiadomość ---\nOd: ${msg.from.name || msg.from.address}\nData: ${formatFullDate(msg.receivedAt)}\n\n${msg.textBody || msg.snippet || ""}`
+    });
+    setIsComposeOpen(true);
+  };
+
   // --- Render Components ---
 
   const FolderList = () => (
     <div className="flex flex-col gap-1 p-2 h-full">
-      <div className="px-2 py-2">
-        <h2 className="text-sm font-semibold mb-2">Foldery</h2>
-        <div className="space-y-1">
-          {folders.map(folder => (
-            <Button
-              key={folder.id}
-              variant={selectedFolderId === folder.id ? "secondary" : "ghost"}
-              className="w-full justify-start font-normal"
-              onClick={() => handleSelectFolder(folder.id)}
-            >
-              <Inbox className="mr-2 h-4 w-4" />
-              <span className="truncate flex-1 text-left">{folder.name}</span>
-              {folder.unreadCount > 0 && (
-                <span className="ml-auto text-xs font-medium text-muted-foreground">
-                  {folder.unreadCount}
-                </span>
-              )}
-            </Button>
-          ))}
-        </div>
+      <div className="px-2 py-2 flex items-center justify-between">
+        <h2 className="text-sm font-semibold">Foldery</h2>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleRefresh} disabled={isRefreshing}>
+                <RefreshCw className={cn("h-3 w-3", isRefreshing && "animate-spin")} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Odśwież skrzynkę</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+      <div className="space-y-1">
+        {folders.map(folder => (
+          <Button
+            key={folder.id}
+            variant={selectedFolderId === folder.id ? "secondary" : "ghost"}
+            className={cn(
+              "w-full justify-start font-normal",
+              selectedFolderId === folder.id && "bg-secondary/50"
+            )}
+            onClick={() => handleSelectFolder(folder.id)}
+          >
+            <Inbox className="mr-2 h-4 w-4" />
+            <span className="truncate flex-1 text-left">{folder.name}</span>
+            {folder.unreadCount > 0 && (
+              <Badge variant="secondary" className="ml-auto text-[10px] h-5 px-1.5">
+                {folder.unreadCount}
+              </Badge>
+            )}
+          </Button>
+        ))}
       </div>
     </div>
   );
@@ -230,10 +404,11 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
   const MessageList = () => (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b space-y-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold">Odebrane</h1>
-          <Button variant="ghost" size="icon" onClick={handleRefresh} disabled={isRefreshing}>
-            <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+        <div className="flex items-center justify-between gap-2">
+          <h1 className="text-xl font-bold truncate">{activeFolder?.name || "Wiadomości"}</h1>
+          <Button size="sm" onClick={handleCompose} className="shrink-0">
+            <Plus className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Nowa</span>
           </Button>
         </div>
         <div className="relative">
@@ -262,32 +437,34 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
                 key={msg.id}
                 onClick={() => handleSelectMessage(msg.id)}
                 className={cn(
-                  "flex flex-col items-start gap-2 p-4 text-left hover:bg-accent transition-colors",
+                  "flex flex-col items-start gap-2 p-4 text-left hover:bg-accent/50 transition-colors",
                   selectedMessageId === msg.id && "bg-accent",
                   !msg.isRead && "bg-muted/30"
                 )}
               >
                 <div className="flex w-full flex-col gap-1">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className={cn("font-semibold", !msg.isRead && "text-primary")}>
+                    <div className="flex items-center gap-2 min-w-0">
+                      {!msg.isRead && (
+                        <span className="flex h-2 w-2 shrink-0 rounded-full bg-blue-600" />
+                      )}
+                      <span className={cn("truncate text-sm", !msg.isRead ? "font-bold text-foreground" : "font-medium text-muted-foreground")}>
                         {msg.from.name || msg.from.address}
                       </span>
-                      {!msg.isRead && (
-                        <span className="flex h-2 w-2 rounded-full bg-blue-600" />
-                      )}
                     </div>
-                    <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
+                    <span className="text-[10px] text-muted-foreground whitespace-nowrap ml-2 shrink-0">
                       {formatMessageDate(msg.receivedAt)}
                     </span>
                   </div>
-                  <div className="text-xs font-medium">{msg.subject || "(Brak tematu)"}</div>
+                  <div className={cn("text-xs w-full truncate", !msg.isRead ? "font-semibold text-foreground" : "font-medium")}>
+                    {msg.subject || "(Brak tematu)"}
+                  </div>
                 </div>
-                <div className="line-clamp-2 text-xs text-muted-foreground">
+                <div className="line-clamp-2 text-xs text-muted-foreground w-full">
                   {msg.snippet || "Brak podglądu"}
                 </div>
                 {msg.hasAttachments && (
-                  <Badge variant="outline" className="text-[10px] px-1 py-0 h-5 gap-1">
+                  <Badge variant="outline" className="text-[10px] px-1 py-0 h-5 gap-1 mt-1">
                     <Paperclip className="h-3 w-3" /> Załącznik
                   </Badge>
                 )}
@@ -302,60 +479,106 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
   const MessageDetail = () => {
     if (!selectedMessage) {
       return (
-        <div className="flex h-full items-center justify-center p-8 text-muted-foreground">
-          Wybierz wiadomość, aby ją przeczytać
+        <div className="flex h-full flex-col items-center justify-center p-8 text-muted-foreground gap-4">
+          <Mail className="h-12 w-12 opacity-20" />
+          <p>Wybierz wiadomość, aby ją przeczytać</p>
         </div>
       );
     }
 
     return (
-      <div className="flex flex-col h-full">
-        <div className="flex items-center p-4 border-b gap-2">
+      <div className="flex flex-col h-full bg-background">
+        {/* Header */}
+        <div className="flex items-center p-4 border-b gap-2 sticky top-0 bg-background z-10">
           {isMobile && (
             <Button variant="ghost" size="icon" onClick={() => setSelectedMessageId(null)}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
           )}
           <div className="flex-1 min-w-0">
-             <h2 className="text-lg font-semibold truncate">{selectedMessage.subject}</h2>
+             <h2 className="text-lg font-semibold truncate" title={selectedMessage.subject || ""}>
+               {selectedMessage.subject || "(Brak tematu)"}
+             </h2>
           </div>
           <div className="flex items-center gap-1">
-             <Button variant="ghost" size="icon" disabled><Archive className="h-4 w-4" /></Button>
-             <Button variant="ghost" size="icon" disabled><Trash2 className="h-4 w-4" /></Button>
+             <TooltipProvider>
+               <Tooltip>
+                 <TooltipTrigger asChild>
+                   <Button variant="ghost" size="icon" onClick={() => handleReply(selectedMessage)}>
+                     <Reply className="h-4 w-4" />
+                   </Button>
+                 </TooltipTrigger>
+                 <TooltipContent>Odpowiedz</TooltipContent>
+               </Tooltip>
+             </TooltipProvider>
+             
+             <DropdownMenu>
+               <DropdownMenuTrigger asChild>
+                 <Button variant="ghost" size="icon">
+                   <MoreVertical className="h-4 w-4" />
+                 </Button>
+               </DropdownMenuTrigger>
+               <DropdownMenuContent align="end">
+                 <DropdownMenuItem disabled>
+                   <Forward className="mr-2 h-4 w-4" /> Przekaż
+                 </DropdownMenuItem>
+                 <DropdownMenuSeparator />
+                 <DropdownMenuItem className="text-destructive" disabled>
+                   <Trash2 className="mr-2 h-4 w-4" /> Usuń
+                 </DropdownMenuItem>
+               </DropdownMenuContent>
+             </DropdownMenu>
           </div>
         </div>
+
+        {/* Content */}
         <ScrollArea className="flex-1">
           <div className="p-6 space-y-6">
+            {/* Sender Info */}
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-                  <User className="h-5 w-5" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted shrink-0">
+                  <User className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <div className="grid gap-0.5">
-                  <div className="font-semibold">{selectedMessage.from.name}</div>
-                  <div className="text-xs text-muted-foreground">{selectedMessage.from.address}</div>
+                  <div className="font-semibold text-sm">{selectedMessage.from.name}</div>
+                  <div className="text-xs text-muted-foreground select-all">{selectedMessage.from.address}</div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Do: {selectedMessage.to.join(", ")}
+                  </div>
                 </div>
               </div>
-              <div className="text-xs text-muted-foreground">
+              <div className="text-xs text-muted-foreground text-right shrink-0">
                 {formatFullDate(selectedMessage.receivedAt)}
               </div>
             </div>
             
+            {selectedMessage.hasAttachments && (
+              <div className="flex gap-2">
+                <Badge variant="secondary" className="gap-1">
+                  <Paperclip className="h-3 w-3" />
+                  Załączniki dostępne (pobieranie wkrótce)
+                </Badge>
+              </div>
+            )}
+
             <Separator />
             
-            <div className="whitespace-pre-wrap text-sm leading-relaxed">
-              {selectedMessage.textBody || selectedMessage.snippet || "Brak treści wiadomości."}
+            {/* Body */}
+            <div className="min-h-[200px]">
+              {selectedMessage.htmlBody ? (
+                 <div className="rounded-md border bg-white p-4 overflow-hidden">
+                   <div 
+                     className="prose prose-sm max-w-none dark:prose-invert"
+                     dangerouslySetInnerHTML={{ __html: selectedMessage.htmlBody }}
+                   />
+                 </div>
+              ) : (
+                <div className="whitespace-pre-wrap text-sm leading-relaxed font-mono bg-muted/20 p-4 rounded-md">
+                  {selectedMessage.textBody || selectedMessage.snippet || "Brak treści wiadomości."}
+                </div>
+              )}
             </div>
-
-            {selectedMessage.htmlBody && (
-               <div className="mt-4 border-t pt-4">
-                 <div className="text-xs text-muted-foreground mb-2">Podgląd HTML:</div>
-                 <div 
-                   className="prose prose-sm max-w-none bg-white p-4 rounded-md border"
-                   dangerouslySetInnerHTML={{ __html: selectedMessage.htmlBody }}
-                 />
-               </div>
-            )}
           </div>
         </ScrollArea>
       </div>
@@ -364,57 +587,71 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
 
   // --- Main Layout Logic ---
 
-  if (isMobile) {
-    // Mobile: Show either List or Detail
-    if (selectedMessageId) {
-      return (
-        <div className="fixed inset-0 z-50 bg-background flex flex-col">
-          <MessageDetail />
-        </div>
-      );
-    }
-    return (
-      <div className="flex flex-col h-[calc(100vh-4rem)]">
-        <div className="p-2 border-b">
-           <DropdownMenu>
-             <DropdownMenuTrigger asChild>
-               <Button variant="outline" className="w-full justify-between">
-                 {activeFolder?.name || "Foldery"}
-                 <MoreVertical className="h-4 w-4 opacity-50" />
-               </Button>
-             </DropdownMenuTrigger>
-             <DropdownMenuContent align="start" className="w-[200px]">
-               {folders.map(f => (
-                 <DropdownMenuItem key={f.id} onClick={() => handleSelectFolder(f.id)}>
-                   {f.name}
-                   {f.unreadCount > 0 && <span className="ml-auto text-xs">{f.unreadCount}</span>}
-                 </DropdownMenuItem>
-               ))}
-             </DropdownMenuContent>
-           </DropdownMenu>
-        </div>
-        <MessageList />
-      </div>
-    );
-  }
-
-  // Desktop: Resizable Layout
   return (
-    <div className="h-[calc(100vh-4rem)] border rounded-lg overflow-hidden bg-background shadow-sm">
-      <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel defaultSize={20} minSize={15} maxSize={30} className="hidden md:block border-r">
-          <FolderList />
-        </ResizablePanel>
-        <ResizableHandle />
-        <ResizablePanel defaultSize={35} minSize={30}>
-          <MessageList />
-        </ResizablePanel>
-        <ResizableHandle />
-        <ResizablePanel defaultSize={45}>
-          <MessageDetail />
-        </ResizablePanel>
-      </ResizablePanelGroup>
-    </div>
+    <>
+      <ComposeDialog 
+        open={isComposeOpen} 
+        onOpenChange={setIsComposeOpen} 
+        accounts={accounts}
+        defaults={composeDefaults}
+      />
+
+      {isMobile ? (
+        // Mobile Layout
+        <div className="flex flex-col h-[calc(100vh-4rem)]">
+          {selectedMessageId ? (
+            <div className="fixed inset-0 z-50 bg-background flex flex-col animate-in slide-in-from-right-full duration-200">
+              <MessageDetail />
+            </div>
+          ) : (
+            <>
+              <div className="p-2 border-b flex items-center gap-2">
+                 <DropdownMenu>
+                   <DropdownMenuTrigger asChild>
+                     <Button variant="outline" className="flex-1 justify-between">
+                       <span className="flex items-center gap-2">
+                         <Inbox className="h-4 w-4" />
+                         {activeFolder?.name || "Foldery"}
+                       </span>
+                       <MoreVertical className="h-4 w-4 opacity-50" />
+                     </Button>
+                   </DropdownMenuTrigger>
+                   <DropdownMenuContent align="start" className="w-[200px]">
+                     {folders.map(f => (
+                       <DropdownMenuItem key={f.id} onClick={() => handleSelectFolder(f.id)}>
+                         {f.name}
+                         {f.unreadCount > 0 && <span className="ml-auto text-xs">{f.unreadCount}</span>}
+                       </DropdownMenuItem>
+                     ))}
+                   </DropdownMenuContent>
+                 </DropdownMenu>
+                 <Button size="icon" variant="ghost" onClick={handleRefresh}>
+                   <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+                 </Button>
+              </div>
+              <MessageList />
+            </>
+          )}
+        </div>
+      ) : (
+        // Desktop Layout
+        <div className="h-[calc(100vh-4rem)] border rounded-lg overflow-hidden bg-background shadow-sm">
+          <ResizablePanelGroup direction="horizontal">
+            <ResizablePanel defaultSize={20} minSize={15} maxSize={25} className="hidden md:block border-r bg-muted/10">
+              <FolderList />
+            </ResizablePanel>
+            <ResizableHandle />
+            <ResizablePanel defaultSize={35} minSize={30} className="border-r">
+              <MessageList />
+            </ResizablePanel>
+            <ResizableHandle />
+            <ResizablePanel defaultSize={45}>
+              <MessageDetail />
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        </div>
+      )}
+    </>
   );
 }
 
