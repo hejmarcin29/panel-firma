@@ -45,7 +45,6 @@ export function MontageChecklistSettings({ initialTemplates }: MontageChecklistS
 
   const handleChange = (index: number, field: keyof TemplateItem, value: string | boolean) => {
     const next = [...templates];
-    // @ts-expect-error - dynamic assignment
     next[index] = { ...next[index], [field]: value };
     setTemplates(next);
   };
