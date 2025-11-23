@@ -1,24 +1,77 @@
+import { desc, asc } from 'drizzle-orm';
+
 import { requireUser } from '@/lib/auth/session';
+import { db } from '@/lib/db';
+import {
+	montageAttachments,
+	montageChecklistItems,
+	montageNotes,
+	montageTasks,
+	montages,
+} from '@/lib/db/schema';
+import { tryGetR2Config } from '@/lib/r2/config';
+
+import { getManualOrders } from './orders/actions';
+import { mapMontageRow, type MontageRow } from './montaze/utils';
+import { DashboardStats } from './_components/dashboard-stats';
+import type { Montage } from './montaze/types';
 
 export default async function DashboardPage() {
 	const user = await requireUser();
+    const r2Config = await tryGetR2Config();
+    const publicBaseUrl = r2Config?.publicBaseUrl ?? null;
+
+    // Fetch Montages
+    const montageRows = await db.query.montages.findMany({
+        orderBy: desc(montages.updatedAt),
+        limit: 10, // Fetch a bit more than needed for stats
+        with: {
+            notes: {
+                orderBy: desc(montageNotes.createdAt),
+                with: {
+                    author: true,
+                    attachments: {
+                        orderBy: desc(montageAttachments.createdAt),
+                        with: {
+                            uploader: true,
+                        },
+                    },
+                },
+            },
+            tasks: {
+                orderBy: asc(montageTasks.createdAt),
+            },
+            checklistItems: {
+                orderBy: asc(montageChecklistItems.orderIndex),
+                with: {
+                    attachment: {
+                        with: {
+                            uploader: true,
+                        },
+                    },
+                },
+            },
+            attachments: {
+                orderBy: desc(montageAttachments.createdAt),
+                with: {
+                    uploader: true,
+                },
+            },
+        },
+    });
+
+    const montagesData: Montage[] = montageRows.map((row) => mapMontageRow(row as MontageRow, publicBaseUrl));
+
+    // Fetch Orders
+    const ordersData = await getManualOrders();
 
 	return (
-		<section className="space-y-4">
-			<div>
-				<h1 className="text-2xl font-semibold tracking-tight">Witaj, {user.name ?? user.email}</h1>
-				<p className="mt-1.5 text-sm text-muted-foreground">
-					Tutaj wkrótce pojawi się dashboard zarządzania dropshippingiem.
-				</p>
-			</div>
-			<div className="rounded-lg border bg-background p-4 shadow-sm">
-				<h2 className="text-xl font-medium">Następne kroki</h2>
-				<ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm text-muted-foreground">
-					<li>Zaprojektuj widgety sprzedażowe z kluczowymi KPI na stronie głównej.</li>
-					<li>Skonfiguruj integracje z WooCommerce oraz Alior Bank.</li>
-					<li>Przygotuj moduł powiadomień e-mail dla klientów i hurtowni.</li>
-				</ul>
-			</div>
+		<section className="space-y-4 p-4 sm:p-6">
+            <DashboardStats 
+                montages={montagesData} 
+                orders={ordersData} 
+                userName={user.name || user.email} 
+            />
 		</section>
 	);
 }

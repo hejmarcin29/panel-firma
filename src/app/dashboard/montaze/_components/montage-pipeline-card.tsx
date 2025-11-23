@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-
+import { Phone, Mail, MapPin } from 'lucide-react';
 import Link from 'next/link';
 
 import { Badge } from '@/components/ui/badge';
@@ -81,59 +81,81 @@ export function MontagePipelineCard({ montage }: Props) {
 	const addressLine = installationAddress || billingAddress;
 	const cityLine = montage.installationCity || montage.billingCity || null;
 	const scheduledDate = useMemo(() => formatScheduleDate(montage.scheduledInstallationAt), [montage.scheduledInstallationAt]);
-	return (
-		<Card className="group w-full border border-border/60 bg-linear-to-br from-background via-background to-muted shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
-			<CardHeader className="space-y-4">
-				<div className="flex items-start justify-between gap-3">
-					<div className="flex items-center gap-3">
-						<div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-							{initials(montage.clientName)}
-						</div>
-						<div className="space-y-1">
-							<CardTitle className="text-base font-semibold leading-tight text-foreground">
-								{montage.clientName}
-							</CardTitle>
-							<CardDescription className="text-xs text-muted-foreground">Aktualizacja: {latestUpdate}</CardDescription>
-						</div>
-					</div>
-					<Badge variant={hasMaterials ? 'default' : 'outline'} className="rounded-full text-[11px] uppercase tracking-wide">
-						{hasMaterials ? 'materiały' : 'brak materiałów'}
-					</Badge>
-				</div>
-				{addressLine || cityLine ? (
-					<div className="space-y-1">
-						{addressLine ? <p className="text-xs text-muted-foreground line-clamp-2">{addressLine}</p> : null}
-						{cityLine ? <p className="text-xs font-medium text-foreground/80">Miasto: {cityLine}</p> : null}
-					</div>
-				) : null}
-			</CardHeader>
-			<CardContent className="space-y-4">
-				<div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-					{montage.contactPhone ? <span>tel. {montage.contactPhone}</span> : null}
-					{montage.contactEmail ? <span>{montage.contactEmail}</span> : null}
-				</div>
-				<div className="flex flex-wrap items-center gap-2 text-xs">
-					<Badge variant="secondary" className="rounded-full px-2">
-						{totalTasks === 0 ? 'Brak zadan' : `${completedTasks}/${totalTasks} zadan`}
-					</Badge>
-					<Badge variant="secondary" className="rounded-full px-2">
-						{montage.notes.length} not.
-					</Badge>
-					<Badge variant="outline" className="rounded-full px-2">
-						Termin: {scheduledDate ?? 'brak'}
-					</Badge>
-				</div>
-				<Separator />
-				<div className="flex items-center justify-between gap-3">
-					<div className="flex-1 text-xs text-muted-foreground">
-						<p className="text-[11px] uppercase tracking-wide">Materiały</p>
-						<p className="mt-1 line-clamp-2 text-sm font-medium text-foreground">{materialsSummary}</p>
-					</div>
-					<Button size="sm" variant="outline" asChild>
-						<Link href={`/dashboard/montaze/${montage.id}`}>Otworz panel</Link>
-					</Button>
-				</div>
-			</CardContent>
-		</Card>
+	
+    return (
+        <Link href={`/dashboard/montaze/${montage.id}`} className="block group">
+            <Card className="w-full border border-border/60 bg-linear-to-br from-background via-background to-muted/30 shadow-sm transition-all hover:shadow-md hover:border-primary/20">
+                <CardHeader className="space-y-3 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                                {initials(montage.clientName)}
+                            </div>
+                            <div className="space-y-0.5">
+                                <CardTitle className="text-sm font-semibold leading-tight text-foreground">
+                                    {montage.clientName}
+                                </CardTitle>
+                                <CardDescription className="text-[10px] text-muted-foreground">Aktualizacja: {latestUpdate}</CardDescription>
+                            </div>
+                        </div>
+                        {hasMaterials && (
+                            <Badge variant="secondary" className="shrink-0 rounded-full px-1.5 py-0 text-[10px] font-normal">
+                                materiały
+                            </Badge>
+                        )}
+                    </div>
+                    {(addressLine || cityLine) && (
+                        <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                            <MapPin className="mt-0.5 h-3 w-3 shrink-0" />
+                            <div className="line-clamp-2">
+                                {addressLine}{cityLine ? `, ${cityLine}` : ''}
+                            </div>
+                        </div>
+                    )}
+                </CardHeader>
+                <CardContent className="space-y-3 p-4 pt-0">
+                    {(montage.contactPhone || montage.contactEmail) && (
+                        <div className="flex flex-wrap gap-3 text-xs text-muted-foreground" onClick={(e) => e.stopPropagation()}>
+                            {montage.contactPhone && (
+                                <a href={`tel:${montage.contactPhone}`} className="flex items-center gap-1.5 hover:text-primary transition-colors">
+                                    <Phone className="h-3 w-3" />
+                                    {montage.contactPhone}
+                                </a>
+                            )}
+                            {montage.contactEmail && (
+                                <a href={`mailto:${montage.contactEmail}`} className="flex items-center gap-1.5 hover:text-primary transition-colors">
+                                    <Mail className="h-3 w-3" />
+                                    <span className="truncate max-w-[150px]">{montage.contactEmail}</span>
+                                </a>
+                            )}
+                        </div>
+                    )}
+                    
+                    <div className="flex flex-wrap items-center gap-1.5">
+                        <Badge variant="outline" className="rounded-md px-1.5 py-0 text-[10px] font-normal text-muted-foreground">
+                            {totalTasks === 0 ? 'Brak zadań' : `${completedTasks}/${totalTasks} zad.`}
+                        </Badge>
+                        <Badge variant="outline" className="rounded-md px-1.5 py-0 text-[10px] font-normal text-muted-foreground">
+                            {montage.notes.length} not.
+                        </Badge>
+                        {scheduledDate && (
+                            <Badge variant="outline" className="rounded-md px-1.5 py-0 text-[10px] font-normal text-blue-600 bg-blue-50/50 border-blue-100">
+                                {scheduledDate}
+                            </Badge>
+                        )}
+                    </div>
+
+                    {hasMaterials && (
+                        <>
+                            <Separator className="bg-border/50" />
+                            <div className="space-y-1">
+                                <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Materiały</p>
+                                <p className="line-clamp-2 text-xs text-foreground/80">{materialsSummary}</p>
+                            </div>
+                        </>
+                    )}
+                </CardContent>
+            </Card>
+        </Link>
 	);
 }
