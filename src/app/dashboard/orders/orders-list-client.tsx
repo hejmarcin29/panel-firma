@@ -12,7 +12,7 @@ import {
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -251,26 +251,17 @@ function OrdersTable({ orders }: { orders: Order[] }) {
   }
 
   return (
-    <Card>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Numer</TableHead>
-            <TableHead>Klient</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Data</TableHead>
-            <TableHead className="text-right">Kwota</TableHead>
-            <TableHead className="text-right">Akcje</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {orders.map((order) => (
-            <TableRow key={order.id}>
-              <TableCell className="font-medium">
-                <div className="flex flex-col">
+    <>
+      {/* Mobile View */}
+      <div className="grid gap-4 md:hidden">
+        {orders.map((order) => (
+          <Card key={order.id} className="overflow-hidden">
+            <CardHeader className="border-b bg-muted/40 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-1">
                   <Link 
                     href={`/dashboard/orders/${order.id}`}
-                    className="hover:underline text-primary font-semibold"
+                    className="font-semibold hover:underline"
                   >
                     {order.reference}
                   </Link>
@@ -278,42 +269,112 @@ function OrdersTable({ orders }: { orders: Order[] }) {
                     {order.source}
                   </span>
                 </div>
-              </TableCell>
-              <TableCell>
-                <div className="flex flex-col">
-                  <span className="font-medium">{order.customer}</span>
-                  <span className="text-xs text-muted-foreground">{order.billing.email}</span>
+                <div className="flex flex-col items-end gap-2">
+                  {getStatusBadge(order.status)}
+                  {order.requiresReview && (
+                    <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5 h-auto">Weryfikacja</Badge>
+                  )}
                 </div>
-              </TableCell>
-              <TableCell>
-                {getStatusBadge(order.status)}
-                {order.requiresReview && (
-                  <Badge variant="destructive" className="ml-2">Weryfikacja</Badge>
-                )}
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {formatDateTime(order.createdAt)}
-              </TableCell>
-              <TableCell className="text-right font-medium">
-                {formatCurrency(order.totals.totalGross, order.currency)}
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
+              </div>
+            </CardHeader>
+            <CardContent className="p-4 grid gap-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs text-muted-foreground">Klient</span>
+                  <span className="font-medium">{order.customer}</span>
+                  <span className="text-xs text-muted-foreground truncate">{order.billing.email}</span>
+                </div>
+                <div className="flex flex-col gap-1 text-right">
+                  <span className="text-xs text-muted-foreground">Kwota</span>
+                  <span className="font-bold text-lg">
+                    {formatCurrency(order.totals.totalGross, order.currency)}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between text-xs text-muted-foreground border-t pt-3">
+                <span>{formatDateTime(order.createdAt)}</span>
+                <div className="flex gap-2">
                   {order.requiresReview && (
                     <ConfirmOrderButton orderId={order.id} />
                   )}
-                  <Button variant="ghost" size="icon" asChild>
+                  <Button variant="outline" size="sm" asChild>
                     <Link href={`/dashboard/orders/${order.id}`}>
-                      <MoreHorizontal className="h-4 w-4" />
-                      <span className="sr-only">Szczegóły</span>
+                      Szczegóły
                     </Link>
                   </Button>
                 </div>
-              </TableCell>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Desktop View */}
+      <Card className="hidden md:block">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Numer</TableHead>
+              <TableHead>Klient</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Data</TableHead>
+              <TableHead className="text-right">Kwota</TableHead>
+              <TableHead className="text-right">Akcje</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </Card>
+          </TableHeader>
+          <TableBody>
+            {orders.map((order) => (
+              <TableRow key={order.id}>
+                <TableCell className="font-medium">
+                  <div className="flex flex-col">
+                    <Link 
+                      href={`/dashboard/orders/${order.id}`}
+                      className="hover:underline text-primary font-semibold"
+                    >
+                      {order.reference}
+                    </Link>
+                    <span className="text-xs text-muted-foreground capitalize">
+                      {order.source}
+                    </span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-col">
+                    <span className="font-medium">{order.customer}</span>
+                    <span className="text-xs text-muted-foreground">{order.billing.email}</span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  {getStatusBadge(order.status)}
+                  {order.requiresReview && (
+                    <Badge variant="destructive" className="ml-2">Weryfikacja</Badge>
+                  )}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {formatDateTime(order.createdAt)}
+                </TableCell>
+                <TableCell className="text-right font-medium">
+                  {formatCurrency(order.totals.totalGross, order.currency)}
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    {order.requiresReview && (
+                      <ConfirmOrderButton orderId={order.id} />
+                    )}
+                    <Button variant="ghost" size="icon" asChild>
+                      <Link href={`/dashboard/orders/${order.id}`}>
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Szczegóły</span>
+                      </Link>
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
+    </>
   );
 }
