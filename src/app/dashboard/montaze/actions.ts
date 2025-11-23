@@ -433,6 +433,11 @@ export async function toggleMontageChecklistItem({ itemId, montageId, completed 
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
 
+type UpdateMontageMaterialsInput = {
+	montageId: string;
+	materialDetails: string;
+};
+
 export async function updateMontageMaterialDetails({ montageId, materialDetails }: UpdateMontageMaterialsInput) {
 	await requireUser();
 
