@@ -9,7 +9,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Separator } from '@/components/ui/separator';
 
 import { updateMontageChecklistTemplatesAction } from '../actions';
 
@@ -44,8 +43,9 @@ export function MontageChecklistSettings({ initialTemplates }: MontageChecklistS
     setTemplates(next);
   };
 
-  const handleChange = (index: number, field: keyof TemplateItem, value: any) => {
+  const handleChange = (index: number, field: keyof TemplateItem, value: string | boolean) => {
     const next = [...templates];
+    // @ts-expect-error - dynamic assignment
     next[index] = { ...next[index], [field]: value };
     setTemplates(next);
   };
