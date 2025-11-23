@@ -5,10 +5,10 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { toggleMontageChecklistItem, uploadChecklistAttachment } from "../../actions";
-import type { Montage, MontageChecklistItem } from "../../types";
+import type { Montage } from "../../types";
 
 export function MontageWorkflowTab({ montage }: { montage: Montage }) {
   const router = useRouter();
@@ -39,7 +39,7 @@ export function MontageWorkflowTab({ montage }: { montage: Montage }) {
       <div className="relative">
         <div className="absolute left-4 top-0 bottom-0 w-px bg-border md:left-8" />
         <div className="space-y-8">
-          {montage.checklistItems.map((item, index) => (
+          {montage.checklistItems.map((item) => (
             <div key={item.id} className="relative flex gap-4 md:gap-8">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-background ring-1 ring-border md:h-16 md:w-16">
                 <button

@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { LayoutGrid, List, Calendar as CalendarIcon, Map as MapIcon } from "lucide-react";
+import { LayoutGrid, List, Calendar as CalendarIcon } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MontagePipelineBoard } from "./montage-pipeline-board";
 import type { Montage, StatusOption } from "../types";
 
@@ -22,7 +22,7 @@ export function MontageDashboardView({ montages, statusOptions, headerAction }: 
     <div className="flex flex-col gap-4 h-full">
       <div className="flex items-center justify-between px-4 sm:px-6">
         <div className="flex items-center gap-2">
-            <Tabs value={view} onValueChange={(v) => setView(v as any)} className="w-auto">
+            <Tabs value={view} onValueChange={(v) => setView(v as "board" | "list" | "calendar")} className="w-auto">
                 <TabsList>
                     <TabsTrigger value="board">
                         <LayoutGrid className="mr-2 h-4 w-4" />

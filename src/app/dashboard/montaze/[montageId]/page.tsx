@@ -1,8 +1,6 @@
 import { asc, desc } from 'drizzle-orm';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';

@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckSquare, Square, Plus, Trash2 } from "lucide-react";
+import { CheckSquare, Plus } from "lucide-react";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 

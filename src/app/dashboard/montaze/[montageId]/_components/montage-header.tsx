@@ -100,8 +100,10 @@ export function MontageHeader({ montage, statusOptions }: MontageHeaderProps) {
                         <div
                         className={cn(
                             "h-2 w-2 rounded-full",
-                            option.value === "completed" ? "bg-green-500" :
-                            option.value === "in_progress" ? "bg-blue-500" :
+                            option.value === "before_final_invoice" ? "bg-green-500" :
+                            option.value === "before_installation" ? "bg-blue-500" :
+                            option.value === "before_first_payment" ? "bg-yellow-500" :
+                            option.value === "before_measurement" ? "bg-orange-500" :
                             "bg-slate-300"
                         )}
                         />

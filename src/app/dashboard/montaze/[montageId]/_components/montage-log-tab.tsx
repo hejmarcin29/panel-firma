@@ -1,13 +1,12 @@
 "use client";
 
 import { Send, Paperclip, User } from "lucide-react";
-import { useState, useTransition, useRef } from "react";
+import { useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
 import { addMontageNote } from "../../actions";
 import type { Montage } from "../../types";
 
