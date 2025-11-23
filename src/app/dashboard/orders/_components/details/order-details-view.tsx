@@ -17,9 +17,8 @@ interface OrderDetailsViewProps {
   timelineEntries: OrderTimelineEntry[];
 }
 
-export function OrderDetailsView({ order, documents, timelineEntries }: OrderDetailsViewProps) {
-  // Desktop View: Bento Grid
-  const DesktopView = () => (
+function DesktopView({ order, documents, timelineEntries }: OrderDetailsViewProps) {
+  return (
     <div className="hidden md:grid grid-cols-3 gap-6 p-6 max-w-[1600px] mx-auto w-full">
       <div className="col-span-2 space-y-6">
         <OrderItemsCard order={order} />
@@ -51,9 +50,10 @@ export function OrderDetailsView({ order, documents, timelineEntries }: OrderDet
       </div>
     </div>
   );
+}
 
-  // Mobile View: Tabs
-  const MobileView = () => (
+function MobileView({ order, documents, timelineEntries }: OrderDetailsViewProps) {
+  return (
     <div className="md:hidden">
       <Tabs defaultValue="info" className="w-full">
         <TabsList className="grid w-full grid-cols-3 rounded-none border-b bg-background p-0 sticky top-0 z-10">
@@ -100,12 +100,14 @@ export function OrderDetailsView({ order, documents, timelineEntries }: OrderDet
       </Tabs>
     </div>
   );
+}
 
+export function OrderDetailsView({ order, documents, timelineEntries }: OrderDetailsViewProps) {
   return (
     <div className="flex flex-col min-h-screen bg-muted/10">
       <OrderHeader order={order} />
-      <DesktopView />
-      <MobileView />
+      <DesktopView order={order} documents={documents} timelineEntries={timelineEntries} />
+      <MobileView order={order} documents={documents} timelineEntries={timelineEntries} />
     </div>
   );
 }
