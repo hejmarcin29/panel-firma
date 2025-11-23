@@ -219,41 +219,43 @@ async function GalleryContent({ selectedFolderKey }: GalleryContentProps) {
 					Ostatnia aktualizacja: {formatDate(selectedCategory.latest)}
 				</p>
 			</header>
-			<div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+			<div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 				{items.map((object) => {
 					const isImage = isImageKey(object.name);
 
 					return (
-						<Card key={object.key} className="overflow-hidden">
+						<Card key={object.key} className="overflow-hidden group transition-all hover:shadow-md">
 							{isImage ? (
-								<div className="relative h-56 w-full bg-muted">
+								<div className="relative aspect-video w-full bg-muted overflow-hidden">
 									{/* eslint-disable-next-line @next/next/no-img-element */}
 									<img
 										src={object.previewUrl}
 										alt={object.name}
 										loading="lazy"
-										className="h-full w-full object-cover"
+										className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
 									/>
 								</div>
 							) : (
-								<div className="flex h-56 w-full items-center justify-center bg-muted text-sm text-muted-foreground">
-									<span>{object.name}</span>
+								<div className="flex aspect-video w-full items-center justify-center bg-muted text-sm text-muted-foreground">
+									<span className="font-medium">{object.name.split('.').pop()?.toUpperCase() || 'PLIK'}</span>
 								</div>
 							)}
 							<CardContent className="space-y-2 p-4">
 								<div className="space-y-1">
-									<h3 className="text-sm font-semibold text-foreground">{object.name}</h3>
+									<h3 className="text-sm font-medium text-foreground truncate" title={object.name}>
+										{object.name}
+									</h3>
 								</div>
 								<div className="flex flex-wrap justify-between text-xs text-muted-foreground">
 									<span>{formatBytes(object.size)}</span>
 									<span>{formatDate(object.lastModified)}</span>
 								</div>
-								<div className="flex items-center gap-2 text-xs">
+								<div className="flex items-center gap-3 text-xs pt-2">
 									<Link
 										href={object.previewUrl}
 										target="_blank"
 										rel="noopener noreferrer"
-										className="text-primary hover:underline"
+										className="font-medium text-primary hover:underline"
 									>
 										Podgląd
 									</Link>
@@ -261,7 +263,7 @@ async function GalleryContent({ selectedFolderKey }: GalleryContentProps) {
 										href={object.url}
 										target="_blank"
 										rel="noopener noreferrer"
-										className="text-primary hover:underline"
+										className="font-medium text-primary hover:underline"
 									>
 										Pobierz
 									</Link>

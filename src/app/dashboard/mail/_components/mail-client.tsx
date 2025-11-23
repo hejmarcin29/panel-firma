@@ -667,29 +667,34 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
                                 type="button"
                                 onClick={() => handleSelectMessage(message.id)}
                                 className={cn(
-                                  'flex w-full flex-col gap-2 px-4 py-3 text-left transition-colors',
-                                  isActive ? 'bg-muted' : 'hover:bg-muted/60',
+                                  'flex w-full flex-col gap-1 px-4 py-3 text-left transition-colors border-l-2',
+                                  isActive ? 'bg-accent border-primary' : 'hover:bg-muted/50 border-transparent',
+                                  !message.isRead && !isActive ? 'bg-muted/20' : ''
                                 )}
                               >
-                                <div className="flex items-start justify-between gap-3">
-                                  <p className="line-clamp-1 text-sm font-medium text-foreground">
-                                    {message.subject ?? '(brak tematu)'}
-                                  </p>
-                                  <span className="shrink-0 text-xs text-muted-foreground">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className={cn("text-sm font-medium truncate", !message.isRead && "font-bold text-foreground")}>
+                                     {formatAddress(message.from)}
+                                  </span>
+                                  <span className={cn("text-[10px] shrink-0", !message.isRead ? "text-primary font-medium" : "text-muted-foreground")}>
                                     {formatListTimestamp(message.receivedAt)}
                                   </span>
                                 </div>
-                                <p className="line-clamp-1 text-xs text-muted-foreground">
-                                  {formatAddress(message.from)}
+                                
+                                <p className={cn("text-xs truncate", !message.isRead ? "font-semibold text-foreground" : "text-muted-foreground")}>
+                                  {message.subject ?? '(brak tematu)'}
                                 </p>
-                                <p className="line-clamp-2 text-xs text-muted-foreground">
+                                
+                                <p className="line-clamp-2 text-[11px] text-muted-foreground/80">
                                   {message.snippet ?? message.textBody ?? 'Brak podglądu treści.'}
                                 </p>
-                                <div className="flex flex-wrap items-center gap-2">
-                                  {!message.isRead ? <Badge variant="destructive">Nowa</Badge> : null}
-                                  {message.isStarred ? <Badge variant="outline">Oznaczona</Badge> : null}
-                                  {message.hasAttachments ? <Badge variant="outline">Załączniki</Badge> : null}
-                                </div>
+                                
+                                {(message.hasAttachments || message.isStarred) && (
+                                    <div className="flex gap-2 mt-1">
+                                        {message.isStarred && <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">★</Badge>}
+                                        {message.hasAttachments && <Badge variant="outline" className="h-5 px-1.5 text-[10px]">📎</Badge>}
+                                    </div>
+                                )}
                               </button>
                             </li>
                           );

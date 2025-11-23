@@ -1,17 +1,18 @@
-import Link from 'next/link';
 import { headers } from 'next/headers';
 import { desc, eq, sql } from 'drizzle-orm';
 
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
 import { db } from '@/lib/db';
 import { integrationLogs, mailAccounts, manualOrders } from '@/lib/db/schema';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
+
 import { WebhookSecretForm } from './_components/webhook-secret-form';
 import { R2ConfigForm } from './_components/r2-config-form';
+import { MailSettingsForm } from './_components/mail-settings-form';
+import { SettingsView } from './_components/settings-view';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type LogLevel = 'info' | 'warning' | 'error';
 
@@ -101,7 +102,7 @@ export default async function SettingsPage() {
 		.from(integrationLogs)
 		.where(eq(integrationLogs.integration, 'woocommerce'))
 		.orderBy(desc(integrationLogs.createdAt))
-		.limit(10);
+		.limit(20);
 
 	const logs: LogRow[] = rawLogs.map((log) => ({
 		id: log.id ?? crypto.randomUUID(),
@@ -131,164 +132,101 @@ export default async function SettingsPage() {
 	const r2StatusLabel = r2Configured ? 'Skonfigurowano' : 'Brak konfiguracji';
 
 	const mailRows = await db
-		.select({
-			id: mailAccounts.id,
-			displayName: mailAccounts.displayName,
-			email: mailAccounts.email,
-			status: mailAccounts.status,
-			lastSyncAt: mailAccounts.lastSyncAt,
-		})
+		.select()
 		.from(mailAccounts)
 		.orderBy(mailAccounts.displayName);
 
-	const mailAccountCount = mailRows.length;
-	const mailConnectedCount = mailRows.filter((row) => row.status === 'connected').length;
-
-	let latestMailSync: number | null = null;
-	for (const row of mailRows) {
-		const value =
-			row.lastSyncAt instanceof Date
-				? row.lastSyncAt.getTime()
-				: typeof row.lastSyncAt === 'number'
-					? row.lastSyncAt
-					: null;
-		if (value !== null && (latestMailSync === null || value > latestMailSync)) {
-			latestMailSync = value;
-		}
-	}
+	const formattedMailAccounts = mailRows.map((account) => ({
+		id: account.id,
+		displayName: account.displayName,
+		email: account.email,
+		provider: account.provider,
+		status: account.status,
+		imapHost: account.imapHost,
+		imapPort: account.imapPort,
+		imapSecure: account.imapSecure,
+		smtpHost: account.smtpHost,
+		smtpPort: account.smtpPort,
+		smtpSecure: account.smtpSecure,
+		username: account.username,
+		signature: account.signature,
+		hasPassword: Boolean(account.passwordSecret),
+		lastSyncAt: account.lastSyncAt?.toISOString() ?? null,
+		nextSyncAt: account.nextSyncAt?.toISOString() ?? null,
+	}));
 
 	return (
-		<div className="space-y-8">
-			<div className="space-y-2">
-				<h1 className="text-2xl font-semibold">Ustawienia</h1>
-				<p className="text-muted-foreground text-sm">
-					Kontroluj konfiguracje integracji WooCommerce i sprawdzaj, czy import zamowien dziala poprawnie.
-				</p>
-			</div>
-
-			{!secretConfigured && (
-				<Alert variant="destructive">
-					<AlertTitle>Brakuje sekretu webhooka</AlertTitle>
-					<AlertDescription>
-						Ustaw sekret w formularzu ponizej, aby aktywowac weryfikacje webhookow WooCommerce.
-					</AlertDescription>
-				</Alert>
-			)}
-
-
-			<div className="grid gap-6 lg:grid-cols-2">
+		<SettingsView
+			mailSettings={<MailSettingsForm accounts={formattedMailAccounts} />}
+			logs={
 				<Card>
 					<CardHeader>
-						<CardTitle>Webhook WooCommerce</CardTitle>
-						<CardDescription>Ustaw dane ponizej w panelu WordPress, aby zamowienia trafialy do systemu.</CardDescription>
+						<CardTitle>Logi integracji</CardTitle>
+						<CardDescription>Ostatnie wpisy zapisywane podczas przetwarzania webhooka.</CardDescription>
 					</CardHeader>
-					<CardContent className="space-y-6">
-						<WebhookSecretForm initialSecret={webhookSecret} />
-						<dl className="grid gap-3 text-sm">
-							<div>
-								<dt className="text-muted-foreground">Adres URL dostawy</dt>
-								<dd className="font-mono text-xs break-all rounded bg-muted px-3 py-2">{webhookUrl}</dd>
-							</div>
-						</dl>
-						<ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
-							<li>Temat webhooka: <code>order.created</code></li>
-							<li>Wersja API: <code>WP REST API v3</code></li>
-							<li>Sekret przechowywany jest w bazie danych i mozesz go zaktualizowac w tym panelu.</li>
-						</ul>
-					</CardContent>
-				</Card>
-
-				<Card>
-					<CardHeader>
-						<CardTitle>Poczta firmowa</CardTitle>
-						<CardDescription>Stan skrzynek pocztowych dostepnych w panelu.</CardDescription>
-					</CardHeader>
-					<CardContent className="space-y-4">
-						<dl className="grid gap-3 text-sm">
-							<div>
-								<dt className="text-muted-foreground">Liczba skrzynek</dt>
-								<dd className="text-base font-semibold">{mailAccountCount}</dd>
-							</div>
-							<div>
-								<dt className="text-muted-foreground">Aktywne polaczenia</dt>
-								<dd className="text-base font-semibold">{mailConnectedCount}</dd>
-							</div>
-							<div>
-								<dt className="text-muted-foreground">Ostatnia synchronizacja</dt>
-								<dd className="text-sm text-muted-foreground">
-									{latestMailSync ? formatTimestamp(latestMailSync) : 'Brak danych'}
-								</dd>
-							</div>
-						</dl>
-
-						{mailAccountCount === 0 ? (
-							<p className="text-sm text-muted-foreground">
-								Nie skonfigurowano jeszcze zadnej skrzynki. Dodaj konto w ustawieniach, aby odbierac i wysylac wiadomosci.
-							</p>
+					<CardContent>
+						{logs.length === 0 ? (
+							<p className="text-sm text-muted-foreground">Brak logow dla integracji WooCommerce.</p>
 						) : (
-							<ul className="space-y-2">
-								{mailRows.map((account) => (
-									<li key={account.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-muted/30 px-3 py-2">
-										<div className="space-y-1">
-											<p className="text-sm font-medium text-foreground">{account.displayName}</p>
-											<p className="text-xs text-muted-foreground">{account.email}</p>
-										</div>
-										<div className="flex items-center gap-2">
-											<Badge variant="secondary">{account.status}</Badge>
-											<span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-												{account.lastSyncAt ? formatTimestamp(account.lastSyncAt) : 'bez synchronizacji'}
-											</span>
-										</div>
-									</li>
-								))}
-							</ul>
+							<Table>
+								<TableHeader>
+									<TableRow>
+										<TableHead>Data</TableHead>
+										<TableHead>Poziom</TableHead>
+										<TableHead>Opis</TableHead>
+									</TableRow>
+								</TableHeader>
+								<TableBody>
+									{logs.map((log) => (
+										<TableRow key={log.id}>
+											<TableCell>{formatTimestamp(log.createdAt)}</TableCell>
+											<TableCell>
+												<Badge className={levelBadgeClass(log.level)}>{log.level}</Badge>
+											</TableCell>
+											<TableCell className="max-w-md whitespace-normal text-xs">
+												{log.message}
+											</TableCell>
+										</TableRow>
+									))}
+								</TableBody>
+							</Table>
 						)}
-
-						<div className="flex flex-wrap gap-2">
-							<Button asChild>
-								<Link href="/dashboard/mail">Otworz skrzynke</Link>
-							</Button>
-							<Button asChild variant="outline">
-								<Link href="/dashboard/settings/mail">Konfiguracja</Link>
-							</Button>
-						</div>
 					</CardContent>
 				</Card>
-
-				<Card>
-					<CardHeader>
-						<CardTitle>Status integracji</CardTitle>
-						<CardDescription>Podglad biezacych danych z backendu.</CardDescription>
-					</CardHeader>
-					<CardContent className="space-y-4">
-						<dl className="grid gap-3 text-sm">
-							<div>
-								<dt className="text-muted-foreground">Zamowienia do potwierdzenia</dt>
-								<dd className="text-base font-semibold">{pendingReviewCount}</dd>
-							</div>
-							<div>
-								<dt className="text-muted-foreground">Ostatnie zdarzenie webhooka</dt>
-								<dd className="flex flex-wrap items-center gap-2">
-									{lastEvent ? (
-										<>
-											<Badge className={levelBadgeClass(lastEvent.level)}>{lastEvent.level}</Badge>
-											<span>{formatTimestamp(lastEvent.createdAt)}</span>
-										</>
-									) : (
-										<span>Brak zdarzen</span>
-									)}
-								</dd>
-							</div>
-							<div>
-								<dt className="text-muted-foreground">Ostatnia wiadomosc</dt>
-								<dd className="text-xs text-foreground/80">
-									{lastEvent?.message ?? 'Brak wpisow w logach integracji.'}
-								</dd>
-							</div>
-						</dl>
-					</CardContent>
-				</Card>
-
+			}
+			integrations={
+				<div className="space-y-6">
+					{!secretConfigured && (
+						<Alert variant="destructive">
+							<AlertTitle>Brakuje sekretu webhooka</AlertTitle>
+							<AlertDescription>
+								Ustaw sekret w formularzu ponizej, aby aktywowac weryfikacje webhookow WooCommerce.
+							</AlertDescription>
+						</Alert>
+					)}
+					<Card>
+						<CardHeader>
+							<CardTitle>Webhook WooCommerce</CardTitle>
+							<CardDescription>Ustaw dane ponizej w panelu WordPress, aby zamowienia trafialy do systemu.</CardDescription>
+						</CardHeader>
+						<CardContent className="space-y-6">
+							<WebhookSecretForm initialSecret={webhookSecret} />
+							<dl className="grid gap-3 text-sm">
+								<div>
+									<dt className="text-muted-foreground">Adres URL dostawy</dt>
+									<dd className="font-mono text-xs break-all rounded bg-muted px-3 py-2">{webhookUrl}</dd>
+								</div>
+							</dl>
+							<ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+								<li>Temat webhooka: <code>order.created</code></li>
+								<li>Wersja API: <code>WP REST API v3</code></li>
+								<li>Sekret przechowywany jest w bazie danych i mozesz go zaktualizowac w tym panelu.</li>
+							</ul>
+						</CardContent>
+					</Card>
+				</div>
+			}
+			storage={
 				<Card>
 					<CardHeader>
 						<CardTitle>Cloudflare R2</CardTitle>
@@ -322,42 +260,41 @@ export default async function SettingsPage() {
 						</div>
 					</CardContent>
 				</Card>
-			</div>
-
+			}
+		>
 			<Card>
 				<CardHeader>
-					<CardTitle>Logi integracji</CardTitle>
-					<CardDescription>Ostatnie wpisy zapisywane podczas przetwarzania webhooka.</CardDescription>
+					<CardTitle>Status integracji</CardTitle>
+					<CardDescription>Podglad biezacych danych z backendu.</CardDescription>
 				</CardHeader>
-				<CardContent>
-					{logs.length === 0 ? (
-						<p className="text-sm text-muted-foreground">Brak logow dla integracji WooCommerce.</p>
-					) : (
-						<Table>
-							<TableHeader>
-								<TableRow>
-									<TableHead>Data</TableHead>
-									<TableHead>Poziom</TableHead>
-									<TableHead>Opis</TableHead>
-								</TableRow>
-							</TableHeader>
-							<TableBody>
-								{logs.map((log) => (
-									<TableRow key={log.id}>
-										<TableCell>{formatTimestamp(log.createdAt)}</TableCell>
-										<TableCell>
-											<Badge className={levelBadgeClass(log.level)}>{log.level}</Badge>
-										</TableCell>
-										<TableCell className="max-w-md whitespace-normal text-xs">
-											{log.message}
-										</TableCell>
-									</TableRow>
-								))}
-							</TableBody>
-						</Table>
-					)}
+				<CardContent className="space-y-4">
+					<dl className="grid gap-3 text-sm">
+						<div>
+							<dt className="text-muted-foreground">Zamowienia do potwierdzenia</dt>
+							<dd className="text-base font-semibold">{pendingReviewCount}</dd>
+						</div>
+						<div>
+							<dt className="text-muted-foreground">Ostatnie zdarzenie webhooka</dt>
+							<dd className="flex flex-wrap items-center gap-2">
+								{lastEvent ? (
+									<>
+										<Badge className={levelBadgeClass(lastEvent.level)}>{lastEvent.level}</Badge>
+										<span>{formatTimestamp(lastEvent.createdAt)}</span>
+									</>
+								) : (
+									<span>Brak zdarzen</span>
+								)}
+							</dd>
+						</div>
+						<div>
+							<dt className="text-muted-foreground">Ostatnia wiadomosc</dt>
+							<dd className="text-xs text-foreground/80">
+								{lastEvent?.message ?? 'Brak wpisow w logach integracji.'}
+							</dd>
+						</div>
+					</dl>
 				</CardContent>
 			</Card>
-		</div>
+		</SettingsView>
 	);
 }
