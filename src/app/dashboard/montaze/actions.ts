@@ -596,3 +596,27 @@ export async function updateMontageChecklistItemLabel({ montageId, itemId, label
 	await touchMontage(montageId);
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
+
+export async function updateMontageSchedule({
+	montageId,
+	scheduledAt,
+	scheduledEndAt,
+}: {
+	montageId: string;
+	scheduledAt: Date | null;
+	scheduledEndAt: Date | null;
+}) {
+	await requireUser();
+
+	await db
+		.update(montages)
+		.set({
+			scheduledInstallationAt: scheduledAt,
+			scheduledEndAt: scheduledEndAt,
+			updatedAt: new Date(),
+		})
+		.where(eq(montages.id, montageId));
+
+	revalidatePath(MONTAGE_DASHBOARD_PATH);
+	revalidatePath(`${MONTAGE_DASHBOARD_PATH}/${montageId}`);
+}

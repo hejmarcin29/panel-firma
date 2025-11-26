@@ -13,6 +13,7 @@ import { WebhookSecretForm } from './_components/webhook-secret-form';
 import { R2ConfigForm } from './_components/r2-config-form';
 import { MailSettingsForm } from './_components/mail-settings-form';
 import { MontageChecklistSettings } from './_components/montage-checklist-settings';
+import { CalendarSettingsForm, type CalendarSettings } from './_components/calendar-settings-form';
 import { SettingsView } from './_components/settings-view';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -159,10 +160,35 @@ export default async function SettingsPage() {
 		nextSyncAt: account.nextSyncAt?.toISOString() ?? null,
 	}));
 
+	const calendarSettingsJson = await getAppSetting(appSettingKeys.calendarSettings);
+	let calendarSettings: CalendarSettings = {
+		conflictPolicy: 'warn',
+		defaultDuration: 4,
+		enableTravelBuffer: false,
+		travelBufferMinutes: 30,
+		workingHoursStart: '08:00',
+		workingHoursEnd: '16:00',
+		hideWeekends: true,
+		googleCalendarSync: false,
+	};
+
+	if (calendarSettingsJson) {
+		try {
+			calendarSettings = JSON.parse(calendarSettingsJson);
+		} catch (e) {
+			console.error('Failed to parse calendar settings', e);
+		}
+	}
+
 	return (
 		<SettingsView
 			mailSettings={<MailSettingsForm accounts={formattedMailAccounts} />}
-			montageSettings={<MontageChecklistSettings initialTemplates={montageChecklistTemplates} />}
+			montageSettings={
+				<MontageChecklistSettings templates={montageChecklistTemplates} />
+			}
+			calendarSettings={
+				<CalendarSettingsForm initialSettings={calendarSettings} />
+			}
 			logs={
 				<Card>
 					<CardHeader>

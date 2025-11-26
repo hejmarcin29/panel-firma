@@ -10,9 +10,10 @@ interface SettingsViewProps {
   integrations: React.ReactNode;
   storage: React.ReactNode;
   montageSettings: React.ReactNode;
+  calendarSettings: React.ReactNode;
 }
 
-export function SettingsView({ children, mailSettings, logs, integrations, storage, montageSettings }: SettingsViewProps) {
+export function SettingsView({ children, mailSettings, logs, integrations, storage, montageSettings, calendarSettings }: SettingsViewProps) {
   return (
     <div className="space-y-6">
       <div>
@@ -31,6 +32,13 @@ export function SettingsView({ children, mailSettings, logs, integrations, stora
             >
               <Settings className="h-4 w-4" />
               Ogólne
+            </TabsTrigger>
+            <TabsTrigger 
+              value="calendar" 
+              className="w-full justify-start gap-2 px-3 py-2 h-9 data-[state=active]:bg-muted data-[state=active]:shadow-none ring-offset-background transition-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <Calendar className="h-4 w-4" />
+              Kalendarz
             </TabsTrigger>
             <TabsTrigger 
               value="integrations" 
@@ -73,6 +81,10 @@ export function SettingsView({ children, mailSettings, logs, integrations, stora
         <div className="flex-1 max-w-4xl space-y-4">
           <TabsContent value="general" className="m-0 space-y-4">
               {children}
+          </TabsContent>
+
+          <TabsContent value="calendar" className="m-0 space-y-4">
+            {calendarSettings}
           </TabsContent>
 
           <TabsContent value="integrations" className="m-0 space-y-4">
