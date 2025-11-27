@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Wyłączamy minifikację SWC, bo potrafi się zawiesić przy małej ilości RAMu
+  swcMinify: false,
   experimental: {
     workerThreads: false,
     cpus: 1,
