@@ -43,7 +43,7 @@ export function MobileNav({ user }: { user: { name?: string | null; email?: stri
   const pathname = usePathname();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 md:hidden">
+    <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/80 backdrop-blur-md supports-backdrop-filter:bg-background/60 md:hidden pb-[env(safe-area-inset-bottom)]">
       <nav className="flex h-16 items-center justify-around px-2">
         {mainLinks.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || (href !== "/dashboard" && pathname?.startsWith(href));
@@ -52,12 +52,30 @@ export function MobileNav({ user }: { user: { name?: string | null; email?: stri
               key={href}
               href={href}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium transition-colors hover:bg-muted/50 min-w-16",
-                isActive ? "text-primary" : "text-muted-foreground"
+                "flex flex-col items-center justify-center gap-1 rounded-xl px-2 py-1 transition-all duration-200 min-w-16 group",
+                isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Icon className={cn("h-5 w-5", isActive && "fill-current")} />
-              {label}
+              <div className={cn(
+                "relative flex items-center justify-center transition-all duration-200",
+                isActive ? "-translate-y-0.5" : "group-hover:-translate-y-0.5"
+              )}>
+                <Icon 
+                  className={cn(
+                    "h-6 w-6 transition-all duration-200", 
+                    isActive ? "stroke-[2.5px]" : "stroke-2"
+                  )} 
+                />
+                {isActive && (
+                  <span className="absolute -bottom-2 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-primary" />
+                )}
+              </div>
+              <span className={cn(
+                "text-[10px] font-medium transition-all duration-200",
+                isActive ? "font-semibold" : ""
+              )}>
+                {label}
+              </span>
             </Link>
           );
         })}
@@ -66,11 +84,13 @@ export function MobileNav({ user }: { user: { name?: string | null; email?: stri
           <SheetTrigger asChild>
             <button
               className={cn(
-                "flex flex-col items-center justify-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium transition-colors hover:bg-muted/50 text-muted-foreground min-w-16"
+                "flex flex-col items-center justify-center gap-1 rounded-xl px-2 py-1 transition-all duration-200 text-muted-foreground hover:text-foreground min-w-16 group"
               )}
             >
-              <Menu className="h-5 w-5" />
-              Menu
+              <div className="relative flex items-center justify-center transition-all duration-200 group-hover:-translate-y-0.5">
+                <Menu className="h-6 w-6 stroke-2" />
+              </div>
+              <span className="text-[10px] font-medium">Menu</span>
             </button>
           </SheetTrigger>
           <SheetContent side="right">
