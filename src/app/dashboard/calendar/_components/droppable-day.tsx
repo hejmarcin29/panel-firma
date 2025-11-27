@@ -8,11 +8,9 @@ interface DroppableDayProps {
   date: Date;
   children: React.ReactNode;
   className?: string;
-  isCurrentMonth?: boolean;
-  isToday?: boolean;
 }
 
-export function DroppableDay({ id, date, children, className, isCurrentMonth, isToday }: DroppableDayProps) {
+export function DroppableDay({ id, date, children, className }: DroppableDayProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: id,
     data: { date },

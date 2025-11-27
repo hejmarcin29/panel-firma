@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db';
 import { orders, montages, customers } from '@/lib/db/schema';
-import { eq, isNotNull, isNull } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
 export type CalendarEventType = 'order' | 'montage';

@@ -69,7 +69,6 @@ export function CalendarView({
   >(initialUnscheduledEvents);
   const isMobile = useIsMobile();
   const [viewMode, setViewMode] = React.useState<'month' | 'agenda'>('month');
-  const [activeId, setActiveId] = React.useState<string | null>(null);
   const [activeEvent, setActiveEvent] = React.useState<CalendarEvent | null>(
     null
   );
@@ -130,7 +129,6 @@ export function CalendarView({
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
-    setActiveId(active.id as string);
     const eventData = active.data.current as CalendarEvent;
     setActiveEvent(eventData);
   };
@@ -139,7 +137,6 @@ export function CalendarView({
     const { active, over } = event;
 
     if (!over) {
-      setActiveId(null);
       setActiveEvent(null);
       return;
     }
@@ -173,7 +170,7 @@ export function CalendarView({
 
       try {
         await updateEventDate(eventId, eventData.type, newDate);
-      } catch (error) {
+      } catch {
         toast.error('Błąd aktualizacji', {
           description: 'Nie udało się zapisać zmian w bazie.',
         });
@@ -181,7 +178,6 @@ export function CalendarView({
       }
     }
 
-    setActiveId(null);
     setActiveEvent(null);
   };
 
@@ -315,7 +311,7 @@ export function CalendarView({
                 ))}
 
                 {/* Calendar Grid */}
-                {calendarDays.map((day, dayIdx) => {
+                {calendarDays.map((day) => {
                   const dayEvents = getEventsForDay(day);
                   const isCurrentMonth = isSameMonth(day, monthStart);
 
@@ -324,8 +320,6 @@ export function CalendarView({
                       key={day.toString()}
                       id={day.toISOString()}
                       date={day}
-                      isCurrentMonth={isCurrentMonth}
-                      isToday={isToday(day)}
                       className={cn(
                         'min-h-[120px] p-2 border-b border-r transition-colors hover:bg-muted/10 flex flex-col gap-1',
                         !isCurrentMonth && 'bg-muted/20 text-muted-foreground',
