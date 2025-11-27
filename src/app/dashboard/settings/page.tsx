@@ -16,6 +16,8 @@ import { MontageChecklistSettings } from './_components/montage-checklist-settin
 import { SettingsView } from './_components/settings-view';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
+import { GoogleCalendarSettings } from './_components/google-calendar-settings';
+
 type LogLevel = 'info' | 'warning' | 'error';
 
 type LogRow = {
@@ -203,6 +205,7 @@ export default async function SettingsPage() {
 			}
 			integrations={
 				<div className="space-y-6">
+					<GoogleCalendarSettings />
 					{!secretConfigured && (
 						<Alert variant="destructive">
 							<AlertTitle>Brakuje sekretu webhooka</AlertTitle>

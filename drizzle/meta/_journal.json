@@ -141,6 +141,13 @@
       "when": 1764277402131,
       "tag": "0019_mixed_riptide",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1764278542454,
+      "tag": "0020_pink_agent_brand",
+      "breakpoints": true
     }
   ]
 }
