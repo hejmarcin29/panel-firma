@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { CalendarIcon, Eraser, PenTool, Save, Upload, X } from 'lucide-react';
+import { CalendarIcon, Eraser } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 
