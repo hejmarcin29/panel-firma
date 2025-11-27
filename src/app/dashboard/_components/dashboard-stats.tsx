@@ -42,10 +42,10 @@ export function DashboardStats({ montages, orders, userName }: DashboardStatsPro
   return (
     <div className="space-y-6">
       {/* Header Section */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between px-2 md:px-0">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Witaj, {userName || 'Użytkowniku'} 👋</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl md:text-2xl font-bold tracking-tight">Witaj, {userName || 'Użytkowniku'} 👋</h1>
+          <p className="text-muted-foreground hidden md:block">
             Oto podsumowanie Twoich działań w panelu.
           </p>
         </div>
