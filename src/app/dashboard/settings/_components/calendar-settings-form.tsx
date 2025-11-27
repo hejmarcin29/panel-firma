@@ -28,6 +28,7 @@ import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { updateCalendarSettings } from "../actions";
+import { ConfigurationGuide } from "./configuration-guide";
 
 export const calendarSettingsSchema = z.object({
   conflictPolicy: z.enum(["allow", "warn", "block"]),
@@ -247,13 +248,18 @@ export function CalendarSettingsForm({
 
         <Card>
             <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <Clock className="h-5 w-5" />
-                    Integracja Google Calendar
-                </CardTitle>
-                <CardDescription>
-                    Synchronizuj montaże z kalendarzem Google.
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                        <CardTitle className="flex items-center gap-2">
+                            <Clock className="h-5 w-5" />
+                            Integracja Google Calendar
+                        </CardTitle>
+                        <CardDescription>
+                            Synchronizuj montaże z kalendarzem Google.
+                        </CardDescription>
+                    </div>
+                    <ConfigurationGuide type="google" />
+                </div>
             </CardHeader>
             <CardContent>
                  <FormField
