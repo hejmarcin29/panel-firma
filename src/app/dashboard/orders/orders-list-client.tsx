@@ -171,8 +171,8 @@ export function OrdersListClient({ initialOrders }: OrdersListClientProps) {
   }, [ordersFilteredByDate, statusFilter, sourceFilter, search, activeTab]);
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="flex flex-col gap-6 p-0 md:p-6">
+      <div className="hidden md:flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Zamówienia</h1>
           <p className="text-muted-foreground">
@@ -205,6 +205,36 @@ export function OrdersListClient({ initialOrders }: OrdersListClientProps) {
             </Link>
           </Button>
         </div>
+      </div>
+
+      {/* Mobile Header */}
+      <div className="flex flex-col gap-4 p-4 md:hidden">
+         <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold">Zamówienia</h1>
+            <Button asChild size="sm">
+               <Link href="/dashboard/orders/new">
+                  <Plus className="h-4 w-4" />
+               </Link>
+            </Button>
+         </div>
+         <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="w-full">
+               <SelectValue placeholder="Wybierz miesiąc" />
+            </SelectTrigger>
+            <SelectContent>
+               <SelectItem value="all">Wszystkie miesiące</SelectItem>
+               {availableMonths.map((month) => {
+                  const [year, monthNum] = month.split('-');
+                  const date = new Date(parseInt(year), parseInt(monthNum) - 1);
+                  const label = new Intl.DateTimeFormat('pl-PL', { month: 'long', year: 'numeric' }).format(date);
+                  return (
+                     <SelectItem key={month} value={month} className="capitalize">
+                        {label}
+                     </SelectItem>
+                  );
+               })}
+            </SelectContent>
+         </Select>
       </div>
 
       <OrdersStats orders={ordersFilteredByDate} />

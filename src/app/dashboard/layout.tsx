@@ -25,8 +25,10 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 					</div>
 				</div>
 			</header>
-			<main className="mx-auto w-full max-w-[1600px] px-5 py-8">
-				<DashboardNav />
+			<main className="mx-auto w-full max-w-[1600px] p-0 md:px-5 md:py-8">
+				<div className="px-4 py-4 md:p-0">
+					<DashboardNav />
+				</div>
 				{children}
 			</main>
 		</div>

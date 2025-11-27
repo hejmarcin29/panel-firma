@@ -390,7 +390,7 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
 
   const MessageList = () => (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b space-y-4">
+      <div className="p-2 md:p-4 border-b space-y-2 md:space-y-4">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 overflow-hidden">
             {/* Tablet Folder Trigger (visible only on MD screens) */}
@@ -411,7 +411,7 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
                  </DropdownMenuContent>
                </DropdownMenu>
             </div>
-            <h1 className="text-xl font-bold truncate">{activeFolder?.name || "Wiadomości"}</h1>
+            <h1 className="text-xl font-bold truncate hidden md:block">{activeFolder?.name || "Wiadomości"}</h1>
           </div>
           <Button size="sm" onClick={handleCompose} className="shrink-0">
             <Plus className="h-4 w-4 mr-2" />

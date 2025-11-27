@@ -60,12 +60,12 @@ export default async function MontazePage() {
 
     return (
         <div className="flex flex-col h-[calc(100vh-4rem)]">
-            <div className="border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+            <div className="hidden md:block border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
                 <div className="flex h-16 items-center px-4 sm:px-6">
                     <h1 className="text-lg font-semibold">Centrum Montaży</h1>
                 </div>
             </div>
-            <div className="flex-1 overflow-hidden py-6">
+            <div className="flex-1 overflow-hidden md:py-6">
                 <MontageDashboardView 
                     montages={montagesData} 
                     statusOptions={statusOptions}

@@ -182,8 +182,8 @@ export function CalendarView({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex h-[calc(100vh-200px)] gap-4">
-        <div className="flex flex-col flex-1 bg-background rounded-lg border shadow-sm overflow-hidden">
+      <div className="flex h-[calc(100vh-120px)] md:h-[calc(100vh-200px)] gap-4">
+        <div className="flex flex-col flex-1 bg-background md:rounded-lg md:border md:shadow-sm rounded-none border-0 shadow-none overflow-hidden">
           {/* Header */}
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10 gap-4">
             <div className="flex items-center justify-between w-full md:w-auto gap-2">

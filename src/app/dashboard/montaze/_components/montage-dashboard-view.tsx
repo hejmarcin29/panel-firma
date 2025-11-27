@@ -20,6 +20,12 @@ export function MontageDashboardView({ montages, statusOptions, headerAction }: 
 
   return (
     <div className="flex flex-col gap-4 h-full">
+      {/* Mobile Header */}
+      <div className="flex items-center justify-between p-4 md:hidden border-b bg-background">
+         <h1 className="text-lg font-semibold">Centrum Montaży</h1>
+         {headerAction}
+      </div>
+
       <div className="flex flex-col gap-4 px-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
             <Tabs value={view} onValueChange={(v) => setView(v as "board" | "list" | "calendar")} className="w-auto">
@@ -39,7 +45,7 @@ export function MontageDashboardView({ montages, statusOptions, headerAction }: 
                 </TabsList>
             </Tabs>
         </div>
-        {headerAction && <div className="flex-shrink-0">{headerAction}</div>}
+        {headerAction && <div className="hidden md:block shrink-0">{headerAction}</div>}
       </div>
 
       <div className="flex-1 overflow-hidden">

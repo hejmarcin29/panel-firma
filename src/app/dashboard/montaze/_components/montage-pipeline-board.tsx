@@ -257,7 +257,7 @@ export function MontagePipelineBoard({ montages, statusOptions }: MontagePipelin
         onDragStart={handleDragStart}
         onDragCancel={() => setActiveId(null)}
       >
-        <div className="flex flex-wrap gap-4 pb-6 xl:flex-nowrap xl:overflow-x-auto">
+        <div className="flex flex-wrap gap-4 px-4 pb-6 xl:flex-nowrap xl:overflow-x-auto">
           {statusOptions.map((status) => (
             <PipelineColumn
               key={status.value}

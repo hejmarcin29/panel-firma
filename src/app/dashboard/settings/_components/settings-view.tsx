@@ -14,17 +14,17 @@ interface SettingsViewProps {
 
 export function SettingsView({ children, mailSettings, logs, integrations, storage, montageSettings }: SettingsViewProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6 p-4 md:p-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Ustawienia</h1>
-        <p className="text-sm text-muted-foreground">
+        <h1 className="text-xl md:text-2xl font-semibold tracking-tight">Ustawienia</h1>
+        <p className="text-sm text-muted-foreground hidden md:block">
           Zarządzaj konfiguracją aplikacji, integracjami i kontami pocztowymi.
         </p>
       </div>
 
-      <Tabs defaultValue="general" className="flex flex-col md:flex-row gap-8">
+      <Tabs defaultValue="general" className="flex flex-col md:flex-row gap-4 md:gap-8">
         <aside className="w-full md:w-64 shrink-0">
-          <TabsList className="flex flex-row md:flex-col h-auto w-full justify-start bg-transparent p-0 gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
+          <TabsList className="flex flex-row md:flex-col h-auto w-full justify-start bg-transparent p-0 gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0 no-scrollbar">
             <TabsTrigger 
               value="general" 
               className="w-full justify-start gap-2 px-3 py-2 h-9 data-[state=active]:bg-muted data-[state=active]:shadow-none ring-offset-background transition-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
