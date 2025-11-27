@@ -383,7 +383,6 @@ export const montages = sqliteTable(
 		installationCity: text('installation_city'),
 		scheduledInstallationAt: integer('scheduled_installation_at', { mode: 'timestamp_ms' }),
 		scheduledInstallationEndAt: integer('scheduled_installation_end_at', { mode: 'timestamp_ms' }),
-		googleEventId: text('google_event_id'),
 		materialDetails: text('material_details'),
 		status: text('status').$type<MontageStatus>().notNull().default('lead'),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' })
@@ -789,19 +788,4 @@ export const mailMessagesRelations = relations(mailMessages, ({ one }) => ({
 		references: [mailFolders.id],
 	}),
 }));
-
-export const googleCalendarSettings = sqliteTable('google_calendar_settings', {
-	id: text('id').primaryKey(),
-	userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }),
-	accessToken: text('access_token'),
-	refreshToken: text('refresh_token'),
-	expiryDate: integer('expiry_date', { mode: 'number' }),
-	targetCalendarId: text('target_calendar_id'),
-	createdAt: integer('created_at', { mode: 'timestamp_ms' })
-		.notNull()
-		.default(sql`(strftime('%s','now') * 1000)`),
-	updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
-		.notNull()
-		.default(sql`(strftime('%s','now') * 1000)`),
-});
 

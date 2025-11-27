@@ -16,7 +16,6 @@ import {
 } from '@/lib/db/schema';
 import { uploadMontageObject } from '@/lib/r2/storage';
 import { getMontageChecklistTemplates } from '@/lib/montaze/checklist';
-import { syncMontageToGoogle } from '@/lib/google/sync';
 
 const MONTAGE_DASHBOARD_PATH = '/dashboard/montaze';
 const MAX_ATTACHMENT_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
@@ -122,7 +121,7 @@ export async function createMontage({
 	scheduledInstallationEndDate,
 	materialDetails,
 }: CreateMontageInput) {
-	const user = await requireUser();
+	await requireUser();
 
 	const trimmedName = clientName.trim();
 	if (!trimmedName) {
@@ -191,11 +190,6 @@ export async function createMontage({
 		);
 	}
 
-	// Sync with Google Calendar
-	if (scheduledInstallationAt) {
-		await syncMontageToGoogle(montageId, user.id);
-	}
-
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
 
@@ -205,16 +199,13 @@ type UpdateMontageStatusInput = {
 };
 
 export async function updateMontageStatus({ montageId, status }: UpdateMontageStatusInput) {
-	const user = await requireUser();
+	await requireUser();
 	const resolved = ensureStatus(status);
 
 	await db
 		.update(montages)
 		.set({ status: resolved, updatedAt: new Date() })
 		.where(eq(montages.id, montageId));
-
-	// Sync with Google Calendar
-	await syncMontageToGoogle(montageId, user.id);
 
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
@@ -244,7 +235,7 @@ export async function updateMontageContactDetails({
 	installationAddress,
 	installationCity,
 }: UpdateMontageContactDetailsInput) {
-	const user = await requireUser();
+	await requireUser();
 
 	const trimmedName = clientName.trim();
 	if (!trimmedName) {
@@ -305,9 +296,6 @@ export async function updateMontageContactDetails({
 			updatedAt: new Date(),
 		})
 		.where(eq(montages.id, montageId));
-
-	// Sync with Google Calendar
-	await syncMontageToGoogle(montageId, user.id);
 
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 	revalidatePath(`${MONTAGE_DASHBOARD_PATH}/${montageId}`);

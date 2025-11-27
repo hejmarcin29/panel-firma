@@ -4,8 +4,6 @@ import { db } from '@/lib/db';
 import { orders, montages, customers } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
-import { syncMontageToGoogle } from '@/lib/google/sync';
-import { requireUser } from '@/lib/auth/session';
 
 export type CalendarEventType = 'order' | 'montage';
 
@@ -82,39 +80,16 @@ export async function updateEventDate(
   type: CalendarEventType,
   date: Date | null
 ) {
-  const user = await requireUser();
-
   if (type === 'order') {
     await db
       .update(orders)
       .set({ expectedShipDate: date })
       .where(eq(orders.id, id));
   } else {
-    // If we are moving a montage, we should probably shift the end date as well if it exists
-    // But for now, let's just update the start date and sync
-    // Ideally we should fetch the montage, calculate duration, and update end date too.
-    
-    const montage = await db.query.montages.findFirst({
-        where: eq(montages.id, id),
-    });
-
-    let newEndDate = null;
-    if (montage && montage.scheduledInstallationAt && montage.scheduledInstallationEndAt && date) {
-        const duration = montage.scheduledInstallationEndAt.getTime() - montage.scheduledInstallationAt.getTime();
-        newEndDate = new Date(date.getTime() + duration);
-    }
-
     await db
       .update(montages)
-      .set({ 
-          scheduledInstallationAt: date,
-          scheduledInstallationEndAt: newEndDate || (date ? montage?.scheduledInstallationEndAt : null)
-      })
+      .set({ scheduledInstallationAt: date })
       .where(eq(montages.id, id));
-
-    if (date) {
-        await syncMontageToGoogle(id, user.id);
-    }
   }
   revalidatePath('/dashboard/calendar');
 }

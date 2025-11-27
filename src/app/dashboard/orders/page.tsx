@@ -1,7 +1,5 @@
 import { requireUser } from '@/lib/auth/session';
 
-export const dynamic = 'force-dynamic';
-
 import { getManualOrders } from './actions';
 import { OrdersListClient } from './orders-list-client';
 

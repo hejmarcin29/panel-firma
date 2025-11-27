@@ -9,51 +9,6 @@ import { appSettingKeys, getAppSetting, setAppSetting } from '@/lib/settings';
 import { createR2Client } from '@/lib/r2/client';
 import { getR2Config } from '@/lib/r2/config';
 import { setMontageChecklistTemplates, type MontageChecklistTemplate } from '@/lib/montaze/checklist';
-import { getAuthUrl, getCalendarClient } from '@/lib/google/calendar';
-import { db } from '@/lib/db';
-import { googleCalendarSettings } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
-
-export async function getGoogleAuthUrlAction() {
-  await requireUser();
-  return getAuthUrl();
-}
-
-export async function disconnectGoogleCalendar() {
-  const user = await requireUser();
-  await db.delete(googleCalendarSettings).where(eq(googleCalendarSettings.userId, user.id));
-  revalidatePath('/dashboard/settings');
-}
-
-export async function getGoogleCalendarStatus() {
-  const user = await requireUser();
-  const settings = await db.query.googleCalendarSettings.findFirst({
-    where: eq(googleCalendarSettings.userId, user.id),
-  });
-
-  return {
-    isConnected: !!settings,
-    targetCalendarId: settings?.targetCalendarId,
-  };
-}
-
-export async function listGoogleCalendars() {
-  const user = await requireUser();
-  const calendar = await getCalendarClient(user.id);
-  if (!calendar) return [];
-
-  const response = await calendar.calendarList.list();
-  return response.data.items || [];
-}
-
-export async function setTargetCalendar(calendarId: string) {
-  const user = await requireUser();
-  await db
-    .update(googleCalendarSettings)
-    .set({ targetCalendarId: calendarId })
-    .where(eq(googleCalendarSettings.userId, user.id));
-  revalidatePath('/dashboard/settings');
-}
 
 export async function updateWooWebhookSecret(secret: string) {
 	const user = await requireUser();

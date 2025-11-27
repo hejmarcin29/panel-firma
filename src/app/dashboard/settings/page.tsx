@@ -1,8 +1,6 @@
 import { headers } from 'next/headers';
 import { desc, eq, sql } from 'drizzle-orm';
 
-export const dynamic = 'force-dynamic';
-
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -17,8 +15,6 @@ import { MailSettingsForm } from './_components/mail-settings-form';
 import { MontageChecklistSettings } from './_components/montage-checklist-settings';
 import { SettingsView } from './_components/settings-view';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-
-import { GoogleCalendarSettings } from './_components/google-calendar-settings';
 
 type LogLevel = 'info' | 'warning' | 'error';
 
@@ -207,7 +203,6 @@ export default async function SettingsPage() {
 			}
 			integrations={
 				<div className="space-y-6">
-					<GoogleCalendarSettings />
 					{!secretConfigured && (
 						<Alert variant="destructive">
 							<AlertTitle>Brakuje sekretu webhooka</AlertTitle>

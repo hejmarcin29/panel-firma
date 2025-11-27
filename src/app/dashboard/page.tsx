@@ -1,7 +1,5 @@
 import { desc, asc } from 'drizzle-orm';
 
-export const dynamic = 'force-dynamic';
-
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
 import {
