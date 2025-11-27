@@ -16,8 +16,6 @@ import {
 } from '@/lib/db/schema';
 import { uploadMontageObject } from '@/lib/r2/storage';
 import { getMontageChecklistTemplates } from '@/lib/montaze/checklist';
-import { getAppSetting, appSettingKeys } from '@/lib/settings';
-import { createOrUpdateEvent } from '@/lib/google/calendar';
 
 const MONTAGE_DASHBOARD_PATH = '/dashboard/montaze';
 const MAX_ATTACHMENT_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
@@ -597,62 +595,4 @@ export async function updateMontageChecklistItemLabel({ montageId, itemId, label
 
 	await touchMontage(montageId);
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
-}
-
-export async function updateMontageSchedule({
-	montageId,
-	scheduledAt,
-	scheduledEndAt,
-}: {
-	montageId: string;
-	scheduledAt: Date | null;
-	scheduledEndAt: Date | null;
-}) {
-	await requireUser();
-
-	const montage = await getMontageOrThrow(montageId);
-	let googleEventId = montage.googleEventId;
-
-	const calendarSettingsJson = await getAppSetting(appSettingKeys.calendarSettings);
-	let syncEnabled = false;
-	if (calendarSettingsJson) {
-		try {
-			const settings = JSON.parse(calendarSettingsJson);
-			syncEnabled = settings.googleCalendarSync === true;
-		} catch (e) {
-			console.error('Failed to parse calendar settings', e);
-		}
-	}
-
-	if (syncEnabled && scheduledAt && scheduledEndAt) {
-		const location = [montage.installationAddress, montage.installationCity].filter(Boolean).join(', ');
-		const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-		const description = `Montaż dla: ${montage.clientName}\nTelefon: ${montage.contactPhone || 'Brak'}\nSzczegóły: ${montage.materialDetails || 'Brak'}\nLink: ${appUrl}/dashboard/montaze/${montageId}`;
-
-		const newEventId = await createOrUpdateEvent({
-			eventId: googleEventId,
-			summary: `Montaż: ${montage.clientName}`,
-			description,
-			location,
-			start: scheduledAt,
-			end: scheduledEndAt,
-		});
-
-		if (newEventId) {
-			googleEventId = newEventId;
-		}
-	}
-
-	await db
-		.update(montages)
-		.set({
-			scheduledInstallationAt: scheduledAt,
-			scheduledEndAt: scheduledEndAt,
-			googleEventId: googleEventId,
-			updatedAt: new Date(),
-		})
-		.where(eq(montages.id, montageId));
-
-	revalidatePath(MONTAGE_DASHBOARD_PATH);
-	revalidatePath(`${MONTAGE_DASHBOARD_PATH}/${montageId}`);
 }

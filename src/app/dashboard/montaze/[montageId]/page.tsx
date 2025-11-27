@@ -18,7 +18,6 @@ import { mapMontageRow, type MontageRow } from '../utils';
 import { MontageHeader } from './_components/montage-header';
 import { MontageClientCard } from './_components/montage-client-card';
 import { MontageMaterialCard } from './_components/montage-material-card';
-import { MontageScheduleCard } from './_components/montage-schedule-card';
 import { MontageWorkflowTab } from './_components/montage-workflow-tab';
 import { MontageTasksTab } from './_components/montage-tasks-tab';
 import { MontageGalleryTab } from './_components/montage-gallery-tab';
@@ -87,24 +86,23 @@ export default async function MontageDetailsPage({ params }: MontageDetailsPageP
             
             <main className="container mx-auto grid gap-6 p-4 md:grid-cols-[350px_1fr] lg:grid-cols-[400px_1fr] lg:p-8">
                 <div className="space-y-6">
-                    <MontageScheduleCard montage={montage} />
                     <MontageClientCard montage={montage} />
                     <MontageMaterialCard montage={montage} />
                 </div>
 
                 <div className="space-y-6">
-                    <Tabs defaultValue="workflow" className="w-full">
-                        <TabsList className="flex w-full justify-start overflow-x-auto h-auto md:grid md:grid-cols-4 md:justify-center">
-                            <TabsTrigger value="workflow" className="flex-1 min-w-fit md:min-w-0">Przebieg</TabsTrigger>
-                            <TabsTrigger value="log" className="flex-1 min-w-fit md:min-w-0">Dziennik</TabsTrigger>
-                            <TabsTrigger value="tasks" className="flex-1 min-w-fit md:min-w-0">Zadania</TabsTrigger>
-                            <TabsTrigger value="gallery" className="flex-1 min-w-fit md:min-w-0">Galeria</TabsTrigger>
+                    <Tabs defaultValue="log" className="w-full">
+                        <TabsList className="flex w-full overflow-x-auto md:grid md:grid-cols-4">
+                            <TabsTrigger value="log" className="flex-1">Dziennik</TabsTrigger>
+                            <TabsTrigger value="workflow" className="flex-1">Przebieg</TabsTrigger>
+                            <TabsTrigger value="tasks" className="flex-1">Zadania</TabsTrigger>
+                            <TabsTrigger value="gallery" className="flex-1">Galeria</TabsTrigger>
                         </TabsList>
-                        <TabsContent value="workflow" className="mt-6">
-                            <MontageWorkflowTab montage={montage} />
-                        </TabsContent>
                         <TabsContent value="log" className="mt-6">
                             <MontageLogTab montage={montage} />
+                        </TabsContent>
+                        <TabsContent value="workflow" className="mt-6">
+                            <MontageWorkflowTab montage={montage} />
                         </TabsContent>
                         <TabsContent value="tasks" className="mt-6">
                             <MontageTasksTab montage={montage} />

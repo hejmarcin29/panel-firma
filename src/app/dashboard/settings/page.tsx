@@ -13,10 +13,8 @@ import { WebhookSecretForm } from './_components/webhook-secret-form';
 import { R2ConfigForm } from './_components/r2-config-form';
 import { MailSettingsForm } from './_components/mail-settings-form';
 import { MontageChecklistSettings } from './_components/montage-checklist-settings';
-import { CalendarSettingsForm, type CalendarSettings } from './_components/calendar-settings-form';
 import { SettingsView } from './_components/settings-view';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ConfigurationGuide } from './_components/configuration-guide';
 
 type LogLevel = 'info' | 'warning' | 'error';
 
@@ -161,35 +159,10 @@ export default async function SettingsPage() {
 		nextSyncAt: account.nextSyncAt?.toISOString() ?? null,
 	}));
 
-	const calendarSettingsJson = await getAppSetting(appSettingKeys.calendarSettings);
-	let calendarSettings: CalendarSettings = {
-		conflictPolicy: 'warn',
-		defaultDuration: 4,
-		enableTravelBuffer: false,
-		travelBufferMinutes: 30,
-		workingHoursStart: '08:00',
-		workingHoursEnd: '16:00',
-		hideWeekends: true,
-		googleCalendarSync: false,
-	};
-
-	if (calendarSettingsJson) {
-		try {
-			calendarSettings = JSON.parse(calendarSettingsJson);
-		} catch (e) {
-			console.error('Failed to parse calendar settings', e);
-		}
-	}
-
 	return (
 		<SettingsView
 			mailSettings={<MailSettingsForm accounts={formattedMailAccounts} />}
-			montageSettings={
-				<MontageChecklistSettings initialTemplates={montageChecklistTemplates} />
-			}
-			calendarSettings={
-				<CalendarSettingsForm initialSettings={calendarSettings} />
-			}
+			montageSettings={<MontageChecklistSettings initialTemplates={montageChecklistTemplates} />}
 			logs={
 				<Card>
 					<CardHeader>
@@ -240,13 +213,8 @@ export default async function SettingsPage() {
 					)}
 					<Card>
 						<CardHeader>
-							<div className="flex items-center justify-between">
-								<div className="space-y-1">
-									<CardTitle>Webhook WooCommerce</CardTitle>
-									<CardDescription>Ustaw dane ponizej w panelu WordPress, aby zamowienia trafialy do systemu.</CardDescription>
-								</div>
-								<ConfigurationGuide type="woocommerce" />
-							</div>
+							<CardTitle>Webhook WooCommerce</CardTitle>
+							<CardDescription>Ustaw dane ponizej w panelu WordPress, aby zamowienia trafialy do systemu.</CardDescription>
 						</CardHeader>
 						<CardContent className="space-y-6">
 							<WebhookSecretForm initialSecret={webhookSecret} />
@@ -268,13 +236,8 @@ export default async function SettingsPage() {
 			storage={
 				<Card>
 					<CardHeader>
-						<div className="flex items-center justify-between">
-							<div className="space-y-1">
-								<CardTitle>Cloudflare R2</CardTitle>
-								<CardDescription>Skonfiguruj magazyn do przechowywania zalacznikow klientow.</CardDescription>
-							</div>
-							<ConfigurationGuide type="r2" />
-						</div>
+						<CardTitle>Cloudflare R2</CardTitle>
+						<CardDescription>Skonfiguruj magazyn do przechowywania zalacznikow klientow.</CardDescription>
 					</CardHeader>
 					<CardContent className="space-y-4">
 						<div className="flex flex-wrap items-center gap-2 text-sm">

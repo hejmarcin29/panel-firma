@@ -152,21 +152,3 @@ export async function updateMontageChecklistTemplatesAction(templates: MontageCh
 	revalidatePath('/dashboard/settings');
 }
 
-import { CalendarSettings } from './_components/calendar-settings-form';
-
-export async function updateCalendarSettings(settings: CalendarSettings) {
-	const user = await requireUser();
-	if (user.role !== 'owner') {
-		throw new Error('Tylko właściciel może zmieniać ustawienia kalendarza.');
-	}
-
-	await setAppSetting({
-		key: appSettingKeys.calendarSettings,
-		value: JSON.stringify(settings),
-		userId: user.id,
-	});
-
-	revalidatePath('/dashboard/settings');
-	revalidatePath('/dashboard/calendar');
-}
-
