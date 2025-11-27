@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 
 const links = [
 	{ href: '/dashboard', label: 'Przegląd' },
+	{ href: '/dashboard/calendar', label: 'Kalendarz' },
 	{ href: '/dashboard/orders', label: 'Zamówienia' },
 	{ href: '/dashboard/montaze', label: 'Montaże' },
 	{ href: '/dashboard/montaze/galeria', label: 'Galeria' },
