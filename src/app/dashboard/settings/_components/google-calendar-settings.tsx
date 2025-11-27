@@ -145,11 +145,13 @@ export function GoogleCalendarSettings() {
                 <SelectValue placeholder="Wybierz kalendarz..." />
               </SelectTrigger>
               <SelectContent>
-                {calendars.map((cal) => (
-                  <SelectItem key={cal.id} value={cal.id}>
-                    {cal.summary} {cal.primary && '(Główny)'}
-                  </SelectItem>
-                ))}
+                {calendars
+                  .filter((cal) => cal.id)
+                  .map((cal) => (
+                    <SelectItem key={cal.id!} value={cal.id!}>
+                      {cal.summary} {cal.primary && '(Główny)'}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
