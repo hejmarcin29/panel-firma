@@ -185,7 +185,7 @@ export default async function SettingsPage() {
 		<SettingsView
 			mailSettings={<MailSettingsForm accounts={formattedMailAccounts} />}
 			montageSettings={
-				<MontageChecklistSettings templates={montageChecklistTemplates} />
+				<MontageChecklistSettings initialTemplates={montageChecklistTemplates} />
 			}
 			calendarSettings={
 				<CalendarSettingsForm initialSettings={calendarSettings} />

@@ -12,12 +12,11 @@ export async function getCalendarClient() {
         return null;
     }
 
-    const auth = new google.auth.JWT(
-        clientEmail,
-        undefined,
-        privateKey,
-        SCOPES
-    );
+    const auth = new google.auth.JWT({
+        email: clientEmail,
+        key: privateKey,
+        scopes: SCOPES,
+    });
 
     return {
         calendar: google.calendar({ version: 'v3', auth }),
