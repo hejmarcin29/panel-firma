@@ -1,7 +1,7 @@
 'use client';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Mail, Database, Activity, Globe } from 'lucide-react';
+import { Settings, Mail, Database, Activity, Globe, Calendar } from 'lucide-react';
 
 interface SettingsViewProps {
   children: React.ReactNode;

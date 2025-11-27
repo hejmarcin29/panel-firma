@@ -1,10 +1,10 @@
 "use client";
 
 import { useTransition } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Calendar, Clock, AlertTriangle, Shield } from "lucide-react";
+import { Calendar, Clock, Shield } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -52,6 +52,11 @@ export function CalendarSettingsForm({
   const form = useForm<CalendarSettings>({
     resolver: zodResolver(calendarSettingsSchema),
     defaultValues: initialSettings,
+  });
+
+  const enableTravelBuffer = useWatch({
+    control: form.control,
+    name: "enableTravelBuffer",
   });
 
   function onSubmit(data: CalendarSettings) {
@@ -162,7 +167,7 @@ export function CalendarSettingsForm({
                     )}
                 />
                 
-                {form.watch("enableTravelBuffer") && (
+                {enableTravelBuffer && (
                     <FormField
                     control={form.control}
                     name="travelBufferMinutes"

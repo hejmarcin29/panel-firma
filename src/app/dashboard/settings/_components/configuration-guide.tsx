@@ -75,7 +75,7 @@ const guides: Record<
               Kliknij <strong>Create Credentials</strong> i wybierz{" "}
               <strong>Service Account</strong>.
             </p>
-            <p>Nadaj nazwę (np. "Panel Firmy") i kliknij Create.</p>
+            <p>Nadaj nazwę (np. &quot;Panel Firmy&quot;) i kliknij Create.</p>
             <p>
               Skopiuj adres email utworzonego konta (np.{" "}
               <code>panel@twoj-projekt.iam.gserviceaccount.com</code>).
@@ -133,7 +133,7 @@ const guides: Record<
               <strong>Ustawienia i udostępnianie</strong>.
             </p>
             <p>
-              W sekcji "Udostępnij określonym osobom" kliknij{" "}
+              W sekcji &quot;Udostępnij określonym osobom&quot; kliknij{" "}
               <strong>Dodaj osoby</strong>.
             </p>
             <p>
@@ -184,7 +184,7 @@ const guides: Record<
               </a>{" "}
               i wybierz <strong>R2</strong> z menu.
             </p>
-            <p>Kliknij "Create bucket", nadaj mu nazwę (np. "panel-pliki").</p>
+            <p>Kliknij &quot;Create bucket&quot;, nadaj mu nazwę (np. &quot;panel-pliki&quot;).</p>
           </div>
         ),
       },
@@ -207,7 +207,7 @@ const guides: Record<
               Na głównej stronie R2 kliknij link{" "}
               <strong>Manage R2 API Tokens</strong> (po prawej).
             </p>
-            <p>Kliknij "Create API token".</p>
+            <p>Kliknij &quot;Create API token&quot;.</p>
             <p>
               Uprawnienia: Wybierz <strong>Object Read & Write</strong>.
             </p>
@@ -283,7 +283,7 @@ const guides: Record<
               Wymyśl długie, losowe hasło (min. 16 znaków). Możesz wpisać
               cokolwiek, byle było trudne do zgadnięcia.
             </p>
-            <p>Wpisz je w polu "Sekret webhooka" w tym panelu i zapisz.</p>
+            <p>Wpisz je w polu &quot;Sekret webhooka&quot; w tym panelu i zapisz.</p>
           </div>
         ),
       },
@@ -298,7 +298,7 @@ const guides: Record<
               Idź do: <strong>WooCommerce</strong> &gt; <strong>Ustawienia</strong>{" "}
               &gt; <strong>Zaawansowane</strong> &gt; <strong>Webhooki</strong>.
             </p>
-            <p>Kliknij "Dodaj webhook".</p>
+            <p>Kliknij &quot;Dodaj webhook&quot;.</p>
           </div>
         ),
       },

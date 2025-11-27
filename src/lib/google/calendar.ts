@@ -65,7 +65,7 @@ export async function createOrUpdateEvent({
                     requestBody: event,
                 });
                 return res.data.id;
-            } catch (e) {
+            } catch {
                 // If not found (404), create new
                 const res = await calendar.events.insert({
                     calendarId,
