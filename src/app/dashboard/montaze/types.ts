@@ -56,6 +56,7 @@ export type Montage = {
 	billingCity: string | null;
 	installationCity: string | null;
 	scheduledInstallationAt: TimestampValue;
+	scheduledInstallationEndAt: TimestampValue;
 	materialDetails: string | null;
 	status: MontageStatus;
 	createdAt: TimestampValue;

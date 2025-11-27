@@ -12,6 +12,7 @@ export interface CalendarEvent {
   type: CalendarEventType;
   title: string;
   date: Date | null;
+  endDate?: Date | null;
   status: string;
   description?: string;
   amount?: string;
@@ -35,6 +36,7 @@ export async function getCalendarEvents(): Promise<{ scheduled: CalendarEvent[];
       .select({
         id: montages.id,
         scheduledInstallationAt: montages.scheduledInstallationAt,
+        scheduledInstallationEndAt: montages.scheduledInstallationEndAt,
         clientName: montages.clientName,
         address: montages.address,
         status: montages.status,
@@ -47,6 +49,7 @@ export async function getCalendarEvents(): Promise<{ scheduled: CalendarEvent[];
     type: 'order',
     title: order.customerName || 'Zamówienie',
     date: order.expectedShipDate,
+    endDate: null,
     status: order.status,
     amount: new Intl.NumberFormat('pl-PL', {
       style: 'currency',
@@ -59,6 +62,7 @@ export async function getCalendarEvents(): Promise<{ scheduled: CalendarEvent[];
     type: 'montage',
     title: montage.clientName,
     date: montage.scheduledInstallationAt,
+    endDate: montage.scheduledInstallationEndAt,
     status: montage.status,
     address: montage.address || '',
   }));

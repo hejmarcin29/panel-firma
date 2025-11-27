@@ -20,6 +20,7 @@ type FormState = {
 	installationAddress: string;
 	installationCity: string;
 	scheduledInstallationDate: string;
+	scheduledInstallationEndDate: string;
 	materialDetails: string;
 };
 
@@ -32,6 +33,7 @@ const initialState: FormState = {
 	installationAddress: '',
 	installationCity: '',
 	scheduledInstallationDate: '',
+	scheduledInstallationEndDate: '',
 	materialDetails: '',
 };
 
@@ -195,12 +197,21 @@ export function CreateMontageForm({ onSuccess }: CreateMontageFormProps) {
 			</div>
 			<div className="grid gap-4 md:grid-cols-2">
 				<div>
-					<Label htmlFor="montage-schedule-date">Przewidywany termin montażu</Label>
+					<Label htmlFor="montage-schedule-date">Przewidywany termin montażu (od)</Label>
 					<Input
 						id="montage-schedule-date"
 						type="date"
 						value={form.scheduledInstallationDate}
 						onChange={handleInputChange('scheduledInstallationDate')}
+					/>
+				</div>
+				<div>
+					<Label htmlFor="montage-schedule-end-date">Przewidywany termin montażu (do)</Label>
+					<Input
+						id="montage-schedule-end-date"
+						type="date"
+						value={form.scheduledInstallationEndDate}
+						onChange={handleInputChange('scheduledInstallationEndDate')}
 					/>
 				</div>
 			</div>

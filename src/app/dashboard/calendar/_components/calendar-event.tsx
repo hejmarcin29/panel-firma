@@ -2,7 +2,9 @@
 
 import { CalendarEvent } from '../actions';
 import { cn } from '@/lib/utils';
-import { MapPin, DollarSign, Clock } from 'lucide-react';
+import { MapPin, DollarSign, Clock, Calendar as CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { pl } from 'date-fns/locale';
 import {
   HoverCard,
   HoverCardContent,
@@ -55,6 +57,14 @@ export function CalendarEventCard({ event, className }: CalendarEventProps) {
               {isMontage ? 'Montaż' : 'Zamówienie'}
             </p>
             <div className="flex items-center pt-2">
+              <CalendarIcon className="mr-2 h-4 w-4 opacity-70" />
+              <span className="text-xs text-muted-foreground">
+                {event.date && format(event.date, 'dd.MM.yyyy', { locale: pl })}
+                {event.endDate &&
+                  ` - ${format(event.endDate, 'dd.MM.yyyy', { locale: pl })}`}
+              </span>
+            </div>
+            <div className="flex items-center pt-1">
               <Clock className="mr-2 h-4 w-4 opacity-70" />
               <span className="text-xs text-muted-foreground">
                 Status: {event.status}

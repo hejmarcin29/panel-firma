@@ -143,6 +143,7 @@ export function mapMontageRow(row: MontageRow, publicBaseUrl: string | null): Mo
 		billingCity: row.billingCity ?? null,
 		installationCity: row.installationCity ?? null,
 		scheduledInstallationAt: row.scheduledInstallationAt ?? null,
+		scheduledInstallationEndAt: row.scheduledInstallationEndAt ?? null,
 		materialDetails: row.materialDetails ?? null,
 		status: row.status as MontageStatus,
 		createdAt: row.createdAt,
@@ -189,6 +190,52 @@ export function formatScheduleDate(value: Montage['scheduledInstallationAt']) {
 	}
 
 	return new Intl.DateTimeFormat('pl-PL', { dateStyle: 'medium' }).format(date);
+}
+
+export function formatScheduleRange(start: Montage['scheduledInstallationAt'], end: Montage['scheduledInstallationEndAt']) {
+	if (!start) {
+		return null;
+	}
+
+	const startDate =
+		start instanceof Date
+			? start
+			: typeof start === 'number'
+				? new Date(start)
+				: typeof start === 'string'
+					? new Date(start)
+					: null;
+
+	if (!startDate || Number.isNaN(startDate.getTime())) {
+		return null;
+	}
+
+	const startStr = new Intl.DateTimeFormat('pl-PL', { dateStyle: 'medium' }).format(startDate);
+
+	if (!end) {
+		return startStr;
+	}
+
+	const endDate =
+		end instanceof Date
+			? end
+			: typeof end === 'number'
+				? new Date(end)
+				: typeof end === 'string'
+					? new Date(end)
+					: null;
+
+	if (!endDate || Number.isNaN(endDate.getTime())) {
+		return startStr;
+	}
+
+	const endStr = new Intl.DateTimeFormat('pl-PL', { dateStyle: 'medium' }).format(endDate);
+
+    if (startStr === endStr) {
+        return startStr;
+    }
+
+	return `${startStr} - ${endStr}`;
 }
 
 export function summarizeMaterialDetails(value: Montage['materialDetails'], maxLength = 80) {

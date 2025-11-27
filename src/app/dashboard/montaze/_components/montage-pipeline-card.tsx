@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 
 import type { Montage, StatusOption } from '../types';
-import { summarizeMaterialDetails } from '../utils';
+import { summarizeMaterialDetails, formatScheduleRange } from '../utils';
 
 function countCompleted(tasks: Montage['tasks']): number {
 	return tasks.filter((task) => task.completed).length;
@@ -29,27 +29,6 @@ function formatTimestamp(value: Montage['updatedAt']) {
 		Math.round((date.getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
 		'day',
 	);
-}
-
-function formatScheduleDate(value: Montage['scheduledInstallationAt']) {
-	if (!value) {
-		return null;
-	}
-
-	const date =
-		value instanceof Date
-			? value
-			: typeof value === 'number'
-				? new Date(value)
-				: typeof value === 'string'
-					? new Date(value)
-					: null;
-
-	if (!date || Number.isNaN(date.getTime())) {
-		return null;
-	}
-
-	return new Intl.DateTimeFormat('pl-PL', { dateStyle: 'medium' }).format(date);
 }
 
 function initials(name: string) {
@@ -79,7 +58,7 @@ export function MontagePipelineCard({ montage }: Props) {
 	const installationAddress = montage.installationAddress;
 	const addressLine = installationAddress || billingAddress;
 	const cityLine = montage.installationCity || montage.billingCity || null;
-	const scheduledDate = useMemo(() => formatScheduleDate(montage.scheduledInstallationAt), [montage.scheduledInstallationAt]);
+	const scheduledDate = useMemo(() => formatScheduleRange(montage.scheduledInstallationAt, montage.scheduledInstallationEndAt), [montage.scheduledInstallationAt, montage.scheduledInstallationEndAt]);
 	
     return (
         <Link href={`/dashboard/montaze/${montage.id}`} className="block group">

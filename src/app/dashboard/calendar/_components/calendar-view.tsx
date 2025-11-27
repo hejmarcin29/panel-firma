@@ -10,6 +10,7 @@ import {
   isSameDay,
   isSameMonth,
   isToday,
+  startOfDay,
   startOfMonth,
   startOfWeek,
   subMonths,
@@ -115,6 +116,14 @@ export function CalendarView({
       if (!event.date) return false;
       if (event.type === 'order' && !showOrders) return false;
       if (event.type === 'montage' && !showMontages) return false;
+
+      if (event.endDate) {
+        const start = startOfDay(event.date);
+        const end = startOfDay(event.endDate);
+        const current = startOfDay(day);
+        return current >= start && current <= end;
+      }
+
       return isSameDay(event.date, day);
     });
   };

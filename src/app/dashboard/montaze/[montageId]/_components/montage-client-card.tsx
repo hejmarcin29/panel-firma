@@ -19,6 +19,8 @@ import {
 import { updateMontageContactDetails } from "../../actions";
 import type { Montage } from "../../types";
 
+import { formatScheduleRange } from "../../utils";
+
 export function MontageClientCard({ montage }: { montage: Montage }) {
   const [isEditing, setIsEditing] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -39,6 +41,7 @@ export function MontageClientCard({ montage }: { montage: Montage }) {
         billingCity: formData.get("billingCity") as string,
         installationCity: formData.get("installationCity") as string,
         scheduledInstallationDate: formData.get("scheduledInstallationAt") as string,
+        scheduledInstallationEndDate: formData.get("scheduledInstallationEndAt") as string,
       });
       setIsEditing(false);
       router.refresh();
@@ -48,6 +51,15 @@ export function MontageClientCard({ montage }: { montage: Montage }) {
   const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
     (montage.installationAddress || "") + " " + (montage.installationCity || "")
   )}`;
+
+  const scheduledDate = montage.scheduledInstallationAt
+    ? new Date(montage.scheduledInstallationAt as string | number | Date).toISOString().split("T")[0]
+    : "";
+  const scheduledEndDate = montage.scheduledInstallationEndAt
+    ? new Date(montage.scheduledInstallationEndAt as string | number | Date).toISOString().split("T")[0]
+    : "";
+
+  const formattedDate = formatScheduleRange(montage.scheduledInstallationAt, montage.scheduledInstallationEndAt);
 
   return (
     <Card>
@@ -97,19 +109,26 @@ export function MontageClientCard({ montage }: { montage: Montage }) {
                   defaultValue={montage.installationCity || ""}
                 />
               </div>
-               <div className="space-y-2">
-                <Label htmlFor="scheduledInstallationAt">Data montażu</Label>
-                <Input
-                  id="scheduledInstallationAt"
-                  name="scheduledInstallationAt"
-                  type="date"
-                  defaultValue={
-                    montage.scheduledInstallationAt
-                      ? new Date(montage.scheduledInstallationAt).toISOString().slice(0, 10)
-                      : ""
-                  }
-                />
-              </div>
+               <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="scheduledInstallationAt">Data montażu (od)</Label>
+                    <Input
+                    id="scheduledInstallationAt"
+                    name="scheduledInstallationAt"
+                    type="date"
+                    defaultValue={scheduledDate}
+                    />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="scheduledInstallationEndAt">Data montażu (do)</Label>
+                    <Input
+                    id="scheduledInstallationEndAt"
+                    name="scheduledInstallationEndAt"
+                    type="date"
+                    defaultValue={scheduledEndDate}
+                    />
+                </div>
+               </div>
               <Button type="submit" disabled={pending} className="w-full">
                 {pending ? "Zapisywanie..." : "Zapisz zmiany"}
               </Button>
@@ -170,9 +189,7 @@ export function MontageClientCard({ montage }: { montage: Montage }) {
             <Calendar className="h-4 w-4 text-muted-foreground" />
             <div className="grid gap-0.5">
                 <span className="text-sm">
-                    {montage.scheduledInstallationAt 
-                        ? new Date(montage.scheduledInstallationAt).toLocaleDateString('pl-PL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
-                        : "Nie zaplanowano"}
+                    {formattedDate || "Nie zaplanowano"}
                 </span>
             </div>
         </div>

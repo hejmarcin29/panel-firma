@@ -105,6 +105,7 @@ type CreateMontageInput = {
 	billingCity?: string;
 	installationCity?: string;
 	scheduledInstallationDate?: string;
+	scheduledInstallationEndDate?: string;
 	materialDetails?: string;
 };
 
@@ -117,6 +118,7 @@ export async function createMontage({
 	billingCity,
 	installationCity,
 	scheduledInstallationDate,
+	scheduledInstallationEndDate,
 	materialDetails,
 }: CreateMontageInput) {
 	await requireUser();
@@ -146,6 +148,14 @@ export async function createMontage({
 		}
 	}
 
+	let scheduledInstallationEndAt: Date | null = null;
+	if (scheduledInstallationEndDate) {
+		const parsed = new Date(`${scheduledInstallationEndDate}T00:00:00`);
+		if (!Number.isNaN(parsed.getTime())) {
+			scheduledInstallationEndAt = parsed;
+		}
+	}
+
 	await db.insert(montages).values({
 		id: montageId,
 		clientName: trimmedName,
@@ -157,6 +167,7 @@ export async function createMontage({
 		billingCity: normalizedBillingCity,
 		installationCity: normalizedInstallationCity,
 		scheduledInstallationAt,
+		scheduledInstallationEndAt,
 		materialDetails: normalizedMaterialDetails,
 		status: 'lead',
 		createdAt: now,
@@ -205,6 +216,7 @@ type UpdateMontageContactDetailsInput = {
 	contactPhone?: string;
 	contactEmail?: string;
 	scheduledInstallationDate?: string;
+	scheduledInstallationEndDate?: string;
 	billingAddress?: string;
 	billingCity?: string;
 	installationAddress?: string;
@@ -217,6 +229,7 @@ export async function updateMontageContactDetails({
 	contactPhone,
 	contactEmail,
 	scheduledInstallationDate,
+	scheduledInstallationEndDate,
 	billingAddress,
 	billingCity,
 	installationAddress,
@@ -254,6 +267,15 @@ export async function updateMontageContactDetails({
 		scheduledInstallationAt = parsed;
 	}
 
+	let scheduledInstallationEndAt: Date | null = null;
+	if (scheduledInstallationEndDate && scheduledInstallationEndDate.trim()) {
+		const parsed = new Date(`${scheduledInstallationEndDate}T00:00:00`);
+		if (Number.isNaN(parsed.getTime())) {
+			throw new Error('Podaj prawidłową datę zakończenia montażu.');
+		}
+		scheduledInstallationEndAt = parsed;
+	}
+
 	const fallbackAddress = normalizedInstallationAddress ?? normalizedBillingAddress;
 	const fallbackCity = normalizedInstallationCity ?? normalizedBillingCity;
 	const combinedAddress = [fallbackAddress, fallbackCity].filter(Boolean).join(', ') || null;
@@ -270,11 +292,13 @@ export async function updateMontageContactDetails({
 			installationCity: normalizedInstallationCity,
 			address: combinedAddress,
 			scheduledInstallationAt,
+			scheduledInstallationEndAt,
 			updatedAt: new Date(),
 		})
 		.where(eq(montages.id, montageId));
 
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
+	revalidatePath(`${MONTAGE_DASHBOARD_PATH}/${montageId}`);
 }
 
 export async function addMontageNote(formData: FormData) {
