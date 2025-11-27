@@ -384,6 +384,10 @@ export const montages = sqliteTable(
 		scheduledInstallationAt: integer('scheduled_installation_at', { mode: 'timestamp_ms' }),
 		scheduledInstallationEndAt: integer('scheduled_installation_end_at', { mode: 'timestamp_ms' }),
 		materialDetails: text('material_details'),
+		measurementDetails: text('measurement_details'),
+		panelType: text('panel_type'),
+		additionalInfo: text('additional_info'),
+		forecastedInstallationDate: integer('forecasted_installation_date', { mode: 'timestamp_ms' }),
 		status: text('status').$type<MontageStatus>().notNull().default('lead'),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' })
 			.notNull()

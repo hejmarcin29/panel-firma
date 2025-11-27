@@ -49,6 +49,7 @@ import { summarizeMaterialDetails } from '../utils';
 import type { MontageStatus } from '@/lib/db/schema';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { Montage, MontageAttachment, StatusOption, TimestampValue } from '../types';
+import { MontageMeasurementTab } from './montage-measurement-tab';
 
 function formatTimestamp(value: TimestampValue) {
 	if (!value) {
@@ -157,6 +158,7 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 	const detailTabs = [
 		{ id: 'overview', label: 'Przegląd' },
 		{ id: 'contact', label: 'Dane kontaktowe' },
+		{ id: 'measurement', label: 'Pomiar' },
 		{ id: 'materials', label: 'Materiały' },
 		{ id: 'checklist', label: 'Checklist' },
 		{ id: 'notes', label: 'Notatki' },
@@ -946,6 +948,11 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 									</Button>
 								</div>
 							</form>
+						</div>
+					</TabsContent>
+					<TabsContent value="measurement" className="space-y-3">
+						<div className="rounded-2xl border border-border/60 bg-muted/10 p-4">
+							<MontageMeasurementTab montage={montage} />
 						</div>
 					</TabsContent>
 					<TabsContent value="checklist" className="space-y-3">

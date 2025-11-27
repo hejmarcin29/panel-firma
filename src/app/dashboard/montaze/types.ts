@@ -58,6 +58,10 @@ export type Montage = {
 	scheduledInstallationAt: TimestampValue;
 	scheduledInstallationEndAt: TimestampValue;
 	materialDetails: string | null;
+	measurementDetails: string | null;
+	panelType: string | null;
+	additionalInfo: string | null;
+	forecastedInstallationDate: TimestampValue;
 	status: MontageStatus;
 	createdAt: TimestampValue;
 	updatedAt: TimestampValue;

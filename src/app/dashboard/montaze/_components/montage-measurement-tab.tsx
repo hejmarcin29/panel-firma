@@ -1,0 +1,234 @@
+'use client';
+
+import { useState, useRef, useEffect, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { CalendarIcon, Eraser, PenTool, Save, Upload, X } from 'lucide-react';
+import { format } from 'date-fns';
+import { pl } from 'date-fns/locale';
+
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
+import type { Montage } from '../types';
+import { updateMontageMeasurement } from '../actions';
+
+interface MontageMeasurementTabProps {
+  montage: Montage;
+}
+
+export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  
+  const [measurementDetails, setMeasurementDetails] = useState(montage.measurementDetails || '');
+  const [panelType, setPanelType] = useState(montage.panelType || '');
+  const [additionalInfo, setAdditionalInfo] = useState(montage.additionalInfo || '');
+  const [forecastedDate, setForecastedDate] = useState<Date | undefined>(
+    montage.forecastedInstallationDate ? new Date(montage.forecastedInstallationDate) : undefined
+  );
+
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // Canvas state
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
+
+  useEffect(() => {
+    if (canvasRef.current) {
+      const canvas = canvasRef.current;
+      canvas.width = canvas.offsetWidth;
+      canvas.height = 300; // Fixed height for now
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 2;
+        setContext(ctx);
+      }
+    }
+  }, []);
+
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!context) return;
+    setIsDrawing(true);
+    const { offsetX, offsetY } = getCoordinates(e);
+    context.beginPath();
+    context.moveTo(offsetX, offsetY);
+  };
+
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawing || !context) return;
+    const { offsetX, offsetY } = getCoordinates(e);
+    context.lineTo(offsetX, offsetY);
+    context.stroke();
+  };
+
+  const stopDrawing = () => {
+    if (!context) return;
+    context.closePath();
+    setIsDrawing(false);
+  };
+
+  const getCoordinates = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { offsetX: 0, offsetY: 0 };
+
+    if ('touches' in e) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        offsetX: e.touches[0].clientX - rect.left,
+        offsetY: e.touches[0].clientY - rect.top
+      };
+    } else {
+      return {
+        offsetX: e.nativeEvent.offsetX,
+        offsetY: e.nativeEvent.offsetY
+      };
+    }
+  };
+
+  const clearCanvas = () => {
+    if (context && canvasRef.current) {
+      context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setFeedback(null);
+
+    startTransition(async () => {
+      try {
+        await updateMontageMeasurement({
+          montageId: montage.id,
+          measurementDetails,
+          panelType,
+          additionalInfo,
+          forecastedInstallationDate: forecastedDate ? forecastedDate.getTime() : null,
+        });
+        setFeedback('Zapisano dane pomiarowe.');
+        router.refresh();
+      } catch (err) {
+        setError('Wystąpił błąd podczas zapisywania.');
+        console.error(err);
+      }
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-medium">Karta Pomiarowa</h3>
+          <p className="text-sm text-muted-foreground">
+            Wprowadź szczegóły pomiaru, szkice i dodatkowe informacje.
+          </p>
+        </div>
+        {feedback && <div className="text-sm text-green-600">{feedback}</div>}
+        {error && <div className="text-sm text-red-600">{error}</div>}
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="measurementDetails">Szczegóły pomiaru</Label>
+            <Textarea
+              id="measurementDetails"
+              placeholder="Wymiary, uwagi techniczne..."
+              value={measurementDetails}
+              onChange={(e) => setMeasurementDetails(e.target.value)}
+              className="min-h-[100px]"
+            />
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="panelType">Rodzaj paneli</Label>
+              <Input
+                id="panelType"
+                placeholder="np. Panel ogrodzeniowy 3D"
+                value={panelType}
+                onChange={(e) => setPanelType(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Przewidywana data montażu</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !forecastedDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {forecastedDate ? format(forecastedDate, "PPP", { locale: pl }) : <span>Wybierz datę</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={forecastedDate}
+                    onSelect={setForecastedDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="additionalInfo">Dodatkowe informacje</Label>
+          <Textarea
+            id="additionalInfo"
+            placeholder="Inne uwagi, ustalenia z klientem..."
+            value={additionalInfo}
+            onChange={(e) => setAdditionalInfo(e.target.value)}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label>Szkic sytuacyjny</Label>
+            <Button type="button" variant="ghost" size="sm" onClick={clearCanvas}>
+              <Eraser className="mr-2 h-4 w-4" />
+              Wyczyść
+            </Button>
+          </div>
+          <div className="border rounded-md overflow-hidden bg-white touch-none">
+            <canvas
+              ref={canvasRef}
+              className="w-full h-[300px] cursor-crosshair"
+              onMouseDown={startDrawing}
+              onMouseMove={draw}
+              onMouseUp={stopDrawing}
+              onMouseLeave={stopDrawing}
+              onTouchStart={startDrawing}
+              onTouchMove={draw}
+              onTouchEnd={stopDrawing}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Możesz rysować palcem na urządzeniach mobilnych lub myszką.
+          </p>
+        </div>
+
+        <div className="flex justify-end">
+          <Button type="submit" disabled={isPending}>
+            {isPending ? 'Zapisywanie...' : 'Zapisz zmiany'}
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+}
