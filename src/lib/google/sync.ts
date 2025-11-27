@@ -56,8 +56,9 @@ export async function syncMontageToGoogle(montageId: string, userId: string) {
           requestBody: event,
         });
         console.log('Updated Google Calendar event:', montage.googleEventId);
-      } catch (error: any) {
-        if (error.code === 404 || error.code === 410) {
+      } catch (error) {
+        const err = error as { code?: number };
+        if (err?.code === 404 || err?.code === 410) {
            // Event deleted in Google, recreate
            const res = await calendar.events.insert({
             calendarId: settings.targetCalendarId,

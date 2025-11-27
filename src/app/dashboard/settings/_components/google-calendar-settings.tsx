@@ -14,46 +14,52 @@ import {
 } from '../actions';
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
 
+interface GoogleCalendar {
+  id?: string | null;
+  summary?: string | null;
+  primary?: boolean | null;
+}
+
 export function GoogleCalendarSettings() {
   const [loading, setLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
-  const [calendars, setCalendars] = useState<any[]>([]);
+  const [calendars, setCalendars] = useState<GoogleCalendar[]>([]);
   const [targetCalendarId, setTargetCalendarId] = useState<string>('');
 
   useEffect(() => {
+    async function loadCalendars() {
+      try {
+        const items = await listGoogleCalendars();
+        setCalendars(items);
+      } catch (error) {
+        console.error(error);
+        toast.error('Nie udało się pobrać listy kalendarzy');
+      }
+    }
+
+    async function loadStatus() {
+      try {
+        const status = await getGoogleCalendarStatus();
+        setIsConnected(status.isConnected);
+        if (status.isConnected) {
+          setTargetCalendarId(status.targetCalendarId || '');
+          loadCalendars();
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
     loadStatus();
   }, []);
-
-  async function loadStatus() {
-    try {
-      const status = await getGoogleCalendarStatus();
-      setIsConnected(status.isConnected);
-      if (status.isConnected) {
-        setTargetCalendarId(status.targetCalendarId || '');
-        loadCalendars();
-      }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function loadCalendars() {
-    try {
-      const items = await listGoogleCalendars();
-      setCalendars(items);
-    } catch (error) {
-      console.error(error);
-      toast.error('Nie udało się pobrać listy kalendarzy');
-    }
-  }
 
   async function handleConnect() {
     try {
       const url = await getGoogleAuthUrlAction();
       window.location.href = url;
-    } catch (error) {
+    } catch {
       toast.error('Błąd podczas inicjowania logowania');
     }
   }
@@ -65,7 +71,7 @@ export function GoogleCalendarSettings() {
       setTargetCalendarId('');
       setCalendars([]);
       toast.success('Odłączono konto Google');
-    } catch (error) {
+    } catch {
       toast.error('Błąd podczas odłączania');
     }
   }
@@ -75,7 +81,7 @@ export function GoogleCalendarSettings() {
       await setTargetCalendar(value);
       setTargetCalendarId(value);
       toast.success('Zapisano kalendarz docelowy');
-    } catch (error) {
+    } catch {
       toast.error('Błąd zapisu');
     }
   }
