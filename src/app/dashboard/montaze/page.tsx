@@ -1,5 +1,7 @@
 import { asc, desc } from 'drizzle-orm';
 
+export const dynamic = 'force-dynamic';
+
 import { CreateMontageDialog } from './_components/create-montage-dialog';
 import { MontageDashboardView } from './_components/montage-dashboard-view';
 import { statusOptions } from './constants';

@@ -1,6 +1,8 @@
 import { headers } from 'next/headers';
 import { desc, eq, sql } from 'drizzle-orm';
 
+export const dynamic = 'force-dynamic';
+
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
