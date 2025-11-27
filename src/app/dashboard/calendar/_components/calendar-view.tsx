@@ -185,32 +185,61 @@ export function CalendarView({
       <div className="flex h-[calc(100vh-200px)] gap-4">
         <div className="flex flex-col flex-1 bg-background rounded-lg border shadow-sm overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold capitalize">
-                {format(currentDate, 'MMMM yyyy', { locale: pl })}
-              </h2>
-              <div className="flex items-center rounded-md border bg-background shadow-sm ml-4">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-none rounded-l-md border-r"
-                  onClick={prevMonth}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-none rounded-r-md"
-                  onClick={nextMonth}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10 gap-4">
+            <div className="flex items-center justify-between w-full md:w-auto gap-2">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold capitalize">
+                  {format(currentDate, 'MMMM yyyy', { locale: pl })}
+                </h2>
+                <div className="flex items-center rounded-md border bg-background shadow-sm ml-4">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-none rounded-l-md border-r"
+                    onClick={prevMonth}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-none rounded-r-md"
+                    onClick={nextMonth}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Mobile Backlog Trigger - Visible only on mobile next to title */}
+              <div className="md:hidden">
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="outline" size="icon">
+                      <Inbox className="h-4 w-4" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent>
+                    <SheetHeader>
+                      <SheetTitle>Poczekalnia</SheetTitle>
+                    </SheetHeader>
+                    <div className="mt-4 flex flex-col gap-2">
+                      {unscheduledEvents.map((event) => (
+                        <DraggableEvent key={event.id} event={event} />
+                      ))}
+                      {unscheduledEvents.length === 0 && (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                          Brak nieprzypisanych zadań.
+                        </p>
+                      )}
+                    </div>
+                  </SheetContent>
+                </Sheet>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center space-x-2 mr-4 border-r pr-4">
+
+            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+              <div className="flex items-center space-x-4 mr-0 border-r-0 pr-0 md:mr-4 md:border-r md:pr-4 w-full md:w-auto justify-between md:justify-start">
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="show-orders"
@@ -233,53 +262,32 @@ export function CalendarView({
                 </div>
               </div>
 
-              <Button variant="outline" size="sm" onClick={jumpToToday}>
-                Dzisiaj
-              </Button>
-              <div className="hidden md:flex border rounded-md overflow-hidden">
-                <Button
-                  variant={viewMode === 'month' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  className="rounded-none"
-                  onClick={() => setViewMode('month')}
-                >
-                  <CalendarIcon className="h-4 w-4 mr-2" />
-                  Miesiąc
+              <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-start">
+                <Button variant="outline" size="sm" onClick={jumpToToday} className="flex-1 md:flex-none">
+                  Dzisiaj
                 </Button>
-                <Button
-                  variant={viewMode === 'agenda' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  className="rounded-none"
-                  onClick={() => setViewMode('agenda')}
-                >
-                  <List className="h-4 w-4 mr-2" />
-                  Agenda
-                </Button>
-              </div>
-              
-              {/* Mobile Backlog Trigger */}
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="outline" size="icon" className="md:hidden">
-                    <Inbox className="h-4 w-4" />
+                
+                <div className="hidden md:flex border rounded-md overflow-hidden">
+                  <Button
+                    variant={viewMode === 'month' ? 'secondary' : 'ghost'}
+                    size="sm"
+                    className="rounded-none"
+                    onClick={() => setViewMode('month')}
+                  >
+                    <CalendarIcon className="h-4 w-4 mr-2" />
+                    Miesiąc
                   </Button>
-                </SheetTrigger>
-                <SheetContent>
-                  <SheetHeader>
-                    <SheetTitle>Poczekalnia</SheetTitle>
-                  </SheetHeader>
-                  <div className="mt-4 flex flex-col gap-2">
-                    {unscheduledEvents.map((event) => (
-                      <DraggableEvent key={event.id} event={event} />
-                    ))}
-                    {unscheduledEvents.length === 0 && (
-                      <p className="text-sm text-muted-foreground text-center py-4">
-                        Brak nieprzypisanych zadań.
-                      </p>
-                    )}
-                  </div>
-                </SheetContent>
-              </Sheet>
+                  <Button
+                    variant={viewMode === 'agenda' ? 'secondary' : 'ghost'}
+                    size="sm"
+                    className="rounded-none"
+                    onClick={() => setViewMode('agenda')}
+                  >
+                    <List className="h-4 w-4 mr-2" />
+                    Agenda
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
 
