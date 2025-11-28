@@ -354,6 +354,25 @@ export const integrationLogs = sqliteTable(
 	}
 );
 
+export const systemLogs = sqliteTable(
+	'system_logs',
+	{
+		id: text('id').primaryKey(),
+		userId: text('user_id').references(() => users.id, { onDelete: 'set null' }),
+		action: text('action').notNull(),
+		details: text('details'),
+		ipAddress: text('ip_address'),
+		userAgent: text('user_agent'),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	},
+	(table) => ({
+		userIdIdx: index('system_logs_user_id_idx').on(table.userId),
+		createdAtIdx: index('system_logs_created_at_idx').on(table.createdAt),
+	})
+);
+
 export const appSettings = sqliteTable(
 	'app_settings',
 	{
@@ -790,6 +809,13 @@ export const mailMessagesRelations = relations(mailMessages, ({ one }) => ({
 	folder: one(mailFolders, {
 		fields: [mailMessages.folderId],
 		references: [mailFolders.id],
+	}),
+}));
+
+export const systemLogsRelations = relations(systemLogs, ({ one }) => ({
+	user: one(users, {
+		fields: [systemLogs.userId],
+		references: [users.id],
 	}),
 }));
 
