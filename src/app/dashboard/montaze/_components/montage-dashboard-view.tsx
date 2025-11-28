@@ -48,7 +48,7 @@ export function MontageDashboardView({ montages, statusOptions, headerAction }: 
         {headerAction && <div className="hidden md:block shrink-0">{headerAction}</div>}
       </div>
 
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-auto">
         {view === "board" && (
             <MontagePipelineBoard montages={montages} statusOptions={statusOptions} />
         )}
