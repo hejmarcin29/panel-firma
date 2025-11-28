@@ -10,6 +10,7 @@ import { OrderInfoCard } from './order-info-card';
 import { OrderItemsCard } from './order-items-card';
 import { OrderSummaryCard } from './order-summary-card';
 import { OrderDocumentsCard } from './order-documents-card';
+import { OrderNotesCard } from './order-notes-card';
 
 interface OrderDetailsViewProps {
   order: Order;
@@ -23,6 +24,7 @@ function DesktopView({ order, documents, timelineEntries }: OrderDetailsViewProp
       <div className="col-span-2 space-y-6">
         <OrderItemsCard order={order} />
         <OrderDocumentsCard documents={documents} />
+        <OrderNotesCard orderId={order.id} initialNote={order.customerNote} />
         <Card>
             <CardHeader className="px-4 py-3">
                 <CardTitle className="text-base">Załączniki</CardTitle>
@@ -59,14 +61,14 @@ function MobileView({ order, documents, timelineEntries }: OrderDetailsViewProps
         <TabsList className="grid w-full grid-cols-3 rounded-none border-b bg-background p-0 sticky top-0 z-10">
           <TabsTrigger value="info" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-background py-3">Info</TabsTrigger>
           <TabsTrigger value="items" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-background py-3">Koszyk</TabsTrigger>
-          <TabsTrigger value="history" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-background py-3">Historia</TabsTrigger>
+          <TabsTrigger value="invoices" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-background py-3">Faktury</TabsTrigger>
         </TabsList>
         
         <div className="p-4 space-y-4 bg-muted/10 min-h-[calc(100vh-180px)]">
             <TabsContent value="info" className="space-y-4 mt-0">
                 <OrderInfoCard order={order} />
                 <OrderSummaryCard order={order} />
-                <OrderDocumentsCard documents={documents} />
+                <OrderNotesCard orderId={order.id} initialNote={order.customerNote} />
                 <Card>
                     <CardHeader className="px-4 py-3">
                         <CardTitle className="text-base">Załączniki</CardTitle>
@@ -82,7 +84,8 @@ function MobileView({ order, documents, timelineEntries }: OrderDetailsViewProps
                 <OrderSummaryCard order={order} />
             </TabsContent>
             
-            <TabsContent value="history" className="space-y-4 mt-0">
+            <TabsContent value="invoices" className="space-y-4 mt-0">
+                <OrderDocumentsCard documents={documents} />
                 <Card>
                     <CardHeader className="px-4 py-3">
                         <CardTitle className="text-base">Historia statusów</CardTitle>

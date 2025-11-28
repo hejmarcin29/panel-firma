@@ -623,3 +623,18 @@ export async function updateManualOrderStatus(orderId: string, nextStatus: strin
 	return updated;
 }
 
+export async function updateOrderNote(orderId: string, note: string) {
+	await requireUser();
+
+	await db
+		.update(manualOrders)
+		.set({
+			notes: note,
+			updatedAt: new Date(),
+		})
+		.where(eq(manualOrders.id, orderId));
+
+	revalidatePath('/dashboard/orders');
+	revalidatePath(`/dashboard/orders/${orderId}`);
+}
+
