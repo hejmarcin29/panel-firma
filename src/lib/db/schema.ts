@@ -57,7 +57,7 @@ export type SupplierMessageDirection = (typeof supplierMessageDirections)[number
 export type SupplierMessageMedium = (typeof supplierMessageMediums)[number];
 export type MailFolderKind = (typeof mailFolderKinds)[number];
 export type MailAccountStatus = (typeof mailAccountStatuses)[number];
-export type MontageStatus = (typeof montageStatuses)[number];
+export type MontageStatus = string;
 
 export const users = sqliteTable(
 	'users',

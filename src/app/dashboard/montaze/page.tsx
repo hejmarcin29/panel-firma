@@ -89,7 +89,7 @@ export default async function MontazePage() {
             </div>
             <div className="flex-1 overflow-hidden md:py-6">
                 <MontageDashboardView 
-                    montages={montagesData} 
+                    montages={montagesList} 
                     statusOptions={statusOptions}
                     headerAction={<CreateMontageDialog />}
                 />
