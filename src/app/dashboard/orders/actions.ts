@@ -7,6 +7,7 @@ import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
 import { documents, manualOrderItems, manualOrders, orderAttachments } from '@/lib/db/schema';
 import { uploadOrderDocumentObject } from '@/lib/r2/storage';
+import { logSystemEvent } from '@/lib/logging';
 
 import type {
 	ManualOrderPayload,
@@ -343,6 +344,7 @@ export async function getManualOrders(): Promise<Order[]> {
 }
 
 export async function createManualOrder(payload: ManualOrderPayload): Promise<Order> {
+	const user = await requireUser();
 	validatePayload(payload);
 
 	const id = crypto.randomUUID();
@@ -412,13 +414,39 @@ export async function createManualOrder(payload: ManualOrderPayload): Promise<Or
 		throw new Error('Nie udało się pobrać świeżo utworzonego zamówienia.');
 	}
 
+	await logSystemEvent('create_order', `Utworzono zamówienie ${payload.reference}`, user.id);
+
 	revalidatePath('/dashboard/orders');
 
 	return created;
 }
 
 export async function confirmManualOrder(orderId: string, type: 'production' | 'sample' = 'production'): Promise<Order> {
-	const [updatedRow] = await db
+	const user = await requireUser();
+	const orderRow = await db.query.manualOrders.findFirst({
+		where: eq(manualOrders.id, orderId),
+		with: {
+			items: true,
+			attachments: {
+				orderBy: desc(orderAttachments.createdAt),
+				with: {
+					uploader: {
+						columns: {
+							id: true,
+							name: true,
+							email: true,
+						},
+					},
+				},
+			},
+		},
+	});
+
+	if (!orderRow) {
+		throw new Error('Nie znaleziono zamówienia do potwierdzenia.');
+	}
+
+	const updatedRow = await db
 		.update(manualOrders)
 		.set({
 			requiresReview: false,
@@ -435,10 +463,13 @@ export async function confirmManualOrder(orderId: string, type: 'production' | '
 	const updated = await getManualOrderById(orderId);
 
 	if (!updated) {
-		throw new Error('Nie udało się odczytać potwierdzonego zamówienia.');
+		throw new Error('Nie udało się odczytać zatwierdzonego zamówienia.');
 	}
 
+	await logSystemEvent('confirm_order', `Zatwierdzono zamówienie ${orderId}`, user.id);
+
 	revalidatePath('/dashboard/orders');
+	revalidatePath(`/dashboard/orders/${orderId}`);
 
 	return updated;
 }
@@ -611,6 +642,8 @@ export async function updateManualOrderStatus(orderId: string, nextStatus: strin
 		.set(updateData)
 		.where(eq(manualOrders.id, orderId));
 
+	await logSystemEvent('update_order_status', `Zmiana statusu zamówienia ${orderId} na ${typedStatus}`, user.id);
+
 	const updated = await getManualOrderById(orderId);
 
 	if (!updated) {
@@ -624,7 +657,7 @@ export async function updateManualOrderStatus(orderId: string, nextStatus: strin
 }
 
 export async function updateOrderNote(orderId: string, note: string) {
-	await requireUser();
+	const user = await requireUser();
 
 	await db
 		.update(manualOrders)
@@ -633,6 +666,8 @@ export async function updateOrderNote(orderId: string, note: string) {
 			updatedAt: new Date(),
 		})
 		.where(eq(manualOrders.id, orderId));
+
+	await logSystemEvent('update_order_note', `Zaktualizowano notatkę zamówienia ${orderId}`, user.id);
 
 	revalidatePath('/dashboard/orders');
 	revalidatePath(`/dashboard/orders/${orderId}`);

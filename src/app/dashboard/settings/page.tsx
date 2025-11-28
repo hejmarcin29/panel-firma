@@ -6,8 +6,9 @@ export const dynamic = 'force-dynamic';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { db } from '@/lib/db';
-import { integrationLogs, mailAccounts, manualOrders } from '@/lib/db/schema';
+import { integrationLogs, mailAccounts, manualOrders, systemLogs, users } from '@/lib/db/schema';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
 import { getMontageChecklistTemplates } from '@/lib/montaze/checklist';
 
@@ -110,6 +111,20 @@ export default async function SettingsPage() {
 		.orderBy(desc(integrationLogs.createdAt))
 		.limit(20);
 
+	const rawSystemLogs = await db
+		.select({
+			id: systemLogs.id,
+			createdAt: systemLogs.createdAt,
+			action: systemLogs.action,
+			details: systemLogs.details,
+			userName: users.name,
+			userEmail: users.email,
+		})
+		.from(systemLogs)
+		.leftJoin(users, eq(systemLogs.userId, users.id))
+		.orderBy(desc(systemLogs.createdAt))
+		.limit(50);
+
 	const logs: LogRow[] = rawLogs.map((log) => ({
 		id: log.id ?? crypto.randomUUID(),
 		createdAt:
@@ -166,42 +181,99 @@ export default async function SettingsPage() {
 			mailSettings={<MailSettingsForm accounts={formattedMailAccounts} />}
 			montageSettings={<MontageChecklistSettings initialTemplates={montageChecklistTemplates} />}
 			logs={
-				<Card>
-					<CardHeader>
-						<CardTitle>Logi integracji</CardTitle>
-						<CardDescription>Ostatnie wpisy zapisywane podczas przetwarzania webhooka.</CardDescription>
-					</CardHeader>
-					<CardContent>
-						{logs.length === 0 ? (
-							<p className="text-sm text-muted-foreground">Brak logow dla integracji WooCommerce.</p>
-						) : (
-							<div className="overflow-x-auto">
-								<Table>
-									<TableHeader>
-										<TableRow>
-											<TableHead>Data</TableHead>
-											<TableHead>Poziom</TableHead>
-											<TableHead>Opis</TableHead>
-										</TableRow>
-									</TableHeader>
-									<TableBody>
-										{logs.map((log) => (
-											<TableRow key={log.id}>
-												<TableCell>{formatTimestamp(log.createdAt)}</TableCell>
-												<TableCell>
-													<Badge className={levelBadgeClass(log.level)}>{log.level}</Badge>
-												</TableCell>
-												<TableCell className="max-w-md whitespace-normal text-xs">
-													{log.message}
-												</TableCell>
-											</TableRow>
-										))}
-									</TableBody>
-								</Table>
-							</div>
-						)}
-					</CardContent>
-				</Card>
+				<Tabs defaultValue="system" className="w-full">
+					<TabsList className="grid w-full grid-cols-2">
+						<TabsTrigger value="system">Logi systemowe</TabsTrigger>
+						<TabsTrigger value="integration">Logi integracji</TabsTrigger>
+					</TabsList>
+					<TabsContent value="system">
+						<Card>
+							<CardHeader>
+								<CardTitle>Logi systemowe</CardTitle>
+								<CardDescription>Historia aktywności użytkowników i zdarzeń systemowych.</CardDescription>
+							</CardHeader>
+							<CardContent>
+								{rawSystemLogs.length === 0 ? (
+									<p className="text-sm text-muted-foreground">Brak logów systemowych.</p>
+								) : (
+									<div className="overflow-x-auto">
+										<Table>
+											<TableHeader>
+												<TableRow>
+													<TableHead>Data</TableHead>
+													<TableHead>Użytkownik</TableHead>
+													<TableHead>Akcja</TableHead>
+													<TableHead>Szczegóły</TableHead>
+												</TableRow>
+											</TableHeader>
+											<TableBody>
+												{rawSystemLogs.map((log) => (
+													<TableRow key={log.id}>
+														<TableCell className="whitespace-nowrap">{formatTimestamp(log.createdAt)}</TableCell>
+														<TableCell>
+															{log.userName ? (
+																<div className="flex flex-col">
+																	<span className="font-medium">{log.userName}</span>
+																	<span className="text-xs text-muted-foreground">{log.userEmail}</span>
+																</div>
+															) : (
+																<span className="text-muted-foreground italic">System</span>
+															)}
+														</TableCell>
+														<TableCell>
+															<Badge variant="outline">{log.action}</Badge>
+														</TableCell>
+														<TableCell className="max-w-md whitespace-normal text-xs font-mono">
+															{log.details}
+														</TableCell>
+													</TableRow>
+												))}
+											</TableBody>
+										</Table>
+									</div>
+								)}
+							</CardContent>
+						</Card>
+					</TabsContent>
+					<TabsContent value="integration">
+						<Card>
+							<CardHeader>
+								<CardTitle>Logi integracji</CardTitle>
+								<CardDescription>Ostatnie wpisy zapisywane podczas przetwarzania webhooka.</CardDescription>
+							</CardHeader>
+							<CardContent>
+								{logs.length === 0 ? (
+									<p className="text-sm text-muted-foreground">Brak logów dla integracji WooCommerce.</p>
+								) : (
+									<div className="overflow-x-auto">
+										<Table>
+											<TableHeader>
+												<TableRow>
+													<TableHead>Data</TableHead>
+													<TableHead>Poziom</TableHead>
+													<TableHead>Opis</TableHead>
+												</TableRow>
+											</TableHeader>
+											<TableBody>
+												{logs.map((log) => (
+													<TableRow key={log.id}>
+														<TableCell>{formatTimestamp(log.createdAt)}</TableCell>
+														<TableCell>
+															<Badge className={levelBadgeClass(log.level)}>{log.level}</Badge>
+														</TableCell>
+														<TableCell className="max-w-md whitespace-normal text-xs">
+															{log.message}
+														</TableCell>
+													</TableRow>
+												))}
+											</TableBody>
+										</Table>
+									</div>
+								)}
+							</CardContent>
+						</Card>
+					</TabsContent>
+				</Tabs>
 			}
 			integrations={
 				<div className="space-y-6">

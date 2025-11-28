@@ -8,6 +8,7 @@ import { db } from '@/lib/db';
 import { users } from '@/lib/db/schema';
 import { verifyPassword } from '@/lib/auth/password';
 import { createSession } from '@/lib/auth/session';
+import { logSystemEvent } from '@/lib/logging';
 
 const loginSchema = z.object({
 	email: z.string().min(1, 'Podaj e-mail').email('Nieprawidłowy e-mail').transform((value) => value.toLowerCase()),
@@ -43,6 +44,7 @@ export async function loginAction(_: LoginFormState, formData: FormData): Promis
 	}
 
 	await createSession(user.id);
+	await logSystemEvent('login', 'Użytkownik zalogował się', user.id);
 
 	redirect('/dashboard');
 }

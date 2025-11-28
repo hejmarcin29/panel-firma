@@ -16,6 +16,7 @@ import {
 } from '@/lib/db/schema';
 import { uploadMontageObject } from '@/lib/r2/storage';
 import { getMontageChecklistTemplates } from '@/lib/montaze/checklist';
+import { logSystemEvent } from '@/lib/logging';
 
 const MONTAGE_DASHBOARD_PATH = '/dashboard/montaze';
 const MAX_ATTACHMENT_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
@@ -121,7 +122,7 @@ export async function createMontage({
 	scheduledInstallationEndDate,
 	materialDetails,
 }: CreateMontageInput) {
-	await requireUser();
+	const user = await requireUser();
 
 	const trimmedName = clientName.trim();
 	if (!trimmedName) {
@@ -190,6 +191,8 @@ export async function createMontage({
 		);
 	}
 
+	await logSystemEvent('create_montage', `Utworzono montaż dla ${trimmedName}`, user.id);
+
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
 
@@ -199,13 +202,15 @@ type UpdateMontageStatusInput = {
 };
 
 export async function updateMontageStatus({ montageId, status }: UpdateMontageStatusInput) {
-	await requireUser();
+	const user = await requireUser();
 	const resolved = ensureStatus(status);
 
 	await db
 		.update(montages)
 		.set({ status: resolved, updatedAt: new Date() })
 		.where(eq(montages.id, montageId));
+
+	await logSystemEvent('update_montage_status', `Zmiana statusu montażu ${montageId} na ${resolved}`, user.id);
 
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 }

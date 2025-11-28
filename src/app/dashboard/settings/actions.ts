@@ -9,6 +9,7 @@ import { appSettingKeys, getAppSetting, setAppSetting } from '@/lib/settings';
 import { createR2Client } from '@/lib/r2/client';
 import { getR2Config } from '@/lib/r2/config';
 import { setMontageChecklistTemplates, type MontageChecklistTemplate } from '@/lib/montaze/checklist';
+import { logSystemEvent } from '@/lib/logging';
 
 export async function updateWooWebhookSecret(secret: string) {
 	const user = await requireUser();
@@ -30,6 +31,8 @@ export async function updateWooWebhookSecret(secret: string) {
 		value: trimmed,
 		userId: user.id,
 	});
+
+	await logSystemEvent('update_webhook_secret', 'Zaktualizowano sekret webhooka WooCommerce', user.id);
 
 	process.env.WOOCOMMERCE_WEBHOOK_SECRET = trimmed;
 	revalidatePath('/dashboard/settings');
@@ -113,6 +116,8 @@ export async function updateR2Config({ accountId, accessKeyId, secretAccessKey, 
 		setAppSetting({ key: appSettingKeys.r2ApiToken, value: trimmedApiToken, userId: user.id }),
 	]);
 
+	await logSystemEvent('update_r2_config', 'Zaktualizowano konfigurację R2', user.id);
+
 	process.env.CLOUDFLARE_R2_ACCOUNT_ID = trimmedAccountId;
 	process.env.CLOUDFLARE_R2_ACCESS_KEY_ID = trimmedAccessKeyId;
 	process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY = trimmedSecretAccessKey;
@@ -149,6 +154,9 @@ export async function updateMontageChecklistTemplatesAction(templates: MontageCh
 	}
 
 	await setMontageChecklistTemplates({ templates, userId: user.id });
+	
+	await logSystemEvent('update_montage_templates', 'Zaktualizowano szablony etapów montażu', user.id);
+
 	revalidatePath('/dashboard/settings');
 }
 
