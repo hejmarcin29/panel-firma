@@ -16,6 +16,7 @@ import {
 } from '@/lib/db/schema';
 import { uploadMontageObject } from '@/lib/r2/storage';
 import { getMontageChecklistTemplates } from '@/lib/montaze/checklist';
+import { getMontageAutomationRules } from '@/lib/montaze/automation';
 import { logSystemEvent } from '@/lib/logging';
 
 const MONTAGE_DASHBOARD_PATH = '/dashboard/montaze';
@@ -441,10 +442,13 @@ type ToggleMontageChecklistInput = {
 };
 
 export async function toggleMontageChecklistItem({ itemId, montageId, completed }: ToggleMontageChecklistInput) {
-	await requireUser();
+	const user = await requireUser();
 
 	const [item] = await db
-		.select({ id: montageChecklistItems.id })
+		.select({ 
+			id: montageChecklistItems.id,
+			templateId: montageChecklistItems.templateId
+		})
 		.from(montageChecklistItems)
 		.where(and(eq(montageChecklistItems.id, itemId), eq(montageChecklistItems.montageId, montageId)))
 		.limit(1);
@@ -457,6 +461,16 @@ export async function toggleMontageChecklistItem({ itemId, montageId, completed 
 		.update(montageChecklistItems)
 		.set({ completed, updatedAt: new Date() })
 		.where(eq(montageChecklistItems.id, itemId));
+
+	if (completed && item.templateId) {
+		const rules = await getMontageAutomationRules();
+		const rule = rules.find(r => r.checklistItemId === item.templateId);
+		
+		if (rule) {
+			await updateMontageStatus({ montageId, status: rule.targetStatus });
+			// Note: updateMontageStatus already logs the event
+		}
+	}
 
 	await touchMontage(montageId);
 	revalidatePath(MONTAGE_DASHBOARD_PATH);

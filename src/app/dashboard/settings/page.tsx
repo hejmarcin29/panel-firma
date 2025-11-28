@@ -11,11 +11,13 @@ import { db } from '@/lib/db';
 import { integrationLogs, mailAccounts, manualOrders, systemLogs, users } from '@/lib/db/schema';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
 import { getMontageChecklistTemplates } from '@/lib/montaze/checklist';
+import { getMontageAutomationRules } from '@/lib/montaze/automation';
 
 import { WebhookSecretForm } from './_components/webhook-secret-form';
 import { R2ConfigForm } from './_components/r2-config-form';
 import { MailSettingsForm } from './_components/mail-settings-form';
 import { MontageChecklistSettings } from './_components/montage-checklist-settings';
+import { MontageAutomationSettings } from './_components/montage-automation-settings';
 import { SettingsView } from './_components/settings-view';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -77,6 +79,7 @@ export default async function SettingsPage() {
 		r2PublicBaseUrlSetting,
 		r2ApiTokenSetting,
 		montageChecklistTemplates,
+		montageAutomationRules,
 	] = await Promise.all([
 		getAppSetting(appSettingKeys.wooWebhookSecret),
 		getAppSetting(appSettingKeys.r2AccountId),
@@ -87,6 +90,7 @@ export default async function SettingsPage() {
 		getAppSetting(appSettingKeys.r2PublicBaseUrl),
 		getAppSetting(appSettingKeys.r2ApiToken),
 		getMontageChecklistTemplates(),
+		getMontageAutomationRules(),
 	]);
 
 	const webhookSecret = webhookSecretSetting ?? '';
@@ -179,7 +183,12 @@ export default async function SettingsPage() {
 	return (
 		<SettingsView
 			mailSettings={<MailSettingsForm accounts={formattedMailAccounts} />}
-			montageSettings={<MontageChecklistSettings initialTemplates={montageChecklistTemplates} />}
+			montageSettings={
+				<div className="space-y-6">
+					<MontageChecklistSettings initialTemplates={montageChecklistTemplates} />
+					<MontageAutomationSettings templates={montageChecklistTemplates} initialRules={montageAutomationRules} />
+				</div>
+			}
 			logs={
 				<Tabs defaultValue="system" className="w-full">
 					<TabsList className="grid w-full grid-cols-2">
