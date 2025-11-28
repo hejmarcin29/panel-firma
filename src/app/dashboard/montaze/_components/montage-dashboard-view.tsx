@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { LayoutGrid, List, Calendar as CalendarIcon } from "lucide-react";
+import { LayoutGrid, List, Calendar as CalendarIcon, CheckSquare } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -59,24 +59,35 @@ export function MontageDashboardView({ montages, statusOptions, headerAction }: 
                         {montages.length === 0 && (
                             <div className="p-4 text-center text-muted-foreground">Brak montaży</div>
                         )}
-                        {montages.map(montage => (
-                            <div key={montage.id} className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
-                                <div>
-                                    <div className="font-medium">{montage.clientName}</div>
-                                    <div className="text-sm text-muted-foreground">
-                                        {montage.installationCity || "Brak lokalizacji"} • {montage.scheduledInstallationAt ? new Date(montage.scheduledInstallationAt).toLocaleDateString() : "Nie zaplanowano"}
+                        {montages.map(montage => {
+                            const pendingTasks = montage.tasks.filter(t => !t.completed).length;
+                            return (
+                                <div key={montage.id} className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
+                                    <div>
+                                        <div className="font-medium flex items-center gap-2">
+                                            {montage.clientName}
+                                            {pendingTasks > 0 && (
+                                                <span className="inline-flex items-center rounded-full border border-transparent bg-destructive px-2 py-0.5 text-xs font-semibold text-destructive-foreground shadow transition-colors hover:bg-destructive/80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+                                                    <CheckSquare className="mr-1 h-3 w-3" />
+                                                    {pendingTasks}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="text-sm text-muted-foreground">
+                                            {montage.installationCity || "Brak lokalizacji"} • {montage.scheduledInstallationAt ? new Date(montage.scheduledInstallationAt).toLocaleDateString() : "Nie zaplanowano"}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <div className="text-sm font-medium px-2 py-1 rounded-full bg-muted">
+                                            {statusOptions.find(s => s.value === montage.status)?.label}
+                                        </div>
+                                        <Button variant="outline" size="sm" asChild>
+                                            <Link href={`/dashboard/montaze/${montage.id}`}>Szczegóły</Link>
+                                        </Button>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-4">
-                                    <div className="text-sm font-medium px-2 py-1 rounded-full bg-muted">
-                                        {statusOptions.find(s => s.value === montage.status)?.label}
-                                    </div>
-                                    <Button variant="outline" size="sm" asChild>
-                                        <Link href={`/dashboard/montaze/${montage.id}`}>Szczegóły</Link>
-                                    </Button>
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             </div>

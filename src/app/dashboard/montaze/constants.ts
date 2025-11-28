@@ -28,6 +28,10 @@ export const statusLabels: Record<MontageStatus, StatusLabelConfig> = {
 		label: 'Przed FV i protokolem',
 		description: 'Czekamy na odbior, fakture koncowa i protokol.',
 	},
+	completed: {
+		label: 'Zakończono',
+		description: 'Montaż zakończony, rozliczony i zamknięty.',
+	},
 };
 
 export const statusOptions: StatusOption[] = montageStatuses.map((value) => ({

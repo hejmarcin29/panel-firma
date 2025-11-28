@@ -7,7 +7,8 @@ import {
   Hammer, 
   Package, 
   Plus, 
-  Users 
+  Users,
+  CheckCircle2
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,16 @@ export function DashboardStats({ montages, orders, userName }: DashboardStatsPro
   const pendingOrders = orders.filter(o => o.status !== 'order.closed' && o.status !== 'order.fulfillment_confirmed');
   const recentOrders = orders.slice(0, 5);
   const recentMontages = montages.slice(0, 5);
+
+  const allPendingTasks = montages.flatMap(m => m.tasks.filter(t => !t.completed).map(t => ({
+    ...t,
+    montageClientName: m.clientName,
+    montageId: m.id
+  }))).sort((a, b) => {
+      const dateA = new Date(a.updatedAt || 0).getTime();
+      const dateB = new Date(b.updatedAt || 0).getTime();
+      return dateB - dateA;
+  }).slice(0, 5);
 
   return (
     <div className="space-y-6">
@@ -99,29 +110,55 @@ export function DashboardStats({ montages, orders, userName }: DashboardStatsPro
           <CardContent>
             <div className="text-2xl font-bold">{pendingOrders.length}</div>
             <p className="text-xs text-muted-foreground">
-              wymagające obsługi
+              wymagają uwagi
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Wszystkie leady</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Zadania do wykonania</CardTitle>
+            <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{montages.filter(m => m.status === 'lead').length}</div>
+            <div className="text-2xl font-bold">{allPendingTasks.length}</div>
             <p className="text-xs text-muted-foreground">
-              nowe zapytania
+              oczekujące zadania
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Main Content Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        
-        {/* Recent Montages */}
         <Card className="col-span-4">
+            <CardHeader>
+                <CardTitle>Oczekujące zadania</CardTitle>
+                <CardDescription>Lista zadań do wykonania w ramach aktywnych montaży.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                {allPendingTasks.length === 0 ? (
+                    <div className="text-center text-sm text-muted-foreground py-4">
+                        Brak oczekujących zadań.
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        {allPendingTasks.map(task => (
+                            <div key={task.id} className="flex items-center justify-between border-b pb-2 last:border-0 last:pb-0">
+                                <div className="space-y-1">
+                                    <p className="text-sm font-medium leading-none">{task.title}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                        Klient: <Link href={`/dashboard/montaze/${task.montageId}`} className="hover:underline">{task.montageClientName}</Link>
+                                    </p>
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                    {task.updatedAt ? new Date(task.updatedAt).toLocaleDateString() : ''}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+        <Card className="col-span-3">
           <CardHeader>
             <div className="flex items-center justify-between">
                 <CardTitle>Ostatnie montaże</CardTitle>
@@ -160,46 +197,6 @@ export function DashboardStats({ montages, orders, userName }: DashboardStatsPro
                                     </Link>
                                 </Button>
                             </div>
-                        </div>
-                    ))
-                )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Recent Orders */}
-        <Card className="col-span-3">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-                <CardTitle>Ostatnie zamówienia</CardTitle>
-                <Button variant="ghost" size="sm" asChild>
-                    <Link href="/dashboard/orders" className="text-xs">
-                        Zobacz wszystkie <ArrowRight className="ml-1 h-3 w-3" />
-                    </Link>
-                </Button>
-            </div>
-            <CardDescription>
-              Najnowsze zamówienia w systemie.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-                {recentOrders.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">Brak zamówień.</p>
-                ) : (
-                    recentOrders.map((order) => (
-                        <div key={order.id} className="flex items-center justify-between">
-                            <div className="space-y-1">
-                                <p className="text-sm font-medium leading-none">
-                                    {order.billing.name}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                    {new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(order.totals.totalGross)}
-                                </p>
-                            </div>
-                            <Badge variant={order.status === 'order.closed' ? 'secondary' : 'default'} className="text-[10px]">
-                                {order.status}
-                            </Badge>
                         </div>
                     ))
                 )}

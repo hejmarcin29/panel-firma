@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Phone, Mail, MapPin } from 'lucide-react';
+import { Phone, Mail, MapPin, CheckSquare } from 'lucide-react';
 import Link from 'next/link';
 
 import { Badge } from '@/components/ui/badge';
@@ -60,6 +60,8 @@ export function MontagePipelineCard({ montage }: Props) {
 	const cityLine = montage.installationCity || montage.billingCity || null;
 	const scheduledDate = useMemo(() => formatScheduleRange(montage.scheduledInstallationAt, montage.scheduledInstallationEndAt), [montage.scheduledInstallationAt, montage.scheduledInstallationEndAt]);
 	
+    const pendingTasksCount = totalTasks - completedTasks;
+
     return (
         <Link href={`/dashboard/montaze/${montage.id}`} className="block group">
             <Card className="w-full border border-border/60 bg-linear-to-br from-background via-background to-muted/30 shadow-sm transition-all hover:shadow-md hover:border-primary/20">
@@ -76,11 +78,19 @@ export function MontagePipelineCard({ montage }: Props) {
                                 <CardDescription className="text-[10px] text-muted-foreground">Aktualizacja: {latestUpdate}</CardDescription>
                             </div>
                         </div>
-                        {hasMaterials && (
-                            <Badge variant="secondary" className="shrink-0 rounded-full px-1.5 py-0 text-[10px] font-normal">
-                                materiały
-                            </Badge>
-                        )}
+                        <div className="flex flex-col items-end gap-1">
+                            {hasMaterials && (
+                                <Badge variant="secondary" className="shrink-0 rounded-full px-1.5 py-0 text-[10px] font-normal">
+                                    materiały
+                                </Badge>
+                            )}
+                            {pendingTasksCount > 0 && (
+                                <Badge variant="destructive" className="shrink-0 rounded-full px-1.5 py-0 text-[10px] font-normal flex items-center gap-1">
+                                    <CheckSquare className="h-3 w-3" />
+                                    {pendingTasksCount}
+                                </Badge>
+                            )}
+                        </div>
                     </div>
                     {(addressLine || cityLine) && (
                         <div className="flex items-start gap-1.5 text-xs text-muted-foreground">

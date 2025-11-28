@@ -42,7 +42,7 @@ export const supplierMessageMediums = ['email', 'phone', 'note'] as const;
 
 export const mailFolderKinds = ['inbox', 'sent', 'drafts', 'spam', 'trash', 'archive', 'custom'] as const;
 export const mailAccountStatuses = ['disabled', 'connected', 'disconnected', 'error'] as const;
-export const montageStatuses = ['lead', 'before_measurement', 'before_first_payment', 'before_installation', 'before_final_invoice'] as const;
+export const montageStatuses = ['lead', 'before_measurement', 'before_first_payment', 'before_installation', 'before_final_invoice', 'completed'] as const;
 
 export type UserRole = (typeof userRoles)[number];
 export type OrderStatus = (typeof orderStatuses)[number];
