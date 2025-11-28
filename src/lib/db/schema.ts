@@ -408,6 +408,7 @@ export const montages = sqliteTable(
 		additionalInfo: text('additional_info'),
 		forecastedInstallationDate: integer('forecasted_installation_date', { mode: 'timestamp_ms' }),
 		status: text('status').$type<MontageStatus>().notNull().default('lead'),
+		displayId: text('display_id'),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' })
 			.notNull()
 			.default(sql`(strftime('%s','now') * 1000)`),
@@ -418,6 +419,7 @@ export const montages = sqliteTable(
 	(table) => ({
 		statusIdx: index('montages_status_idx').on(table.status),
 		updatedIdx: index('montages_updated_at_idx').on(table.updatedAt),
+		displayIdIdx: uniqueIndex('montages_display_id_idx').on(table.displayId),
 	})
 );
 

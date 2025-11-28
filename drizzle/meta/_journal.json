@@ -169,6 +169,13 @@
       "when": 1764314218353,
       "tag": "0023_amusing_demogoblin",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "6",
+      "when": 1764370442611,
+      "tag": "0024_lumpy_luckman",
+      "breakpoints": true
     }
   ]
 }

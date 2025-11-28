@@ -75,7 +75,12 @@ export function MontagePipelineCard({ montage }: Props) {
                                 <CardTitle className="text-sm font-semibold leading-tight text-foreground">
                                     {montage.clientName}
                                 </CardTitle>
-                                <CardDescription className="text-[10px] text-muted-foreground">Aktualizacja: {latestUpdate}</CardDescription>
+                                <div className="flex flex-col gap-0.5">
+                                    {montage.displayId && (
+                                        <span className="text-[10px] font-medium text-primary/80">{montage.displayId}</span>
+                                    )}
+                                    <CardDescription className="text-[10px] text-muted-foreground">Aktualizacja: {latestUpdate}</CardDescription>
+                                </div>
                             </div>
                         </div>
                         <div className="flex flex-col items-end gap-1">

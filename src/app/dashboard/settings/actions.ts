@@ -10,6 +10,7 @@ import { createR2Client } from '@/lib/r2/client';
 import { getR2Config } from '@/lib/r2/config';
 import { setMontageChecklistTemplates, type MontageChecklistTemplate } from '@/lib/montaze/checklist';
 import { setMontageAutomationRules, type MontageAutomationRule } from '@/lib/montaze/automation';
+import { setMontageStatusDefinitions, type MontageStatusDefinition } from '@/lib/montaze/statuses';
 import { logSystemEvent } from '@/lib/logging';
 
 export async function updateWooWebhookSecret(secret: string) {
@@ -172,5 +173,19 @@ export async function updateMontageAutomationRulesAction(rules: MontageAutomatio
 	await logSystemEvent('update_montage_automation', 'Zaktualizowano reguły automatyzacji montażu', user.id);
 
 	revalidatePath('/dashboard/settings');
+}
+
+export async function updateMontageStatusDefinitionsAction(statuses: MontageStatusDefinition[]) {
+	const user = await requireUser();
+	if (user.role !== 'owner') {
+		throw new Error('Tylko właściciel może zmieniać definicje statusów.');
+	}
+
+	await setMontageStatusDefinitions(statuses, user.id);
+	
+	await logSystemEvent('update_montage_statuses', 'Zaktualizowano definicje statusów montażu', user.id);
+
+	revalidatePath('/dashboard/settings');
+    revalidatePath('/dashboard/montaze');
 }
 

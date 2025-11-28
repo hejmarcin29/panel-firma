@@ -13,14 +13,15 @@ import { updateMontageAutomationRulesAction } from '../actions';
 import type { MontageChecklistTemplate } from '@/lib/montaze/checklist';
 import type { MontageAutomationRule } from '@/lib/montaze/automation';
 import type { MontageStatus } from '@/lib/db/schema';
-import { statusOptions } from '../../montaze/constants';
+import type { StatusOption } from '../../montaze/types';
 
 interface MontageAutomationSettingsProps {
   templates: MontageChecklistTemplate[];
   initialRules: MontageAutomationRule[];
+  statusOptions: StatusOption[];
 }
 
-export function MontageAutomationSettings({ templates, initialRules }: MontageAutomationSettingsProps) {
+export function MontageAutomationSettings({ templates, initialRules, statusOptions }: MontageAutomationSettingsProps) {
   const [rules, setRules] = useState<MontageAutomationRule[]>(initialRules);
   const [isPending, startTransition] = useTransition();
 

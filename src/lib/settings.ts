@@ -16,6 +16,7 @@ export const appSettingKeys = {
 	r2PublicBaseUrl: 'r2.public_base_url',
 	montageChecklist: 'montage.checklist',
 	montageAutomation: 'montage.automation',
+	montageStatuses: 'montage.statuses',
 } as const;
 
 export type AppSettingKey = (typeof appSettingKeys)[keyof typeof appSettingKeys];

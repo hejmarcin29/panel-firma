@@ -19,6 +19,16 @@ type SystemLog = {
     userId: string | null;
 };
 
+const ACTION_LABELS: Record<string, string> = {
+    'create_montage': 'Utworzono montaż',
+    'update_montage_status': 'Zmiana statusu',
+    'update_montage_automation': 'Automatyzacja',
+    'update_montage_statuses': 'Edycja statusów',
+    'update_webhook_secret': 'Konfiguracja webhooka',
+    'update_r2_config': 'Konfiguracja R2',
+    'update_montage_templates': 'Edycja szablonów',
+};
+
 export function MontageLogTab({ montage, logs = [] }: { montage: Montage; logs?: SystemLog[] }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -117,8 +127,10 @@ export function MontageLogTab({ montage, logs = [] }: { montage: Montage; logs?:
                                 </span>
                             </div>
                             <div className="text-sm text-muted-foreground">
-                                <Badge variant="outline" className="mr-2">{log.action}</Badge>
-                                {log.details}
+                                <Badge variant="outline" className="mr-2">
+                                    {ACTION_LABELS[log.action] || log.action}
+                                </Badge>
+                                {log.details?.replace(montage.id, montage.displayId ? `${montage.displayId} (${montage.clientName})` : montage.clientName)}
                             </div>
                         </div>
                     </div>

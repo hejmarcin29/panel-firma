@@ -63,6 +63,7 @@ export type Montage = {
 	additionalInfo: string | null;
 	forecastedInstallationDate: TimestampValue;
 	status: MontageStatus;
+	displayId: string | null;
 	createdAt: TimestampValue;
 	updatedAt: TimestampValue;
 	notes: MontageNote[];
@@ -72,7 +73,7 @@ export type Montage = {
 };
 
 export type StatusOption = {
-	value: MontageStatus;
+	value: string;
 	label: string;
 	description: string;
 };

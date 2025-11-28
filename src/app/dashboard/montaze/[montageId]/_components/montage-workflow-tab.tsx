@@ -19,10 +19,9 @@ import {
     updateMontageChecklistItemLabel,
     updateMontageStatus
 } from "../../actions";
-import type { Montage } from "../../types";
-import { statusOptions } from "../../constants";
+import type { Montage, StatusOption } from "../../types";
 
-export function MontageWorkflowTab({ montage }: { montage: Montage }) {
+export function MontageWorkflowTab({ montage, statusOptions }: { montage: Montage; statusOptions: StatusOption[] }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [isEditing, setIsEditing] = useState(false);

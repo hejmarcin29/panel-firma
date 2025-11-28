@@ -12,8 +12,8 @@ import {
     systemLogs,
 } from '@/lib/db/schema';
 import { tryGetR2Config } from '@/lib/r2/config';
+import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
 
-import { statusOptions } from '../constants';
 import { mapMontageRow, type MontageRow } from '../utils';
 
 import { MontageHeader } from './_components/montage-header';
@@ -38,6 +38,13 @@ export default async function MontageDetailsPage({ params }: MontageDetailsPageP
 
     const r2Config = await tryGetR2Config();
     const publicBaseUrl = r2Config?.publicBaseUrl ?? null;
+
+    const statusDefinitions = await getMontageStatusDefinitions();
+    const statusOptions = statusDefinitions.map(def => ({
+        value: def.id,
+        label: def.label,
+        description: def.description
+    }));
 
     const montageRow = await db.query.montages.findFirst({
         where: (table, { eq }) => eq(table.id, montageId),
@@ -111,7 +118,7 @@ export default async function MontageDetailsPage({ params }: MontageDetailsPageP
                             <MontageLogTab montage={montage} logs={logs} />
                         </TabsContent>
                         <TabsContent value="workflow" className="mt-6">
-                            <MontageWorkflowTab montage={montage} />
+                            <MontageWorkflowTab montage={montage} statusOptions={statusOptions} />
                         </TabsContent>
                         <TabsContent value="measurement" className="mt-6">
                             <MontageMeasurementTab montage={montage} />

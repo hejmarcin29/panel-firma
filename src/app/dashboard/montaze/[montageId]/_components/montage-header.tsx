@@ -51,8 +51,11 @@ export function MontageHeader({ montage, statusOptions }: MontageHeaderProps) {
             </Link>
           </Button>
           <div className="flex flex-col overflow-hidden">
-            <h1 className="truncate text-lg font-semibold leading-none tracking-tight">
+            <h1 className="truncate text-lg font-semibold leading-none tracking-tight flex items-center gap-2">
               {montage.clientName}
+              {montage.displayId && (
+                  <span className="text-sm font-normal text-muted-foreground">({montage.displayId})</span>
+              )}
             </h1>
             <span className="truncate text-sm text-muted-foreground">
               {montage.installationCity || "Brak lokalizacji"}

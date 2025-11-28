@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, like, desc } from 'drizzle-orm';
 
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
@@ -21,6 +21,30 @@ import { logSystemEvent } from '@/lib/logging';
 
 const MONTAGE_DASHBOARD_PATH = '/dashboard/montaze';
 const MAX_ATTACHMENT_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
+
+async function generateNextMontageId(): Promise<string> {
+    const now = new Date();
+    const year = now.getFullYear();
+    const prefix = `M/${year}/`;
+
+    const lastMontage = await db.query.montages.findFirst({
+        where: (table, { like }) => like(table.displayId, `${prefix}%`),
+        orderBy: (table, { desc }) => [desc(table.displayId)],
+    });
+
+    let nextNumber = 1;
+    if (lastMontage && lastMontage.displayId) {
+        const parts = lastMontage.displayId.split('/');
+        if (parts.length === 3) {
+            const lastNumber = parseInt(parts[2], 10);
+            if (!isNaN(lastNumber)) {
+                nextNumber = lastNumber + 1;
+            }
+        }
+    }
+
+    return `${prefix}${nextNumber.toString().padStart(3, '0')}`;
+}
 
 async function getMontageOrThrow(montageId: string) {
 	const montageRecord = await db.query.montages.findFirst({
@@ -132,6 +156,7 @@ export async function createMontage({
 
 	const now = new Date();
 	const montageId = crypto.randomUUID();
+    const displayId = await generateNextMontageId();
 	const templates = await getMontageChecklistTemplates();
 	const normalizedBilling = billingAddress?.trim() ? billingAddress.trim() : null;
 	const normalizedInstallation = installationAddress?.trim() ? installationAddress.trim() : null;
@@ -160,6 +185,7 @@ export async function createMontage({
 
 	await db.insert(montages).values({
 		id: montageId,
+        displayId,
 		clientName: trimmedName,
 		contactPhone: contactPhone?.trim() ?? null,
 		contactEmail: contactEmail?.trim() ?? null,
@@ -192,7 +218,7 @@ export async function createMontage({
 		);
 	}
 
-	await logSystemEvent('create_montage', `Utworzono montaż dla ${trimmedName}`, user.id);
+	await logSystemEvent('create_montage', `Utworzono montaż ${displayId} dla ${trimmedName}`, user.id);
 
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
@@ -206,12 +232,15 @@ export async function updateMontageStatus({ montageId, status }: UpdateMontageSt
 	const user = await requireUser();
 	const resolved = ensureStatus(status);
 
+    const montage = await getMontageOrThrow(montageId);
+
 	await db
 		.update(montages)
 		.set({ status: resolved, updatedAt: new Date() })
 		.where(eq(montages.id, montageId));
 
-	await logSystemEvent('update_montage_status', `Zmiana statusu montażu ${montageId} na ${resolved}`, user.id);
+    const montageLabel = montage.displayId ? `${montage.displayId} (${montage.clientName})` : montage.clientName;
+	await logSystemEvent('update_montage_status', `Zmiana statusu montażu ${montageLabel} na ${resolved}`, user.id);
 
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 }

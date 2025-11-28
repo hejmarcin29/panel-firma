@@ -66,6 +66,9 @@ export function MontageDashboardView({ montages, statusOptions, headerAction }: 
                                     <div>
                                         <div className="font-medium flex items-center gap-2">
                                             {montage.clientName}
+                                            {montage.displayId && (
+                                                <span className="text-xs text-muted-foreground font-normal">({montage.displayId})</span>
+                                            )}
                                             {pendingTasks > 0 && (
                                                 <span className="inline-flex items-center rounded-full border border-transparent bg-destructive px-2 py-0.5 text-xs font-semibold text-destructive-foreground shadow transition-colors hover:bg-destructive/80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
                                                     <CheckSquare className="mr-1 h-3 w-3" />

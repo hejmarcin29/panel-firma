@@ -12,12 +12,14 @@ import { integrationLogs, mailAccounts, manualOrders, systemLogs, users } from '
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
 import { getMontageChecklistTemplates } from '@/lib/montaze/checklist';
 import { getMontageAutomationRules } from '@/lib/montaze/automation';
+import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
 
 import { WebhookSecretForm } from './_components/webhook-secret-form';
 import { R2ConfigForm } from './_components/r2-config-form';
 import { MailSettingsForm } from './_components/mail-settings-form';
 import { MontageChecklistSettings } from './_components/montage-checklist-settings';
 import { MontageAutomationSettings } from './_components/montage-automation-settings';
+import { MontageStatusSettings } from './_components/montage-status-settings';
 import { SettingsView } from './_components/settings-view';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -80,6 +82,7 @@ export default async function SettingsPage() {
 		r2ApiTokenSetting,
 		montageChecklistTemplates,
 		montageAutomationRules,
+		montageStatusDefinitions,
 	] = await Promise.all([
 		getAppSetting(appSettingKeys.wooWebhookSecret),
 		getAppSetting(appSettingKeys.r2AccountId),
@@ -91,10 +94,17 @@ export default async function SettingsPage() {
 		getAppSetting(appSettingKeys.r2ApiToken),
 		getMontageChecklistTemplates(),
 		getMontageAutomationRules(),
+		getMontageStatusDefinitions(),
 	]);
 
 	const webhookSecret = webhookSecretSetting ?? '';
 	const secretConfigured = Boolean(webhookSecret);
+
+    const statusOptions = montageStatusDefinitions.map(def => ({
+        value: def.id,
+        label: def.label,
+        description: def.description
+    }));
 
 	const [pendingRow] = await db
 		.select({ count: sql<number>`count(*)` })
@@ -185,8 +195,13 @@ export default async function SettingsPage() {
 			mailSettings={<MailSettingsForm accounts={formattedMailAccounts} />}
 			montageSettings={
 				<div className="space-y-6">
+					<MontageStatusSettings initialStatuses={montageStatusDefinitions} />
 					<MontageChecklistSettings initialTemplates={montageChecklistTemplates} />
-					<MontageAutomationSettings templates={montageChecklistTemplates} initialRules={montageAutomationRules} />
+					<MontageAutomationSettings 
+                        templates={montageChecklistTemplates} 
+                        initialRules={montageAutomationRules} 
+                        statusOptions={statusOptions}
+                    />
 				</div>
 			}
 			logs={
