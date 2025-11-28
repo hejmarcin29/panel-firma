@@ -157,10 +157,10 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 	const isMobile = useIsMobile();
 	const detailTabs = [
 		{ id: 'overview', label: 'Przegląd' },
-		{ id: 'contact', label: 'Dane kontaktowe' },
 		{ id: 'measurement', label: 'Pomiar' },
-		{ id: 'materials', label: 'Materiały' },
 		{ id: 'checklist', label: 'Checklist' },
+		{ id: 'materials', label: 'Materiały' },
+		{ id: 'contact', label: 'Dane kontaktowe' },
 		{ id: 'notes', label: 'Notatki' },
 		{ id: 'tasks', label: 'Zadania' },
 		{ id: 'timeline', label: 'Aktywność' },
@@ -741,64 +741,150 @@ export function MontageCard({ montage, statusOptions }: MontageCardProps) {
 							</TabsTrigger>
 						))}
 					</TabsList>
-					<TabsContent value="overview" className="space-y-3">
-						<div className="grid gap-3 sm:grid-cols-2">
-							<div className="rounded-2xl border border-border/60 bg-muted/10 p-4">
-								<p className="text-[11px] uppercase tracking-wide text-muted-foreground">Materiały i ilości</p>
-								<p className="mt-2 text-sm font-medium text-foreground">
-									{hasMaterials ? materialsSummary : 'Brak opisu materiałów.'}
-								</p>
-								<div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-									<span>Widoczne dla całej ekipy.</span>
-									<Button type="button" size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setActiveTab('materials')}>
-										Przejdź do edycji
-									</Button>
+					<TabsContent value="overview" className="space-y-6">
+						<div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+							{/* Left Column: Journal / Timeline */}
+							<div className="space-y-6 lg:col-span-2">
+								<div className="rounded-2xl border border-border/60 bg-muted/10 p-4">
+									<div className="mb-4 flex items-center justify-between">
+										<div>
+											<h3 className="text-sm font-semibold text-foreground">Dziennik montażu</h3>
+											<p className="text-xs text-muted-foreground">Historia zdarzeń i notatki</p>
+										</div>
+										<Button type="button" size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setActiveTab('timeline')}>
+											Pełna historia
+										</Button>
+									</div>
+
+									{/* Quick Note Input */}
+									<form onSubmit={submitNote} className="mb-6 space-y-3 rounded-xl border border-border/60 bg-background p-3">
+										<div className="space-y-2">
+											<Label htmlFor="quick-note-content" className="sr-only">Treść notatki</Label>
+											<Textarea
+												id="quick-note-content"
+												placeholder="Dodaj szybką notatkę..."
+												value={noteContent}
+												onChange={(e) => setNoteContent(e.target.value)}
+												className="min-h-20 resize-none border-0 bg-transparent p-0 focus-visible:ring-0"
+											/>
+										</div>
+										<div className="flex items-center justify-between border-t border-border/40 pt-2">
+											<div className="flex items-center gap-2">
+												<Button type="button" size="icon" variant="ghost" className="size-8 text-muted-foreground hover:text-foreground">
+													<PaperclipIcon className="size-4" />
+													<span className="sr-only">Dodaj załącznik</span>
+												</Button>
+											</div>
+											<Button type="submit" size="sm" disabled={notePending || !noteContent.trim()}>
+												{notePending ? 'Zapisywanie...' : 'Dodaj wpis'}
+											</Button>
+										</div>
+									</form>
+
+									{/* Timeline Feed */}
+									{timelineEvents.length === 0 ? (
+										<p className="text-center text-sm text-muted-foreground py-8">Brak aktywności. Dodaj pierwszą notatkę.</p>
+									) : (
+										<ul className="space-y-4">
+											{timelineEvents.slice(0, 5).map((event) => {
+												const visuals = timelineVisuals[event.type];
+												const Icon = visuals.icon;
+												return (
+													<li key={event.id} className="relative pl-6 pb-1 last:pb-0">
+														{/* Timeline Line */}
+														<div className="absolute left-[11px] top-8 bottom-0 w-px bg-border/60 last:hidden" />
+														
+														<div className="flex gap-3">
+															<div className={cn('relative z-10 flex size-6 shrink-0 items-center justify-center rounded-full border border-background shadow-sm', visuals.className)}>
+																<Icon className="size-3" />
+															</div>
+															<div className="flex-1 space-y-1">
+																<div className="flex items-center justify-between gap-2">
+																	<p className="text-xs font-medium text-foreground">{event.label}</p>
+																	<span className="text-[10px] text-muted-foreground">{formatTimestamp(event.timestamp)}</span>
+																</div>
+																<p className="text-sm text-muted-foreground">{event.description}</p>
+															</div>
+														</div>
+													</li>
+												);
+											})}
+										</ul>
+									)}
 								</div>
 							</div>
-							<div className="rounded-2xl border border-border/60 bg-muted/10 p-4">
-								<p className="text-[11px] uppercase tracking-wide text-muted-foreground">Checklist i zadania</p>
-								<p className="mt-2 text-sm font-semibold text-foreground">{checklistProgressLabel} etapów ukończonych</p>
-								<p className="text-xs text-muted-foreground">Otwarte zadania: {openTasks}</p>
-								<Button type="button" size="sm" variant="ghost" className="mt-3 h-7 px-2 text-xs" onClick={() => setActiveTab('checklist')}>
-									Zarządzaj listą
-								</Button>
-							</div>
-						</div>
-						<div className="rounded-2xl border border-border/60 bg-muted/10 p-4">
-							<div className="flex flex-wrap items-center justify-between gap-2">
-								<div>
-									<p className="text-[11px] uppercase tracking-wide text-muted-foreground">Ostatnia aktywność</p>
-									<h3 className="text-sm font-semibold text-foreground">Historia skrócona</h3>
+
+							{/* Right Column: Info & Resources */}
+							<div className="space-y-4">
+								{/* Materials Card */}
+								<div className="rounded-2xl border border-border/60 bg-muted/10 p-4">
+									<div className="mb-3 flex items-center justify-between">
+										<p className="text-[11px] uppercase tracking-wide text-muted-foreground">Materiały</p>
+										<Button type="button" size="sm" variant="ghost" className="h-6 px-2 text-[10px]" onClick={() => setActiveTab('materials')}>
+											Edytuj
+										</Button>
+									</div>
+									<div className="rounded-xl border border-border/60 bg-background p-3">
+										<p className="text-sm text-foreground leading-relaxed">
+											{hasMaterials ? materialsSummary : 'Brak listy materiałów.'}
+										</p>
+									</div>
 								</div>
-								<Button type="button" size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setActiveTab('timeline')}>
-									Zobacz wszystko
-								</Button>
+
+								{/* Checklist Card */}
+								<div className="rounded-2xl border border-border/60 bg-muted/10 p-4">
+									<div className="mb-3 flex items-center justify-between">
+										<p className="text-[11px] uppercase tracking-wide text-muted-foreground">Postęp prac</p>
+										<Button type="button" size="sm" variant="ghost" className="h-6 px-2 text-[10px]" onClick={() => setActiveTab('checklist')}>
+											Lista
+										</Button>
+									</div>
+									<div className="space-y-3">
+										<div className="flex items-end justify-between">
+											<span className="text-2xl font-bold text-foreground">{checklistProgressLabel}</span>
+											<span className="text-xs text-muted-foreground mb-1">zadań ukończonych</span>
+										</div>
+										{/* Simple Progress Bar */}
+										<div className="h-2 w-full overflow-hidden rounded-full bg-border/40">
+											<div 
+												className="h-full bg-primary transition-all duration-500 ease-in-out" 
+												style={{ width: `${totalChecklistItems > 0 ? (completedChecklistItems / totalChecklistItems) * 100 : 0}%` }} 
+											/>
+										</div>
+										<p className="text-xs text-muted-foreground">
+											Otwarte zadania: <span className="font-medium text-foreground">{openTasks}</span>
+										</p>
+									</div>
+								</div>
+
+								{/* Contact Mini Card */}
+								<div className="rounded-2xl border border-border/60 bg-muted/10 p-4">
+									<div className="mb-3 flex items-center justify-between">
+										<p className="text-[11px] uppercase tracking-wide text-muted-foreground">Kontakt</p>
+										<Button type="button" size="sm" variant="ghost" className="h-6 px-2 text-[10px]" onClick={() => setActiveTab('contact')}>
+											Szczegóły
+										</Button>
+									</div>
+									<div className="space-y-2">
+										<div className="flex items-center gap-2 text-sm">
+											<User className="size-4 text-muted-foreground" />
+											<span className="truncate font-medium">{montage.clientName}</span>
+										</div>
+										{montage.contactPhone && (
+											<div className="flex items-center gap-2 text-sm">
+												<Phone className="size-4 text-muted-foreground" />
+												<a href={`tel:${montage.contactPhone}`} className="hover:underline">{montage.contactPhone}</a>
+											</div>
+										)}
+										{installationAddress && (
+											<div className="flex items-start gap-2 text-sm">
+												<div className="mt-0.5"><div className="size-4 rounded-full border-2 border-muted-foreground/40" /></div>
+												<span className="text-muted-foreground">{installationAddress}, {installationCity}</span>
+											</div>
+										)}
+									</div>
+								</div>
 							</div>
-							{timelineEvents.length === 0 ? (
-								<p className="text-sm text-muted-foreground">Brak zarejestrowanej aktywności dla tego montażu.</p>
-							) : (
-								<ul className="mt-3 space-y-2">
-									{timelineEvents.slice(0, 3).map((event) => {
-										const visuals = timelineVisuals[event.type];
-										const Icon = visuals.icon;
-										return (
-											<li
-												key={event.id}
-												className="flex items-start gap-2 rounded-xl border border-border/60 bg-background/80 px-3 py-2"
-											>
-												<div className={cn('flex h-8 w-8 items-center justify-center rounded-full', visuals.className)}>
-													<Icon className="size-4" />
-												</div>
-												<div className="space-y-0.5">
-													<p className="text-xs font-semibold text-muted-foreground">{event.label}</p>
-													<p className="text-sm text-foreground">{event.description}</p>
-													<p className="text-[11px] text-muted-foreground">{formatTimestamp(event.timestamp)}</p>
-												</div>
-											</li>
-										);
-									})}
-								</ul>
-							)}
 						</div>
 					</TabsContent>
 					<TabsContent value="contact" className="space-y-3">
