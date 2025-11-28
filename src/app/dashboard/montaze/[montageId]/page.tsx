@@ -1,4 +1,4 @@
-import { asc, desc } from 'drizzle-orm';
+import { asc, desc, sql } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,6 +9,7 @@ import {
     montageChecklistItems,
     montageNotes,
     montageTasks,
+    systemLogs,
 } from '@/lib/db/schema';
 import { tryGetR2Config } from '@/lib/r2/config';
 
@@ -78,6 +79,12 @@ export default async function MontageDetailsPage({ params }: MontageDetailsPageP
         notFound();
     }
 
+    const logs = await db
+        .select()
+        .from(systemLogs)
+        .where(sql`${systemLogs.details} LIKE ${`%${montageId}%`}`)
+        .orderBy(desc(systemLogs.createdAt));
+
     const montage = mapMontageRow(montageRow as MontageRow, publicBaseUrl);
 
     return (
@@ -99,7 +106,7 @@ export default async function MontageDetailsPage({ params }: MontageDetailsPageP
                             <TabsTrigger value="gallery" className="flex-1">Galeria</TabsTrigger>
                         </TabsList>
                         <TabsContent value="log" className="mt-6">
-                            <MontageLogTab montage={montage} />
+                            <MontageLogTab montage={montage} logs={logs} />
                         </TabsContent>
                         <TabsContent value="workflow" className="mt-6">
                             <MontageWorkflowTab montage={montage} />
