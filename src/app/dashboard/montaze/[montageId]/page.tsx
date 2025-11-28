@@ -23,6 +23,7 @@ import { MontageWorkflowTab } from './_components/montage-workflow-tab';
 import { MontageTasksTab } from './_components/montage-tasks-tab';
 import { MontageGalleryTab } from './_components/montage-gallery-tab';
 import { MontageLogTab } from './_components/montage-log-tab';
+import { MontageMeasurementTab } from '../_components/montage-measurement-tab';
 
 type MontageDetailsPageParams = {
     params: Promise<{
@@ -99,9 +100,10 @@ export default async function MontageDetailsPage({ params }: MontageDetailsPageP
 
                 <div className="space-y-6">
                     <Tabs defaultValue="log" className="w-full">
-                        <TabsList className="flex w-full overflow-x-auto md:grid md:grid-cols-4">
+                        <TabsList className="flex w-full overflow-x-auto md:grid md:grid-cols-5">
                             <TabsTrigger value="log" className="flex-1">Dziennik</TabsTrigger>
                             <TabsTrigger value="workflow" className="flex-1">Przebieg</TabsTrigger>
+                            <TabsTrigger value="measurement" className="flex-1">Pomiar</TabsTrigger>
                             <TabsTrigger value="tasks" className="flex-1">Zadania</TabsTrigger>
                             <TabsTrigger value="gallery" className="flex-1">Galeria</TabsTrigger>
                         </TabsList>
@@ -110,6 +112,9 @@ export default async function MontageDetailsPage({ params }: MontageDetailsPageP
                         </TabsContent>
                         <TabsContent value="workflow" className="mt-6">
                             <MontageWorkflowTab montage={montage} />
+                        </TabsContent>
+                        <TabsContent value="measurement" className="mt-6">
+                            <MontageMeasurementTab montage={montage} />
                         </TabsContent>
                         <TabsContent value="tasks" className="mt-6">
                             <MontageTasksTab montage={montage} />
