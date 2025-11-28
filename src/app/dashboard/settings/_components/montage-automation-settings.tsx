@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { updateMontageAutomationRulesAction } from '../actions';
 import type { MontageChecklistTemplate } from '@/lib/montaze/checklist';
 import type { MontageAutomationRule } from '@/lib/montaze/automation';
+import type { MontageStatus } from '@/lib/db/schema';
 import { statusOptions } from '../../montaze/constants';
 
 interface MontageAutomationSettingsProps {
@@ -32,7 +33,7 @@ export function MontageAutomationSettings({ templates, initialRules }: MontageAu
     if (value !== 'none') {
       newRules.push({
         checklistItemId: templateId,
-        targetStatus: value as any,
+        targetStatus: value as MontageStatus,
       });
     }
     setRules(newRules);
@@ -89,7 +90,7 @@ export function MontageAutomationSettings({ templates, initialRules }: MontageAu
           
           {templates.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-4">
-              Najpierw zdefiniuj etapy w sekcji "Szablony etapów montażu".
+              Najpierw zdefiniuj etapy w sekcji &quot;Szablony etapów montażu&quot;.
             </p>
           )}
         </div>

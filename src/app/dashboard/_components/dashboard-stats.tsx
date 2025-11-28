@@ -7,7 +7,6 @@ import {
   Hammer, 
   Package, 
   Plus, 
-  Users,
   CheckCircle2
 } from "lucide-react";
 
@@ -37,7 +36,6 @@ export function DashboardStats({ montages, orders, userName }: DashboardStatsPro
   });
   
   const pendingOrders = orders.filter(o => o.status !== 'order.closed' && o.status !== 'order.fulfillment_confirmed');
-  const recentOrders = orders.slice(0, 5);
   const recentMontages = montages.slice(0, 5);
 
   const allPendingTasks = montages.flatMap(m => m.tasks.filter(t => !t.completed).map(t => ({

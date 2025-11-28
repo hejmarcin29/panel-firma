@@ -442,7 +442,7 @@ type ToggleMontageChecklistInput = {
 };
 
 export async function toggleMontageChecklistItem({ itemId, montageId, completed }: ToggleMontageChecklistInput) {
-	const user = await requireUser();
+	await requireUser();
 
 	const [item] = await db
 		.select({ 
