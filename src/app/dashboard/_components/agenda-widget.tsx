@@ -11,6 +11,7 @@ export interface AgendaItem {
     installationCity: string | null;
     scheduledInstallationAt: Date | number | string | null;
     displayId: string | null;
+    floorArea: number | null;
 }
 
 interface AgendaWidgetProps {
@@ -49,6 +50,11 @@ export function AgendaWidget({ upcomingMontages }: AgendaWidgetProps) {
                         <Clock className="mr-1 h-3 w-3" />
                         {montage.scheduledInstallationAt ? new Date(montage.scheduledInstallationAt).toLocaleDateString() : 'Nieustalona data'}
                     </p>
+                    {montage.floorArea && (
+                        <p className="text-xs text-muted-foreground font-medium">
+                            Powierzchnia: {montage.floorArea} m²
+                        </p>
+                    )}
                   </div>
                 </Link>
               ))}

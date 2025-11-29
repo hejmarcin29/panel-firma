@@ -22,7 +22,17 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
-import { Pencil, Save, X } from "lucide-react";
+import { Pencil, Save, X, Settings } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
 import { AgendaWidget, type AgendaItem } from "./agenda-widget";
 import { RecentActivity } from "./recent-activity";
@@ -51,6 +61,90 @@ const WIDGET_LABELS: Record<string, string> = {
     "tasks": "Zadania do wykonania",
 };
 
+function WidgetSettingsDialog({ 
+    open, 
+    onOpenChange, 
+    widget, 
+    onSave 
+}: { 
+    open: boolean; 
+    onOpenChange: (open: boolean) => void; 
+    widget: DashboardWidgetConfig | null; 
+    onSave: (settings: any) => void; 
+}) {
+    const [localSettings, setLocalSettings] = useState<any>(widget?.settings || {});
+
+    if (!widget) return null;
+
+    const handleSave = () => {
+        onSave(localSettings);
+        onOpenChange(false);
+    };
+
+    // KPI Specific Settings
+    if (widget.type === 'kpi') {
+        const visibleCards = localSettings.visibleCards || ['today', 'leads', 'payments', 'urgent'];
+        
+        const toggleCard = (card: string) => {
+            if (visibleCards.includes(card)) {
+                setLocalSettings({ ...localSettings, visibleCards: visibleCards.filter((c: string) => c !== card) });
+            } else {
+                setLocalSettings({ ...localSettings, visibleCards: [...visibleCards, card] });
+            }
+        };
+
+        return (
+            <Dialog open={open} onOpenChange={onOpenChange}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Konfiguracja: {WIDGET_LABELS[widget.type]}</DialogTitle>
+                        <DialogDescription>Wybierz które karty mają być widoczne.</DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="flex items-center space-x-2">
+                            <Checkbox 
+                                id="card-today" 
+                                checked={visibleCards.includes('today')}
+                                onCheckedChange={() => toggleCard('today')}
+                            />
+                            <Label htmlFor="card-today">Dzisiejsze montaże</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <Checkbox 
+                                id="card-leads" 
+                                checked={visibleCards.includes('leads')}
+                                onCheckedChange={() => toggleCard('leads')}
+                            />
+                            <Label htmlFor="card-leads">Nowe Leady</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <Checkbox 
+                                id="card-payments" 
+                                checked={visibleCards.includes('payments')}
+                                onCheckedChange={() => toggleCard('payments')}
+                            />
+                            <Label htmlFor="card-payments">Oczekujące płatności</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <Checkbox 
+                                id="card-urgent" 
+                                checked={visibleCards.includes('urgent')}
+                                onCheckedChange={() => toggleCard('urgent')}
+                            />
+                            <Label htmlFor="card-urgent">Pilne zadania</Label>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button onClick={handleSave}>Zapisz</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        );
+    }
+
+    return null;
+}
+
 interface DashboardBuilderProps {
   initialLayout: DashboardLayoutConfig;
   data: {
@@ -66,7 +160,7 @@ interface DashboardBuilderProps {
   };
 }
 
-function SortableWidget({ widget, data, isEditing }: { id: string; widget: DashboardWidgetConfig; data: DashboardBuilderProps['data']; isEditing: boolean }) {
+function SortableWidget({ widget, data, isEditing, onConfigure }: { id: string; widget: DashboardWidgetConfig; data: DashboardBuilderProps['data']; isEditing: boolean; onConfigure: (widget: DashboardWidgetConfig) => void }) {
   const {
     attributes,
     listeners,
@@ -90,7 +184,7 @@ function SortableWidget({ widget, data, isEditing }: { id: string; widget: Dashb
   const props = widget.type === "agenda" ? { upcomingMontages: data.upcomingMontages } :
                 widget.type === "recent-activity" ? { recentMontages: data.recentMontages } :
                 widget.type === "tasks" ? { tasksMontages: data.tasksMontages } :
-                widget.type === "kpi" ? { ...data.kpiData } :
+                widget.type === "kpi" ? { ...data.kpiData, settings: widget.settings } :
                 {};
 
   return (
@@ -101,9 +195,25 @@ function SortableWidget({ widget, data, isEditing }: { id: string; widget: Dashb
                 {...listeners} 
                 className="absolute inset-0 z-50 bg-background/50 flex items-center justify-center border-2 border-dashed border-primary/50 rounded-lg cursor-grab active:cursor-grabbing hover:bg-background/70 transition-colors"
             >
-                <span className="font-medium text-sm bg-background px-3 py-1 rounded-full shadow-sm border">
-                    {WIDGET_LABELS[widget.type] || widget.type}
-                </span>
+                <div className="flex items-center gap-2">
+                    <span className="font-medium text-sm bg-background px-3 py-1 rounded-full shadow-sm border">
+                        {WIDGET_LABELS[widget.type] || widget.type}
+                    </span>
+                    {widget.type === 'kpi' && (
+                        <Button 
+                            variant="secondary" 
+                            size="icon" 
+                            className="h-7 w-7 rounded-full shadow-sm border"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onConfigure(widget);
+                            }}
+                            onPointerDown={(e) => e.stopPropagation()}
+                        >
+                            <Settings className="h-3 w-3" />
+                        </Button>
+                    )}
+                </div>
             </div>
         )}
         <Component {...props} />
@@ -115,6 +225,8 @@ export function DashboardBuilder({ initialLayout, data }: DashboardBuilderProps)
   const [isEditing, setIsEditing] = useState(false);
   const [layout, setLayout] = useState<DashboardLayoutConfig>(initialLayout);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
+  const [selectedWidget, setSelectedWidget] = useState<DashboardWidgetConfig | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -282,6 +394,10 @@ export function DashboardBuilder({ initialLayout, data }: DashboardBuilderProps)
                                     widget={widget} 
                                     data={data} 
                                     isEditing={isEditing} 
+                                    onConfigure={(w) => {
+                                        setSelectedWidget(w);
+                                        setSettingsDialogOpen(true);
+                                    }}
                                 />
                             ))}
                         </div>
@@ -303,6 +419,10 @@ export function DashboardBuilder({ initialLayout, data }: DashboardBuilderProps)
                                     widget={widget} 
                                     data={data} 
                                     isEditing={isEditing} 
+                                    onConfigure={(w) => {
+                                        setSelectedWidget(w);
+                                        setSettingsDialogOpen(true);
+                                    }}
                                 />
                             ))}
                         </div>
@@ -321,6 +441,34 @@ export function DashboardBuilder({ initialLayout, data }: DashboardBuilderProps)
                 ) : null}
             </DragOverlay>
         </DndContext>
+
+        {/* Widget Settings Dialog - for configuring widget settings like KPI cards visibility */}
+        {selectedWidget && (
+            <WidgetSettingsDialog
+                open={settingsDialogOpen}
+                onOpenChange={setSettingsDialogOpen}
+                widget={selectedWidget}
+                onSave={(settings) => {
+                    setLayout((prev) => {
+                        const updatedColumns = { ...prev.columns };
+                        const widgetColumn = Object.keys(updatedColumns).find((key) =>
+                          updatedColumns[key].find((w) => w.id === selectedWidget?.id)
+                        );
+                        
+                        if (widgetColumn) {
+                          updatedColumns[widgetColumn] = updatedColumns[widgetColumn].map((w) =>
+                            w.id === selectedWidget.id ? { ...w, settings } : w
+                          );
+                        }
+
+                        return {
+                          ...prev,
+                          columns: updatedColumns,
+                        };
+                    });
+                }}
+            />
+        )}
     </div>
   );
 }

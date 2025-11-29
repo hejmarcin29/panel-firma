@@ -17,6 +17,7 @@ export async function logoutAction() {
 export interface DashboardWidgetConfig {
     id: string;
     type: string;
+    settings?: Record<string, any>;
 }
 
 export interface DashboardLayoutConfig {
