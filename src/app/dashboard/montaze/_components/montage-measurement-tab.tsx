@@ -25,6 +25,10 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
   const [isPending, startTransition] = useTransition();
   
   const [measurementDetails, setMeasurementDetails] = useState(montage.measurementDetails || '');
+  const [floorArea, setFloorArea] = useState<string>(montage.floorArea?.toString() || '');
+  const [floorDetails, setFloorDetails] = useState(montage.floorDetails || '');
+  const [skirtingLength, setSkirtingLength] = useState<string>(montage.skirtingLength?.toString() || '');
+  const [skirtingDetails, setSkirtingDetails] = useState(montage.skirtingDetails || '');
   const [panelType, setPanelType] = useState(montage.panelType || '');
   const [additionalInfo, setAdditionalInfo] = useState(montage.additionalInfo || '');
   const [forecastedDate, setForecastedDate] = useState<Date | undefined>(
@@ -109,6 +113,10 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
         await updateMontageMeasurement({
           montageId: montage.id,
           measurementDetails,
+          floorArea: floorArea ? parseFloat(floorArea) : null,
+          floorDetails,
+          skirtingLength: skirtingLength ? parseFloat(skirtingLength) : null,
+          skirtingDetails,
           panelType,
           additionalInfo,
           forecastedInstallationDate: forecastedDate ? forecastedDate.getTime() : null,
@@ -138,7 +146,53 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="measurementDetails">Szczegóły pomiaru</Label>
+            <Label htmlFor="floorArea">Pomiar podłoga (m²)</Label>
+            <Input
+              id="floorArea"
+              type="number"
+              step="0.01"
+              placeholder="0.00"
+              value={floorArea}
+              onChange={(e) => setFloorArea(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="floorDetails">Szczegóły podłogi</Label>
+            <Input
+              id="floorDetails"
+              placeholder="Np. rodzaj wylewki, uwagi..."
+              value={floorDetails}
+              onChange={(e) => setFloorDetails(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="skirtingLength">Pomiar listwy (mb)</Label>
+            <Input
+              id="skirtingLength"
+              type="number"
+              step="0.01"
+              placeholder="0.00"
+              value={skirtingLength}
+              onChange={(e) => setSkirtingLength(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="skirtingDetails">Szczegóły listew</Label>
+            <Input
+              id="skirtingDetails"
+              placeholder="Np. rodzaj listwy, narożniki..."
+              value={skirtingDetails}
+              onChange={(e) => setSkirtingDetails(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="measurementDetails">Ogólne szczegóły pomiaru</Label>
             <Textarea
               id="measurementDetails"
               placeholder="Wymiary, uwagi techniczne..."

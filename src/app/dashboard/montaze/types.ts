@@ -60,6 +60,10 @@ export type Montage = {
 	scheduledInstallationEndAt: TimestampValue;
 	materialDetails: string | null;
 	measurementDetails: string | null;
+	floorArea: number | null;
+	floorDetails: string | null;
+	skirtingLength: number | null;
+	skirtingDetails: string | null;
 	panelType: string | null;
 	additionalInfo: string | null;
 	forecastedInstallationDate: TimestampValue;

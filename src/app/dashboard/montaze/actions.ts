@@ -682,12 +682,20 @@ export async function updateMontageChecklistItemLabel({ montageId, itemId, label
 export async function updateMontageMeasurement({
 	montageId,
 	measurementDetails,
+	floorArea,
+	floorDetails,
+	skirtingLength,
+	skirtingDetails,
 	panelType,
 	additionalInfo,
 	forecastedInstallationDate,
 }: {
 	montageId: string;
 	measurementDetails: string;
+	floorArea: number | null;
+	floorDetails: string;
+	skirtingLength: number | null;
+	skirtingDetails: string;
 	panelType: string;
 	additionalInfo: string;
 	forecastedInstallationDate: number | null;
@@ -698,6 +706,10 @@ export async function updateMontageMeasurement({
 		.update(montages)
 		.set({
 			measurementDetails,
+			floorArea,
+			floorDetails,
+			skirtingLength,
+			skirtingDetails,
 			panelType,
 			additionalInfo,
 			forecastedInstallationDate: forecastedInstallationDate ? new Date(forecastedInstallationDate) : null,

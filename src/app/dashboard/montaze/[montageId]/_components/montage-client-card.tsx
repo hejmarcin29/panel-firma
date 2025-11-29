@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, Phone, Mail, Calendar, Edit2 } from "lucide-react";
+import { MapPin, Phone, Mail, Calendar, Edit2, Ruler } from "lucide-react";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
@@ -193,6 +193,20 @@ export function MontageClientCard({ montage }: { montage: Montage }) {
                 </span>
             </div>
         </div>
+
+        {montage.floorArea && (
+            <div className="flex items-center gap-3">
+                <Ruler className="h-4 w-4 text-muted-foreground" />
+                <div className="grid gap-0.5">
+                    <span className="text-sm">
+                        {montage.floorArea} m²
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                        Powierzchnia podłogi
+                    </span>
+                </div>
+            </div>
+        )}
       </CardContent>
     </Card>
   );

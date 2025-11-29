@@ -1,3 +1,5 @@
+"use client";
+
 import { CheckSquare, Plus, Paperclip, FileIcon } from "lucide-react";
 import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
