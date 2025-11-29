@@ -63,6 +63,9 @@ export default async function MontageDetailsPage({ params }: MontageDetailsPageP
             },
             tasks: {
                 orderBy: asc(montageTasks.createdAt),
+                with: {
+                    attachments: true,
+                },
             },
             checklistItems: {
                 orderBy: asc(montageChecklistItems.orderIndex),
@@ -112,7 +115,7 @@ export default async function MontageDetailsPage({ params }: MontageDetailsPageP
                             <TabsTrigger value="workflow" className="flex-1">Przebieg</TabsTrigger>
                             <TabsTrigger value="measurement" className="flex-1">Pomiar</TabsTrigger>
                             <TabsTrigger value="tasks" className="flex-1">Zadania</TabsTrigger>
-                            <TabsTrigger value="gallery" className="flex-1">Galeria</TabsTrigger>
+                            <TabsTrigger value="gallery" className="flex-1">Załączniki</TabsTrigger>
                         </TabsList>
                         <TabsContent value="log" className="mt-6">
                             <MontageLogTab montage={montage} logs={logs} />

@@ -18,6 +18,7 @@ import { uploadMontageObject } from '@/lib/r2/storage';
 import { getMontageChecklistTemplates } from '@/lib/montaze/checklist';
 import { getMontageAutomationRules } from '@/lib/montaze/automation';
 import { logSystemEvent } from '@/lib/logging';
+import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
 
 const MONTAGE_DASHBOARD_PATH = '/dashboard/montaze';
 const MAX_ATTACHMENT_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
@@ -78,12 +79,14 @@ async function createMontageAttachment({
 	uploadedBy,
 	title,
 	noteId,
+	taskId,
 }: {
 	montage: typeof montages.$inferSelect;
 	file: File;
 	uploadedBy: string;
 	title: string | null;
 	noteId?: string | null;
+	taskId?: string | null;
 }): Promise<string> {
 	ensureValidAttachmentFile(file);
 
@@ -99,6 +102,7 @@ async function createMontageAttachment({
 		id: attachmentId,
 		montageId: montage.id,
 		noteId: noteId ?? null,
+		taskId: taskId ?? null,
 		title,
 		url: uploaded.url,
 		uploadedBy,
@@ -239,8 +243,11 @@ export async function updateMontageStatus({ montageId, status }: UpdateMontageSt
 		.set({ status: resolved, updatedAt: new Date() })
 		.where(eq(montages.id, montageId));
 
+    const statusDefinitions = await getMontageStatusDefinitions();
+    const statusLabel = statusDefinitions.find(d => d.id === resolved)?.label || resolved;
+
     const montageLabel = montage.displayId ? `${montage.displayId} (${montage.clientName})` : montage.clientName;
-	await logSystemEvent('update_montage_status', `Zmiana statusu montażu ${montageLabel} na ${resolved}`, user.id);
+	await logSystemEvent('update_montage_status', `Zmiana statusu montażu ${montageLabel} na ${statusLabel}`, user.id);
 
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
@@ -436,11 +443,13 @@ export async function addMontageAttachment(formData: FormData) {
 	const montageIdRaw = formData.get('montageId');
 	const titleRaw = formData.get('title');
 	const noteIdRaw = formData.get('noteId');
+	const taskIdRaw = formData.get('taskId');
 	const fileField = formData.get('file');
 
 	const montageId = typeof montageIdRaw === 'string' ? montageIdRaw.trim() : '';
 	const title = typeof titleRaw === 'string' ? titleRaw.trim() : '';
 	const noteId = typeof noteIdRaw === 'string' ? noteIdRaw.trim() : '';
+	const taskId = typeof taskIdRaw === 'string' ? taskIdRaw.trim() : '';
 
 	if (!montageId) {
 		throw new Error('Brakuje identyfikatora montaży.');
@@ -458,6 +467,7 @@ export async function addMontageAttachment(formData: FormData) {
 		uploadedBy: user.id,
 		title: title ? title : null,
 		noteId: noteId || null,
+		taskId: taskId || null,
 	});
 
 	await touchMontage(montageRecord.id);

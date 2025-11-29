@@ -453,6 +453,9 @@ export const montageAttachments = sqliteTable(
 		noteId: text('note_id').references(() => montageNotes.id, {
 			onDelete: 'set null',
 		}),
+		taskId: text('task_id').references(() => montageTasks.id, {
+			onDelete: 'set null',
+		}),
 		title: text('title'),
 		url: text('url').notNull(),
 		uploadedBy: text('uploaded_by').references(() => users.id, { onDelete: 'set null' }),
@@ -554,6 +557,10 @@ export const montageAttachmentsRelations = relations(montageAttachments, ({ one 
 		fields: [montageAttachments.noteId],
 		references: [montageNotes.id],
 	}),
+	task: one(montageTasks, {
+		fields: [montageAttachments.taskId],
+		references: [montageTasks.id],
+	}),
 }));
 
 export const montageChecklistItemsRelations = relations(montageChecklistItems, ({ one }) => ({
@@ -567,11 +574,12 @@ export const montageChecklistItemsRelations = relations(montageChecklistItems, (
 	}),
 }));
 
-export const montageTasksRelations = relations(montageTasks, ({ one }) => ({
+export const montageTasksRelations = relations(montageTasks, ({ one, many }) => ({
 	montage: one(montages, {
 		fields: [montageTasks.montageId],
 		references: [montages.id],
 	}),
+	attachments: many(montageAttachments),
 }));
 
 export const manualOrders = sqliteTable(

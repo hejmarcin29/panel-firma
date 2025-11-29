@@ -32,6 +32,7 @@ export type MontageTask = {
 	title: string;
 	completed: boolean;
 	updatedAt: TimestampValue;
+	attachments?: MontageAttachment[];
 };
 
 export type MontageChecklistItem = {

@@ -15,7 +15,6 @@ import {
 import { tryGetR2Config } from '@/lib/r2/config';
 
 import { mapMontageRow, type MontageRow } from './montaze/utils';
-import { KPICards } from './_components/kpi-cards';
 import { DashboardBuilder } from './_components/dashboard-builder';
 import type { DashboardLayoutConfig } from './actions';
 
