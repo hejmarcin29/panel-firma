@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, FileText, UserPlus, Mail } from "lucide-react";
+import { PlusCircle, FileText, Mail } from "lucide-react";
 import Link from "next/link";
 
 export function QuickActions() {

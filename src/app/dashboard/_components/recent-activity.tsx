@@ -1,8 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import Link from "next/link";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { Montage } from "../montaze/types";
 
 interface RecentActivityProps {

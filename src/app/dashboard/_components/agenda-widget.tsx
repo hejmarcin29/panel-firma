@@ -5,7 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Clock, MapPin } from "lucide-react";
 import Link from "next/link";
 
-interface AgendaItem {
+export interface AgendaItem {
     id: string;
     clientName: string;
     installationCity: string | null;

@@ -2,10 +2,10 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CheckSquare, MapPin, Calendar } from "lucide-react";
+import { MapPin, Calendar } from "lucide-react";
 import Link from "next/link";
 
-interface TaskItem {
+export interface TaskItem {
     id: string;
     clientName: string;
     installationCity: string | null;

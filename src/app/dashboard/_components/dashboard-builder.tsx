@@ -23,16 +23,17 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
 import { Pencil, Save, X } from "lucide-react";
-import { cn } from "@/lib/utils";
 
-import { AgendaWidget } from "./agenda-widget";
+import { AgendaWidget, type AgendaItem } from "./agenda-widget";
 import { RecentActivity } from "./recent-activity";
 import { QuickActions } from "./quick-actions";
-import { TasksWidget } from "./tasks-widget";
+import { TasksWidget, type TaskItem } from "./tasks-widget";
 import { updateDashboardLayout, type DashboardLayoutConfig, type DashboardWidgetConfig } from "../actions";
 import { toast } from "sonner";
+import type { Montage } from "../montaze/types";
 
 // Widget Registry
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const WIDGET_COMPONENTS: Record<string, React.ComponentType<any>> = {
   "agenda": AgendaWidget,
   "recent-activity": RecentActivity,
@@ -50,13 +51,13 @@ const WIDGET_LABELS: Record<string, string> = {
 interface DashboardBuilderProps {
   initialLayout: DashboardLayoutConfig;
   data: {
-    upcomingMontages: any[];
-    recentMontages: any[];
-    tasksMontages: any[];
+    upcomingMontages: AgendaItem[];
+    recentMontages: Montage[];
+    tasksMontages: TaskItem[];
   };
 }
 
-function SortableWidget({ id, widget, data, isEditing }: { id: string; widget: DashboardWidgetConfig; data: any; isEditing: boolean }) {
+function SortableWidget({ widget, data, isEditing }: { id: string; widget: DashboardWidgetConfig; data: DashboardBuilderProps['data']; isEditing: boolean }) {
   const {
     attributes,
     listeners,
@@ -117,7 +118,7 @@ export function DashboardBuilder({ initialLayout, data }: DashboardBuilderProps)
           await updateDashboardLayout(layout);
           setIsEditing(false);
           toast.success("Układ zapisany");
-      } catch (error) {
+      } catch {
           toast.error("Błąd zapisu układu");
       }
   };
