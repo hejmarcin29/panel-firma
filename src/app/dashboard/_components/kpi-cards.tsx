@@ -1,7 +1,6 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, DollarSign, AlertCircle, Users } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface KPICardsProps {
   todayMontagesCount: number;
@@ -17,53 +16,29 @@ export function KPICards({
   urgentTasksCount,
 }: KPICardsProps) {
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-2">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Dzisiejsze montaże</CardTitle>
-          <Calendar className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{todayMontagesCount}</div>
-          <p className="text-xs text-muted-foreground">
-            Zaplanowane na dziś
-          </p>
+        <CardContent className="p-3 flex flex-col items-center justify-center text-center">
+          <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Dzisiejsze</span>
+          <div className="text-xl font-bold mt-1">{todayMontagesCount}</div>
         </CardContent>
       </Card>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Nowe Leady</CardTitle>
-          <Users className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{newLeadsCount}</div>
-          <p className="text-xs text-muted-foreground">
-            Oczekują na kontakt
-          </p>
+        <CardContent className="p-3 flex flex-col items-center justify-center text-center">
+          <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Leady</span>
+          <div className="text-xl font-bold mt-1">{newLeadsCount}</div>
         </CardContent>
       </Card>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Oczekujące płatności</CardTitle>
-          <DollarSign className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{pendingPaymentsCount}</div>
-          <p className="text-xs text-muted-foreground">
-            Przed wpłatą
-          </p>
+        <CardContent className="p-3 flex flex-col items-center justify-center text-center">
+          <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Płatności</span>
+          <div className="text-xl font-bold mt-1">{pendingPaymentsCount}</div>
         </CardContent>
       </Card>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Pilne sprawy</CardTitle>
-          <AlertCircle className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{urgentTasksCount}</div>
-          <p className="text-xs text-muted-foreground">
-            Wymagają uwagi
-          </p>
+        <CardContent className="p-3 flex flex-col items-center justify-center text-center border-red-200 bg-red-50/50 dark:bg-red-900/10">
+          <span className="text-[10px] uppercase text-red-600/80 font-bold tracking-wider">Pilne</span>
+          <div className="text-xl font-bold mt-1 text-red-600">{urgentTasksCount}</div>
         </CardContent>
       </Card>
     </div>

@@ -22,6 +22,7 @@ import type { DashboardLayoutConfig } from './actions';
 const DEFAULT_LAYOUT: DashboardLayoutConfig = {
     columns: {
         left: [
+            { id: 'kpi-1', type: 'kpi' },
             { id: 'quick-1', type: 'quick-actions' },
             { id: 'recent-1', type: 'recent-activity' },
             { id: 'tasks-1', type: 'tasks' },
@@ -46,6 +47,18 @@ export default async function DashboardPage() {
     if (dbUser?.dashboardConfig) {
         try {
             layout = dbUser.dashboardConfig as unknown as DashboardLayoutConfig;
+            
+            // Migration: Ensure KPI widget exists
+            const hasKpi = [...layout.columns.left, ...layout.columns.right].some(w => w.type === 'kpi');
+            if (!hasKpi) {
+                layout = {
+                    ...layout,
+                    columns: {
+                        ...layout.columns,
+                        left: [{ id: 'kpi-1', type: 'kpi' }, ...layout.columns.left]
+                    }
+                };
+            }
         } catch (e) {
             console.error("Failed to parse dashboard config", e);
         }
@@ -145,19 +158,18 @@ export default async function DashboardPage() {
                 </div>
             </div>
 
-            <KPICards 
-                todayMontagesCount={todayMontagesCount}
-                newLeadsCount={newLeadsCount}
-                pendingPaymentsCount={pendingPaymentsCount}
-                urgentTasksCount={urgentTasksCount}
-            />
-
             <DashboardBuilder 
                 initialLayout={layout} 
                 data={{
                     upcomingMontages,
                     recentMontages,
-                    tasksMontages
+                    tasksMontages,
+                    kpiData: {
+                        todayMontagesCount,
+                        newLeadsCount,
+                        pendingPaymentsCount,
+                        urgentTasksCount
+                    }
                 }}
             />
         </div>
