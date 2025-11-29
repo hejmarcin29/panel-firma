@@ -70,9 +70,9 @@ function WidgetSettingsDialog({
     open: boolean; 
     onOpenChange: (open: boolean) => void; 
     widget: DashboardWidgetConfig | null; 
-    onSave: (settings: any) => void; 
+    onSave: (settings: Record<string, unknown>) => void; 
 }) {
-    const [localSettings, setLocalSettings] = useState<any>(widget?.settings || {});
+    const [localSettings, setLocalSettings] = useState<Record<string, unknown>>(widget?.settings || {});
 
     if (!widget) return null;
 
@@ -83,7 +83,7 @@ function WidgetSettingsDialog({
 
     // KPI Specific Settings
     if (widget.type === 'kpi') {
-        const visibleCards = localSettings.visibleCards || ['today', 'leads', 'payments', 'urgent', 'orders'];
+        const visibleCards = (localSettings.visibleCards as string[] | undefined) || ['today', 'leads', 'payments', 'urgent', 'orders'];
         
         const toggleCard = (card: string) => {
             if (visibleCards.includes(card)) {
