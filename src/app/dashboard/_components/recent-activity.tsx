@@ -20,7 +20,7 @@ function initials(name: string) {
 
 export function RecentActivity({ recentMontages }: RecentActivityProps) {
   return (
-    <Card className="col-span-1 md:col-span-1 lg:col-span-2 h-full">
+    <Card className="h-full">
       <CardHeader>
         <CardTitle>Ostatnia Aktywność</CardTitle>
         <CardDescription>Ostatnio aktualizowane montaże</CardDescription>

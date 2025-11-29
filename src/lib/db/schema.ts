@@ -67,6 +67,7 @@ export const users = sqliteTable(
 		passwordHash: text('password_hash').notNull(),
 		name: text('name'),
 		role: text('role').$type<UserRole>().notNull().default('operator'),
+		dashboardConfig: text('dashboard_config', { mode: 'json' }),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' })
 			.notNull()
 			.default(sql`(strftime('%s','now') * 1000)`),

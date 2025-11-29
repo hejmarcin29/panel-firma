@@ -176,6 +176,13 @@
       "when": 1764370442611,
       "tag": "0024_lumpy_luckman",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "6",
+      "when": 1764407016272,
+      "tag": "0025_little_the_professor",
+      "breakpoints": true
     }
   ]
 }

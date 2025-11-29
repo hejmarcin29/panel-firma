@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `dashboard_config` text;

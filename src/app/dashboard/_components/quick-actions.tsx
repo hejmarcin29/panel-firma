@@ -7,7 +7,7 @@ import Link from "next/link";
 
 export function QuickActions() {
   return (
-    <Card className="col-span-1 md:col-span-1 h-full">
+    <Card className="h-full">
       <CardHeader>
         <CardTitle>Szybkie Akcje</CardTitle>
         <CardDescription>Najczęstsze operacje</CardDescription>
