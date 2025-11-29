@@ -11,6 +11,7 @@ import {
 	montageTasks,
 	montages,
     users,
+    manualOrders,
 } from '@/lib/db/schema';
 import { tryGetR2Config } from '@/lib/r2/config';
 
@@ -134,6 +135,12 @@ export default async function DashboardPage() {
     // Urgent tasks: Montages that are not completed/lead but have no date, or maybe just a placeholder logic for now.
     const urgentTasksCount = allMontages.filter(m => m.status !== 'lead' && m.status !== 'completed' && !m.scheduledInstallationAt).length;
 
+    // Fetch New Orders Count
+    const newOrders = await db.query.manualOrders.findMany({
+        where: eq(manualOrders.status, 'Zamówienie utworzone'),
+    });
+    const newOrdersCount = newOrders.length;
+
     // Tasks Widget Data
     const tasksMontages = allMontages
         .map(m => ({
@@ -167,7 +174,8 @@ export default async function DashboardPage() {
                         todayMontagesCount,
                         newLeadsCount,
                         pendingPaymentsCount,
-                        urgentTasksCount
+                        urgentTasksCount,
+                        newOrdersCount
                     }
                 }}
             />

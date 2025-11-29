@@ -83,7 +83,7 @@ function WidgetSettingsDialog({
 
     // KPI Specific Settings
     if (widget.type === 'kpi') {
-        const visibleCards = localSettings.visibleCards || ['today', 'leads', 'payments', 'urgent'];
+        const visibleCards = localSettings.visibleCards || ['today', 'leads', 'payments', 'urgent', 'orders'];
         
         const toggleCard = (card: string) => {
             if (visibleCards.includes(card)) {
@@ -116,6 +116,14 @@ function WidgetSettingsDialog({
                                 onCheckedChange={() => toggleCard('leads')}
                             />
                             <Label htmlFor="card-leads">Nowe Leady</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <Checkbox 
+                                id="card-orders" 
+                                checked={visibleCards.includes('orders')}
+                                onCheckedChange={() => toggleCard('orders')}
+                            />
+                            <Label htmlFor="card-orders">Nowe Zamówienia</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                             <Checkbox 
@@ -156,6 +164,7 @@ interface DashboardBuilderProps {
         newLeadsCount: number;
         pendingPaymentsCount: number;
         urgentTasksCount: number;
+        newOrdersCount: number;
     };
   };
 }
