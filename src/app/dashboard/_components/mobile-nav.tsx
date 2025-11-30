@@ -14,7 +14,8 @@ import {
   Image as ImageIcon,
   LogOut,
   ClipboardList,
-  KanbanSquare
+  KanbanSquare,
+  LucideIcon
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -29,7 +30,7 @@ import {
 import { logoutAction } from "../actions";
 import { MobileMenuItem } from "../settings/actions";
 
-const iconMap: Record<string, any> = {
+const iconMap: Record<string, LucideIcon> = {
   Home,
   Calendar,
   Package,
