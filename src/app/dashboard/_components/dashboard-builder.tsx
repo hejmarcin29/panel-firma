@@ -83,7 +83,7 @@ function WidgetSettingsDialog({
 
     // KPI Specific Settings
     if (widget.type === 'kpi') {
-        const visibleCards = (localSettings.visibleCards as string[] | undefined) || ['today', 'leads', 'payments', 'urgent', 'orders'];
+        const visibleCards = (localSettings.visibleCards as string[] | undefined) || ['today', 'leads', 'payments', 'urgent', 'orders', 'todo'];
         
         const toggleCard = (card: string) => {
             if (visibleCards.includes(card)) {
@@ -108,6 +108,14 @@ function WidgetSettingsDialog({
                                 onCheckedChange={() => toggleCard('today')}
                             />
                             <Label htmlFor="card-today">Dzisiejsze montaże</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <Checkbox 
+                                id="card-todo" 
+                                checked={visibleCards.includes('todo')}
+                                onCheckedChange={() => toggleCard('todo')}
+                            />
+                            <Label htmlFor="card-todo">To Do (Osobiste)</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                             <Checkbox 
@@ -168,6 +176,7 @@ interface DashboardBuilderProps {
         pendingPaymentsCount: number;
         urgentTasksCount: number;
         newOrdersCount: number;
+        todoCount: number;
     };
   };
 }

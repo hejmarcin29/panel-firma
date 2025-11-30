@@ -7,8 +7,9 @@ import { cn } from '@/lib/utils';
 
 const links = [
 	{ href: '/dashboard', label: 'Przegląd' },
+    { href: '/dashboard/todo', label: 'To Do' },
+    { href: '/dashboard/zadania', label: 'Zadania Montaże' },
 	{ href: '/dashboard/calendar', label: 'Kalendarz' },
-    { href: '/dashboard/zadania', label: 'Zadania' },
 	{ href: '/dashboard/orders', label: 'Zamówienia' },
 	{ href: '/dashboard/montaze', label: 'Montaże' },
 	{ href: '/dashboard/montaze/galeria', label: 'Galeria' },

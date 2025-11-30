@@ -12,6 +12,7 @@ import {
 	montages,
     users,
     manualOrders,
+    boardTasks,
 } from '@/lib/db/schema';
 import { tryGetR2Config } from '@/lib/r2/config';
 
@@ -168,6 +169,10 @@ export default async function DashboardPage() {
     });
     const newOrdersCount = newOrders.length;
 
+    // Fetch Personal Todo Count
+    const todoTasks = await db.select().from(boardTasks);
+    const todoCount = todoTasks.length;
+
     // Tasks Widget Data (Lite)
     const tasksMontagesRaw = allMontages.filter(m => m.tasks.some(t => !t.completed));
     const tasksCount = tasksMontagesRaw.length;
@@ -201,7 +206,8 @@ export default async function DashboardPage() {
                         newLeadsCount,
                         pendingPaymentsCount,
                         urgentTasksCount,
-                        newOrdersCount
+                        newOrdersCount,
+                        todoCount,
                     }
                 }}
             />

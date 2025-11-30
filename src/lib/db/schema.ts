@@ -834,3 +834,54 @@ export const systemLogsRelations = relations(systemLogs, ({ one }) => ({
 	}),
 }));
 
+export const boardColumns = sqliteTable(
+	'board_columns',
+	{
+		id: text('id').primaryKey(),
+		title: text('title').notNull(),
+		orderIndex: integer('order_index', { mode: 'number' }).notNull().default(0),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	},
+	(table) => ({
+		orderIdx: index('board_columns_order_idx').on(table.orderIndex),
+	})
+);
+
+export const boardTasks = sqliteTable(
+	'board_tasks',
+	{
+		id: text('id').primaryKey(),
+		columnId: text('column_id')
+			.notNull()
+			.references(() => boardColumns.id, { onDelete: 'cascade' }),
+		content: text('content').notNull(),
+		orderIndex: integer('order_index', { mode: 'number' }).notNull().default(0),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	},
+	(table) => ({
+		columnIdx: index('board_tasks_column_id_idx').on(table.columnId),
+		orderIdx: index('board_tasks_order_idx').on(table.orderIndex),
+	})
+);
+
+export const boardColumnsRelations = relations(boardColumns, ({ many }) => ({
+	tasks: many(boardTasks),
+}));
+
+export const boardTasksRelations = relations(boardTasks, ({ one }) => ({
+	column: one(boardColumns, {
+		fields: [boardTasks.columnId],
+		references: [boardColumns.id],
+	}),
+}));
+

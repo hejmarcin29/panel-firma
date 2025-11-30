@@ -14,6 +14,7 @@ interface KPICardsProps {
   pendingPaymentsCount: number; // Or some other metric
   urgentTasksCount: number;
   newOrdersCount: number;
+  todoCount: number;
   settings?: {
       visibleCards?: string[];
   };
@@ -41,9 +42,10 @@ export function KPICards({
   pendingPaymentsCount,
   urgentTasksCount,
   newOrdersCount,
+  todoCount,
   settings,
 }: KPICardsProps) {
-  const visibleCards = settings?.visibleCards || ['today', 'leads', 'orders', 'payments', 'urgent'];
+  const visibleCards = settings?.visibleCards || ['today', 'leads', 'orders', 'payments', 'urgent', 'todo'];
 
   return (
     <div className="grid grid-cols-2 gap-2">
@@ -55,6 +57,17 @@ export function KPICards({
                 <InfoIcon content="Liczba montaży zaplanowanych na dzisiaj." />
             </div>
             <div className="text-xl font-bold mt-1">{todayMontagesCount}</div>
+            </CardContent>
+        </Card>
+      )}
+      {visibleCards.includes('todo') && (
+        <Card>
+            <CardContent className="p-3 flex flex-col items-center justify-center text-center relative">
+            <div className="flex items-center gap-1">
+                <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">To Do</span>
+                <InfoIcon content="Liczba zadań w Twoim osobistym organizerze." />
+            </div>
+            <div className="text-xl font-bold mt-1">{todoCount}</div>
             </CardContent>
         </Card>
       )}

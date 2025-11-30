@@ -13,7 +13,9 @@ import {
   Settings,
   Image as ImageIcon,
   LogOut,
-  CheckSquare
+  CheckSquare,
+  ClipboardList,
+  KanbanSquare
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -29,13 +31,14 @@ import { logoutAction } from "../actions";
 
 const mainLinks = [
   { href: "/dashboard", label: "Start", icon: Home },
+  { href: "/dashboard/todo", label: "To Do", icon: KanbanSquare },
+  { href: "/dashboard/zadania", label: "Zad. Montaże", icon: ClipboardList },
   { href: "/dashboard/calendar", label: "Kalendarz", icon: Calendar },
-  { href: "/dashboard/orders", label: "Zamówienia", icon: Package },
-  { href: "/dashboard/montaze", label: "Montaże", icon: Hammer },
 ];
 
 const menuLinks = [
-  { href: "/dashboard/zadania", label: "Zadania", icon: CheckSquare },
+  { href: "/dashboard/orders", label: "Zamówienia", icon: Package },
+  { href: "/dashboard/montaze", label: "Montaże", icon: Hammer },
   { href: "/dashboard/mail", label: "Poczta", icon: Mail },
   { href: "/dashboard/montaze/galeria", label: "Galeria", icon: ImageIcon },
   { href: "/dashboard/settings", label: "Ustawienia", icon: Settings },

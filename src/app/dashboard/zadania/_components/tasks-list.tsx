@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MapPin, Calendar, CheckCircle2, Filter, SortAsc, SortDesc } from "lucide-react";
+import { MapPin, Calendar, CheckCircle2, Filter, SortAsc, SortDesc, LayoutList, ListTodo } from "lucide-react";
 import Link from "next/link";
 import {
   Accordion,
@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 export interface Task {
     id: string;
@@ -44,6 +45,7 @@ export function TasksList({ tasksMontages }: TasksListProps) {
     const router = useRouter();
     const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+    const [viewMode, setViewMode] = useState<'clients' | 'tasks'>('clients');
 
     const handleToggleTask = async (taskId: string, montageId: string, currentCompleted: boolean) => {
         if (pendingIds.has(taskId)) return;
@@ -102,7 +104,71 @@ export function TasksList({ tasksMontages }: TasksListProps) {
         });
     };
 
+    const renderFlatList = (items: TaskItem[]) => {
+        if (items.length === 0) {
+            return (
+                <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+                    <CheckCircle2 className="h-12 w-12 mb-4 opacity-20" />
+                    <p>Brak zadań w tej kategorii</p>
+                </div>
+            );
+        }
+
+        // Flatten tasks
+        const flatTasks = items.flatMap(montage => 
+            montage.tasks.map(task => ({
+                ...task,
+                montage
+            }))
+        );
+
+        return (
+            <div className="space-y-2">
+                {flatTasks.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg bg-card hover:bg-muted/50 transition-colors group">
+                        <div className="flex items-start gap-3 flex-1">
+                            <Checkbox 
+                                id={`flat-${item.id}`} 
+                                checked={item.completed}
+                                onCheckedChange={() => handleToggleTask(item.id, item.montage.id, item.completed)}
+                                disabled={pendingIds.has(item.id)}
+                                className="mt-1"
+                            />
+                            <div className="space-y-1 flex-1">
+                                <label 
+                                    htmlFor={`flat-${item.id}`} 
+                                    className={cn(
+                                        "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer select-none block",
+                                        item.completed && "line-through text-muted-foreground"
+                                    )}
+                                >
+                                    {item.title}
+                                </label>
+                                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                    <span className="font-medium text-foreground/80">{item.montage.clientName}</span>
+                                    <span className={cn("flex items-center", getUrgencyColor(item.montage.scheduledInstallationAt))}>
+                                        <Calendar className="mr-1 h-3 w-3" />
+                                        {item.montage.scheduledInstallationAt ? new Date(item.montage.scheduledInstallationAt).toLocaleDateString() : 'Brak terminu'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <Button variant="ghost" size="icon" asChild className="opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Link href={`/dashboard/montaze/${item.montage.id}?tab=tasks`}>
+                                <LayoutList className="h-4 w-4" />
+                            </Link>
+                        </Button>
+                    </div>
+                ))}
+            </div>
+        );
+    };
+
     const renderList = (items: TaskItem[]) => {
+        if (viewMode === 'tasks') {
+            return renderFlatList(items);
+        }
+
         if (items.length === 0) {
             return (
                 <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
@@ -182,21 +248,37 @@ export function TasksList({ tasksMontages }: TasksListProps) {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <h2 className="text-lg font-semibold">Lista zadań</h2>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-                    className="gap-2"
-                >
-                    {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
-                    {sortOrder === 'asc' ? 'Od najpilniejszych' : 'Od najdalszych'}
-                </Button>
+                <div className="flex items-center gap-2">
+                    <ToggleGroup type="single" value={viewMode} onValueChange={(v) => v && setViewMode(v as any)}>
+                        <ToggleGroupItem value="clients" aria-label="Widok klientów">
+                            <LayoutList className="h-4 w-4 mr-2" />
+                            Klienci
+                        </ToggleGroupItem>
+                        <ToggleGroupItem value="tasks" aria-label="Widok zadań">
+                            <ListTodo className="h-4 w-4 mr-2" />
+                            Zadania
+                        </ToggleGroupItem>
+                    </ToggleGroup>
+                    <div className="h-6 w-px bg-border mx-2" />
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                        className="gap-2"
+                    >
+                        {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
+                        {sortOrder === 'asc' ? 'Od najpilniejszych' : 'Od najdalszych'}
+                    </Button>
+                </div>
             </div>
 
             <Tabs defaultValue="all" className="w-full">
                 <TabsList className="grid w-full grid-cols-4 mb-6">
+                    <TabsTrigger value="all">
+                        Wszystkie
+                    </TabsTrigger>
                     <TabsTrigger value="urgent" className="data-[state=active]:bg-destructive data-[state=active]:text-destructive-foreground">
                         Pilne / Zaległe
                     </TabsTrigger>
@@ -206,11 +288,11 @@ export function TasksList({ tasksMontages }: TasksListProps) {
                     <TabsTrigger value="week" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">
                         Ten tydzień
                     </TabsTrigger>
-                    <TabsTrigger value="all">
-                        Wszystkie
-                    </TabsTrigger>
                 </TabsList>
 
+                <TabsContent value="all" className="mt-0">
+                    {renderList(filterTasks('all'))}
+                </TabsContent>
                 <TabsContent value="urgent" className="mt-0">
                     {renderList(filterTasks('urgent'))}
                 </TabsContent>
@@ -219,9 +301,6 @@ export function TasksList({ tasksMontages }: TasksListProps) {
                 </TabsContent>
                 <TabsContent value="week" className="mt-0">
                     {renderList(filterTasks('week'))}
-                </TabsContent>
-                <TabsContent value="all" className="mt-0">
-                    {renderList(filterTasks('all'))}
                 </TabsContent>
             </Tabs>
         </div>

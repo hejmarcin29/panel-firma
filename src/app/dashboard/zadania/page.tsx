@@ -35,9 +35,9 @@ export default async function TasksPage() {
     return (
         <div className="flex flex-col gap-6 p-6 md:p-8 max-w-5xl mx-auto">
             <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-bold tracking-tight">Centrum Zadań</h1>
+                <h1 className="text-3xl font-bold tracking-tight">Zadania Montażowe</h1>
                 <p className="text-muted-foreground">
-                    Zarządzaj zadaniami montażowymi w jednym miejscu.
+                    Zarządzaj zadaniami przypisanymi do konkretnych montaży.
                 </p>
             </div>
 
