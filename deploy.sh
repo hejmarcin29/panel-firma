@@ -17,6 +17,9 @@ npm run db:generate
 # Używamy push, aby zsynchronizować schemat (dla SQLite)
 npx drizzle-kit push
 
+# Wyczyść cache Next.js (opcjonalne, ale pomaga przy problemach)
+rm -rf .next
+
 # Zbuduj aplikację
 npm run build
 
