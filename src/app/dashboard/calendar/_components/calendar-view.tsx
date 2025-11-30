@@ -3,6 +3,7 @@
 import * as React from 'react';
 import {
   addMonths,
+  addWeeks,
   eachDayOfInterval,
   endOfMonth,
   endOfWeek,
@@ -14,14 +15,17 @@ import {
   startOfMonth,
   startOfWeek,
   subMonths,
+  subWeeks,
 } from 'date-fns';
 import { pl } from 'date-fns/locale';
+import { CalendarWeekView } from './calendar-week-view';
 import {
   ChevronLeft,
   ChevronRight,
   Calendar as CalendarIcon,
   List,
   Inbox,
+  Clock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CalendarEvent, updateEventDate } from '../actions';
@@ -68,7 +72,7 @@ export function CalendarView({
     CalendarEvent[]
   >(initialUnscheduledEvents);
   const isMobile = useIsMobile();
-  const [viewMode, setViewMode] = React.useState<'month' | 'agenda'>('month');
+  const [viewMode, setViewMode] = React.useState<'month' | 'week' | 'agenda'>('month');
   const [activeEvent, setActiveEvent] = React.useState<CalendarEvent | null>(
     null
   );
@@ -94,8 +98,21 @@ export function CalendarView({
     }
   }, [isMobile]);
 
-  const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
-  const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
+  const next = () => {
+    if (viewMode === 'week') {
+      setCurrentDate(addWeeks(currentDate, 1));
+    } else {
+      setCurrentDate(addMonths(currentDate, 1));
+    }
+  };
+
+  const prev = () => {
+    if (viewMode === 'week') {
+      setCurrentDate(subWeeks(currentDate, 1));
+    } else {
+      setCurrentDate(subMonths(currentDate, 1));
+    }
+  };
   const jumpToToday = () => setCurrentDate(new Date());
 
   const monthStart = startOfMonth(currentDate);
@@ -201,7 +218,7 @@ export function CalendarView({
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 rounded-none rounded-l-md border-r"
-                    onClick={prevMonth}
+                    onClick={prev}
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
@@ -209,7 +226,7 @@ export function CalendarView({
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 rounded-none rounded-r-md"
-                    onClick={nextMonth}
+                    onClick={next}
                   >
                     <ChevronRight className="h-4 w-4" />
                   </Button>
@@ -283,6 +300,15 @@ export function CalendarView({
                     Miesiąc
                   </Button>
                   <Button
+                    variant={viewMode === 'week' ? 'secondary' : 'ghost'}
+                    size="sm"
+                    className="rounded-none"
+                    onClick={() => setViewMode('week')}
+                  >
+                    <Clock className="h-4 w-4 mr-2" />
+                    Tydzień
+                  </Button>
+                  <Button
                     variant={viewMode === 'agenda' ? 'secondary' : 'ghost'}
                     size="sm"
                     className="rounded-none"
@@ -298,7 +324,21 @@ export function CalendarView({
 
           {/* Content */}
           <div className="flex-1 overflow-auto">
-            {viewMode === 'month' ? (
+            {viewMode === 'week' ? (
+              <CalendarWeekView
+                currentDate={currentDate}
+                events={scheduledEvents.filter((event) => {
+                  if (event.type === 'order' && !showOrders) return false;
+                  if (event.type === 'montage' && !showMontages) return false;
+                  return true;
+                })}
+                onEventClick={(event) => {
+                  toast.info(event.title, {
+                    description: `${format(event.date!, 'HH:mm')} - ${event.endDate ? format(event.endDate, 'HH:mm') : ''}`,
+                  });
+                }}
+              />
+            ) : viewMode === 'month' ? (
               <div className="grid grid-cols-7 h-full min-w-[800px]">
                 {/* Days Header */}
                 {daysOfWeek.map((day) => (

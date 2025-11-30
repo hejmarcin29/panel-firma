@@ -29,10 +29,13 @@ type MontageDetailsPageParams = {
     params: Promise<{
         montageId: string;
     }>;
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
-export default async function MontageDetailsPage({ params }: MontageDetailsPageParams) {
+export default async function MontageDetailsPage({ params, searchParams }: MontageDetailsPageParams) {
     const { montageId } = await params;
+    const { tab } = await searchParams;
+    const activeTab = typeof tab === 'string' ? tab : 'log';
 
     await requireUser();
 
@@ -109,7 +112,7 @@ export default async function MontageDetailsPage({ params }: MontageDetailsPageP
                 </div>
 
                 <div className="space-y-6">
-                    <Tabs defaultValue="log" className="w-full">
+                    <Tabs defaultValue={activeTab} className="w-full">
                         <TabsList className="flex w-full overflow-x-auto md:grid md:grid-cols-5">
                             <TabsTrigger value="log" className="flex-1">Dziennik</TabsTrigger>
                             <TabsTrigger value="workflow" className="flex-1">Przebieg</TabsTrigger>
