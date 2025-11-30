@@ -33,4 +33,5 @@ else
     echo "PM2 nie znaleziony. Pamiętaj o ręcznym restarcie aplikacji."
 fi
 
-echo "Wdrożenie zakończone sukcesem!"
+echo "Wdrożenie zakończone sukcesem! Następuje restart serwera..."
+sudo reboot
