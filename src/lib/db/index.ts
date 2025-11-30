@@ -1,14 +1,22 @@
-import 'server-only';
+// import 'server-only'; // Disabled to prevent potential build/runtime issues
 
 import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 
 import * as schema from './schema';
 
-const sqlitePath = join(process.cwd(), 'sqlite.db');
+// Use an absolute path if provided via env, otherwise default to local file
+const sqlitePath = process.env.DATABASE_URL 
+    ? process.env.DATABASE_URL.replace('file:', '') 
+    : join(process.cwd(), 'sqlite.db');
 
 function createClient() {
+    console.log(`[DB] Initializing database at: ${sqlitePath}`);
+    const dbExists = existsSync(sqlitePath);
+    console.log(`[DB] Database file exists: ${dbExists}`);
+    
 	const sqlite = new Database(sqlitePath);
 	sqlite.pragma('journal_mode = WAL');
 	return drizzle(sqlite, { schema });

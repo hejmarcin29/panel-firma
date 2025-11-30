@@ -4,16 +4,27 @@ export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
 
+import { redirect } from 'next/navigation';
 import { DashboardNav } from './_components/dashboard-nav';
 import { MobileNav } from './_components/mobile-nav';
 import { LogoutButton } from './_components/logout-button';
 import { BackButton } from './_components/back-button';
 import { logoutAction } from './actions';
 import { requireUser } from '@/lib/auth/session';
-import { getUrgentOrdersCount } from './orders/actions';
+import { getUrgentOrdersCount } from './orders/queries';
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
-	const user = await requireUser();
+	let user;
+    try {
+        user = await requireUser();
+    } catch (error: any) {
+        // Rethrow redirect errors (NEXT_REDIRECT)
+        if (error?.digest?.includes('NEXT_REDIRECT')) {
+            throw error;
+        }
+        console.error('Auth error in layout:', error);
+        redirect('/login');
+    }
     
     let urgentOrdersCount = 0;
     try {

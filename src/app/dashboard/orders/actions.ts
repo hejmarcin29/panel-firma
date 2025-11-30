@@ -673,13 +673,5 @@ export async function updateOrderNote(orderId: string, note: string) {
 	revalidatePath(`/dashboard/orders/${orderId}`);
 }
 
-export async function getUrgentOrdersCount() {
-  await requireUser();
-  const result = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(manualOrders)
-    .where(eq(manualOrders.status, 'order.received'));
-  
-  return Number(result[0]?.count ?? 0);
-}
+// getUrgentOrdersCount moved to queries.ts
 
