@@ -289,33 +289,33 @@ export function CalendarView({
                   Dzisiaj
                 </Button>
                 
-                <div className="hidden md:flex border rounded-md overflow-hidden">
+                <div className="flex border rounded-md overflow-hidden">
                   <Button
                     variant={viewMode === 'month' ? 'secondary' : 'ghost'}
                     size="sm"
-                    className="rounded-none"
+                    className="rounded-none px-2 sm:px-4"
                     onClick={() => setViewMode('month')}
                   >
-                    <CalendarIcon className="h-4 w-4 mr-2" />
-                    Miesiąc
+                    <CalendarIcon className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Miesiąc</span>
                   </Button>
                   <Button
                     variant={viewMode === 'week' ? 'secondary' : 'ghost'}
                     size="sm"
-                    className="rounded-none"
+                    className="rounded-none px-2 sm:px-4"
                     onClick={() => setViewMode('week')}
                   >
-                    <Clock className="h-4 w-4 mr-2" />
-                    Tydzień
+                    <Clock className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Tydzień</span>
                   </Button>
                   <Button
                     variant={viewMode === 'agenda' ? 'secondary' : 'ghost'}
                     size="sm"
-                    className="rounded-none"
+                    className="rounded-none px-2 sm:px-4"
                     onClick={() => setViewMode('agenda')}
                   >
-                    <List className="h-4 w-4 mr-2" />
-                    Agenda
+                    <List className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Agenda</span>
                   </Button>
                 </div>
               </div>
