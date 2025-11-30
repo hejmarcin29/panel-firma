@@ -19,6 +19,7 @@ npm run db:generate
 npx drizzle-kit push
 
 # Wyczyść cache Next.js (opcjonalne, ale pomaga przy problemach)
+# Usuwamy folder .next (build) oraz cache Data Cache
 rm -rf .next
 
 # Zbuduj aplikację

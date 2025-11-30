@@ -5,7 +5,7 @@
 - Po zakończeniu iteracji, jeśli zmieniałeś schemat, uruchom `npm run db:generate`, aby wygenerować migrację do folderu `drizzle/`.
 - Sprawdź wygenerowaną migrację i gdy jest OK, zatwierdź ją w repozytorium razem ze zmianami w schemacie.
 - Aby od razu zaktualizować lokalną bazę, użyj `npm run db:migrate`. Dzięki temu inni członkowie zespołu i środowiska CI/CD mogą potem zreplayować te same migracje.
-- Gdy nie było zmian w schemacie podczas iteracji, migracji nie generujemy.
+- Gdy nie było zmian w schemacie podczas iteracji, migracji nie generujey.
 
 ## Zmienne środowiskowe
 - Plik `.env` jest wersjonowany i zawiera bezpieczne wartości domyślne (bez sekretów).
@@ -34,3 +34,9 @@
 - `npm run dev` – lokalny serwer Next.js.
 - `npm run lint` – sprawdzenie lintem.
 - `npm run db:studio` – podgląd danych i schematu przez Drizzle Studio.
+
+## Unikanie błędów hydracji (Hydration Errors)
+- W komponentach oznaczonych `'use client'` **NIGDY** nie używaj `new Date()` (bez argumentów), `Math.random()`, `window` ani `localStorage` bezpośrednio w ciele funkcji renderującej lub jako wartość początkowa `useState`.
+- Powód: Wartości te będą inne na serwerze (podczas generowania HTML) i inne w przeglądarce (podczas hydracji), co powoduje błędy i "miganie" interfejsu.
+- Rozwiązanie 1: Przekaż gotową wartość (np. datę) jako props z komponentu serwerowego (`page.tsx`).
+- Rozwiązanie 2: Użyj `useEffect`, aby ustawić wartość dopiero po załadowaniu komponentu w przeglądarce.
