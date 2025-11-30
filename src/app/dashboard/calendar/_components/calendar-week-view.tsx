@@ -18,6 +18,7 @@ import { pl } from 'date-fns/locale';
 import { CalendarEvent } from '../actions';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface CalendarWeekViewProps {
   currentDate: Date;
@@ -30,6 +31,13 @@ export function CalendarWeekView({
   events,
   onEventClick,
 }: CalendarWeekViewProps) {
+  const isMobile = useIsMobile();
+  const [selectedDay, setSelectedDay] = React.useState(currentDate);
+
+  React.useEffect(() => {
+    setSelectedDay(currentDate);
+  }, [currentDate]);
+
   const startDate = startOfWeek(currentDate, { locale: pl });
   const endDate = endOfWeek(currentDate, { locale: pl });
 
@@ -37,6 +45,8 @@ export function CalendarWeekView({
     start: startDate,
     end: endDate,
   });
+
+  const daysToShow = isMobile ? [selectedDay] : weekDays;
 
   const hours = Array.from({ length: 24 }, (_, i) => i);
 
@@ -67,22 +77,29 @@ export function CalendarWeekView({
     <div className="flex flex-col h-full overflow-hidden bg-background">
       {/* Header - Days */}
       <div className="flex border-b">
-        <div className="w-16 flex-shrink-0 border-r bg-muted/30" /> {/* Time column header */}
-        <div className="flex flex-1">
+        <div className="w-16 shrink-0 border-r bg-muted/30" /> {/* Time column header */}
+        <div className={cn("flex flex-1", isMobile && "overflow-x-auto no-scrollbar")}>
           {weekDays.map((day, i) => (
             <div
               key={day.toString()}
               className={cn(
-                "flex-1 p-2 text-center border-r last:border-r-0 text-sm",
-                isSameDay(day, new Date()) && "bg-accent/50"
+                "flex-1 p-2 text-center border-r last:border-r-0 text-sm cursor-pointer transition-colors hover:bg-muted/50",
+                isMobile && "min-w-[60px]",
+                isSameDay(day, selectedDay) && isMobile && "bg-accent/20",
+                !isMobile && isSameDay(day, new Date()) && "bg-accent/50"
               )}
+              onClick={() => isMobile && setSelectedDay(day)}
             >
-              <div className="font-medium text-muted-foreground">
+              <div className={cn(
+                "font-medium text-muted-foreground uppercase text-xs",
+                isSameDay(day, selectedDay) && isMobile && "text-primary font-bold"
+              )}>
                 {format(day, 'EEE', { locale: pl })}
               </div>
               <div className={cn(
                 "text-lg font-bold rounded-full w-8 h-8 flex items-center justify-center mx-auto mt-1",
-                isSameDay(day, new Date()) && "bg-primary text-primary-foreground"
+                isSameDay(day, new Date()) && !isMobile && "bg-primary text-primary-foreground",
+                isSameDay(day, selectedDay) && isMobile && "bg-primary text-primary-foreground shadow-md scale-110 transition-transform"
               )}>
                 {format(day, 'd')}
               </div>
@@ -95,7 +112,7 @@ export function CalendarWeekView({
       <ScrollArea className="flex-1">
         <div className="flex relative min-h-[1536px]"> {/* 24 * 64px = 1536px */}
           {/* Time Labels */}
-          <div className="w-16 flex-shrink-0 border-r bg-muted/10 flex flex-col">
+          <div className="w-16 shrink-0 border-r bg-muted/10 flex flex-col">
             {hours.map((hour) => (
               <div
                 key={hour}
@@ -112,7 +129,7 @@ export function CalendarWeekView({
           <div className="flex flex-1 relative">
             {/* Grid Lines */}
             <div className="absolute inset-0 flex pointer-events-none">
-              {weekDays.map((day) => (
+              {daysToShow.map((day) => (
                 <div key={day.toString()} className="flex-1 border-r last:border-r-0 flex flex-col">
                   {hours.map((hour) => (
                     <div key={hour} className="h-16 border-b" />
@@ -123,7 +140,7 @@ export function CalendarWeekView({
 
             {/* Events */}
             <div className="absolute inset-0 flex">
-              {weekDays.map((day) => {
+              {daysToShow.map((day) => {
                 const dayEvents = events.filter(event => 
                   event.date && isSameDay(new Date(event.date), day)
                 );
