@@ -10,9 +10,11 @@ import { LogoutButton } from './_components/logout-button';
 import { BackButton } from './_components/back-button';
 import { logoutAction } from './actions';
 import { requireUser } from '@/lib/auth/session';
+import { getUrgentOrdersCount } from './orders/actions';
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
 	const user = await requireUser();
+    const urgentOrdersCount = await getUrgentOrdersCount();
 
 	return (
 		<div className="min-h-screen bg-muted pb-16 md:pb-0">
@@ -42,11 +44,11 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 			</header>
 			<main className="mx-auto w-full max-w-[1600px] p-0 md:px-5 md:py-8">
 				<div className="hidden md:block px-4 py-4 md:p-0">
-					<DashboardNav />
+					<DashboardNav urgentOrdersCount={urgentOrdersCount} />
 				</div>
 				{children}
 			</main>
-            <MobileNav user={user} />
+            <MobileNav user={user} urgentOrdersCount={urgentOrdersCount} />
 		</div>
 	);
 }

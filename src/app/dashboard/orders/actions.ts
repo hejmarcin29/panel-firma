@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, count } from 'drizzle-orm';
 
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
@@ -671,5 +671,14 @@ export async function updateOrderNote(orderId: string, note: string) {
 
 	revalidatePath('/dashboard/orders');
 	revalidatePath(`/dashboard/orders/${orderId}`);
+}
+
+export async function getUrgentOrdersCount() {
+  await requireUser();
+  const result = await db
+    .select({ count: count() })
+    .from(manualOrders)
+    .where(eq(manualOrders.status, 'order.received'));
+  return result[0].count;
 }
 

@@ -39,7 +39,7 @@ const menuLinks = [
   { href: "/dashboard/settings", label: "Ustawienia", icon: Settings },
 ];
 
-export function MobileNav({ user }: { user: { name?: string | null; email?: string | null } }) {
+export function MobileNav({ user, urgentOrdersCount = 0 }: { user: { name?: string | null; email?: string | null }, urgentOrdersCount?: number }) {
   const pathname = usePathname();
 
   return (
@@ -52,10 +52,16 @@ export function MobileNav({ user }: { user: { name?: string | null; email?: stri
               key={href}
               href={href}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 rounded-xl px-2 py-1 transition-all duration-200 min-w-16 group",
+                "flex flex-col items-center justify-center gap-1 rounded-xl px-2 py-1 transition-all duration-200 min-w-16 group relative",
                 isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
               )}
             >
+              {href === '/dashboard/orders' && urgentOrdersCount > 0 && (
+                <span className="absolute top-0 right-3 flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                </span>
+              )}
               <div className={cn(
                 "relative flex items-center justify-center transition-all duration-200",
                 isActive ? "-translate-y-0.5" : "group-hover:-translate-y-0.5"

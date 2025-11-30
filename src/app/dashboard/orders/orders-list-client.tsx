@@ -89,7 +89,7 @@ function includesQuery(value: string, query: string) {
 function getStatusBadge(status: string) {
   switch (status) {
     case 'order.received':
-      return <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-100">Nowe</Badge>;
+      return <Badge variant="destructive" className="animate-pulse">PILNE</Badge>;
     case 'order.pending_proforma':
       return <Badge variant="outline" className="border-orange-200 text-orange-800 bg-orange-50">Oczekuje na proformę</Badge>;
     case 'order.proforma_issued':
