@@ -65,21 +65,29 @@ export default async function DashboardPage() {
     let layout = DEFAULT_LAYOUT;
     if (dbUser?.dashboardConfig) {
         try {
-            layout = dbUser.dashboardConfig as unknown as DashboardLayoutConfig;
+            const savedLayout = dbUser.dashboardConfig as unknown as DashboardLayoutConfig;
             
-            // Migration: Ensure KPI widget exists
-            const hasKpi = [...layout.columns.left, ...layout.columns.right].some(w => w.type === 'kpi');
-            if (!hasKpi) {
-                layout = {
-                    ...layout,
-                    columns: {
-                        ...layout.columns,
-                        left: [{ id: 'kpi-1', type: 'kpi' }, ...layout.columns.left]
-                    }
-                };
+            // Validate layout structure
+            if (savedLayout && savedLayout.columns && Array.isArray(savedLayout.columns.left) && Array.isArray(savedLayout.columns.right)) {
+                layout = savedLayout;
+                
+                // Migration: Ensure KPI widget exists
+                const hasKpi = [...layout.columns.left, ...layout.columns.right].some(w => w.type === 'kpi');
+                if (!hasKpi) {
+                    layout = {
+                        ...layout,
+                        columns: {
+                            ...layout.columns,
+                            left: [{ id: 'kpi-1', type: 'kpi' }, ...layout.columns.left]
+                        }
+                    };
+                }
+            } else {
+                console.warn('Invalid dashboard config found, using default.');
             }
         } catch (e) {
             console.error("Failed to parse dashboard config", e);
+            layout = DEFAULT_LAYOUT;
         }
     }
 
