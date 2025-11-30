@@ -168,19 +168,15 @@ export default async function DashboardPage() {
     });
     const newOrdersCount = newOrders.length;
 
-    // Tasks Widget Data
-    const tasksMontages = allMontages
-        .map(m => ({
-            id: m.id,
-            clientName: m.clientName,
-            installationCity: m.installationCity,
-            scheduledInstallationAt: m.scheduledInstallationAt,
-            displayId: m.displayId,
-            pendingTasksCount: m.tasks.filter(t => !t.completed).length
-        }))
-        .filter(m => m.pendingTasksCount > 0)
-        .sort((a, b) => b.pendingTasksCount - a.pendingTasksCount)
-        .slice(0, 5);
+    // Tasks Widget Data (Lite)
+    const tasksMontagesRaw = allMontages.filter(m => m.tasks.some(t => !t.completed));
+    const tasksCount = tasksMontagesRaw.length;
+    const urgentCount = tasksMontagesRaw.filter(m => {
+        if (!m.scheduledInstallationAt) return false;
+        const date = new Date(m.scheduledInstallationAt);
+        date.setHours(0, 0, 0, 0);
+        return date < today;
+    }).length;
 
     return (
         <div className="flex flex-col gap-6 p-6 md:p-8">
@@ -196,7 +192,10 @@ export default async function DashboardPage() {
                 data={{
                     upcomingMontages,
                     recentMontages,
-                    tasksMontages,
+                    tasksStats: {
+                        tasksCount,
+                        urgentCount
+                    },
                     kpiData: {
                         todayMontagesCount,
                         newLeadsCount,

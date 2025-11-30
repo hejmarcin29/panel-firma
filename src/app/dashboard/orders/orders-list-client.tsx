@@ -35,7 +35,10 @@ import {
 
 import { ConfirmOrderButton } from './_components/confirm-order-button';
 import { OrdersStats } from './_components/orders-stats';
+import { OrderCard } from './_components/order-card';
+import { OrderStatusBadge } from './_components/order-status-badge';
 import type { Order } from './data';
+import { Edit, Mail } from 'lucide-react';
 
 const STATUS_FILTERS = [
   { value: 'all', label: 'Wszystkie' },
@@ -84,33 +87,6 @@ function formatDateTime(value: string) {
 
 function includesQuery(value: string, query: string) {
   return value.toLowerCase().includes(query);
-}
-
-function getStatusBadge(status: string) {
-  switch (status) {
-    case 'order.received':
-      return <Badge variant="destructive" className="animate-pulse">PILNE</Badge>;
-    case 'order.pending_proforma':
-      return <Badge variant="outline" className="border-orange-200 text-orange-800 bg-orange-50">Oczekuje na proformę</Badge>;
-    case 'order.proforma_issued':
-      return <Badge variant="outline" className="border-yellow-200 text-yellow-800 bg-yellow-50">Proforma wysłana</Badge>;
-    case 'order.awaiting_payment':
-      return <Badge variant="outline" className="border-red-200 text-red-800 bg-red-50">Oczekuje na płatność</Badge>;
-    case 'order.paid':
-      return <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-100">Opłacone</Badge>;
-    case 'order.advance_invoice':
-      return <Badge variant="outline" className="border-purple-200 text-purple-800 bg-purple-50">Faktura zaliczkowa</Badge>;
-    case 'order.forwarded_to_supplier':
-      return <Badge variant="outline" className="border-indigo-200 text-indigo-800 bg-indigo-50">Wysłane do dostawcy</Badge>;
-    case 'order.fulfillment_confirmed':
-      return <Badge variant="secondary" className="bg-teal-100 text-teal-800 hover:bg-teal-100">Potwierdzone</Badge>;
-    case 'order.final_invoice':
-      return <Badge variant="outline" className="border-pink-200 text-pink-800 bg-pink-50">Faktura końcowa</Badge>;
-    case 'order.closed':
-      return <Badge variant="secondary" className="bg-gray-100 text-gray-800 hover:bg-gray-100">Zakończone</Badge>;
-    default:
-      return <Badge variant="outline">{status}</Badge>;
-  }
 }
 
 export type OrdersListClientProps = {
@@ -332,106 +308,62 @@ function OrdersTable({ orders }: { orders: Order[] }) {
       {/* Mobile View */}
       <div className="grid gap-4 md:hidden px-4 md:px-0">
         {orders.map((order) => (
-          <Card key={order.id} className="overflow-hidden">
-            <CardHeader className="border-b bg-muted/40 p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex flex-col gap-1">
-                  <Link 
-                    href={`/dashboard/orders/${order.id}`}
-                    className="font-semibold hover:underline"
-                  >
-                    {order.reference}
-                  </Link>
-                  <span className="text-xs text-muted-foreground capitalize">
-                    {order.source}
-                  </span>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  {getStatusBadge(order.status)}
-                  {order.requiresReview && (
-                    <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5 h-auto">Weryfikacja</Badge>
-                  )}
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-4 grid gap-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs text-muted-foreground">Klient</span>
-                  <span className="font-medium">{order.customer}</span>
-                  <span className="text-xs text-muted-foreground truncate">{order.billing.email}</span>
-                </div>
-                <div className="flex flex-col gap-1 text-right">
-                  <span className="text-xs text-muted-foreground">Kwota</span>
-                  <span className="font-bold text-lg">
-                    {formatCurrency(order.totals.totalGross, order.currency)}
-                  </span>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between text-xs text-muted-foreground border-t pt-3">
-                <span>{formatDateTime(order.createdAt)}</span>
-                <div className="flex gap-2">
-                  {order.requiresReview && (
-                    <ConfirmOrderButton orderId={order.id} />
-                  )}
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/dashboard/orders/${order.id}`}>
-                      Szczegóły
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <OrderCard 
+            key={order.id} 
+            order={order} 
+            formatCurrency={formatCurrency}
+            formatDateTime={formatDateTime}
+          />
         ))}
       </div>
 
       {/* Desktop View */}
-      <Card className="hidden md:block">
+      <Card className="hidden md:block overflow-hidden border-none shadow-sm">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-muted/50">
             <TableRow>
-              <TableHead>Numer</TableHead>
-              <TableHead>Klient</TableHead>
+              <TableHead className="w-[250px]">Numer / Źródło</TableHead>
+              <TableHead className="w-[250px]">Klient</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Data</TableHead>
               <TableHead className="text-right">Kwota</TableHead>
-              <TableHead className="text-right">Akcje</TableHead>
+              <TableHead className="text-right w-[100px]">Akcje</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {orders.map((order) => (
-              <TableRow key={order.id}>
+              <TableRow key={order.id} className="hover:bg-muted/30 transition-colors">
                 <TableCell className="font-medium">
-                  <div className="flex flex-col">
+                  <div className="flex flex-col gap-1">
                     <Link 
                       href={`/dashboard/orders/${order.id}`}
-                      className="hover:underline text-primary font-semibold"
+                      className="hover:underline text-primary font-semibold text-base"
                     >
                       {order.reference}
                     </Link>
-                    <span className="text-xs text-muted-foreground capitalize">
-                      {order.source}
+                    <span className="text-xs text-muted-foreground capitalize flex items-center gap-1">
+                      {order.source === 'woocommerce' ? 'WooCommerce' : 'Ręczne'}
                     </span>
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div className="flex flex-col">
+                  <div className="flex flex-col gap-1">
                     <span className="font-medium">{order.customer}</span>
                     <span className="text-xs text-muted-foreground">{order.billing.email}</span>
                   </div>
                 </TableCell>
                 <TableCell>
-                  {getStatusBadge(order.status)}
-                  {order.requiresReview && (
-                    <Badge variant="destructive" className="ml-2">Weryfikacja</Badge>
-                  )}
+                  <div className="flex items-center gap-2">
+                    <OrderStatusBadge status={order.status} />
+                    {order.requiresReview && (
+                      <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5 h-auto">Weryfikacja</Badge>
+                    )}
+                  </div>
                 </TableCell>
-                <TableCell className="text-muted-foreground">
+                <TableCell className="text-muted-foreground text-sm">
                   {formatDateTime(order.createdAt)}
                 </TableCell>
-                <TableCell className="text-right font-medium">
+                <TableCell className="text-right font-bold text-base">
                   {formatCurrency(order.totals.totalGross, order.currency)}
                 </TableCell>
                 <TableCell className="text-right">
@@ -439,12 +371,30 @@ function OrdersTable({ orders }: { orders: Order[] }) {
                     {order.requiresReview && (
                       <ConfirmOrderButton orderId={order.id} />
                     )}
-                    <Button variant="ghost" size="icon" asChild>
-                      <Link href={`/dashboard/orders/${order.id}`}>
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Szczegóły</span>
-                      </Link>
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">Więcej opcji</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem asChild>
+                          <Link href={`/dashboard/orders/${order.id}`}>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Szczegóły
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem disabled>
+                          <FileText className="mr-2 h-4 w-4" />
+                          Pobierz proformę
+                        </DropdownMenuItem>
+                        <DropdownMenuItem disabled>
+                          <Mail className="mr-2 h-4 w-4" />
+                          Wyślij wiadomość
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </TableCell>
               </TableRow>

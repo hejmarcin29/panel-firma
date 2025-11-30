@@ -12,7 +12,8 @@ import {
   Mail,
   Settings,
   Image as ImageIcon,
-  LogOut
+  LogOut,
+  CheckSquare
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -34,6 +35,7 @@ const mainLinks = [
 ];
 
 const menuLinks = [
+  { href: "/dashboard/zadania", label: "Zadania", icon: CheckSquare },
   { href: "/dashboard/mail", label: "Poczta", icon: Mail },
   { href: "/dashboard/montaze/galeria", label: "Galeria", icon: ImageIcon },
   { href: "/dashboard/settings", label: "Ustawienia", icon: Settings },

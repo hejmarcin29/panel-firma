@@ -37,7 +37,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { AgendaWidget, type AgendaItem } from "./agenda-widget";
 import { RecentActivity } from "./recent-activity";
 import { QuickActions } from "./quick-actions";
-import { TasksWidget, type TaskItem } from "./tasks-widget";
+import { TasksWidget } from "./tasks-widget";
 import { KPICards } from "./kpi-cards";
 import { updateDashboardLayout, type DashboardLayoutConfig, type DashboardWidgetConfig } from "../actions";
 import { toast } from "sonner";
@@ -158,7 +158,10 @@ interface DashboardBuilderProps {
   data: {
     upcomingMontages: AgendaItem[];
     recentMontages: Montage[];
-    tasksMontages: TaskItem[];
+    tasksStats: {
+        tasksCount: number;
+        urgentCount: number;
+    };
     kpiData: {
         todayMontagesCount: number;
         newLeadsCount: number;
@@ -192,7 +195,7 @@ function SortableWidget({ widget, data, isEditing, onConfigure }: { id: string; 
   // Map data to widget props
   const props = widget.type === "agenda" ? { upcomingMontages: data.upcomingMontages } :
                 widget.type === "recent-activity" ? { recentMontages: data.recentMontages } :
-                widget.type === "tasks" ? { tasksMontages: data.tasksMontages } :
+                widget.type === "tasks" ? { ...data.tasksStats } :
                 widget.type === "kpi" ? { ...data.kpiData, settings: widget.settings } :
                 {};
 
