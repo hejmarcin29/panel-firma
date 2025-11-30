@@ -35,7 +35,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     }
 
 	return (
-		<div className="min-h-screen bg-muted pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
+		<div className="min-h-screen bg-muted pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-0">
             {/* Mobile Header */}
             <header className="md:hidden flex items-center justify-between border-b bg-background px-4 py-3 sticky top-0 z-10">
                 <div className="flex items-center gap-2">

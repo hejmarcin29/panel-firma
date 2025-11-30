@@ -240,7 +240,7 @@ export function OrdersListClient({ initialOrders }: OrdersListClientProps) {
       <OrdersStats orders={ordersFilteredByDate} />
 
       <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between px-4 md:px-0">
           <TabsList>
             <TabsTrigger value="all">Wszystkie</TabsTrigger>
             <TabsTrigger value="active">Aktywne</TabsTrigger>
@@ -248,7 +248,7 @@ export function OrdersListClient({ initialOrders }: OrdersListClientProps) {
           </TabsList>
         </div>
 
-        <div className="my-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="my-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between px-4 md:px-0">
           <div className="flex flex-1 items-center gap-2">
             <div className="relative flex-1 md:max-w-sm">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -330,7 +330,7 @@ function OrdersTable({ orders }: { orders: Order[] }) {
   return (
     <>
       {/* Mobile View */}
-      <div className="grid gap-4 md:hidden">
+      <div className="grid gap-4 md:hidden px-4 md:px-0">
         {orders.map((order) => (
           <Card key={order.id} className="overflow-hidden">
             <CardHeader className="border-b bg-muted/40 p-4">
