@@ -59,13 +59,15 @@ import { toast } from 'sonner';
 interface CalendarViewProps {
   initialScheduledEvents: CalendarEvent[];
   initialUnscheduledEvents: CalendarEvent[];
+  initialDate: Date;
 }
 
 export function CalendarView({
   initialScheduledEvents,
   initialUnscheduledEvents,
+  initialDate,
 }: CalendarViewProps) {
-  const [currentDate, setCurrentDate] = React.useState(new Date());
+  const [currentDate, setCurrentDate] = React.useState(initialDate);
   const [scheduledEvents, setScheduledEvents] = React.useState<CalendarEvent[]>(
     initialScheduledEvents
   );
@@ -74,7 +76,7 @@ export function CalendarView({
   >(initialUnscheduledEvents);
   const isMobile = useIsMobile();
   const [viewMode, setViewMode] = React.useState<'month' | 'month-compact' | 'week' | 'agenda'>('month');
-  const [selectedCompactDate, setSelectedCompactDate] = React.useState<Date>(new Date());
+  const [selectedCompactDate, setSelectedCompactDate] = React.useState<Date>(initialDate);
   const [activeEvent, setActiveEvent] = React.useState<CalendarEvent | null>(
     null
   );

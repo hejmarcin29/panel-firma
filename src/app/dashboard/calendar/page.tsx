@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function CalendarPage() {
   const { scheduled, unscheduled } = await getCalendarEvents();
+  const today = new Date();
 
   return (
     <div className="h-full flex-1 flex-col space-y-8 p-0 md:p-8 md:flex">
@@ -16,7 +17,11 @@ export default async function CalendarPage() {
           </p>
         </div>
       </div>
-      <CalendarView initialScheduledEvents={scheduled} initialUnscheduledEvents={unscheduled} />
+      <CalendarView 
+        initialScheduledEvents={scheduled} 
+        initialUnscheduledEvents={unscheduled} 
+        initialDate={today}
+      />
     </div>
   );
 }
