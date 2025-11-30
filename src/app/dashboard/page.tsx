@@ -33,15 +33,34 @@ const DEFAULT_LAYOUT: DashboardLayoutConfig = {
     }
 };
 
+import { redirect } from 'next/navigation';
+
 export default async function DashboardPage() {
-	const user = await requireUser();
+    let user;
+    try {
+	    user = await requireUser();
+    } catch (error) {
+         // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         if ((error as any)?.digest?.includes('NEXT_REDIRECT')) {
+            throw error;
+        }
+        console.error('Auth error in dashboard page:', error);
+        redirect('/login');
+    }
+
     const r2Config = await tryGetR2Config();
     const publicBaseUrl = r2Config?.publicBaseUrl ?? null;
 
     // Fetch User Config
-    const dbUser = await db.query.users.findFirst({
-        where: eq(users.id, user.id),
-    });
+    let dbUser = null;
+    try {
+        dbUser = await db.query.users.findFirst({
+            where: eq(users.id, user.id),
+        });
+    } catch (error) {
+        console.error('Failed to fetch user config:', error);
+        // Continue with default layout
+    }
 
     let layout = DEFAULT_LAYOUT;
     if (dbUser?.dashboardConfig) {
