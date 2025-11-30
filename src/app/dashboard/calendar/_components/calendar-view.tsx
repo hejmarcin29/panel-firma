@@ -26,6 +26,7 @@ import {
   List,
   Inbox,
   Clock,
+  Grid3X3,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CalendarEvent, updateEventDate } from '../actions';
@@ -72,7 +73,8 @@ export function CalendarView({
     CalendarEvent[]
   >(initialUnscheduledEvents);
   const isMobile = useIsMobile();
-  const [viewMode, setViewMode] = React.useState<'month' | 'week' | 'agenda'>('month');
+  const [viewMode, setViewMode] = React.useState<'month' | 'month-compact' | 'week' | 'agenda'>('month');
+  const [selectedCompactDate, setSelectedCompactDate] = React.useState<Date>(new Date());
   const [activeEvent, setActiveEvent] = React.useState<CalendarEvent | null>(
     null
   );
@@ -300,6 +302,14 @@ export function CalendarView({
                     <span className="hidden sm:inline">Miesiąc</span>
                   </Button>
                   <Button
+                    variant={viewMode === 'month-compact' ? 'secondary' : 'ghost'}
+                    size="sm"
+                    className="rounded-none px-2 sm:px-4 md:hidden"
+                    onClick={() => setViewMode('month-compact')}
+                  >
+                    <Grid3X3 className="h-4 w-4" />
+                  </Button>
+                  <Button
                     variant={viewMode === 'week' ? 'secondary' : 'ghost'}
                     size="sm"
                     className="rounded-none px-2 sm:px-4"
@@ -338,6 +348,85 @@ export function CalendarView({
                   });
                 }}
               />
+            ) : viewMode === 'month-compact' ? (
+              <div className="flex flex-col h-full">
+                <div className="grid grid-cols-7 border-b">
+                  {daysOfWeek.map((day) => (
+                    <div
+                      key={day}
+                      className="p-2 text-center text-xs font-medium text-muted-foreground border-r last:border-r-0 bg-muted/30"
+                    >
+                      {day}
+                    </div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-7 auto-rows-fr">
+                  {calendarDays.map((day) => {
+                    const dayEvents = getEventsForDay(day);
+                    const isCurrentMonth = isSameMonth(day, monthStart);
+                    const isSelected = isSameDay(day, selectedCompactDate);
+
+                    return (
+                      <div
+                        key={day.toString()}
+                        className={cn(
+                          'min-h-[60px] p-1 border-b border-r last:border-r-0 flex flex-col items-center gap-1 cursor-pointer transition-colors',
+                          !isCurrentMonth && 'bg-muted/20 text-muted-foreground',
+                          isSelected && 'bg-accent/20 ring-2 ring-inset ring-primary',
+                          isToday(day) && !isSelected && 'bg-accent/10'
+                        )}
+                        onClick={() => setSelectedCompactDate(day)}
+                      >
+                        <span
+                          className={cn(
+                            'text-xs font-medium h-6 w-6 flex items-center justify-center rounded-full',
+                            isToday(day)
+                              ? 'bg-primary text-primary-foreground'
+                              : 'text-muted-foreground'
+                          )}
+                        >
+                          {format(day, 'd')}
+                        </span>
+                        <div className="flex flex-wrap justify-center gap-1 w-full px-1">
+                          {dayEvents.map((event) => (
+                            <div
+                              key={event.id}
+                              className={cn(
+                                "w-1.5 h-1.5 rounded-full",
+                                event.type === 'order' ? "bg-blue-500" : "bg-orange-500"
+                              )}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex-1 overflow-y-auto border-t bg-background p-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="text-lg font-bold">
+                      {format(selectedCompactDate, 'd MMMM', { locale: pl })}
+                    </div>
+                    <div className="text-sm text-muted-foreground capitalize">
+                      {format(selectedCompactDate, 'EEEE', { locale: pl })}
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {getEventsForDay(selectedCompactDate).map((event) => (
+                      <CalendarEventCard
+                        key={event.id}
+                        event={event}
+                        className="w-full"
+                      />
+                    ))}
+                    {getEventsForDay(selectedCompactDate).length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground text-sm">
+                        Brak wydarzeń tego dnia.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             ) : viewMode === 'month' ? (
               <div className="grid grid-cols-7 h-full min-w-[800px]">
                 {/* Days Header */}
