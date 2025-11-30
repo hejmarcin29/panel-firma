@@ -12,11 +12,14 @@ import { BackButton } from './_components/back-button';
 import { logoutAction } from './actions';
 import { requireUser } from '@/lib/auth/session';
 import { getUrgentOrdersCount } from './orders/queries';
+import { db } from '@/lib/db';
+import { users } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
-	let user;
+	let sessionUser;
     try {
-        user = await requireUser();
+        sessionUser = await requireUser();
     } catch (error) {
         // Rethrow redirect errors (NEXT_REDIRECT)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -26,6 +29,16 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         console.error('Auth error in layout:', error);
         redirect('/login');
     }
+
+    const userDetails = await db.query.users.findFirst({
+        where: eq(users.id, sessionUser.id),
+        columns: { mobileMenuConfig: true }
+    });
+
+    const user = {
+        ...sessionUser,
+        mobileMenuConfig: userDetails?.mobileMenuConfig ? JSON.stringify(userDetails.mobileMenuConfig) : null
+    };
     
     let urgentOrdersCount = 0;
     try {

@@ -68,6 +68,7 @@ export const users = sqliteTable(
 		name: text('name'),
 		role: text('role').$type<UserRole>().notNull().default('operator'),
 		dashboardConfig: text('dashboard_config', { mode: 'json' }),
+		mobileMenuConfig: text('mobile_menu_config', { mode: 'json' }),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' })
 			.notNull()
 			.default(sql`(strftime('%s','now') * 1000)`),

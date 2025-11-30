@@ -27,6 +27,21 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { logoutAction } from "../actions";
+import { MobileMenuItem } from "../settings/actions";
+
+const iconMap: Record<string, any> = {
+  Home,
+  Calendar,
+  Package,
+  Hammer,
+  Menu,
+  Mail,
+  Settings,
+  ImageIcon,
+  LogOut,
+  ClipboardList,
+  KanbanSquare
+};
 
 const mainLinks = [
   { href: "/dashboard", label: "Start", icon: Home },
@@ -43,13 +58,34 @@ const menuLinks = [
   { href: "/dashboard/settings", label: "Ustawienia", icon: Settings },
 ];
 
-export function MobileNav({ user, urgentOrdersCount = 0 }: { user: { name?: string | null; email?: string | null }, urgentOrdersCount?: number }) {
+export function MobileNav({ user, urgentOrdersCount = 0 }: { user: { name?: string | null; email?: string | null; mobileMenuConfig?: string | null }, urgentOrdersCount?: number }) {
   const pathname = usePathname();
+
+  let displayedLinks = mainLinks;
+
+  if (user.mobileMenuConfig) {
+    try {
+      const config: MobileMenuItem[] = JSON.parse(user.mobileMenuConfig);
+      const enabledLinks = config
+        .filter(item => item.visible)
+        .map(item => ({
+          href: item.href,
+          label: item.label,
+          icon: iconMap[item.iconName] || Home // Fallback icon
+        }));
+      
+      if (enabledLinks.length > 0) {
+        displayedLinks = enabledLinks;
+      }
+    } catch (e) {
+      console.error("Failed to parse mobile menu config", e);
+    }
+  }
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-100 w-full border-t bg-background/80 backdrop-blur-md supports-backdrop-filter:bg-background/60 md:hidden pb-[env(safe-area-inset-bottom)]">
       <nav className="flex h-16 items-center justify-around px-2">
-        {mainLinks.map(({ href, label, icon: Icon }) => {
+        {displayedLinks.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || (href !== "/dashboard" && pathname?.startsWith(href));
           return (
             <Link

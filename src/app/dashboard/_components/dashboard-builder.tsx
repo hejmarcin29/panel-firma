@@ -204,7 +204,7 @@ function SortableWidget({ widget, data, isEditing, onConfigure }: { id: string; 
   // Map data to widget props
   const props = widget.type === "agenda" ? { upcomingMontages: data.upcomingMontages } :
                 widget.type === "recent-activity" ? { recentMontages: data.recentMontages } :
-                widget.type === "tasks" ? { ...data.tasksStats } :
+                widget.type === "tasks" ? { ...data.tasksStats, todoCount: data.kpiData.todoCount } :
                 widget.type === "kpi" ? { ...data.kpiData, settings: widget.settings } :
                 {};
 

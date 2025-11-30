@@ -3,6 +3,7 @@ import { desc, eq, sql } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
+import { requireUser } from '@/lib/auth/session';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -21,6 +22,8 @@ import { MontageChecklistSettings } from './_components/montage-checklist-settin
 import { MontageAutomationSettings } from './_components/montage-automation-settings';
 import { MontageStatusSettings } from './_components/montage-status-settings';
 import { SettingsView } from './_components/settings-view';
+import { MobileMenuSettings } from './_components/mobile-menu-settings';
+import { MobileMenuItem } from './actions';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type LogLevel = 'info' | 'warning' | 'error';
@@ -58,7 +61,32 @@ function levelBadgeClass(level: LogLevel) {
 }
 
 export default async function SettingsPage() {
-	const headerList = await headers();
+  const sessionUser = await requireUser();
+  
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, sessionUser.id),
+  });
+
+  if (!user) {
+      // Should not happen if session is valid
+      return null;
+  }
+  
+  // Parsowanie konfiguracji menu mobilnego
+  let mobileMenuConfig: MobileMenuItem[] = [];
+  try {
+    if (user.mobileMenuConfig) {
+      // Drizzle with mode: 'json' returns object/array directly, no need to parse if typed correctly
+      // But let's check if it's string or object just in case
+      mobileMenuConfig = typeof user.mobileMenuConfig === 'string' 
+        ? JSON.parse(user.mobileMenuConfig) 
+        : user.mobileMenuConfig as MobileMenuItem[];
+    }
+  } catch (e) {
+    console.error("Failed to parse mobile menu config", e);
+  }
+
+  const headerList = await headers();
 	const forwardedProto = headerList.get('x-forwarded-proto');
 	const forwardedHost = headerList.get('x-forwarded-host');
 	const hostHeader = headerList.get('host');
@@ -365,6 +393,9 @@ export default async function SettingsPage() {
 						</div>
 					</CardContent>
 				</Card>
+			}
+			mobileMenuSettings={
+				<MobileMenuSettings initialItems={mobileMenuConfig} />
 			}
 		>
 			<Card>

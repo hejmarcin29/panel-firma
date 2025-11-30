@@ -1,10 +1,13 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { eq } from 'drizzle-orm';
 
 import { HeadBucketCommand } from '@aws-sdk/client-s3';
 
 import { requireUser } from '@/lib/auth/session';
+import { db } from '@/lib/db';
+import { users } from '@/lib/db/schema';
 import { appSettingKeys, getAppSetting, setAppSetting } from '@/lib/settings';
 import { createR2Client } from '@/lib/r2/client';
 import { getR2Config } from '@/lib/r2/config';
@@ -187,5 +190,23 @@ export async function updateMontageStatusDefinitionsAction(statuses: MontageStat
 
 	revalidatePath('/dashboard/settings');
     revalidatePath('/dashboard/montaze');
+}
+
+export type MobileMenuItem = {
+    id: string;
+    label: string;
+    href: string;
+    iconName: string;
+    visible: boolean;
+};
+
+export async function updateMobileMenuConfig(config: MobileMenuItem[]) {
+    const user = await requireUser();
+    
+    await db.update(users)
+        .set({ mobileMenuConfig: config, updatedAt: new Date() })
+        .where(eq(users.id, user.id));
+        
+    revalidatePath('/dashboard');
 }
 
