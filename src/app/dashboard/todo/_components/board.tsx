@@ -346,7 +346,6 @@ export function Board({ initialColumns }: BoardProps) {
                 onDragStart={handleDragStart}
                 onDragOver={handleDragOver}
                 onDragEnd={handleDragEnd}
-                dropAnimation={dropAnimation}
             >
                 <div className="flex gap-4 h-full overflow-x-auto pb-4 items-start">
                     <SortableContext
@@ -359,7 +358,7 @@ export function Board({ initialColumns }: BoardProps) {
                     </SortableContext>
                 </div>
 
-                <DragOverlay>
+                <DragOverlay dropAnimation={dropAnimation}>
                     {activeColumn && (
                         <Column column={activeColumn} isOverlay />
                     )}
