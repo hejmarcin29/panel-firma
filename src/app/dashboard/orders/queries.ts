@@ -1,7 +1,6 @@
 import { eq, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { manualOrders } from '@/lib/db/schema';
-import { requireUser } from '@/lib/auth/session';
 
 export async function getUrgentOrdersCount() {
   // We don't need to call requireUser here if it's called in the layout, 

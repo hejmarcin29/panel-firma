@@ -17,9 +17,10 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 	let user;
     try {
         user = await requireUser();
-    } catch (error: any) {
+    } catch (error) {
         // Rethrow redirect errors (NEXT_REDIRECT)
-        if (error?.digest?.includes('NEXT_REDIRECT')) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if ((error as any)?.digest?.includes('NEXT_REDIRECT')) {
             throw error;
         }
         console.error('Auth error in layout:', error);

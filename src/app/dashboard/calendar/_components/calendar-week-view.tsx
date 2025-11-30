@@ -2,17 +2,12 @@
 
 import * as React from 'react';
 import {
-  addDays,
   eachDayOfInterval,
   endOfWeek,
   format,
   isSameDay,
   startOfWeek,
-  setHours,
-  setMinutes,
   differenceInMinutes,
-  startOfDay,
-  isWithinInterval,
 } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { CalendarEvent } from '../actions';
@@ -55,7 +50,6 @@ export function CalendarWeekView({
     if (!event.date) return {};
 
     const start = new Date(event.date);
-    const end = event.endDate ? new Date(event.endDate) : addDays(start, 0); // Default to 1 hour if no end date? Or just show as block.
     
     // If no end date, assume 1 hour duration for visualization
     const effectiveEnd = event.endDate ? new Date(event.endDate) : new Date(start.getTime() + 60 * 60 * 1000);
@@ -79,7 +73,7 @@ export function CalendarWeekView({
       <div className="flex border-b">
         <div className="w-16 shrink-0 border-r bg-muted/30" /> {/* Time column header */}
         <div className={cn("flex flex-1", isMobile && "overflow-x-auto no-scrollbar")}>
-          {weekDays.map((day, i) => (
+          {weekDays.map((day) => (
             <div
               key={day.toString()}
               className={cn(
