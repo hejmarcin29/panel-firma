@@ -14,7 +14,13 @@ import { getUrgentOrdersCount } from './orders/actions';
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
 	const user = await requireUser();
-    const urgentOrdersCount = await getUrgentOrdersCount();
+    
+    let urgentOrdersCount = 0;
+    try {
+        urgentOrdersCount = await getUrgentOrdersCount();
+    } catch (error) {
+        console.error('Failed to fetch urgent orders count:', error);
+    }
 
 	return (
 		<div className="min-h-screen bg-muted pb-16 md:pb-0">

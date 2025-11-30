@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { desc, eq, count } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
 
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
@@ -676,7 +676,7 @@ export async function updateOrderNote(orderId: string, note: string) {
 export async function getUrgentOrdersCount() {
   await requireUser();
   const result = await db
-    .select({ count: count() })
+    .select({ count: sql<number>`count(*)` })
     .from(manualOrders)
     .where(eq(manualOrders.status, 'order.received'));
   
