@@ -13,7 +13,6 @@ import {
   Settings,
   Image as ImageIcon,
   LogOut,
-  CheckSquare,
   ClipboardList,
   KanbanSquare
 } from "lucide-react";

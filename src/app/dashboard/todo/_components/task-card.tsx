@@ -4,7 +4,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trash2, GripVertical } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { useState } from "react";
 import { deleteTask, updateTaskContent } from "../actions";
 import { toast } from "sonner";

@@ -1,9 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { MapPin, Calendar, CheckCircle2, Filter, SortAsc, SortDesc, LayoutList, ListTodo } from "lucide-react";
+import { MapPin, Calendar, CheckCircle2, SortAsc, SortDesc, LayoutList, ListTodo } from "lucide-react";
 import Link from "next/link";
 import {
   Accordion,
@@ -251,7 +249,7 @@ export function TasksList({ tasksMontages }: TasksListProps) {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <h2 className="text-lg font-semibold">Lista zadań</h2>
                 <div className="flex items-center gap-2">
-                    <ToggleGroup type="single" value={viewMode} onValueChange={(v) => v && setViewMode(v as any)}>
+                    <ToggleGroup type="single" value={viewMode} onValueChange={(v) => v && setViewMode(v as 'clients' | 'tasks')}>
                         <ToggleGroupItem value="clients" aria-label="Widok klientów">
                             <LayoutList className="h-4 w-4 mr-2" />
                             Klienci

@@ -2,7 +2,6 @@
 
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import { TaskCard, type TaskType } from "./task-card";
@@ -29,7 +28,7 @@ interface ColumnProps {
     isOverlay?: boolean;
 }
 
-export function Column({ column, isOverlay }: ColumnProps) {
+export function Column({ column }: ColumnProps) {
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [title, setTitle] = useState(column.title);
     const [newTaskContent, setNewTaskContent] = useState("");
@@ -99,7 +98,7 @@ export function Column({ column, isOverlay }: ColumnProps) {
             <div
                 ref={setNodeRef}
                 style={style}
-                className="bg-muted/50 w-[300px] h-[500px] rounded-xl border-2 border-dashed border-primary/50 opacity-50 flex-shrink-0"
+                className="bg-muted/50 w-[300px] h-[500px] rounded-xl border-2 border-dashed border-primary/50 opacity-50 shrink-0"
             />
         );
     }
@@ -108,7 +107,7 @@ export function Column({ column, isOverlay }: ColumnProps) {
         <div
             ref={setNodeRef}
             style={style}
-            className="w-[300px] flex-shrink-0 h-full max-h-full flex flex-col bg-muted/30 rounded-xl border"
+            className="w-[300px] shrink-0 h-full max-h-full flex flex-col bg-muted/30 rounded-xl border"
         >
             <div
                 {...attributes}

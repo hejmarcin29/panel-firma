@@ -20,13 +20,12 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
   horizontalListSortingStrategy,
-  verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { Column, type ColumnType } from "./column";
 import { TaskCard, type TaskType } from "./task-card";
-import { createColumn, moveTask, updateColumnOrder, reorderColumns, reorderTasks } from "../actions";
+import { createColumn, reorderColumns, reorderTasks } from "../actions";
 import { toast } from "sonner";
 import {
     Dialog,
@@ -79,7 +78,7 @@ export function Board({ initialColumns }: BoardProps) {
             setNewColumnTitle("");
             setIsDialogOpen(false);
             toast.success("Dodano kolumnę");
-        } catch (error) {
+        } catch {
             toast.error("Błąd dodawania kolumny");
         }
     };
@@ -269,7 +268,7 @@ export function Board({ initialColumns }: BoardProps) {
             const activeIndex = activeColumn.tasks.findIndex(t => t.id === activeId);
             const overIndex = activeColumn.tasks.findIndex(t => t.id === overId);
 
-            let newColumns = [...columns];
+            const newColumns = [...columns];
             const columnIndex = columns.findIndex(c => c.id === activeColumn.id);
 
             if (activeIndex !== overIndex) {
@@ -317,7 +316,7 @@ export function Board({ initialColumns }: BoardProps) {
                         <DialogHeader>
                             <DialogTitle>Dodaj nową kolumnę</DialogTitle>
                             <DialogDescription>
-                                Np. "Biuro", "YouTube", "Zakupy".
+                                Np. &quot;Biuro&quot;, &quot;YouTube&quot;, &quot;Zakupy&quot;.
                             </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
