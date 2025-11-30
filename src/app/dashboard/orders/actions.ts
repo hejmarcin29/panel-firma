@@ -679,6 +679,7 @@ export async function getUrgentOrdersCount() {
     .select({ count: count() })
     .from(manualOrders)
     .where(eq(manualOrders.status, 'order.received'));
-  return result[0].count;
+  
+  return Number(result[0]?.count ?? 0);
 }
 
