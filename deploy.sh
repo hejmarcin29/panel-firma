@@ -4,8 +4,9 @@ set -e
 # Przejdź do katalogu aplikacji
 cd /srv/panel
 
-# Pobierz najnowsze zmiany
-git pull origin main
+# Pobierz najnowsze zmiany (wymuś zgodność z repozytorium)
+git fetch origin main
+git reset --hard origin/main
 
 # Zainstaluj zależności
 npm install

@@ -43,7 +43,7 @@ export function MobileNav({ user, urgentOrdersCount = 0 }: { user: { name?: stri
   const pathname = usePathname();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/80 backdrop-blur-md supports-backdrop-filter:bg-background/60 md:hidden pb-[env(safe-area-inset-bottom)]">
+    <div className="fixed bottom-0 left-0 right-0 z-100 w-full border-t bg-background/80 backdrop-blur-md supports-backdrop-filter:bg-background/60 md:hidden pb-[env(safe-area-inset-bottom)]">
       <nav className="flex h-16 items-center justify-around px-2">
         {mainLinks.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || (href !== "/dashboard" && pathname?.startsWith(href));
