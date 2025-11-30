@@ -112,11 +112,14 @@ async function createMontageAttachment({
 	return attachmentId;
 }
 
-function ensureStatus(value: string): MontageStatus {
-	if ((montageStatuses as readonly string[]).includes(value)) {
+async function ensureStatus(value: string): Promise<MontageStatus> {
+    const definitions = await getMontageStatusDefinitions();
+    const isValid = definitions.some(d => d.id === value);
+    
+	if (isValid || (montageStatuses as readonly string[]).includes(value)) {
 		return value as MontageStatus;
 	}
-	throw new Error('Nieznany status montaży.');
+	throw new Error(`Nieznany status montaży: ${value}`);
 }
 
 async function touchMontage(montageId: string) {
@@ -234,7 +237,7 @@ type UpdateMontageStatusInput = {
 
 export async function updateMontageStatus({ montageId, status }: UpdateMontageStatusInput) {
 	const user = await requireUser();
-	const resolved = ensureStatus(status);
+	const resolved = await ensureStatus(status);
 
     const montage = await getMontageOrThrow(montageId);
 
