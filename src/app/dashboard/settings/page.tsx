@@ -395,7 +395,7 @@ export default async function SettingsPage() {
 				</Card>
 			}
 			mobileMenuSettings={
-				<MobileMenuSettings initialItems={mobileMenuConfig} />
+				<MobileMenuSettings initialConfig={mobileMenuConfig} />
 			}
 		>
 			<Card>
