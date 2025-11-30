@@ -94,7 +94,7 @@ export function CalendarView({
   // Sync view mode with mobile state
   React.useEffect(() => {
     if (isMobile) {
-      setViewMode('agenda');
+      setViewMode('month-compact');
     } else {
       setViewMode('month');
     }
@@ -293,6 +293,14 @@ export function CalendarView({
                 
                 <div className="flex border rounded-md overflow-hidden">
                   <Button
+                    variant={viewMode === 'month-compact' ? 'secondary' : 'ghost'}
+                    size="sm"
+                    className="rounded-none px-2 sm:px-4 md:hidden"
+                    onClick={() => setViewMode('month-compact')}
+                  >
+                    <Grid3X3 className="h-4 w-4" />
+                  </Button>
+                  <Button
                     variant={viewMode === 'month' ? 'secondary' : 'ghost'}
                     size="sm"
                     className="rounded-none px-2 sm:px-4"
@@ -300,14 +308,6 @@ export function CalendarView({
                   >
                     <CalendarIcon className="h-4 w-4 sm:mr-2" />
                     <span className="hidden sm:inline">Miesiąc</span>
-                  </Button>
-                  <Button
-                    variant={viewMode === 'month-compact' ? 'secondary' : 'ghost'}
-                    size="sm"
-                    className="rounded-none px-2 sm:px-4 md:hidden"
-                    onClick={() => setViewMode('month-compact')}
-                  >
-                    <Grid3X3 className="h-4 w-4" />
                   </Button>
                   <Button
                     variant={viewMode === 'week' ? 'secondary' : 'ghost'}
