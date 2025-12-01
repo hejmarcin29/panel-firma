@@ -97,7 +97,7 @@ export function TaskCard({ task, isOverlay }: TaskCardProps) {
                         }
                     }}
                     autoFocus
-                    className="min-h-[80px] resize-none bg-background"
+                    className="min-h-20 resize-none bg-background"
                 />
             </div>
         );

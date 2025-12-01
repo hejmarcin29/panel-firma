@@ -383,7 +383,7 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
                                     Usuń
                                 </Button>
                                 <Button 
-                                    className="flex-[2]"
+                                    className="flex-2"
                                     onClick={() => handleSaveTaskDetails(selectedTask.id, selectedTask.content, selectedTask.description || "")}
                                 >
                                     Zapisz zmiany
