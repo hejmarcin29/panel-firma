@@ -147,7 +147,7 @@ export function MobileNav({ user, urgentOrdersCount = 0 }: { user: { name?: stri
             <div className="flex flex-col gap-4 py-4 h-full">
                 <div className="flex flex-col gap-2">
                     <p className="text-sm font-medium text-muted-foreground px-2">Aplikacje</p>
-                    {menuLinks.map(({ href, label, icon: Icon }) => {
+                    {[...mainLinks, ...menuLinks].map(({ href, label, icon: Icon }) => {
                         const isActive = pathname === href || pathname?.startsWith(href);
                         return (
                             <Link
