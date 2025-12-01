@@ -861,6 +861,8 @@ export const boardTasks = sqliteTable(
 			.notNull()
 			.references(() => boardColumns.id, { onDelete: 'cascade' }),
 		content: text('content').notNull(),
+		description: text('description'),
+		completed: integer('completed', { mode: 'boolean' }).notNull().default(false),
 		orderIndex: integer('order_index', { mode: 'number' }).notNull().default(0),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' })
 			.notNull()

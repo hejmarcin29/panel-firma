@@ -80,11 +80,28 @@ export async function deleteTask(taskId: string) {
     revalidatePath(TODO_PATH);
 }
 
-export async function updateTaskContent(taskId: string, content: string) {
+export async function updateTaskContent(taskId: string, content: string, description?: string) {
     await requireUser();
 
     await db.update(boardTasks)
-        .set({ content, updatedAt: new Date() })
+        .set({ 
+            content, 
+            description,
+            updatedAt: new Date() 
+        })
+        .where(eq(boardTasks.id, taskId));
+
+    revalidatePath(TODO_PATH);
+}
+
+export async function toggleTaskCompletion(taskId: string, completed: boolean) {
+    await requireUser();
+
+    await db.update(boardTasks)
+        .set({ 
+            completed,
+            updatedAt: new Date() 
+        })
         .where(eq(boardTasks.id, taskId));
 
     revalidatePath(TODO_PATH);
