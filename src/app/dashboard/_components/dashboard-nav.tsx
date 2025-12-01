@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const links = [
@@ -21,27 +21,34 @@ export function DashboardNav({ urgentOrdersCount = 0 }: { urgentOrdersCount?: nu
 	const pathname = usePathname();
 
 	return (
-		<nav className="mb-8 border-b pb-3">
-			<ul className="flex flex-wrap items-center gap-4 text-sm font-medium">
+		<nav className="mb-8 pb-2 overflow-x-auto no-scrollbar">
+			<ul className="flex items-center gap-1 p-1 bg-zinc-100/50 dark:bg-zinc-900/50 rounded-full border border-zinc-200/50 dark:border-zinc-800/50 w-max mx-auto backdrop-blur-sm">
 				{links.map((link) => {
-					const isActive = pathname === link.href || pathname?.startsWith(`${link.href}/`);
+					const isActive = pathname === link.href || (link.href !== '/dashboard' && pathname?.startsWith(`${link.href}/`));
 
 					return (
-						<li key={link.href}>
+						<li key={link.href} className="relative">
+                            {isActive && (
+                                <motion.div
+                                    layoutId="active-pill"
+                                    className="absolute inset-0 bg-white dark:bg-zinc-800 rounded-full shadow-sm"
+                                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                />
+                            )}
 							<Link
 								href={link.href}
 								className={cn(
-									'rounded-full px-3 py-1 transition-colors relative',
+									'relative z-10 block px-4 py-2 text-sm font-medium transition-colors rounded-full whitespace-nowrap',
 									isActive
-										? 'bg-primary text-primary-foreground'
-										: 'text-muted-foreground hover:text-foreground',
+										? 'text-foreground'
+										: 'text-muted-foreground hover:text-foreground hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50',
 								)}
 							>
 								{link.label}
                                 {link.href === '/dashboard/orders' && urgentOrdersCount > 0 && (
-                                    <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                    <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
                                     </span>
                                 )}
 							</Link>

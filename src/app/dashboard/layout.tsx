@@ -49,20 +49,24 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
 	return (
         <>
-            <div className="min-h-dvh bg-muted pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-0">
+            <div className="min-h-dvh bg-zinc-50/50 dark:bg-zinc-950 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-0 relative isolate">
+                {/* Background Pattern */}
+                <div className="absolute inset-0 -z-10 h-full w-full bg-white dark:bg-zinc-950 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-size-[14px_24px] mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
+                <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-primary/20 opacity-20 blur-[100px]"></div>
+
                 {/* Mobile Header */}
-                <header className="md:hidden flex items-center justify-between border-b bg-background px-4 py-3 sticky top-0 z-10">
+                <header className="md:hidden flex items-center justify-between border-b bg-background/80 backdrop-blur-md px-4 py-3 sticky top-0 z-10">
                     <div className="flex items-center gap-2">
                         <BackButton />
                         <span className="font-semibold">Panel firmy</span>
                     </div>
                 </header>
 
-                <header className="hidden md:block border-b bg-background">
+                <header className="hidden md:block border-b bg-background/80 backdrop-blur-md sticky top-0 z-50">
                     <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between px-5 py-3">
                         <div className="flex items-center gap-4">
                             <BackButton />
-                            <Link href="/dashboard" className="text-lg font-semibold">
+                            <Link href="/dashboard" className="text-lg font-semibold bg-clip-text text-transparent bg-linear-to-r from-primary to-purple-600">
                                 Panel firmy
                             </Link>
                         </div>
@@ -75,7 +79,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
                     </div>
                 </header>
                 <main className="mx-auto w-full max-w-[1600px] p-0 md:px-5 md:py-8">
-                    <div className="hidden md:block px-4 py-4 md:p-0">
+                    <div className="hidden md:block px-4 py-4 md:p-0 sticky top-[65px] z-40 bg-transparent">
                         <DashboardNav urgentOrdersCount={urgentOrdersCount} />
                     </div>
                     {children}
