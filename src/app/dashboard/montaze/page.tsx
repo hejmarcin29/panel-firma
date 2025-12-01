@@ -1,8 +1,10 @@
 import { asc, desc } from 'drizzle-orm';
+import Link from 'next/link';
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export const dynamic = 'force-dynamic';
 
-import { CreateMontageDialog } from './_components/create-montage-dialog';
 import { MontageDashboardView } from './_components/montage-dashboard-view';
 import { mapMontageRow, type MontageRow } from './utils';
 import { db } from '@/lib/db';
@@ -91,7 +93,14 @@ export default async function MontazePage() {
                 <MontageDashboardView 
                     montages={montagesList} 
                     statusOptions={statusOptions}
-                    headerAction={<CreateMontageDialog />}
+                    headerAction={
+                        <Button asChild>
+                            <Link href="/dashboard/montaze/nowy">
+                                <Plus className="mr-2 h-4 w-4" />
+                                Dodaj montaż
+                            </Link>
+                        </Button>
+                    }
                 />
             </div>
         </div>

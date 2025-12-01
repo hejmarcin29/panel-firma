@@ -247,6 +247,7 @@ export async function createMontage({
 	await logSystemEvent('create_montage', `Utworzono montaż ${displayId} dla ${trimmedName}`, user.id);
 
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
+    return montageId;
 }
 
 type UpdateMontageStatusInput = {

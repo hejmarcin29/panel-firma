@@ -124,6 +124,7 @@ export function CreateMontageForm({ onSuccess }: CreateMontageFormProps) {
 				setSameAsBilling(true);
 				setFeedback('Dodano nowy montaż.');
 				onSuccess?.();
+				router.push('/dashboard/montaze');
 				router.refresh();
 			} catch (submissionError) {
 				const message =
