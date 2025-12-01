@@ -1,4 +1,4 @@
-import { desc, asc, eq, and, gte, lte, or, not } from 'drizzle-orm';
+import { desc, eq, asc } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,7 +36,7 @@ const DEFAULT_LAYOUT: DashboardLayoutConfig = {
 };
 
 function addWorkingDays(startDate: Date, days: number) {
-    let currentDate = new Date(startDate);
+    const currentDate = new Date(startDate);
     let addedDays = 0;
     while (addedDays < days) {
         currentDate.setDate(currentDate.getDate() + 1);

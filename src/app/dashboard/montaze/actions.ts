@@ -735,7 +735,7 @@ export async function updateMontageRealizationStatus({
 }) {
     const user = await requireUser();
 
-    const updateData: any = {};
+    const updateData: { isMaterialOrdered?: boolean; isInstallerConfirmed?: boolean } = {};
     if (isMaterialOrdered !== undefined) updateData.isMaterialOrdered = isMaterialOrdered;
     if (isInstallerConfirmed !== undefined) updateData.isInstallerConfirmed = isInstallerConfirmed;
 

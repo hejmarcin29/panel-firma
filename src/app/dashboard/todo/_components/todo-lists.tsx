@@ -15,9 +15,7 @@ import {
   Sheet, 
   SheetContent, 
   SheetHeader, 
-  SheetTitle, 
-  SheetDescription,
-  SheetFooter
+  SheetTitle
 } from "@/components/ui/sheet";
 import { 
   DropdownMenu,
@@ -81,7 +79,7 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
 
         try {
             await toggleTaskCompletion(taskId, completed);
-        } catch (error) {
+        } catch {
             toast.error("Failed to update task");
             router.refresh();
         }
@@ -107,7 +105,7 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
         try {
             await updateTaskContent(taskId, content, description);
             toast.success("Zapisano zmiany");
-        } catch (error) {
+        } catch {
             toast.error("Błąd zapisu");
         }
     };
@@ -122,7 +120,7 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
         try {
             await deleteTask(taskId);
             toast.success("Usunięto zadanie");
-        } catch (error) {
+        } catch {
             toast.error("Błąd usuwania");
             router.refresh();
         }
@@ -154,7 +152,7 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
         try {
             await createTask(columnId, content);
             router.refresh(); // Refresh to get real ID
-        } catch (error) {
+        } catch {
             toast.error("Błąd dodawania zadania");
             router.refresh();
         }
@@ -178,7 +176,7 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
         try {
             await createColumn(newColumnTitle);
             router.refresh();
-        } catch (error) {
+        } catch {
             toast.error("Błąd dodawania listy");
             router.refresh();
         }
@@ -192,7 +190,7 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
         try {
             await deleteColumn(columnId);
             toast.success("Usunięto listę");
-        } catch (error) {
+        } catch {
             toast.error("Błąd usuwania listy");
             router.refresh();
         }
@@ -206,7 +204,7 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
 
         try {
             await updateColumnTitle(columnId, editingColumnTitle);
-        } catch (error) {
+        } catch {
             toast.error("Błąd zmiany nazwy");
             router.refresh();
         }
