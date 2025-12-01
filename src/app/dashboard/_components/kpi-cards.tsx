@@ -48,70 +48,82 @@ export function KPICards({
   const visibleCards = settings?.visibleCards || ['today', 'leads', 'orders', 'payments', 'urgent', 'todo'];
 
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div className="grid grid-cols-2 gap-4">
       {visibleCards.includes('today') && (
         <Card>
-            <CardContent className="p-3 flex flex-col items-center justify-center text-center relative">
-            <div className="flex items-center gap-1">
-                <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Dzisiejsze</span>
-                <InfoIcon content="Liczba montaży zaplanowanych na dzisiaj." />
+            <CardContent className="p-5 flex flex-col items-start justify-between h-full relative">
+            <div className="flex items-center justify-between w-full mb-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Dzisiejsze</span>
+                <div className="p-1.5 bg-primary/10 rounded-md text-primary">
+                    <InfoIcon content="Liczba montaży zaplanowanych na dzisiaj." />
+                </div>
             </div>
-            <div className="text-xl font-bold mt-1">{todayMontagesCount}</div>
+            <div className="text-3xl font-bold text-foreground">{todayMontagesCount}</div>
             </CardContent>
         </Card>
       )}
       {visibleCards.includes('todo') && (
         <Card>
-            <CardContent className="p-3 flex flex-col items-center justify-center text-center relative">
-            <div className="flex items-center gap-1">
-                <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">To Do</span>
-                <InfoIcon content="Liczba zadań w Twoim osobistym organizerze." />
+            <CardContent className="p-5 flex flex-col items-start justify-between h-full relative">
+            <div className="flex items-center justify-between w-full mb-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">To Do</span>
+                <div className="p-1.5 bg-primary/10 rounded-md text-primary">
+                    <InfoIcon content="Liczba zadań w Twoim osobistym organizerze." />
+                </div>
             </div>
-            <div className="text-xl font-bold mt-1">{todoCount}</div>
+            <div className="text-3xl font-bold text-foreground">{todoCount}</div>
             </CardContent>
         </Card>
       )}
       {visibleCards.includes('leads') && (
         <Card>
-            <CardContent className="p-3 flex flex-col items-center justify-center text-center relative">
-            <div className="flex items-center gap-1">
-                <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Leady Montaż</span>
-                <InfoIcon content="Liczba nowych zapytań (status Lead)." />
+            <CardContent className="p-5 flex flex-col items-start justify-between h-full relative">
+            <div className="flex items-center justify-between w-full mb-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Leady Montaż</span>
+                <div className="p-1.5 bg-primary/10 rounded-md text-primary">
+                    <InfoIcon content="Liczba nowych zapytań (status Lead)." />
+                </div>
             </div>
-            <div className="text-xl font-bold mt-1">{newLeadsCount}</div>
+            <div className="text-3xl font-bold text-foreground">{newLeadsCount}</div>
             </CardContent>
         </Card>
       )}
       {visibleCards.includes('orders') && (
         <Card>
-            <CardContent className="p-3 flex flex-col items-center justify-center text-center relative">
-            <div className="flex items-center gap-1">
-                <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Zamówienia</span>
-                <InfoIcon content="Liczba nowych zamówień (status Zamówienie utworzone)." />
+            <CardContent className="p-5 flex flex-col items-start justify-between h-full relative">
+            <div className="flex items-center justify-between w-full mb-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Zamówienia</span>
+                <div className="p-1.5 bg-primary/10 rounded-md text-primary">
+                    <InfoIcon content="Liczba nowych zamówień (status Zamówienie utworzone)." />
+                </div>
             </div>
-            <div className="text-xl font-bold mt-1">{newOrdersCount}</div>
+            <div className="text-3xl font-bold text-foreground">{newOrdersCount}</div>
             </CardContent>
         </Card>
       )}
       {visibleCards.includes('payments') && (
         <Card>
-            <CardContent className="p-3 flex flex-col items-center justify-center text-center relative">
-            <div className="flex items-center gap-1">
-                <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Płatności</span>
-                <InfoIcon content="Liczba montaży oczekujących na płatność (przed zaliczką lub fakturą końcową)." />
+            <CardContent className="p-5 flex flex-col items-start justify-between h-full relative">
+            <div className="flex items-center justify-between w-full mb-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Płatności</span>
+                <div className="p-1.5 bg-primary/10 rounded-md text-primary">
+                    <InfoIcon content="Liczba montaży oczekujących na płatność (przed zaliczką lub fakturą końcową)." />
+                </div>
             </div>
-            <div className="text-xl font-bold mt-1">{pendingPaymentsCount}</div>
+            <div className="text-3xl font-bold text-foreground">{pendingPaymentsCount}</div>
             </CardContent>
         </Card>
       )}
       {visibleCards.includes('urgent') && (
-        <Card>
-            <CardContent className="p-3 flex flex-col items-center justify-center text-center border-red-200 bg-red-50/50 dark:bg-red-900/10 relative">
-            <div className="flex items-center gap-1">
-                <span className="text-[10px] uppercase text-red-600/80 font-bold tracking-wider">Pilne</span>
-                <InfoIcon content="Liczba aktywnych montaży bez ustalonej daty realizacji." />
+        <Card className="border-red-200 bg-red-50/50 dark:bg-red-900/10">
+            <CardContent className="p-5 flex flex-col items-start justify-between h-full relative">
+            <div className="flex items-center justify-between w-full mb-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-red-600/80">Pilne</span>
+                <div className="p-1.5 bg-red-100 rounded-md text-red-600">
+                    <InfoIcon content="Liczba aktywnych montaży bez ustalonej daty realizacji." />
+                </div>
             </div>
-            <div className="text-xl font-bold mt-1 text-red-600">{urgentTasksCount}</div>
+            <div className="text-3xl font-bold text-red-600">{urgentTasksCount}</div>
             </CardContent>
         </Card>
       )}
