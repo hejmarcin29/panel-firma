@@ -2,8 +2,6 @@ import type { ReactNode } from 'react';
 
 export const dynamic = 'force-dynamic';
 
-import Link from 'next/link';
-
 import { redirect } from 'next/navigation';
 import { AppSidebar } from './_components/app-sidebar';
 import { MobileNav } from './_components/mobile-nav';

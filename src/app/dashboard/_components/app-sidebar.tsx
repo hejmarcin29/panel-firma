@@ -31,9 +31,14 @@ const links = [
     { href: '/dashboard/settings', label: 'Ustawienia', icon: Settings },
 ];
 
+interface User {
+    name: string | null;
+    email: string;
+}
+
 interface AppSidebarProps {
     urgentOrdersCount?: number;
-    user?: any;
+    user?: User;
 }
 
 export function AppSidebar({ urgentOrdersCount = 0, user }: AppSidebarProps) {
