@@ -17,7 +17,7 @@ import {
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { LogoutButton } from "./logout-button";
+import { logoutAction } from "../actions";
 
 const links = [
     { href: '/dashboard', label: 'Przegląd', icon: LayoutDashboard },
@@ -81,10 +81,6 @@ export function AppSidebar({ urgentOrdersCount = 0, user }: AppSidebarProps) {
                         );
                     })}
                 </nav>
-
-import { logoutAction } from "../actions";
-
-// ...
 
                 {/* User Profile */}
                 <div className="p-4 border-t border-border/50 bg-muted/30">
