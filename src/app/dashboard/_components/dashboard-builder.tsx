@@ -39,6 +39,7 @@ import { RecentActivity } from "./recent-activity";
 import { QuickActions } from "./quick-actions";
 import { TasksWidget } from "./tasks-widget";
 import { KPICards } from "./kpi-cards";
+import { MontageAlertsKPI, type MontageAlert } from "./montage-alerts-kpi";
 import { updateDashboardLayout, type DashboardLayoutConfig, type DashboardWidgetConfig } from "../actions";
 import { toast } from "sonner";
 import type { Montage } from "../montaze/types";
@@ -47,6 +48,7 @@ import type { Montage } from "../montaze/types";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const WIDGET_COMPONENTS: Record<string, React.ComponentType<any>> = {
   "kpi": KPICards,
+  "montage-alerts": MontageAlertsKPI,
   "agenda": AgendaWidget,
   "recent-activity": RecentActivity,
   "quick-actions": QuickActions,
@@ -55,6 +57,7 @@ const WIDGET_COMPONENTS: Record<string, React.ComponentType<any>> = {
 
 const WIDGET_LABELS: Record<string, string> = {
     "kpi": "Statystyki (KPI)",
+    "montage-alerts": "Zagrożone Montaże",
     "agenda": "Najbliższe montaże",
     "recent-activity": "Ostatnia Aktywność",
     "quick-actions": "Szybkie Akcje",
@@ -178,6 +181,7 @@ interface DashboardBuilderProps {
         newOrdersCount: number;
         todoCount: number;
     };
+    montageAlerts: MontageAlert[];
   };
 }
 
@@ -206,6 +210,7 @@ function SortableWidget({ widget, data, isEditing, onConfigure }: { id: string; 
                 widget.type === "recent-activity" ? { recentMontages: data.recentMontages } :
                 widget.type === "tasks" ? { ...data.tasksStats, todoCount: data.kpiData.todoCount } :
                 widget.type === "kpi" ? { ...data.kpiData, settings: widget.settings } :
+                widget.type === "montage-alerts" ? { alerts: data.montageAlerts } :
                 {};
 
   return (

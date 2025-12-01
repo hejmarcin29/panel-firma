@@ -157,6 +157,8 @@ export function mapMontageRow(row: MontageRow, publicBaseUrl: string | null): Mo
 		displayId: row.displayId ?? null,
 		createdAt: row.createdAt,
 		updatedAt: row.updatedAt,
+        isMaterialOrdered: row.isMaterialOrdered ?? false,
+        isInstallerConfirmed: row.isInstallerConfirmed ?? false,
 		notes: row.notes.map((note) => mapNote(note, publicBaseUrl)),
 		attachments: row.attachments.map((attachment) => mapAttachment(attachment, publicBaseUrl)),
 		tasks: row.tasks.map(mapTask),

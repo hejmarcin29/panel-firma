@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { 
@@ -17,7 +18,8 @@ import {
     addMontageChecklistItem,
     deleteMontageChecklistItem,
     updateMontageChecklistItemLabel,
-    updateMontageStatus
+    updateMontageStatus,
+    updateMontageRealizationStatus
 } from "../../actions";
 import type { Montage, StatusOption } from "../../types";
 
@@ -91,12 +93,57 @@ export function MontageWorkflowTab({ montage, statusOptions }: { montage: Montag
     });
   };
 
+  const handleRealizationStatusChange = (field: 'isMaterialOrdered' | 'isInstallerConfirmed', value: boolean) => {
+    startTransition(async () => {
+        await updateMontageRealizationStatus({ 
+            montageId: montage.id, 
+            [field]: value 
+        });
+        router.refresh();
+    });
+  };
+
   const currentStatusIndex = statusOptions.findIndex(o => o.value === montage.status);
 
   return (
     <div className="space-y-8">
         <Card className="p-6">
-            <h3 className="mb-4 text-lg font-semibold">Status montażu</h3>
+            <h3 className="mb-4 text-lg font-semibold">Status Realizacji</h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+                <div className={cn(
+                    "flex items-center justify-between p-4 rounded-lg border transition-colors",
+                    montage.isMaterialOrdered ? "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-900" : "bg-card"
+                )}>
+                    <div className="space-y-0.5">
+                        <Label htmlFor="material-ordered" className="text-base font-medium">Zamówiono materiał</Label>
+                        <p className="text-sm text-muted-foreground">Potwierdzenie zamówienia u dostawcy</p>
+                    </div>
+                    <Switch 
+                        id="material-ordered"
+                        checked={montage.isMaterialOrdered}
+                        onCheckedChange={(checked) => handleRealizationStatusChange('isMaterialOrdered', checked)}
+                    />
+                </div>
+
+                <div className={cn(
+                    "flex items-center justify-between p-4 rounded-lg border transition-colors",
+                    montage.isInstallerConfirmed ? "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-900" : "bg-card"
+                )}>
+                    <div className="space-y-0.5">
+                        <Label htmlFor="installer-confirmed" className="text-base font-medium">Potwierdzony montażysta</Label>
+                        <p className="text-sm text-muted-foreground">Termin i wykonawca ustalony</p>
+                    </div>
+                    <Switch 
+                        id="installer-confirmed"
+                        checked={montage.isInstallerConfirmed}
+                        onCheckedChange={(checked) => handleRealizationStatusChange('isInstallerConfirmed', checked)}
+                    />
+                </div>
+            </div>
+        </Card>
+
+        <Card className="p-6">
+            <h3 className="mb-4 text-lg font-semibold">Etapy montażu</h3>
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {statusOptions.map((option, index) => {
                     const isCurrent = montage.status === option.value;

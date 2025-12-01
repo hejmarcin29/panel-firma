@@ -723,3 +723,34 @@ export async function updateMontageMeasurement({
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 	revalidatePath(`${MONTAGE_DASHBOARD_PATH}/${montageId}`);
 }
+
+export async function updateMontageRealizationStatus({
+    montageId,
+    isMaterialOrdered,
+    isInstallerConfirmed
+}: {
+    montageId: string;
+    isMaterialOrdered?: boolean;
+    isInstallerConfirmed?: boolean;
+}) {
+    const user = await requireUser();
+
+    const updateData: any = {};
+    if (isMaterialOrdered !== undefined) updateData.isMaterialOrdered = isMaterialOrdered;
+    if (isInstallerConfirmed !== undefined) updateData.isInstallerConfirmed = isInstallerConfirmed;
+
+    if (Object.keys(updateData).length === 0) return;
+
+    await db.update(montages)
+        .set(updateData)
+        .where(eq(montages.id, montageId));
+
+    await logSystemEvent(
+        'montage.update_realization_status',
+        `Updated realization status for montage ${montageId}: ${JSON.stringify(updateData)}`,
+        user.id
+    );
+
+    revalidatePath(`${MONTAGE_DASHBOARD_PATH}/${montageId}`);
+    revalidatePath(MONTAGE_DASHBOARD_PATH);
+}

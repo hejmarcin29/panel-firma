@@ -1,4 +1,4 @@
-import { desc, asc, eq } from 'drizzle-orm';
+import { desc, asc, eq, and, gte, lte, or, not } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,6 +23,7 @@ import type { DashboardLayoutConfig } from './actions';
 const DEFAULT_LAYOUT: DashboardLayoutConfig = {
     columns: {
         left: [
+            { id: 'alerts-1', type: 'montage-alerts' },
             { id: 'kpi-1', type: 'kpi' },
             { id: 'quick-1', type: 'quick-actions' },
             { id: 'recent-1', type: 'recent-activity' },
@@ -33,6 +34,18 @@ const DEFAULT_LAYOUT: DashboardLayoutConfig = {
         ]
     }
 };
+
+function addWorkingDays(startDate: Date, days: number) {
+    let currentDate = new Date(startDate);
+    let addedDays = 0;
+    while (addedDays < days) {
+        currentDate.setDate(currentDate.getDate() + 1);
+        if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
+            addedDays++;
+        }
+    }
+    return currentDate;
+}
 
 import { redirect } from 'next/navigation';
 
@@ -80,6 +93,18 @@ export default async function DashboardPage() {
                         columns: {
                             ...layout.columns,
                             left: [{ id: 'kpi-1', type: 'kpi' }, ...layout.columns.left]
+                        }
+                    };
+                }
+
+                // Migration: Ensure Alerts widget exists
+                const hasAlerts = [...layout.columns.left, ...layout.columns.right].some(w => w.type === 'montage-alerts');
+                if (!hasAlerts) {
+                    layout = {
+                        ...layout,
+                        columns: {
+                            ...layout.columns,
+                            left: [{ id: 'alerts-1', type: 'montage-alerts' }, ...layout.columns.left]
                         }
                     };
                 }
@@ -183,6 +208,24 @@ export default async function DashboardPage() {
         return date < today;
     }).length;
 
+    // Alerts Logic (Next 7 working days)
+    const alertThresholdDate = addWorkingDays(today, 7);
+    alertThresholdDate.setHours(23, 59, 59, 999);
+
+    const montageAlerts = allMontages.filter(m => {
+        if (!m.scheduledInstallationAt) return false;
+        const date = new Date(m.scheduledInstallationAt);
+        
+        // Filter out past dates (before today 00:00)
+        if (date < today) return false;
+        
+        // Filter out dates beyond threshold
+        if (date > alertThresholdDate) return false;
+
+        // Check for missing flags
+        return m.isMaterialOrdered === false || m.isInstallerConfirmed === false;
+    }).sort((a, b) => new Date(a.scheduledInstallationAt!).getTime() - new Date(b.scheduledInstallationAt!).getTime());
+
     return (
         <div className="flex flex-col gap-6 p-6 md:p-8">
             <div className="flex items-center justify-between">
@@ -197,6 +240,7 @@ export default async function DashboardPage() {
                 data={{
                     upcomingMontages,
                     recentMontages,
+                    montageAlerts,
                     tasksStats: {
                         tasksCount,
                         urgentCount

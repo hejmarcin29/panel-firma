@@ -415,6 +415,8 @@ export const montages = sqliteTable(
 		forecastedInstallationDate: integer('forecasted_installation_date', { mode: 'timestamp_ms' }),
 		status: text('status').$type<MontageStatus>().notNull().default('lead'),
 		displayId: text('display_id'),
+		isMaterialOrdered: integer('is_material_ordered', { mode: 'boolean' }).notNull().default(false),
+		isInstallerConfirmed: integer('is_installer_confirmed', { mode: 'boolean' }).notNull().default(false),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' })
 			.notNull()
 			.default(sql`(strftime('%s','now') * 1000)`),

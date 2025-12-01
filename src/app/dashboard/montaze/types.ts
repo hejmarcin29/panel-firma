@@ -69,6 +69,8 @@ export type Montage = {
 	forecastedInstallationDate: TimestampValue;
 	status: MontageStatus;
 	displayId: string | null;
+	isMaterialOrdered: boolean;
+	isInstallerConfirmed: boolean;
 	createdAt: TimestampValue;
 	updatedAt: TimestampValue;
 	notes: MontageNote[];
