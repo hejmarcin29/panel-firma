@@ -75,7 +75,7 @@ export function KPICards({
         <Card>
             <CardContent className="p-3 flex flex-col items-center justify-center text-center relative">
             <div className="flex items-center gap-1">
-                <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Leady</span>
+                <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Leady Montaż</span>
                 <InfoIcon content="Liczba nowych zapytań (status Lead)." />
             </div>
             <div className="text-xl font-bold mt-1">{newLeadsCount}</div>

@@ -179,7 +179,7 @@ export function MontageWorkflowTab({ montage, statusOptions }: { montage: Montag
         <Card className="p-6">
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h3 className="text-lg font-semibold">Lista kontrolna</h3>
+                    <h3 className="text-lg font-semibold">Checkboxy Dokumenty</h3>
                     <p className="text-sm text-muted-foreground">Zadania do wykonania w ramach realizacji.</p>
                 </div>
                 {montage.checklistItems.length > 0 && (

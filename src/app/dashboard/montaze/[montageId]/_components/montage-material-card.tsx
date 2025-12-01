@@ -1,11 +1,12 @@
 "use client";
 
-import { Package, Edit2 } from "lucide-react";
+import { Package, Edit2, Ruler, HelpCircle } from "lucide-react";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Sheet,
@@ -75,6 +76,33 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
             <p>Brak listy materiałów</p>
           </div>
         )}
+
+        <div className="mt-4 pt-4 border-t border-border/50">
+            <div className="flex items-center gap-2 mb-2">
+                <Ruler className="h-4 w-4 text-muted-foreground" />
+                <span className="text-xs font-medium text-muted-foreground">Zapotrzebowanie wg pomiaru:</span>
+            </div>
+            
+            {(!montage.floorArea && !montage.skirtingLength) ? (
+                 <div className="flex items-center gap-2 text-muted-foreground bg-muted/50 p-2 rounded-md">
+                    <HelpCircle className="h-4 w-4" />
+                    <span className="text-xs">Brak danych z pomiaru</span>
+                 </div>
+            ) : (
+                <div className="flex flex-wrap gap-2">
+                    {montage.floorArea ? (
+                        <Badge variant="secondary" className="text-xs font-normal">
+                            Podłoga: <span className="font-semibold ml-1">{montage.floorArea} m²</span>
+                        </Badge>
+                    ) : null}
+                    {montage.skirtingLength ? (
+                        <Badge variant="secondary" className="text-xs font-normal">
+                            Listwy: <span className="font-semibold ml-1">{montage.skirtingLength} mb</span>
+                        </Badge>
+                    ) : null}
+                </div>
+            )}
+        </div>
       </CardContent>
     </Card>
   );
