@@ -2,10 +2,14 @@ import type { ReactNode } from 'react';
 
 export const dynamic = 'force-dynamic';
 
+import Link from 'next/link';
+
 import { redirect } from 'next/navigation';
-import { AppSidebar } from './_components/app-sidebar';
+import { DashboardNav } from './_components/dashboard-nav';
 import { MobileNav } from './_components/mobile-nav';
+import { LogoutButton } from './_components/logout-button';
 import { BackButton } from './_components/back-button';
+import { logoutAction } from './actions';
 import { requireUser } from '@/lib/auth/session';
 import { getUrgentOrdersCount } from './orders/queries';
 import { db } from '@/lib/db';
@@ -44,25 +48,40 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     }
 
 	return (
-        <div className="flex min-h-screen bg-muted/30">
-            {/* Desktop Sidebar */}
-            <AppSidebar urgentOrdersCount={urgentOrdersCount} user={user} />
-
-            <div className="flex-1 flex flex-col min-w-0 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-0">
-                 {/* Mobile Header */}
-                <header className="md:hidden flex items-center justify-between border-b bg-background/80 backdrop-blur-md px-4 py-3 sticky top-0 z-10">
+        <>
+            <div className="min-h-dvh bg-muted pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-0">
+                {/* Mobile Header */}
+                <header className="md:hidden flex items-center justify-between border-b bg-background px-4 py-3 sticky top-0 z-10">
                     <div className="flex items-center gap-2">
                         <BackButton />
                         <span className="font-semibold">Panel firmy</span>
                     </div>
                 </header>
 
-                <main className="flex-1 p-4 md:p-8 max-w-[1600px] mx-auto w-full">
+                <header className="hidden md:block border-b bg-background">
+                    <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between px-5 py-3">
+                        <div className="flex items-center gap-4">
+                            <BackButton />
+                            <Link href="/dashboard" className="text-lg font-semibold">
+                                Panel firmy
+                            </Link>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm">
+                            <span className="text-muted-foreground">{user.name ?? user.email}</span>
+                            <form action={logoutAction}>
+                                <LogoutButton />
+                            </form>
+                        </div>
+                    </div>
+                </header>
+                <main className="mx-auto w-full max-w-[1600px] p-0 md:px-5 md:py-8">
+                    <div className="hidden md:block px-4 py-4 md:p-0">
+                        <DashboardNav urgentOrdersCount={urgentOrdersCount} />
+                    </div>
                     {children}
                 </main>
             </div>
-            
             <MobileNav user={user} urgentOrdersCount={urgentOrdersCount} />
-        </div>
+        </>
 	);
 }
