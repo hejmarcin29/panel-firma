@@ -27,12 +27,13 @@ export function MontageAlertsKPI({ alerts }: { alerts: MontageAlert[] }) {
                 </CardTitle>
                 <Popover>
                     <PopoverTrigger asChild>
-                        <button className="focus:outline-none">
-                            <Info className="h-4 w-4 text-muted-foreground" />
+                        <button className="ml-1 text-muted-foreground hover:text-foreground transition-colors">
+                            <Info className="h-3 w-3" />
+                            <span className="sr-only">Informacja</span>
                         </button>
                     </PopoverTrigger>
-                    <PopoverContent className="max-w-xs">
-                        <p className="text-sm">Licznik pokazuje montaże zaplanowane na najbliższe 7 dni roboczych, które wciąż nie mają zamówionego materiału lub potwierdzonego montażysty.</p>
+                    <PopoverContent className="w-60 text-sm p-3">
+                        Licznik pokazuje montaże zaplanowane na najbliższe 7 dni roboczych, które wciąż nie mają zamówionego materiału lub potwierdzonego montażysty.
                     </PopoverContent>
                 </Popover>
             </CardHeader>
