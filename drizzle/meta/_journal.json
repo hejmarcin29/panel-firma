@@ -218,6 +218,13 @@
       "when": 1764595963118,
       "tag": "0030_chilly_mentor",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "6",
+      "when": 1764598325084,
+      "tag": "0031_flashy_skin",
+      "breakpoints": true
     }
   ]
 }

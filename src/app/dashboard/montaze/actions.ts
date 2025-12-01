@@ -137,6 +137,11 @@ type CreateMontageInput = {
 	installationAddress?: string;
 	billingCity?: string;
 	installationCity?: string;
+	billingPostalCode?: string;
+	installationPostalCode?: string;
+	isCompany?: boolean;
+	companyName?: string;
+	nip?: string;
 	scheduledInstallationDate?: string;
 	scheduledInstallationEndDate?: string;
 	materialDetails?: string;
@@ -150,6 +155,11 @@ export async function createMontage({
 	installationAddress,
 	billingCity,
 	installationCity,
+	billingPostalCode,
+	installationPostalCode,
+	isCompany,
+	companyName,
+	nip,
 	scheduledInstallationDate,
 	scheduledInstallationEndDate,
 	materialDetails,
@@ -169,6 +179,10 @@ export async function createMontage({
 	const normalizedInstallation = installationAddress?.trim() ? installationAddress.trim() : null;
 	const normalizedBillingCity = billingCity?.trim() ? billingCity.trim() : null;
 	const normalizedInstallationCity = installationCity?.trim() ? installationCity.trim() : null;
+	const normalizedBillingPostalCode = billingPostalCode?.trim() ? billingPostalCode.trim() : null;
+	const normalizedInstallationPostalCode = installationPostalCode?.trim() ? installationPostalCode.trim() : null;
+	const normalizedCompanyName = companyName?.trim() ? companyName.trim() : null;
+	const normalizedNip = nip?.trim() ? nip.trim() : null;
 	const normalizedMaterialDetails = materialDetails?.trim() ? materialDetails.trim() : null;
 	const fallbackAddress = normalizedInstallation ?? normalizedBilling;
 	const fallbackCity = normalizedInstallationCity ?? normalizedBillingCity;
@@ -201,6 +215,11 @@ export async function createMontage({
 		installationAddress: normalizedInstallation,
 		billingCity: normalizedBillingCity,
 		installationCity: normalizedInstallationCity,
+		billingPostalCode: normalizedBillingPostalCode,
+		installationPostalCode: normalizedInstallationPostalCode,
+		isCompany: isCompany ?? false,
+		companyName: normalizedCompanyName,
+		nip: normalizedNip,
 		scheduledInstallationAt,
 		scheduledInstallationEndAt,
 		materialDetails: normalizedMaterialDetails,

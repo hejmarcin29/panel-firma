@@ -15,10 +15,22 @@ type FormState = {
 	clientName: string;
 	contactPhone: string;
 	contactEmail: string;
-	billingAddress: string;
+	
+    // Company fields
+    isCompany: boolean;
+    companyName: string;
+    nip: string;
+
+    // Billing Address
+	billingAddress: string; // Street
 	billingCity: string;
-	installationAddress: string;
+    billingPostalCode: string;
+
+    // Installation Address
+	installationAddress: string; // Street
 	installationCity: string;
+    installationPostalCode: string;
+
 	scheduledInstallationDate: string;
 	scheduledInstallationEndDate: string;
 	materialDetails: string;
@@ -28,10 +40,15 @@ const initialState: FormState = {
 	clientName: '',
 	contactPhone: '',
 	contactEmail: '',
+    isCompany: false,
+    companyName: '',
+    nip: '',
 	billingAddress: '',
 	billingCity: '',
+    billingPostalCode: '',
 	installationAddress: '',
 	installationCity: '',
+    installationPostalCode: '',
 	scheduledInstallationDate: '',
 	scheduledInstallationEndDate: '',
 	materialDetails: '',
@@ -56,16 +73,17 @@ export function CreateMontageForm({ onSuccess }: CreateMontageFormProps) {
 		setForm((prev) => {
 			const next = { ...prev, [key]: value };
 			if (sameAsBilling) {
-				if (key === 'billingAddress') {
-					next.installationAddress = value;
-				}
-				if (key === 'billingCity') {
-					next.installationCity = value;
-				}
+				if (key === 'billingAddress') next.installationAddress = value;
+				if (key === 'billingCity') next.installationCity = value;
+                if (key === 'billingPostalCode') next.installationPostalCode = value;
 			}
 			return next;
 		});
 	};
+
+    const handleCheckboxChange = (key: keyof FormState) => (checked: boolean) => {
+        setForm(prev => ({ ...prev, [key]: checked }));
+    };
 
 	const toggleSameAsBilling = (checked: boolean) => {
 		setSameAsBilling(checked);
@@ -74,6 +92,7 @@ export function CreateMontageForm({ onSuccess }: CreateMontageFormProps) {
 				...prev,
 				installationAddress: prev.billingAddress,
 				installationCity: prev.billingCity,
+                installationPostalCode: prev.billingPostalCode,
 			}));
 		}
 	};
@@ -89,10 +108,15 @@ export function CreateMontageForm({ onSuccess }: CreateMontageFormProps) {
 					clientName: form.clientName,
 					contactPhone: form.contactPhone,
 					contactEmail: form.contactEmail,
+                    isCompany: form.isCompany,
+                    companyName: form.companyName,
+                    nip: form.nip,
 					billingAddress: form.billingAddress,
 					billingCity: form.billingCity,
+                    billingPostalCode: form.billingPostalCode,
 					installationAddress: form.installationAddress,
 					installationCity: form.installationCity,
+                    installationPostalCode: form.installationPostalCode,
 					scheduledInstallationDate: form.scheduledInstallationDate || undefined,
 					materialDetails: form.materialDetails,
 				});
@@ -114,15 +138,48 @@ export function CreateMontageForm({ onSuccess }: CreateMontageFormProps) {
 	return (
 		<form onSubmit={handleSubmit} className="space-y-4 rounded-xl border bg-background p-4 shadow-sm">
 			<div>
-				<Label htmlFor="montage-client">Klient</Label>
+				<Label htmlFor="montage-client">Klient (Osoba kontaktowa)</Label>
 				<Input
 					id="montage-client"
 					value={form.clientName}
 					onChange={handleInputChange('clientName')}
-					placeholder="np. Jan Kowalski / Firma"
+					placeholder="np. Jan Kowalski"
 					required
 				/>
 			</div>
+
+            <div className="flex items-center gap-2">
+                <Checkbox 
+                    id="is-company" 
+                    checked={form.isCompany}
+                    onCheckedChange={handleCheckboxChange('isCompany')}
+                />
+                <Label htmlFor="is-company">Firma</Label>
+            </div>
+
+            {form.isCompany && (
+                <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                        <Label htmlFor="company-name">Nazwa firmy</Label>
+                        <Input
+                            id="company-name"
+                            value={form.companyName}
+                            onChange={handleInputChange('companyName')}
+                            placeholder="np. Firma Budowlana Sp. z o.o."
+                        />
+                    </div>
+                    <div>
+                        <Label htmlFor="nip">NIP</Label>
+                        <Input
+                            id="nip"
+                            value={form.nip}
+                            onChange={handleInputChange('nip')}
+                            placeholder="np. 1234567890"
+                        />
+                    </div>
+                </div>
+            )}
+
 			<div className="grid gap-4 md:grid-cols-2">
 				<div>
 					<Label htmlFor="montage-phone">Telefon kontaktowy</Label>
@@ -144,57 +201,94 @@ export function CreateMontageForm({ onSuccess }: CreateMontageFormProps) {
 					/>
 				</div>
 			</div>
-			<div className="grid gap-4 md:grid-cols-2">
-				<div className="space-y-3">
-					<Label htmlFor="montage-billing-address">Adres do faktury</Label>
-					<Textarea
-						id="montage-billing-address"
-						value={form.billingAddress}
-						onChange={handleInputChange('billingAddress')}
-						placeholder="np. ul. Wiosenna 12, 00-001 Warszawa"
-						rows={3}
-					/>
-					<div className="space-y-1">
-						<Label htmlFor="montage-billing-city">Miasto (faktura)</Label>
-						<Input
-							id="montage-billing-city"
-							value={form.billingCity}
-							onChange={handleInputChange('billingCity')}
-							placeholder="np. Warszawa"
-						/>
-					</div>
-				</div>
-				<div className="space-y-3">
-					<div className="flex items-center gap-2">
-						<Checkbox
-							id="montage-installation-same"
-							checked={sameAsBilling}
-							onCheckedChange={(checked) => toggleSameAsBilling(Boolean(checked))}
-						/>
-						<Label htmlFor="montage-installation-same" className="text-sm font-medium">
-							Adres montażu taki sam jak do faktury
-						</Label>
-					</div>
-					<Textarea
-						id="montage-installation-address"
-						value={form.installationAddress}
-						onChange={handleInputChange('installationAddress')}
-						placeholder="np. ul. Letnia 8/2, 00-001 Warszawa"
-						rows={3}
-						disabled={sameAsBilling}
-					/>
-					<div className="space-y-1">
-						<Label htmlFor="montage-installation-city">Miasto montażu</Label>
-						<Input
-							id="montage-installation-city"
-							value={form.installationCity}
-							onChange={handleInputChange('installationCity')}
-							placeholder="np. Warszawa"
-							disabled={sameAsBilling}
-						/>
-					</div>
-				</div>
-			</div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+                {/* Billing Address */}
+                <div className="space-y-3 border p-3 rounded-md">
+                    <h4 className="font-medium text-sm">Adres do faktury / Główny</h4>
+                    
+                    <div>
+                        <Label htmlFor="billing-street">Ulica i numer</Label>
+                        <Input
+                            id="billing-street"
+                            value={form.billingAddress}
+                            onChange={handleInputChange('billingAddress')}
+                            placeholder="np. ul. Wiosenna 12"
+                        />
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                        <div className="col-span-1">
+                            <Label htmlFor="billing-zip">Kod</Label>
+                            <Input
+                                id="billing-zip"
+                                value={form.billingPostalCode}
+                                onChange={handleInputChange('billingPostalCode')}
+                                placeholder="00-000"
+                            />
+                        </div>
+                        <div className="col-span-2">
+                            <Label htmlFor="billing-city">Miasto</Label>
+                            <Input
+                                id="billing-city"
+                                value={form.billingCity}
+                                onChange={handleInputChange('billingCity')}
+                                placeholder="Warszawa"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Installation Address */}
+                <div className="space-y-3 border p-3 rounded-md">
+                    <div className="flex items-center justify-between">
+                        <h4 className="font-medium text-sm">Adres montażu</h4>
+                        <div className="flex items-center gap-2">
+                            <Checkbox
+                                id="montage-installation-same"
+                                checked={sameAsBilling}
+                                onCheckedChange={(checked) => toggleSameAsBilling(Boolean(checked))}
+                            />
+                            <Label htmlFor="montage-installation-same" className="text-xs">
+                                Taki sam
+                            </Label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <Label htmlFor="installation-street">Ulica i numer</Label>
+                        <Input
+                            id="installation-street"
+                            value={form.installationAddress}
+                            onChange={handleInputChange('installationAddress')}
+                            placeholder="np. ul. Letnia 8/2"
+                            disabled={sameAsBilling}
+                        />
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                        <div className="col-span-1">
+                            <Label htmlFor="installation-zip">Kod</Label>
+                            <Input
+                                id="installation-zip"
+                                value={form.installationPostalCode}
+                                onChange={handleInputChange('installationPostalCode')}
+                                placeholder="00-000"
+                                disabled={sameAsBilling}
+                            />
+                        </div>
+                        <div className="col-span-2">
+                            <Label htmlFor="installation-city">Miasto</Label>
+                            <Input
+                                id="installation-city"
+                                value={form.installationCity}
+                                onChange={handleInputChange('installationCity')}
+                                placeholder="Warszawa"
+                                disabled={sameAsBilling}
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
 			<div className="grid gap-4 md:grid-cols-2">
 				<div>
 					<Label htmlFor="montage-schedule-date">Przewidywany termin montażu (od)</Label>
