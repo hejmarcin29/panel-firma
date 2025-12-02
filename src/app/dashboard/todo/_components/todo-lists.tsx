@@ -47,12 +47,25 @@ import {
   deleteTask,
   createColumn,
   deleteColumn,
-  updateColumnTitle
+  updateColumnTitle,
+  updateTaskDates,
+  uploadTaskAttachment
 } from "../actions";
 import { useRouter } from "next/navigation";
 import { SwipeableTaskItem } from "../../zadania/_components/swipeable-task-item";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { pl } from "date-fns/locale";
 
 // Types based on schema
+interface TaskAttachment {
+    id: string;
+    fileUrl: string;
+    fileName: string;
+    fileType: string | null;
+}
+
 interface Task {
     id: string;
     content: string;
@@ -61,6 +74,9 @@ interface Task {
     columnId: string;
     orderIndex: number;
     createdAt: Date;
+    dueDate?: Date | null;
+    reminderAt?: Date | null;
+    attachments?: TaskAttachment[];
 }
 
 interface Column {
@@ -423,27 +439,102 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
 
                                     {/* Action List */}
                                     <div className="flex flex-col gap-1">
-                                        <Button variant="ghost" className="justify-start px-2 h-12 text-muted-foreground hover:text-foreground gap-4 font-normal">
-                                            <Sun className="h-5 w-5" />
-                                            Dodaj do Mojego dnia
-                                        </Button>
-                                        <Button variant="ghost" className="justify-start px-2 h-12 text-muted-foreground hover:text-foreground gap-4 font-normal">
-                                            <Bell className="h-5 w-5" />
-                                            Przypomnij mi
-                                        </Button>
-                                        <Button variant="ghost" className="justify-start px-2 h-12 text-muted-foreground hover:text-foreground gap-4 font-normal">
-                                            <Calendar className="h-5 w-5" />
-                                            Dodaj termin
-                                        </Button>
-                                        <Button variant="ghost" className="justify-start px-2 h-12 text-muted-foreground hover:text-foreground gap-4 font-normal">
-                                            <Repeat className="h-5 w-5" />
-                                            Powtórz
-                                        </Button>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button variant="ghost" className={cn("justify-start px-2 h-12 text-muted-foreground hover:text-foreground gap-4 font-normal", selectedTask.reminderAt && "text-blue-600")}>
+                                                    <Bell className="h-5 w-5" />
+                                                    {selectedTask.reminderAt ? `Przypomnienie: ${format(new Date(selectedTask.reminderAt), "PPP p", { locale: pl })}` : "Przypomnij mi"}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                                <CalendarComponent
+                                                    mode="single"
+                                                    selected={selectedTask.reminderAt ? new Date(selectedTask.reminderAt) : undefined}
+                                                    onSelect={(date) => {
+                                                        if (date) {
+                                                            // Set default time to 9:00 AM
+                                                            date.setHours(9, 0, 0, 0);
+                                                            const newDate = date;
+                                                            setSelectedTask({ ...selectedTask, reminderAt: newDate });
+                                                            updateTaskDates(selectedTask.id, selectedTask.dueDate || null, newDate);
+                                                        } else {
+                                                            setSelectedTask({ ...selectedTask, reminderAt: null });
+                                                            updateTaskDates(selectedTask.id, selectedTask.dueDate || null, null);
+                                                        }
+                                                    }}
+                                                    initialFocus
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button variant="ghost" className={cn("justify-start px-2 h-12 text-muted-foreground hover:text-foreground gap-4 font-normal", selectedTask.dueDate && "text-blue-600")}>
+                                                    <Calendar className="h-5 w-5" />
+                                                    {selectedTask.dueDate ? `Termin: ${format(new Date(selectedTask.dueDate), "PPP", { locale: pl })}` : "Dodaj termin"}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                                <CalendarComponent
+                                                    mode="single"
+                                                    selected={selectedTask.dueDate ? new Date(selectedTask.dueDate) : undefined}
+                                                    onSelect={(date) => {
+                                                        const newDate = date || null;
+                                                        setSelectedTask({ ...selectedTask, dueDate: newDate });
+                                                        updateTaskDates(selectedTask.id, newDate, selectedTask.reminderAt || null);
+                                                    }}
+                                                    initialFocus
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+
                                         <div className="h-px bg-border my-2" />
-                                        <Button variant="ghost" className="justify-start px-2 h-12 text-muted-foreground hover:text-foreground gap-4 font-normal">
-                                            <Paperclip className="h-5 w-5" />
-                                            Dodaj plik
-                                        </Button>
+                                        
+                                        <div className="relative">
+                                            <input 
+                                                type="file" 
+                                                id="file-upload" 
+                                                className="hidden" 
+                                                onChange={async (e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (file) {
+                                                        const formData = new FormData();
+                                                        formData.append('taskId', selectedTask.id);
+                                                        formData.append('file', file);
+                                                        toast.promise(uploadTaskAttachment(formData), {
+                                                            loading: 'Wysyłanie pliku...',
+                                                            success: 'Plik dodany',
+                                                            error: 'Błąd wysyłania pliku'
+                                                        });
+                                                    }
+                                                }}
+                                            />
+                                            <Button 
+                                                variant="ghost" 
+                                                className="justify-start px-2 h-12 text-muted-foreground hover:text-foreground gap-4 font-normal w-full"
+                                                onClick={() => document.getElementById('file-upload')?.click()}
+                                            >
+                                                <Paperclip className="h-5 w-5" />
+                                                Dodaj plik
+                                            </Button>
+                                        </div>
+
+                                        {/* Attachments List */}
+                                        {selectedTask.attachments && selectedTask.attachments.length > 0 && (
+                                            <div className="flex flex-col gap-2 mt-2 pl-11">
+                                                {selectedTask.attachments.map((att) => (
+                                                    <a 
+                                                        key={att.id} 
+                                                        href={att.fileUrl} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        className="text-sm text-blue-600 hover:underline truncate"
+                                                    >
+                                                        {att.fileName}
+                                                    </a>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Notes Section */}

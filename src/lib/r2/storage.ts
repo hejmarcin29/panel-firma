@@ -15,6 +15,7 @@ import { sanitizeFilename, slugify } from '@/lib/strings';
 
 export const MONTAGE_ROOT_PREFIX = 'montaze';
 export const ORDER_ROOT_PREFIX = 'zamowienia';
+export const TASK_ROOT_PREFIX = 'zadania';
 
 function buildMontageFolder(clientName: string): string {
 	const base = slugify(clientName || 'klient');
@@ -92,6 +93,35 @@ export async function uploadOrderDocumentObject(params: {
 	const filename = sanitizeFilename(file.name || 'zalacznik');
 	const folder = buildOrderFolder(customerName);
 	const key = buildObjectKey(ORDER_ROOT_PREFIX, folder, filename);
+	const buffer = Buffer.from(await file.arrayBuffer());
+
+	const putParams: PutObjectCommandInput = {
+		Bucket: config.bucketName,
+		Key: key,
+		Body: buffer,
+		ContentType: file.type || 'application/octet-stream',
+	};
+
+	await client.send(new PutObjectCommand(putParams));
+
+	const url = buildPublicUrl(config.publicBaseUrl, key);
+
+	return {
+		key,
+		url,
+		bytes: buffer.byteLength,
+	};
+}
+
+export async function uploadTaskAttachmentObject(params: {
+	file: File;
+}): Promise<UploadedObjectInfo> {
+	const { file } = params;
+	const config = await getR2Config();
+	const client = createR2Client(config);
+
+	const filename = sanitizeFilename(file.name || 'zalacznik');
+	const key = buildObjectKey(TASK_ROOT_PREFIX, 'attachments', filename);
 	const buffer = Buffer.from(await file.arrayBuffer());
 
 	const putParams: PutObjectCommandInput = {

@@ -871,6 +871,8 @@ export const boardTasks = sqliteTable(
 		description: text('description'),
 		completed: integer('completed', { mode: 'boolean' }).notNull().default(false),
 		orderIndex: integer('order_index', { mode: 'number' }).notNull().default(0),
+		dueDate: integer('due_date', { mode: 'timestamp_ms' }),
+		reminderAt: integer('reminder_at', { mode: 'timestamp_ms' }),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' })
 			.notNull()
 			.default(sql`(strftime('%s','now') * 1000)`),
@@ -884,14 +886,41 @@ export const boardTasks = sqliteTable(
 	})
 );
 
+export const taskAttachments = sqliteTable(
+	'task_attachments',
+	{
+		id: text('id').primaryKey(),
+		taskId: text('task_id')
+			.notNull()
+			.references(() => boardTasks.id, { onDelete: 'cascade' }),
+		fileUrl: text('file_url').notNull(),
+		fileName: text('file_name').notNull(),
+		fileType: text('file_type'),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	},
+	(table) => ({
+		taskIdx: index('task_attachments_task_id_idx').on(table.taskId),
+	})
+);
+
 export const boardColumnsRelations = relations(boardColumns, ({ many }) => ({
 	tasks: many(boardTasks),
 }));
 
-export const boardTasksRelations = relations(boardTasks, ({ one }) => ({
+export const boardTasksRelations = relations(boardTasks, ({ one, many }) => ({
 	column: one(boardColumns, {
 		fields: [boardTasks.columnId],
 		references: [boardColumns.id],
+	}),
+	attachments: many(taskAttachments),
+}));
+
+export const taskAttachmentsRelations = relations(taskAttachments, ({ one }) => ({
+	task: one(boardTasks, {
+		fields: [taskAttachments.taskId],
+		references: [boardTasks.id],
 	}),
 }));
 

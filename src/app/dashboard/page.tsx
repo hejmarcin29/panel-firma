@@ -1,4 +1,4 @@
-import { desc, eq, asc, and, lt } from 'drizzle-orm';
+import { desc, eq, asc, and, lt, or, lte, gte } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
@@ -213,8 +213,24 @@ export default async function DashboardPage() {
     const urgentOrdersCount = urgentOrders.length;
 
     // Fetch Personal Todo Count
-    const todoTasks = await db.select().from(boardTasks);
+    const todoTasks = await db.select().from(boardTasks).where(eq(boardTasks.completed, false));
     const todoCount = todoTasks.length;
+
+    // Fetch Reminder Tasks (Due today or past due, or Reminder today or past due)
+    const now = new Date();
+    const reminderTasks = todoTasks.filter(t => {
+        if (t.completed) return false;
+        
+        const isDue = t.dueDate && new Date(t.dueDate) <= now;
+        const isReminder = t.reminderAt && new Date(t.reminderAt) <= now;
+        
+        return isDue || isReminder;
+    }).map(t => ({
+        id: t.id,
+        content: t.content,
+        reminderAt: t.reminderAt,
+        dueDate: t.dueDate
+    }));
 
     // Tasks Widget Data (Lite)
     const tasksMontagesRaw = allMontages.filter(m => m.tasks.some(t => !t.completed));
@@ -262,7 +278,9 @@ export default async function DashboardPage() {
                     threatDays,
                     tasksStats: {
                         tasksCount,
-                        urgentCount
+                        urgentCount,
+                        todoCount,
+                        reminderTasks
                     },
                     kpiData: {
                         todayMontagesCount,

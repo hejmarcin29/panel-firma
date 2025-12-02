@@ -3,8 +3,9 @@
 import { revalidatePath } from 'next/cache';
 import { eq, asc } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { boardColumns, boardTasks } from '@/lib/db/schema';
+import { boardColumns, boardTasks, taskAttachments } from '@/lib/db/schema';
 import { requireUser } from '@/lib/auth/session';
+import { uploadTaskAttachmentObject } from '@/lib/r2/storage';
 
 const TODO_PATH = '/dashboard/todo';
 
@@ -16,6 +17,9 @@ export async function getBoardData() {
         with: {
             tasks: {
                 orderBy: asc(boardTasks.orderIndex),
+                with: {
+                    attachments: true
+                }
             },
         },
     });
@@ -165,5 +169,44 @@ export async function reorderTasks(items: { id: string; orderIndex: number; colu
         )
     );
 
+    revalidatePath(TODO_PATH);
+}
+
+export async function updateTaskDates(taskId: string, dueDate: Date | null, reminderAt: Date | null) {
+    await requireUser();
+
+    await db.update(boardTasks)
+        .set({ 
+            dueDate,
+            reminderAt,
+            updatedAt: new Date() 
+        })
+        .where(eq(boardTasks.id, taskId));
+
+    revalidatePath(TODO_PATH);
+}
+
+export async function uploadTaskAttachment(formData: FormData) {
+    await requireUser();
+
+    const taskId = formData.get('taskId') as string;
+    const file = formData.get('file') as File;
+
+    if (!taskId || !file) {
+        throw new Error('Missing taskId or file');
+    }
+
+    const uploaded = await uploadTaskAttachmentObject({ file });
+
+    await db.insert(taskAttachments).values({
+        id: crypto.randomUUID(),
+        taskId,
+        fileUrl: uploaded.url,
+        fileName: file.name,
+        fileType: file.type,
+    });
+
+    revalidatePath(TODO_PATH);
+}
     revalidatePath(TODO_PATH);
 }

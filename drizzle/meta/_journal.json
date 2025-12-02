@@ -225,6 +225,13 @@
       "when": 1764598325084,
       "tag": "0031_flashy_skin",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "6",
+      "when": 1764709951860,
+      "tag": "0032_glamorous_exodus",
+      "breakpoints": true
     }
   ]
 }
