@@ -7,7 +7,6 @@ import {
   RefreshCw, 
   Mail, 
   Inbox, 
-  Send, 
   Trash2, 
   MoreVertical,
   Paperclip,
@@ -23,13 +22,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -54,7 +50,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-import { getMailMessage, listMailFolders, listMailMessages, sendMail, toggleMailMessageRead } from '../actions';
+import { getMailMessage, listMailFolders, listMailMessages, toggleMailMessageRead } from '../actions';
 import { syncMailAccount } from '../../settings/mail/actions';
 import type { MailAccountSummary, MailFolderSummary, MailMessageSummary } from '../types';
 import { ComposeForm } from './compose-form';

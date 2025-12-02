@@ -1,8 +1,8 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { ComposeForm, ComposeDefaults } from '../_components/compose-form';
-import type { MailAccountSummary } from '../types';
+import { ComposeForm, ComposeDefaults } from '../../_components/compose-form';
+import type { MailAccountSummary } from '../../types';
 
 interface MobileComposeWrapperProps {
     accounts: MailAccountSummary[];
