@@ -9,7 +9,19 @@ import {
 } from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Plus, FileText, Trash2, MoreVertical, Pencil } from "lucide-react";
+import { 
+  Plus, 
+  FileText, 
+  Trash2, 
+  MoreVertical, 
+  Pencil, 
+  Sun, 
+  Bell, 
+  Calendar, 
+  Repeat, 
+  Paperclip, 
+  Star 
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { 
@@ -377,52 +389,95 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
 
             {/* Task Detail Sheet */}
             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-                <SheetContent className="w-full sm:max-w-md flex flex-col h-full p-0 gap-0">
-                    <SheetHeader className="p-6 border-b">
-                        <SheetTitle>Szczegóły zadania</SheetTitle>
-                    </SheetHeader>
-                    
+                <SheetContent className="w-full sm:max-w-md flex flex-col h-full p-0 gap-0 bg-background">
                     {selectedTask && (
                         <>
+                            <SheetHeader className="px-6 py-4 border-b flex flex-row items-center justify-between space-y-0">
+                                <SheetTitle className="text-base font-semibold uppercase tracking-wider text-muted-foreground">
+                                    {columns.find(c => c.id === selectedTask.columnId)?.title || "Zadanie"}
+                                </SheetTitle>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <Star className="h-5 w-5 text-muted-foreground" />
+                                </Button>
+                            </SheetHeader>
+                            
                             <ScrollArea className="flex-1">
-                                <div className="flex flex-col gap-6 p-6">
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium text-muted-foreground">Treść zadania</label>
+                                <div className="flex flex-col p-6 gap-6">
+                                    {/* Task Title Section */}
+                                    <div className="flex items-start gap-4">
+                                        <Checkbox 
+                                            checked={selectedTask.completed}
+                                            onCheckedChange={(checked) => {
+                                                handleToggleTask(selectedTask.id, !!checked);
+                                                setSelectedTask({ ...selectedTask, completed: !!checked });
+                                            }}
+                                            className="mt-1.5 h-6 w-6 rounded-full border-2 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                                        />
                                         <Input 
                                             value={selectedTask.content} 
                                             onChange={(e) => setSelectedTask({ ...selectedTask, content: e.target.value })}
-                                            className="text-lg font-medium"
+                                            className="text-xl font-semibold border-0 p-0 h-auto focus-visible:ring-0 bg-transparent shadow-none"
                                         />
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium text-muted-foreground">Notatki</label>
+                                    {/* Action List */}
+                                    <div className="flex flex-col gap-1">
+                                        <Button variant="ghost" className="justify-start px-2 h-12 text-muted-foreground hover:text-foreground gap-4 font-normal">
+                                            <Sun className="h-5 w-5" />
+                                            Dodaj do Mojego dnia
+                                        </Button>
+                                        <Button variant="ghost" className="justify-start px-2 h-12 text-muted-foreground hover:text-foreground gap-4 font-normal">
+                                            <Bell className="h-5 w-5" />
+                                            Przypomnij mi
+                                        </Button>
+                                        <Button variant="ghost" className="justify-start px-2 h-12 text-muted-foreground hover:text-foreground gap-4 font-normal">
+                                            <Calendar className="h-5 w-5" />
+                                            Dodaj termin
+                                        </Button>
+                                        <Button variant="ghost" className="justify-start px-2 h-12 text-muted-foreground hover:text-foreground gap-4 font-normal">
+                                            <Repeat className="h-5 w-5" />
+                                            Powtórz
+                                        </Button>
+                                        <div className="h-px bg-border my-2" />
+                                        <Button variant="ghost" className="justify-start px-2 h-12 text-muted-foreground hover:text-foreground gap-4 font-normal">
+                                            <Paperclip className="h-5 w-5" />
+                                            Dodaj plik
+                                        </Button>
+                                    </div>
+
+                                    {/* Notes Section */}
+                                    <div className="flex-1">
                                         <Textarea 
                                             value={selectedTask.description || ""} 
                                             onChange={(e) => setSelectedTask({ ...selectedTask, description: e.target.value })}
-                                            className="min-h-[200px] resize-y text-base leading-relaxed"
-                                            placeholder="Wpisz szczegóły, listę zakupów, linki..."
+                                            className="min-h-[150px] resize-none border-0 p-0 text-base leading-relaxed focus-visible:ring-0 bg-transparent shadow-none placeholder:text-muted-foreground/70"
+                                            placeholder="Dodaj notatkę..."
                                         />
                                     </div>
                                 </div>
                             </ScrollArea>
 
-                            <div className="p-6 border-t bg-background">
-                                <div className="flex gap-2">
-                                    <Button 
-                                        variant="destructive" 
-                                        className="flex-1"
-                                        onClick={() => handleDeleteTask(selectedTask.id)}
-                                    >
-                                        <Trash2 className="w-4 h-4 mr-2" />
-                                        Usuń
-                                    </Button>
-                                    <Button 
-                                        className="flex-2"
-                                        onClick={() => handleSaveTaskDetails(selectedTask.id, selectedTask.content, selectedTask.description || "")}
-                                    >
-                                        Zapisz zmiany
-                                    </Button>
+                            <div className="p-4 border-t bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+                                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                    <span>
+                                        Utworzono {new Date(selectedTask.createdAt).toLocaleDateString()}
+                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <Button 
+                                            variant="ghost" 
+                                            size="icon"
+                                            className="h-8 w-8 hover:text-destructive"
+                                            onClick={() => handleDeleteTask(selectedTask.id)}
+                                        >
+                                            <Trash2 className="h-5 w-5" />
+                                        </Button>
+                                        <Button 
+                                            size="sm"
+                                            onClick={() => handleSaveTaskDetails(selectedTask.id, selectedTask.content, selectedTask.description || "")}
+                                        >
+                                            Zapisz
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
                         </>
