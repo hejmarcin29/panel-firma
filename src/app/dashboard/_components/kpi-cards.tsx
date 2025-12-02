@@ -51,82 +51,76 @@ export function KPICards({
   return (
     <div className="grid grid-cols-2 gap-2">
       {visibleCards.includes('today') && (
-        <Link href="/dashboard/montaze">
-            <Card className="hover:bg-accent/50 transition-colors cursor-pointer h-full">
-                <CardContent className="p-3 flex flex-col items-center justify-center text-center relative h-full">
-                <div className="flex items-center gap-1">
-                    <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Dzisiejsze</span>
-                    <InfoIcon content="Liczba montaży zaplanowanych na dzisiaj." />
-                </div>
-                <div className="text-xl font-bold mt-1">{todayMontagesCount}</div>
-                </CardContent>
-            </Card>
-        </Link>
+        <Card className="hover:bg-accent/50 transition-colors h-full relative">
+            <Link href="/dashboard/montaze" className="absolute inset-0 z-0" />
+            <CardContent className="p-3 flex flex-col items-center justify-center text-center relative h-full pointer-events-none">
+            <div className="flex items-center gap-1 pointer-events-auto relative z-10">
+                <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Dzisiejsze</span>
+                <InfoIcon content="Liczba montaży zaplanowanych na dzisiaj." />
+            </div>
+            <div className="text-xl font-bold mt-1 pointer-events-none relative z-0">{todayMontagesCount}</div>
+            </CardContent>
+        </Card>
       )}
       {visibleCards.includes('todo') && (
-        <Link href="/dashboard/todo">
-            <Card className="hover:bg-accent/50 transition-colors cursor-pointer h-full">
-                <CardContent className="p-3 flex flex-col items-center justify-center text-center relative h-full">
-                <div className="flex items-center gap-1">
-                    <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">To Do</span>
-                    <InfoIcon content="Liczba zadań w Twoim osobistym organizerze." />
-                </div>
-                <div className="text-xl font-bold mt-1">{todoCount}</div>
-                </CardContent>
-            </Card>
-        </Link>
+        <Card className="hover:bg-accent/50 transition-colors h-full relative">
+            <Link href="/dashboard/todo" className="absolute inset-0 z-0" />
+            <CardContent className="p-3 flex flex-col items-center justify-center text-center relative h-full pointer-events-none">
+            <div className="flex items-center gap-1 pointer-events-auto relative z-10">
+                <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">To Do</span>
+                <InfoIcon content="Liczba zadań w Twoim osobistym organizerze." />
+            </div>
+            <div className="text-xl font-bold mt-1 pointer-events-none relative z-0">{todoCount}</div>
+            </CardContent>
+        </Card>
       )}
       {visibleCards.includes('leads') && (
-        <Link href="/dashboard/montaze">
-            <Card className="hover:bg-accent/50 transition-colors cursor-pointer h-full">
-                <CardContent className="p-3 flex flex-col items-center justify-center text-center relative h-full">
-                <div className="flex items-center gap-1">
-                    <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Leady Montaż</span>
-                    <InfoIcon content="Liczba nowych zapytań (status Lead)." />
-                </div>
-                <div className="text-xl font-bold mt-1">{newLeadsCount}</div>
-                </CardContent>
-            </Card>
-        </Link>
+        <Card className="hover:bg-accent/50 transition-colors h-full relative">
+            <Link href="/dashboard/montaze" className="absolute inset-0 z-0" />
+            <CardContent className="p-3 flex flex-col items-center justify-center text-center relative h-full pointer-events-none">
+            <div className="flex items-center gap-1 pointer-events-auto relative z-10">
+                <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Leady Montaż</span>
+                <InfoIcon content="Liczba nowych zapytań (status Lead)." />
+            </div>
+            <div className="text-xl font-bold mt-1 pointer-events-none relative z-0">{newLeadsCount}</div>
+            </CardContent>
+        </Card>
       )}
       {visibleCards.includes('orders') && (
-        <Link href="/dashboard/orders">
-            <Card className="hover:bg-accent/50 transition-colors cursor-pointer h-full">
-                <CardContent className="p-3 flex flex-col items-center justify-center text-center relative h-full">
-                <div className="flex items-center gap-1">
-                    <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Zamówienia</span>
-                    <InfoIcon content="Liczba nowych zamówień (status Zamówienie utworzone)." />
-                </div>
-                <div className="text-xl font-bold mt-1">{newOrdersCount}</div>
-                </CardContent>
-            </Card>
-        </Link>
+        <Card className="hover:bg-accent/50 transition-colors h-full relative">
+            <Link href="/dashboard/orders" className="absolute inset-0 z-0" />
+            <CardContent className="p-3 flex flex-col items-center justify-center text-center relative h-full pointer-events-none">
+            <div className="flex items-center gap-1 pointer-events-auto relative z-10">
+                <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Zamówienia</span>
+                <InfoIcon content="Liczba nowych zamówień (status Zamówienie utworzone)." />
+            </div>
+            <div className="text-xl font-bold mt-1 pointer-events-none relative z-0">{newOrdersCount}</div>
+            </CardContent>
+        </Card>
       )}
       {visibleCards.includes('payments') && (
-        <Link href="/dashboard/montaze">
-            <Card className="hover:bg-accent/50 transition-colors cursor-pointer h-full">
-                <CardContent className="p-3 flex flex-col items-center justify-center text-center relative h-full">
-                <div className="flex items-center gap-1">
-                    <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Płatności</span>
-                    <InfoIcon content="Liczba montaży oczekujących na płatność (przed zaliczką lub fakturą końcową)." />
-                </div>
-                <div className="text-xl font-bold mt-1">{pendingPaymentsCount}</div>
-                </CardContent>
-            </Card>
-        </Link>
+        <Card className="hover:bg-accent/50 transition-colors h-full relative">
+            <Link href="/dashboard/montaze" className="absolute inset-0 z-0" />
+            <CardContent className="p-3 flex flex-col items-center justify-center text-center relative h-full pointer-events-none">
+            <div className="flex items-center gap-1 pointer-events-auto relative z-10">
+                <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Płatności</span>
+                <InfoIcon content="Liczba montaży oczekujących na płatność (przed zaliczką lub fakturą końcową)." />
+            </div>
+            <div className="text-xl font-bold mt-1 pointer-events-none relative z-0">{pendingPaymentsCount}</div>
+            </CardContent>
+        </Card>
       )}
       {visibleCards.includes('urgent') && (
-        <Link href="/dashboard/zadania">
-            <Card className="hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors cursor-pointer h-full">
-                <CardContent className="p-3 flex flex-col items-center justify-center text-center border-red-200 bg-red-50/50 dark:bg-red-900/10 relative h-full">
-                <div className="flex items-center gap-1">
-                    <span className="text-[10px] uppercase text-red-600/80 font-bold tracking-wider">Pilne</span>
-                    <InfoIcon content="Liczba aktywnych montaży bez ustalonej daty realizacji." />
-                </div>
-                <div className="text-xl font-bold mt-1 text-red-600">{urgentTasksCount}</div>
-                </CardContent>
-            </Card>
-        </Link>
+        <Card className="hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors h-full relative">
+            <Link href="/dashboard/zadania" className="absolute inset-0 z-0" />
+            <CardContent className="p-3 flex flex-col items-center justify-center text-center border-red-200 bg-red-50/50 dark:bg-red-900/10 relative h-full pointer-events-none">
+            <div className="flex items-center gap-1 pointer-events-auto relative z-10">
+                <span className="text-[10px] uppercase text-red-600/80 font-bold tracking-wider">Pilne</span>
+                <InfoIcon content="Liczba aktywnych montaży bez ustalonej daty realizacji." />
+            </div>
+            <div className="text-xl font-bold mt-1 text-red-600 pointer-events-none relative z-0">{urgentTasksCount}</div>
+            </CardContent>
+        </Card>
       )}
     </div>
   );
