@@ -23,6 +23,7 @@ import { MontageAutomationSettings } from './_components/montage-automation-sett
 import { MontageStatusSettings } from './_components/montage-status-settings';
 import { SettingsView } from './_components/settings-view';
 import { MobileMenuSettings } from './_components/mobile-menu-settings';
+import { KpiSettingsForm } from './_components/kpi-settings-form';
 import { ThemeSelector } from './_components/theme-selector';
 import { MobileMenuItem } from './actions';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -112,6 +113,8 @@ export default async function SettingsPage() {
 		montageChecklistTemplates,
 		montageAutomationRules,
 		montageStatusDefinitions,
+		kpiMontageThreatDays,
+		kpiOrderUrgentDays,
 	] = await Promise.all([
 		getAppSetting(appSettingKeys.wooWebhookSecret),
 		getAppSetting(appSettingKeys.r2AccountId),
@@ -124,6 +127,8 @@ export default async function SettingsPage() {
 		getMontageChecklistTemplates(),
 		getMontageAutomationRules(),
 		getMontageStatusDefinitions(),
+		getAppSetting(appSettingKeys.kpiMontageThreatDays),
+		getAppSetting(appSettingKeys.kpiOrderUrgentDays),
 	]);
 
 	const webhookSecret = webhookSecretSetting ?? '';
@@ -412,6 +417,12 @@ export default async function SettingsPage() {
 			}
 			mobileMenuSettings={
 				<MobileMenuSettings initialConfig={mobileMenuConfig} />
+			}
+			kpiSettings={
+				<KpiSettingsForm 
+					initialMontageThreatDays={Number(kpiMontageThreatDays ?? 7)}
+					initialOrderUrgentDays={Number(kpiOrderUrgentDays ?? 3)}
+				/>
 			}
 		>
 			<Card>

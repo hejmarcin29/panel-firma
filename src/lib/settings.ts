@@ -17,6 +17,8 @@ export const appSettingKeys = {
 	montageChecklist: 'montage.checklist',
 	montageAutomation: 'montage.automation',
 	montageStatuses: 'montage.statuses',
+	kpiMontageThreatDays: 'kpi.montage_threat_days',
+	kpiOrderUrgentDays: 'kpi.order_urgent_days',
 } as const;
 
 export type AppSettingKey = (typeof appSettingKeys)[keyof typeof appSettingKeys];

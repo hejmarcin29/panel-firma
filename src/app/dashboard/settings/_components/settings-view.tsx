@@ -12,9 +12,10 @@ interface SettingsViewProps {
   storage: React.ReactNode;
   montageSettings: React.ReactNode;
   mobileMenuSettings: React.ReactNode;
+  kpiSettings: React.ReactNode;
 }
 
-export function SettingsView({ children, appearance, mailSettings, logs, integrations, storage, montageSettings, mobileMenuSettings }: SettingsViewProps) {
+export function SettingsView({ children, appearance, mailSettings, logs, integrations, storage, montageSettings, mobileMenuSettings, kpiSettings }: SettingsViewProps) {
   return (
     <div className="space-y-4 md:space-y-6 p-4 md:p-6">
       <div>
@@ -49,7 +50,14 @@ export function SettingsView({ children, appearance, mailSettings, logs, integra
               Menu Mobilne
             </TabsTrigger>
             <TabsTrigger 
-              value="integrations" 
+              value="kpi" 
+              className="w-full justify-start gap-2 px-3 py-2 h-9 data-[state=active]:bg-muted data-[state=active]:shadow-none ring-offset-background transition-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <Activity className="h-4 w-4" />
+              KPI / Alerty
+            </TabsTrigger>
+            <TabsTrigger 
+              value="mail" 
               className="w-full justify-start gap-2 px-3 py-2 h-9 data-[state=active]:bg-muted data-[state=active]:shadow-none ring-offset-background transition-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               <Globe className="h-4 w-4" />
@@ -97,6 +105,10 @@ export function SettingsView({ children, appearance, mailSettings, logs, integra
 
           <TabsContent value="mobile-menu" className="m-0 space-y-4">
             {mobileMenuSettings}
+          </TabsContent>
+
+          <TabsContent value="kpi" className="m-0 space-y-4">
+            {kpiSettings}
           </TabsContent>
 
           <TabsContent value="integrations" className="m-0 space-y-4">

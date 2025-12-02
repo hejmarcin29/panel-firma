@@ -71,11 +71,13 @@ function DraggableMontageCard({
   statusOptions,
   status,
   disabled,
+  threatDays,
 }: {
   montage: Montage;
   statusOptions: StatusOption[];
   status: MontageStatus;
   disabled: boolean;
+  threatDays: number;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: montage.id,
@@ -98,7 +100,7 @@ function DraggableMontageCard({
       {...(!disabled ? attributes : {})}
       {...(!disabled ? listeners : {})}
     >
-      <MontagePipelineCard montage={montage} statusOptions={statusOptions} />
+      <MontagePipelineCard montage={montage} statusOptions={statusOptions} threatDays={threatDays} />
     </div>
   );
 }
@@ -108,11 +110,13 @@ function PipelineColumn({
   items,
   statusOptions,
   isPending,
+  threatDays,
 }: {
   status: StatusOption;
   items: Montage[];
   statusOptions: StatusOption[];
   isPending: boolean;
+  threatDays: number;
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id: status.value,
@@ -161,6 +165,7 @@ function PipelineColumn({
                 status={status.value}
                 statusOptions={statusOptions}
                 disabled={isPending}
+                threatDays={threatDays}
               />
             ))
           )}
@@ -173,9 +178,10 @@ function PipelineColumn({
 type MontagePipelineBoardProps = {
   montages: Montage[];
   statusOptions: StatusOption[];
+  threatDays: number;
 };
 
-export function MontagePipelineBoard({ montages, statusOptions }: MontagePipelineBoardProps) {
+export function MontagePipelineBoard({ montages, statusOptions, threatDays }: MontagePipelineBoardProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const sensors = useSensors(
@@ -265,13 +271,14 @@ export function MontagePipelineBoard({ montages, statusOptions }: MontagePipelin
               items={board[status.value] ?? []}
               statusOptions={statusOptions}
               isPending={isPending}
+              threatDays={threatDays}
             />
           ))}
         </div>
         <DragOverlay>
           {activeMontage ? (
             <div className="w-[280px]">
-              <MontagePipelineCard montage={activeMontage} statusOptions={statusOptions} />
+              <MontagePipelineCard montage={activeMontage} statusOptions={statusOptions} threatDays={threatDays} />
             </div>
           ) : null}
         </DragOverlay>

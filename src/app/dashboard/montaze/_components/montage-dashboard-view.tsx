@@ -13,9 +13,10 @@ interface MontageDashboardViewProps {
   montages: Montage[];
   statusOptions: StatusOption[];
   headerAction?: React.ReactNode;
+  threatDays: number;
 }
 
-export function MontageDashboardView({ montages, statusOptions, headerAction }: MontageDashboardViewProps) {
+export function MontageDashboardView({ montages, statusOptions, headerAction, threatDays }: MontageDashboardViewProps) {
   const [view, setView] = useState<"board" | "list" | "calendar">("board");
 
   return (
@@ -50,7 +51,7 @@ export function MontageDashboardView({ montages, statusOptions, headerAction }: 
 
       <div className="flex-1 overflow-auto">
         {view === "board" && (
-            <MontagePipelineBoard montages={montages} statusOptions={statusOptions} />
+            <MontagePipelineBoard montages={montages} statusOptions={statusOptions} threatDays={threatDays} />
         )}
         {view === "list" && (
             <div className="p-4 sm:p-6">

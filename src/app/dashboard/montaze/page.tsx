@@ -17,10 +17,14 @@ import {
 } from '@/lib/db/schema';
 import { tryGetR2Config } from '@/lib/r2/config';
 import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
+import { getAppSetting, appSettingKeys } from '@/lib/settings';
 
 export default async function MontazePage() {
     const r2Config = await tryGetR2Config();
     const publicBaseUrl = r2Config?.publicBaseUrl ?? null;
+
+    const kpiMontageThreatDays = await getAppSetting(appSettingKeys.kpiMontageThreatDays);
+    const threatDays = Number(kpiMontageThreatDays ?? 7);
 
     const statusDefinitions = await getMontageStatusDefinitions();
     const statusOptions = statusDefinitions.map(def => ({
@@ -93,6 +97,7 @@ export default async function MontazePage() {
                 <MontageDashboardView 
                     montages={montagesList} 
                     statusOptions={statusOptions}
+                    threatDays={threatDays}
                     headerAction={
                         <Button asChild>
                             <Link href="/dashboard/montaze/nowy">

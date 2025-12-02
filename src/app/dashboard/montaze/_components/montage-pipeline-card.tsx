@@ -43,9 +43,10 @@ function initials(name: string) {
 type Props = {
 	montage: Montage;
 	statusOptions: StatusOption[];
+    threatDays: number;
 };
 
-export function MontagePipelineCard({ montage }: Props) {
+export function MontagePipelineCard({ montage, threatDays }: Props) {
 	const completedTasks = useMemo(() => countCompleted(montage.tasks), [montage.tasks]);
 	const totalTasks = montage.tasks.length;
 	const materialsSummary = useMemo(
@@ -62,9 +63,21 @@ export function MontagePipelineCard({ montage }: Props) {
 	
     const pendingTasksCount = totalTasks - completedTasks;
 
+    const isThreatened = useMemo(() => {
+        if (!montage.scheduledInstallationAt) return false;
+        // Ignore completed statuses if needed, but for now just check date
+        if (montage.status === 'completed' || montage.status === 'cancelled') return false;
+
+        const now = new Date();
+        const scheduled = new Date(montage.scheduledInstallationAt);
+        const diffTime = scheduled.getTime() - now.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays >= 0 && diffDays <= threatDays;
+    }, [montage.scheduledInstallationAt, montage.status, threatDays]);
+
     return (
         <Link href={`/dashboard/montaze/${montage.id}`} className="block group">
-            <Card className="w-full border border-border/60 bg-linear-to-br from-background via-background to-muted/30 shadow-sm transition-all hover:shadow-md hover:border-primary/20">
+            <Card className={`w-full border border-border/60 bg-linear-to-br from-background via-background to-muted/30 shadow-sm transition-all hover:shadow-md hover:border-primary/20 ${isThreatened ? 'border-destructive/50 bg-destructive/5' : ''}`}>
                 <CardHeader className="space-y-3 p-4">
                     <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-3">
@@ -84,6 +97,11 @@ export function MontagePipelineCard({ montage }: Props) {
                             </div>
                         </div>
                         <div className="flex flex-col items-end gap-1">
+                            {isThreatened && (
+                                <Badge variant="destructive" className="shrink-0 rounded-full px-1.5 py-0 text-[10px] font-normal animate-pulse">
+                                    Zagrożony
+                                </Badge>
+                            )}
                             {hasMaterials && (
                                 <Badge variant="secondary" className="shrink-0 rounded-full px-1.5 py-0 text-[10px] font-normal">
                                     materiały

@@ -210,3 +210,29 @@ export async function updateMobileMenuConfig(config: MobileMenuItem[]) {
     revalidatePath('/dashboard');
 }
 
+export async function updateKpiSettings(montageThreatDays: number, orderUrgentDays: number) {
+    const user = await requireUser();
+    if (user.role !== 'owner') {
+        throw new Error('Tylko właściciel może zmieniać ustawienia KPI.');
+    }
+
+    await setAppSetting({
+        key: appSettingKeys.kpiMontageThreatDays,
+        value: String(montageThreatDays),
+        userId: user.id,
+    });
+
+    await setAppSetting({
+        key: appSettingKeys.kpiOrderUrgentDays,
+        value: String(orderUrgentDays),
+        userId: user.id,
+    });
+
+    await logSystemEvent('update_kpi_settings', `Zaktualizowano ustawienia KPI: Montaże=${montageThreatDays} dni, Zamówienia=${orderUrgentDays} dni`, user.id);
+
+    revalidatePath('/dashboard/settings');
+    revalidatePath('/dashboard/montaze');
+    revalidatePath('/dashboard/orders');
+}
+
+
