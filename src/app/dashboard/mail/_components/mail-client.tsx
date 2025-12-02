@@ -117,14 +117,14 @@ function ComposeDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col p-0 gap-0">
+      <DialogContent className="sm:max-w-[800px] md:max-w-[900px] lg:max-w-[1000px] max-h-[90vh] flex flex-col p-0 gap-0">
         <DialogHeader className="p-6 pb-2">
           <DialogTitle>Nowa wiadomość</DialogTitle>
           <DialogDescription>Wypełnij formularz, aby wysłać wiadomość e-mail.</DialogDescription>
         </DialogHeader>
-        <ScrollArea className="flex-1 max-h-[600px]">
+        <ScrollArea className="flex-1">
             <div className="p-6 pt-2">
-                <ComposeForm 
+                <ComposeForm  
                     accounts={accounts} 
                     defaults={defaults} 
                     onSuccess={() => onOpenChange(false)} 
@@ -310,9 +310,9 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
   );
 
   const MessageList = () => (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full w-full max-w-full">
       <div className="p-2 md:p-4 border-b space-y-2 md:space-y-4">
-        <div className="flex items-center justify-between gap-2">
+        <div className="hidden md:flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 overflow-hidden">
             {/* Tablet Folder Trigger (visible only on MD screens) */}
             <div className="hidden md:block lg:hidden">
@@ -332,24 +332,29 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
                  </DropdownMenuContent>
                </DropdownMenu>
             </div>
-            <h1 className="text-xl font-bold truncate hidden md:block">{activeFolder?.name || "Wiadomości"}</h1>
+            <h1 className="text-xl font-bold truncate">{activeFolder?.name || "Wiadomości"}</h1>
           </div>
           <Button size="sm" onClick={handleCompose} className="shrink-0">
             <Plus className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Nowa</span>
+            Nowa
           </Button>
         </div>
-        <div className="relative">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Szukaj..." 
-            className="pl-8" 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input 
+              placeholder="Szukaj..." 
+              className="pl-8" 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <Button size="icon" onClick={handleCompose} className="shrink-0 md:hidden">
+            <Plus className="h-4 w-4" />
+          </Button>
         </div>
       </div>
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 w-full">
         {isListing ? (
           <div className="p-8 flex justify-center">
             <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />

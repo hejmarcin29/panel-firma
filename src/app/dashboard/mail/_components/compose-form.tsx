@@ -133,7 +133,7 @@ export function ComposeForm({ accounts, defaults, onSuccess, onCancel, className
               id="body" 
               name="body" 
               placeholder="Napisz coś..." 
-              className="min-h-[300px] border-0 focus-visible:ring-0 resize-none p-0 text-base leading-relaxed shadow-none bg-transparent" 
+              className="min-h-[300px] border-0 focus-visible:ring-0 resize-y p-0 text-base leading-relaxed shadow-none bg-transparent" 
               defaultValue={defaults?.body}
               required 
             />
