@@ -28,8 +28,7 @@ import {
   Sheet, 
   SheetContent, 
   SheetHeader, 
-  SheetTitle,
-  SheetFooter
+  SheetTitle
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
@@ -61,6 +60,7 @@ interface Task {
     completed: boolean;
     columnId: string;
     orderIndex: number;
+    createdAt: Date;
 }
 
 interface Column {
@@ -168,7 +168,8 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
             columnId,
             completed: false,
             orderIndex: 9999, // temporary
-            description: ""
+            description: "",
+            createdAt: new Date()
         };
 
         setColumns(prev => prev.map(col => {
