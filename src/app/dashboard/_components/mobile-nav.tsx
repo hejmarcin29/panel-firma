@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useFormStatus } from "react-dom";
@@ -60,6 +61,7 @@ const menuLinks = [
 ];
 
 export function MobileNav({ user, urgentOrdersCount = 0 }: { user: { name?: string | null; email?: string | null; mobileMenuConfig?: string | null }, urgentOrdersCount?: number }) {
+  const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
   let displayedLinks = mainLinks;
@@ -127,7 +129,7 @@ export function MobileNav({ user, urgentOrdersCount = 0 }: { user: { name?: stri
           );
         })}
         
-        <Sheet>
+        <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
             <button
               className={cn(
@@ -153,6 +155,7 @@ export function MobileNav({ user, urgentOrdersCount = 0 }: { user: { name?: stri
                             <Link
                                 key={href}
                                 href={href}
+                                onClick={() => setOpen(false)}
                                 className={cn(
                                     "flex items-center gap-3 rounded-md px-2 py-2 text-sm font-medium transition-colors hover:bg-muted",
                                     isActive ? "bg-muted text-primary" : "text-foreground"

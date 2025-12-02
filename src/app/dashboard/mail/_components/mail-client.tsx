@@ -57,6 +57,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { getMailMessage, listMailFolders, listMailMessages, sendMail, toggleMailMessageRead } from '../actions';
 import { syncMailAccount } from '../../settings/mail/actions';
 import type { MailAccountSummary, MailFolderSummary, MailMessageSummary } from '../types';
+import { ComposeForm } from './compose-form';
+import { useRouter } from 'next/navigation';
 
 // --- Types & Helpers ---
 
@@ -117,26 +119,6 @@ function ComposeDialog({
   accounts: MailAccountSummary[];
   defaults?: ComposeDefaults;
 }) {
-  const [state, formAction, isPending] = React.useActionState(sendMail, { status: 'idle' });
-  const formRef = React.useRef<HTMLFormElement>(null);
-
-  // Reset form when dialog opens/closes or defaults change
-  React.useEffect(() => {
-    if (open && formRef.current) {
-      formRef.current.reset();
-    }
-  }, [open, defaults]);
-
-  // Handle success
-  React.useEffect(() => {
-    if (state.status === 'success') {
-      toast.success("Wiadomość została wysłana");
-      onOpenChange(false);
-    } else if (state.status === 'error') {
-      toast.error(state.message || "Błąd wysyłania wiadomości");
-    }
-  }, [state, onOpenChange]);
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col p-0 gap-0">
@@ -145,76 +127,14 @@ function ComposeDialog({
           <DialogDescription>Wypełnij formularz, aby wysłać wiadomość e-mail.</DialogDescription>
         </DialogHeader>
         <ScrollArea className="flex-1 max-h-[600px]">
-          <form ref={formRef} action={formAction} className="space-y-4 p-6 pt-2">
-            <div className="grid gap-2">
-              <Label htmlFor="accountId">Konto nadawcze</Label>
-              <div className="relative">
-                <select
-                  id="accountId"
-                  name="accountId"
-                  defaultValue={defaults?.accountId || accounts[0]?.id}
-                  className={cn(
-                    "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-                  )}
-                >
-                  {accounts.map(acc => (
-                    <option key={acc.id} value={acc.id}>
-                      {acc.displayName} ({acc.email})
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div className="p-6 pt-2">
+                <ComposeForm 
+                    accounts={accounts} 
+                    defaults={defaults} 
+                    onSuccess={() => onOpenChange(false)} 
+                    onCancel={() => onOpenChange(false)}
+                />
             </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="to">Do</Label>
-              <Input id="to" name="to" placeholder="adres@example.com" defaultValue={defaults?.to} required />
-              {state.errors?.to && <p className="text-xs text-destructive">{state.errors.to}</p>}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="cc">DW</Label>
-                <Input id="cc" name="cc" placeholder="Opcjonalnie" />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="bcc">UDW</Label>
-                <Input id="bcc" name="bcc" placeholder="Opcjonalnie" />
-              </div>
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="subject">Temat</Label>
-              <Input id="subject" name="subject" placeholder="Temat wiadomości" defaultValue={defaults?.subject} />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="body">Treść</Label>
-              <Textarea 
-                id="body" 
-                name="body" 
-                placeholder="Wpisz treść wiadomości..." 
-                className="min-h-[200px]" 
-                defaultValue={defaults?.body}
-                required 
-              />
-              {state.errors?.body && <p className="text-xs text-destructive">{state.errors.body}</p>}
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="attachments">Załączniki</Label>
-              <Input id="attachments" name="attachments" type="file" multiple className="cursor-pointer" />
-              <p className="text-[10px] text-muted-foreground">Max 25MB łącznie.</p>
-            </div>
-
-            <DialogFooter className="pt-4">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Anuluj</Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                Wyślij
-              </Button>
-            </DialogFooter>
-          </form>
         </ScrollArea>
       </DialogContent>
     </Dialog>
@@ -225,6 +145,7 @@ function ComposeDialog({
 
 export function MailClient({ accounts, initialFolders, initialMessages }: MailClientProps) {
   const isMobile = useIsMobile();
+  const router = useRouter();
   
   // State
   const [selectedAccountId] = React.useState<string | null>(accounts[0]?.id ?? null);
@@ -333,6 +254,10 @@ export function MailClient({ accounts, initialFolders, initialMessages }: MailCl
   };
 
   const handleCompose = () => {
+    if (isMobile) {
+        router.push('/dashboard/mail/compose');
+        return;
+    }
     setComposeDefaults({ accountId: selectedAccountId ?? undefined });
     setIsComposeOpen(true);
   };

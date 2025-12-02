@@ -60,7 +60,7 @@ export function KPICards({
             <CardContent className="p-3 flex flex-col items-center justify-center text-center relative h-full pointer-events-none">
             <div className="flex items-center gap-1 pointer-events-auto relative z-10">
                 <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Dzisiejsze</span>
-                <InfoIcon content="Liczba montaży zaplanowanych na dzisiaj." />
+                <InfoIcon content="Liczba montaży, które mają zaplanowaną datę realizacji na dzisiaj." />
             </div>
             <div className="text-xl font-bold mt-1 pointer-events-none relative z-0">{todayMontagesCount}</div>
             </CardContent>
@@ -72,7 +72,7 @@ export function KPICards({
             <CardContent className="p-3 flex flex-col items-center justify-center text-center relative h-full pointer-events-none">
             <div className="flex items-center gap-1 pointer-events-auto relative z-10">
                 <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">To Do</span>
-                <InfoIcon content="Liczba zadań w Twoim osobistym organizerze." />
+                <InfoIcon content="Liczba zadań do wykonania w Twoim osobistym organizerze (To Do)." />
             </div>
             <div className="text-xl font-bold mt-1 pointer-events-none relative z-0">{todoCount}</div>
             </CardContent>
@@ -84,7 +84,7 @@ export function KPICards({
             <CardContent className="p-3 flex flex-col items-center justify-center text-center relative h-full pointer-events-none">
             <div className="flex items-center gap-1 pointer-events-auto relative z-10">
                 <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Leady Montaż</span>
-                <InfoIcon content="Liczba nowych zapytań (status Lead)." />
+                <InfoIcon content="Liczba montaży ze statusem 'Lead', które wymagają kontaktu lub dalszej obsługi." />
             </div>
             <div className="text-xl font-bold mt-1 pointer-events-none relative z-0">{newLeadsCount}</div>
             </CardContent>
@@ -96,7 +96,7 @@ export function KPICards({
             <CardContent className="p-3 flex flex-col items-center justify-center text-center relative h-full pointer-events-none">
             <div className="flex items-center gap-1 pointer-events-auto relative z-10">
                 <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Zamówienia</span>
-                <InfoIcon content="Liczba nowych zamówień (status Zamówienie utworzone)." />
+                <InfoIcon content="Liczba zamówień ze statusem 'Zamówienie utworzone', które wymagają procesowania." />
             </div>
             <div className="text-xl font-bold mt-1 pointer-events-none relative z-0">{newOrdersCount}</div>
             </CardContent>
@@ -108,7 +108,7 @@ export function KPICards({
             <CardContent className="p-3 flex flex-col items-center justify-center text-center relative h-full pointer-events-none">
             <div className="flex items-center gap-1 pointer-events-auto relative z-10">
                 <span className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">Płatności</span>
-                <InfoIcon content="Liczba montaży oczekujących na płatność (przed zaliczką lub fakturą końcową)." />
+                <InfoIcon content="Liczba montaży, które mają status 'Oczekiwanie na zaliczkę' lub 'Oczekiwanie na płatność końcową'." />
             </div>
             <div className="text-xl font-bold mt-1 pointer-events-none relative z-0">{pendingPaymentsCount}</div>
             </CardContent>
@@ -120,7 +120,7 @@ export function KPICards({
             <CardContent className="p-3 flex flex-col items-center justify-center text-center border-red-200 bg-red-50/50 dark:bg-red-900/10 relative h-full pointer-events-none">
             <div className="flex items-center gap-1 pointer-events-auto relative z-10">
                 <span className="text-[10px] uppercase text-red-600/80 font-bold tracking-wider">Pilne Montaże</span>
-                <InfoIcon content="Liczba aktywnych montaży bez ustalonej daty realizacji." />
+                <InfoIcon content="Liczba montaży, które są w trakcie realizacji (nie zakończone), ale nie mają jeszcze ustalonej daty montażu." />
             </div>
             <div className="text-xl font-bold mt-1 text-red-600 pointer-events-none relative z-0">{urgentTasksCount}</div>
             </CardContent>
@@ -132,7 +132,7 @@ export function KPICards({
             <CardContent className="p-3 flex flex-col items-center justify-center text-center border-red-200 bg-red-50/50 dark:bg-red-900/10 relative h-full pointer-events-none">
             <div className="flex items-center gap-1 pointer-events-auto relative z-10">
                 <span className="text-[10px] uppercase text-red-600/80 font-bold tracking-wider">Pilne Zamówienia</span>
-                <InfoIcon content={`Liczba zamówień bez zmiany statusu od ponad ${orderUrgentDays} dni.`} />
+                <InfoIcon content={`Liczba zamówień, których status nie zmienił się od ponad ${orderUrgentDays} dni, co może wymagać Twojej uwagi.`} />
             </div>
             <div className="text-xl font-bold mt-1 text-red-600 pointer-events-none relative z-0">{urgentOrdersCount}</div>
             </CardContent>
