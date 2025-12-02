@@ -26,11 +26,15 @@ rm -rf .next
 npm run build
 
 # Zrestartuj aplikację (zakładając PM2)
-# Jeśli używasz innej metody (np. systemd), dostosuj tę linię
+echo "Restartowanie aplikacji..."
 if command -v pm2 &> /dev/null; then
     pm2 restart panel || pm2 start npm --name "panel" -- start
+    pm2 save
+    echo "PM2: Aplikacja zrestartowana."
 else
-    echo "PM2 nie znaleziony. Pamiętaj o ręcznym restarcie aplikacji."
+    echo "BŁĄD: Komenda 'pm2' nie została znaleziona. Aplikacja działa na starym kodzie!"
+    echo "Spróbuj dodać pełną ścieżkę do pm2 lub upewnij się, że jest w PATH."
+    exit 1
 fi
 
 echo "Wdrożenie zakończone sukcesem!"
