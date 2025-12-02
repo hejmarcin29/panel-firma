@@ -23,6 +23,7 @@ import { MontageAutomationSettings } from './_components/montage-automation-sett
 import { MontageStatusSettings } from './_components/montage-status-settings';
 import { SettingsView } from './_components/settings-view';
 import { MobileMenuSettings } from './_components/mobile-menu-settings';
+import { ThemeSelector } from './_components/theme-selector';
 import { MobileMenuItem } from './actions';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -220,6 +221,21 @@ export default async function SettingsPage() {
 
 	return (
 		<SettingsView
+            appearance={
+                <div className="grid gap-4">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Motyw aplikacji</CardTitle>
+                            <CardDescription>
+                                Wybierz klimat swojej pracy. Dostosuj wygląd panelu do swoich preferencji.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <ThemeSelector />
+                        </CardContent>
+                    </Card>
+                </div>
+            }
 			mailSettings={<MailSettingsForm accounts={formattedMailAccounts} />}
 			montageSettings={
 				<div className="space-y-6">
