@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Plus, FileText, Trash2, MoreVertical, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 import { 
   Sheet, 
   SheetContent, 
@@ -58,6 +59,21 @@ interface Column {
 interface TodoListsProps {
     initialColumns: Column[];
 }
+
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05
+    }
+  }
+};
+
+const itemVariant = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0 }
+};
 
 export function TodoLists({ initialColumns }: TodoListsProps) {
     const [columns, setColumns] = useState<Column[]>(initialColumns);
@@ -263,43 +279,49 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
                         </div>
                         
                         <AccordionContent className="pt-0 pb-4">
-                            <div className="flex flex-col gap-1">
+                            <motion.div 
+                                className="flex flex-col gap-1"
+                                variants={container}
+                                initial="hidden"
+                                animate="show"
+                            >
                                 {column.tasks.map((task) => (
-                                    <SwipeableTaskItem
-                                        key={task.id}
-                                        onComplete={() => handleToggleTask(task.id, !task.completed)}
-                                        onEdit={() => handleOpenTask(task)}
-                                    >
-                                        <div 
-                                            className={cn(
-                                                "group flex items-start gap-3 p-3 rounded-md hover:bg-muted/50 transition-colors",
-                                                task.completed && "opacity-60"
-                                            )}
+                                    <motion.div key={task.id} variants={itemVariant}>
+                                        <SwipeableTaskItem
+                                            onComplete={() => handleToggleTask(task.id, !task.completed)}
+                                            onEdit={() => handleOpenTask(task)}
                                         >
-                                            <Checkbox 
-                                                checked={task.completed} 
-                                                onCheckedChange={(checked) => handleToggleTask(task.id, checked as boolean)}
-                                                className="mt-1 rounded-full w-5 h-5 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
-                                            />
                                             <div 
-                                                className="flex-1 cursor-pointer" 
-                                                onClick={() => handleOpenTask(task)}
-                                            >
-                                                <p className={cn(
-                                                    "text-base leading-tight font-medium transition-all",
-                                                    task.completed && "line-through text-muted-foreground"
-                                                )}>
-                                                    {task.content}
-                                                </p>
-                                                {task.description && (
-                                                    <p className="text-sm text-muted-foreground line-clamp-1 mt-0.5 flex items-center gap-1">
-                                                        <FileText className="w-3 h-3" />
-                                                        {task.description}
-                                                    </p>
+                                                className={cn(
+                                                    "group flex items-start gap-3 p-3 rounded-md hover:bg-muted/50 transition-colors",
+                                                    task.completed && "opacity-60"
                                                 )}
+                                            >
+                                                <Checkbox 
+                                                    checked={task.completed} 
+                                                    onCheckedChange={(checked) => handleToggleTask(task.id, checked as boolean)}
+                                                    className="mt-1 rounded-full w-5 h-5 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                                                />
+                                                <div 
+                                                    className="flex-1 cursor-pointer" 
+                                                    onClick={() => handleOpenTask(task)}
+                                                >
+                                                    <p className={cn(
+                                                        "text-base leading-tight font-medium transition-all",
+                                                        task.completed && "line-through text-muted-foreground"
+                                                    )}>
+                                                        {task.content}
+                                                    </p>
+                                                    {task.description && (
+                                                        <p className="text-sm text-muted-foreground line-clamp-1 mt-0.5 flex items-center gap-1">
+                                                            <FileText className="w-3 h-3" />
+                                                            {task.description}
+                                                        </p>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
-                                    </SwipeableTaskItem>
+                                        </SwipeableTaskItem>
+                                    </motion.div>
                                 ))}
                                 
                                 {/* Quick Add Input */}
@@ -317,7 +339,7 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
                                         }}
                                     />
                                 </div>
-                            </div>
+                            </motion.div>
                         </AccordionContent>
                     </AccordionItem>
                 ))}
