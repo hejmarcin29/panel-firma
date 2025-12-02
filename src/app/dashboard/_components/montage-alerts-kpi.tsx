@@ -13,7 +13,7 @@ export interface MontageAlert {
     isInstallerConfirmed: boolean;
 }
 
-export function MontageAlertsKPI({ alerts }: { alerts: MontageAlert[] }) {
+export function MontageAlertsKPI({ alerts, threatDays = 7 }: { alerts: MontageAlert[], threatDays?: number }) {
     const alertCount = alerts.length;
     const hasAlerts = alertCount > 0;
 
@@ -32,7 +32,7 @@ export function MontageAlertsKPI({ alerts }: { alerts: MontageAlert[] }) {
                         </button>
                     </PopoverTrigger>
                     <PopoverContent className="max-w-xs">
-                        <p className="text-sm">Licznik pokazuje montaże zaplanowane na najbliższe 7 dni roboczych, które wciąż nie mają zamówionego materiału lub potwierdzonego montażysty.</p>
+                        <p className="text-sm">Licznik pokazuje montaże zaplanowane na najbliższe {threatDays} dni roboczych, które wciąż nie mają zamówionego materiału lub potwierdzonego montażysty.</p>
                     </PopoverContent>
                 </Popover>
             </CardHeader>

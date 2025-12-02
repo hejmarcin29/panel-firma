@@ -86,7 +86,7 @@ function WidgetSettingsDialog({
 
     // KPI Specific Settings
     if (widget.type === 'kpi') {
-        const visibleCards = (localSettings.visibleCards as string[] | undefined) || ['today', 'leads', 'payments', 'urgent', 'orders', 'todo'];
+        const visibleCards = (localSettings.visibleCards as string[] | undefined) || ['today', 'leads', 'payments', 'urgent', 'orders', 'todo', 'urgentOrders'];
         
         const toggleCard = (card: string) => {
             if (visibleCards.includes(card)) {
@@ -150,7 +150,15 @@ function WidgetSettingsDialog({
                                 checked={visibleCards.includes('urgent')}
                                 onCheckedChange={() => toggleCard('urgent')}
                             />
-                            <Label htmlFor="card-urgent">Pilne zadania</Label>
+                            <Label htmlFor="card-urgent">Pilne Montaże</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <Checkbox 
+                                id="card-urgentOrders" 
+                                checked={visibleCards.includes('urgentOrders')}
+                                onCheckedChange={() => toggleCard('urgentOrders')}
+                            />
+                            <Label htmlFor="card-urgentOrders">Pilne Zamówienia</Label>
                         </div>
                     </div>
                     <DialogFooter>
@@ -180,8 +188,11 @@ interface DashboardBuilderProps {
         urgentTasksCount: number;
         newOrdersCount: number;
         todoCount: number;
+        urgentOrdersCount?: number;
+        orderUrgentDays?: number;
     };
     montageAlerts: MontageAlert[];
+    threatDays?: number;
   };
 }
 
@@ -210,7 +221,7 @@ function SortableWidget({ widget, data, isEditing, onConfigure }: { id: string; 
                 widget.type === "recent-activity" ? { recentMontages: data.recentMontages } :
                 widget.type === "tasks" ? { ...data.tasksStats, todoCount: data.kpiData.todoCount } :
                 widget.type === "kpi" ? { ...data.kpiData, settings: widget.settings } :
-                widget.type === "montage-alerts" ? { alerts: data.montageAlerts } :
+                widget.type === "montage-alerts" ? { alerts: data.montageAlerts, threatDays: data.threatDays } :
                 {};
 
   return (

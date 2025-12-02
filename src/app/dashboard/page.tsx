@@ -1,4 +1,4 @@
-import { desc, eq, asc } from 'drizzle-orm';
+import { desc, eq, asc, and, lt } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,6 +15,7 @@ import {
     boardTasks,
 } from '@/lib/db/schema';
 import { tryGetR2Config } from '@/lib/r2/config';
+import { getAppSetting, appSettingKeys } from '@/lib/settings';
 
 import { mapMontageRow, type MontageRow } from './montaze/utils';
 import { DashboardBuilder } from './_components/dashboard-builder';
@@ -64,6 +65,12 @@ export default async function DashboardPage() {
 
     const r2Config = await tryGetR2Config();
     const publicBaseUrl = r2Config?.publicBaseUrl ?? null;
+
+    const kpiMontageThreatDays = await getAppSetting(appSettingKeys.kpiMontageThreatDays);
+    const threatDays = Number(kpiMontageThreatDays ?? 7);
+
+    const kpiOrderUrgentDays = await getAppSetting(appSettingKeys.kpiOrderUrgentDays);
+    const orderUrgentDays = Number(kpiOrderUrgentDays ?? 3);
 
     // Fetch User Config
     let dbUser = null;
@@ -194,6 +201,17 @@ export default async function DashboardPage() {
     });
     const newOrdersCount = newOrders.length;
 
+    const urgentOrdersLimitDate = new Date();
+    urgentOrdersLimitDate.setDate(urgentOrdersLimitDate.getDate() - orderUrgentDays);
+
+    const urgentOrders = await db.query.manualOrders.findMany({
+        where: and(
+            eq(manualOrders.status, 'Zamówienie utworzone'),
+            lt(manualOrders.createdAt, urgentOrdersLimitDate)
+        )
+    });
+    const urgentOrdersCount = urgentOrders.length;
+
     // Fetch Personal Todo Count
     const todoTasks = await db.select().from(boardTasks);
     const todoCount = todoTasks.length;
@@ -208,8 +226,8 @@ export default async function DashboardPage() {
         return date < today;
     }).length;
 
-    // Alerts Logic (Next 7 working days)
-    const alertThresholdDate = addWorkingDays(today, 7);
+    // Alerts Logic (Next X working days)
+    const alertThresholdDate = addWorkingDays(today, threatDays);
     alertThresholdDate.setHours(23, 59, 59, 999);
 
     const montageAlerts = allMontages.filter(m => {
@@ -241,6 +259,7 @@ export default async function DashboardPage() {
                     upcomingMontages,
                     recentMontages,
                     montageAlerts,
+                    threatDays,
                     tasksStats: {
                         tasksCount,
                         urgentCount
@@ -252,6 +271,8 @@ export default async function DashboardPage() {
                         urgentTasksCount,
                         newOrdersCount,
                         todoCount,
+                        urgentOrdersCount,
+                        orderUrgentDays,
                     }
                 }}
             />
