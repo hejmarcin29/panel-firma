@@ -16,8 +16,10 @@ import {
   Sheet, 
   SheetContent, 
   SheetHeader, 
-  SheetTitle
+  SheetTitle,
+  SheetFooter
 } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -375,49 +377,55 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
 
             {/* Task Detail Sheet */}
             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-                <SheetContent className="w-full sm:max-w-md flex flex-col h-full">
-                    <SheetHeader className="space-y-4">
+                <SheetContent className="w-full sm:max-w-md flex flex-col h-full p-0 gap-0">
+                    <SheetHeader className="p-6 border-b">
                         <SheetTitle>Szczegóły zadania</SheetTitle>
                     </SheetHeader>
                     
                     {selectedTask && (
-                        <div className="flex flex-col gap-6 mt-6 flex-1">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-muted-foreground">Treść zadania</label>
-                                <Input 
-                                    value={selectedTask.content} 
-                                    onChange={(e) => setSelectedTask({ ...selectedTask, content: e.target.value })}
-                                    className="text-lg font-medium"
-                                />
-                            </div>
+                        <>
+                            <ScrollArea className="flex-1">
+                                <div className="flex flex-col gap-6 p-6">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-muted-foreground">Treść zadania</label>
+                                        <Input 
+                                            value={selectedTask.content} 
+                                            onChange={(e) => setSelectedTask({ ...selectedTask, content: e.target.value })}
+                                            className="text-lg font-medium"
+                                        />
+                                    </div>
 
-                            <div className="space-y-2 flex-1 flex flex-col">
-                                <label className="text-sm font-medium text-muted-foreground">Notatki</label>
-                                <Textarea 
-                                    value={selectedTask.description || ""} 
-                                    onChange={(e) => setSelectedTask({ ...selectedTask, description: e.target.value })}
-                                    className="flex-1 resize-none text-base leading-relaxed"
-                                    placeholder="Wpisz szczegóły, listę zakupów, linki..."
-                                />
-                            </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-muted-foreground">Notatki</label>
+                                        <Textarea 
+                                            value={selectedTask.description || ""} 
+                                            onChange={(e) => setSelectedTask({ ...selectedTask, description: e.target.value })}
+                                            className="min-h-[200px] resize-y text-base leading-relaxed"
+                                            placeholder="Wpisz szczegóły, listę zakupów, linki..."
+                                        />
+                                    </div>
+                                </div>
+                            </ScrollArea>
 
-                            <div className="flex gap-2 pt-4 border-t">
-                                <Button 
-                                    variant="destructive" 
-                                    className="flex-1"
-                                    onClick={() => handleDeleteTask(selectedTask.id)}
-                                >
-                                    <Trash2 className="w-4 h-4 mr-2" />
-                                    Usuń
-                                </Button>
-                                <Button 
-                                    className="flex-2"
-                                    onClick={() => handleSaveTaskDetails(selectedTask.id, selectedTask.content, selectedTask.description || "")}
-                                >
-                                    Zapisz zmiany
-                                </Button>
+                            <div className="p-6 border-t bg-background">
+                                <div className="flex gap-2">
+                                    <Button 
+                                        variant="destructive" 
+                                        className="flex-1"
+                                        onClick={() => handleDeleteTask(selectedTask.id)}
+                                    >
+                                        <Trash2 className="w-4 h-4 mr-2" />
+                                        Usuń
+                                    </Button>
+                                    <Button 
+                                        className="flex-2"
+                                        onClick={() => handleSaveTaskDetails(selectedTask.id, selectedTask.content, selectedTask.description || "")}
+                                    >
+                                        Zapisz zmiany
+                                    </Button>
+                                </div>
                             </div>
-                        </div>
+                        </>
                     )}
                 </SheetContent>
             </Sheet>
