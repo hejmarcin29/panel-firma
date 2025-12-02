@@ -208,5 +208,3 @@ export async function uploadTaskAttachment(formData: FormData) {
 
     revalidatePath(TODO_PATH);
 }
-    revalidatePath(TODO_PATH);
-}

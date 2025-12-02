@@ -4,8 +4,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertCircle, Bell, Calendar } from "lucide-react";
 import Link from "next/link";
-import { format } from "date-fns";
-import { pl } from "date-fns/locale";
 
 interface TasksWidgetProps {
   tasksCount: number;

@@ -180,6 +180,8 @@ interface DashboardBuilderProps {
     tasksStats: {
         tasksCount: number;
         urgentCount: number;
+        todoCount: number;
+        reminderTasks: { id: string; content: string; reminderAt: Date | null; dueDate: Date | null }[];
     };
     kpiData: {
         todayMontagesCount: number;

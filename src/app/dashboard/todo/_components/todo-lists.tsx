@@ -15,10 +15,8 @@ import {
   Trash2, 
   MoreVertical, 
   Pencil, 
-  Sun, 
   Bell, 
   Calendar, 
-  Repeat, 
   Paperclip, 
   Star 
 } from "lucide-react";
