@@ -17,13 +17,13 @@ export function TasksWidget({ tasksCount, urgentCount, todoCount = 0 }: TasksWid
             <CardContent className="p-6 flex flex-col items-center text-center gap-4">
                 <div className="flex gap-4 justify-center w-full">
                     {/* Montage Tasks Icon */}
-                    <div className="relative">
+                    <Link href="/dashboard/zadania" className="relative group cursor-pointer">
                         {urgentCount > 0 ? (
-                            <div className="h-14 w-14 rounded-full bg-destructive/10 flex items-center justify-center text-destructive animate-pulse">
+                            <div className="h-14 w-14 rounded-full bg-destructive/10 flex items-center justify-center text-destructive animate-pulse group-hover:bg-destructive/20 transition-colors">
                                 <AlertCircle className="h-7 w-7" />
                             </div>
                         ) : (
-                            <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                            <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary/20 transition-colors">
                                 <CheckCircle2 className="h-7 w-7" />
                             </div>
                         )}
@@ -32,18 +32,18 @@ export function TasksWidget({ tasksCount, urgentCount, todoCount = 0 }: TasksWid
                                 {tasksCount}
                             </span>
                         )}
-                    </div>
+                    </Link>
 
                     {/* Personal Todo Icon */}
                     {todoCount > 0 && (
-                        <div className="relative">
-                            <div className="h-14 w-14 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                        <Link href="/dashboard/todo" className="relative group cursor-pointer">
+                            <div className="h-14 w-14 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:bg-blue-500/20 transition-colors">
                                 <CheckCircle2 className="h-7 w-7" />
                             </div>
                             <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[10px] font-bold border-2 border-background">
                                 {todoCount}
                             </span>
-                        </div>
+                        </Link>
                     )}
                 </div>
 

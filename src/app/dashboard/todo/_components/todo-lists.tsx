@@ -36,6 +36,7 @@ import {
   updateColumnTitle
 } from "../actions";
 import { useRouter } from "next/navigation";
+import { SwipeableTaskItem } from "../../zadania/_components/swipeable-task-item";
 
 // Types based on schema
 interface Task {
@@ -264,36 +265,41 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
                         <AccordionContent className="pt-0 pb-4">
                             <div className="flex flex-col gap-1">
                                 {column.tasks.map((task) => (
-                                    <div 
-                                        key={task.id} 
-                                        className={cn(
-                                            "group flex items-start gap-3 p-2 rounded-md hover:bg-muted/50 transition-colors",
-                                            task.completed && "opacity-60"
-                                        )}
+                                    <SwipeableTaskItem
+                                        key={task.id}
+                                        onComplete={() => handleToggleTask(task.id, !task.completed)}
+                                        onEdit={() => handleOpenTask(task)}
                                     >
-                                        <Checkbox 
-                                            checked={task.completed} 
-                                            onCheckedChange={(checked) => handleToggleTask(task.id, checked as boolean)}
-                                            className="mt-1 rounded-full w-5 h-5 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
-                                        />
                                         <div 
-                                            className="flex-1 cursor-pointer" 
-                                            onClick={() => handleOpenTask(task)}
-                                        >
-                                            <p className={cn(
-                                                "text-base leading-tight font-medium transition-all",
-                                                task.completed && "line-through text-muted-foreground"
-                                            )}>
-                                                {task.content}
-                                            </p>
-                                            {task.description && (
-                                                <p className="text-sm text-muted-foreground line-clamp-1 mt-0.5 flex items-center gap-1">
-                                                    <FileText className="w-3 h-3" />
-                                                    {task.description}
-                                                </p>
+                                            className={cn(
+                                                "group flex items-start gap-3 p-3 rounded-md hover:bg-muted/50 transition-colors",
+                                                task.completed && "opacity-60"
                                             )}
+                                        >
+                                            <Checkbox 
+                                                checked={task.completed} 
+                                                onCheckedChange={(checked) => handleToggleTask(task.id, checked as boolean)}
+                                                className="mt-1 rounded-full w-5 h-5 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                                            />
+                                            <div 
+                                                className="flex-1 cursor-pointer" 
+                                                onClick={() => handleOpenTask(task)}
+                                            >
+                                                <p className={cn(
+                                                    "text-base leading-tight font-medium transition-all",
+                                                    task.completed && "line-through text-muted-foreground"
+                                                )}>
+                                                    {task.content}
+                                                </p>
+                                                {task.description && (
+                                                    <p className="text-sm text-muted-foreground line-clamp-1 mt-0.5 flex items-center gap-1">
+                                                        <FileText className="w-3 h-3" />
+                                                        {task.description}
+                                                    </p>
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
+                                    </SwipeableTaskItem>
                                 ))}
                                 
                                 {/* Quick Add Input */}

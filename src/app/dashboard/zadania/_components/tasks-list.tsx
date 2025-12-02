@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { SwipeableTaskItem } from "./swipeable-task-item";
 
 export interface Task {
     id: string;
@@ -123,40 +124,46 @@ export function TasksList({ tasksMontages }: TasksListProps) {
         return (
             <div className="space-y-2">
                 {flatTasks.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg bg-card hover:bg-muted/50 transition-colors group">
-                        <div className="flex items-start gap-3 flex-1">
-                            <Checkbox 
-                                id={`flat-${item.id}`} 
-                                checked={item.completed}
-                                onCheckedChange={() => handleToggleTask(item.id, item.montage.id, item.completed)}
-                                disabled={pendingIds.has(item.id)}
-                                className="mt-1"
-                            />
-                            <div className="space-y-1 flex-1">
-                                <label 
-                                    htmlFor={`flat-${item.id}`} 
-                                    className={cn(
-                                        "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer select-none block",
-                                        item.completed && "line-through text-muted-foreground"
-                                    )}
-                                >
-                                    {item.title}
-                                </label>
-                                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                    <span className="font-medium text-foreground/80">{item.montage.clientName}</span>
-                                    <span className={cn("flex items-center", getUrgencyColor(item.montage.scheduledInstallationAt))}>
-                                        <Calendar className="mr-1 h-3 w-3" />
-                                        {item.montage.scheduledInstallationAt ? new Date(item.montage.scheduledInstallationAt).toLocaleDateString() : 'Brak terminu'}
-                                    </span>
+                    <SwipeableTaskItem 
+                        key={item.id}
+                        onComplete={() => handleToggleTask(item.id, item.montage.id, item.completed)}
+                        onEdit={() => router.push(`/dashboard/montaze/${item.montage.id}?tab=tasks`)}
+                    >
+                        <div className="flex items-center justify-between p-4">
+                            <div className="flex items-start gap-3 flex-1">
+                                <Checkbox 
+                                    id={`flat-${item.id}`} 
+                                    checked={item.completed}
+                                    onCheckedChange={() => handleToggleTask(item.id, item.montage.id, item.completed)}
+                                    disabled={pendingIds.has(item.id)}
+                                    className="mt-1"
+                                />
+                                <div className="space-y-1 flex-1">
+                                    <label 
+                                        htmlFor={`flat-${item.id}`} 
+                                        className={cn(
+                                            "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer select-none block",
+                                            item.completed && "line-through text-muted-foreground"
+                                        )}
+                                    >
+                                        {item.title}
+                                    </label>
+                                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                        <span className="font-medium text-foreground/80">{item.montage.clientName}</span>
+                                        <span className={cn("flex items-center", getUrgencyColor(item.montage.scheduledInstallationAt))}>
+                                            <Calendar className="mr-1 h-3 w-3" />
+                                            {item.montage.scheduledInstallationAt ? new Date(item.montage.scheduledInstallationAt).toLocaleDateString() : 'Brak terminu'}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
+                            <Button variant="ghost" size="icon" asChild className="text-muted-foreground">
+                                <Link href={`/dashboard/montaze/${item.montage.id}?tab=tasks`}>
+                                    <LayoutList className="h-4 w-4" />
+                                </Link>
+                            </Button>
                         </div>
-                        <Button variant="ghost" size="icon" asChild className="opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Link href={`/dashboard/montaze/${item.montage.id}?tab=tasks`}>
-                                <LayoutList className="h-4 w-4" />
-                            </Link>
-                        </Button>
-                    </div>
+                    </SwipeableTaskItem>
                 ))}
             </div>
         );
@@ -208,26 +215,32 @@ export function TasksList({ tasksMontages }: TasksListProps) {
                             </div>
                         </AccordionTrigger>
                         <AccordionContent className="pt-2 pb-4">
-                            <div className="space-y-3 pl-14 pr-2">
+                            <div className="space-y-2 pl-4 pr-2">
                                 {montage.tasks.map((task) => (
-                                    <div key={task.id} className="flex items-start gap-3 group p-2 rounded-md hover:bg-muted/50 transition-colors">
-                                        <Checkbox 
-                                            id={task.id} 
-                                            checked={task.completed}
-                                            onCheckedChange={() => handleToggleTask(task.id, montage.id, task.completed)}
-                                            disabled={pendingIds.has(task.id)}
-                                            className="mt-1"
-                                        />
-                                        <label 
-                                            htmlFor={task.id} 
-                                            className={cn(
-                                                "text-sm leading-relaxed peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer select-none flex-1",
-                                                task.completed && "line-through text-muted-foreground"
-                                            )}
-                                        >
-                                            {task.title}
-                                        </label>
-                                    </div>
+                                    <SwipeableTaskItem
+                                        key={task.id}
+                                        onComplete={() => handleToggleTask(task.id, montage.id, task.completed)}
+                                        onEdit={() => router.push(`/dashboard/montaze/${montage.id}?tab=tasks`)}
+                                    >
+                                        <div className="flex items-start gap-3 p-3">
+                                            <Checkbox 
+                                                id={task.id} 
+                                                checked={task.completed}
+                                                onCheckedChange={() => handleToggleTask(task.id, montage.id, task.completed)}
+                                                disabled={pendingIds.has(task.id)}
+                                                className="mt-1"
+                                            />
+                                            <label 
+                                                htmlFor={task.id} 
+                                                className={cn(
+                                                    "text-sm leading-relaxed peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer select-none flex-1",
+                                                    task.completed && "line-through text-muted-foreground"
+                                                )}
+                                            >
+                                                {task.title}
+                                            </label>
+                                        </div>
+                                    </SwipeableTaskItem>
                                 ))}
                                 <div className="pt-4 flex justify-end">
                                     <Button variant="ghost" size="sm" asChild>
