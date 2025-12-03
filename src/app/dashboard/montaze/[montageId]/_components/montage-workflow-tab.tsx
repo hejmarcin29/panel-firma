@@ -97,11 +97,10 @@ export function MontageWorkflowTab({ montage, statusOptions }: { montage: Montag
 
   const handleRealizationStatusChange = (field: 'materialStatus' | 'installerStatus', value: string) => {
     startTransition(async () => {
-        // @ts-expect-error - dynamic key access
         await updateMontageRealizationStatus({ 
             montageId: montage.id, 
             [field]: value 
-        });
+        } as any);
         router.refresh();
     });
   };
