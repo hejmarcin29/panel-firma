@@ -97,10 +97,17 @@ export function MontageWorkflowTab({ montage, statusOptions }: { montage: Montag
 
   const handleRealizationStatusChange = (field: 'materialStatus' | 'installerStatus', value: string) => {
     startTransition(async () => {
-        await updateMontageRealizationStatus({ 
-            montageId: montage.id, 
-            [field]: value 
-        } as any);
+        const updateData: { montageId: string; materialStatus?: 'none' | 'ordered' | 'in_stock' | 'delivered'; installerStatus?: 'none' | 'informed' | 'confirmed' } = {
+            montageId: montage.id
+        };
+        
+        if (field === 'materialStatus') {
+            updateData.materialStatus = value as 'none' | 'ordered' | 'in_stock' | 'delivered';
+        } else {
+            updateData.installerStatus = value as 'none' | 'informed' | 'confirmed';
+        }
+
+        await updateMontageRealizationStatus(updateData);
         router.refresh();
     });
   };
