@@ -1,4 +1,3 @@
-import { headers } from 'next/headers';
 import { desc, eq, sql } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
@@ -15,7 +14,6 @@ import { getMontageChecklistTemplates } from '@/lib/montaze/checklist';
 import { getMontageAutomationRules } from '@/lib/montaze/automation';
 import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
 
-import { WebhookSecretForm } from './_components/webhook-secret-form';
 import { R2ConfigForm } from './_components/r2-config-form';
 import { MailSettingsForm } from './_components/mail-settings-form';
 import { MontageChecklistSettings } from './_components/montage-checklist-settings';
@@ -26,7 +24,8 @@ import { MobileMenuSettings } from './_components/mobile-menu-settings';
 import { KpiSettingsForm } from './_components/kpi-settings-form';
 import { ThemeSelector } from './_components/theme-selector';
 import { MobileMenuItem } from './actions';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { WooSettingsForm } from './integrations/_components/woo-settings-form';
+import { IntegrationLogs } from './integrations/_components/integration-logs';
 
 type LogLevel = 'info' | 'warning' | 'error';
 
@@ -88,21 +87,11 @@ export default async function SettingsPage() {
     console.error("Failed to parse mobile menu config", e);
   }
 
-  const headerList = await headers();
-	const forwardedProto = headerList.get('x-forwarded-proto');
-	const forwardedHost = headerList.get('x-forwarded-host');
-	const hostHeader = headerList.get('host');
-
-	const configuredBaseUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') ?? null;
-	const host = forwardedHost ?? hostHeader ?? configuredBaseUrl?.replace(/https?:\/\//, '') ?? 'localhost:3000';
-	const protocol =
-		forwardedProto ?? configuredBaseUrl?.split('://')[0] ?? (process.env.NODE_ENV === 'development' ? 'http' : 'https');
-
-	const webhookBase = configuredBaseUrl ?? `${protocol}://${host}`;
-	const webhookUrl = `${webhookBase.replace(/\/$/, '')}/api/woocommerce/webhook`;
-
 	const [
 		webhookSecretSetting,
+		wooConsumerKeySetting,
+		wooConsumerSecretSetting,
+		wooUrlSetting,
 		r2AccountIdSetting,
 		r2AccessKeyIdSetting,
 		r2SecretAccessKeySetting,
@@ -117,6 +106,9 @@ export default async function SettingsPage() {
 		kpiOrderUrgentDays,
 	] = await Promise.all([
 		getAppSetting(appSettingKeys.wooWebhookSecret),
+		getAppSetting(appSettingKeys.wooConsumerKey),
+		getAppSetting(appSettingKeys.wooConsumerSecret),
+		getAppSetting(appSettingKeys.wooUrl),
 		getAppSetting(appSettingKeys.r2AccountId),
 		getAppSetting(appSettingKeys.r2AccessKeyId),
 		getAppSetting(appSettingKeys.r2SecretAccessKey),
@@ -130,9 +122,6 @@ export default async function SettingsPage() {
 		getAppSetting(appSettingKeys.kpiMontageThreatDays),
 		getAppSetting(appSettingKeys.kpiOrderUrgentDays),
 	]);
-
-	const webhookSecret = webhookSecretSetting ?? '';
-	const secretConfigured = Boolean(webhookSecret);
 
     const statusOptions = montageStatusDefinitions.map(def => ({
         value: def.id,
@@ -350,34 +339,37 @@ export default async function SettingsPage() {
 			}
 			integrations={
 				<div className="space-y-6">
-					{!secretConfigured && (
-						<Alert variant="destructive">
-							<AlertTitle>Brakuje sekretu webhooka</AlertTitle>
-							<AlertDescription>
-								Ustaw sekret w formularzu ponizej, aby aktywowac weryfikacje webhookow WooCommerce.
-							</AlertDescription>
-						</Alert>
-					)}
-					<Card>
-						<CardHeader>
-							<CardTitle>Webhook WooCommerce</CardTitle>
-							<CardDescription>Ustaw dane ponizej w panelu WordPress, aby zamowienia trafialy do systemu.</CardDescription>
-						</CardHeader>
-						<CardContent className="space-y-6">
-							<WebhookSecretForm initialSecret={webhookSecret} />
-							<dl className="grid gap-3 text-sm">
-								<div>
-									<dt className="text-muted-foreground">Adres URL dostawy</dt>
-									<dd className="font-mono text-xs break-all rounded bg-muted px-3 py-2">{webhookUrl}</dd>
+					<div className="grid gap-6 md:grid-cols-2">
+						<div className="space-y-6">
+							<WooSettingsForm initialSettings={{
+								consumerKey: wooConsumerKeySetting ?? '',
+								consumerSecret: wooConsumerSecretSetting ?? '',
+								webhookSecret: webhookSecretSetting ?? '',
+								wooUrl: wooUrlSetting ?? '',
+							}} />
+							
+							<div className="p-4 border rounded-lg bg-card">
+								<h3 className="font-medium mb-2">Status Połączenia</h3>
+								<div className="flex items-center gap-2">
+									<div className={`h-3 w-3 rounded-full ${wooConsumerKeySetting ? 'bg-green-500' : 'bg-gray-300'}`} />
+									<span className="text-sm text-muted-foreground">
+										{wooConsumerKeySetting ? 'Skonfigurowano' : 'Brak konfiguracji'}
+									</span>
 								</div>
-							</dl>
-							<ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
-								<li>Temat webhooka: <code>order.created</code></li>
-								<li>Wersja API: <code>WP REST API v3</code></li>
-								<li>Sekret przechowywany jest w bazie danych i mozesz go zaktualizowac w tym panelu.</li>
-							</ul>
-						</CardContent>
-					</Card>
+								<p className="text-xs text-muted-foreground mt-2">
+									Webhook URL: <code className="bg-muted px-1 py-0.5 rounded select-all">{webhookUrl}</code>
+								</p>
+							</div>
+						</div>
+						
+						<div>
+							<IntegrationLogs logs={logs.map(l => ({
+								...l,
+								meta: null,
+								createdAt: l.createdAt ? new Date(l.createdAt) : new Date()
+							}))} />
+						</div>
+					</div>
 				</div>
 			}
 			storage={

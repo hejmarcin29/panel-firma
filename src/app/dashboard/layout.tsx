@@ -9,6 +9,7 @@ import { DashboardNav } from './_components/dashboard-nav';
 import { MobileNav } from './_components/mobile-nav';
 import { LogoutButton } from './_components/logout-button';
 import { BackButton } from './_components/back-button';
+import { RefreshButton } from './_components/refresh-button';
 import { logoutAction } from './actions';
 import { requireUser } from '@/lib/auth/session';
 import { getUrgentOrdersCount } from './orders/queries';
@@ -60,6 +61,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
                         <BackButton />
                         <span className="font-semibold">Panel firmy</span>
                     </div>
+                    <RefreshButton />
                 </header>
 
                 <header className="hidden md:block border-b bg-background/80 backdrop-blur-md sticky top-0 z-50">
@@ -71,6 +73,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
                             </Link>
                         </div>
                         <div className="flex items-center gap-4 text-sm">
+                            <RefreshButton />
                             <span className="text-muted-foreground">{user.name ?? user.email}</span>
                             <form action={logoutAction}>
                                 <LogoutButton />

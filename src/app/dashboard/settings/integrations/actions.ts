@@ -40,5 +40,5 @@ export async function saveWooSettings(formData: FormData) {
 			});
 	}
 
-	revalidatePath('/dashboard/integrations');
+	revalidatePath('/dashboard/settings');
 }

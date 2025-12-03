@@ -35,3 +35,7 @@ export async function updateDashboardLayout(layout: DashboardLayoutConfig) {
 
     revalidatePath('/dashboard');
 }
+
+export async function refreshAppAction() {
+    revalidatePath('/', 'layout');
+}

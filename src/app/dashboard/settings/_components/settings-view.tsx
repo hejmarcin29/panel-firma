@@ -2,6 +2,7 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Settings, Mail, Database, Activity, Globe, Smartphone, Palette } from 'lucide-react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 interface SettingsViewProps {
   children: React.ReactNode;
@@ -16,6 +17,18 @@ interface SettingsViewProps {
 }
 
 export function SettingsView({ children, appearance, mailSettings, logs, integrations, storage, montageSettings, mobileMenuSettings, kpiSettings }: SettingsViewProps) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  
+  const currentTab = searchParams.get('tab') || 'appearance';
+
+  const handleTabChange = (value: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('tab', value);
+      router.push(`${pathname}?${params.toString()}`);
+  };
+
   return (
     <div className="space-y-4 md:space-y-6 p-4 md:p-6">
       <div>
@@ -25,7 +38,7 @@ export function SettingsView({ children, appearance, mailSettings, logs, integra
         </p>
       </div>
 
-      <Tabs defaultValue="appearance" className="flex flex-col md:flex-row gap-4 md:gap-8">
+      <Tabs value={currentTab} onValueChange={handleTabChange} className="flex flex-col md:flex-row gap-4 md:gap-8">
         <aside className="w-full md:w-64 shrink-0">
           <TabsList className="flex flex-row md:flex-col h-auto w-full justify-start bg-transparent p-0 gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0 no-scrollbar">
             <TabsTrigger 
@@ -57,7 +70,7 @@ export function SettingsView({ children, appearance, mailSettings, logs, integra
               KPI / Alerty
             </TabsTrigger>
             <TabsTrigger 
-              value="mail" 
+              value="integrations" 
               className="w-full justify-start gap-2 px-3 py-2 h-9 data-[state=active]:bg-muted data-[state=active]:shadow-none ring-offset-background transition-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               <Globe className="h-4 w-4" />
