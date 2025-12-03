@@ -1,7 +1,7 @@
 'use client';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Mail, Database, Activity, Globe, Smartphone, Palette } from 'lucide-react';
+import { Settings, Activity, Globe, Smartphone, Palette } from 'lucide-react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 interface SettingsViewProps {

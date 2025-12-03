@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,7 +40,7 @@ export function WooSettingsForm({ initialSettings, webhookUrl }: WooSettingsForm
         try {
             const result = await testWooConnection();
             setTestResult(result);
-        } catch (e) {
+        } catch {
             setTestResult({ success: false, message: 'Błąd wywołania testu.' });
         } finally {
             setIsTesting(false);
