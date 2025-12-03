@@ -31,8 +31,7 @@ type FormState = {
 	installationCity: string;
     installationPostalCode: string;
 
-	scheduledInstallationDate: string;
-	scheduledInstallationEndDate: string;
+	forecastedInstallationDate: string;
 	materialDetails: string;
 };
 
@@ -49,8 +48,7 @@ const initialState: FormState = {
 	installationAddress: '',
 	installationCity: '',
     installationPostalCode: '',
-	scheduledInstallationDate: '',
-	scheduledInstallationEndDate: '',
+	forecastedInstallationDate: '',
 	materialDetails: '',
 };
 
@@ -117,7 +115,7 @@ export function CreateMontageForm({ onSuccess }: CreateMontageFormProps) {
 					installationAddress: form.installationAddress,
 					installationCity: form.installationCity,
                     installationPostalCode: form.installationPostalCode,
-					scheduledInstallationDate: form.scheduledInstallationDate || undefined,
+					forecastedInstallationDate: form.forecastedInstallationDate || undefined,
 					materialDetails: form.materialDetails,
 				});
 				setForm(initialState);
@@ -292,22 +290,16 @@ export function CreateMontageForm({ onSuccess }: CreateMontageFormProps) {
 
 			<div className="grid gap-4 md:grid-cols-2">
 				<div>
-					<Label htmlFor="montage-schedule-date">Przewidywany termin montażu (od)</Label>
+					<Label htmlFor="montage-forecast-date">Szacowany termin montażu</Label>
 					<Input
-						id="montage-schedule-date"
+						id="montage-forecast-date"
 						type="date"
-						value={form.scheduledInstallationDate}
-						onChange={handleInputChange('scheduledInstallationDate')}
+						value={form.forecastedInstallationDate}
+						onChange={handleInputChange('forecastedInstallationDate')}
 					/>
-				</div>
-				<div>
-					<Label htmlFor="montage-schedule-end-date">Przewidywany termin montażu (do)</Label>
-					<Input
-						id="montage-schedule-end-date"
-						type="date"
-						value={form.scheduledInstallationEndDate}
-						onChange={handleInputChange('scheduledInstallationEndDate')}
-					/>
+					<p className="text-xs text-muted-foreground mt-1">
+						Wstępna data. Konkretny termin ustalisz po pomiarach.
+					</p>
 				</div>
 			</div>
 			<div>

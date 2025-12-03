@@ -60,6 +60,9 @@ export function MontageClientCard({ montage }: { montage: Montage }) {
     : "";
 
   const formattedDate = formatScheduleRange(montage.scheduledInstallationAt, montage.scheduledInstallationEndAt);
+  const forecastedDate = montage.forecastedInstallationDate 
+    ? new Date(montage.forecastedInstallationDate as string | number | Date).toLocaleDateString('pl-PL')
+    : null;
 
   return (
     <Card>
@@ -189,8 +192,13 @@ export function MontageClientCard({ montage }: { montage: Montage }) {
             <Calendar className="h-4 w-4 text-muted-foreground" />
             <div className="grid gap-0.5">
                 <span className="text-sm">
-                    {formattedDate || "Nie zaplanowano"}
+                    {formattedDate || (forecastedDate ? `Szac: ${forecastedDate}` : "Nie zaplanowano")}
                 </span>
+                {formattedDate && forecastedDate && (
+                    <span className="text-xs text-muted-foreground">
+                        (Szacowany: {forecastedDate})
+                    </span>
+                )}
             </div>
         </div>
 

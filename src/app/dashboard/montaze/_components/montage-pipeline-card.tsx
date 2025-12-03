@@ -60,20 +60,24 @@ export function MontagePipelineCard({ montage, threatDays }: Props) {
 	const addressLine = installationAddress || billingAddress;
 	const cityLine = montage.installationCity || montage.billingCity || null;
 	const scheduledDate = useMemo(() => formatScheduleRange(montage.scheduledInstallationAt, montage.scheduledInstallationEndAt), [montage.scheduledInstallationAt, montage.scheduledInstallationEndAt]);
-	
+	const forecastedDate = montage.forecastedInstallationDate 
+        ? new Date(montage.forecastedInstallationDate as string | number | Date).toLocaleDateString('pl-PL')
+        : null;
+
     const pendingTasksCount = totalTasks - completedTasks;
 
     const isThreatened = useMemo(() => {
-        if (!montage.scheduledInstallationAt) return false;
+        const dateToCheck = montage.scheduledInstallationAt || montage.forecastedInstallationDate;
+        if (!dateToCheck) return false;
         // Ignore completed statuses if needed, but for now just check date
         if (montage.status === 'completed' || montage.status === 'cancelled') return false;
 
         const now = new Date();
-        const scheduled = new Date(montage.scheduledInstallationAt);
+        const scheduled = new Date(dateToCheck);
         const diffTime = scheduled.getTime() - now.getTime();
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         return diffDays >= 0 && diffDays <= threatDays;
-    }, [montage.scheduledInstallationAt, montage.status, threatDays]);
+    }, [montage.scheduledInstallationAt, montage.forecastedInstallationDate, montage.status, threatDays]);
 
     return (
         <Link href={`/dashboard/montaze/${montage.id}`} className="block group">
@@ -149,9 +153,12 @@ export function MontagePipelineCard({ montage, threatDays }: Props) {
                         <Badge variant="outline" className="rounded-md px-1.5 py-0 text-[10px] font-normal text-muted-foreground">
                             {montage.notes.length} not.
                         </Badge>
-                        {scheduledDate && (
-                            <Badge variant="outline" className="rounded-md px-1.5 py-0 text-[10px] font-normal text-blue-600 bg-blue-50/50 border-blue-100">
-                                {scheduledDate}
+                        {(scheduledDate || forecastedDate) && (
+                            <Badge variant="outline" className={cn(
+                                "rounded-md px-1.5 py-0 text-[10px] font-normal",
+                                scheduledDate ? "text-blue-600 bg-blue-50/50 border-blue-100" : "text-muted-foreground bg-muted/50 border-border italic"
+                            )}>
+                                {scheduledDate || `Szac: ${forecastedDate}`}
                             </Badge>
                         )}
                     </div>

@@ -217,7 +217,7 @@ function mapOrderRow(
 	};
 }
 
-function validateItems(items: OrderItemPayload[]) {
+function validateItems(items: OrderItemPayload[], isWooCommerce: boolean = false) {
 	if (items.length === 0) {
 		throw new Error('Dodaj przynajmniej jedną pozycję zamówienia.');
 	}
@@ -232,24 +232,26 @@ function validateItems(items: OrderItemPayload[]) {
 		}
 
 		if (!Number.isFinite(item.unitPrice) || item.unitPrice < 0) {
-			throw new Error('Cena jednostkowa musi być liczbą nieujemną.');
+			if (!isWooCommerce) throw new Error('Cena jednostkowa musi być liczbą nieujemną.');
 		}
 
 		if (!Number.isFinite(item.vatRate) || item.vatRate < 0) {
-			throw new Error('Stawka VAT musi być liczbą nieujemną.');
+			if (!isWooCommerce) throw new Error('Stawka VAT musi być liczbą nieujemną.');
 		}
 
 		if (!Number.isFinite(item.totalNet) || item.totalNet < 0) {
-			throw new Error('Kwota netto pozycji musi być liczbą nieujemną.');
+			if (!isWooCommerce) throw new Error('Kwota netto pozycji musi być liczbą nieujemną.');
 		}
 
 		if (!Number.isFinite(item.totalGross) || item.totalGross < 0) {
-			throw new Error('Kwota brutto pozycji musi być liczbą nieujemną.');
+			if (!isWooCommerce) throw new Error('Kwota brutto pozycji musi być liczbą nieujemną.');
 		}
 	}
 }
 
 function validatePayload(payload: ManualOrderPayload) {
+	const isWooCommerce = payload.source === 'woocommerce';
+
 	if (!payload.reference.trim()) {
 		throw new Error('Numer zamówienia jest wymagany.');
 	}
@@ -258,15 +260,16 @@ function validatePayload(payload: ManualOrderPayload) {
 		throw new Error('Imię i nazwisko na fakturę jest wymagane.');
 	}
 
-	if (!payload.billing.street.trim() || !payload.billing.postalCode.trim() || !payload.billing.city.trim()) {
+	if (!isWooCommerce && (!payload.billing.street.trim() || !payload.billing.postalCode.trim() || !payload.billing.city.trim())) {
 		throw new Error('Adres rozliczeniowy musi być kompletny.');
 	}
 
 	const normalizedBillingPhone = normalizePhone(payload.billing.phone);
-	if (normalizedBillingPhone.length < 9 || normalizedBillingPhone.length > 11) {
+	if (!isWooCommerce && (normalizedBillingPhone.length < 9 || normalizedBillingPhone.length > 11)) {
 		throw new Error('Telefon rozliczeniowy powinien miec od 9 do 11 cyfr.');
 	}
-	payload.billing.phone = normalizedBillingPhone;
+	// For WooCommerce, we accept whatever phone number comes in, or empty
+	payload.billing.phone = normalizedBillingPhone || payload.billing.phone;
 
 	if (!payload.billing.email.trim()) {
 		throw new Error('E-mail rozliczeniowy jest wymagany.');
@@ -274,23 +277,25 @@ function validatePayload(payload: ManualOrderPayload) {
 
 	if (!payload.shipping.sameAsBilling) {
 		if (
-			!payload.shipping.name.trim() ||
-			!payload.shipping.street.trim() ||
-			!payload.shipping.postalCode.trim() ||
-			!payload.shipping.city.trim() ||
-			!payload.shipping.email.trim()
+			!isWooCommerce && (
+				!payload.shipping.name.trim() ||
+				!payload.shipping.street.trim() ||
+				!payload.shipping.postalCode.trim() ||
+				!payload.shipping.city.trim() ||
+				!payload.shipping.email.trim()
+			)
 		) {
 			throw new Error('Dane wysyłkowe muszą być kompletne.');
 		}
 
 		const normalizedShippingPhone = normalizePhone(payload.shipping.phone);
-		if (normalizedShippingPhone.length < 9 || normalizedShippingPhone.length > 11) {
+		if (!isWooCommerce && (normalizedShippingPhone.length < 9 || normalizedShippingPhone.length > 11)) {
 			throw new Error('Telefon wysylkowy powinien miec od 9 do 11 cyfr.');
 		}
-		payload.shipping.phone = normalizedShippingPhone;
+		payload.shipping.phone = normalizedShippingPhone || payload.shipping.phone;
 	}
 
-	validateItems(payload.items);
+	validateItems(payload.items, isWooCommerce);
 }
 
 export async function getManualOrderById(id: string): Promise<Order | null> {

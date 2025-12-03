@@ -148,8 +148,7 @@ type CreateMontageInput = {
 	isCompany?: boolean;
 	companyName?: string;
 	nip?: string;
-	scheduledInstallationDate?: string;
-	scheduledInstallationEndDate?: string;
+	forecastedInstallationDate?: string;
 	materialDetails?: string;
 };
 
@@ -166,7 +165,7 @@ export async function createMontage({
 	isCompany,
 	companyName,
 	nip,
-	scheduledInstallationDate,
+	forecastedInstallationDate,
 	materialDetails,
 }: CreateMontageInput) {
 	const user = await requireUser();
@@ -260,11 +259,11 @@ export async function createMontage({
 		}
 	}
 
-	let scheduledInstallationAt: Date | null = null;
-	if (scheduledInstallationDate) {
-		const parsed = new Date(`${scheduledInstallationDate}T00:00:00`);
+	let forecastedDate: Date | null = null;
+	if (forecastedInstallationDate) {
+		const parsed = new Date(`${forecastedInstallationDate}T00:00:00`);
 		if (!Number.isNaN(parsed.getTime())) {
-			scheduledInstallationAt = parsed;
+			forecastedDate = parsed;
 		}
 	}
 
@@ -286,7 +285,7 @@ export async function createMontage({
 		nip: normalizedNip,
 		scheduledInstallationAt: null,
 		scheduledInstallationEndAt: null,
-        forecastedInstallationDate: scheduledInstallationAt,
+        forecastedInstallationDate: forecastedDate,
 		materialDetails: normalizedMaterialDetails,
 		status: 'lead',
 		createdAt: now,

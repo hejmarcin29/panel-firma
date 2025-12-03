@@ -530,10 +530,21 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
                                             }}
                                             className="mt-1.5 h-6 w-6 rounded-full border-2 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
                                         />
-                                        <Input 
+                                        <Textarea 
+                                            ref={(el) => {
+                                                if (el) {
+                                                    el.style.height = 'auto';
+                                                    el.style.height = el.scrollHeight + 'px';
+                                                }
+                                            }}
                                             value={selectedTask.content} 
-                                            onChange={(e) => setSelectedTask({ ...selectedTask, content: e.target.value })}
-                                            className="text-xl font-semibold border-0 p-0 h-auto focus-visible:ring-0 bg-transparent shadow-none"
+                                            onChange={(e) => {
+                                                setSelectedTask({ ...selectedTask, content: e.target.value });
+                                                e.target.style.height = 'auto';
+                                                e.target.style.height = e.target.scrollHeight + 'px';
+                                            }}
+                                            className="text-xl font-semibold border-0 p-0 min-h-[28px] resize-none focus-visible:ring-0 bg-transparent shadow-none overflow-hidden"
+                                            rows={1}
                                         />
                                     </div>
 

@@ -20,7 +20,7 @@ export default async function TasksPage() {
             id: m.id,
             clientName: m.clientName,
             installationCity: m.installationCity,
-            scheduledInstallationAt: m.scheduledInstallationAt,
+            scheduledInstallationAt: m.scheduledInstallationAt || m.forecastedInstallationDate,
             displayId: m.displayId,
             tasks: m.tasks.filter(t => !t.completed),
             pendingTasksCount: m.tasks.filter(t => !t.completed).length
@@ -38,6 +38,9 @@ export default async function TasksPage() {
                 <h1 className="text-3xl font-bold tracking-tight">Zadania Montażowe</h1>
                 <p className="text-muted-foreground">
                     Zarządzaj zadaniami przypisanymi do konkretnych montaży.
+                </p>
+                <p className="text-xs text-muted-foreground/80 bg-muted/50 p-2 rounded-md border border-border/50 max-w-max">
+                    ℹ️ Terminy zadań (Pilne, Na dziś, Ten tydzień) wynikają z daty montażu ustawionej w szczegółach zlecenia.
                 </p>
             </div>
 

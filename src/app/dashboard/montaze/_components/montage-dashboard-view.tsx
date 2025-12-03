@@ -78,7 +78,13 @@ export function MontageDashboardView({ montages, statusOptions, headerAction, th
                                             )}
                                         </div>
                                         <div className="text-sm text-muted-foreground">
-                                            {montage.installationCity || "Brak lokalizacji"} • {montage.scheduledInstallationAt ? new Date(montage.scheduledInstallationAt).toLocaleDateString() : "Nie zaplanowano"}
+                                            {montage.installationCity || "Brak lokalizacji"} • {
+                                                montage.scheduledInstallationAt 
+                                                    ? new Date(montage.scheduledInstallationAt).toLocaleDateString() 
+                                                    : (montage.forecastedInstallationDate 
+                                                        ? <span className="italic text-muted-foreground/80">Szac: {new Date(montage.forecastedInstallationDate).toLocaleDateString()}</span>
+                                                        : "Nie zaplanowano")
+                                            }
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4">

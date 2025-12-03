@@ -1,5 +1,8 @@
 import { desc, eq, asc, and, lt } from 'drizzle-orm';
 import { differenceInCalendarDays } from 'date-fns';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Sparkles } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -288,6 +291,15 @@ export default async function DashboardPage() {
                     }
                 }}
             />
+
+            <div className="flex justify-center mt-8 pb-8">
+                <Button variant="outline" className="gap-2" asChild>
+                    <Link href="/dashboard/v2">
+                        <Sparkles className="h-4 w-4 text-amber-500" />
+                        Wypróbuj nowy Dashboard V2
+                    </Link>
+                </Button>
+            </div>
         </div>
     );
 }
