@@ -9,8 +9,8 @@ export interface MontageAlert {
     id: string;
     clientName: string;
     scheduledInstallationAt: Date | string | number | null;
-    isMaterialOrdered: boolean;
-    isInstallerConfirmed: boolean;
+    materialStatus: 'none' | 'ordered' | 'in_stock' | 'delivered';
+    installerStatus: 'none' | 'informed' | 'confirmed';
 }
 
 export function MontageAlertsKPI({ alerts, threatDays = 7 }: { alerts: MontageAlert[], threatDays?: number }) {
@@ -32,7 +32,7 @@ export function MontageAlertsKPI({ alerts, threatDays = 7 }: { alerts: MontageAl
                         </button>
                     </PopoverTrigger>
                     <PopoverContent className="max-w-xs">
-                        <p className="text-sm">Licznik pokazuje montaże zaplanowane na najbliższe {threatDays} dni roboczych, które wciąż nie mają zamówionego materiału lub potwierdzonego montażysty.</p>
+                        <p className="text-sm">Licznik pokazuje montaże zaplanowane na najbliższe dni, które nie spełniają wymogów KPI (materiał, montażysta).</p>
                     </PopoverContent>
                 </Popover>
             </CardHeader>
@@ -57,8 +57,8 @@ export function MontageAlertsKPI({ alerts, threatDays = 7 }: { alerts: MontageAl
                                     <div className="font-medium">{m.clientName}</div>
                                     <div className="text-xs text-muted-foreground">
                                         {m.scheduledInstallationAt ? new Date(m.scheduledInstallationAt).toLocaleDateString('pl-PL') : 'Brak daty'}
-                                        {!m.isMaterialOrdered && <span className="ml-2 text-destructive font-medium">• Brak materiału</span>}
-                                        {!m.isInstallerConfirmed && <span className="ml-2 text-destructive font-medium">• Brak montażysty</span>}
+                                        {m.materialStatus !== 'delivered' && <span className="ml-2 text-destructive font-medium">• Problem z materiałem</span>}
+                                        {m.installerStatus !== 'confirmed' && <span className="ml-2 text-destructive font-medium">• Brak montażysty</span>}
                                     </div>
                                 </div>
                             </Link>

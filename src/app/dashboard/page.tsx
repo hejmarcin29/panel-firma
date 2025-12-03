@@ -1,4 +1,5 @@
 import { desc, eq, asc, and, lt } from 'drizzle-orm';
+import { differenceInCalendarDays } from 'date-fns';
 
 export const dynamic = 'force-dynamic';
 
@@ -243,9 +244,6 @@ export default async function DashboardPage() {
     }).length;
 
     // Alerts Logic (Next X working days)
-    const alertThresholdDate = addWorkingDays(today, threatDays);
-    alertThresholdDate.setHours(23, 59, 59, 999);
-
     const montageAlerts = allMontages.filter(m => {
         if (!m.scheduledInstallationAt) return false;
         const date = new Date(m.scheduledInstallationAt);
@@ -253,11 +251,17 @@ export default async function DashboardPage() {
         // Filter out past dates (before today 00:00)
         if (date < today) return false;
         
-        // Filter out dates beyond threshold
-        if (date > alertThresholdDate) return false;
+        const days = differenceInCalendarDays(date, today);
+        
+        // Material Alerts
+        if (days <= 10 && m.materialStatus === 'none') return true;
+        if (days <= 5 && (m.materialStatus === 'none' || m.materialStatus === 'ordered')) return true;
+        if (days <= 2 && (m.materialStatus === 'none' || m.materialStatus === 'ordered' || m.materialStatus === 'in_stock')) return true;
+        
+        // Installer Alerts (using threatDays default)
+        if (days <= threatDays && m.installerStatus !== 'confirmed') return true;
 
-        // Check for missing flags
-        return m.isMaterialOrdered === false || m.isInstallerConfirmed === false;
+        return false;
     }).sort((a, b) => new Date(a.scheduledInstallationAt!).getTime() - new Date(b.scheduledInstallationAt!).getTime());
 
     return (

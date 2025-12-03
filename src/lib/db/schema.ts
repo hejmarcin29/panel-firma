@@ -58,6 +58,8 @@ export type SupplierMessageMedium = (typeof supplierMessageMediums)[number];
 export type MailFolderKind = (typeof mailFolderKinds)[number];
 export type MailAccountStatus = (typeof mailAccountStatuses)[number];
 export type MontageStatus = string;
+export type MontageMaterialStatus = 'none' | 'ordered' | 'in_stock' | 'delivered';
+export type MontageInstallerStatus = 'none' | 'informed' | 'confirmed';
 
 export const users = sqliteTable(
 	'users',
@@ -420,8 +422,8 @@ export const montages = sqliteTable(
 		forecastedInstallationDate: integer('forecasted_installation_date', { mode: 'timestamp_ms' }),
 		status: text('status').$type<MontageStatus>().notNull().default('lead'),
 		displayId: text('display_id'),
-		isMaterialOrdered: integer('is_material_ordered', { mode: 'boolean' }).notNull().default(false),
-		isInstallerConfirmed: integer('is_installer_confirmed', { mode: 'boolean' }).notNull().default(false),
+		materialStatus: text('material_status').$type<MontageMaterialStatus>().notNull().default('none'),
+		installerStatus: text('installer_status').$type<MontageInstallerStatus>().notNull().default('none'),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' })
 			.notNull()
 			.default(sql`(strftime('%s','now') * 1000)`),

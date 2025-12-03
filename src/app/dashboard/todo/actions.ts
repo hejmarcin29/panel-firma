@@ -1,16 +1,27 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { eq, asc } from 'drizzle-orm';
+import { eq, asc, and, lt } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { boardColumns, boardTasks, taskAttachments } from '@/lib/db/schema';
 import { requireUser } from '@/lib/auth/session';
 import { uploadTaskAttachmentObject } from '@/lib/r2/storage';
+import { subDays } from 'date-fns';
 
 const TODO_PATH = '/dashboard/todo';
 
 export async function getBoardData() {
     await requireUser();
+
+    // Cleanup old completed tasks (older than 60 days)
+    const cleanupDate = subDays(new Date(), 60);
+    await db.delete(boardTasks)
+        .where(
+            and(
+                eq(boardTasks.completed, true),
+                lt(boardTasks.updatedAt, cleanupDate)
+            )
+        );
 
     const columns = await db.query.boardColumns.findMany({
         orderBy: asc(boardColumns.orderIndex),

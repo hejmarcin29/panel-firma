@@ -1,4 +1,4 @@
-import type { MontageStatus } from '@/lib/db/schema';
+import type { MontageStatus, MontageMaterialStatus, MontageInstallerStatus } from '@/lib/db/schema';
 
 export type TimestampValue = Date | number | string | null | undefined;
 
@@ -69,8 +69,8 @@ export type Montage = {
 	forecastedInstallationDate: TimestampValue;
 	status: MontageStatus;
 	displayId: string | null;
-	isMaterialOrdered: boolean;
-	isInstallerConfirmed: boolean;
+	materialStatus: MontageMaterialStatus;
+	installerStatus: MontageInstallerStatus;
 	createdAt: TimestampValue;
 	updatedAt: TimestampValue;
 	notes: MontageNote[];

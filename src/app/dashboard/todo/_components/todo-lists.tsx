@@ -112,6 +112,7 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
     const [isAddingColumn, setIsAddingColumn] = useState(false);
     const [editingColumnId, setEditingColumnId] = useState<string | null>(null);
     const [editingColumnTitle, setEditingColumnTitle] = useState("");
+    const [showCompletedMap, setShowCompletedMap] = useState<Record<string, boolean>>({});
     const router = useRouter();
 
     // Handlers
@@ -314,44 +315,102 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
                                 initial="hidden"
                                 animate="show"
                             >
-                                {column.tasks.map((task) => (
-                                    <motion.div key={task.id} variants={itemVariant}>
-                                        <SwipeableTaskItem
-                                            onComplete={() => handleToggleTask(task.id, !task.completed)}
-                                            onEdit={() => handleOpenTask(task)}
-                                        >
-                                            <div 
-                                                className={cn(
-                                                    "group flex items-start gap-3 p-3 rounded-md hover:bg-muted/50 transition-colors",
-                                                    task.completed && "opacity-60"
-                                                )}
-                                            >
-                                                <Checkbox 
-                                                    checked={task.completed} 
-                                                    onCheckedChange={(checked) => handleToggleTask(task.id, checked as boolean)}
-                                                    className="mt-1 rounded-full w-5 h-5 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
-                                                />
-                                                <div 
-                                                    className="flex-1 cursor-pointer" 
-                                                    onClick={() => handleOpenTask(task)}
-                                                >
-                                                    <p className={cn(
-                                                        "text-base leading-tight font-medium transition-all",
-                                                        task.completed && "line-through text-muted-foreground"
-                                                    )}>
-                                                        {task.content}
-                                                    </p>
-                                                    {task.description && (
-                                                        <p className="text-sm text-muted-foreground line-clamp-1 mt-0.5 flex items-center gap-1">
-                                                            <FileText className="w-3 h-3" />
-                                                            {task.description}
-                                                        </p>
-                                                    )}
+                                {(() => {
+                                    const activeTasks = column.tasks.filter(t => !t.completed);
+                                    const completedTasks = column.tasks.filter(t => t.completed);
+                                    const showCompleted = showCompletedMap[column.id] ?? false;
+
+                                    return (
+                                        <>
+                                            {activeTasks.map((task) => (
+                                                <motion.div key={task.id} variants={itemVariant}>
+                                                    <SwipeableTaskItem
+                                                        onComplete={() => handleToggleTask(task.id, !task.completed)}
+                                                        onEdit={() => handleOpenTask(task)}
+                                                    >
+                                                        <div 
+                                                            className={cn(
+                                                                "group flex items-start gap-3 p-3 rounded-md hover:bg-muted/50 transition-colors",
+                                                                task.completed && "opacity-60"
+                                                            )}
+                                                        >
+                                                            <Checkbox 
+                                                                checked={task.completed} 
+                                                                onCheckedChange={(checked) => handleToggleTask(task.id, checked as boolean)}
+                                                                className="mt-1 rounded-full w-5 h-5 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                                                            />
+                                                            <div 
+                                                                className="flex-1 cursor-pointer" 
+                                                                onClick={() => handleOpenTask(task)}
+                                                            >
+                                                                <p className={cn(
+                                                                    "text-base leading-tight font-medium transition-all",
+                                                                    task.completed && "line-through text-muted-foreground"
+                                                                )}>
+                                                                    {task.content}
+                                                                </p>
+                                                                {task.description && (
+                                                                    <p className="text-sm text-muted-foreground line-clamp-1 mt-0.5 flex items-center gap-1">
+                                                                        <FileText className="w-3 h-3" />
+                                                                        {task.description}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </SwipeableTaskItem>
+                                                </motion.div>
+                                            ))}
+
+                                            {completedTasks.length > 0 && (
+                                                <div className="mt-2">
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="sm" 
+                                                        className="text-muted-foreground text-xs w-full justify-start h-8"
+                                                        onClick={() => setShowCompletedMap(prev => ({ ...prev, [column.id]: !prev[column.id] }))}
+                                                    >
+                                                        {showCompleted ? "Ukryj" : "Pokaż"} zakończone ({completedTasks.length})
+                                                    </Button>
+                                                    
+                                                    {showCompleted && completedTasks.map((task) => (
+                                                        <motion.div key={task.id} variants={itemVariant}>
+                                                            <SwipeableTaskItem
+                                                                onComplete={() => handleToggleTask(task.id, !task.completed)}
+                                                                onEdit={() => handleOpenTask(task)}
+                                                            >
+                                                                <div 
+                                                                    className={cn(
+                                                                        "group flex items-start gap-3 p-3 rounded-md hover:bg-muted/50 transition-colors opacity-60"
+                                                                    )}
+                                                                >
+                                                                    <Checkbox 
+                                                                        checked={task.completed} 
+                                                                        onCheckedChange={(checked) => handleToggleTask(task.id, checked as boolean)}
+                                                                        className="mt-1 rounded-full w-5 h-5 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                                                                    />
+                                                                    <div 
+                                                                        className="flex-1 cursor-pointer" 
+                                                                        onClick={() => handleOpenTask(task)}
+                                                                    >
+                                                                        <p className="text-base leading-tight font-medium transition-all line-through text-muted-foreground">
+                                                                            {task.content}
+                                                                        </p>
+                                                                        {task.description && (
+                                                                            <p className="text-sm text-muted-foreground line-clamp-1 mt-0.5 flex items-center gap-1">
+                                                                                <FileText className="w-3 h-3" />
+                                                                                {task.description}
+                                                                            </p>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </SwipeableTaskItem>
+                                                        </motion.div>
+                                                    ))}
                                                 </div>
-                                            </div>
-                                        </SwipeableTaskItem>
-                                    </motion.div>
-                                ))}
+                                            )}
+                                        </>
+                                    );
+                                })()}
                                 
                                 {/* Quick Add Input */}
                                 <div className="flex items-center gap-2 mt-2 px-2">

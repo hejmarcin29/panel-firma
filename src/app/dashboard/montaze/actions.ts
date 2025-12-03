@@ -750,20 +750,28 @@ export async function updateMontageMeasurement({
 
 export async function updateMontageRealizationStatus({
     montageId,
-    isMaterialOrdered,
-    isInstallerConfirmed
+    materialStatus,
+    installerStatus
 }: {
     montageId: string;
-    isMaterialOrdered?: boolean;
-    isInstallerConfirmed?: boolean;
+    materialStatus?: 'none' | 'ordered' | 'in_stock' | 'delivered';
+    installerStatus?: 'none' | 'informed' | 'confirmed';
 }) {
     const user = await requireUser();
 
-    const updateData: { isMaterialOrdered?: boolean; isInstallerConfirmed?: boolean } = {};
-    if (isMaterialOrdered !== undefined) updateData.isMaterialOrdered = isMaterialOrdered;
-    if (isInstallerConfirmed !== undefined) updateData.isInstallerConfirmed = isInstallerConfirmed;
+    const updateData: { 
+        materialStatus?: 'none' | 'ordered' | 'in_stock' | 'delivered'; 
+        installerStatus?: 'none' | 'informed' | 'confirmed';
+        updatedAt: Date;
+    } = {
+        updatedAt: new Date()
+    };
+    
+    if (materialStatus !== undefined) updateData.materialStatus = materialStatus;
+    if (installerStatus !== undefined) updateData.installerStatus = installerStatus;
 
-    if (Object.keys(updateData).length === 0) return;
+    // If nothing to update (except updatedAt), return
+    if (Object.keys(updateData).length <= 1) return;
 
     await db.update(montages)
         .set(updateData)

@@ -1,8 +1,9 @@
 "use client";
 
-import { CheckCircle2, Circle, Upload, FileText, RefreshCw, Pencil, Trash2, Plus, X } from "lucide-react";
+import { CheckCircle2, Circle, Upload, FileText, RefreshCw, Pencil, Trash2, Plus, X, AlertTriangle, Info } from "lucide-react";
 import { useTransition, useState } from "react";
 import { useRouter } from "next/navigation";
+import { differenceInCalendarDays } from "date-fns";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { 
     toggleMontageChecklistItem, 
@@ -93,8 +96,9 @@ export function MontageWorkflowTab({ montage, statusOptions }: { montage: Montag
     });
   };
 
-  const handleRealizationStatusChange = (field: 'isMaterialOrdered' | 'isInstallerConfirmed', value: boolean) => {
+  const handleRealizationStatusChange = (field: 'materialStatus' | 'installerStatus', value: string) => {
     startTransition(async () => {
+        // @ts-ignore - dynamic key access
         await updateMontageRealizationStatus({ 
             montageId: montage.id, 
             [field]: value 
@@ -105,39 +109,110 @@ export function MontageWorkflowTab({ montage, statusOptions }: { montage: Montag
 
   const currentStatusIndex = statusOptions.findIndex(o => o.value === montage.status);
 
+  // KPI Logic
+  const daysToInstallation = montage.scheduledInstallationAt 
+    ? differenceInCalendarDays(new Date(montage.scheduledInstallationAt), new Date()) 
+    : null;
+
+  const getMaterialAlert = () => {
+    if (daysToInstallation === null) return null;
+    
+    const status = montage.materialStatus;
+    
+    // 10 days before: Must be at least 'ordered'
+    if (daysToInstallation <= 10 && status === 'none') {
+        return { level: 'warning', message: 'Materiał powinien być już zamówiony (10 dni przed montażem)' };
+    }
+    
+    // 5 days before: Must be at least 'in_stock'
+    if (daysToInstallation <= 5 && (status === 'none' || status === 'ordered')) {
+        return { level: 'error', message: 'Materiał powinien być na magazynie (5 dni przed montażem)' };
+    }
+    
+    // 2 days before: Must be at least 'delivered'
+    if (daysToInstallation <= 2 && (status === 'none' || status === 'ordered' || status === 'in_stock')) {
+        return { level: 'critical', message: 'Materiał powinien być dostarczony (2 dni przed montażem)' };
+    }
+    
+    return null;
+  };
+
+  const materialAlert = getMaterialAlert();
+
   return (
     <div className="space-y-8">
         <Card className="p-6">
             <h3 className="mb-4 text-lg font-semibold">Status Realizacji</h3>
             <div className="grid gap-4 sm:grid-cols-2">
                 <div className={cn(
-                    "flex items-center justify-between p-4 rounded-lg border transition-colors",
-                    montage.isMaterialOrdered ? "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-900" : "bg-card"
+                    "flex flex-col gap-2 p-4 rounded-lg border transition-colors",
+                    materialAlert?.level === 'critical' ? "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-900" :
+                    materialAlert?.level === 'error' ? "bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-900" :
+                    materialAlert?.level === 'warning' ? "bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-900" :
+                    montage.materialStatus === 'delivered' ? "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-900" : "bg-card"
                 )}>
-                    <div className="space-y-0.5">
-                        <Label htmlFor="material-ordered" className="text-base font-medium">Zamówiono materiał</Label>
-                        <p className="text-sm text-muted-foreground">Potwierdzenie zamówienia u dostawcy</p>
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                            <div className="flex items-center gap-2">
+                                <Label htmlFor="material-status" className="text-base font-medium">Status Materiału</Label>
+                                {materialAlert && (
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger>
+                                                <AlertTriangle className={cn(
+                                                    "h-4 w-4",
+                                                    materialAlert.level === 'critical' ? "text-red-500" :
+                                                    materialAlert.level === 'error' ? "text-orange-500" :
+                                                    "text-yellow-500"
+                                                )} />
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>{materialAlert.message}</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                )}
+                            </div>
+                            <p className="text-sm text-muted-foreground">Status zamówienia materiałów</p>
+                        </div>
                     </div>
-                    <Switch 
-                        id="material-ordered"
-                        checked={montage.isMaterialOrdered}
-                        onCheckedChange={(checked) => handleRealizationStatusChange('isMaterialOrdered', checked)}
-                    />
+                    <Select 
+                        value={montage.materialStatus} 
+                        onValueChange={(value) => handleRealizationStatusChange('materialStatus', value)}
+                    >
+                        <SelectTrigger id="material-status">
+                            <SelectValue placeholder="Wybierz status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="none">Brak</SelectItem>
+                            <SelectItem value="ordered">Zamówiono</SelectItem>
+                            <SelectItem value="in_stock">Na magazynie</SelectItem>
+                            <SelectItem value="delivered">Dostarczono</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
 
                 <div className={cn(
-                    "flex items-center justify-between p-4 rounded-lg border transition-colors",
-                    montage.isInstallerConfirmed ? "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-900" : "bg-card"
+                    "flex flex-col gap-2 p-4 rounded-lg border transition-colors",
+                    montage.installerStatus === 'confirmed' ? "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-900" : "bg-card"
                 )}>
                     <div className="space-y-0.5">
-                        <Label htmlFor="installer-confirmed" className="text-base font-medium">Potwierdzony montażysta</Label>
-                        <p className="text-sm text-muted-foreground">Termin i wykonawca ustalony</p>
+                        <Label htmlFor="installer-status" className="text-base font-medium">Status Montażysty</Label>
+                        <p className="text-sm text-muted-foreground">Status ustaleń z montażystą</p>
                     </div>
-                    <Switch 
-                        id="installer-confirmed"
-                        checked={montage.isInstallerConfirmed}
-                        onCheckedChange={(checked) => handleRealizationStatusChange('isInstallerConfirmed', checked)}
-                    />
+                    <Select 
+                        value={montage.installerStatus} 
+                        onValueChange={(value) => handleRealizationStatusChange('installerStatus', value)}
+                    >
+                        <SelectTrigger id="installer-status">
+                            <SelectValue placeholder="Wybierz status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="none">Brak</SelectItem>
+                            <SelectItem value="informed">Poinformowany</SelectItem>
+                            <SelectItem value="confirmed">Potwierdzony</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
             </div>
         </Card>
