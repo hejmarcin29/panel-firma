@@ -1,4 +1,5 @@
 import { desc, eq, sql } from 'drizzle-orm';
+import { headers } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
@@ -86,6 +87,19 @@ export default async function SettingsPage() {
   } catch (e) {
     console.error("Failed to parse mobile menu config", e);
   }
+
+  const headerList = await headers();
+  const forwardedProto = headerList.get('x-forwarded-proto');
+  const forwardedHost = headerList.get('x-forwarded-host');
+  const hostHeader = headerList.get('host');
+
+  const configuredBaseUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') ?? null;
+  const host = forwardedHost ?? hostHeader ?? configuredBaseUrl?.replace(/https?:\/\//, '') ?? 'localhost:3000';
+  const protocol =
+    forwardedProto ?? configuredBaseUrl?.split('://')[0] ?? (process.env.NODE_ENV === 'development' ? 'http' : 'https');
+
+  const webhookBase = configuredBaseUrl ?? `${protocol}://${host}`;
+  const webhookUrl = `${webhookBase.replace(/\/$/, '')}/api/woocommerce/webhook`;
 
 	const [
 		webhookSecretSetting,
