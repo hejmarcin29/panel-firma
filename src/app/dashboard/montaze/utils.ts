@@ -4,6 +4,7 @@ import type {
 	MontageChecklistItem,
 	MontageNote,
 	MontageTask,
+	MaterialsEditHistoryEntry,
 } from './types';
 import {
 	montageAttachments,
@@ -157,7 +158,7 @@ export function mapMontageRow(row: MontageRow, publicBaseUrl: string | null): Mo
 		modelsApproved: row.modelsApproved ?? false,
 		finalPanelAmount: row.finalPanelAmount ?? null,
 		finalSkirtingLength: row.finalSkirtingLength ?? null,
-		materialsEditHistory: row.materialsEditHistory ?? null,
+		materialsEditHistory: (row.materialsEditHistory as unknown as MaterialsEditHistoryEntry[]) ?? null,
 		additionalInfo: row.additionalInfo ?? null,
 		forecastedInstallationDate: row.forecastedInstallationDate ?? null,
 		status: row.status as MontageStatus,
