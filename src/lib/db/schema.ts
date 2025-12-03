@@ -933,3 +933,30 @@ export const taskAttachmentsRelations = relations(taskAttachments, ({ one }) => 
 	}),
 }));
 
+export const customersRelations = relations(customers, ({ many }) => ({
+	orders: many(orders),
+}));
+
+export const ordersRelations = relations(orders, ({ one, many }) => ({
+	customer: one(customers, {
+		fields: [orders.customerId],
+		references: [customers.id],
+	}),
+	items: many(orderItems),
+	documents: many(documents),
+}));
+
+export const orderItemsRelations = relations(orderItems, ({ one }) => ({
+	order: one(orders, {
+		fields: [orderItems.orderId],
+		references: [orders.id],
+	}),
+}));
+
+export const documentsRelations = relations(documents, ({ one }) => ({
+	order: one(orders, {
+		fields: [documents.orderId],
+		references: [orders.id],
+	}),
+}));
+
