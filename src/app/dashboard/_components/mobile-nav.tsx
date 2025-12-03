@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useFormStatus } from "react-dom";
@@ -63,6 +63,35 @@ const menuLinks = [
 export function MobileNav({ user, urgentOrdersCount = 0 }: { user: { name?: string | null; email?: string | null; mobileMenuConfig?: string | null }, urgentOrdersCount?: number }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+
+  useEffect(() => {
+    if (open) {
+      // Push a new state to history when menu opens
+      window.history.pushState({ menuOpen: true }, "", window.location.href);
+
+      const handlePopState = () => {
+        // Close menu when back button is pressed
+        setOpen(false);
+      };
+
+      window.addEventListener("popstate", handlePopState);
+
+      return () => {
+        window.removeEventListener("popstate", handlePopState);
+      };
+    }
+  }, [open]);
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen && open) {
+      // If closing via UI (not back button), we need to revert the history push
+      // Check if we are currently at the state we pushed
+      if (window.history.state?.menuOpen) {
+        window.history.back();
+      }
+    }
+    setOpen(newOpen);
+  };
 
   let displayedLinks = mainLinks;
 
@@ -129,7 +158,7 @@ export function MobileNav({ user, urgentOrdersCount = 0 }: { user: { name?: stri
           );
         })}
         
-        <Sheet open={open} onOpenChange={setOpen}>
+        <Sheet open={open} onOpenChange={handleOpenChange}>
           <SheetTrigger asChild>
             <button
               className={cn(
