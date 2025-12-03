@@ -12,7 +12,11 @@ export async function saveWooSettings(formData: FormData) {
 	const consumerKey = formData.get('consumerKey') as string;
 	const consumerSecret = formData.get('consumerSecret') as string;
 	const webhookSecret = formData.get('webhookSecret') as string;
-	const wooUrl = formData.get('wooUrl') as string;
+	let wooUrl = formData.get('wooUrl') as string;
+
+    if (wooUrl && !wooUrl.startsWith('http://') && !wooUrl.startsWith('https://')) {
+        wooUrl = `https://${wooUrl}`;
+    }
 
 	const settingsToUpdate = [
 		{ key: appSettingKeys.wooConsumerKey, value: consumerKey },
@@ -56,7 +60,11 @@ export async function testWooConnection() {
 
 	try {
 		// Remove trailing slash if present
-		const baseUrl = url.replace(/\/$/, '');
+		let baseUrl = url.replace(/\/$/, '');
+        if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+            baseUrl = `https://${baseUrl}`;
+        }
+
 		const auth = Buffer.from(`${key}:${secret}`).toString('base64');
 		
 		const response = await fetch(`${baseUrl}/wp-json/wc/v3/system_status`, {
@@ -77,6 +85,7 @@ export async function testWooConnection() {
 		return { success: true, message: 'Połączenie nawiązane pomyślnie.', data: { version: data.environment?.version } };
 	} catch (error) {
 		console.error('WooCommerce connection test error:', error);
-		return { success: false, message: 'Wystąpił błąd podczas łączenia ze sklepem.' };
+        const errorMessage = error instanceof Error ? error.message : 'Nieznany błąd';
+		return { success: false, message: `Wystąpił błąd: ${errorMessage}` };
 	}
 }
