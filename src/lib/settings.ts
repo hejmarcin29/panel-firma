@@ -7,6 +7,9 @@ import { appSettings } from './db/schema';
 
 export const appSettingKeys = {
 	wooWebhookSecret: 'woocommerce.webhook_secret',
+	wooConsumerKey: 'woocommerce.consumer_key',
+	wooConsumerSecret: 'woocommerce.consumer_secret',
+	wooUrl: 'woocommerce.url',
 	r2AccountId: 'r2.account_id',
 	r2AccessKeyId: 'r2.access_key_id',
 	r2SecretAccessKey: 'r2.secret_access_key',

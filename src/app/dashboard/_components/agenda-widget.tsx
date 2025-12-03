@@ -2,7 +2,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Clock, MapPin } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Clock, MapPin, CalendarDays } from "lucide-react";
 import Link from "next/link";
 
 export interface AgendaItem {
@@ -30,31 +31,44 @@ export function AgendaWidget({ upcomingMontages }: AgendaWidgetProps) {
           {upcomingMontages.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">Brak nadchodzących montaży.</p>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {upcomingMontages.map((montage) => (
                 <Link 
                     key={montage.id} 
                     href={`/dashboard/montaze/${montage.id}`}
-                    className="flex items-start gap-4 p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                    className="relative flex items-start gap-4 p-4 rounded-xl border bg-card hover:bg-accent/50 transition-all group"
                 >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-medium text-xs">
-                    {montage.displayId || 'M'}
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/5 text-primary group-hover:bg-primary/10 transition-colors">
+                    <CalendarDays className="h-5 w-5" />
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium leading-none">{montage.clientName}</p>
-                    <div className="flex items-center text-xs text-muted-foreground">
-                        <MapPin className="mr-1 h-3 w-3" />
-                        {montage.installationCity || "Brak adresu"}
+                  <div className="space-y-1.5 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm font-semibold leading-none pt-0.5">{montage.clientName}</p>
+                        {montage.displayId && (
+                            <Badge variant="outline" className="text-[10px] font-mono text-muted-foreground px-1.5 py-0 h-5">
+                                {montage.displayId}
+                            </Badge>
+                        )}
                     </div>
-                    <p className="text-xs text-muted-foreground flex items-center">
-                        <Clock className="mr-1 h-3 w-3" />
-                        {montage.scheduledInstallationAt ? new Date(montage.scheduledInstallationAt).toLocaleDateString() : 'Nieustalona data'}
-                    </p>
-                    {montage.floorArea && (
-                        <p className="text-xs text-muted-foreground font-medium">
-                            Powierzchnia: {montage.floorArea} m²
-                        </p>
-                    )}
+                    
+                    <div className="flex flex-col gap-1">
+                        <div className="flex items-center text-xs text-muted-foreground">
+                            <MapPin className="mr-1.5 h-3 w-3 shrink-0" />
+                            <span className="truncate">{montage.installationCity || "Brak adresu"}</span>
+                        </div>
+                        <div className="flex items-center text-xs text-muted-foreground">
+                            <Clock className="mr-1.5 h-3 w-3 shrink-0" />
+                            <span>
+                                {montage.scheduledInstallationAt 
+                                    ? new Date(montage.scheduledInstallationAt).toLocaleDateString('pl-PL', { 
+                                        weekday: 'short', 
+                                        day: 'numeric', 
+                                        month: 'long' 
+                                      }) 
+                                    : 'Nieustalona data'}
+                            </span>
+                        </div>
+                    </div>
                   </div>
                 </Link>
               ))}

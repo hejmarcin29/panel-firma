@@ -2,8 +2,9 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, AlertCircle, Bell, Calendar } from "lucide-react";
+import { CheckCircle2, AlertCircle, Bell, Calendar, Wrench, ListTodo } from "lucide-react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 interface TasksWidgetProps {
   tasksCount: number;
@@ -15,39 +16,8 @@ interface TasksWidgetProps {
 export function TasksWidget({ tasksCount, urgentCount, todoCount = 0, reminderTasks = [] }: TasksWidgetProps) {
     return (
         <Card className="h-full flex flex-col justify-center">
-            <CardContent className="p-6 flex flex-col items-center text-center gap-4">
-                <div className="flex gap-4 justify-center w-full">
-                    {/* Montage Tasks Icon */}
-                    <Link href="/dashboard/zadania" className="relative group cursor-pointer">
-                        {urgentCount > 0 ? (
-                            <div className="h-14 w-14 rounded-full bg-destructive/10 flex items-center justify-center text-destructive animate-pulse group-hover:bg-destructive/20 transition-colors">
-                                <AlertCircle className="h-7 w-7" />
-                            </div>
-                        ) : (
-                            <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary/20 transition-colors">
-                                <CheckCircle2 className="h-7 w-7" />
-                            </div>
-                        )}
-                        {tasksCount > 0 && (
-                            <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-foreground text-background text-[10px] font-bold border-2 border-background">
-                                {tasksCount}
-                            </span>
-                        )}
-                    </Link>
-
-                    {/* Personal Todo Icon */}
-                    {todoCount > 0 && (
-                        <Link href="/dashboard/todo" className="relative group cursor-pointer">
-                            <div className="h-14 w-14 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:bg-blue-500/20 transition-colors">
-                                <CheckCircle2 className="h-7 w-7" />
-                            </div>
-                            <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white text-[10px] font-bold border-2 border-background">
-                                {todoCount}
-                            </span>
-                        </Link>
-                    )}
-                </div>
-
+            <CardContent className="p-6 flex flex-col items-center text-center gap-6">
+                
                 <div className="space-y-1 w-full">
                     <h3 className="font-semibold text-lg">
                         {urgentCount > 0 
@@ -56,42 +26,64 @@ export function TasksWidget({ tasksCount, urgentCount, todoCount = 0, reminderTa
                                 ? "Masz zadania do wykonania" 
                                 : "Wszystko zrobione!"}
                     </h3>
-                    
-                    {reminderTasks.length > 0 ? (
-                        <div className="flex flex-col gap-2 mt-2 text-left bg-muted/30 p-3 rounded-md">
-                            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Wymagające uwagi:</span>
-                            {reminderTasks.slice(0, 3).map(task => (
-                                <Link key={task.id} href="/dashboard/todo" className="flex items-start gap-2 text-sm hover:underline">
-                                    {task.reminderAt && <Bell className="h-4 w-4 text-orange-500 shrink-0 mt-0.5" />}
-                                    {task.dueDate && !task.reminderAt && <Calendar className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />}
-                                    <span className="truncate">{task.content}</span>
-                                </Link>
-                            ))}
-                            {reminderTasks.length > 3 && (
-                                <span className="text-xs text-muted-foreground text-center">+ {reminderTasks.length - 3} więcej</span>
-                            )}
-                        </div>
-                    ) : (
-                        <p className="text-sm text-muted-foreground">
-                            {tasksCount > 0 && `Montaże: ${tasksCount}. `}
-                            {todoCount > 0 && `To Do: ${todoCount}.`}
-                            {tasksCount === 0 && todoCount === 0 && "Możesz odpocząć, brak zaległości."}
-                        </p>
-                    )}
+                    <p className="text-sm text-muted-foreground">
+                        Wybierz kategorię, aby przejść do listy.
+                    </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 w-full mt-2">
-                    <Button asChild variant={urgentCount > 0 ? "destructive" : "default"} className="w-full">
-                        <Link href="/dashboard/zadania">
-                            Montaże
-                        </Link>
-                    </Button>
-                    <Button asChild variant="outline" className="w-full">
-                        <Link href="/dashboard/todo">
-                            To Do
-                        </Link>
-                    </Button>
+                {/* Segmented Control / Big Buttons */}
+                <div className="grid grid-cols-2 gap-3 w-full">
+                    <Link 
+                        href="/dashboard/zadania" 
+                        className={cn(
+                            "flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all hover:bg-accent/50",
+                            urgentCount > 0 ? "border-destructive/20 bg-destructive/5 hover:bg-destructive/10" : "border-muted bg-card"
+                        )}
+                    >
+                        <div className={cn(
+                            "p-2 rounded-full",
+                            urgentCount > 0 ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"
+                        )}>
+                            <Wrench className="h-5 w-5" />
+                        </div>
+                        <div className="flex flex-col items-center">
+                            <span className="text-sm font-medium">Montaże</span>
+                            <span className="text-xs text-muted-foreground">{tasksCount} zadań</span>
+                        </div>
+                    </Link>
+
+                    <Link 
+                        href="/dashboard/todo" 
+                        className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 border-muted bg-card transition-all hover:bg-accent/50"
+                    >
+                        <div className="p-2 rounded-full bg-blue-500/10 text-blue-600">
+                            <ListTodo className="h-5 w-5" />
+                        </div>
+                        <div className="flex flex-col items-center">
+                            <span className="text-sm font-medium">To Do</span>
+                            <span className="text-xs text-muted-foreground">{todoCount} zadań</span>
+                        </div>
+                    </Link>
                 </div>
+
+                {reminderTasks.length > 0 && (
+                    <div className="flex flex-col gap-2 w-full text-left bg-muted/30 p-3 rounded-md border border-border/50">
+                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                            <Bell className="h-3 w-3" />
+                            Wymagające uwagi
+                        </span>
+                        {reminderTasks.slice(0, 3).map(task => (
+                            <Link key={task.id} href="/dashboard/todo" className="flex items-start gap-2 text-sm hover:underline group">
+                                {task.reminderAt && <Bell className="h-3.5 w-3.5 text-orange-500 shrink-0 mt-0.5 group-hover:text-orange-600" />}
+                                {task.dueDate && !task.reminderAt && <Calendar className="h-3.5 w-3.5 text-red-500 shrink-0 mt-0.5 group-hover:text-red-600" />}
+                                <span className="truncate text-muted-foreground group-hover:text-foreground transition-colors">{task.content}</span>
+                            </Link>
+                        ))}
+                        {reminderTasks.length > 3 && (
+                            <span className="text-xs text-muted-foreground text-center pt-1">+ {reminderTasks.length - 3} więcej</span>
+                        )}
+                    </div>
+                )}
             </CardContent>
         </Card>
     );
