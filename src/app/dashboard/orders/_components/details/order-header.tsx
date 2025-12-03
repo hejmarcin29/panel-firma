@@ -20,19 +20,16 @@ interface OrderHeaderProps {
 }
 
 export function OrderHeader({ order }: OrderHeaderProps) {
-  const router = useRouter();
-
   return (
     <div className="flex flex-col gap-4 border-b bg-background p-4 sm:flex-row sm:items-center sm:justify-between lg:px-6">
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => router.back()}
+          <Link
+            href="/dashboard/orders"
             className="text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
-          </button>
+          </Link>
           <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
             {order.reference}
           </h1>
