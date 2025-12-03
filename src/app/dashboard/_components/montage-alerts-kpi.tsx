@@ -13,7 +13,7 @@ export interface MontageAlert {
     installerStatus: 'none' | 'informed' | 'confirmed';
 }
 
-export function MontageAlertsKPI({ alerts, threatDays = 7 }: { alerts: MontageAlert[], threatDays?: number }) {
+export function MontageAlertsKPI({ alerts }: { alerts: MontageAlert[], threatDays?: number }) {
     const alertCount = alerts.length;
     const hasAlerts = alertCount > 0;
 

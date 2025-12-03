@@ -37,18 +37,6 @@ const DEFAULT_LAYOUT: DashboardLayoutConfig = {
     }
 };
 
-function addWorkingDays(startDate: Date, days: number) {
-    const currentDate = new Date(startDate);
-    let addedDays = 0;
-    while (addedDays < days) {
-        currentDate.setDate(currentDate.getDate() + 1);
-        if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
-            addedDays++;
-        }
-    }
-    return currentDate;
-}
-
 import { redirect } from 'next/navigation';
 
 export default async function DashboardPage() {

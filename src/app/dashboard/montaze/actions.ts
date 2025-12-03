@@ -161,7 +161,6 @@ export async function createMontage({
 	companyName,
 	nip,
 	scheduledInstallationDate,
-	scheduledInstallationEndDate,
 	materialDetails,
 }: CreateMontageInput) {
 	const user = await requireUser();
@@ -193,14 +192,6 @@ export async function createMontage({
 		const parsed = new Date(`${scheduledInstallationDate}T00:00:00`);
 		if (!Number.isNaN(parsed.getTime())) {
 			scheduledInstallationAt = parsed;
-		}
-	}
-
-	let scheduledInstallationEndAt: Date | null = null;
-	if (scheduledInstallationEndDate) {
-		const parsed = new Date(`${scheduledInstallationEndDate}T00:00:00`);
-		if (!Number.isNaN(parsed.getTime())) {
-			scheduledInstallationEndAt = parsed;
 		}
 	}
 

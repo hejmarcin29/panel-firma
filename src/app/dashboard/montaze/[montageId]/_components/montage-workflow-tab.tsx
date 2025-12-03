@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Circle, Upload, FileText, RefreshCw, Pencil, Trash2, Plus, X, AlertTriangle, Info } from "lucide-react";
+import { CheckCircle2, Circle, Upload, FileText, RefreshCw, Pencil, Trash2, Plus, X, AlertTriangle } from "lucide-react";
 import { useTransition, useState } from "react";
 import { useRouter } from "next/navigation";
 import { differenceInCalendarDays } from "date-fns";
@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -98,7 +97,7 @@ export function MontageWorkflowTab({ montage, statusOptions }: { montage: Montag
 
   const handleRealizationStatusChange = (field: 'materialStatus' | 'installerStatus', value: string) => {
     startTransition(async () => {
-        // @ts-ignore - dynamic key access
+        // @ts-expect-error - dynamic key access
         await updateMontageRealizationStatus({ 
             montageId: montage.id, 
             [field]: value 
