@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { Phone, Mail, MapPin, CheckSquare } from 'lucide-react';
 import Link from 'next/link';
 
+import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';

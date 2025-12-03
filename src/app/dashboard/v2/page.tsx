@@ -1,5 +1,6 @@
-import { desc, eq, asc, and, lt, or, isNull } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import Link from 'next/link';
+import { subDays } from 'date-fns';
 import { 
     LayoutDashboard, 
     AlertCircle, 
@@ -18,7 +19,6 @@ import {
 	montages,
     manualOrders,
     boardTasks,
-    users,
 } from '@/lib/db/schema';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -30,16 +30,17 @@ export const dynamic = 'force-dynamic';
 
 export default async function DashboardV2Page() {
     const user = await requireUser();
+    const sevenDaysAgo = subDays(new Date(), 7);
 
     // 1. Fetch Urgent Data for Command Center
     
     // Montages needing attention (delayed or upcoming soon without date)
     const urgentMontages = await db.query.montages.findMany({
-        where: (table, { or, and, lt, isNull }) => or(
+        where: (table, { or, and, lt }) => or(
             // Status is lead or before_measurement and created more than 7 days ago
             and(
                 or(eq(table.status, 'lead'), eq(table.status, 'before_measurement')),
-                lt(table.createdAt, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))
+                lt(table.createdAt, sevenDaysAgo)
             ),
             // Or scheduled date is in the past and not completed
             and(

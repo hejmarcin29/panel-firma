@@ -17,16 +17,13 @@ import {
   Pencil, 
   Paperclip, 
   Star,
-  X,
-  ArrowLeft
+  X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { 
   Sheet, 
   SheetContent, 
-  SheetHeader, 
-  SheetTitle,
   SheetClose
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -52,8 +49,6 @@ import {
 } from "../actions";
 import { useRouter } from "next/navigation";
 import { SwipeableTaskItem } from "../../zadania/_components/swipeable-task-item";
-import { format } from "date-fns";
-import { pl } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 
 // Types based on schema

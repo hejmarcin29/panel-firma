@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { customers, orders, montages, manualOrders } from '@/lib/db/schema';
+import { customers, montages, manualOrders } from '@/lib/db/schema';
 import { desc, eq, ilike, or, inArray } from 'drizzle-orm';
 
 export type CustomerWithStats = typeof customers.$inferSelect & {

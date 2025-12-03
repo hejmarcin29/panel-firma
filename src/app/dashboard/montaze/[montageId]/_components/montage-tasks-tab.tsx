@@ -68,7 +68,7 @@ export function MontageTasksTab({ montage }: { montage: Montage }) {
       <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 p-2 rounded-md border border-border/50">
         <Info className="h-4 w-4 shrink-0" />
         <span>
-          Terminy zadań (Pilne, Na dziś, Ten tydzień) wynikają z daty montażu ustawionej w sekcji "Dane Klienta".
+          Terminy zadań (Pilne, Na dziś, Ten tydzień) wynikają z daty montażu ustawionej w sekcji &quot;Dane Klienta&quot;.
         </span>
       </div>
 
