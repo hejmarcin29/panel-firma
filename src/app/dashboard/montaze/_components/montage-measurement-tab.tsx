@@ -31,8 +31,11 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
   const [skirtingDetails, setSkirtingDetails] = useState(montage.skirtingDetails || '');
   const [panelType, setPanelType] = useState(montage.panelType || '');
   const [additionalInfo, setAdditionalInfo] = useState(montage.additionalInfo || '');
-  const [forecastedDate, setForecastedDate] = useState<Date | undefined>(
-    montage.forecastedInstallationDate ? new Date(montage.forecastedInstallationDate) : undefined
+  const [scheduledDate, setScheduledDate] = useState<Date | undefined>(
+    montage.scheduledInstallationAt ? new Date(montage.scheduledInstallationAt) : undefined
+  );
+  const [scheduledEndDate, setScheduledEndDate] = useState<Date | undefined>(
+    montage.scheduledInstallationEndAt ? new Date(montage.scheduledInstallationEndAt) : undefined
   );
 
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -119,7 +122,8 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
           skirtingDetails,
           panelType,
           additionalInfo,
-          forecastedInstallationDate: forecastedDate ? forecastedDate.getTime() : null,
+          scheduledInstallationAt: scheduledDate ? scheduledDate.getTime() : null,
+          scheduledInstallationEndAt: scheduledEndDate ? scheduledEndDate.getTime() : null,
         });
         setFeedback('Zapisano dane pomiarowe.');
         router.refresh();
@@ -214,25 +218,51 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
             </div>
 
             <div className="space-y-2">
-              <Label>Przewidywana data montażu</Label>
+              <Label>Data montażu (od)</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant={"outline"}
                     className={cn(
                       "w-full justify-start text-left font-normal",
-                      !forecastedDate && "text-muted-foreground"
+                      !scheduledDate && "text-muted-foreground"
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {forecastedDate ? format(forecastedDate, "PPP", { locale: pl }) : <span>Wybierz datę</span>}
+                    {scheduledDate ? format(scheduledDate, "PPP", { locale: pl }) : <span>Wybierz datę</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
                   <Calendar
                     mode="single"
-                    selected={forecastedDate}
-                    onSelect={setForecastedDate}
+                    selected={scheduledDate}
+                    onSelect={setScheduledDate}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Data montażu (do)</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !scheduledEndDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {scheduledEndDate ? format(scheduledEndDate, "PPP", { locale: pl }) : <span>Wybierz datę</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={scheduledEndDate}
+                    onSelect={setScheduledEndDate}
                     initialFocus
                   />
                 </PopoverContent>

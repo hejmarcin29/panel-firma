@@ -220,8 +220,9 @@ export async function createMontage({
 		isCompany: isCompany ?? false,
 		companyName: normalizedCompanyName,
 		nip: normalizedNip,
-		scheduledInstallationAt,
-		scheduledInstallationEndAt,
+		scheduledInstallationAt: null,
+		scheduledInstallationEndAt: null,
+        forecastedInstallationDate: scheduledInstallationAt,
 		materialDetails: normalizedMaterialDetails,
 		status: 'lead',
 		createdAt: now,
@@ -711,7 +712,8 @@ export async function updateMontageMeasurement({
 	skirtingDetails,
 	panelType,
 	additionalInfo,
-	forecastedInstallationDate,
+	scheduledInstallationAt,
+	scheduledInstallationEndAt,
 }: {
 	montageId: string;
 	measurementDetails: string;
@@ -721,7 +723,8 @@ export async function updateMontageMeasurement({
 	skirtingDetails: string;
 	panelType: string;
 	additionalInfo: string;
-	forecastedInstallationDate: number | null;
+	scheduledInstallationAt: number | null;
+	scheduledInstallationEndAt: number | null;
 }) {
 	await requireUser();
 
@@ -735,7 +738,8 @@ export async function updateMontageMeasurement({
 			skirtingDetails,
 			panelType,
 			additionalInfo,
-			forecastedInstallationDate: forecastedInstallationDate ? new Date(forecastedInstallationDate) : null,
+			scheduledInstallationAt: scheduledInstallationAt ? new Date(scheduledInstallationAt) : null,
+			scheduledInstallationEndAt: scheduledInstallationEndAt ? new Date(scheduledInstallationEndAt) : null,
 			updatedAt: new Date(),
 		})
 		.where(eq(montages.id, montageId));
