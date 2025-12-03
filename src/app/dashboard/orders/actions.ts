@@ -5,7 +5,7 @@ import { desc, eq } from 'drizzle-orm';
 
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
-import { documents, manualOrderItems, manualOrders, orderAttachments } from '@/lib/db/schema';
+import { documents, manualOrderItems, manualOrders, orderAttachments, customers } from '@/lib/db/schema';
 import { uploadOrderDocumentObject } from '@/lib/r2/storage';
 import { logSystemEvent } from '@/lib/logging';
 
@@ -350,6 +350,40 @@ export async function createOrder(payload: ManualOrderPayload, userId?: string |
 
 	const billing = payload.billing;
 	const shipping = payload.shipping.sameAsBilling ? payload.billing : payload.shipping;
+
+	// Upsert customer
+	if (billing.email) {
+		const existingCustomer = await db.query.customers.findFirst({
+			where: eq(customers.email, billing.email),
+		});
+
+		if (!existingCustomer) {
+			await db.insert(customers).values({
+				id: crypto.randomUUID(),
+				name: billing.name,
+				email: billing.email,
+				phone: billing.phone,
+				billingStreet: billing.street,
+				billingCity: billing.city,
+				billingPostalCode: billing.postalCode,
+				shippingStreet: shipping.street,
+				shippingCity: shipping.city,
+				shippingPostalCode: shipping.postalCode,
+			});
+		} else {
+			// Optional: Update customer details if needed
+			await db.update(customers)
+				.set({
+					name: billing.name,
+					phone: billing.phone,
+					billingStreet: billing.street,
+					billingCity: billing.city,
+					billingPostalCode: billing.postalCode,
+					updatedAt: new Date(),
+				})
+				.where(eq(customers.email, billing.email));
+		}
+	}
 
 	const orderTotals = payload.items.reduce(
 		(acc, item) => ({
