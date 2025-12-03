@@ -19,6 +19,7 @@ import { getMontageChecklistTemplates } from '@/lib/montaze/checklist';
 import { getMontageAutomationRules } from '@/lib/montaze/automation';
 import { logSystemEvent } from '@/lib/logging';
 import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
+import type { MaterialsEditHistoryEntry } from './types';
 
 const MONTAGE_DASHBOARD_PATH = '/dashboard/montaze';
 const MAX_ATTACHMENT_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
@@ -535,7 +536,7 @@ type UpdateMontageMaterialsInput = {
 	materialDetails: string;
 	finalPanelAmount?: number | null;
 	finalSkirtingLength?: number | null;
-	materialsEditHistory?: any;
+	materialsEditHistory?: MaterialsEditHistoryEntry[];
 };
 
 export async function updateMontageMaterialDetails({

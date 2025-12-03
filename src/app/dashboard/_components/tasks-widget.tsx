@@ -1,8 +1,7 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { CheckCircle2, AlertCircle, Bell, Calendar, Wrench, ListTodo } from "lucide-react";
+import { Bell, Calendar, Wrench, ListTodo } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 

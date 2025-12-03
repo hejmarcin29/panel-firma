@@ -47,6 +47,14 @@ export type MontageChecklistItem = {
 	attachment: MontageAttachment | null;
 };
 
+export type MaterialsEditHistoryEntry = {
+	date: string;
+	changes: {
+		finalPanelAmount?: number | null;
+		finalSkirtingLength?: number | null;
+	};
+};
+
 export type Montage = {
 	id: string;
 	clientName: string;
@@ -71,7 +79,7 @@ export type Montage = {
 	modelsApproved: boolean;
 	finalPanelAmount: number | null;
 	finalSkirtingLength: number | null;
-	materialsEditHistory: any | null;
+	materialsEditHistory: MaterialsEditHistoryEntry[] | null;
 	additionalInfo: string | null;
 	forecastedInstallationDate: TimestampValue;
 	status: MontageStatus;

@@ -1,12 +1,11 @@
 "use client";
 
-import { Package, Edit2, Ruler, HelpCircle } from "lucide-react";
+import { Package, Edit2 } from "lucide-react";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,7 +17,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { updateMontageMaterialDetails } from "../../actions";
-import type { Montage } from "../../types";
+import type { Montage, MaterialsEditHistoryEntry } from "../../types";
 
 export function MontageMaterialCard({ montage }: { montage: Montage }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -117,7 +116,7 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
                 <div className="mt-6 pt-4 border-t">
                     <h4 className="text-sm font-medium mb-2">Historia edycji</h4>
                     <div className="space-y-2 max-h-[150px] overflow-y-auto text-xs text-muted-foreground">
-                        {[...montage.materialsEditHistory].reverse().map((entry: any, i: number) => (
+                        {[...montage.materialsEditHistory].reverse().map((entry: MaterialsEditHistoryEntry, i: number) => (
                             <div key={i} className="flex flex-col gap-1 pb-2 border-b border-border/50 last:border-0">
                                 <span className="font-medium">{new Date(entry.date).toLocaleString('pl-PL')}</span>
                                 <div className="pl-2 border-l-2 border-muted">

@@ -1,7 +1,6 @@
-import { Suspense } from 'react';
 import { db } from '@/lib/db';
 import { appSettings, integrationLogs } from '@/lib/db/schema';
-import { desc, eq, inArray } from 'drizzle-orm';
+import { desc, inArray } from 'drizzle-orm';
 import { appSettingKeys } from '@/lib/settings';
 import { WooSettingsForm } from './_components/woo-settings-form';
 import { IntegrationLogs } from './_components/integration-logs';
