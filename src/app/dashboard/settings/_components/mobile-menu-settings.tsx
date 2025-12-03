@@ -31,7 +31,8 @@ import {
   GripVertical,
   Smartphone,
   Sparkles,
-  LayoutGrid
+  LayoutGrid,
+  Users
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -51,7 +52,8 @@ const ICON_MAP: Record<string, any> = {
     "Settings": Settings2,
     "ImageIcon": Images,
     "ClipboardList": ClipboardCheck,
-    "KanbanSquare": ListTodo
+    "KanbanSquare": ListTodo,
+    "Users": Users
 };
 
 const DEFAULT_ITEMS: MobileMenuItem[] = [
@@ -59,6 +61,7 @@ const DEFAULT_ITEMS: MobileMenuItem[] = [
     { id: "todo", label: "To Do", href: "/dashboard/todo", iconName: "KanbanSquare", visible: true },
     { id: "tasks", label: "Zad. Montaże", href: "/dashboard/zadania", iconName: "ClipboardList", visible: true },
     { id: "calendar", label: "Kalendarz", href: "/dashboard/calendar", iconName: "Calendar", visible: true },
+    { id: "customers", label: "Klienci", href: "/dashboard/customers", iconName: "Users", visible: true },
     { id: "orders", label: "Zamówienia", href: "/dashboard/orders", iconName: "Package", visible: false },
     { id: "montages", label: "Montaże", href: "/dashboard/montaze", iconName: "Hammer", visible: false },
     { id: "mail", label: "Poczta", href: "/dashboard/mail", iconName: "Mail", visible: false },

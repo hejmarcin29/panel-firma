@@ -10,6 +10,7 @@ const links = [
     { href: '/dashboard/todo', label: 'To Do' },
     { href: '/dashboard/zadania', label: 'Zadania Montaże' },
 	{ href: '/dashboard/calendar', label: 'Kalendarz' },
+    { href: '/dashboard/customers', label: 'Klienci' },
 	{ href: '/dashboard/orders', label: 'Zamówienia' },
 	{ href: '/dashboard/montaze', label: 'Montaże' },
 	{ href: '/dashboard/montaze/galeria', label: 'Galeria' },

@@ -16,7 +16,8 @@ import {
   LogOut,
   ClipboardList,
   KanbanSquare,
-  LucideIcon
+  LucideIcon,
+  Users
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -42,7 +43,8 @@ const iconMap: Record<string, LucideIcon> = {
   ImageIcon,
   LogOut,
   ClipboardList,
-  KanbanSquare
+  KanbanSquare,
+  Users
 };
 
 const mainLinks = [
@@ -53,6 +55,7 @@ const mainLinks = [
 ];
 
 const menuLinks = [
+  { href: "/dashboard/customers", label: "Klienci", icon: Users },
   { href: "/dashboard/orders", label: "Zamówienia", icon: Package },
   { href: "/dashboard/montaze", label: "Montaże", icon: Hammer },
   { href: "/dashboard/mail", label: "Poczta", icon: Mail },
