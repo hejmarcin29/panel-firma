@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db';
 import { customers, orders, montages } from '@/lib/db/schema';
-import { desc, eq, ilike, or, sql } from 'drizzle-orm';
+import { desc, eq, ilike, or } from 'drizzle-orm';
 
 export type CustomerWithStats = typeof customers.$inferSelect & {
 	ordersCount: number;

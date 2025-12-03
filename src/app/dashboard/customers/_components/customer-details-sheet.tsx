@@ -1,12 +1,12 @@
 'use client';
 
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Phone, Mail, MapPin, Calendar, Package, Hammer, ExternalLink, Building2, User } from 'lucide-react';
+import { Phone, Mail, MapPin, Package, Hammer, ExternalLink, Building2 } from 'lucide-react';
 import { CustomerDetails } from '../actions';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
