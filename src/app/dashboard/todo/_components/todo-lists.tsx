@@ -525,20 +525,35 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="start">
                                                 <DropdownMenuItem onClick={() => {
-                                                    setSelectedTask({ ...selectedTask, priority: 'normal' });
-                                                    updateTaskPriority(selectedTask.id, 'normal');
+                                                    const newPriority = 'normal';
+                                                    setSelectedTask({ ...selectedTask, priority: newPriority });
+                                                    setColumns(prev => prev.map(col => ({
+                                                        ...col,
+                                                        tasks: col.tasks.map(t => t.id === selectedTask.id ? { ...t, priority: newPriority } : t)
+                                                    })));
+                                                    updateTaskPriority(selectedTask.id, newPriority);
                                                 }}>
                                                     Normalny
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem onClick={() => {
-                                                    setSelectedTask({ ...selectedTask, priority: 'important' });
-                                                    updateTaskPriority(selectedTask.id, 'important');
+                                                    const newPriority = 'important';
+                                                    setSelectedTask({ ...selectedTask, priority: newPriority });
+                                                    setColumns(prev => prev.map(col => ({
+                                                        ...col,
+                                                        tasks: col.tasks.map(t => t.id === selectedTask.id ? { ...t, priority: newPriority } : t)
+                                                    })));
+                                                    updateTaskPriority(selectedTask.id, newPriority);
                                                 }}>
                                                     <span className="text-amber-600 font-medium">Ważne</span>
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem onClick={() => {
-                                                    setSelectedTask({ ...selectedTask, priority: 'urgent' });
-                                                    updateTaskPriority(selectedTask.id, 'urgent');
+                                                    const newPriority = 'urgent';
+                                                    setSelectedTask({ ...selectedTask, priority: newPriority });
+                                                    setColumns(prev => prev.map(col => ({
+                                                        ...col,
+                                                        tasks: col.tasks.map(t => t.id === selectedTask.id ? { ...t, priority: newPriority } : t)
+                                                    })));
+                                                    updateTaskPriority(selectedTask.id, newPriority);
                                                 }}>
                                                     <span className="text-red-600 font-medium">Pilne</span>
                                                 </DropdownMenuItem>

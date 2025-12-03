@@ -212,13 +212,15 @@ export default async function DashboardPage() {
         
         const isDue = t.dueDate && new Date(t.dueDate) <= now;
         const isReminder = t.reminderAt && new Date(t.reminderAt) <= now;
+        const isUrgent = t.priority === 'urgent';
         
-        return isDue || isReminder;
+        return isDue || isReminder || isUrgent;
     }).map(t => ({
         id: t.id,
         content: t.content,
         reminderAt: t.reminderAt,
-        dueDate: t.dueDate
+        dueDate: t.dueDate,
+        priority: t.priority
     }));
 
     // Tasks Widget Data (Lite)

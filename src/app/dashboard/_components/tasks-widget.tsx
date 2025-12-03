@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Bell, Calendar, Wrench, ListTodo } from "lucide-react";
+import { Bell, Calendar, Wrench, ListTodo, Star } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -9,7 +9,7 @@ interface TasksWidgetProps {
   tasksCount: number;
   urgentCount: number;
   todoCount?: number;
-  reminderTasks?: { id: string; content: string; reminderAt: Date | null; dueDate: Date | null }[];
+  reminderTasks?: { id: string; content: string; reminderAt: Date | null; dueDate: Date | null; priority?: string }[];
 }
 
 export function TasksWidget({ tasksCount, urgentCount, todoCount = 0, reminderTasks = [] }: TasksWidgetProps) {
@@ -73,8 +73,9 @@ export function TasksWidget({ tasksCount, urgentCount, todoCount = 0, reminderTa
                         </span>
                         {reminderTasks.slice(0, 3).map(task => (
                             <Link key={task.id} href="/dashboard/todo" className="flex items-start gap-2 text-sm hover:underline group">
-                                {task.reminderAt && <Bell className="h-3.5 w-3.5 text-orange-500 shrink-0 mt-0.5 group-hover:text-orange-600" />}
-                                {task.dueDate && !task.reminderAt && <Calendar className="h-3.5 w-3.5 text-red-500 shrink-0 mt-0.5 group-hover:text-red-600" />}
+                                {task.priority === 'urgent' && <Star className="h-3.5 w-3.5 text-red-500 shrink-0 mt-0.5 fill-red-500" />}
+                                {task.priority !== 'urgent' && task.reminderAt && <Bell className="h-3.5 w-3.5 text-orange-500 shrink-0 mt-0.5 group-hover:text-orange-600" />}
+                                {task.priority !== 'urgent' && task.dueDate && !task.reminderAt && <Calendar className="h-3.5 w-3.5 text-red-500 shrink-0 mt-0.5 group-hover:text-red-600" />}
                                 <span className="truncate text-muted-foreground group-hover:text-foreground transition-colors">{task.content}</span>
                             </Link>
                         ))}
