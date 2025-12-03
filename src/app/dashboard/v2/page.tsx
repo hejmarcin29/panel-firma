@@ -21,9 +21,9 @@ import {
 import { tryGetR2Config } from '@/lib/r2/config';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
 
-import { mapMontageRow, type MontageRow } from './montaze/utils';
-import { DashboardBuilder } from './_components/dashboard-builder';
-import type { DashboardLayoutConfig } from './actions';
+import { mapMontageRow, type MontageRow } from '../montaze/utils';
+import { DashboardBuilder } from '../_components/dashboard-builder';
+import type { DashboardLayoutConfig } from '../actions';
 
 const DEFAULT_LAYOUT: DashboardLayoutConfig = {
     columns: {
