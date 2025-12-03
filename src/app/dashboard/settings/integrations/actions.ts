@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { appSettings } from '@/lib/db/schema';
 import { requireUser } from '@/lib/auth/session';
-import { appSettingKeys } from '@/lib/settings';
+import { appSettingKeys, getAppSetting } from '@/lib/settings';
 
 export async function saveWooSettings(formData: FormData) {
 	const user = await requireUser();
@@ -41,4 +41,42 @@ export async function saveWooSettings(formData: FormData) {
 	}
 
 	revalidatePath('/dashboard/settings');
+}
+
+export async function testWooConnection() {
+	await requireUser();
+
+	const url = await getAppSetting(appSettingKeys.wooUrl);
+	const key = await getAppSetting(appSettingKeys.wooConsumerKey);
+	const secret = await getAppSetting(appSettingKeys.wooConsumerSecret);
+
+	if (!url || !key || !secret) {
+		return { success: false, message: 'Brak konfiguracji WooCommerce.' };
+	}
+
+	try {
+		// Remove trailing slash if present
+		const baseUrl = url.replace(/\/$/, '');
+		const auth = Buffer.from(`${key}:${secret}`).toString('base64');
+		
+		const response = await fetch(`${baseUrl}/wp-json/wc/v3/system_status`, {
+			headers: {
+				Authorization: `Basic ${auth}`,
+			},
+            next: { revalidate: 0 } 
+		});
+
+		if (!response.ok) {
+            if (response.status === 401) {
+                return { success: false, message: 'Błąd autoryzacji. Sprawdź klucze API.' };
+            }
+			return { success: false, message: `Błąd połączenia: ${response.status} ${response.statusText}` };
+		}
+
+		const data = await response.json();
+		return { success: true, message: 'Połączenie nawiązane pomyślnie.', data: { version: data.environment?.version } };
+	} catch (error) {
+		console.error('WooCommerce connection test error:', error);
+		return { success: false, message: 'Wystąpił błąd podczas łączenia ze sklepem.' };
+	}
 }

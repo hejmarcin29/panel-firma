@@ -14,7 +14,6 @@ const links = [
 	{ href: '/dashboard/montaze', label: 'Montaże' },
 	{ href: '/dashboard/montaze/galeria', label: 'Galeria' },
 	{ href: '/dashboard/mail', label: 'Poczta' },
-    { href: '/dashboard/integrations', label: 'Integracje' },
 	{ href: '/dashboard/settings', label: 'Ustawienia' },
 ];
 

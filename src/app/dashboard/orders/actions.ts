@@ -343,8 +343,7 @@ export async function getManualOrders(): Promise<Order[]> {
 	return rows.map(mapOrderRow);
 }
 
-export async function createManualOrder(payload: ManualOrderPayload): Promise<Order> {
-	const user = await requireUser();
+export async function createOrder(payload: ManualOrderPayload, userId?: string | null): Promise<Order> {
 	validatePayload(payload);
 
 	const id = crypto.randomUUID();
@@ -414,11 +413,16 @@ export async function createManualOrder(payload: ManualOrderPayload): Promise<Or
 		throw new Error('Nie udało się pobrać świeżo utworzonego zamówienia.');
 	}
 
-	await logSystemEvent('create_order', `Utworzono zamówienie ${payload.reference}`, user.id);
+	await logSystemEvent('create_order', `Utworzono zamówienie ${payload.reference}`, userId);
 
 	revalidatePath('/dashboard/orders');
 
 	return created;
+}
+
+export async function createManualOrder(payload: ManualOrderPayload): Promise<Order> {
+	const user = await requireUser();
+	return createOrder(payload, user.id);
 }
 
 export async function confirmManualOrder(orderId: string, type: 'production' | 'sample' = 'production'): Promise<Order> {

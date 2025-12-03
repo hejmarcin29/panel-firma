@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createHmac } from 'crypto';
 
-import { createManualOrder } from '@/app/dashboard/orders/actions';
+import { createOrder } from '@/app/dashboard/orders/actions';
 import { db } from '@/lib/db';
 import { integrationLogs } from '@/lib/db/schema';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 
 	try {
 		const manualPayload = mapWooOrderToManualOrderPayload(payload);
-		await createManualOrder(manualPayload);
+		await createOrder(manualPayload, 'woocommerce-webhook');
 		await logIntegration('info', 'Imported WooCommerce order', {
 			orderId: payload.id,
 			orderNumber: payload.number,

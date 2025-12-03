@@ -244,7 +244,6 @@ export default async function SettingsPage() {
                     </Card>
                 </div>
             }
-			mailSettings={<MailSettingsForm accounts={formattedMailAccounts} />}
 			montageSettings={
 				<div className="space-y-6">
 					<MontageStatusSettings initialStatuses={montageStatusDefinitions} />
@@ -352,74 +351,74 @@ export default async function SettingsPage() {
 				</Tabs>
 			}
 			integrations={
-				<div className="space-y-6">
-					<div className="grid gap-6 md:grid-cols-2">
-						<div className="space-y-6">
-							<WooSettingsForm initialSettings={{
-								consumerKey: wooConsumerKeySetting ?? '',
-								consumerSecret: wooConsumerSecretSetting ?? '',
-								webhookSecret: webhookSecretSetting ?? '',
-								wooUrl: wooUrlSetting ?? '',
-							}} />
+				<Tabs defaultValue="woocommerce" className="w-full">
+					<TabsList className="grid w-full grid-cols-3 mb-4">
+						<TabsTrigger value="woocommerce">WooCommerce</TabsTrigger>
+						<TabsTrigger value="mail">Poczta</TabsTrigger>
+						<TabsTrigger value="storage">Magazyn plików</TabsTrigger>
+					</TabsList>
+					<TabsContent value="woocommerce" className="space-y-6">
+						<div className="grid gap-6 md:grid-cols-2">
+							<div className="space-y-6">
+								<WooSettingsForm 
+                                    initialSettings={{
+                                        consumerKey: wooConsumerKeySetting ?? '',
+                                        consumerSecret: wooConsumerSecretSetting ?? '',
+                                        webhookSecret: webhookSecretSetting ?? '',
+                                        wooUrl: wooUrlSetting ?? '',
+                                    }} 
+                                    webhookUrl={webhookUrl}
+                                />
+							</div>
 							
-							<div className="p-4 border rounded-lg bg-card">
-								<h3 className="font-medium mb-2">Status Połączenia</h3>
-								<div className="flex items-center gap-2">
-									<div className={`h-3 w-3 rounded-full ${wooConsumerKeySetting ? 'bg-green-500' : 'bg-gray-300'}`} />
-									<span className="text-sm text-muted-foreground">
-										{wooConsumerKeySetting ? 'Skonfigurowano' : 'Brak konfiguracji'}
-									</span>
-								</div>
-								<p className="text-xs text-muted-foreground mt-2">
-									Webhook URL: <code className="bg-muted px-1 py-0.5 rounded select-all">{webhookUrl}</code>
-								</p>
+							<div>
+								<IntegrationLogs logs={logs.map(l => ({
+									...l,
+									meta: null,
+									createdAt: l.createdAt ? new Date(l.createdAt) : new Date()
+								}))} />
 							</div>
 						</div>
-						
-						<div>
-							<IntegrationLogs logs={logs.map(l => ({
-								...l,
-								meta: null,
-								createdAt: l.createdAt ? new Date(l.createdAt) : new Date()
-							}))} />
-						</div>
-					</div>
-				</div>
-			}
-			storage={
-				<Card>
-					<CardHeader>
-						<CardTitle>Cloudflare R2</CardTitle>
-						<CardDescription>Skonfiguruj magazyn do przechowywania zalacznikow klientow.</CardDescription>
-					</CardHeader>
-					<CardContent className="space-y-4">
-						<div className="flex flex-wrap items-center gap-2 text-sm">
-							<Badge className={r2StatusBadgeClass}>{r2StatusLabel}</Badge>
-							{r2BucketNameSetting ? <span className="text-muted-foreground">Bucket {r2BucketNameSetting}</span> : null}
-						</div>
-						<R2ConfigForm
-							initialAccountId={r2AccountIdSetting ?? ''}
-							initialAccessKeyId={r2AccessKeyIdSetting ?? ''}
-							initialSecretAccessKey={r2SecretAccessKeySetting ?? ''}
-							initialBucketName={r2BucketNameSetting ?? ''}
-							initialEndpoint={r2EndpointSetting ?? ''}
-							initialPublicBaseUrl={r2PublicBaseUrlSetting ?? ''}
-							initialApiToken={r2ApiTokenSetting ?? ''}
-						/>
-						<div className="space-y-2 text-xs text-muted-foreground">
-							<p>
-								Trzymaj wartosci w bazie albo ustaw je w <code>.env.local</code> (zmienne <code>CLOUDFLARE_R2_*</code>).
-								Pole tokenu API jest opcjonalne i potrzebne tylko przy wywolaniach HTTP do Cloudflare.
-							</p>
-							<ul className="list-disc space-y-1 pl-5">
-								<li><code>Account ID</code> znajduje sie w Cloudflare R2.</li>
-								<li><code>Access Key ID</code> i <code>Secret Access Key</code> autoryzuja klienta S3.</li>
-								<li><code>Endpoint</code> powinien wskazywac region, np. <code>https://...r2.cloudflarestorage.com</code>.</li>
-								<li><code>Publiczny URL</code> to adres <code>*.r2.dev</code>, ktory pokazujesz klientom (bez trailing <code>/</code>).</li>
-							</ul>
-						</div>
-					</CardContent>
-				</Card>
+					</TabsContent>
+					<TabsContent value="mail">
+						<MailSettingsForm accounts={formattedMailAccounts} />
+					</TabsContent>
+					<TabsContent value="storage">
+						<Card>
+							<CardHeader>
+								<CardTitle>Cloudflare R2</CardTitle>
+								<CardDescription>Skonfiguruj magazyn do przechowywania zalacznikow klientow.</CardDescription>
+							</CardHeader>
+							<CardContent className="space-y-4">
+								<div className="flex flex-wrap items-center gap-2 text-sm">
+									<Badge className={r2StatusBadgeClass}>{r2StatusLabel}</Badge>
+									{r2BucketNameSetting ? <span className="text-muted-foreground">Bucket {r2BucketNameSetting}</span> : null}
+								</div>
+								<R2ConfigForm
+									initialAccountId={r2AccountIdSetting ?? ''}
+									initialAccessKeyId={r2AccessKeyIdSetting ?? ''}
+									initialSecretAccessKey={r2SecretAccessKeySetting ?? ''}
+									initialBucketName={r2BucketNameSetting ?? ''}
+									initialEndpoint={r2EndpointSetting ?? ''}
+									initialPublicBaseUrl={r2PublicBaseUrlSetting ?? ''}
+									initialApiToken={r2ApiTokenSetting ?? ''}
+								/>
+								<div className="space-y-2 text-xs text-muted-foreground">
+									<p>
+										Trzymaj wartosci w bazie albo ustaw je w <code>.env.local</code> (zmienne <code>CLOUDFLARE_R2_*</code>).
+										Pole tokenu API jest opcjonalne i potrzebne tylko przy wywolaniach HTTP do Cloudflare.
+									</p>
+									<ul className="list-disc space-y-1 pl-5">
+										<li><code>Account ID</code> znajduje sie w Cloudflare R2.</li>
+										<li><code>Access Key ID</code> i <code>Secret Access Key</code> autoryzuja klienta S3.</li>
+										<li><code>Endpoint</code> powinien wskazywac region, np. <code>https://...r2.cloudflarestorage.com</code>.</li>
+										<li><code>Publiczny URL</code> to adres <code>*.r2.dev</code>, ktory pokazujesz klientom (bez trailing <code>/</code>).</li>
+									</ul>
+								</div>
+							</CardContent>
+						</Card>
+					</TabsContent>
+				</Tabs>
 			}
 			mobileMenuSettings={
 				<MobileMenuSettings initialConfig={mobileMenuConfig} />

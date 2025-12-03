@@ -7,16 +7,14 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 interface SettingsViewProps {
   children: React.ReactNode;
   appearance: React.ReactNode;
-  mailSettings: React.ReactNode;
   logs: React.ReactNode;
   integrations: React.ReactNode;
-  storage: React.ReactNode;
   montageSettings: React.ReactNode;
   mobileMenuSettings: React.ReactNode;
   kpiSettings: React.ReactNode;
 }
 
-export function SettingsView({ children, appearance, mailSettings, logs, integrations, storage, montageSettings, mobileMenuSettings, kpiSettings }: SettingsViewProps) {
+export function SettingsView({ children, appearance, logs, integrations, montageSettings, mobileMenuSettings, kpiSettings }: SettingsViewProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -77,25 +75,11 @@ export function SettingsView({ children, appearance, mailSettings, logs, integra
               Integracje
             </TabsTrigger>
             <TabsTrigger 
-              value="mail" 
-              className="w-full justify-start gap-2 px-3 py-2 h-9 data-[state=active]:bg-muted data-[state=active]:shadow-none ring-offset-background transition-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
-              <Mail className="h-4 w-4" />
-              Poczta
-            </TabsTrigger>
-            <TabsTrigger 
               value="montage" 
               className="w-full justify-start gap-2 px-3 py-2 h-9 data-[state=active]:bg-muted data-[state=active]:shadow-none ring-offset-background transition-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               <Activity className="h-4 w-4" />
               Montaże
-            </TabsTrigger>
-            <TabsTrigger 
-              value="storage" 
-              className="w-full justify-start gap-2 px-3 py-2 h-9 data-[state=active]:bg-muted data-[state=active]:shadow-none ring-offset-background transition-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
-              <Database className="h-4 w-4" />
-              Magazyn plików
             </TabsTrigger>
             <TabsTrigger 
               value="logs" 
@@ -128,16 +112,8 @@ export function SettingsView({ children, appearance, mailSettings, logs, integra
             {integrations}
           </TabsContent>
 
-          <TabsContent value="mail" className="m-0 space-y-4">
-            {mailSettings}
-          </TabsContent>
-
           <TabsContent value="montage" className="m-0 space-y-4">
             {montageSettings}
-          </TabsContent>
-
-          <TabsContent value="storage" className="m-0 space-y-4">
-            {storage}
           </TabsContent>
 
           <TabsContent value="logs" className="m-0 space-y-4">
