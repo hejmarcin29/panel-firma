@@ -16,7 +16,9 @@ import {
   MoreVertical, 
   Pencil, 
   Paperclip, 
-  Star 
+  Star,
+  X,
+  ArrowLeft
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -24,7 +26,8 @@ import {
   Sheet, 
   SheetContent, 
   SheetHeader, 
-  SheetTitle
+  SheetTitle,
+  SheetClose
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
@@ -478,17 +481,42 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
 
             {/* Task Detail Sheet */}
             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-                <SheetContent className="w-full sm:max-w-md flex flex-col h-full p-0 gap-0 bg-background">
+                <SheetContent className="w-full sm:max-w-md flex flex-col h-full p-0 gap-0 bg-background border-l">
                     {selectedTask && (
                         <>
-                            <SheetHeader className="px-6 py-4 border-b flex flex-row items-center justify-between space-y-0">
-                                <SheetTitle className="text-base font-semibold uppercase tracking-wider text-muted-foreground">
-                                    {columns.find(c => c.id === selectedTask.columnId)?.title || "Zadanie"}
-                                </SheetTitle>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <Star className="h-5 w-5 text-muted-foreground" />
-                                </Button>
-                            </SheetHeader>
+                            {/* Custom Header */}
+                            <div className="px-4 py-3 border-b flex items-center justify-between bg-background/95 backdrop-blur z-10">
+                                <div className="flex items-center gap-2">
+                                    <SheetClose asChild>
+                                        <Button variant="ghost" size="icon" className="h-10 w-10 -ml-2">
+                                            <X className="h-6 w-6" />
+                                        </Button>
+                                    </SheetClose>
+                                    <span className="font-semibold text-lg truncate max-w-[200px]">
+                                        {columns.find(c => c.id === selectedTask.columnId)?.title || "Zadanie"}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-10 w-10"
+                                        onClick={() => {
+                                            const newPriority = selectedTask.priority === 'important' ? 'normal' : 'important';
+                                            setSelectedTask({ ...selectedTask, priority: newPriority });
+                                            setColumns(prev => prev.map(col => ({
+                                                ...col,
+                                                tasks: col.tasks.map(t => t.id === selectedTask.id ? { ...t, priority: newPriority } : t)
+                                            })));
+                                            updateTaskPriority(selectedTask.id, newPriority);
+                                        }}
+                                    >
+                                        <Star className={cn("h-6 w-6 transition-colors", 
+                                            selectedTask.priority === 'important' ? "fill-amber-400 text-amber-400" : "text-muted-foreground"
+                                        )} />
+                                    </Button>
+                                </div>
+                            </div>
                             
                             <ScrollArea className="flex-1">
                                 <div className="flex flex-col p-6 gap-6">
@@ -509,22 +537,14 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
                                         />
                                     </div>
 
-                                    {/* Action List */}
-                                    <div className="flex flex-col gap-1">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" className={cn("justify-start px-2 h-12 text-muted-foreground hover:text-foreground gap-4 font-normal", selectedTask.priority !== 'normal' && "text-foreground font-medium")}>
-                                                    <Star className={cn("h-5 w-5", 
-                                                        selectedTask.priority === 'urgent' && "text-red-500 fill-red-500",
-                                                        selectedTask.priority === 'important' && "text-amber-500 fill-amber-500"
-                                                    )} />
-                                                    {selectedTask.priority === 'normal' ? "Ustaw priorytet" : 
-                                                     selectedTask.priority === 'important' ? "Ważne" : 
-                                                     selectedTask.priority === 'urgent' ? "Pilne" : "Priorytet"}
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="start">
-                                                <DropdownMenuItem onClick={() => {
+                                    {/* Priority Selection - Buttons instead of Dropdown */}
+                                    <div className="flex flex-col gap-2">
+                                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Priorytet</span>
+                                        <div className="flex gap-2">
+                                            <Button 
+                                                variant={selectedTask.priority === 'normal' ? 'secondary' : 'outline'} 
+                                                size="sm"
+                                                onClick={() => {
                                                     const newPriority = 'normal';
                                                     setSelectedTask({ ...selectedTask, priority: newPriority });
                                                     setColumns(prev => prev.map(col => ({
@@ -532,10 +552,15 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
                                                         tasks: col.tasks.map(t => t.id === selectedTask.id ? { ...t, priority: newPriority } : t)
                                                     })));
                                                     updateTaskPriority(selectedTask.id, newPriority);
-                                                }}>
-                                                    Normalny
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => {
+                                                }}
+                                                className="flex-1"
+                                            >
+                                                Normalny
+                                            </Button>
+                                            <Button 
+                                                variant={selectedTask.priority === 'important' ? 'secondary' : 'outline'} 
+                                                size="sm"
+                                                onClick={() => {
                                                     const newPriority = 'important';
                                                     setSelectedTask({ ...selectedTask, priority: newPriority });
                                                     setColumns(prev => prev.map(col => ({
@@ -543,10 +568,15 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
                                                         tasks: col.tasks.map(t => t.id === selectedTask.id ? { ...t, priority: newPriority } : t)
                                                     })));
                                                     updateTaskPriority(selectedTask.id, newPriority);
-                                                }}>
-                                                    <span className="text-amber-600 font-medium">Ważne</span>
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => {
+                                                }}
+                                                className={cn("flex-1", selectedTask.priority === 'important' && "bg-amber-100 text-amber-900 hover:bg-amber-200")}
+                                            >
+                                                Ważne
+                                            </Button>
+                                            <Button 
+                                                variant={selectedTask.priority === 'urgent' ? 'secondary' : 'outline'} 
+                                                size="sm"
+                                                onClick={() => {
                                                     const newPriority = 'urgent';
                                                     setSelectedTask({ ...selectedTask, priority: newPriority });
                                                     setColumns(prev => prev.map(col => ({
@@ -554,68 +584,75 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
                                                         tasks: col.tasks.map(t => t.id === selectedTask.id ? { ...t, priority: newPriority } : t)
                                                     })));
                                                     updateTaskPriority(selectedTask.id, newPriority);
-                                                }}>
-                                                    <span className="text-red-600 font-medium">Pilne</span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-
-                                        <div className="h-px bg-border my-2" />
-                                        
-                                        <div className="relative">
-                                            <input 
-                                                type="file" 
-                                                id="file-upload" 
-                                                className="hidden" 
-                                                onChange={async (e) => {
-                                                    const file = e.target.files?.[0];
-                                                    if (file) {
-                                                        const formData = new FormData();
-                                                        formData.append('taskId', selectedTask.id);
-                                                        formData.append('file', file);
-                                                        toast.promise(uploadTaskAttachment(formData), {
-                                                            loading: 'Wysyłanie pliku...',
-                                                            success: 'Plik dodany',
-                                                            error: 'Błąd wysyłania pliku'
-                                                        });
-                                                    }
                                                 }}
-                                            />
-                                            <Button 
-                                                variant="ghost" 
-                                                className="justify-start px-2 h-12 text-muted-foreground hover:text-foreground gap-4 font-normal w-full"
-                                                onClick={() => document.getElementById('file-upload')?.click()}
+                                                className={cn("flex-1", selectedTask.priority === 'urgent' && "bg-red-100 text-red-900 hover:bg-red-200")}
                                             >
-                                                <Paperclip className="h-5 w-5" />
-                                                Dodaj plik
+                                                Pilne
                                             </Button>
                                         </div>
+                                    </div>
 
-                                        {/* Attachments List */}
-                                        {selectedTask.attachments && selectedTask.attachments.length > 0 && (
-                                            <div className="flex flex-col gap-2 mt-2 pl-11">
-                                                {selectedTask.attachments.map((att) => (
+                                    <div className="h-px bg-border my-2" />
+                                    
+                                    {/* File Upload */}
+                                    <div className="relative">
+                                        <input 
+                                            type="file" 
+                                            id="file-upload" 
+                                            className="hidden" 
+                                            onChange={async (e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    const formData = new FormData();
+                                                    formData.append('taskId', selectedTask.id);
+                                                    formData.append('file', file);
+                                                    toast.promise(uploadTaskAttachment(formData), {
+                                                        loading: 'Wysyłanie pliku...',
+                                                        success: 'Plik dodany',
+                                                        error: 'Błąd wysyłania pliku'
+                                                    });
+                                                }
+                                            }}
+                                        />
+                                        <Button 
+                                            variant="outline" 
+                                            className="justify-start px-4 h-12 gap-3 font-normal w-full"
+                                            onClick={() => document.getElementById('file-upload')?.click()}
+                                        >
+                                            <Paperclip className="h-5 w-5 text-muted-foreground" />
+                                            Dodaj załącznik
+                                        </Button>
+                                    </div>
+
+                                    {/* Attachments List */}
+                                    {selectedTask.attachments && selectedTask.attachments.length > 0 && (
+                                        <div className="flex flex-col gap-2 pl-1">
+                                            {selectedTask.attachments.map((att) => (
+                                                <div key={att.id} className="flex items-center gap-2 p-2 bg-muted/50 rounded-md border">
+                                                    <Paperclip className="h-4 w-4 text-muted-foreground" />
                                                     <a 
-                                                        key={att.id} 
                                                         href={att.fileUrl} 
                                                         target="_blank" 
                                                         rel="noopener noreferrer"
-                                                        className="text-sm text-blue-600 hover:underline truncate"
+                                                        className="text-sm text-blue-600 hover:underline truncate flex-1"
                                                     >
                                                         {att.fileName}
                                                     </a>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    <div className="h-px bg-border my-2" />
 
                                     {/* Notes Section */}
-                                    <div className="flex-1">
+                                    <div className="flex-1 flex flex-col gap-2">
+                                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Notatki</span>
                                         <Textarea 
                                             value={selectedTask.description || ""} 
                                             onChange={(e) => setSelectedTask({ ...selectedTask, description: e.target.value })}
-                                            className="min-h-[150px] resize-none border-0 p-0 text-base leading-relaxed focus-visible:ring-0 bg-transparent shadow-none placeholder:text-muted-foreground/70"
-                                            placeholder="Dodaj notatkę..."
+                                            className="min-h-[150px] resize-none border p-3 text-base leading-relaxed focus-visible:ring-1 bg-transparent shadow-sm placeholder:text-muted-foreground/70"
+                                            placeholder="Dodaj szczegóły zadania..."
                                         />
                                     </div>
                                 </div>
@@ -630,13 +667,14 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
                                         <Button 
                                             variant="ghost" 
                                             size="icon"
-                                            className="h-8 w-8 hover:text-destructive"
+                                            className="h-10 w-10 hover:bg-destructive/10 hover:text-destructive"
                                             onClick={() => handleDeleteTask(selectedTask.id)}
                                         >
                                             <Trash2 className="h-5 w-5" />
                                         </Button>
                                         <Button 
                                             size="sm"
+                                            className="h-10 px-6"
                                             onClick={() => handleSaveTaskDetails(selectedTask.id, selectedTask.content, selectedTask.description || "")}
                                         >
                                             Zapisz
