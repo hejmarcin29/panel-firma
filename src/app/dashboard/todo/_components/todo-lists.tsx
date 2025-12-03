@@ -182,7 +182,8 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
             completed: false,
             orderIndex: 9999, // temporary
             description: "",
-            createdAt: new Date()
+            createdAt: new Date(),
+            priority: 'normal'
         };
 
         setColumns(prev => prev.map(col => {
