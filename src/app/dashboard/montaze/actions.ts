@@ -13,6 +13,7 @@ import {
 	montages,
 	type MontageStatus,
 	montageStatuses,
+	customers,
 } from '@/lib/db/schema';
 import { uploadMontageObject } from '@/lib/r2/storage';
 import { getMontageChecklistTemplates } from '@/lib/montaze/checklist';
@@ -23,6 +24,10 @@ import type { MaterialsEditHistoryEntry } from './types';
 
 const MONTAGE_DASHBOARD_PATH = '/dashboard/montaze';
 const MAX_ATTACHMENT_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
+
+function normalizePhone(phone: string): string {
+	return phone.replace(/\D/g, '');
+}
 
 async function generateNextMontageId(): Promise<string> {
     const now = new Date();
@@ -187,6 +192,73 @@ export async function createMontage({
 	const fallbackAddress = normalizedInstallation ?? normalizedBilling;
 	const fallbackCity = normalizedInstallationCity ?? normalizedBillingCity;
 	const fallbackAddressLine = [fallbackAddress, fallbackCity].filter(Boolean).join(', ') || null;
+
+	const normalizedPhone = contactPhone ? normalizePhone(contactPhone) : null;
+	const normalizedEmail = contactEmail?.trim()?.toLowerCase() || null;
+
+	// Customer sync logic
+	if (normalizedEmail || normalizedPhone) {
+		let existingCustomer = null;
+
+		// 1. Try by email
+		if (normalizedEmail) {
+			existingCustomer = await db.query.customers.findFirst({
+				where: (table, { eq }) => eq(table.email, normalizedEmail),
+			});
+		}
+
+		// 2. Try by phone if not found
+		if (!existingCustomer && normalizedPhone) {
+			existingCustomer = await db.query.customers.findFirst({
+				where: (table, { eq }) => eq(table.phone, normalizedPhone),
+			});
+		}
+
+		const customerData = {
+			name: (isCompany && normalizedCompanyName) ? normalizedCompanyName : trimmedName,
+			email: normalizedEmail,
+			phone: normalizedPhone,
+			taxId: normalizedNip,
+			billingStreet: normalizedBilling,
+			billingCity: normalizedBillingCity,
+			billingPostalCode: normalizedBillingPostalCode,
+			shippingStreet: normalizedInstallation,
+			shippingCity: normalizedInstallationCity,
+			shippingPostalCode: normalizedInstallationPostalCode,
+			updatedAt: now,
+		};
+
+		if (existingCustomer) {
+			// Smart merge for phone numbers
+			if (existingCustomer.phone && normalizedPhone && !existingCustomer.phone.includes(normalizedPhone)) {
+				customerData.phone = `${existingCustomer.phone}, ${normalizedPhone}`;
+			} else if (existingCustomer.phone) {
+                // Keep existing phone if new one is null or already present
+                customerData.phone = existingCustomer.phone;
+            }
+
+			// Update existing customer - only overwrite fields that are provided in the new montage
+			await db.update(customers)
+				.set({
+					...customerData,
+					email: normalizedEmail ?? existingCustomer.email,
+					taxId: normalizedNip ?? existingCustomer.taxId,
+					billingStreet: normalizedBilling ?? existingCustomer.billingStreet,
+					billingCity: normalizedBillingCity ?? existingCustomer.billingCity,
+					billingPostalCode: normalizedBillingPostalCode ?? existingCustomer.billingPostalCode,
+					shippingStreet: normalizedInstallation ?? existingCustomer.shippingStreet,
+					shippingCity: normalizedInstallationCity ?? existingCustomer.shippingCity,
+					shippingPostalCode: normalizedInstallationPostalCode ?? existingCustomer.shippingPostalCode,
+				})
+				.where(eq(customers.id, existingCustomer.id));
+		} else {
+			await db.insert(customers).values({
+				id: crypto.randomUUID(),
+				...customerData,
+				createdAt: now,
+			});
+		}
+	}
 
 	let scheduledInstallationAt: Date | null = null;
 	if (scheduledInstallationDate) {

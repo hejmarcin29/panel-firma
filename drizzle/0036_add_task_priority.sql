@@ -1,0 +1,1 @@
+ALTER TABLE `board_tasks` ADD `priority` text DEFAULT 'normal' NOT NULL;

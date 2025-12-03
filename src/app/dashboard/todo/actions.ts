@@ -183,6 +183,19 @@ export async function reorderTasks(items: { id: string; orderIndex: number; colu
     revalidatePath(TODO_PATH);
 }
 
+export async function updateTaskPriority(taskId: string, priority: string) {
+    await requireUser();
+
+    await db.update(boardTasks)
+        .set({ 
+            priority,
+            updatedAt: new Date() 
+        })
+        .where(eq(boardTasks.id, taskId));
+
+    revalidatePath(TODO_PATH);
+}
+
 export async function updateTaskDates(taskId: string, dueDate: Date | null, reminderAt: Date | null) {
     await requireUser();
 

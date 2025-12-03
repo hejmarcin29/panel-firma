@@ -15,8 +15,6 @@ import {
   Trash2, 
   MoreVertical, 
   Pencil, 
-  Bell, 
-  Calendar, 
   Paperclip, 
   Star 
 } from "lucide-react";
@@ -46,15 +44,14 @@ import {
   createColumn,
   deleteColumn,
   updateColumnTitle,
-  updateTaskDates,
+  updateTaskPriority,
   uploadTaskAttachment
 } from "../actions";
 import { useRouter } from "next/navigation";
 import { SwipeableTaskItem } from "../../zadania/_components/swipeable-task-item";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
+import { Badge } from "@/components/ui/badge";
 
 // Types based on schema
 interface TaskAttachment {
@@ -74,6 +71,7 @@ interface Task {
     createdAt: Date;
     dueDate?: Date | null;
     reminderAt?: Date | null;
+    priority: string;
     attachments?: TaskAttachment[];
 }
 
@@ -349,12 +347,20 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
                                                                 )}>
                                                                     {task.content}
                                                                 </p>
-                                                                {task.description && (
-                                                                    <p className="text-sm text-muted-foreground line-clamp-1 mt-0.5 flex items-center gap-1">
-                                                                        <FileText className="w-3 h-3" />
-                                                                        {task.description}
-                                                                    </p>
-                                                                )}
+                                                                <div className="flex flex-wrap gap-2 mt-1 items-center">
+                                                                    {task.priority === 'urgent' && (
+                                                                        <Badge variant="destructive" className="h-5 px-1.5 text-[10px]">Pilne</Badge>
+                                                                    )}
+                                                                    {task.priority === 'important' && (
+                                                                        <Badge variant="secondary" className="h-5 px-1.5 text-[10px] bg-amber-100 text-amber-800 hover:bg-amber-200">Ważne</Badge>
+                                                                    )}
+                                                                    {task.description && (
+                                                                        <p className="text-sm text-muted-foreground line-clamp-1 flex items-center gap-1">
+                                                                            <FileText className="w-3 h-3" />
+                                                                            {task.description}
+                                                                        </p>
+                                                                    )}
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </SwipeableTaskItem>
@@ -395,12 +401,20 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
                                                                         <p className="text-base leading-tight font-medium transition-all line-through text-muted-foreground">
                                                                             {task.content}
                                                                         </p>
-                                                                        {task.description && (
-                                                                            <p className="text-sm text-muted-foreground line-clamp-1 mt-0.5 flex items-center gap-1">
-                                                                                <FileText className="w-3 h-3" />
-                                                                                {task.description}
-                                                                            </p>
-                                                                        )}
+                                                                        <div className="flex flex-wrap gap-2 mt-1 items-center">
+                                                                            {task.priority === 'urgent' && (
+                                                                                <Badge variant="destructive" className="h-5 px-1.5 text-[10px]">Pilne</Badge>
+                                                                            )}
+                                                                            {task.priority === 'important' && (
+                                                                                <Badge variant="secondary" className="h-5 px-1.5 text-[10px] bg-amber-100 text-amber-800 hover:bg-amber-200">Ważne</Badge>
+                                                                            )}
+                                                                            {task.description && (
+                                                                                <p className="text-sm text-muted-foreground line-clamp-1 flex items-center gap-1">
+                                                                                    <FileText className="w-3 h-3" />
+                                                                                    {task.description}
+                                                                                </p>
+                                                                            )}
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             </SwipeableTaskItem>
@@ -496,54 +510,39 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
 
                                     {/* Action List */}
                                     <div className="flex flex-col gap-1">
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <Button variant="ghost" className={cn("justify-start px-2 h-12 text-muted-foreground hover:text-foreground gap-4 font-normal", selectedTask.reminderAt && "text-blue-600")}>
-                                                    <Bell className="h-5 w-5" />
-                                                    {selectedTask.reminderAt ? `Przypomnienie: ${format(new Date(selectedTask.reminderAt), "PPP p", { locale: pl })}` : "Przypomnij mi"}
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" className={cn("justify-start px-2 h-12 text-muted-foreground hover:text-foreground gap-4 font-normal", selectedTask.priority !== 'normal' && "text-foreground font-medium")}>
+                                                    <Star className={cn("h-5 w-5", 
+                                                        selectedTask.priority === 'urgent' && "text-red-500 fill-red-500",
+                                                        selectedTask.priority === 'important' && "text-amber-500 fill-amber-500"
+                                                    )} />
+                                                    {selectedTask.priority === 'normal' ? "Ustaw priorytet" : 
+                                                     selectedTask.priority === 'important' ? "Ważne" : 
+                                                     selectedTask.priority === 'urgent' ? "Pilne" : "Priorytet"}
                                                 </Button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-auto p-0" align="start">
-                                                <CalendarComponent
-                                                    mode="single"
-                                                    selected={selectedTask.reminderAt ? new Date(selectedTask.reminderAt) : undefined}
-                                                    onSelect={(date) => {
-                                                        if (date) {
-                                                            // Set default time to 9:00 AM
-                                                            date.setHours(9, 0, 0, 0);
-                                                            const newDate = date;
-                                                            setSelectedTask({ ...selectedTask, reminderAt: newDate });
-                                                            updateTaskDates(selectedTask.id, selectedTask.dueDate || null, newDate);
-                                                        } else {
-                                                            setSelectedTask({ ...selectedTask, reminderAt: null });
-                                                            updateTaskDates(selectedTask.id, selectedTask.dueDate || null, null);
-                                                        }
-                                                    }}
-                                                    initialFocus
-                                                />
-                                            </PopoverContent>
-                                        </Popover>
-
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <Button variant="ghost" className={cn("justify-start px-2 h-12 text-muted-foreground hover:text-foreground gap-4 font-normal", selectedTask.dueDate && "text-blue-600")}>
-                                                    <Calendar className="h-5 w-5" />
-                                                    {selectedTask.dueDate ? `Termin: ${format(new Date(selectedTask.dueDate), "PPP", { locale: pl })}` : "Dodaj termin"}
-                                                </Button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-auto p-0" align="start">
-                                                <CalendarComponent
-                                                    mode="single"
-                                                    selected={selectedTask.dueDate ? new Date(selectedTask.dueDate) : undefined}
-                                                    onSelect={(date) => {
-                                                        const newDate = date || null;
-                                                        setSelectedTask({ ...selectedTask, dueDate: newDate });
-                                                        updateTaskDates(selectedTask.id, newDate, selectedTask.reminderAt || null);
-                                                    }}
-                                                    initialFocus
-                                                />
-                                            </PopoverContent>
-                                        </Popover>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="start">
+                                                <DropdownMenuItem onClick={() => {
+                                                    setSelectedTask({ ...selectedTask, priority: 'normal' });
+                                                    updateTaskPriority(selectedTask.id, 'normal');
+                                                }}>
+                                                    Normalny
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => {
+                                                    setSelectedTask({ ...selectedTask, priority: 'important' });
+                                                    updateTaskPriority(selectedTask.id, 'important');
+                                                }}>
+                                                    <span className="text-amber-600 font-medium">Ważne</span>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => {
+                                                    setSelectedTask({ ...selectedTask, priority: 'urgent' });
+                                                    updateTaskPriority(selectedTask.id, 'urgent');
+                                                }}>
+                                                    <span className="text-red-600 font-medium">Pilne</span>
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
 
                                         <div className="h-px bg-border my-2" />
                                         

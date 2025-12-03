@@ -880,6 +880,7 @@ export const boardTasks = sqliteTable(
 		description: text('description'),
 		completed: integer('completed', { mode: 'boolean' }).notNull().default(false),
 		orderIndex: integer('order_index', { mode: 'number' }).notNull().default(0),
+		priority: text('priority').notNull().default('normal'),
 		dueDate: integer('due_date', { mode: 'timestamp_ms' }),
 		reminderAt: integer('reminder_at', { mode: 'timestamp_ms' }),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' })
