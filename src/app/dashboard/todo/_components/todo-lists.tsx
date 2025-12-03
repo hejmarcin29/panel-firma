@@ -543,7 +543,7 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
                                                 e.target.style.height = 'auto';
                                                 e.target.style.height = e.target.scrollHeight + 'px';
                                             }}
-                                            className="text-xl font-semibold border-0 p-0 min-h-[28px] resize-none focus-visible:ring-0 bg-transparent shadow-none overflow-hidden"
+                                            className="text-xl font-semibold border-0 p-0 min-h-7 resize-none focus-visible:ring-0 bg-transparent shadow-none overflow-hidden"
                                             rows={1}
                                         />
                                     </div>

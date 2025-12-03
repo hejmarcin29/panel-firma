@@ -111,11 +111,11 @@ function SortableItem({ item, onToggle }: SortableItemProps) {
             className={cn(
                 "group relative flex items-center justify-between p-4 mb-3 rounded-xl border transition-colors duration-200",
                 // CSS variables for framer-motion to interpolate
-                "[--bg-dragging:theme(colors.white)] dark:[--bg-dragging:theme(colors.zinc.800)]",
-                "[--bg-visible:theme(colors.white)] dark:[--bg-visible:theme(colors.zinc.900)]",
-                "[--bg-hidden:theme(colors.zinc.50)] dark:[--bg-hidden:theme(colors.zinc.900/30)]",
-                "[--border-dragging:theme(colors.primary.DEFAULT/0.5)]",
-                "[--border-visible:theme(colors.zinc.200)] dark:[--border-visible:theme(colors.zinc.800)]",
+                "[--bg-dragging:var(--color-white)] dark:[--bg-dragging:var(--color-zinc-800)]",
+                "[--bg-visible:var(--color-white)] dark:[--bg-visible:var(--color-zinc-900)]",
+                "[--bg-hidden:var(--color-zinc-50)] dark:[--bg-hidden:var(--color-zinc-900)]/30",
+                "[--border-dragging:var(--color-primary)]/50",
+                "[--border-visible:var(--color-zinc-200)] dark:[--border-visible:var(--color-zinc-800)]",
                 
                 isDragging ? "shadow-2xl ring-2 ring-primary/20" : "",
                 !isDragging && item.visible ? "shadow-sm" : "",
@@ -136,7 +136,7 @@ function SortableItem({ item, onToggle }: SortableItemProps) {
                         className={cn(
                             "p-2.5 rounded-xl border shadow-sm",
                             item.visible 
-                                ? "bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 text-primary" 
+                                ? "bg-linear-to-br from-primary/10 to-primary/5 border-primary/20 text-primary" 
                                 : "bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-400"
                         )}
                         whileHover={{ rotate: [0, -10, 10, 0], transition: { duration: 0.5 } }}
@@ -173,18 +173,18 @@ function PhonePreview({ items }: { items: MobileMenuItem[] }) {
     
     return (
         <div className="sticky top-8">
-            <div className="relative mx-auto border-zinc-800 dark:border-zinc-800 bg-zinc-900 border-[14px] rounded-[2.5rem] h-[600px] w-[300px] shadow-xl">
-                <div className="w-[148px] h-[18px] bg-zinc-800 top-0 rounded-b-[1rem] left-1/2 -translate-x-1/2 absolute"></div>
-                <div className="h-[32px] w-[3px] bg-zinc-800 absolute -start-[17px] top-[72px] rounded-s-lg"></div>
+            <div className="relative mx-auto border-zinc-800 dark:border-zinc-800 bg-zinc-900 border-14 rounded-4xl h-[600px] w-[300px] shadow-xl">
+                <div className="w-[148px] h-[18px] bg-zinc-800 top-0 rounded-b-2xl left-1/2 -translate-x-1/2 absolute"></div>
+                <div className="h-8 w-[3px] bg-zinc-800 absolute -start-[17px] top-[72px] rounded-s-lg"></div>
                 <div className="h-[46px] w-[3px] bg-zinc-800 absolute -start-[17px] top-[124px] rounded-s-lg"></div>
                 <div className="h-[46px] w-[3px] bg-zinc-800 absolute -start-[17px] top-[178px] rounded-s-lg"></div>
-                <div className="h-[64px] w-[3px] bg-zinc-800 absolute -end-[17px] top-[142px] rounded-e-lg"></div>
+                <div className="h-16 w-[3px] bg-zinc-800 absolute -end-[17px] top-[142px] rounded-e-lg"></div>
                 
-                <div className="rounded-[2rem] overflow-hidden w-full h-full bg-white dark:bg-zinc-950 relative flex flex-col">
+                <div className="rounded-4xl overflow-hidden w-full h-full bg-white dark:bg-zinc-950 relative flex flex-col">
                     {/* Mock Content */}
                     <div className="flex-1 bg-zinc-50 dark:bg-zinc-900/50 p-4 space-y-4 overflow-hidden relative">
-                        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-                        <div className="h-32 rounded-2xl bg-gradient-to-br from-primary/20 to-purple-500/20 animate-pulse" />
+                        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px]"></div>
+                        <div className="h-32 rounded-2xl bg-linear-to-br from-primary/20 to-purple-500/20 animate-pulse" />
                         <div className="space-y-2">
                             <div className="h-4 w-3/4 bg-zinc-200 dark:bg-zinc-800 rounded animate-pulse" />
                             <div className="h-4 w-1/2 bg-zinc-200 dark:bg-zinc-800 rounded animate-pulse" />
@@ -291,7 +291,7 @@ export function MobileMenuSettings({ initialConfig }: { initialConfig?: MobileMe
                                 <Smartphone className="h-6 w-6" />
                             </div>
                             <div>
-                                <CardTitle className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600">
+                                <CardTitle className="text-2xl font-bold bg-clip-text text-transparent bg-linear-to-r from-primary to-purple-600">
                                     Menu Mobilne
                                 </CardTitle>
                                 <CardDescription className="text-base mt-1">
