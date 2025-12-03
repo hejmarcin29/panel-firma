@@ -64,7 +64,14 @@ export type Montage = {
 	floorDetails: string | null;
 	skirtingLength: number | null;
 	skirtingDetails: string | null;
-	panelType: string | null;
+	panelModel: string | null;
+	panelWaste: number | null;
+	skirtingModel: string | null;
+	skirtingWaste: number | null;
+	modelsApproved: boolean;
+	finalPanelAmount: number | null;
+	finalSkirtingLength: number | null;
+	materialsEditHistory: any | null;
 	additionalInfo: string | null;
 	forecastedInstallationDate: TimestampValue;
 	status: MontageStatus;

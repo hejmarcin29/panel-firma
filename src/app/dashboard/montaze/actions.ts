@@ -533,16 +533,31 @@ export async function toggleMontageChecklistItem({ itemId, montageId, completed 
 type UpdateMontageMaterialsInput = {
 	montageId: string;
 	materialDetails: string;
+	finalPanelAmount?: number | null;
+	finalSkirtingLength?: number | null;
+	materialsEditHistory?: any;
 };
 
-export async function updateMontageMaterialDetails({ montageId, materialDetails }: UpdateMontageMaterialsInput) {
+export async function updateMontageMaterialDetails({
+	montageId,
+	materialDetails,
+	finalPanelAmount,
+	finalSkirtingLength,
+	materialsEditHistory,
+}: UpdateMontageMaterialsInput) {
 	await requireUser();
 
 	const sanitized = materialDetails.trim();
 
 	await db
 		.update(montages)
-		.set({ materialDetails: sanitized ? sanitized : null, updatedAt: new Date() })
+		.set({
+			materialDetails: sanitized ? sanitized : null,
+			finalPanelAmount,
+			finalSkirtingLength,
+			materialsEditHistory,
+			updatedAt: new Date(),
+		})
 		.where(eq(montages.id, montageId));
 
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
@@ -701,7 +716,11 @@ export async function updateMontageMeasurement({
 	floorDetails,
 	skirtingLength,
 	skirtingDetails,
-	panelType,
+	panelModel,
+	panelWaste,
+	skirtingModel,
+	skirtingWaste,
+	modelsApproved,
 	additionalInfo,
 	scheduledInstallationAt,
 	scheduledInstallationEndAt,
@@ -712,7 +731,11 @@ export async function updateMontageMeasurement({
 	floorDetails: string;
 	skirtingLength: number | null;
 	skirtingDetails: string;
-	panelType: string;
+	panelModel: string;
+	panelWaste: number;
+	skirtingModel: string;
+	skirtingWaste: number;
+	modelsApproved: boolean;
 	additionalInfo: string;
 	scheduledInstallationAt: number | null;
 	scheduledInstallationEndAt: number | null;
@@ -727,7 +750,11 @@ export async function updateMontageMeasurement({
 			floorDetails,
 			skirtingLength,
 			skirtingDetails,
-			panelType,
+			panelModel,
+			panelWaste,
+			skirtingModel,
+			skirtingWaste,
+			modelsApproved,
 			additionalInfo,
 			scheduledInstallationAt: scheduledInstallationAt ? new Date(scheduledInstallationAt) : null,
 			scheduledInstallationEndAt: scheduledInstallationEndAt ? new Date(scheduledInstallationEndAt) : null,
@@ -768,9 +795,28 @@ export async function updateMontageRealizationStatus({
         .set(updateData)
         .where(eq(montages.id, montageId));
 
+    const changes: string[] = [];
+    if (materialStatus) {
+        const labels: Record<string, string> = {
+            'none': 'Brak',
+            'ordered': 'Zamówiono',
+            'in_stock': 'Na magazynie',
+            'delivered': 'Dostarczono'
+        };
+        changes.push(`Status materiału: ${labels[materialStatus] || materialStatus}`);
+    }
+    if (installerStatus) {
+        const labels: Record<string, string> = {
+            'none': 'Brak',
+            'informed': 'Poinformowany',
+            'confirmed': 'Potwierdzony'
+        };
+        changes.push(`Status montażysty: ${labels[installerStatus] || installerStatus}`);
+    }
+
     await logSystemEvent(
         'montage.update_realization_status',
-        `Updated realization status for montage ${montageId}: ${JSON.stringify(updateData)}`,
+        `Zaktualizowano status realizacji dla montażu ${montageId}: ${changes.join(', ')}`,
         user.id
     );
 
