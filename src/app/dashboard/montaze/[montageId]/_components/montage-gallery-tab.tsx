@@ -20,22 +20,24 @@ export function MontageGalleryTab({ montage }: { montage: Montage }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append("montageId", montage.id);
-    formData.append("file", file);
-    // Optional: prompt for title or use filename
-    formData.append("title", file.name);
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
     startTransition(async () => {
         try {
-            await addMontageAttachment(formData);
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const formData = new FormData();
+                formData.append("montageId", montage.id);
+                formData.append("file", file);
+                formData.append("title", file.name);
+                
+                await addMontageAttachment(formData);
+            }
             router.refresh();
         } catch (error) {
             console.error(error);
-            alert("Wystąpił błąd podczas przesyłania pliku.");
+            alert("Wystąpił błąd podczas przesyłania plików.");
         }
         // Reset input
         if (fileInputRef.current) {
@@ -64,6 +66,7 @@ export function MontageGalleryTab({ montage }: { montage: Montage }) {
                     ref={fileInputRef}
                     className="hidden"
                     onChange={handleFileChange}
+                    multiple
                 />
                 <Button 
                     onClick={() => fileInputRef.current?.click()} 

@@ -34,9 +34,11 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
   
   const [measurementDetails, setMeasurementDetails] = useState(montage.measurementDetails || '');
   const [floorArea, setFloorArea] = useState<string>(montage.floorArea?.toString() || '');
-  const [floorDetails, setFloorDetails] = useState(montage.floorDetails || '');
+  // floorDetails repurposed as Panel Additional Materials
+  const [panelAdditionalMaterials, setPanelAdditionalMaterials] = useState(montage.floorDetails || '');
   const [skirtingLength, setSkirtingLength] = useState<string>(montage.skirtingLength?.toString() || '');
-  const [skirtingDetails, setSkirtingDetails] = useState(montage.skirtingDetails || '');
+  // skirtingDetails repurposed as Skirting Additional Materials
+  const [skirtingAdditionalMaterials, setSkirtingAdditionalMaterials] = useState(montage.skirtingDetails || '');
   
   const [panelModel, setPanelModel] = useState(montage.panelModel || '');
   const [panelWaste, setPanelWaste] = useState<string>(montage.panelWaste?.toString() || '5');
@@ -131,9 +133,9 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
           montageId: montage.id,
           measurementDetails,
           floorArea: floorArea ? parseFloat(floorArea) : null,
-          floorDetails,
+          floorDetails: panelAdditionalMaterials, // Repurposed
           skirtingLength: skirtingLength ? parseFloat(skirtingLength) : null,
-          skirtingDetails,
+          skirtingDetails: skirtingAdditionalMaterials, // Repurposed
           panelModel,
           panelWaste: parseFloat(panelWaste),
           skirtingModel,
@@ -179,18 +181,6 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="floorDetails">Szczegóły podłogi</Label>
-            <Input
-              id="floorDetails"
-              placeholder="Np. rodzaj wylewki, uwagi..."
-              value={floorDetails}
-              onChange={(e) => setFloorDetails(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
             <Label htmlFor="skirtingLength">Pomiar listwy (mb)</Label>
             <Input
               id="skirtingLength"
@@ -201,19 +191,9 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
               onChange={(e) => setSkirtingLength(e.target.value)}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="skirtingDetails">Szczegóły listew</Label>
-            <Input
-              id="skirtingDetails"
-              placeholder="Np. rodzaj listwy, narożniki..."
-              value={skirtingDetails}
-              onChange={(e) => setSkirtingDetails(e.target.value)}
-            />
-          </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
+        <div className="space-y-2">
             <Label htmlFor="measurementDetails">Ogólne szczegóły pomiaru</Label>
             <Textarea
               id="measurementDetails"
@@ -222,57 +202,79 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
               onChange={(e) => setMeasurementDetails(e.target.value)}
               className="min-h-[100px]"
             />
-          </div>
+        </div>
 
-          <div className="space-y-4">
-            <div className="grid gap-4 grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="panelModel">Wybrany model paneli</Label>
-                <Input
-                  id="panelModel"
-                  placeholder="np. Dąb Naturalny"
-                  value={panelModel}
-                  onChange={(e) => setPanelModel(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="panelWaste">Zapas paneli (%)</Label>
-                <Select value={panelWaste} onValueChange={setPanelWaste}>
-                  <SelectTrigger id="panelWaste">
-                    <SelectValue placeholder="Wybierz zapas" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="5">5%</SelectItem>
-                    <SelectItem value="10">10%</SelectItem>
-                    <SelectItem value="15">15%</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+        <div className="border rounded-lg p-4 space-y-4 bg-muted/10">
+            <h4 className="font-medium text-sm uppercase tracking-wider text-muted-foreground mb-2">Materiał</h4>
+            
+            <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="panelModel">Wybrany model paneli</Label>
+                        <Input
+                        id="panelModel"
+                        placeholder="np. Dąb Naturalny"
+                        value={panelModel}
+                        onChange={(e) => setPanelModel(e.target.value)}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="panelAdditionalMaterials">Dodatkowe materiały (Panele)</Label>
+                        <Input
+                        id="panelAdditionalMaterials"
+                        placeholder="np. podkład, folia..."
+                        value={panelAdditionalMaterials}
+                        onChange={(e) => setPanelAdditionalMaterials(e.target.value)}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="panelWaste">Zapas paneli (%)</Label>
+                        <Select value={panelWaste} onValueChange={setPanelWaste}>
+                        <SelectTrigger id="panelWaste">
+                            <SelectValue placeholder="Wybierz zapas" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="5">5%</SelectItem>
+                            <SelectItem value="10">10%</SelectItem>
+                            <SelectItem value="15">15%</SelectItem>
+                        </SelectContent>
+                        </Select>
+                    </div>
+                </div>
 
-            <div className="grid gap-4 grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="skirtingModel">Wybrany model listew</Label>
-                <Input
-                  id="skirtingModel"
-                  placeholder="np. Biała MDF 8cm"
-                  value={skirtingModel}
-                  onChange={(e) => setSkirtingModel(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="skirtingWaste">Zapas listew (%)</Label>
-                <Select value={skirtingWaste} onValueChange={setSkirtingWaste}>
-                  <SelectTrigger id="skirtingWaste">
-                    <SelectValue placeholder="Wybierz zapas" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="5">5%</SelectItem>
-                    <SelectItem value="10">10%</SelectItem>
-                    <SelectItem value="15">15%</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="skirtingModel">Wybrany model listew</Label>
+                        <Input
+                        id="skirtingModel"
+                        placeholder="np. Biała MDF 8cm"
+                        value={skirtingModel}
+                        onChange={(e) => setSkirtingModel(e.target.value)}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="skirtingAdditionalMaterials">Dodatkowe materiały (Listwy)</Label>
+                        <Input
+                        id="skirtingAdditionalMaterials"
+                        placeholder="np. klej, narożniki..."
+                        value={skirtingAdditionalMaterials}
+                        onChange={(e) => setSkirtingAdditionalMaterials(e.target.value)}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="skirtingWaste">Zapas listew (%)</Label>
+                        <Select value={skirtingWaste} onValueChange={setSkirtingWaste}>
+                        <SelectTrigger id="skirtingWaste">
+                            <SelectValue placeholder="Wybierz zapas" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="5">5%</SelectItem>
+                            <SelectItem value="10">10%</SelectItem>
+                            <SelectItem value="15">15%</SelectItem>
+                        </SelectContent>
+                        </Select>
+                    </div>
+                </div>
             </div>
 
             <div className="flex items-center space-x-2 pt-2">
@@ -283,7 +285,9 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
               />
               <Label htmlFor="modelsApproved">Wybrane modele zaakceptowane przez klienta</Label>
             </div>
+        </div>
 
+        <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label>Data montażu (od)</Label>
               <Popover>
