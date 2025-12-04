@@ -35,7 +35,7 @@ export async function getBoardData() {
         },
     });
 
-    return columns;
+    return { columns };
 }
 
 export async function createColumn(title: string) {

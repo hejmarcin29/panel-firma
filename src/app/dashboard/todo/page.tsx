@@ -1,31 +1,27 @@
 import { requireUser } from '@/lib/auth/session';
-import { CheckSquare } from 'lucide-react';
 import { getBoardData } from './actions';
-import { TodoLists } from './_components/todo-lists';
+import { TodoSidebar } from './_components/todo-sidebar';
 
 export const dynamic = 'force-dynamic';
 
 export default async function TodoPage() {
     await requireUser();
-    const columns = await getBoardData();
+    const { columns } = await getBoardData();
 
     return (
-        <div className="flex flex-col min-h-[calc(100vh-4rem)] p-4 md:p-8">
-            <div className="flex items-center justify-between mb-8">
-                <div className="flex flex-col gap-1">
-                    <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-                        <CheckSquare className="h-8 w-8" />
-                        Focus List
-                    </h1>
-                    <p className="text-muted-foreground">
-                        Twoje centrum dowodzenia: pomysły, zakupy, marketing i inne sprawy firmowe.
-                    </p>
+        <>
+            {/* Mobile: Show Sidebar (as the main content) */}
+            <div className="md:hidden h-full bg-background">
+                <TodoSidebar columns={columns} className="h-full border-none" />
+            </div>
+            
+            {/* Desktop: Show Empty State */}
+            <div className="hidden md:flex items-center justify-center h-full text-muted-foreground">
+                <div className="text-center">
+                    <h3 className="font-semibold text-lg">Wybierz listę</h3>
+                    <p className="text-sm">Wybierz listę z menu po lewej stronie, aby zobaczyć zadania.</p>
                 </div>
             </div>
-
-            <div className="flex-1">
-                <TodoLists initialColumns={columns} />
-            </div>
-        </div>
+        </>
     );
 }
