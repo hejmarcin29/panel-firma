@@ -34,11 +34,21 @@ export async function getCustomers(query?: string): Promise<CustomerWithStats[]>
     const emails = rows.map(c => c.email).filter(Boolean) as string[];
     
     let customerOrders: Pick<typeof manualOrders.$inferSelect, 'billingEmail' | 'createdAt'>[] = [];
+    let customerMontages: Pick<typeof montages.$inferSelect, 'contactEmail' | 'createdAt'>[] = [];
+
     if (emails.length > 0) {
         customerOrders = await db.query.manualOrders.findMany({
             where: inArray(manualOrders.billingEmail, emails),
             columns: {
                 billingEmail: true,
+                createdAt: true,
+            }
+        });
+
+        customerMontages = await db.query.montages.findMany({
+            where: inArray(montages.contactEmail, emails),
+            columns: {
+                contactEmail: true,
                 createdAt: true,
             }
         });
@@ -50,11 +60,23 @@ export async function getCustomers(query?: string): Promise<CustomerWithStats[]>
             ? myOrders.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0].createdAt 
             : null;
 
+        const myMontages = customerMontages.filter(m => m.contactEmail === c.email);
+        const lastMontageDate = myMontages.length > 0
+            ? myMontages.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0].createdAt
+            : null;
+
+        let lastActivity = lastOrderDate;
+        if (lastMontageDate) {
+            if (!lastActivity || lastMontageDate > lastActivity) {
+                lastActivity = lastMontageDate;
+            }
+        }
+
 		return {
 			...c,
 			ordersCount: myOrders.length,
-			montagesCount: 0, 
-			lastActivity: lastOrderDate,
+			montagesCount: myMontages.length, 
+			lastActivity,
 		};
 	});
 }
