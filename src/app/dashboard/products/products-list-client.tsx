@@ -15,20 +15,31 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
-import { WooCommerceProduct } from './actions';
+import { 
+    Select, 
+    SelectContent, 
+    SelectItem, 
+    SelectTrigger, 
+    SelectValue 
+} from '@/components/ui/select';
+import { WooCommerceProduct, WooCommerceCategory, WooCommerceAttributeTerm } from './actions';
 
 interface ProductsListClientProps {
     initialProducts: WooCommerceProduct[];
     initialTotal: number;
     initialTotalPages: number;
     currentPage: number;
+    categories: WooCommerceCategory[];
+    brandTerms: WooCommerceAttributeTerm[];
 }
 
 export function ProductsListClient({ 
     initialProducts, 
     initialTotal, 
     initialTotalPages,
-    currentPage 
+    currentPage,
+    categories,
+    brandTerms
 }: ProductsListClientProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -43,10 +54,60 @@ export function ProductsListClient({
         setIsLoading(false);
     };
 
+    const handleFilterChange = (key: string, value: string) => {
+        setIsLoading(true);
+        const params = new URLSearchParams(searchParams);
+        if (value === 'all') {
+            params.delete(key);
+        } else {
+            params.set(key, value);
+        }
+        params.set('page', '1'); // Reset to page 1
+        router.push(`/dashboard/products?${params.toString()}`);
+        setIsLoading(false);
+    };
+
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <h2 className="text-2xl font-bold tracking-tight">Produkty ({initialTotal})</h2>
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                    <Select 
+                        value={searchParams.get('category') || 'all'} 
+                        onValueChange={(val) => handleFilterChange('category', val)}
+                    >
+                        <SelectTrigger className="w-full sm:w-[200px]">
+                            <SelectValue placeholder="Wybierz kategorię" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Wszystkie kategorie</SelectItem>
+                            {categories.map((cat) => (
+                                <SelectItem key={cat.id} value={cat.id.toString()}>
+                                    {cat.name} ({cat.count})
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+
+                    {brandTerms.length > 0 && (
+                        <Select 
+                            value={searchParams.get('brand') || 'all'} 
+                            onValueChange={(val) => handleFilterChange('brand', val)}
+                        >
+                            <SelectTrigger className="w-full sm:w-[200px]">
+                                <SelectValue placeholder="Wybierz markę" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">Wszystkie marki</SelectItem>
+                                {brandTerms.map((term) => (
+                                    <SelectItem key={term.id} value={term.id.toString()}>
+                                        {term.name} ({term.count})
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    )}
+                </div>
             </div>
 
             <Card>
@@ -58,7 +119,7 @@ export function ProductsListClient({
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="w-[80px]">Obraz</TableHead>
+                                    <TableHead className="w-20">Obraz</TableHead>
                                     <TableHead>Nazwa</TableHead>
                                     <TableHead>SKU</TableHead>
                                     <TableHead>Atrybuty</TableHead>

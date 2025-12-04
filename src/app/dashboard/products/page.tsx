@@ -1,4 +1,4 @@
-import { getProducts } from './actions';
+import { getProducts, getCategories, getAttributes, getAttributeTerms } from './actions';
 import { ProductsListClient } from './products-list-client';
 import { requireUser } from '@/lib/auth/session';
 
@@ -13,16 +13,37 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     
     const resolvedSearchParams = await searchParams;
     const page = typeof resolvedSearchParams.page === 'string' ? parseInt(resolvedSearchParams.page) : 1;
+    const categoryId = typeof resolvedSearchParams.category === 'string' ? parseInt(resolvedSearchParams.category) : undefined;
+    const brandTermId = typeof resolvedSearchParams.brand === 'string' ? parseInt(resolvedSearchParams.brand) : undefined;
     const perPage = 20;
 
-    const { products, total, totalPages } = await getProducts(page, perPage);
+    const [productsData, categories, attributes] = await Promise.all([
+        getProducts(page, perPage, categoryId, brandTermId),
+        getCategories(),
+        getAttributes()
+    ]);
+
+    // Find "Brand" or "Marka" attribute
+    const brandAttribute = attributes.find(attr => 
+        attr.name.toLowerCase() === 'marka' || 
+        attr.name.toLowerCase() === 'brand' || 
+        attr.slug.toLowerCase().includes('brand') ||
+        attr.slug.toLowerCase().includes('marka')
+    );
+
+    let brandTerms: any[] = [];
+    if (brandAttribute) {
+        brandTerms = await getAttributeTerms(brandAttribute.id);
+    }
 
     return (
         <ProductsListClient 
-            initialProducts={products} 
-            initialTotal={total} 
-            initialTotalPages={totalPages}
+            initialProducts={productsData.products} 
+            initialTotal={productsData.total} 
+            initialTotalPages={productsData.totalPages}
             currentPage={page}
+            categories={categories}
+            brandTerms={brandTerms}
         />
     );
 }
