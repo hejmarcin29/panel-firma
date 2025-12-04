@@ -44,7 +44,7 @@ export function useMobileModal(
   }, [onClose]);
 
   useEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
+    const handlePopState = () => {
       // If we popped state, it means we went back.
       // If the modal was open, we should close it.
       // The state we are popping TO might be null (base state).

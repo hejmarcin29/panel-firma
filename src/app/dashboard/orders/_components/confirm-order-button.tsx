@@ -1,6 +1,6 @@
 'use client';
 
-import { useTransition, useState, useEffect } from 'react';
+import { useTransition, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Package, Truck, StickyNote, CreditCard } from 'lucide-react';
 
@@ -35,12 +35,13 @@ export function ConfirmOrderButton({ order, disabled = false, className }: Confi
   const [isOpen, setIsOpen] = useState(false);
   const [selectedType, setSelectedType] = useState<'production' | 'sample'>('production');
 
-  useEffect(() => {
-    if (isOpen && order.paymentMethod) {
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (open && order.paymentMethod) {
         const isTpay = order.paymentMethod.toLowerCase().includes('tpay');
         setSelectedType(isTpay ? 'sample' : 'production');
     }
-  }, [isOpen, order.paymentMethod]);
+  };
 
   const handleConfirm = () => {
     if (disabled || isPending) {
@@ -61,7 +62,7 @@ export function ConfirmOrderButton({ order, disabled = false, className }: Confi
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button disabled={disabled} className={className}>
           Potwierdź zamówienie
@@ -186,7 +187,7 @@ export function ConfirmOrderButton({ order, disabled = false, className }: Confi
         {error ? <p className="text-sm text-destructive text-center">{error}</p> : null}
         
         <DialogFooter>
-          <Button variant="outline" onClick={() => setIsOpen(false)} disabled={isPending}>
+          <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={isPending}>
             Anuluj
           </Button>
           <Button onClick={handleConfirm} disabled={isPending}>

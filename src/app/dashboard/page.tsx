@@ -1,8 +1,5 @@
 import { desc, eq, asc, and, lt } from 'drizzle-orm';
 import { differenceInCalendarDays } from 'date-fns';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Sparkles } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
