@@ -29,7 +29,7 @@ export interface WooCommerceProduct {
     total_sales: number;
     virtual: boolean;
     downloadable: boolean;
-    downloads: any[];
+    downloads: unknown[];
     download_limit: number;
     download_expiry: number;
     external_url: string;
@@ -89,11 +89,11 @@ export interface WooCommerceProduct {
         variation: boolean;
         options: string[];
     }[];
-    default_attributes: any[];
+    default_attributes: unknown[];
     variations: number[];
     grouped_products: number[];
     menu_order: number;
-    meta_data: any[];
+    meta_data: unknown[];
 }
 
 export async function getProducts(page: number = 1, perPage: number = 20): Promise<{ products: WooCommerceProduct[], total: number, totalPages: number }> {

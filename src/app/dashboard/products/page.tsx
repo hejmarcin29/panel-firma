@@ -1,4 +1,3 @@
-import { Suspense } from 'react';
 import { getProducts } from './actions';
 import { ProductsListClient } from './products-list-client';
 import { requireUser } from '@/lib/auth/session';
