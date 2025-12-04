@@ -920,6 +920,8 @@ export async function updateMontageMeasurement({
 			additionalInfo,
 			scheduledInstallationAt: scheduledInstallationAt ? new Date(scheduledInstallationAt) : null,
 			scheduledInstallationEndAt: scheduledInstallationEndAt ? new Date(scheduledInstallationEndAt) : null,
+			finalPanelAmount: null, // Reset to auto-calculation on measurement update
+			finalSkirtingLength: null, // Reset to auto-calculation on measurement update
 			updatedAt: new Date(),
 		})
 		.where(eq(montages.id, montageId));
