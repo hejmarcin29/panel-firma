@@ -13,12 +13,42 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     
     const resolvedSearchParams = await searchParams;
     const page = typeof resolvedSearchParams.page === 'string' ? parseInt(resolvedSearchParams.page) : 1;
-    const categoryId = typeof resolvedSearchParams.category === 'string' ? parseInt(resolvedSearchParams.category) : undefined;
-    const brandTermId = typeof resolvedSearchParams.brand === 'string' ? parseInt(resolvedSearchParams.brand) : undefined;
+    const categoryId = typeof resolvedSearchParams.categories === 'string' ? parseInt(resolvedSearchParams.categories) : undefined; // Note: filter-config uses 'categories' but API expects ID. Need to handle mapping if slug is passed.
+    // Actually, filter-config uses 'categories' and 'brands' which are slugs or IDs.
+    // In products-list-client, I mapped slug to ID.
+    // Let's assume the URL param contains the ID for now as per previous implementation, or I need to lookup.
+    // The previous implementation used 'category' param with ID.
+    // My filter config uses 'categories'.
+    // I should align them.
+    
+    // Let's stick to what I implemented in useProductFilters: it sets 'categories' param.
+    // But getProducts expects categoryId.
+    // If the value in URL is ID, it's fine.
+    // In products-list-client, I mapped slug: c.id.toString(). So the value in URL will be ID.
+    
+    const categoryIds = typeof resolvedSearchParams.categories === 'string' ? resolvedSearchParams.categories : undefined;
+    const brandIds = typeof resolvedSearchParams.brands === 'string' ? resolvedSearchParams.brands : undefined;
+    
+    // getProducts currently only supports single category/brand.
+    // I'll take the first one if multiple are selected for now, or update getProducts to support array if possible (not easy with standard WC API).
+    const categoryId = categoryIds ? parseInt(categoryIds.split(',')[0]) : undefined;
+    const brandTermId = brandIds ? parseInt(brandIds.split(',')[0]) : undefined;
+
+    const scope = typeof resolvedSearchParams.scope === 'string' ? resolvedSearchParams.scope as 'public' | 'private' | 'all' : 'public';
+    const search = typeof resolvedSearchParams.q === 'string' ? resolvedSearchParams.q : undefined;
+    const sort = typeof resolvedSearchParams.sort === 'string' ? resolvedSearchParams.sort : undefined;
     const perPage = 20;
 
     const [productsData, categories, attributes] = await Promise.all([
-        getProducts(page, perPage, categoryId, brandTermId),
+        getProducts({
+            page, 
+            perPage, 
+            categoryId, 
+            brandTermId,
+            scope,
+            search,
+            sort
+        }),
         getCategories(),
         getAttributes()
     ]);

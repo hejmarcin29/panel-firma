@@ -142,11 +142,26 @@ async function getWooCredentials() {
 }
 
 export async function getProducts(
-    page: number = 1, 
-    perPage: number = 20,
-    categoryId?: number,
-    attributeTermId?: number
+    options: {
+        page?: number;
+        perPage?: number;
+        search?: string;
+        scope?: 'public' | 'private' | 'all';
+        categoryId?: number;
+        brandTermId?: number;
+        sort?: string;
+    } = {}
 ): Promise<{ products: WooCommerceProduct[], total: number, totalPages: number }> {
+    const { 
+        page = 1, 
+        perPage = 20, 
+        search = '', 
+        scope = 'public',
+        categoryId,
+        brandTermId,
+        sort = 'date_desc'
+    } = options;
+
     const creds = await getWooCredentials();
     if (!creds) {
         console.error('WooCommerce settings are missing');
@@ -155,12 +170,36 @@ export async function getProducts(
 
     let endpoint = `${creds.baseUrl}/wp-json/wc/v3/products?page=${page}&per_page=${perPage}`;
     
+    // Search
+    if (search) {
+        endpoint += `&search=${encodeURIComponent(search)}`;
+    }
+
+    // Scope / Status
+    if (scope === 'public') {
+        endpoint += `&status=publish`;
+    } else if (scope === 'private') {
+        endpoint += `&status=private`;
+    } else {
+        endpoint += `&status=any`;
+    }
+
+    // Category
     if (categoryId) {
         endpoint += `&category=${categoryId}`;
     }
     
-    if (attributeTermId) {
-        endpoint += `&attribute_term=${attributeTermId}`;
+    // Brand (Attribute)
+    if (brandTermId) {
+        endpoint += `&attribute_term=${brandTermId}`;
+    }
+
+    // Sort
+    if (sort) {
+        const [orderby, order] = sort.split('_');
+        if (orderby && order) {
+            endpoint += `&orderby=${orderby}&order=${order}`;
+        }
     }
 
     try {
@@ -178,7 +217,22 @@ export async function getProducts(
 
         const total = parseInt(response.headers.get('x-wp-total') || '0', 10);
         const totalPages = parseInt(response.headers.get('x-wp-totalpages') || '0', 10);
-        const products = await response.json() as WooCommerceProduct[];
+        let products = await response.json() as WooCommerceProduct[];
+
+        // Client-side filtering for custom meta if needed (e.g. _pp_made_private_by_collection)
+        // This is a fallback since we can't easily filter by meta in standard API
+        if (scope === 'public') {
+             products = products.filter(p => {
+                 const isPrivateMeta = p.meta_data.find((m: any) => m.key === '_pp_made_private_by_collection' && m.value === '1');
+                 return !isPrivateMeta;
+             });
+        } else if (scope === 'private') {
+             // For private scope, we might want to include those with the meta flag even if status is publish
+             // But since we fetched status=private, we only got private status ones.
+             // To fully support the requirement "private = status:private OR meta:private", we would need to fetch status=any and filter here.
+             // But that messes up pagination. 
+             // For now, we stick to status=private for the API call.
+        }
 
         return { products, total, totalPages };
     } catch (error) {
