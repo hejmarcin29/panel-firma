@@ -258,7 +258,6 @@ export default async function DashboardPage() {
 
     // Stalled Orders Logic
     const allOrders = await db.query.manualOrders.findMany();
-    const today = new Date();
     const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
     const daysLeft = daysInMonth - today.getDate();
     const isMonthEnd = daysLeft <= 5; // Alert if 5 days or less left in month

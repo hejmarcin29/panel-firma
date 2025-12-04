@@ -57,8 +57,10 @@ export function KPICards({
                         Pilne Montaże
                     </CardTitle>
                     <Tooltip>
-                        <TooltipTrigger className="cursor-help z-20 relative">
-                            <Info className="h-3 w-3 text-muted-foreground/50" />
+                        <TooltipTrigger asChild>
+                            <span className="cursor-help z-20 relative">
+                                <Info className="h-3 w-3 text-muted-foreground/50" />
+                            </span>
                         </TooltipTrigger>
                         <TooltipContent>
                             <p>Montaże, które wymagają natychmiastowej uwagi (np. brak kontaktu, opóźnienia).</p>
@@ -85,8 +87,10 @@ export function KPICards({
                         Aktywne Leady
                     </CardTitle>
                     <Tooltip>
-                        <TooltipTrigger className="cursor-help z-20 relative">
-                            <Info className="h-3 w-3 text-muted-foreground/50" />
+                        <TooltipTrigger asChild>
+                            <span className="cursor-help z-20 relative">
+                                <Info className="h-3 w-3 text-muted-foreground/50" />
+                            </span>
                         </TooltipTrigger>
                         <TooltipContent>
                             <p>Nowe zapytania ofertowe, które są w trakcie procesowania.</p>
@@ -113,8 +117,10 @@ export function KPICards({
                         Nowe Zamówienia
                     </CardTitle>
                     <Tooltip>
-                        <TooltipTrigger className="cursor-help z-20 relative">
-                            <Info className="h-3 w-3 text-muted-foreground/50" />
+                        <TooltipTrigger asChild>
+                            <span className="cursor-help z-20 relative">
+                                <Info className="h-3 w-3 text-muted-foreground/50" />
+                            </span>
                         </TooltipTrigger>
                         <TooltipContent>
                             <p>Zamówienia, które wpłynęły i oczekują na weryfikację lub płatność.</p>
@@ -141,8 +147,10 @@ export function KPICards({
                         Dzisiaj
                     </CardTitle>
                     <Tooltip>
-                        <TooltipTrigger className="cursor-help z-20 relative">
-                            <Info className="h-3 w-3 text-muted-foreground/50" />
+                        <TooltipTrigger asChild>
+                            <span className="cursor-help z-20 relative">
+                                <Info className="h-3 w-3 text-muted-foreground/50" />
+                            </span>
                         </TooltipTrigger>
                         <TooltipContent>
                             <p>Liczba montaży zaplanowanych w kalendarzu na dzisiejszą datę.</p>
@@ -171,8 +179,10 @@ export function KPICards({
                         Zadania ToDo
                     </CardTitle>
                     <Tooltip>
-                        <TooltipTrigger className="cursor-help z-20 relative">
-                            <Info className="h-3 w-3 text-muted-foreground/50" />
+                        <TooltipTrigger asChild>
+                            <span className="cursor-help z-20 relative">
+                                <Info className="h-3 w-3 text-muted-foreground/50" />
+                            </span>
                         </TooltipTrigger>
                         <TooltipContent>
                             <p>Liczba wszystkich niezrealizowanych zadań na liście ToDo.</p>
@@ -199,8 +209,10 @@ export function KPICards({
                         Płatności
                     </CardTitle>
                     <Tooltip>
-                        <TooltipTrigger className="cursor-help z-20 relative">
-                            <Info className="h-3 w-3 text-muted-foreground/50" />
+                        <TooltipTrigger asChild>
+                            <span className="cursor-help z-20 relative">
+                                <Info className="h-3 w-3 text-muted-foreground/50" />
+                            </span>
                         </TooltipTrigger>
                         <TooltipContent>
                             <p>Liczba montaży, które zostały zakończone, ale nie odnotowano jeszcze pełnej płatności od klienta.</p>
@@ -227,8 +239,10 @@ export function KPICards({
                         Pilne Zamówienia
                     </CardTitle>
                     <Tooltip>
-                        <TooltipTrigger className="cursor-help z-20 relative">
-                            <Info className="h-3 w-3 text-red-600/50" />
+                        <TooltipTrigger asChild>
+                            <span className="cursor-help z-20 relative">
+                                <Info className="h-3 w-3 text-red-600/50" />
+                            </span>
                         </TooltipTrigger>
                         <TooltipContent>
                             <p>Zamówienia, które nie zmieniły statusu przez dłuższy czas, co może sugerować zator.</p>
@@ -255,8 +269,10 @@ export function KPICards({
                         Brak Faktury
                     </CardTitle>
                     <Tooltip>
-                        <TooltipTrigger className="cursor-help z-20 relative">
-                            <Info className="h-3 w-3 text-orange-600/50" />
+                        <TooltipTrigger asChild>
+                            <span className="cursor-help z-20 relative">
+                                <Info className="h-3 w-3 text-orange-600/50" />
+                            </span>
                         </TooltipTrigger>
                         <TooltipContent>
                             <p>Zamówienia przyjęte przez magazyn bez faktury końcowej (stare lub koniec miesiąca).</p>
