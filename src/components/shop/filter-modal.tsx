@@ -1,6 +1,6 @@
 'use client';
 
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter, SheetClose } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -9,10 +9,16 @@ import { FILTERS_CONFIG } from '@/lib/filter-config';
 import { useProductFilters } from '@/hooks/use-product-filters';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
+interface FilterOption {
+  name: string;
+  slug: string;
+  count: number;
+}
+
 interface FilterModalProps {
   isOpen: boolean;
   onClose: () => void;
-  availableOptions: any; // Aggregations from backend
+  availableOptions: Record<string, FilterOption[]>; // Aggregations from backend
   totalProducts: number;
 }
 
@@ -38,7 +44,7 @@ export function FilterModal({ isOpen, onClose, availableOptions, totalProducts }
                     
                     {filter.type === 'checkbox' && (
                       <div className="space-y-3 pt-2">
-                        {availableOptions[filter.id]?.map((option: any) => (
+                        {availableOptions[filter.id]?.map((option) => (
                           <div key={option.slug} className="flex items-center space-x-2">
                             <Checkbox 
                               id={`${filter.id}-${option.slug}`}

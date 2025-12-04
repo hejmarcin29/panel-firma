@@ -223,7 +223,7 @@ export async function getProducts(
         // This is a fallback since we can't easily filter by meta in standard API
         if (scope === 'public') {
              products = products.filter(p => {
-                 const isPrivateMeta = p.meta_data.find((m: any) => m.key === '_pp_made_private_by_collection' && m.value === '1');
+                 const isPrivateMeta = (p.meta_data as { key: string; value: unknown }[]).find(m => m.key === '_pp_made_private_by_collection' && m.value === '1');
                  return !isPrivateMeta;
              });
         } else if (scope === 'private') {

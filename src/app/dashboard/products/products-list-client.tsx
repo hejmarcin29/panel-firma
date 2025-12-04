@@ -92,7 +92,7 @@ export function ProductsListClient({
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[80px]">Obraz</TableHead>
+                            <TableHead className="w-20">Obraz</TableHead>
                             <TableHead>Nazwa</TableHead>
                             <TableHead>SKU</TableHead>
                             <TableHead>Cena</TableHead>

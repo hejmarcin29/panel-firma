@@ -20,7 +20,11 @@ export function useProductFilters() {
          const values = current.split(',');
          if (values.includes(value)) {
              const newValues = values.filter(v => v !== value);
-             newValues.length > 0 ? params.set(key, newValues.join(',')) : params.delete(key);
+             if (newValues.length > 0) {
+                 params.set(key, newValues.join(','));
+             } else {
+                 params.delete(key);
+             }
          } else {
              params.set(key, [...values, value].join(','));
          }
