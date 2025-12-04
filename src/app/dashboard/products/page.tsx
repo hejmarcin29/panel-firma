@@ -13,18 +13,6 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     
     const resolvedSearchParams = await searchParams;
     const page = typeof resolvedSearchParams.page === 'string' ? parseInt(resolvedSearchParams.page) : 1;
-    const categoryId = typeof resolvedSearchParams.categories === 'string' ? parseInt(resolvedSearchParams.categories) : undefined; // Note: filter-config uses 'categories' but API expects ID. Need to handle mapping if slug is passed.
-    // Actually, filter-config uses 'categories' and 'brands' which are slugs or IDs.
-    // In products-list-client, I mapped slug to ID.
-    // Let's assume the URL param contains the ID for now as per previous implementation, or I need to lookup.
-    // The previous implementation used 'category' param with ID.
-    // My filter config uses 'categories'.
-    // I should align them.
-    
-    // Let's stick to what I implemented in useProductFilters: it sets 'categories' param.
-    // But getProducts expects categoryId.
-    // If the value in URL is ID, it's fine.
-    // In products-list-client, I mapped slug: c.id.toString(). So the value in URL will be ID.
     
     const categoryIds = typeof resolvedSearchParams.categories === 'string' ? resolvedSearchParams.categories : undefined;
     const brandIds = typeof resolvedSearchParams.brands === 'string' ? resolvedSearchParams.brands : undefined;
