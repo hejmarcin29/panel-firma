@@ -260,6 +260,13 @@
       "when": 1764783643621,
       "tag": "0036_sharp_garia",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "6",
+      "when": 1764838598949,
+      "tag": "0037_early_black_panther",
+      "breakpoints": true
     }
   ]
 }
