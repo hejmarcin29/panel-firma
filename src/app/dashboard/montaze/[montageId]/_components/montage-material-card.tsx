@@ -37,6 +37,8 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
     
     const finalPanelAmountStr = formData.get("finalPanelAmount") as string;
     const finalSkirtingLengthStr = formData.get("finalSkirtingLength") as string;
+    const panelModel = formData.get("panelModel") as string;
+    const skirtingModel = formData.get("skirtingModel") as string;
 
     startTransition(async () => {
       await updateMontageMaterialDetails({
@@ -44,6 +46,8 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
         materialDetails: formData.get("materialDetails") as string,
         finalPanelAmount: finalPanelAmountStr ? parseFloat(finalPanelAmountStr) : null,
         finalSkirtingLength: finalSkirtingLengthStr ? parseFloat(finalSkirtingLengthStr) : null,
+        panelModel: panelModel || null,
+        skirtingModel: skirtingModel || null,
       });
       setIsEditing(false);
       router.refresh();
@@ -79,6 +83,11 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
                         (Wyliczono z pomiaru: {calculatedPanelAmount || 0} m²)
                     </div>
                 </div>
+                <Input 
+                    name="panelModel" 
+                    placeholder="Model paneli"
+                    defaultValue={montage.panelModel || ""} 
+                />
               </div>
 
               <div className="space-y-2">
@@ -95,6 +104,11 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
                         (Wyliczono z pomiaru: {calculatedSkirtingLength || 0} mb)
                     </div>
                 </div>
+                <Input 
+                    name="skirtingModel" 
+                    placeholder="Model listew"
+                    defaultValue={montage.skirtingModel || ""} 
+                />
               </div>
 
               <div className="space-y-2">

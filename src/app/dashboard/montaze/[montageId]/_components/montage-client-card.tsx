@@ -10,12 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { updateMontageContactDetails } from "../../actions";
 import type { Montage } from "../../types";
 
@@ -68,16 +68,16 @@ export function MontageClientCard({ montage }: { montage: Montage }) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">Dane Klienta</CardTitle>
-        <Sheet open={isEditing} onOpenChange={setIsEditing}>
-          <SheetTrigger asChild>
+        <Dialog open={isEditing} onOpenChange={setIsEditing}>
+          <DialogTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">
               <Edit2 className="h-4 w-4" />
             </Button>
-          </SheetTrigger>
-          <SheetContent>
-            <SheetHeader>
-              <SheetTitle>Edytuj dane klienta</SheetTitle>
-            </SheetHeader>
+          </DialogTrigger>
+          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Edytuj dane klienta</DialogTitle>
+            </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="contactPhone">Telefon</Label>
@@ -136,8 +136,8 @@ export function MontageClientCard({ montage }: { montage: Montage }) {
                 {pending ? "Zapisywanie..." : "Zapisz zmiany"}
               </Button>
             </form>
-          </SheetContent>
-        </Sheet>
+          </DialogContent>
+        </Dialog>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-start gap-3">

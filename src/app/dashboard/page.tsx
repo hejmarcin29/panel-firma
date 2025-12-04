@@ -1,310 +1,297 @@
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, asc, and, lt } from 'drizzle-orm';
+import { differenceInCalendarDays } from 'date-fns';
 import Link from 'next/link';
-import { subDays } from 'date-fns';
-import { 
-    LayoutDashboard, 
-    AlertCircle, 
-    Briefcase, 
-    ShoppingCart,
-    ListTodo,
-    CalendarDays,
-    ArrowUpRight,
-    Clock,
-    CheckCircle2,
-    ArrowRight
-} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Sparkles } from 'lucide-react';
+
+export const dynamic = 'force-dynamic';
 
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
 import {
+	montageAttachments,
+	montageChecklistItems,
+	montageNotes,
+	montageTasks,
 	montages,
+    users,
     manualOrders,
     boardTasks,
 } from '@/lib/db/schema';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils';
+import { tryGetR2Config } from '@/lib/r2/config';
+import { getAppSetting, appSettingKeys } from '@/lib/settings';
 
-export const dynamic = 'force-dynamic';
+import { mapMontageRow, type MontageRow } from './montaze/utils';
+import { DashboardBuilder } from './_components/dashboard-builder';
+import type { DashboardLayoutConfig } from './actions';
+
+const DEFAULT_LAYOUT: DashboardLayoutConfig = {
+    columns: {
+        left: [
+            { id: 'alerts-1', type: 'montage-alerts' },
+            { id: 'kpi-1', type: 'kpi' },
+            { id: 'quick-1', type: 'quick-actions' },
+            { id: 'recent-1', type: 'recent-activity' },
+            { id: 'tasks-1', type: 'tasks' },
+        ],
+        right: [
+            { id: 'agenda-1', type: 'agenda' },
+        ]
+    }
+};
+
+import { redirect } from 'next/navigation';
 
 export default async function DashboardPage() {
-    const user = await requireUser();
-    const sevenDaysAgo = subDays(new Date(), 7);
+    let user;
+    try {
+	    user = await requireUser();
+    } catch (error) {
+         // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         if ((error as any)?.digest?.includes('NEXT_REDIRECT')) {
+            throw error;
+        }
+        console.error('Auth error in dashboard page:', error);
+        redirect('/login');
+    }
 
-    // 1. Fetch Urgent Data for Command Center
+    const r2Config = await tryGetR2Config();
+    const publicBaseUrl = r2Config?.publicBaseUrl ?? null;
+
+    const kpiMontageThreatDays = await getAppSetting(appSettingKeys.kpiMontageThreatDays);
+    const threatDays = Number(kpiMontageThreatDays ?? 7);
+
+    const kpiOrderUrgentDays = await getAppSetting(appSettingKeys.kpiOrderUrgentDays);
+    const orderUrgentDays = Number(kpiOrderUrgentDays ?? 3);
+
+    // Fetch User Config
+    let dbUser = null;
+    try {
+        dbUser = await db.query.users.findFirst({
+            where: eq(users.id, user.id),
+        });
+    } catch (error) {
+        console.error('Failed to fetch user config:', error);
+        // Continue with default layout
+    }
+
+    let layout = DEFAULT_LAYOUT;
+    if (dbUser?.dashboardConfig) {
+        try {
+            const savedLayout = dbUser.dashboardConfig as unknown as DashboardLayoutConfig;
+            
+            // Validate layout structure
+            if (savedLayout && savedLayout.columns && Array.isArray(savedLayout.columns.left) && Array.isArray(savedLayout.columns.right)) {
+                layout = savedLayout;
+                
+                // Migration: Ensure KPI widget exists
+                const hasKpi = [...layout.columns.left, ...layout.columns.right].some(w => w.type === 'kpi');
+                if (!hasKpi) {
+                    layout = {
+                        ...layout,
+                        columns: {
+                            ...layout.columns,
+                            left: [{ id: 'kpi-1', type: 'kpi' }, ...layout.columns.left]
+                        }
+                    };
+                }
+
+                // Migration: Ensure Alerts widget exists
+                const hasAlerts = [...layout.columns.left, ...layout.columns.right].some(w => w.type === 'montage-alerts');
+                if (!hasAlerts) {
+                    layout = {
+                        ...layout,
+                        columns: {
+                            ...layout.columns,
+                            left: [{ id: 'alerts-1', type: 'montage-alerts' }, ...layout.columns.left]
+                        }
+                    };
+                }
+            } else {
+                console.warn('Invalid dashboard config found, using default.');
+            }
+        } catch (e) {
+            console.error("Failed to parse dashboard config", e);
+            layout = DEFAULT_LAYOUT;
+        }
+    }
+
+    // Fetch Recent Montages (for Activity Feed)
+    const recentMontageRows = await db.query.montages.findMany({
+        orderBy: desc(montages.updatedAt),
+        limit: 5,
+        with: {
+            notes: {
+                orderBy: desc(montageNotes.createdAt),
+                with: {
+                    author: true,
+                    attachments: {
+                        orderBy: desc(montageAttachments.createdAt),
+                        with: {
+                            uploader: true,
+                        },
+                    },
+                },
+            },
+            tasks: {
+                orderBy: asc(montageTasks.createdAt),
+            },
+            checklistItems: {
+                orderBy: asc(montageChecklistItems.orderIndex),
+                with: {
+                    attachment: {
+                        with: {
+                            uploader: true,
+                        },
+                    },
+                },
+            },
+            attachments: {
+                orderBy: desc(montageAttachments.createdAt),
+                with: {
+                    uploader: true,
+                },
+            },
+        },
+    });
+
+    const recentMontages = recentMontageRows.map(row => mapMontageRow(row as MontageRow, publicBaseUrl));
+
+    // Fetch All Montages (Lightweight for Stats)
+    const allMontages = await db.query.montages.findMany({
+        with: {
+            tasks: true
+        }
+    });
+
+    // Calculate Stats
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const todayMontagesCount = allMontages.filter(m => {
+        if (!m.scheduledInstallationAt) return false;
+        const date = new Date(m.scheduledInstallationAt);
+        return date >= today && date < tomorrow;
+    }).length;
+
+    const upcomingMontages = allMontages
+        .filter(m => m.scheduledInstallationAt && new Date(m.scheduledInstallationAt) >= today)
+        .sort((a, b) => new Date(a.scheduledInstallationAt!).getTime() - new Date(b.scheduledInstallationAt!).getTime())
+        .slice(0, 3);
+
+    const newLeadsCount = allMontages.filter(m => m.status === 'lead').length;
+    const pendingPaymentsCount = allMontages.filter(m => m.status === 'before_first_payment' || m.status === 'before_final_invoice').length;
     
-    // Montages needing attention (delayed or upcoming soon without date)
-    const urgentMontages = await db.query.montages.findMany({
-        where: (table, { or, and, lt }) => or(
-            // Status is lead or before_measurement and created more than 7 days ago
-            and(
-                or(eq(table.status, 'lead'), eq(table.status, 'before_measurement')),
-                lt(table.createdAt, sevenDaysAgo)
-            ),
-            // Or scheduled date is in the past and not completed
-            and(
-                lt(table.scheduledInstallationAt, new Date()),
-                eq(table.status, 'before_installation')
-            )
-        ),
-        limit: 5,
-        orderBy: desc(montages.updatedAt)
-    });
+    // Urgent tasks: Montages that are not completed/lead but have no date, or maybe just a placeholder logic for now.
+    const urgentTasksCount = allMontages.filter(m => m.status !== 'lead' && m.status !== 'completed' && !m.scheduledInstallationAt).length;
 
-    // Urgent Tasks (Priority 'urgent' or 'important')
-    const urgentTasks = await db.query.boardTasks.findMany({
-        where: (table, { and, or, eq }) => and(
-            eq(table.completed, false),
-            or(eq(table.priority, 'urgent'), eq(table.priority, 'important'))
-        ),
-        limit: 5,
-        orderBy: desc(boardTasks.createdAt)
+    // Fetch New Orders Count
+    const newOrders = await db.query.manualOrders.findMany({
+        where: eq(manualOrders.status, 'Zamówienie utworzone'),
     });
+    const newOrdersCount = newOrders.length;
 
-    // Recent Orders needing review
-    const recentOrders = await db.query.manualOrders.findMany({
-        where: (table, { eq }) => eq(table.requiresReview, true),
-        limit: 5,
-        orderBy: desc(manualOrders.createdAt)
+    const urgentOrdersLimitDate = new Date();
+    urgentOrdersLimitDate.setDate(urgentOrdersLimitDate.getDate() - orderUrgentDays);
+
+    const urgentOrders = await db.query.manualOrders.findMany({
+        where: and(
+            eq(manualOrders.status, 'Zamówienie utworzone'),
+            lt(manualOrders.createdAt, urgentOrdersLimitDate)
+        )
     });
+    const urgentOrdersCount = urgentOrders.length;
 
-    // Stats for Bento Grid
-    const stats = {
-        activeMontages: (await db.query.montages.findMany({ where: (t, { ne }) => ne(t.status, 'completed') })).length,
-        pendingOrders: (await db.query.manualOrders.findMany({ where: (t, { eq }) => eq(t.status, 'Nowe') })).length,
-        urgentTasksCount: urgentTasks.length,
-    };
+    // Fetch Personal Todo Count
+    const todoTasks = await db.select().from(boardTasks).where(eq(boardTasks.completed, false));
+    const todoCount = todoTasks.length;
+
+    // Fetch Reminder Tasks (Due today or past due, or Reminder today or past due)
+    const now = new Date();
+    const reminderTasks = todoTasks.filter(t => {
+        if (t.completed) return false;
+        
+        const isDue = t.dueDate && new Date(t.dueDate) <= now;
+        const isReminder = t.reminderAt && new Date(t.reminderAt) <= now;
+        const isUrgent = t.priority === 'urgent';
+        
+        return isDue || isReminder || isUrgent;
+    }).map(t => ({
+        id: t.id,
+        content: t.content,
+        reminderAt: t.reminderAt,
+        dueDate: t.dueDate,
+        priority: t.priority,
+        createdAt: t.createdAt
+    }));
+
+    // Tasks Widget Data (Lite)
+    const tasksMontagesRaw = allMontages.filter(m => m.tasks.some(t => !t.completed));
+    const tasksCount = tasksMontagesRaw.length;
+    const urgentCount = tasksMontagesRaw.filter(m => {
+        if (!m.scheduledInstallationAt) return false;
+        const date = new Date(m.scheduledInstallationAt);
+        date.setHours(0, 0, 0, 0);
+        return date < today;
+    }).length;
+
+    // Alerts Logic (Next X working days)
+    const montageAlerts = allMontages.filter(m => {
+        if (!m.scheduledInstallationAt) return false;
+        const date = new Date(m.scheduledInstallationAt);
+        
+        // Filter out past dates (before today 00:00)
+        if (date < today) return false;
+        
+        const days = differenceInCalendarDays(date, today);
+        
+        // Material Alerts
+        if (days <= 10 && m.materialStatus === 'none') return true;
+        if (days <= 5 && (m.materialStatus === 'none' || m.materialStatus === 'ordered')) return true;
+        if (days <= 2 && (m.materialStatus === 'none' || m.materialStatus === 'ordered' || m.materialStatus === 'in_stock')) return true;
+        
+        // Installer Alerts (using threatDays default)
+        if (days <= threatDays && m.installerStatus !== 'confirmed') return true;
+
+        return false;
+    }).sort((a, b) => new Date(a.scheduledInstallationAt!).getTime() - new Date(b.scheduledInstallationAt!).getTime());
 
     return (
-        <div className="min-h-screen bg-background text-foreground p-4 md:p-6 space-y-8">
-            {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col gap-6 p-6 md:p-8">
+            <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
-                    <p className="text-muted-foreground mt-1">Witaj, {user.name || 'Użytkowniku'}.</p>
-                </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" className="bg-card border-border text-muted-foreground hover:bg-accent hover:text-accent-foreground" asChild>
-                        <Link href="/dashboard/v2">
-                            <LayoutDashboard className="mr-2 h-4 w-4" />
-                            Stary Dashboard
-                        </Link>
-                    </Button>
+                    <h1 className="text-2xl font-bold tracking-tight">Dzień dobry, {user.name || 'Użytkowniku'}!</h1>
+                    <p className="text-muted-foreground">Oto co dzieje się dzisiaj w Twojej firmie.</p>
                 </div>
             </div>
 
-            {/* Command Center - Actionable Items */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card className="bg-card border-border shadow-none">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">
-                            Pilne Zadania
-                        </CardTitle>
-                        <AlertCircle className="h-4 w-4 text-orange-500" />
-                    </CardHeader>
-                    <CardContent className="p-4 pt-0">
-                        <div className="text-2xl font-bold text-foreground">{stats.urgentTasksCount}</div>
-                        <p className="text-xs text-orange-500/80 flex items-center mt-1">
-                            Wymagają uwagi <ArrowUpRight className="h-3 w-3 ml-1" />
-                        </p>
-                    </CardContent>
-                </Card>
-                <Card className="bg-card border-border shadow-none">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">
-                            Aktywne Montaże
-                        </CardTitle>
-                        <Briefcase className="h-4 w-4 text-blue-500" />
-                    </CardHeader>
-                    <CardContent className="p-4 pt-0">
-                        <div className="text-2xl font-bold text-foreground">{stats.activeMontages}</div>
-                        <p className="text-xs text-blue-500/80 flex items-center mt-1">
-                            W realizacji <ArrowUpRight className="h-3 w-3 ml-1" />
-                        </p>
-                    </CardContent>
-                </Card>
-                <Card className="bg-card border-border shadow-none">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">
-                            Nowe Zamówienia
-                        </CardTitle>
-                        <ShoppingCart className="h-4 w-4 text-emerald-500" />
-                    </CardHeader>
-                    <CardContent className="p-4 pt-0">
-                        <div className="text-2xl font-bold text-foreground">{stats.pendingOrders}</div>
-                        <p className="text-xs text-emerald-500/80 flex items-center mt-1">
-                            Do weryfikacji <ArrowUpRight className="h-3 w-3 ml-1" />
-                        </p>
-                    </CardContent>
-                </Card>
-                <Card className="bg-card border-border shadow-none">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">
-                            Dzisiaj
-                        </CardTitle>
-                        <CalendarDays className="h-4 w-4 text-purple-500" />
-                    </CardHeader>
-                    <CardContent className="p-4 pt-0">
-                        <div className="text-xl font-bold text-foreground truncate">
-                            {new Date().toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' })}
-                        </div>
-                        <p className="text-xs text-purple-500/80 mt-1 truncate">
-                            {new Date().toLocaleDateString('pl-PL', { weekday: 'long' })}
-                        </p>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Bento Grid Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
-                {/* Left Column - Urgent Actions (Span 2) */}
-                <div className="lg:col-span-2 space-y-6">
-                    
-                    {/* Urgent Tasks Section */}
-                    <Card className="bg-card border-border shadow-none h-full">
-                        <CardHeader className="border-b border-border/50 pb-4">
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-1">
-                                    <CardTitle className="flex items-center gap-2 text-foreground">
-                                        <ListTodo className="h-5 w-5 text-orange-500" />
-                                        Priorytety
-                                    </CardTitle>
-                                    <CardDescription className="text-muted-foreground">Zadania oznaczone jako pilne lub ważne</CardDescription>
-                                </div>
-                                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-accent" asChild>
-                                    <Link href="/dashboard/todo">Wszystkie</Link>
-                                </Button>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="pt-6">
-                            <ScrollArea className="h-[300px] pr-4">
-                                <div className="space-y-3">
-                                    {urgentTasks.length === 0 ? (
-                                        <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
-                                            <CheckCircle2 className="h-8 w-8 mb-2 opacity-20" />
-                                            <p>Wszystko zrobione!</p>
-                                        </div>
-                                    ) : (
-                                        urgentTasks.map(task => (
-                                            <div key={task.id} className="group flex items-start gap-3 p-3 rounded-lg bg-accent/50 border border-border/50 hover:border-border transition-colors">
-                                                <div className={cn(
-                                                    "mt-1.5 h-2 w-2 rounded-full shrink-0 shadow-[0_0_8px]",
-                                                    task.priority === 'urgent' ? "bg-orange-500 shadow-orange-500/50" : "bg-yellow-500 shadow-yellow-500/50"
-                                                )} />
-                                                <div className="flex-1 space-y-1">
-                                                    <p className="font-medium leading-none text-foreground group-hover:text-primary transition-colors">{task.content}</p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {task.priority === 'urgent' ? 'PILNE' : 'WAŻNE'} • {new Date(task.createdAt).toLocaleDateString()}
-                                                    </p>
-                                                </div>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-accent" asChild>
-                                                    <Link href="/dashboard/todo">
-                                                        <ArrowRight className="h-4 w-4" />
-                                                    </Link>
-                                                </Button>
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
-                            </ScrollArea>
-                        </CardContent>
-                    </Card>
-
-                    {/* Recent Orders Section */}
-                    <Card className="bg-card border-border shadow-none">
-                        <CardHeader className="border-b border-border/50 pb-4">
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-1">
-                                    <CardTitle className="flex items-center gap-2 text-foreground">
-                                        <ShoppingCart className="h-5 w-5 text-emerald-500" />
-                                        Zamówienia
-                                    </CardTitle>
-                                    <CardDescription className="text-muted-foreground">Ostatnie zamówienia do weryfikacji</CardDescription>
-                                </div>
-                                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground hover:bg-accent" asChild>
-                                    <Link href="/dashboard/orders">Wszystkie</Link>
-                                </Button>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="pt-6">
-                            <div className="space-y-3">
-                                {recentOrders.length === 0 ? (
-                                    <p className="text-sm text-muted-foreground">Brak nowych zamówień do weryfikacji.</p>
-                                ) : (
-                                    recentOrders.map(order => (
-                                        <div key={order.id} className="flex items-center justify-between p-3 rounded-lg bg-accent/50 border border-border/50">
-                                            <div>
-                                                <p className="font-medium text-foreground">{order.reference}</p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {order.billingName} • {new Date(order.createdAt).toLocaleDateString()}
-                                                </p>
-                                            </div>
-                                            <div className="flex items-center gap-3">
-                                                <Badge variant="outline" className="bg-card border-border text-muted-foreground">
-                                                    {order.status}
-                                                </Badge>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-accent" asChild>
-                                                    <Link href={`/dashboard/orders/${order.id}`}>
-                                                        <ArrowRight className="h-4 w-4" />
-                                                    </Link>
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* Right Column - Montages & Alerts */}
-                <div className="space-y-6">
-                    <Card className="bg-card border-border shadow-none h-full">
-                        <CardHeader className="border-b border-border/50 pb-4">
-                            <CardTitle className="flex items-center gap-2 text-foreground">
-                                <AlertCircle className="h-5 w-5 text-red-500" />
-                                Alerty Montażowe
-                            </CardTitle>
-                            <CardDescription className="text-muted-foreground">Zlecenia wymagające uwagi</CardDescription>
-                        </CardHeader>
-                        <CardContent className="pt-6">
-                            <div className="space-y-3">
-                                {urgentMontages.length === 0 ? (
-                                    <p className="text-sm text-muted-foreground">Brak alertów montażowych.</p>
-                                ) : (
-                                    urgentMontages.map(montage => (
-                                        <Link key={montage.id} href={`/dashboard/montaze/${montage.id}`} className="block group">
-                                            <div className="p-3 rounded-lg bg-accent/50 border border-border/50 group-hover:border-red-500/30 transition-all">
-                                                <div className="flex justify-between items-start mb-2">
-                                                    <span className="font-medium text-sm text-foreground group-hover:text-primary transition-colors">{montage.clientName}</span>
-                                                    <Badge variant="outline" className="text-[10px] bg-card border-border text-muted-foreground">
-                                                        {montage.status}
-                                                    </Badge>
-                                                </div>
-                                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                                    <Clock className="h-3.5 w-3.5" />
-                                                    {montage.scheduledInstallationAt 
-                                                        ? <span className="text-red-400">Termin: {new Date(montage.scheduledInstallationAt).toLocaleDateString()}</span>
-                                                        : <span className="text-orange-400">Brak terminu (stare zlecenie)</span>
-                                                    }
-                                                </div>
-                                            </div>
-                                        </Link>
-                                    ))
-                                )}
-                            </div>
-                            <div className="mt-6 pt-4 border-t border-border/50">
-                                <Button variant="outline" className="w-full bg-card border-border text-muted-foreground hover:bg-accent hover:text-foreground" asChild>
-                                    <Link href="/dashboard/montaze">Przejdź do montaży</Link>
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-            </div>
+            <DashboardBuilder 
+                initialLayout={layout} 
+                data={{
+                    upcomingMontages,
+                    recentMontages,
+                    montageAlerts,
+                    threatDays,
+                    tasksStats: {
+                        tasksCount,
+                        urgentCount,
+                        todoCount,
+                        reminderTasks
+                    },
+                    kpiData: {
+                        todayMontagesCount,
+                        newLeadsCount,
+                        pendingPaymentsCount,
+                        urgentTasksCount,
+                        newOrdersCount,
+                        todoCount,
+                        urgentOrdersCount,
+                        orderUrgentDays,
+                    }
+                }}
+            />
         </div>
     );
 }

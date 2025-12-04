@@ -30,11 +30,11 @@ export function SwipeableTaskItem({ children, onComplete, onEdit }: SwipeableTas
       {/* Background Actions */}
       <div className="absolute inset-0 flex rounded-xl overflow-hidden">
         {/* Left side (Swipe Right) -> Complete */}
-        <div className="flex-1 bg-green-500 flex items-center justify-start pl-6">
+        <div className="flex-1 bg-emerald-600 flex items-center justify-start pl-6">
             <Check className="text-white h-6 w-6" />
         </div>
         {/* Right side (Swipe Left) -> Edit */}
-        <div className="flex-1 bg-orange-500 flex items-center justify-end pr-6">
+        <div className="flex-1 bg-blue-600 flex items-center justify-end pr-6">
             <Edit className="text-white h-6 w-6" />
         </div>
       </div>

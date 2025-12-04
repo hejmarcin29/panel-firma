@@ -285,6 +285,8 @@ export function OrdersListClient({ initialOrders }: OrdersListClientProps) {
 }
 
 function OrdersTable({ orders }: { orders: Order[] }) {
+  const router = useRouter();
+
   if (orders.length === 0) {
     return (
       <Card>
@@ -332,12 +334,17 @@ function OrdersTable({ orders }: { orders: Order[] }) {
           </TableHeader>
           <TableBody>
             {orders.map((order) => (
-              <TableRow key={order.id} className="hover:bg-muted/30 transition-colors">
+              <TableRow 
+                key={order.id} 
+                className="hover:bg-muted/30 transition-colors cursor-pointer"
+                onClick={() => router.push(`/dashboard/orders/${order.id}`)}
+              >
                 <TableCell className="font-medium">
                   <div className="flex flex-col gap-1">
                     <Link 
                       href={`/dashboard/orders/${order.id}`}
                       className="hover:underline text-primary font-semibold text-base"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       {order.reference}
                     </Link>
@@ -367,9 +374,12 @@ function OrdersTable({ orders }: { orders: Order[] }) {
                   {formatCurrency(order.totals.totalGross, order.currency)}
                 </TableCell>
                 <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
+                  <div 
+                    className="flex justify-end gap-2"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     {order.requiresReview && (
-                      <ConfirmOrderButton orderId={order.id} />
+                      <ConfirmOrderButton order={order} />
                     )}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

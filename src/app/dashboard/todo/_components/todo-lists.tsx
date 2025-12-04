@@ -433,9 +433,12 @@ export function TodoLists({ initialColumns }: TodoListsProps) {
                                         className="border-0 shadow-none focus-visible:ring-0 px-0 h-auto py-2 bg-transparent placeholder:text-muted-foreground"
                                         value={newTaskInput[column.id] || ""}
                                         onChange={(e) => setNewTaskInput(prev => ({ ...prev, [column.id]: e.target.value }))}
+                                        onBlur={() => handleAddTask(column.id)}
                                         onKeyDown={(e) => {
                                             if (e.key === "Enter") {
                                                 handleAddTask(column.id);
+                                                // Optional: blur on enter if desired, but usually keeping focus is better for multiple entries
+                                                // (e.target as HTMLInputElement).blur(); 
                                             }
                                         }}
                                     />

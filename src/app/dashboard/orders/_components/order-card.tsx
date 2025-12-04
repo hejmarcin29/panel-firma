@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { MoreHorizontal, FileText, Mail, Edit } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -22,8 +23,13 @@ interface OrderCardProps {
 }
 
 export function OrderCard({ order, formatCurrency, formatDateTime }: OrderCardProps) {
+  const router = useRouter();
+
   return (
-    <Card className="overflow-hidden transition-all hover:shadow-md">
+    <Card 
+      className="overflow-hidden transition-all hover:shadow-md cursor-pointer"
+      onClick={() => router.push(`/dashboard/orders/${order.id}`)}
+    >
       <CardHeader className="border-b bg-muted/30 p-4">
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col gap-1.5">
@@ -31,6 +37,7 @@ export function OrderCard({ order, formatCurrency, formatDateTime }: OrderCardPr
               <Link 
                 href={`/dashboard/orders/${order.id}`}
                 className="font-semibold hover:underline text-base"
+                onClick={(e) => e.stopPropagation()}
               >
                 {order.reference}
               </Link>
@@ -67,9 +74,12 @@ export function OrderCard({ order, formatCurrency, formatDateTime }: OrderCardPr
             {formatDateTime(order.createdAt)}
           </span>
           
-          <div className="flex items-center gap-2">
+          <div 
+            className="flex items-center gap-2"
+            onClick={(e) => e.stopPropagation()}
+          >
             {order.requiresReview && (
-              <ConfirmOrderButton orderId={order.id} />
+                      <ConfirmOrderButton order={order} className="w-full" />
             )}
             
             <DropdownMenu>

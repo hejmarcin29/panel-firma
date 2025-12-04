@@ -607,6 +607,8 @@ type UpdateMontageMaterialsInput = {
 	materialDetails: string;
 	finalPanelAmount?: number | null;
 	finalSkirtingLength?: number | null;
+	panelModel?: string | null;
+	skirtingModel?: string | null;
 	materialsEditHistory?: MaterialsEditHistoryEntry[];
 };
 
@@ -615,6 +617,8 @@ export async function updateMontageMaterialDetails({
 	materialDetails,
 	finalPanelAmount,
 	finalSkirtingLength,
+	panelModel,
+	skirtingModel,
 	materialsEditHistory,
 }: UpdateMontageMaterialsInput) {
 	await requireUser();
@@ -627,6 +631,8 @@ export async function updateMontageMaterialDetails({
 			materialDetails: sanitized ? sanitized : null,
 			finalPanelAmount,
 			finalSkirtingLength,
+			panelModel,
+			skirtingModel,
 			materialsEditHistory,
 			updatedAt: new Date(),
 		})
