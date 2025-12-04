@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { 
     Table, 
@@ -114,11 +113,11 @@ export function ProductsListClient({
                                     <TableCell>
                                         {product.images && product.images[0] ? (
                                             <div className="relative h-12 w-12 rounded overflow-hidden">
-                                                <Image 
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img 
                                                     src={product.images[0].src} 
                                                     alt={product.images[0].alt || product.name}
-                                                    fill
-                                                    className="object-cover"
+                                                    className="h-full w-full object-cover"
                                                 />
                                             </div>
                                         ) : (
