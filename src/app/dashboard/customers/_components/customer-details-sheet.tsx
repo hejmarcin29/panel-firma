@@ -1,6 +1,11 @@
 'use client';
 
-import { Sheet, SheetContent } from '@/components/ui/sheet';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,6 +16,7 @@ import { CustomerDetails } from '../actions';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import Link from 'next/link';
+import { useEffect } from 'react';
 
 interface CustomerDetailsSheetProps {
 	customer: CustomerDetails | null;
@@ -35,11 +41,39 @@ function formatCurrency(amount: number) {
 }
 
 export function CustomerDetailsSheet({ customer, isOpen, onClose }: CustomerDetailsSheetProps) {
+    // Handle back button
+    useEffect(() => {
+        if (isOpen) {
+            window.history.pushState({ modalOpen: true }, '', window.location.href);
+            
+            const handlePopState = () => {
+                onClose();
+            };
+
+            window.addEventListener('popstate', handlePopState);
+            return () => {
+                window.removeEventListener('popstate', handlePopState);
+            };
+        }
+    }, [isOpen, onClose]);
+
+    const handleOpenChange = (open: boolean) => {
+        if (!open) {
+            onClose();
+            if (window.history.state?.modalOpen) {
+                window.history.back();
+            }
+        }
+    };
+
 	if (!customer) return null;
 
 	return (
-		<Sheet open={isOpen} onOpenChange={onClose}>
-			<SheetContent className="w-full sm:max-w-xl p-0 gap-0 bg-background/95 backdrop-blur-sm">
+		<Dialog open={isOpen} onOpenChange={handleOpenChange}>
+			<DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl p-0 gap-0 bg-background/95 backdrop-blur-sm">
+                <DialogHeader className="sr-only">
+                    <DialogTitle>Szczegóły klienta {customer.name}</DialogTitle>
+                </DialogHeader>
 				<ScrollArea className="h-full w-full">
 					<div className="p-6 space-y-8">
 						{/* Header Section */}
@@ -201,7 +235,7 @@ export function CustomerDetailsSheet({ customer, isOpen, onClose }: CustomerDeta
 						</div>
 					</div>
 				</ScrollArea>
-			</SheetContent>
-		</Sheet>
+			</DialogContent>
+		</Dialog>
 	);
 }

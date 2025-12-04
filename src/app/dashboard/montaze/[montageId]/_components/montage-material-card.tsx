@@ -1,7 +1,7 @@
 "use client";
 
 import { Package, Edit2 } from "lucide-react";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -10,12 +10,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { updateMontageMaterialDetails } from "../../actions";
 import type { Montage, MaterialsEditHistoryEntry } from "../../types";
 
@@ -23,6 +23,32 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
   const [isEditing, setIsEditing] = useState(false);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
+
+  useEffect(() => {
+    if (isEditing) {
+        window.history.pushState({ modalOpen: true }, '', window.location.href);
+        
+        const handlePopState = () => {
+            setIsEditing(false);
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => {
+            window.removeEventListener('popstate', handlePopState);
+        };
+    }
+  }, [isEditing]);
+
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+        setIsEditing(false);
+        if (window.history.state?.modalOpen) {
+            window.history.back();
+        }
+    } else {
+        setIsEditing(true);
+    }
+  };
 
   const calculatedPanelAmount = montage.floorArea 
     ? (montage.floorArea * (1 + (montage.panelWaste || 5) / 100)).toFixed(2) 
@@ -58,16 +84,20 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">Materiały</CardTitle>
-        <Sheet open={isEditing} onOpenChange={setIsEditing}>
-          <SheetTrigger asChild>
+        <Dialog open={isEditing} onOpenChange={handleOpenChange}>
+          <DialogTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">
               <Edit2 className="h-4 w-4" />
             </Button>
-          </SheetTrigger>
-          <SheetContent className="w-[400px] sm:w-[540px]">
-            <SheetHeader>
-              <SheetTitle>Edytuj listę materiałów</SheetTitle>
-            </SheetHeader>
+          </DialogTrigger>
+          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl" onPointerDownOutside={(e) => {
+              if (!window.confirm("Czy na pewno chcesz zamknąć? Niezapisane zmiany zostaną utracone.")) {
+                  e.preventDefault();
+              }
+          }}>
+            <DialogHeader>
+              <DialogTitle>Edytuj listę materiałów</DialogTitle>
+            </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-6 py-4">
               <div className="space-y-2">
                 <Label>Ilość paneli do zamówienia (m²)</Label>
@@ -142,8 +172,8 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
                     </div>
                 </div>
             )}
-          </SheetContent>
-        </Sheet>
+          </DialogContent>
+        </Dialog>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
