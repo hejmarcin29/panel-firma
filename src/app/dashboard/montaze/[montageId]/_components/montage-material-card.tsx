@@ -201,7 +201,7 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
                                 <span className="h-2 w-2 rounded-full bg-blue-500"></span>
                                 <span className="text-sm font-medium">Podłoga</span>
                             </div>
-                            <div className="text-xl font-bold">{calculatedPanelAmount} m²</div>
+                            <div className="text-lg font-bold">{calculatedPanelAmount} m²</div>
                             <div className="text-xs text-muted-foreground">
                                 ({montage.floorArea} m² + {montage.panelWaste}% zapasu)
                             </div>
@@ -214,7 +214,7 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
                                 <span className="h-2 w-2 rounded-full bg-amber-500"></span>
                                 <span className="text-sm font-medium">Listwy</span>
                             </div>
-                            <div className="text-xl font-bold">{calculatedSkirtingLength} mb</div>
+                            <div className="text-lg font-bold">{calculatedSkirtingLength} mb</div>
                             <div className="text-xs text-muted-foreground">
                                 ({montage.skirtingLength} mb + {montage.skirtingWaste}% zapasu)
                             </div>
@@ -225,20 +225,32 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
             </div>
         )}
 
-        <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-                <span className="text-xs text-muted-foreground">Panele (do zamówienia)</span>
-                <div className="font-medium">
-                    {montage.finalPanelAmount ? `${montage.finalPanelAmount} m²` : (calculatedPanelAmount ? `${calculatedPanelAmount} m² (auto)` : '-')}
+        {/* Manual overrides display if they exist and differ from calculated */}
+        {((montage.finalPanelAmount && montage.finalPanelAmount !== parseFloat(calculatedPanelAmount || '0')) || 
+          (montage.finalSkirtingLength && montage.finalSkirtingLength !== parseFloat(calculatedSkirtingLength || '0'))) && (
+            <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border/50">
+                <div className="space-y-1">
+                    {montage.finalPanelAmount && montage.finalPanelAmount !== parseFloat(calculatedPanelAmount || '0') && (
+                        <>
+                            <span className="text-xs text-muted-foreground">Panele (ręczna zmiana)</span>
+                            <div className="font-medium text-orange-600">
+                                {montage.finalPanelAmount} m²
+                            </div>
+                        </>
+                    )}
+                </div>
+                <div className="space-y-1">
+                    {montage.finalSkirtingLength && montage.finalSkirtingLength !== parseFloat(calculatedSkirtingLength || '0') && (
+                        <>
+                            <span className="text-xs text-muted-foreground">Listwy (ręczna zmiana)</span>
+                            <div className="font-medium text-orange-600">
+                                {montage.finalSkirtingLength} mb
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
-            <div className="space-y-1">
-                <span className="text-xs text-muted-foreground">Listwy (do zamówienia)</span>
-                <div className="font-medium">
-                    {montage.finalSkirtingLength ? `${montage.finalSkirtingLength} mb` : (calculatedSkirtingLength ? `${calculatedSkirtingLength} mb (auto)` : '-')}
-                </div>
-            </div>
-        </div>
+        )}
 
         {(montage.floorDetails || montage.skirtingDetails) && (
             <div className="pt-4 border-t border-border/50 grid grid-cols-2 gap-4">
