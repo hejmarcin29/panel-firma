@@ -20,6 +20,7 @@ interface KPICardsProps {
   newOrdersCount: number;
   todoCount: number;
   urgentOrdersCount?: number;
+  stalledOrdersCount?: number;
   orderUrgentDays?: number;
   settings?: {
       visibleCards?: string[];
@@ -34,9 +35,10 @@ export function KPICards({
   newOrdersCount,
   todoCount,
   urgentOrdersCount = 0,
-  settings,
+  stalledOrdersCount = 0,
+  settings
 }: KPICardsProps) {
-  const visibleCards = settings?.visibleCards || ['today', 'leads', 'orders', 'payments', 'urgent', 'todo', 'urgentOrders'];
+  const visibleCards = settings?.visibleCards || ['today', 'leads', 'payments', 'urgent', 'orders', 'todo', 'urgentOrders', 'stalledOrders'];
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 h-full">
@@ -163,6 +165,24 @@ export function KPICards({
                 <div className="text-2xl font-bold text-red-700">{urgentOrdersCount}</div>
                 <p className="text-xs text-red-600/80 flex items-center mt-1">
                     Wymagają reakcji <ArrowUpRight className="h-3 w-3 ml-1" />
+                </p>
+            </CardContent>
+        </Card>
+      )}
+
+      {visibleCards.includes('stalledOrders') && stalledOrdersCount > 0 && (
+        <Card className="shadow-none relative overflow-hidden group border-orange-500/20 bg-orange-500/5">
+            <Link href="/dashboard/orders" className="absolute inset-0 z-10" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
+                <CardTitle className="text-sm font-medium text-orange-600">
+                    Brak Faktury
+                </CardTitle>
+                <AlertCircle className="h-4 w-4 text-orange-600" />
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+                <div className="text-2xl font-bold text-orange-700">{stalledOrdersCount}</div>
+                <p className="text-xs text-orange-600/80 flex items-center mt-1">
+                    Wymagają wystawienia <ArrowUpRight className="h-3 w-3 ml-1" />
                 </p>
             </CardContent>
         </Card>

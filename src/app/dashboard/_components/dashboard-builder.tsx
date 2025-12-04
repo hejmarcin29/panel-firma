@@ -86,7 +86,7 @@ function WidgetSettingsDialog({
 
     // KPI Specific Settings
     if (widget.type === 'kpi') {
-        const visibleCards = (localSettings.visibleCards as string[] | undefined) || ['today', 'leads', 'payments', 'urgent', 'orders', 'todo', 'urgentOrders'];
+        const visibleCards = (localSettings.visibleCards as string[] | undefined) || ['today', 'leads', 'payments', 'urgent', 'orders', 'todo', 'urgentOrders', 'stalledOrders'];
         
         const toggleCard = (card: string) => {
             if (visibleCards.includes(card)) {
@@ -160,6 +160,14 @@ function WidgetSettingsDialog({
                             />
                             <Label htmlFor="card-urgentOrders">Pilne Zamówienia</Label>
                         </div>
+                        <div className="flex items-center space-x-2">
+                            <Checkbox 
+                                id="card-stalledOrders" 
+                                checked={visibleCards.includes('stalledOrders')}
+                                onCheckedChange={() => toggleCard('stalledOrders')}
+                            />
+                            <Label htmlFor="card-stalledOrders">Brak Faktury</Label>
+                        </div>
                     </div>
                     <DialogFooter>
                         <Button onClick={handleSave}>Zapisz</Button>
@@ -191,6 +199,7 @@ interface DashboardBuilderProps {
         newOrdersCount: number;
         todoCount: number;
         urgentOrdersCount?: number;
+        stalledOrdersCount?: number;
         orderUrgentDays?: number;
     };
     montageAlerts: MontageAlert[];

@@ -70,10 +70,6 @@ export function buildTimelineEntries(status: string, notes: string, createdAt: s
 	const createdAtDate = new Date(createdAt);
 
 	const baseEntries: OrderTimelineEntry[] = timelineStages.map((stage, index) => {
-		// For samples, skip "Weryfikacja i płatność" if it's not the current active stage
-		// Actually, if it's a sample, we might want to mark it as completed or skip it entirely.
-		// Let's say for samples, "Weryfikacja i płatność" is auto-completed if we are past it.
-		
 		let state: OrderTimelineState = 'pending';
 		if (index < activeIndex) {
 			state = 'completed';
@@ -82,8 +78,13 @@ export function buildTimelineEntries(status: string, notes: string, createdAt: s
 		}
 
 		// Special handling for samples
+		let tasks = stage.tasks;
 		if (type === 'sample' && stage.key === 'Weryfikacja i płatność') {
-			// If we are at this stage or past it, it's effectively done/skipped because it's Tpay
+			// For samples (Tpay), we don't issue proformas.
+			// We replace the tasks with a simple "Payment confirmed" check.
+			tasks = ['Płatność Tpay potwierdzona'];
+			
+			// If we are at this stage or past it, it's effectively done because it's Tpay
 			if (state === 'pending' && activeIndex > index) {
 				state = 'completed';
 			}
@@ -104,7 +105,7 @@ export function buildTimelineEntries(status: string, notes: string, createdAt: s
 			timestamp,
 			state,
 			statusKey: stage.key,
-			tasks: stage.tasks.map((task) => ({
+			tasks: tasks.map((task) => ({
 				id: `${stage.key.toLowerCase().replace(/[^a-z0-9]+/gi, '-')}-${task.toLowerCase().replace(/[^a-z0-9]+/gi, '-')}`,
 				label: task,
 				completed: false,
@@ -136,4 +137,28 @@ export function buildTimelineEntries(status: string, notes: string, createdAt: s
 		: [];
 
 	return [...baseEntries, ...noteEntries];
+}
+
+export function parseTaskOverrides(value: string | null | undefined): Record<string, boolean> {
+	if (!value) {
+		return {};
+	}
+
+	try {
+		const parsed = JSON.parse(value);
+		if (parsed && typeof parsed === 'object') {
+			return Object.entries(parsed as Record<string, unknown>).reduce<Record<string, boolean>>(
+				(acc, [key, rawValue]) => {
+					if (typeof rawValue === 'boolean') {
+						acc[key] = rawValue;
+					}
+					return acc;
+				},
+				{},
+			);
+		}
+	} catch {
+		// Ignore malformed JSON and fall back to empty overrides.
+	}
+	return {};
 }

@@ -1,5 +1,6 @@
 import { desc, eq, asc, and, lt } from 'drizzle-orm';
 import { differenceInCalendarDays } from 'date-fns';
+import { parseTaskOverrides } from '@/app/dashboard/orders/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -255,6 +256,32 @@ export default async function DashboardPage() {
         return false;
     }).sort((a, b) => new Date(a.scheduledInstallationAt!).getTime() - new Date(b.scheduledInstallationAt!).getTime());
 
+    // Stalled Orders Logic
+    const allOrders = await db.query.manualOrders.findMany();
+    const today = new Date();
+    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+    const daysLeft = daysInMonth - today.getDate();
+    const isMonthEnd = daysLeft <= 5; // Alert if 5 days or less left in month
+
+    const stalledOrdersCount = allOrders.filter(order => {
+        const overrides = parseTaskOverrides(order.timelineTaskOverrides);
+        const acceptedByWarehouse = overrides['Zamówienie przyjęte przez magazyn'];
+        const finalInvoiceIssued = overrides['Wystawiono fakturę końcową'];
+        
+        // Only care if accepted by warehouse AND invoice NOT issued
+        if (!acceptedByWarehouse) return false;
+        if (finalInvoiceIssued) return false;
+        
+        // Check time condition
+        const updatedAt = order.updatedAt ? new Date(order.updatedAt) : new Date(order.createdAt);
+        const daysSinceUpdate = differenceInCalendarDays(today, updatedAt);
+        
+        if (daysSinceUpdate > 7) return true;
+        if (isMonthEnd) return true;
+        
+        return false;
+    }).length;
+
     return (
         <div className="flex flex-col gap-6 p-6 md:p-8">
             <div className="flex items-center justify-between">
@@ -285,6 +312,7 @@ export default async function DashboardPage() {
                         newOrdersCount,
                         todoCount,
                         urgentOrdersCount,
+                        stalledOrdersCount,
                         orderUrgentDays,
                     }
                 }}
