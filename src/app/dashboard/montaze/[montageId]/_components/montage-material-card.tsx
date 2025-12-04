@@ -65,6 +65,8 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
     const finalSkirtingLengthStr = formData.get("finalSkirtingLength") as string;
     const panelModel = formData.get("panelModel") as string;
     const skirtingModel = formData.get("skirtingModel") as string;
+    const floorDetails = formData.get("floorDetails") as string;
+    const skirtingDetails = formData.get("skirtingDetails") as string;
 
     startTransition(async () => {
       await updateMontageMaterialDetails({
@@ -74,6 +76,8 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
         finalSkirtingLength: finalSkirtingLengthStr ? parseFloat(finalSkirtingLengthStr) : null,
         panelModel: panelModel || null,
         skirtingModel: skirtingModel || null,
+        floorDetails: floorDetails || null,
+        skirtingDetails: skirtingDetails || null,
       });
       setIsEditing(false);
       router.refresh();
@@ -118,6 +122,11 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
                     placeholder="Model paneli"
                     defaultValue={montage.panelModel || ""} 
                 />
+                <Input 
+                    name="floorDetails" 
+                    placeholder="Dodatkowe materiały do paneli"
+                    defaultValue={montage.floorDetails || ""} 
+                />
               </div>
 
               <div className="space-y-2">
@@ -138,6 +147,11 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
                     name="skirtingModel" 
                     placeholder="Model listew"
                     defaultValue={montage.skirtingModel || ""} 
+                />
+                <Input 
+                    name="skirtingDetails" 
+                    placeholder="Dodatkowe materiały do listew"
+                    defaultValue={montage.skirtingDetails || ""} 
                 />
               </div>
 
@@ -183,6 +197,7 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
                     {montage.finalPanelAmount ? `${montage.finalPanelAmount} m²` : (calculatedPanelAmount ? `${calculatedPanelAmount} m² (auto)` : '-')}
                 </div>
                 {montage.panelModel && <div className="text-xs text-muted-foreground">{montage.panelModel}</div>}
+                {montage.floorDetails && <div className="text-xs text-muted-foreground mt-1">Dodatkowe: {montage.floorDetails}</div>}
             </div>
             <div className="space-y-1">
                 <span className="text-xs text-muted-foreground">Listwy (do zamówienia)</span>
@@ -190,6 +205,7 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
                     {montage.finalSkirtingLength ? `${montage.finalSkirtingLength} mb` : (calculatedSkirtingLength ? `${calculatedSkirtingLength} mb (auto)` : '-')}
                 </div>
                 {montage.skirtingModel && <div className="text-xs text-muted-foreground">{montage.skirtingModel}</div>}
+                {montage.skirtingDetails && <div className="text-xs text-muted-foreground mt-1">Dodatkowe: {montage.skirtingDetails}</div>}
             </div>
         </div>
 
