@@ -1,4 +1,4 @@
-import { getProducts, getCategories, getAttributes, getAttributeTerms } from './actions';
+import { getProducts, getCategories, getAttributes, getAttributeTerms, WooCommerceAttributeTerm } from './actions';
 import { ProductsListClient } from './products-list-client';
 import { requireUser } from '@/lib/auth/session';
 
@@ -31,7 +31,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         attr.slug.toLowerCase().includes('marka')
     );
 
-    let brandTerms: any[] = [];
+    let brandTerms: WooCommerceAttributeTerm[] = [];
     if (brandAttribute) {
         brandTerms = await getAttributeTerms(brandAttribute.id);
     }

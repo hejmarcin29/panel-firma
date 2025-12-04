@@ -44,6 +44,7 @@ export function ProductsListClient({
     const router = useRouter();
     const searchParams = useSearchParams();
     const [isLoading, setIsLoading] = useState(false);
+    const [showDebug, setShowDebug] = useState(false);
 
     const handlePageChange = (newPage: number) => {
         if (newPage < 1 || newPage > initialTotalPages) return;
@@ -70,7 +71,12 @@ export function ProductsListClient({
     return (
         <div className="space-y-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <h2 className="text-2xl font-bold tracking-tight">Produkty ({initialTotal})</h2>
+                <div className="flex items-center gap-2">
+                    <h2 className="text-2xl font-bold tracking-tight">Produkty ({initialTotal})</h2>
+                    <Button variant="outline" size="sm" onClick={() => setShowDebug(!showDebug)}>
+                        {showDebug ? 'Ukryj Debug' : 'Debug'}
+                    </Button>
+                </div>
                 <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                     <Select 
                         value={searchParams.get('category') || 'all'} 
@@ -109,6 +115,19 @@ export function ProductsListClient({
                     )}
                 </div>
             </div>
+
+            {showDebug && initialProducts.length > 0 && (
+                <Card className="bg-zinc-950 text-zinc-50">
+                    <CardHeader>
+                        <CardTitle className="text-sm font-mono">Debug: Pierwszy produkt (Raw JSON)</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <pre className="text-xs overflow-auto max-h-[400px] whitespace-pre-wrap">
+                            {JSON.stringify(initialProducts[0], null, 2)}
+                        </pre>
+                    </CardContent>
+                </Card>
+            )}
 
             <Card>
                 <CardHeader>
