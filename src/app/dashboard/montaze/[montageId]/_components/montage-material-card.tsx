@@ -205,6 +205,7 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
                             <div className="text-xs text-muted-foreground">
                                 ({montage.floorArea} m² + {montage.panelWaste}% zapasu)
                             </div>
+                            {montage.panelModel && <div className="text-sm font-medium mt-1">{montage.panelModel}</div>}
                         </div>
                     )}
                     {calculatedSkirtingLength && (
@@ -217,6 +218,7 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
                             <div className="text-xs text-muted-foreground">
                                 ({montage.skirtingLength} mb + {montage.skirtingWaste}% zapasu)
                             </div>
+                            {montage.skirtingModel && <div className="text-sm font-medium mt-1">{montage.skirtingModel}</div>}
                         </div>
                     )}
                 </div>
@@ -229,18 +231,31 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
                 <div className="font-medium">
                     {montage.finalPanelAmount ? `${montage.finalPanelAmount} m²` : (calculatedPanelAmount ? `${calculatedPanelAmount} m² (auto)` : '-')}
                 </div>
-                {montage.panelModel && <div className="text-xs text-muted-foreground">{montage.panelModel}</div>}
-                {montage.floorDetails && <div className="text-xs text-muted-foreground mt-1">Dodatkowe: {montage.floorDetails}</div>}
             </div>
             <div className="space-y-1">
                 <span className="text-xs text-muted-foreground">Listwy (do zamówienia)</span>
                 <div className="font-medium">
                     {montage.finalSkirtingLength ? `${montage.finalSkirtingLength} mb` : (calculatedSkirtingLength ? `${calculatedSkirtingLength} mb (auto)` : '-')}
                 </div>
-                {montage.skirtingModel && <div className="text-xs text-muted-foreground">{montage.skirtingModel}</div>}
-                {montage.skirtingDetails && <div className="text-xs text-muted-foreground mt-1">Dodatkowe: {montage.skirtingDetails}</div>}
             </div>
         </div>
+
+        {(montage.floorDetails || montage.skirtingDetails) && (
+            <div className="pt-4 border-t border-border/50 grid grid-cols-2 gap-4">
+                {montage.floorDetails && (
+                    <div className="space-y-1">
+                        <span className="text-xs text-muted-foreground">Dodatkowe (Panele)</span>
+                        <div className="text-sm">{montage.floorDetails}</div>
+                    </div>
+                )}
+                {montage.skirtingDetails && (
+                    <div className="space-y-1">
+                        <span className="text-xs text-muted-foreground">Dodatkowe (Listwy)</span>
+                        <div className="text-sm">{montage.skirtingDetails}</div>
+                    </div>
+                )}
+            </div>
+        )}
 
         {montage.materialDetails && (
           <div className="pt-4 border-t border-border/50">

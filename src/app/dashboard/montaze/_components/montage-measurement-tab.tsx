@@ -224,6 +224,30 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
                     </Select>
                 </div>
             </div>
+            
+            <div className="space-y-2 pt-2 border-t border-dashed">
+                <div className="space-y-1">
+                    <Label htmlFor="panelModel" className="text-xs text-muted-foreground">Model paneli</Label>
+                    <Input
+                    id="panelModel"
+                    placeholder="np. Dąb Naturalny"
+                    value={panelModel}
+                    onChange={(e) => setPanelModel(e.target.value)}
+                    className="h-8 text-sm"
+                    />
+                </div>
+                <div className="space-y-1">
+                    <Label htmlFor="panelAdditionalMaterials" className="text-xs text-muted-foreground">Dodatkowe (podkład, folia...)</Label>
+                    <Input
+                    id="panelAdditionalMaterials"
+                    placeholder="np. podkład 5mm, folia paroizolacyjna"
+                    value={panelAdditionalMaterials}
+                    onChange={(e) => setPanelAdditionalMaterials(e.target.value)}
+                    className="h-8 text-sm"
+                    />
+                </div>
+            </div>
+
             <div className="pt-2 border-t flex justify-between items-center">
                 <span className="text-sm font-medium text-muted-foreground">Do zamówienia:</span>
                 <span className="text-lg font-bold">
@@ -266,6 +290,30 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
                     </Select>
                 </div>
             </div>
+
+            <div className="space-y-2 pt-2 border-t border-dashed">
+                <div className="space-y-1">
+                    <Label htmlFor="skirtingModel" className="text-xs text-muted-foreground">Model listew</Label>
+                    <Input
+                    id="skirtingModel"
+                    placeholder="np. Biała MDF 8cm"
+                    value={skirtingModel}
+                    onChange={(e) => setSkirtingModel(e.target.value)}
+                    className="h-8 text-sm"
+                    />
+                </div>
+                <div className="space-y-1">
+                    <Label htmlFor="skirtingAdditionalMaterials" className="text-xs text-muted-foreground">Dodatkowe (klej, narożniki...)</Label>
+                    <Input
+                    id="skirtingAdditionalMaterials"
+                    placeholder="np. klej montażowy, narożniki wew."
+                    value={skirtingAdditionalMaterials}
+                    onChange={(e) => setSkirtingAdditionalMaterials(e.target.value)}
+                    className="h-8 text-sm"
+                    />
+                </div>
+            </div>
+
             <div className="pt-2 border-t flex justify-between items-center">
                 <span className="text-sm font-medium text-muted-foreground">Do zamówienia:</span>
                 <span className="text-lg font-bold">
@@ -287,65 +335,6 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
         </div>
 
         <div className="border rounded-lg p-4 space-y-4 bg-muted/10">
-            <h4 className="font-medium text-sm uppercase tracking-wider text-muted-foreground mb-2">Materiał</h4>
-            
-            <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="panelModel">Wybrany model paneli</Label>
-                        <Input
-                        id="panelModel"
-                        placeholder="np. Dąb Naturalny"
-                        value={panelModel}
-                        onChange={(e) => setPanelModel(e.target.value)}
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="panelAdditionalMaterials">Dodatkowe materiały (Panele)</Label>
-                        <Input
-                        id="panelAdditionalMaterials"
-                        placeholder="np. podkład, folia..."
-                        value={panelAdditionalMaterials}
-                        onChange={(e) => setPanelAdditionalMaterials(e.target.value)}
-                        />
-                    </div>
-                </div>
-
-                <div className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="skirtingModel">Wybrany model listew</Label>
-                        <Input
-                        id="skirtingModel"
-                        placeholder="np. Biała MDF 8cm"
-                        value={skirtingModel}
-                        onChange={(e) => setSkirtingModel(e.target.value)}
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="skirtingAdditionalMaterials">Dodatkowe materiały (Listwy)</Label>
-                        <Input
-                        id="skirtingAdditionalMaterials"
-                        placeholder="np. klej, narożniki..."
-                        value={skirtingAdditionalMaterials}
-                        onChange={(e) => setSkirtingAdditionalMaterials(e.target.value)}
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="skirtingWaste">Zapas listew (%)</Label>
-                        <Select value={skirtingWaste} onValueChange={setSkirtingWaste}>
-                        <SelectTrigger id="skirtingWaste">
-                            <SelectValue placeholder="Wybierz zapas" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="5">5%</SelectItem>
-                            <SelectItem value="10">10%</SelectItem>
-                            <SelectItem value="15">15%</SelectItem>
-                        </SelectContent>
-                        </Select>
-                    </div>
-                </div>
-            </div>
-
             <div className="flex items-center space-x-2 pt-2">
               <Checkbox 
                 id="modelsApproved" 
