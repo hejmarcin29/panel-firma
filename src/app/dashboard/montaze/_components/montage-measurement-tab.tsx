@@ -339,7 +339,6 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
                 </PopoverContent>
               </Popover>
             </div>
-          </div>
         </div>
 
         <div className="space-y-2">
