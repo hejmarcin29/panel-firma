@@ -278,12 +278,13 @@ async function GalleryContent({ selectedFolderKey }: GalleryContentProps) {
 }
 
 type MontageGalleryPageProps = {
-	searchParams?: {
-		folder?: string;
-	};
+	searchParams: Promise<{
+		folder?: string | string[];
+	}>;
 };
 
-export default function MontageGalleryPage({ searchParams }: MontageGalleryPageProps) {
+export default async function MontageGalleryPage(props: MontageGalleryPageProps) {
+	const searchParams = await props.searchParams;
 	const folderParam = typeof searchParams?.folder === 'string' ? searchParams.folder : undefined;
 
 	return (
