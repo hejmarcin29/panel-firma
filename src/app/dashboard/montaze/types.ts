@@ -30,6 +30,7 @@ export type MontageNote = {
 export type MontageTask = {
 	id: string;
 	title: string;
+	source?: string;
 	completed: boolean;
 	updatedAt: TimestampValue;
 	attachments?: MontageAttachment[];

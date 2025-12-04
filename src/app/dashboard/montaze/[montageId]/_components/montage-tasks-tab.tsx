@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { addMontageTask, toggleMontageTask, addMontageAttachment } from "../../actions";
 import type { Montage } from "../../types";
@@ -120,14 +121,19 @@ export function MontageTasksTab({ montage }: { montage: Montage }) {
             
             <div className="flex flex-col flex-1 gap-2 min-w-0">
                 <div className="flex items-center justify-between gap-2">
-                    <span
-                    className={cn(
-                        "text-sm break-all",
-                        task.completed && "text-muted-foreground line-through"
-                    )}
-                    >
-                    {task.title}
-                    </span>
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <span
+                        className={cn(
+                            "text-sm break-all",
+                            task.completed && "text-muted-foreground line-through"
+                        )}
+                        >
+                        {task.title}
+                        </span>
+                        {task.source === 'measurement' && (
+                            <Badge variant="secondary" className="text-[10px] px-1 py-0 h-5 shrink-0">Pomiar</Badge>
+                        )}
+                    </div>
                     <Button 
                         variant="ghost" 
                         size="icon" 

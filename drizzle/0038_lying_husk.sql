@@ -1,0 +1,1 @@
+ALTER TABLE `montage_tasks` ADD `source` text DEFAULT 'manual' NOT NULL;

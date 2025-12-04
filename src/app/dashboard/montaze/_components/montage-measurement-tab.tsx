@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { CalendarIcon, Eraser } from 'lucide-react';
+import { CalendarIcon, Eraser, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 
@@ -22,7 +22,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import type { Montage } from '../types';
-import { updateMontageMeasurement } from '../actions';
+import { updateMontageMeasurement, addMontageTask, toggleMontageTask } from '../actions';
 
 interface MontageMeasurementTabProps {
   montage: Montage;
@@ -56,6 +56,27 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
 
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+
+  const handleAddTask = async () => {
+      if (!newTaskTitle.trim()) return;
+      startTransition(async () => {
+          try {
+              await addMontageTask({
+                  montageId: montage.id,
+                  title: newTaskTitle,
+                  source: 'measurement'
+              });
+              setNewTaskTitle('');
+              router.refresh();
+          } catch (e) {
+              console.error(e);
+          }
+      });
+  };
+
+  const measurementTasks = montage.tasks.filter(t => t.source === 'measurement');
 
   // Canvas state
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -168,28 +189,89 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="floorArea">Pomiar podłoga (m²)</Label>
-            <Input
-              id="floorArea"
-              type="number"
-              step="0.01"
-              placeholder="0.00"
-              value={floorArea}
-              onChange={(e) => setFloorArea(e.target.value)}
-            />
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Floor Calculator */}
+          <div className="space-y-3 p-4 border rounded-lg bg-muted/5">
+            <h4 className="font-medium text-sm flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-blue-500"></span>
+                Podłoga
+            </h4>
+            <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                    <Label htmlFor="floorArea" className="text-xs text-muted-foreground">Wymiar netto (m²)</Label>
+                    <Input
+                    id="floorArea"
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={floorArea}
+                    onChange={(e) => setFloorArea(e.target.value)}
+                    />
+                </div>
+                <div className="space-y-1">
+                    <Label htmlFor="panelWaste" className="text-xs text-muted-foreground">Zapas (%)</Label>
+                    <Select value={panelWaste} onValueChange={setPanelWaste}>
+                        <SelectTrigger id="panelWaste">
+                            <SelectValue placeholder="Zapas" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="0">0%</SelectItem>
+                            <SelectItem value="5">5%</SelectItem>
+                            <SelectItem value="7">7%</SelectItem>
+                            <SelectItem value="10">10%</SelectItem>
+                            <SelectItem value="15">15%</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+            <div className="pt-2 border-t flex justify-between items-center">
+                <span className="text-sm font-medium text-muted-foreground">Do zamówienia:</span>
+                <span className="text-lg font-bold">
+                    {floorArea ? (parseFloat(floorArea) * (1 + parseInt(panelWaste)/100)).toFixed(2) : '0.00'} m²
+                </span>
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="skirtingLength">Pomiar listwy (mb)</Label>
-            <Input
-              id="skirtingLength"
-              type="number"
-              step="0.01"
-              placeholder="0.00"
-              value={skirtingLength}
-              onChange={(e) => setSkirtingLength(e.target.value)}
-            />
+
+          {/* Skirting Calculator */}
+          <div className="space-y-3 p-4 border rounded-lg bg-muted/5">
+            <h4 className="font-medium text-sm flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-amber-500"></span>
+                Listwy
+            </h4>
+            <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                    <Label htmlFor="skirtingLength" className="text-xs text-muted-foreground">Wymiar netto (mb)</Label>
+                    <Input
+                    id="skirtingLength"
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={skirtingLength}
+                    onChange={(e) => setSkirtingLength(e.target.value)}
+                    />
+                </div>
+                <div className="space-y-1">
+                    <Label htmlFor="skirtingWaste" className="text-xs text-muted-foreground">Zapas (%)</Label>
+                    <Select value={skirtingWaste} onValueChange={setSkirtingWaste}>
+                        <SelectTrigger id="skirtingWaste">
+                            <SelectValue placeholder="Zapas" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="0">0%</SelectItem>
+                            <SelectItem value="5">5%</SelectItem>
+                            <SelectItem value="7">7%</SelectItem>
+                            <SelectItem value="10">10%</SelectItem>
+                            <SelectItem value="15">15%</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+            <div className="pt-2 border-t flex justify-between items-center">
+                <span className="text-sm font-medium text-muted-foreground">Do zamówienia:</span>
+                <span className="text-lg font-bold">
+                    {skirtingLength ? (parseFloat(skirtingLength) * (1 + parseInt(skirtingWaste)/100)).toFixed(2) : '0.00'} mb
+                </span>
+            </div>
           </div>
         </div>
 
@@ -226,19 +308,6 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
                         value={panelAdditionalMaterials}
                         onChange={(e) => setPanelAdditionalMaterials(e.target.value)}
                         />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="panelWaste">Zapas paneli (%)</Label>
-                        <Select value={panelWaste} onValueChange={setPanelWaste}>
-                        <SelectTrigger id="panelWaste">
-                            <SelectValue placeholder="Wybierz zapas" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="5">5%</SelectItem>
-                            <SelectItem value="10">10%</SelectItem>
-                            <SelectItem value="15">15%</SelectItem>
-                        </SelectContent>
-                        </Select>
                     </div>
                 </div>
 
@@ -349,6 +418,54 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
             value={additionalInfo}
             onChange={(e) => setAdditionalInfo(e.target.value)}
           />
+        </div>
+
+        {/* Measurement Tasks */}
+        <div className="border rounded-lg p-4 space-y-4 bg-muted/10">
+            <h4 className="font-medium text-sm uppercase tracking-wider text-muted-foreground mb-2">Zadania z pomiaru</h4>
+            
+            <div className="space-y-2">
+                {measurementTasks.map(task => (
+                    <div key={task.id} className="flex items-center gap-2 p-2 bg-background rounded border">
+                        <Checkbox 
+                            checked={task.completed} 
+                            onCheckedChange={(checked) => {
+                                startTransition(async () => {
+                                    await toggleMontageTask({
+                                        taskId: task.id,
+                                        montageId: montage.id,
+                                        completed: !!checked
+                                    });
+                                    router.refresh();
+                                });
+                            }}
+                        />
+                        <span className={cn("text-sm", task.completed && "line-through text-muted-foreground")}>
+                            {task.title}
+                        </span>
+                    </div>
+                ))}
+                {measurementTasks.length === 0 && (
+                    <p className="text-sm text-muted-foreground italic">Brak zadań z pomiaru.</p>
+                )}
+            </div>
+
+            <div className="flex gap-2">
+                <Input 
+                    placeholder="Dodaj nowe zadanie..." 
+                    value={newTaskTitle}
+                    onChange={(e) => setNewTaskTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddTask();
+                        }
+                    }}
+                />
+                <Button type="button" onClick={handleAddTask} disabled={!newTaskTitle.trim() || isPending} size="icon">
+                    <Plus className="h-4 w-4" />
+                </Button>
+            </div>
         </div>
 
         <div className="space-y-2">

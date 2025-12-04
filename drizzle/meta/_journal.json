@@ -267,6 +267,13 @@
       "when": 1764838598949,
       "tag": "0037_early_black_panther",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "6",
+      "when": 1764865245415,
+      "tag": "0038_lying_husk",
+      "breakpoints": true
     }
   ]
 }

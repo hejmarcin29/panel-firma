@@ -190,6 +190,39 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
         </Dialog>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Calculated Materials Section */}
+        {(calculatedPanelAmount || calculatedSkirtingLength) && (
+            <div className="mb-4 p-3 bg-muted/30 rounded-md border border-border/50">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Wyliczone z pomiaru</h4>
+                <div className="grid grid-cols-2 gap-4">
+                    {calculatedPanelAmount && (
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-blue-500"></span>
+                                <span className="text-sm font-medium">Podłoga</span>
+                            </div>
+                            <div className="text-xl font-bold">{calculatedPanelAmount} m²</div>
+                            <div className="text-xs text-muted-foreground">
+                                ({montage.floorArea} m² + {montage.panelWaste}% zapasu)
+                            </div>
+                        </div>
+                    )}
+                    {calculatedSkirtingLength && (
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-amber-500"></span>
+                                <span className="text-sm font-medium">Listwy</span>
+                            </div>
+                            <div className="text-xl font-bold">{calculatedSkirtingLength} mb</div>
+                            <div className="text-xs text-muted-foreground">
+                                ({montage.skirtingLength} mb + {montage.skirtingWaste}% zapasu)
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        )}
+
         <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
                 <span className="text-xs text-muted-foreground">Panele (do zamówienia)</span>

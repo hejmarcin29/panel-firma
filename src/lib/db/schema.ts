@@ -531,6 +531,7 @@ export const montageTasks = sqliteTable(
 			.notNull()
 			.references(() => montages.id, { onDelete: 'cascade' }),
 		title: text('title').notNull(),
+		source: text('source').notNull().default('manual'),
 		completed: integer('completed', { mode: 'boolean' }).notNull().default(false),
 		orderIndex: integer('order_index'),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' })

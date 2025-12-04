@@ -556,9 +556,10 @@ await db.insert(montageNotes).values({
 type AddMontageTaskInput = {
 	montageId: string;
 	title: string;
+	source?: string;
 };
 
-export async function addMontageTask({ montageId, title }: AddMontageTaskInput) {
+export async function addMontageTask({ montageId, title, source }: AddMontageTaskInput) {
 	await requireUser();
 	const trimmedTitle = title.trim();
 
@@ -572,6 +573,7 @@ export async function addMontageTask({ montageId, title }: AddMontageTaskInput) 
 		id: crypto.randomUUID(),
 		montageId,
 		title: trimmedTitle,
+		source: source || 'manual',
 		completed: false,
 		orderIndex: Number(now.getTime()),
 		createdAt: now,

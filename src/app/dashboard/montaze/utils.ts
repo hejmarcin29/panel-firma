@@ -125,6 +125,7 @@ function mapTask(task: MontageRow['tasks'][number]): MontageTask {
 	return {
 		id: String(task.id),
 		title: task.title,
+		source: task.source,
 		completed: Boolean(task.completed),
 		updatedAt: task.updatedAt,
 	};
