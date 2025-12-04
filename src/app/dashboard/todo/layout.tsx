@@ -9,7 +9,7 @@ export default async function TodoLayout({ children }: { children: React.ReactNo
     return (
         <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
             {/* Desktop Sidebar - Hidden on Mobile */}
-            <div className="hidden md:block w-80 border-r bg-background flex-shrink-0">
+            <div className="hidden md:block w-80 border-r bg-background shrink-0">
                 <TodoSidebar columns={columns} className="h-full" />
             </div>
             

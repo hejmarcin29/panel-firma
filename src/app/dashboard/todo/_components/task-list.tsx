@@ -40,7 +40,7 @@ import {
   updateColumnTitle,
   updateTaskPriority,
   uploadTaskAttachment
-} from "../../actions";
+} from "../actions";
 import { useRouter } from "next/navigation";
 import { SwipeableTaskItem } from "../../zadania/_components/swipeable-task-item";
 import { Badge } from "@/components/ui/badge";
