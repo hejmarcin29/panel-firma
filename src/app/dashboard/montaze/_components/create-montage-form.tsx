@@ -19,7 +19,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import { createMontage } from '../actions';
+import { createMontage, type CustomerConflictData } from '../actions';
 
 type FormState = {
 	clientName: string;
@@ -73,7 +73,7 @@ export function CreateMontageForm({ onSuccess }: CreateMontageFormProps) {
 	const [error, setError] = useState<string | null>(null);
 	const [isPending, startTransition] = useTransition();
 	const [sameAsBilling, setSameAsBilling] = useState(true);
-    const [conflictData, setConflictData] = useState<{ existing: any, new: any } | null>(null);
+    const [conflictData, setConflictData] = useState<{ existing: CustomerConflictData, new: CustomerConflictData } | null>(null);
 
 	const handleInputChange = (key: keyof FormState) => (
 		event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,

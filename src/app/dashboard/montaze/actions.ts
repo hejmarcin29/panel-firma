@@ -153,9 +153,22 @@ type CreateMontageInput = {
     customerUpdateStrategy?: 'update' | 'keep';
 };
 
+export type CustomerConflictData = {
+    name: string | null;
+    email: string | null;
+    phone: string | null;
+    taxId: string | null;
+    billingStreet: string | null;
+    billingCity: string | null;
+    billingPostalCode: string | null;
+    shippingStreet: string | null;
+    shippingCity: string | null;
+    shippingPostalCode: string | null;
+};
+
 export type CreateMontageResult = 
     | { status: 'success'; montageId: string }
-    | { status: 'conflict'; existingCustomer: any; newCustomerData: any };
+    | { status: 'conflict'; existingCustomer: CustomerConflictData; newCustomerData: CustomerConflictData };
 
 export async function createMontage({
 	clientName,
@@ -339,8 +352,9 @@ export async function createMontage({
                 updatedAt: now,
             });
             saved = true;
-        } catch (e: any) {
-            if (e.message && e.message.includes('UNIQUE constraint failed: montages.display_id')) {
+        } catch (e: unknown) {
+            const message = e instanceof Error ? e.message : String(e);
+            if (message.includes('UNIQUE constraint failed: montages.display_id')) {
                 attempts++;
                 // Wait a bit before retrying to reduce collision chance
                 await new Promise(resolve => setTimeout(resolve, 100));
