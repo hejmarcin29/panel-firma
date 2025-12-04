@@ -33,7 +33,7 @@ export function ProductControlBar({ totalProducts, onOpenFilters }: { totalProdu
   };
 
   return (
-    <div className="sticky top-[120px] z-30 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 border-b shadow-sm pb-4 pt-4 px-5 space-y-4">
+    <div className="sticky top-[65px] md:top-[120px] z-30 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 border-b shadow-sm pb-4 pt-4 px-5 space-y-4">
       
       {/* Zone A: Scope & Search */}
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">

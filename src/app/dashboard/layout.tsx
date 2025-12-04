@@ -56,7 +56,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
                 <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-primary/20 opacity-20 blur-[100px]"></div>
 
                 {/* Mobile Header */}
-                <header className="md:hidden flex items-center justify-between border-b bg-background/80 backdrop-blur-md px-4 py-3 sticky top-0 z-10">
+                <header className="md:hidden flex items-center justify-between border-b bg-background/80 backdrop-blur-md px-4 py-3 sticky top-0 z-50">
                     <div className="flex items-center gap-2">
                         <BackButton />
                         <span className="font-semibold">Panel firmy</span>
