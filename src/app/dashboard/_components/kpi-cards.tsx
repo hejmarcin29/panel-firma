@@ -8,9 +8,16 @@ import {
     ListTodo, 
     CalendarDays, 
     ArrowUpRight,
-    CreditCard
+    CreditCard,
+    Info
 } from "lucide-react";
 import Link from "next/link";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface KPICardsProps {
   todayMontagesCount: number;
@@ -41,14 +48,25 @@ export function KPICards({
   const visibleCards = settings?.visibleCards || ['today', 'leads', 'payments', 'urgent', 'orders', 'todo', 'urgentOrders', 'stalledOrders'];
 
   return (
+    <TooltipProvider>
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 h-full">
       {visibleCards.includes('urgent') && (
         <Card className="bg-card border-border shadow-none relative overflow-hidden group">
             <Link href="/dashboard/montaze?filter=urgent" className="absolute inset-0 z-10" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Pilne Montaże
-                </CardTitle>
+                <div className="flex items-center gap-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                        Pilne Montaże
+                    </CardTitle>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Info className="h-3 w-3 text-muted-foreground/50 cursor-help z-20 relative" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Montaże, które wymagają natychmiastowej uwagi (np. brak kontaktu, opóźnienia).</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </div>
                 <AlertCircle className="h-4 w-4 text-orange-500" />
             </CardHeader>
             <CardContent className="p-4 pt-0">
@@ -64,9 +82,19 @@ export function KPICards({
         <Card className="bg-card border-border shadow-none relative overflow-hidden group">
             <Link href="/dashboard/montaze" className="absolute inset-0 z-10" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Aktywne Leady
-                </CardTitle>
+                <div className="flex items-center gap-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                        Aktywne Leady
+                    </CardTitle>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Info className="h-3 w-3 text-muted-foreground/50 cursor-help z-20 relative" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Nowe zapytania ofertowe, które są w trakcie procesowania.</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </div>
                 <Briefcase className="h-4 w-4 text-blue-500" />
             </CardHeader>
             <CardContent className="p-4 pt-0">
@@ -82,9 +110,19 @@ export function KPICards({
         <Card className="bg-card border-border shadow-none relative overflow-hidden group">
             <Link href="/dashboard/orders" className="absolute inset-0 z-10" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Nowe Zamówienia
-                </CardTitle>
+                <div className="flex items-center gap-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                        Nowe Zamówienia
+                    </CardTitle>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Info className="h-3 w-3 text-muted-foreground/50 cursor-help z-20 relative" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Zamówienia, które wpłynęły i oczekują na weryfikację lub płatność.</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </div>
                 <ShoppingCart className="h-4 w-4 text-emerald-500" />
             </CardHeader>
             <CardContent className="p-4 pt-0">
@@ -100,9 +138,19 @@ export function KPICards({
         <Card className="bg-card border-border shadow-none relative overflow-hidden group">
             <Link href="/dashboard/montaze" className="absolute inset-0 z-10" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Dzisiaj
-                </CardTitle>
+                <div className="flex items-center gap-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                        Dzisiaj
+                    </CardTitle>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Info className="h-3 w-3 text-muted-foreground/50 cursor-help z-20 relative" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Liczba montaży zaplanowanych w kalendarzu na dzisiejszą datę.</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </div>
                 <CalendarDays className="h-4 w-4 text-purple-500" />
             </CardHeader>
             <CardContent className="p-4 pt-0">
@@ -120,9 +168,19 @@ export function KPICards({
         <Card className="bg-card border-border shadow-none relative overflow-hidden group">
             <Link href="/dashboard/todo" className="absolute inset-0 z-10" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Zadania ToDo
-                </CardTitle>
+                <div className="flex items-center gap-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                        Zadania ToDo
+                    </CardTitle>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Info className="h-3 w-3 text-muted-foreground/50 cursor-help z-20 relative" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Liczba wszystkich niezrealizowanych zadań na liście ToDo.</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </div>
                 <ListTodo className="h-4 w-4 text-pink-500" />
             </CardHeader>
             <CardContent className="p-4 pt-0">
@@ -138,9 +196,19 @@ export function KPICards({
         <Card className="bg-card border-border shadow-none relative overflow-hidden group">
             <Link href="/dashboard/montaze" className="absolute inset-0 z-10" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Płatności
-                </CardTitle>
+                <div className="flex items-center gap-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                        Płatności
+                    </CardTitle>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Info className="h-3 w-3 text-muted-foreground/50 cursor-help z-20 relative" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Liczba montaży, które zostały zakończone, ale nie odnotowano jeszcze pełnej płatności od klienta.</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </div>
                 <CreditCard className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent className="p-4 pt-0">
@@ -156,9 +224,19 @@ export function KPICards({
         <Card className="shadow-none relative overflow-hidden group border-red-500/20 bg-red-500/5">
             <Link href="/dashboard/orders" className="absolute inset-0 z-10" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-                <CardTitle className="text-sm font-medium text-red-600">
-                    Pilne Zamówienia
-                </CardTitle>
+                <div className="flex items-center gap-2">
+                    <CardTitle className="text-sm font-medium text-red-600">
+                        Pilne Zamówienia
+                    </CardTitle>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Info className="h-3 w-3 text-red-600/50 cursor-help z-20 relative" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Zamówienia, które nie zmieniły statusu przez dłuższy czas, co może sugerować zator.</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </div>
                 <AlertCircle className="h-4 w-4 text-red-600" />
             </CardHeader>
             <CardContent className="p-4 pt-0">
@@ -174,9 +252,19 @@ export function KPICards({
         <Card className="shadow-none relative overflow-hidden group border-orange-500/20 bg-orange-500/5">
             <Link href="/dashboard/orders" className="absolute inset-0 z-10" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-                <CardTitle className="text-sm font-medium text-orange-600">
-                    Brak Faktury
-                </CardTitle>
+                <div className="flex items-center gap-2">
+                    <CardTitle className="text-sm font-medium text-orange-600">
+                        Brak Faktury
+                    </CardTitle>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Info className="h-3 w-3 text-orange-600/50 cursor-help z-20 relative" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Zamówienia przyjęte przez magazyn bez faktury końcowej (stare lub koniec miesiąca).</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </div>
                 <AlertCircle className="h-4 w-4 text-orange-600" />
             </CardHeader>
             <CardContent className="p-4 pt-0">
@@ -188,5 +276,6 @@ export function KPICards({
         </Card>
       )}
     </div>
+    </TooltipProvider>
   );
 }
