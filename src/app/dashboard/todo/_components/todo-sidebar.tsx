@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Plus, List, Star, Home, AlertCircle, CheckCircle2, Briefcase, ShoppingCart } from "lucide-react";
+import { Plus, List, Star, Home, AlertCircle, Briefcase, ShoppingCart } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
 import { createColumn } from "../actions";
@@ -19,8 +19,18 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
+interface Task {
+  completed: boolean;
+}
+
+interface Column {
+  id: string;
+  title: string;
+  tasks: Task[];
+}
+
 interface TodoSidebarProps {
-  columns: any[];
+  columns: Column[];
   className?: string;
 }
 
@@ -36,7 +46,7 @@ export function TodoSidebar({ columns, className }: TodoSidebarProps) {
       setNewListName("");
       setIsCreateDialogOpen(false);
       toast.success("Lista utworzona");
-    } catch (error) {
+    } catch {
       toast.error("Błąd tworzenia listy");
     }
   };
@@ -62,7 +72,7 @@ export function TodoSidebar({ columns, className }: TodoSidebarProps) {
         <div className="p-2 space-y-1">
           {columns.map((column) => {
             const isActive = pathname === `/dashboard/todo/${column.id}`;
-            const taskCount = column.tasks?.filter((t: any) => !t.completed).length || 0;
+            const taskCount = column.tasks?.filter((t) => !t.completed).length || 0;
             
             return (
               <Link
