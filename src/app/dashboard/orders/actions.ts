@@ -353,6 +353,15 @@ export async function getManualOrders(): Promise<Order[]> {
 export async function createOrder(payload: ManualOrderPayload, userId?: string | null): Promise<Order> {
 	validatePayload(payload);
 
+    // Check for existing order reference
+    const existingOrder = await db.query.manualOrders.findFirst({
+        where: eq(manualOrders.reference, payload.reference),
+    });
+
+    if (existingOrder) {
+        throw new Error(`Zamówienie o numerze ${payload.reference} już istnieje.`);
+    }
+
 	const id = crypto.randomUUID();
 
 	const billing = payload.billing;
@@ -378,24 +387,28 @@ export async function createOrder(payload: ManualOrderPayload, userId?: string |
 				shippingPostalCode: shipping.postalCode,
 			});
 		} else {
-			// Optional: Update customer details if needed
+			// Update customer details only if missing in existing record
 			await db.update(customers)
 				.set({
-					name: billing.name,
-					phone: billing.phone,
-					billingStreet: billing.street,
-					billingCity: billing.city,
-					billingPostalCode: billing.postalCode,
+					// name: existingCustomer.name ?? billing.name, // Name might change, but let's be safe
+					phone: existingCustomer.phone ?? billing.phone,
+					billingStreet: existingCustomer.billingStreet ?? billing.street,
+					billingCity: existingCustomer.billingCity ?? billing.city,
+					billingPostalCode: existingCustomer.billingPostalCode ?? billing.postalCode,
+                    shippingStreet: existingCustomer.shippingStreet ?? shipping.street,
+                    shippingCity: existingCustomer.shippingCity ?? shipping.city,
+                    shippingPostalCode: existingCustomer.shippingPostalCode ?? shipping.postalCode,
 					updatedAt: new Date(),
 				})
 				.where(eq(customers.email, billing.email));
 		}
 	}
 
-	const orderTotals = payload.items.reduce(
+    // Calculate totals using integer arithmetic (minor units) to avoid rounding errors
+	const orderTotalsMinor = payload.items.reduce(
 		(acc, item) => ({
-			net: acc.net + item.totalNet,
-			gross: acc.gross + item.totalGross,
+			net: acc.net + toMinorUnits(item.totalNet),
+			gross: acc.gross + toMinorUnits(item.totalGross),
 		}),
 		{ net: 0, gross: 0 },
 	);
@@ -411,8 +424,8 @@ export async function createOrder(payload: ManualOrderPayload, userId?: string |
 		type: payload.type ?? 'production',
 		sourceOrderId: payload.sourceOrderId ?? null,
 		requiresReview: payload.requiresReview ?? false,
-		totalNet: toMinorUnits(orderTotals.net),
-		totalGross: toMinorUnits(orderTotals.gross),
+		totalNet: orderTotalsMinor.net,
+		totalGross: orderTotalsMinor.gross,
 		billingName: billing.name,
 		billingStreet: billing.street,
 		billingPostalCode: billing.postalCode,

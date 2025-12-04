@@ -195,6 +195,10 @@ export async function createMontage({
 	const normalizedPhone = contactPhone ? normalizePhone(contactPhone) : null;
 	const normalizedEmail = contactEmail?.trim()?.toLowerCase() || null;
 
+    if (normalizedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+        throw new Error('Podaj prawidłowy adres e-mail.');
+    }
+
 	// Customer sync logic
 	if (normalizedEmail || normalizedPhone) {
 		let existingCustomer = null;
@@ -229,25 +233,29 @@ export async function createMontage({
 
 		if (existingCustomer) {
 			// Smart merge for phone numbers
-			if (existingCustomer.phone && normalizedPhone && !existingCustomer.phone.includes(normalizedPhone)) {
-				customerData.phone = `${existingCustomer.phone}, ${normalizedPhone}`;
-			} else if (existingCustomer.phone) {
-                // Keep existing phone if new one is null or already present
+            if (existingCustomer.phone) {
+                // Keep existing phone if present
                 customerData.phone = existingCustomer.phone;
             }
 
-			// Update existing customer - only overwrite fields that are provided in the new montage
+			// Update existing customer - only overwrite fields that are MISSING in the existing customer
 			await db.update(customers)
 				.set({
-					...customerData,
-					email: normalizedEmail ?? existingCustomer.email,
-					taxId: normalizedNip ?? existingCustomer.taxId,
-					billingStreet: normalizedBilling ?? existingCustomer.billingStreet,
-					billingCity: normalizedBillingCity ?? existingCustomer.billingCity,
-					billingPostalCode: normalizedBillingPostalCode ?? existingCustomer.billingPostalCode,
-					shippingStreet: normalizedInstallation ?? existingCustomer.shippingStreet,
-					shippingCity: normalizedInstallationCity ?? existingCustomer.shippingCity,
-					shippingPostalCode: normalizedInstallationPostalCode ?? existingCustomer.shippingPostalCode,
+					// Only update name if it was missing or placeholder? Actually name might change. 
+                    // But let's stick to the rule: don't overwrite if exists.
+                    // However, for name, we might want to update it if it's more specific now.
+                    // Let's be safe and only update address/contact info if missing.
+                    
+					email: existingCustomer.email ?? normalizedEmail,
+                    phone: existingCustomer.phone ?? normalizedPhone,
+					taxId: existingCustomer.taxId ?? normalizedNip,
+					billingStreet: existingCustomer.billingStreet ?? normalizedBilling,
+					billingCity: existingCustomer.billingCity ?? normalizedBillingCity,
+					billingPostalCode: existingCustomer.billingPostalCode ?? normalizedBillingPostalCode,
+					shippingStreet: existingCustomer.shippingStreet ?? normalizedInstallation,
+					shippingCity: existingCustomer.shippingCity ?? normalizedInstallationCity,
+					shippingPostalCode: existingCustomer.shippingPostalCode ?? normalizedInstallationPostalCode,
+                    updatedAt: now,
 				})
 				.where(eq(customers.id, existingCustomer.id));
 		} else {
@@ -261,36 +269,58 @@ export async function createMontage({
 
 	let forecastedDate: Date | null = null;
 	if (forecastedInstallationDate) {
-		const parsed = new Date(`${forecastedInstallationDate}T00:00:00`);
+        // Use Noon UTC to avoid timezone shifting issues when displaying the date
+		const parsed = new Date(`${forecastedInstallationDate}T12:00:00Z`);
 		if (!Number.isNaN(parsed.getTime())) {
 			forecastedDate = parsed;
 		}
 	}
 
-	await db.insert(montages).values({
-		id: montageId,
-        displayId,
-		clientName: trimmedName,
-		contactPhone: contactPhone?.trim() ?? null,
-		contactEmail: contactEmail?.trim() ?? null,
-		address: fallbackAddressLine,
-		billingAddress: normalizedBilling,
-		installationAddress: normalizedInstallation,
-		billingCity: normalizedBillingCity,
-		installationCity: normalizedInstallationCity,
-		billingPostalCode: normalizedBillingPostalCode,
-		installationPostalCode: normalizedInstallationPostalCode,
-		isCompany: isCompany ?? false,
-		companyName: normalizedCompanyName,
-		nip: normalizedNip,
-		scheduledInstallationAt: null,
-		scheduledInstallationEndAt: null,
-        forecastedInstallationDate: forecastedDate,
-		materialDetails: normalizedMaterialDetails,
-		status: 'lead',
-		createdAt: now,
-		updatedAt: now,
-	});
+    // Retry logic for unique displayId
+    let saved = false;
+    let attempts = 0;
+    while (!saved && attempts < 3) {
+        try {
+            const displayId = await generateNextMontageId();
+            await db.insert(montages).values({
+                id: montageId,
+                displayId,
+                clientName: trimmedName,
+                contactPhone: contactPhone?.trim() ?? null,
+                contactEmail: contactEmail?.trim() ?? null,
+                address: fallbackAddressLine,
+                billingAddress: normalizedBilling,
+                installationAddress: normalizedInstallation,
+                billingCity: normalizedBillingCity,
+                installationCity: normalizedInstallationCity,
+                billingPostalCode: normalizedBillingPostalCode,
+                installationPostalCode: normalizedInstallationPostalCode,
+                isCompany: isCompany ?? false,
+                companyName: normalizedCompanyName,
+                nip: normalizedNip,
+                scheduledInstallationAt: null,
+                scheduledInstallationEndAt: null,
+                forecastedInstallationDate: forecastedDate,
+                materialDetails: normalizedMaterialDetails,
+                status: 'lead',
+                createdAt: now,
+                updatedAt: now,
+            });
+            saved = true;
+        } catch (e: any) {
+            if (e.message && e.message.includes('UNIQUE constraint failed: montages.display_id')) {
+                attempts++;
+                // Wait a bit before retrying to reduce collision chance
+                await new Promise(resolve => setTimeout(resolve, 100));
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    if (!saved) {
+        throw new Error('Nie udało się wygenerować unikalnego numeru montażu. Spróbuj ponownie.');
+    }
 
 	if (templates.length > 0) {
 		await db.insert(montageChecklistItems).values(
