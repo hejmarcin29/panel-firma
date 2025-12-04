@@ -8,6 +8,16 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 import { createMontage } from '../actions';
 
@@ -63,6 +73,7 @@ export function CreateMontageForm({ onSuccess }: CreateMontageFormProps) {
 	const [error, setError] = useState<string | null>(null);
 	const [isPending, startTransition] = useTransition();
 	const [sameAsBilling, setSameAsBilling] = useState(true);
+    const [conflictData, setConflictData] = useState<{ existing: any, new: any } | null>(null);
 
 	const handleInputChange = (key: keyof FormState) => (
 		event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -95,14 +106,14 @@ export function CreateMontageForm({ onSuccess }: CreateMontageFormProps) {
 		}
 	};
 
-	const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-		event.preventDefault();
+    const submitForm = (strategy?: 'update' | 'keep') => {
 		setError(null);
 		setFeedback(null);
+        setConflictData(null);
 
 		startTransition(async () => {
 			try {
-				await createMontage({
+				const result = await createMontage({
 					clientName: form.clientName,
 					contactPhone: form.contactPhone,
 					contactEmail: form.contactEmail,
@@ -117,7 +128,17 @@ export function CreateMontageForm({ onSuccess }: CreateMontageFormProps) {
                     installationPostalCode: form.installationPostalCode,
 					forecastedInstallationDate: form.forecastedInstallationDate || undefined,
 					materialDetails: form.materialDetails,
+                    customerUpdateStrategy: strategy,
 				});
+
+                if (result.status === 'conflict') {
+                    setConflictData({
+                        existing: result.existingCustomer,
+                        new: result.newCustomerData
+                    });
+                    return;
+                }
+
 				setForm(initialState);
 				setSameAsBilling(true);
 				setFeedback('Dodano nowy montaż.');
@@ -132,9 +153,57 @@ export function CreateMontageForm({ onSuccess }: CreateMontageFormProps) {
 				setError(message);
 			}
 		});
+    };
+
+	const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+        submitForm();
 	};
 
 	return (
+        <>
+            <AlertDialog open={!!conflictData} onOpenChange={(open) => !open && setConflictData(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Klient już istnieje</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            <div className="space-y-4">
+                                <p>W bazie istnieje już klient o podanym adresie e-mail lub numerze telefonu, ale jego dane różnią się od wprowadzonych.</p>
+                                
+                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                    <div className="border rounded-md p-3 bg-muted/50">
+                                        <p className="font-semibold mb-2 text-muted-foreground">Dane w bazie:</p>
+                                        <div className="space-y-1">
+                                            <p className="font-medium">{conflictData?.existing.name}</p>
+                                            <p>{conflictData?.existing.billingStreet}</p>
+                                            <p>{conflictData?.existing.billingPostalCode} {conflictData?.existing.billingCity}</p>
+                                            {conflictData?.existing.taxId && <p className="text-xs text-muted-foreground">NIP: {conflictData?.existing.taxId}</p>}
+                                        </div>
+                                    </div>
+                                    <div className="border rounded-md p-3 bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
+                                        <p className="font-semibold mb-2 text-blue-600 dark:text-blue-400">Nowe dane:</p>
+                                        <div className="space-y-1">
+                                            <p className="font-medium">{conflictData?.new.name}</p>
+                                            <p>{conflictData?.new.billingStreet}</p>
+                                            <p>{conflictData?.new.billingPostalCode} {conflictData?.new.billingCity}</p>
+                                            {conflictData?.new.taxId && <p className="text-xs text-muted-foreground">NIP: {conflictData?.new.taxId}</p>}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <p className="text-sm text-muted-foreground">
+                                    Czy chcesz zaktualizować dane klienta w bazie, czy zachować istniejące (używając nowych tylko dla tego montażu)?
+                                </p>
+                            </div>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => submitForm('keep')}>Zachowaj stare</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => submitForm('update')}>Zastąp nowymi</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
 		<form onSubmit={handleSubmit} className="space-y-4 rounded-xl border bg-background p-4 shadow-sm">
 			<div>
 				<Label htmlFor="montage-client">Klient (Osoba kontaktowa)</Label>
@@ -320,5 +389,6 @@ export function CreateMontageForm({ onSuccess }: CreateMontageFormProps) {
 				{error ? <span className="text-xs text-destructive">{error}</span> : null}
 			</div>
 		</form>
+        </>
 	);
 }

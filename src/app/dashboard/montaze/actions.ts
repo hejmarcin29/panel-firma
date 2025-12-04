@@ -150,7 +150,12 @@ type CreateMontageInput = {
 	nip?: string;
 	forecastedInstallationDate?: string;
 	materialDetails?: string;
+    customerUpdateStrategy?: 'update' | 'keep';
 };
+
+export type CreateMontageResult = 
+    | { status: 'success'; montageId: string }
+    | { status: 'conflict'; existingCustomer: any; newCustomerData: any };
 
 export async function createMontage({
 	clientName,
@@ -167,7 +172,8 @@ export async function createMontage({
 	nip,
 	forecastedInstallationDate,
 	materialDetails,
-}: CreateMontageInput) {
+    customerUpdateStrategy,
+}: CreateMontageInput): Promise<CreateMontageResult> {
 	const user = await requireUser();
 
 	const trimmedName = clientName.trim();
@@ -232,29 +238,55 @@ export async function createMontage({
 		};
 
 		if (existingCustomer) {
-			// Smart merge for phone numbers
-            if (existingCustomer.phone) {
-                // Keep existing phone if present
-                customerData.phone = existingCustomer.phone;
+            // Check for conflicts if strategy is not provided
+            if (!customerUpdateStrategy) {
+                const hasConflict = 
+                    (normalizedBilling && existingCustomer.billingStreet && normalizedBilling !== existingCustomer.billingStreet) ||
+                    (normalizedBillingCity && existingCustomer.billingCity && normalizedBillingCity !== existingCustomer.billingCity) ||
+                    (normalizedBillingPostalCode && existingCustomer.billingPostalCode && normalizedBillingPostalCode !== existingCustomer.billingPostalCode) ||
+                    (normalizedInstallation && existingCustomer.shippingStreet && normalizedInstallation !== existingCustomer.shippingStreet) ||
+                    (normalizedInstallationCity && existingCustomer.shippingCity && normalizedInstallationCity !== existingCustomer.shippingCity) ||
+                    (normalizedInstallationPostalCode && existingCustomer.shippingPostalCode && normalizedInstallationPostalCode !== existingCustomer.shippingPostalCode) ||
+                    (normalizedNip && existingCustomer.taxId && normalizedNip !== existingCustomer.taxId);
+
+                if (hasConflict) {
+                    return {
+                        status: 'conflict',
+                        existingCustomer: {
+                            name: existingCustomer.name,
+                            email: existingCustomer.email,
+                            phone: existingCustomer.phone,
+                            taxId: existingCustomer.taxId,
+                            billingStreet: existingCustomer.billingStreet,
+                            billingCity: existingCustomer.billingCity,
+                            billingPostalCode: existingCustomer.billingPostalCode,
+                            shippingStreet: existingCustomer.shippingStreet,
+                            shippingCity: existingCustomer.shippingCity,
+                            shippingPostalCode: existingCustomer.shippingPostalCode,
+                        },
+                        newCustomerData: customerData
+                    };
+                }
             }
 
-			// Update existing customer - only overwrite fields that are MISSING in the existing customer
+            const shouldOverwrite = customerUpdateStrategy === 'update';
+            
+            const resolve = (newVal: string | null, oldVal: string | null) => {
+                if (shouldOverwrite) return newVal ?? oldVal;
+                return oldVal ?? newVal;
+            };
+
 			await db.update(customers)
 				.set({
-					// Only update name if it was missing or placeholder? Actually name might change. 
-                    // But let's stick to the rule: don't overwrite if exists.
-                    // However, for name, we might want to update it if it's more specific now.
-                    // Let's be safe and only update address/contact info if missing.
-                    
-					email: existingCustomer.email ?? normalizedEmail,
-                    phone: existingCustomer.phone ?? normalizedPhone,
-					taxId: existingCustomer.taxId ?? normalizedNip,
-					billingStreet: existingCustomer.billingStreet ?? normalizedBilling,
-					billingCity: existingCustomer.billingCity ?? normalizedBillingCity,
-					billingPostalCode: existingCustomer.billingPostalCode ?? normalizedBillingPostalCode,
-					shippingStreet: existingCustomer.shippingStreet ?? normalizedInstallation,
-					shippingCity: existingCustomer.shippingCity ?? normalizedInstallationCity,
-					shippingPostalCode: existingCustomer.shippingPostalCode ?? normalizedInstallationPostalCode,
+					email: resolve(normalizedEmail, existingCustomer.email),
+                    phone: resolve(normalizedPhone, existingCustomer.phone),
+					taxId: resolve(normalizedNip, existingCustomer.taxId),
+					billingStreet: resolve(normalizedBilling, existingCustomer.billingStreet),
+					billingCity: resolve(normalizedBillingCity, existingCustomer.billingCity),
+					billingPostalCode: resolve(normalizedBillingPostalCode, existingCustomer.billingPostalCode),
+					shippingStreet: resolve(normalizedInstallation, existingCustomer.shippingStreet),
+					shippingCity: resolve(normalizedInstallationCity, existingCustomer.shippingCity),
+					shippingPostalCode: resolve(normalizedInstallationPostalCode, existingCustomer.shippingPostalCode),
                     updatedAt: now,
 				})
 				.where(eq(customers.id, existingCustomer.id));
@@ -341,7 +373,7 @@ export async function createMontage({
 	await logSystemEvent('create_montage', `Utworzono montaż ${displayId} dla ${trimmedName}`, user.id);
 
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
-    return montageId;
+    return { status: 'success', montageId };
 }
 
 type UpdateMontageStatusInput = {
