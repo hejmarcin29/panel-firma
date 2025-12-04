@@ -1,8 +1,8 @@
 'use client';
 
-import { useTransition, useState } from 'react';
+import { useTransition, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Package, Truck, StickyNote } from 'lucide-react';
+import { Package, Truck, StickyNote, CreditCard } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -34,6 +34,13 @@ export function ConfirmOrderButton({ order, disabled = false, className }: Confi
   const [error, setError] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedType, setSelectedType] = useState<'production' | 'sample'>('production');
+
+  useEffect(() => {
+    if (isOpen && order.paymentMethod) {
+        const isTpay = order.paymentMethod.toLowerCase().includes('tpay');
+        setSelectedType(isTpay ? 'sample' : 'production');
+    }
+  }, [isOpen, order.paymentMethod]);
 
   const handleConfirm = () => {
     if (disabled || isPending) {
@@ -108,6 +115,29 @@ export function ConfirmOrderButton({ order, disabled = false, className }: Confi
                                     <p>{order.shipping.postalCode} {order.shipping.city}</p>
                                 </>
                             )}
+                        </div>
+                    </div>
+
+                    <div className="rounded-md border bg-muted/30 p-3">
+                        <div className="flex items-center gap-2 mb-2 font-medium text-sm">
+                            <CreditCard className="h-4 w-4 text-primary" />
+                            <span>Płatność i Dostawa</span>
+                        </div>
+                        <div className="space-y-1 text-sm">
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">Metoda płatności:</span>
+                                <span className="font-medium text-right">{order.paymentMethod || '-'}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">Dostawa:</span>
+                                <span className="font-medium text-right">{order.shippingMethod || '-'}</span>
+                            </div>
+                            <div className="flex justify-between border-t border-border/50 pt-1 mt-1">
+                                <span className="text-muted-foreground">Łącznie:</span>
+                                <span className="font-bold">
+                                    {new Intl.NumberFormat('pl-PL', { style: 'currency', currency: order.currency }).format(order.totals.totalGross)}
+                                </span>
+                            </div>
                         </div>
                     </div>
 

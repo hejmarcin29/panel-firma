@@ -636,6 +636,8 @@ export const manualOrders = sqliteTable(
 		shippingCity: text('shipping_city'),
 		shippingPhone: text('shipping_phone'),
 		shippingEmail: text('shipping_email'),
+		paymentMethod: text('payment_method'),
+		shippingMethod: text('shipping_method'),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' })
 			.notNull()
 			.default(sql`(strftime('%s','now') * 1000)`),

@@ -63,18 +63,30 @@ const timelineStages = [
 	},
 ] as const;
 
-export function buildTimelineEntries(status: string, notes: string, createdAt: string): OrderTimelineEntry[] {
+export function buildTimelineEntries(status: string, notes: string, createdAt: string, type: 'production' | 'sample' = 'production'): OrderTimelineEntry[] {
 	const normalizedStatus = normalizeStatus(status);
 	const statusIndex = timelineStages.findIndex((stage) => stage.key === normalizedStatus);
 	const activeIndex = statusIndex === -1 ? 0 : statusIndex;
 	const createdAtDate = new Date(createdAt);
 
 	const baseEntries: OrderTimelineEntry[] = timelineStages.map((stage, index) => {
+		// For samples, skip "Weryfikacja i płatność" if it's not the current active stage
+		// Actually, if it's a sample, we might want to mark it as completed or skip it entirely.
+		// Let's say for samples, "Weryfikacja i płatność" is auto-completed if we are past it.
+		
 		let state: OrderTimelineState = 'pending';
 		if (index < activeIndex) {
 			state = 'completed';
 		} else if (index === activeIndex) {
 			state = 'current';
+		}
+
+		// Special handling for samples
+		if (type === 'sample' && stage.key === 'Weryfikacja i płatność') {
+			// If we are at this stage or past it, it's effectively done/skipped because it's Tpay
+			if (state === 'pending' && activeIndex > index) {
+				state = 'completed';
+			}
 		}
 
 		let timestamp: string | null = null;

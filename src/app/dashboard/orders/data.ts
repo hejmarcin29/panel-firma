@@ -95,6 +95,8 @@ export type Order = {
 	totals: OrderTotals;
 	taskOverrides: OrderTaskOverrides;
 	attachments: OrderAttachment[];
+	paymentMethod: string | null;
+	shippingMethod: string | null;
 };
 
 export type OrderItemPayload = Omit<OrderItem, 'id'>;
@@ -112,6 +114,8 @@ export type ManualOrderPayload = {
 	type?: ManualOrderType;
 	sourceOrderId?: string | null;
 	requiresReview?: boolean;
+	paymentMethod?: string;
+	shippingMethod?: string;
 };
 
 export const initialOrders: Order[] = [];

@@ -58,6 +58,8 @@ export type WooOrder = {
 	currency: string;
 	total: string;
 	total_tax: string;
+	payment_method: string;
+	payment_method_title: string;
 	note?: string | null;
 	customer_note: string | null;
 	date_created: string;

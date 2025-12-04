@@ -204,7 +204,7 @@ function mapOrderRow(
 		customerNote: row.notes?.trim() ? row.notes.trim() : null,
 		createdAt,
 		updatedAt,
-		statuses: buildTimelineEntries(row.status, row.notes ?? '', createdAt),
+		statuses: buildTimelineEntries(row.status, row.notes ?? '', createdAt, (row.type ?? 'production') as 'production' | 'sample'),
 		items,
 		billing,
 		shipping: rawShipping,
@@ -214,6 +214,8 @@ function mapOrderRow(
 		},
 		taskOverrides,
 		attachments: row.attachments.map(mapAttachmentRow),
+		paymentMethod: row.paymentMethod,
+		shippingMethod: row.shippingMethod,
 	};
 }
 
@@ -424,6 +426,8 @@ export async function createOrder(payload: ManualOrderPayload, userId?: string |
 		shippingCity: shipping.city,
 		shippingPhone: shipping.phone,
 		shippingEmail: shipping.email,
+		paymentMethod: payload.paymentMethod,
+		shippingMethod: payload.shippingMethod,
 	};
 
 	await db.insert(manualOrders).values(orderRecord);

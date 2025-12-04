@@ -171,6 +171,9 @@ export function mapWooOrderToManualOrderPayload(order: WooOrder): ManualOrderPay
 		sameAsBilling,
 	};
 
+	const paymentMethod = order.payment_method_title || order.payment_method || 'Nieznana';
+	const shippingMethod = order.shipping_lines?.[0]?.method_title || 'Nieznana';
+
 	return {
 		reference: order.number,
 		status,
@@ -183,5 +186,7 @@ export function mapWooOrderToManualOrderPayload(order: WooOrder): ManualOrderPay
 		source: 'woocommerce',
 		sourceOrderId: order.id !== undefined ? String(order.id) : order.number ?? null,
 		requiresReview: true,
+		paymentMethod,
+		shippingMethod,
 	};
 }
