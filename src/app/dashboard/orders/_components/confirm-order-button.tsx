@@ -118,7 +118,7 @@ export function ConfirmOrderButton({ order, disabled = false, className }: Confi
                                 <span>Notatka klienta</span>
                             </div>
                             <p className="text-sm text-muted-foreground italic">
-                                "{order.customerNote}"
+                                &quot;{order.customerNote}&quot;
                             </p>
                         </div>
                     )}
