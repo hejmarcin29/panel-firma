@@ -1,7 +1,7 @@
 'use client';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Activity, Globe, Smartphone, Palette } from 'lucide-react';
+import { Settings, Activity, Globe, Smartphone, Palette, RefreshCw } from 'lucide-react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 interface SettingsViewProps {
@@ -12,9 +12,10 @@ interface SettingsViewProps {
   montageSettings: React.ReactNode;
   mobileMenuSettings: React.ReactNode;
   kpiSettings: React.ReactNode;
+  wpChanges: React.ReactNode;
 }
 
-export function SettingsView({ children, appearance, logs, integrations, montageSettings, mobileMenuSettings, kpiSettings }: SettingsViewProps) {
+export function SettingsView({ children, appearance, logs, integrations, montageSettings, mobileMenuSettings, kpiSettings, wpChanges }: SettingsViewProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -75,6 +76,13 @@ export function SettingsView({ children, appearance, logs, integrations, montage
               Integracje
             </TabsTrigger>
             <TabsTrigger 
+              value="wp-changes" 
+              className="w-full justify-start gap-2 px-3 py-2 h-9 data-[state=active]:bg-muted data-[state=active]:shadow-none ring-offset-background transition-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Zmiany WP
+            </TabsTrigger>
+            <TabsTrigger 
               value="montage" 
               className="w-full justify-start gap-2 px-3 py-2 h-9 data-[state=active]:bg-muted data-[state=active]:shadow-none ring-offset-background transition-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
@@ -110,6 +118,10 @@ export function SettingsView({ children, appearance, logs, integrations, montage
 
           <TabsContent value="integrations" className="m-0 space-y-4">
             {integrations}
+          </TabsContent>
+
+          <TabsContent value="wp-changes" className="m-0 space-y-4">
+            {wpChanges}
           </TabsContent>
 
           <TabsContent value="montage" className="m-0 space-y-4">

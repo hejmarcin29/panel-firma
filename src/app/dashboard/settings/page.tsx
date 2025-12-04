@@ -27,6 +27,7 @@ import { ThemeSelector } from './_components/theme-selector';
 import { MobileMenuItem } from './actions';
 import { WooSettingsForm } from './integrations/_components/woo-settings-form';
 import { IntegrationLogs } from './integrations/_components/integration-logs';
+import { WpChangesSettings } from './_components/wp-changes-settings';
 
 type LogLevel = 'info' | 'warning' | 'error';
 
@@ -428,6 +429,9 @@ export default async function SettingsPage() {
 					initialMontageThreatDays={Number(kpiMontageThreatDays ?? 7)}
 					initialOrderUrgentDays={Number(kpiOrderUrgentDays ?? 3)}
 				/>
+			}
+			wpChanges={
+				<WpChangesSettings />
 			}
 		>
 			<Card>
