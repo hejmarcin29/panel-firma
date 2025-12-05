@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useTransition } from 'react';
+import { useState, useRef, useEffect, useTransition, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { CalendarIcon, Eraser, Plus, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
@@ -70,7 +70,7 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const isFirstRender = useRef(true);
 
-  const saveData = async () => {
+  const saveData = useCallback(async () => {
       setIsSaving(true);
       try {
         await updateMontageMeasurement({
@@ -96,7 +96,23 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
       } finally {
         setIsSaving(false);
       }
-  };
+  }, [
+    montage.id,
+    measurementDetails,
+    floorArea,
+    panelAdditionalMaterials,
+    skirtingLength,
+    skirtingAdditionalMaterials,
+    panelModel,
+    panelWaste,
+    skirtingModel,
+    skirtingWaste,
+    modelsApproved,
+    additionalInfo,
+    sketchDataUrl,
+    scheduledDate,
+    scheduledEndDate
+  ]);
 
   useEffect(() => {
     if (isFirstRender.current) {
@@ -109,22 +125,7 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [
-    measurementDetails,
-    floorArea,
-    panelAdditionalMaterials,
-    skirtingLength,
-    skirtingAdditionalMaterials,
-    panelModel,
-    panelWaste,
-    skirtingModel,
-    skirtingWaste,
-    modelsApproved,
-    additionalInfo,
-    scheduledDate,
-    scheduledEndDate,
-    sketchDataUrl
-  ]);
+  }, [saveData]);
 
   const [newTaskTitle, setNewTaskTitle] = useState('');
 
@@ -577,7 +578,7 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
             ) : (
                 <div className="flex flex-col items-center gap-2 p-8 text-muted-foreground">
                     <Pencil className="h-8 w-8 opacity-20" />
-                    <p className="text-sm">Brak szkicu. Kliknij "Rysuj" aby dodać.</p>
+                    <p className="text-sm">Brak szkicu. Kliknij &quot;Rysuj&quot; aby dodać.</p>
                 </div>
             )}
           </div>
