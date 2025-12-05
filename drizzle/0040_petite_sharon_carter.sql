@@ -12,7 +12,7 @@ CREATE TABLE `__new_users` (
 	`updated_at` integer DEFAULT (strftime('%s','now') * 1000) NOT NULL
 );
 --> statement-breakpoint
-INSERT INTO `__new_users`("id", "email", "password_hash", "name", "role", "is_active", "dashboard_config", "mobile_menu_config", "created_at", "updated_at") SELECT "id", "email", "password_hash", "name", "role", "is_active", "dashboard_config", "mobile_menu_config", "created_at", "updated_at" FROM `users`;--> statement-breakpoint
+INSERT INTO `__new_users`("id", "email", "password_hash", "name", "dashboard_config", "mobile_menu_config", "created_at", "updated_at") SELECT "id", "email", "password_hash", "name", "dashboard_config", "mobile_menu_config", "created_at", "updated_at" FROM `users`;--> statement-breakpoint
 DROP TABLE `users`;--> statement-breakpoint
 ALTER TABLE `__new_users` RENAME TO `users`;--> statement-breakpoint
 PRAGMA foreign_keys=ON;--> statement-breakpoint

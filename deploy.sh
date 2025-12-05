@@ -15,8 +15,8 @@ npm install
 npm run db:generate
 
 # Zaaplikuj migracje bazy danych
-# Używamy push, aby zsynchronizować schemat (dla SQLite)
-npx drizzle-kit push
+# Używamy migrate, aby bezpiecznie aplikować zmiany z plików migracji
+npm run db:migrate
 
 # Wyczyść cache Next.js (opcjonalne, ale pomaga przy problemach)
 # Usuwamy folder .next (build) oraz cache Data Cache
