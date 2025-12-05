@@ -347,6 +347,7 @@ export async function createMontage({
                 scheduledInstallationEndAt: null,
                 forecastedInstallationDate: forecastedDate,
                 materialDetails: normalizedMaterialDetails,
+                measurementDetails: normalizedMaterialDetails, // Sync on create
                 status: 'lead',
                 createdAt: now,
                 updatedAt: now,
@@ -711,6 +712,7 @@ export async function updateMontageMaterialDetails({
 		.update(montages)
 		.set({
 			materialDetails: sanitized ? sanitized : null,
+			measurementDetails: sanitized ? sanitized : null, // Sync with measurementDetails
 			finalPanelAmount,
 			finalSkirtingLength,
 			panelModel,
@@ -910,6 +912,7 @@ export async function updateMontageMeasurement({
 		.update(montages)
 		.set({
 			measurementDetails,
+			materialDetails: measurementDetails, // Sync with materialDetails
 			floorArea,
 			floorDetails,
 			skirtingLength,

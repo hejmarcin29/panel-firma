@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 
@@ -38,12 +37,6 @@ export function LoginForm() {
 				<p className="text-sm text-destructive">{state.errors}</p>
 			) : null}
 			<SubmitButton />
-			<p className="text-sm text-muted-foreground">
-				Nie masz konta?{' '}
-				<Link href="/register" className="text-primary underline underline-offset-4">
-					Zarejestruj się
-				</Link>
-			</p>
 		</form>
 	);
 }

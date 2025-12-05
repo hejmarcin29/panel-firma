@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
+/*
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getCurrentUser } from '@/lib/auth/session';
 
 import { RegisterForm } from './_components/register-form';
+*/
 
 export const metadata: Metadata = {
 	title: 'Rejestracja | Panel firmy',
@@ -12,6 +14,8 @@ export const metadata: Metadata = {
 };
 
 export default async function RegisterPage() {
+	redirect('/login');
+	/*
 	const user = await getCurrentUser();
 	if (user) {
 		redirect('/dashboard');
@@ -29,4 +33,5 @@ export default async function RegisterPage() {
 			</Card>
 		</main>
 	);
+	*/
 }

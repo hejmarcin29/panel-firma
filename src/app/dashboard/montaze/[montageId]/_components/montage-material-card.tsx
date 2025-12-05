@@ -156,12 +156,12 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
               </div>
 
               <div className="space-y-2">
-                <Label>Dodatkowe materiały / uwagi</Label>
+                <Label>Uwagi dotyczące listew i podłogi / Materiały</Label>
                 <Textarea
                     name="materialDetails"
                     className="min-h-[150px]"
-                    defaultValue={montage.materialDetails || ""}
-                    placeholder="Wpisz listę materiałów..."
+                    defaultValue={montage.measurementDetails || montage.materialDetails || ""}
+                    placeholder="Wpisz uwagi..."
                 />
               </div>
 
@@ -269,25 +269,16 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
             </div>
         )}
 
-        {montage.materialDetails && (
+        {(montage.measurementDetails || montage.materialDetails) && (
           <div className="pt-4 border-t border-border/50">
-            <span className="text-xs text-muted-foreground block mb-2">Dodatkowe uwagi:</span>
+            <span className="text-xs text-muted-foreground block mb-2">Uwagi dotyczące listew i podłogi / Materiały:</span>
             <div className="whitespace-pre-wrap text-sm bg-muted/30 p-3 rounded-md">
-                {montage.materialDetails}
+                {montage.measurementDetails || montage.materialDetails}
             </div>
           </div>
         )}
 
-        {montage.measurementDetails && (
-          <div className="pt-4 border-t border-border/50">
-            <span className="text-xs text-muted-foreground block mb-2">Uwagi dotyczące listew i podłogi:</span>
-            <div className="whitespace-pre-wrap text-sm bg-muted/30 p-3 rounded-md">
-                {montage.measurementDetails}
-            </div>
-          </div>
-        )}
-
-        {!montage.finalPanelAmount && !montage.finalSkirtingLength && !montage.materialDetails && !calculatedPanelAmount && (
+        {!montage.finalPanelAmount && !montage.finalSkirtingLength && !montage.measurementDetails && !montage.materialDetails && !calculatedPanelAmount && (
           <div className="flex flex-col items-center justify-center py-4 text-center text-sm text-muted-foreground">
             <Package className="mb-2 h-8 w-8 opacity-50" />
             <p>Brak danych materiałowych</p>
