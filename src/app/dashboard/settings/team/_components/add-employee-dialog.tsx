@@ -96,6 +96,25 @@ export function AddEmployeeDialog() {
                 <SelectItem value="installer">Montażysta</SelectItem>
               </SelectContent>
             </Select>
+            <div className="text-xs text-muted-foreground space-y-2 mt-2 p-3 bg-muted/50 rounded-md border">
+                <p><strong>Uprawnienia ról:</strong></p>
+                <ul className="list-disc pl-4 space-y-1">
+                    <li>
+                        <span className="font-medium">Administrator:</span> Pełny dostęp do systemu (Zamówienia, Klienci, Poczta, Ustawienia).
+                    </li>
+                    <li>
+                        <span className="font-medium">Pomiarowiec / Montażysta:</span> Dostęp tylko do modułów operacyjnych:
+                        <br/>
+                        - Montaże i Galeria
+                        <br/>
+                        - Kalendarz i Zadania
+                        <br/>
+                        - Pulpit i To Do
+                        <br/>
+                        <span className="italic text-red-500/80">Brak dostępu do: Zamówień, Klientów, Produktów, Poczty i Ustawień.</span>
+                    </li>
+                </ul>
+            </div>
           </div>
           
           {error && <p className="text-sm text-destructive">{error}</p>}

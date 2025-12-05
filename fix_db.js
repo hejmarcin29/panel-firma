@@ -38,6 +38,19 @@ addColumn('users', 'is_active', "integer DEFAULT 1 NOT NULL"); // SQLite uses 1 
 addColumn('users', 'dashboard_config', "text");
 addColumn('users', 'mobile_menu_config', "text");
 
+// Fix roles: Ensure kontakt@primepodloga.pl is admin, others are measurers
+try {
+    // 1. Set specific user to admin
+    const adminResult = db.prepare("UPDATE users SET role = 'admin' WHERE email = 'kontakt@primepodloga.pl'").run();
+    console.log(`Set admin role for kontakt@primepodloga.pl: ${adminResult.changes} changes`);
+
+    // 2. Demote others to measurer if they are admin/user/null (enforcing "only one admin")
+    const othersResult = db.prepare("UPDATE users SET role = 'measurer' WHERE email != 'kontakt@primepodloga.pl' AND (role = 'admin' OR role = 'user' OR role IS NULL)").run();
+    console.log(`Set measurer role for others: ${othersResult.changes} changes`);
+} catch (e) {
+    console.error('Failed to update user roles:', e.message);
+}
+
 // Montages table updates
 addColumn('montages', 'installer_id', "text REFERENCES users(id)");
 addColumn('montages', 'measurer_id', "text REFERENCES users(id)");
