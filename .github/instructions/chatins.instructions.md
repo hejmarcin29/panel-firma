@@ -27,3 +27,18 @@ System posiada 3 główne role użytkowników:
    - **Zadania:** Realizuje montaże, widzi szczegóły techniczne zlecenia, zmienia statusy montażu.
 
 Przy tworzeniu nowych funkcjonalności dla Pomiarowca lub Montażysty, pamiętaj o tych ograniczeniach.
+
+## Dokumentacja Logiki Biznesowej
+**WAŻNE:** Wszelkie zmiany w logice biznesowej, automatyzacjach, rolach czy przepływach pracy (workflows) muszą być odzwierciedlone w pliku:
+`docs/business-logic.md`
+
+Jako AI, masz obowiązek:
+1. Sprawdzać ten plik przed implementacją nowych funkcji biznesowych.
+2. Aktualizować ten plik, gdy wprowadzasz nowe automatyzacje lub zmieniasz zasady działania systemu.
+3. Traktować ten plik jako "Single Source of Truth" dla zasad biznesowych.
+
+## Instrukcje dla Użytkowników (User Manuals)
+Przy tworzeniu lub modyfikowaniu ról użytkowników (np. Pomiarowiec, Montażysta, Partner), **ZAWSZE** pamiętaj o zapewnieniu im dostępu do instrukcji obsługi w panelu.
+- Każda rola powinna mieć dedykowaną sekcję lub zakładkę "Pomoc" / "Instrukcja".
+- Instrukcja ta powinna wyjaśniać, jak korzystać z dostępnych dla nich funkcji.
+- Przy dodawaniu nowych funkcji dla danej roli, zaktualizuj również jej instrukcję.

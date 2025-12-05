@@ -1,6 +1,8 @@
 import { desc, eq, sql } from 'drizzle-orm';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
+import fs from 'fs';
+import path from 'path';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,6 +32,7 @@ import { WooSettingsForm } from './integrations/_components/woo-settings-form';
 import { IntegrationLogs } from './integrations/_components/integration-logs';
 import { WpChangesSettings } from './_components/wp-changes-settings';
 import TeamPage from './team/page';
+import { DocumentationView } from './_components/documentation-view';
 
 type LogLevel = 'info' | 'warning' | 'error';
 
@@ -234,8 +237,25 @@ export default async function SettingsPage() {
 		nextSyncAt: account.nextSyncAt?.toISOString() ?? null,
 	}));
 
+    // Read business logic documentation
+    let businessLogicContent = '';
+    try {
+        const docsPath = path.join(process.cwd(), 'docs', 'business-logic.md');
+        if (fs.existsSync(docsPath)) {
+            businessLogicContent = fs.readFileSync(docsPath, 'utf-8');
+        } else {
+            businessLogicContent = '# Błąd\n\nNie znaleziono pliku dokumentacji.';
+        }
+    } catch (error) {
+        console.error('Failed to read documentation:', error);
+        businessLogicContent = '# Błąd\n\nWystąpił błąd podczas odczytu dokumentacji.';
+    }
+
 	return (
 		<SettingsView
+            documentation={
+                <DocumentationView content={businessLogicContent} />
+            }
             appearance={
                 <div className="grid gap-4">
                     <Card>
