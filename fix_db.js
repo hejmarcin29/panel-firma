@@ -15,7 +15,22 @@ function addColumn(table, column, definition) {
     }
 }
 
+function dropIndex(indexName) {
+    try {
+        db.prepare(`DROP INDEX IF EXISTS ${indexName}`).run();
+        console.log(`Dropped index ${indexName} (to allow recreation)`);
+    } catch (e) {
+        console.error(`Failed to drop index ${indexName}:`, e.message);
+    }
+}
+
 console.log('Starting manual schema patch...');
+
+// Drop problematic indexes that cause drizzle-kit push to fail
+// Drizzle-kit push tries to create them even if they exist, so we drop them first
+dropIndex('users_email_idx');
+dropIndex('mail_messages_message_id_idx');
+dropIndex('montages_display_id_idx');
 
 // Users table updates
 addColumn('users', 'role', "text DEFAULT 'admin' NOT NULL");
