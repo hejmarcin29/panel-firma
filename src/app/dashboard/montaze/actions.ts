@@ -884,6 +884,7 @@ export async function updateMontageMeasurement({
 	skirtingWaste,
 	modelsApproved,
 	additionalInfo,
+	sketchUrl,
 	scheduledInstallationAt,
 	scheduledInstallationEndAt,
 }: {
@@ -899,6 +900,7 @@ export async function updateMontageMeasurement({
 	skirtingWaste: number;
 	modelsApproved: boolean;
 	additionalInfo: string;
+	sketchUrl?: string | null;
 	scheduledInstallationAt: number | null;
 	scheduledInstallationEndAt: number | null;
 }) {
@@ -918,6 +920,7 @@ export async function updateMontageMeasurement({
 			skirtingWaste,
 			modelsApproved,
 			additionalInfo,
+			sketchUrl,
 			scheduledInstallationAt: scheduledInstallationAt ? new Date(scheduledInstallationAt) : null,
 			scheduledInstallationEndAt: scheduledInstallationEndAt ? new Date(scheduledInstallationEndAt) : null,
 			finalPanelAmount: null, // Reset to auto-calculation on measurement update

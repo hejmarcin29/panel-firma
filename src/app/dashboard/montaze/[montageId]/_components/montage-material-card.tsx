@@ -193,7 +193,7 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
         {/* Calculated Materials Section */}
         {(calculatedPanelAmount || calculatedSkirtingLength) && (
             <div className="mb-4 p-3 bg-muted/30 rounded-md border border-border/50">
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Wyliczone z pomiaru</h4>
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">POMIAR</h4>
                 <div className="grid grid-cols-2 gap-4">
                     {calculatedPanelAmount && (
                         <div className="space-y-1">
@@ -203,7 +203,7 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
                             </div>
                             <div className="text-lg font-bold">{calculatedPanelAmount} m²</div>
                             <div className="text-xs text-muted-foreground">
-                                ({montage.floorArea} m² + {montage.panelWaste}% zapasu)
+                                ({montage.floorArea} m² + {montage.panelWaste}%)
                             </div>
                             {montage.panelModel && <div className="text-sm font-medium mt-1">{montage.panelModel}</div>}
                         </div>
@@ -216,7 +216,7 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
                             </div>
                             <div className="text-lg font-bold">{calculatedSkirtingLength} mb</div>
                             <div className="text-xs text-muted-foreground">
-                                ({montage.skirtingLength} mb + {montage.skirtingWaste}% zapasu)
+                                ({montage.skirtingLength} mb + {montage.skirtingWaste}%)
                             </div>
                             {montage.skirtingModel && <div className="text-sm font-medium mt-1">{montage.skirtingModel}</div>}
                         </div>
@@ -274,6 +274,15 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
             <span className="text-xs text-muted-foreground block mb-2">Dodatkowe uwagi:</span>
             <div className="whitespace-pre-wrap text-sm bg-muted/30 p-3 rounded-md">
                 {montage.materialDetails}
+            </div>
+          </div>
+        )}
+
+        {montage.measurementDetails && (
+          <div className="pt-4 border-t border-border/50">
+            <span className="text-xs text-muted-foreground block mb-2">Uwagi dotyczące listew i podłogi:</span>
+            <div className="whitespace-pre-wrap text-sm bg-muted/30 p-3 rounded-md">
+                {montage.measurementDetails}
             </div>
           </div>
         )}

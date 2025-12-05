@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { CalendarIcon, Eraser, Plus } from 'lucide-react';
+import { CalendarIcon, Eraser, Plus, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 
@@ -18,11 +18,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import type { Montage } from '../types';
 import { updateMontageMeasurement, addMontageTask, toggleMontageTask } from '../actions';
+
+import { Loader2, Check } from 'lucide-react';
 
 interface MontageMeasurementTabProps {
   montage: Montage;
@@ -31,6 +40,9 @@ interface MontageMeasurementTabProps {
 export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  
+  const [isSketchOpen, setIsSketchOpen] = useState(false);
+  const [sketchDataUrl, setSketchDataUrl] = useState<string | null>(montage.sketchUrl || null);
   
   const [measurementDetails, setMeasurementDetails] = useState(montage.measurementDetails || '');
   const [floorArea, setFloorArea] = useState<string>(montage.floorArea?.toString() || '');
@@ -54,8 +66,65 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
     montage.scheduledInstallationEndAt ? new Date(montage.scheduledInstallationEndAt) : undefined
   );
 
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const isFirstRender = useRef(true);
+
+  const saveData = async () => {
+      setIsSaving(true);
+      try {
+        await updateMontageMeasurement({
+          montageId: montage.id,
+          measurementDetails,
+          floorArea: floorArea ? parseFloat(floorArea) : null,
+          floorDetails: panelAdditionalMaterials,
+          skirtingLength: skirtingLength ? parseFloat(skirtingLength) : null,
+          skirtingDetails: skirtingAdditionalMaterials,
+          panelModel,
+          panelWaste: parseFloat(panelWaste),
+          skirtingModel,
+          skirtingWaste: parseFloat(skirtingWaste),
+          modelsApproved,
+          additionalInfo,
+          sketchUrl: sketchDataUrl,
+          scheduledInstallationAt: scheduledDate ? scheduledDate.getTime() : null,
+          scheduledInstallationEndAt: scheduledEndDate ? scheduledEndDate.getTime() : null,
+        });
+        setLastSaved(new Date());
+      } catch (err) {
+        console.error("Auto-save failed", err);
+      } finally {
+        setIsSaving(false);
+      }
+  };
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+        isFirstRender.current = false;
+        return;
+    }
+
+    const timer = setTimeout(() => {
+      saveData();
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [
+    measurementDetails,
+    floorArea,
+    panelAdditionalMaterials,
+    skirtingLength,
+    skirtingAdditionalMaterials,
+    panelModel,
+    panelWaste,
+    skirtingModel,
+    skirtingWaste,
+    modelsApproved,
+    additionalInfo,
+    scheduledDate,
+    scheduledEndDate,
+    sketchDataUrl
+  ]);
 
   const [newTaskTitle, setNewTaskTitle] = useState('');
 
@@ -97,6 +166,27 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
       }
     }
   }, []);
+
+  useEffect(() => {
+    if (isSketchOpen && sketchDataUrl && canvasRef.current) {
+        const canvas = canvasRef.current;
+        const context = canvas.getContext('2d');
+        if (context) {
+            const img = new Image();
+            img.onload = () => {
+                context.drawImage(img, 0, 0);
+            };
+            img.src = sketchDataUrl;
+        }
+    }
+  }, [isSketchOpen, sketchDataUrl]);
+
+  const saveSketch = () => {
+    if (canvasRef.current) {
+      setSketchDataUrl(canvasRef.current.toDataURL());
+    }
+    setIsSketchOpen(false);
+  };
 
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!context) return;
@@ -143,38 +233,6 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setFeedback(null);
-
-    startTransition(async () => {
-      try {
-        await updateMontageMeasurement({
-          montageId: montage.id,
-          measurementDetails,
-          floorArea: floorArea ? parseFloat(floorArea) : null,
-          floorDetails: panelAdditionalMaterials, // Repurposed
-          skirtingLength: skirtingLength ? parseFloat(skirtingLength) : null,
-          skirtingDetails: skirtingAdditionalMaterials, // Repurposed
-          panelModel,
-          panelWaste: parseFloat(panelWaste),
-          skirtingModel,
-          skirtingWaste: parseFloat(skirtingWaste),
-          modelsApproved,
-          additionalInfo,
-          scheduledInstallationAt: scheduledDate ? scheduledDate.getTime() : null,
-          scheduledInstallationEndAt: scheduledEndDate ? scheduledEndDate.getTime() : null,
-        });
-        setFeedback('Zapisano dane pomiarowe.');
-        router.refresh();
-      } catch (err) {
-        setError('Wystąpił błąd podczas zapisywania.');
-        console.error(err);
-      }
-    });
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -184,11 +242,20 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
             Wprowadź szczegóły pomiaru, szkice i dodatkowe informacje.
           </p>
         </div>
-        {feedback && <div className="text-sm text-green-600">{feedback}</div>}
-        {error && <div className="text-sm text-red-600">{error}</div>}
+        <div className="flex items-center gap-2 text-sm">
+            {isSaving ? (
+                <span className="text-muted-foreground flex items-center gap-1">
+                    <Loader2 className="h-3 w-3 animate-spin" /> Zapisywanie...
+                </span>
+            ) : lastSaved ? (
+                <span className="text-green-600 flex items-center gap-1">
+                    <Check className="h-3 w-3" /> Zapisano {lastSaved.toLocaleTimeString()}
+                </span>
+            ) : null}
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-6">
         <div className="grid gap-6 md:grid-cols-2">
           {/* Floor Calculator */}
           <div className="space-y-3 p-4 border rounded-lg bg-muted/5">
@@ -324,7 +391,7 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
         </div>
 
         <div className="space-y-2">
-            <Label htmlFor="measurementDetails">Ogólne szczegóły pomiaru</Label>
+            <Label htmlFor="measurementDetails">Uwagi dotyczące listew i podłogi</Label>
             <Textarea
               id="measurementDetails"
               placeholder="Wymiary, uwagi techniczne..."
@@ -460,35 +527,64 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label>Szkic sytuacyjny</Label>
-            <Button type="button" variant="ghost" size="sm" onClick={clearCanvas}>
-              <Eraser className="mr-2 h-4 w-4" />
-              Wyczyść
-            </Button>
+            <Dialog open={isSketchOpen} onOpenChange={setIsSketchOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Pencil className="mr-2 h-4 w-4" />
+                  {sketchDataUrl ? 'Edytuj szkic' : 'Rysuj'}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl w-full h-[80vh] flex flex-col" onPointerDownOutside={(e) => e.preventDefault()}>
+                <DialogHeader>
+                  <DialogTitle>Szkic sytuacyjny</DialogTitle>
+                </DialogHeader>
+                <div className="flex-1 border rounded-md overflow-hidden bg-white touch-none relative">
+                  <canvas
+                    ref={canvasRef}
+                    className="w-full h-full cursor-crosshair absolute inset-0"
+                    width={800}
+                    height={600}
+                    onMouseDown={startDrawing}
+                    onMouseMove={draw}
+                    onMouseUp={stopDrawing}
+                    onMouseLeave={stopDrawing}
+                    onTouchStart={startDrawing}
+                    onTouchMove={draw}
+                    onTouchEnd={stopDrawing}
+                  />
+                </div>
+                <div className="flex justify-between items-center mt-4">
+                  <Button type="button" variant="ghost" size="sm" onClick={clearCanvas}>
+                    <Eraser className="mr-2 h-4 w-4" />
+                    Wyczyść
+                  </Button>
+                  <div className="flex gap-2">
+                    <Button type="button" variant="outline" onClick={() => setIsSketchOpen(false)}>Anuluj</Button>
+                    <Button type="button" onClick={saveSketch}>Zapisz szkic</Button>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground text-center">
+                    Możesz rysować palcem na urządzeniach mobilnych lub myszką.
+                </p>
+              </DialogContent>
+            </Dialog>
           </div>
-          <div className="border rounded-md overflow-hidden bg-white touch-none">
-            <canvas
-              ref={canvasRef}
-              className="w-full h-[300px] cursor-crosshair"
-              onMouseDown={startDrawing}
-              onMouseMove={draw}
-              onMouseUp={stopDrawing}
-              onMouseLeave={stopDrawing}
-              onTouchStart={startDrawing}
-              onTouchMove={draw}
-              onTouchEnd={stopDrawing}
-            />
+          
+          <div className="border rounded-md overflow-hidden min-h-[150px] flex items-center justify-center bg-muted/10">
+            {sketchDataUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={sketchDataUrl} alt="Szkic" className="w-full h-auto max-h-[300px] object-contain" />
+            ) : (
+                <div className="flex flex-col items-center gap-2 p-8 text-muted-foreground">
+                    <Pencil className="h-8 w-8 opacity-20" />
+                    <p className="text-sm">Brak szkicu. Kliknij "Rysuj" aby dodać.</p>
+                </div>
+            )}
           </div>
-          <p className="text-xs text-muted-foreground">
-            Możesz rysować palcem na urządzeniach mobilnych lub myszką.
-          </p>
         </div>
 
-        <div className="flex justify-end">
-          <Button type="submit" disabled={isPending}>
-            {isPending ? 'Zapisywanie...' : 'Zapisz zmiany'}
-          </Button>
-        </div>
-      </form>
+        {/* Removed Save Button */}
+      </div>
     </div>
   );
 }

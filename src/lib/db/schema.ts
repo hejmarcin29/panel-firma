@@ -426,6 +426,7 @@ export const montages = sqliteTable(
 		finalSkirtingLength: integer('final_skirting_length', { mode: 'number' }),
 		materialsEditHistory: text('materials_edit_history', { mode: 'json' }),
 		additionalInfo: text('additional_info'),
+		sketchUrl: text('sketch_url'),
 		forecastedInstallationDate: integer('forecasted_installation_date', { mode: 'timestamp_ms' }),
 		status: text('status').$type<MontageStatus>().notNull().default('lead'),
 		displayId: text('display_id'),

@@ -82,6 +82,7 @@ export type Montage = {
 	finalSkirtingLength: number | null;
 	materialsEditHistory: MaterialsEditHistoryEntry[] | null;
 	additionalInfo: string | null;
+	sketchUrl?: string | null;
 	forecastedInstallationDate: TimestampValue;
 	status: MontageStatus;
 	displayId: string | null;
