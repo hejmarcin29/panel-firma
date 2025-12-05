@@ -12,7 +12,7 @@ git reset --hard origin/main
 npm install
 
 # Wygeneruj klienta bazy danych
-npm run db:generate
+# npm run db:generate
 
 # Zaaplikuj migracje bazy danych
 # Używamy migrate, aby bezpiecznie aplikować zmiany z plików migracji
