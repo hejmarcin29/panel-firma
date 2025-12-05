@@ -8,6 +8,17 @@ cd /srv/panel
 git fetch origin main
 git reset --hard origin/main
 
+# Mechanizm samo-aktualizacji skryptu
+# Jeśli skrypt został zaktualizowany przez git reset, musimy go przeładować,
+# aby bash nie wykonywał starych instrukcji z bufora.
+if [ -z "$DEPLOY_RELOADED" ]; then
+    echo "Kod zaktualizowany. Restartowanie skryptu deploy..."
+    export DEPLOY_RELOADED=true
+    exec "$0" "$@"
+fi
+
+echo "--- Uruchamianie Deploy v2 (Fix DB + Push) ---"
+
 # Zainstaluj zależności
 npm install
 
@@ -15,10 +26,13 @@ npm install
 npm run db:generate
 
 # Napraw strukturę bazy danych ręcznie (dla kolumn, które powodują błędy w push)
+# Upewniamy się, że fix_db.js jest wykonywany
+echo "Uruchamianie fix_db.js..."
 node fix_db.js
 
 # Zaaplikuj migracje bazy danych
 # Używamy push, ponieważ historia migracji jest niespójna
+echo "Synchronizacja schematu (drizzle-kit push)..."
 npx drizzle-kit push
 
 # Wyczyść cache Next.js (opcjonalne, ale pomaga przy problemach)
