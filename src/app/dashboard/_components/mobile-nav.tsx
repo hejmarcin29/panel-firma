@@ -21,7 +21,7 @@ import {
   ShoppingBag
 } from "lucide-react";
 
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/sheet";
 import { logoutAction } from "../actions";
 import { MobileMenuItem } from "../settings/actions";
+import { type UserRole } from '@/lib/db/schema';
 
 const iconMap: Record<string, LucideIcon> = {
   Home,
@@ -66,7 +67,7 @@ const menuLinks = [
   { href: "/dashboard/settings", label: "Ustawienia", icon: Settings },
 ];
 
-export function MobileNav({ user, urgentOrdersCount = 0 }: { user: { name?: string | null; email?: string | null; mobileMenuConfig?: string | null }, urgentOrdersCount?: number }) {
+export function MobileNav({ user, urgentOrdersCount = 0, userRole = 'admin' }: { user: { name?: string | null; email?: string | null; mobileMenuConfig?: string | null }, urgentOrdersCount?: number, userRole?: UserRole }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -99,13 +100,20 @@ export function MobileNav({ user, urgentOrdersCount = 0 }: { user: { name?: stri
     setOpen(newOpen);
   };
 
-  let displayedLinks = mainLinks;
+  const restrictedLinks = ['/dashboard/customers', '/dashboard/orders', '/dashboard/products', '/dashboard/mail', '/dashboard/settings'];
+  
+  const isAllowed = (href: string) => {
+      if (userRole === 'admin') return true;
+      return !restrictedLinks.includes(href);
+  };
+
+  let displayedLinks = mainLinks.filter(link => isAllowed(link.href));
 
   if (user.mobileMenuConfig) {
     try {
       const config: MobileMenuItem[] = JSON.parse(user.mobileMenuConfig);
       const enabledLinks = config
-        .filter(item => item.visible)
+        .filter(item => item.visible && isAllowed(item.href))
         .map(item => ({
           href: item.href,
           label: item.label,
@@ -184,7 +192,7 @@ export function MobileNav({ user, urgentOrdersCount = 0 }: { user: { name?: stri
             <div className="flex flex-col gap-4 py-4 h-full">
                 <div className="flex flex-col gap-2">
                     <p className="text-sm font-medium text-muted-foreground px-2">Aplikacje</p>
-                    {[...mainLinks, ...menuLinks].map(({ href, label, icon: Icon }) => {
+                    {[...mainLinks, ...menuLinks].filter(link => isAllowed(link.href)).map(({ href, label, icon: Icon }) => {
                         const isActive = pathname === href || pathname?.startsWith(href);
                         return (
                             <Link

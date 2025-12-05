@@ -1,4 +1,4 @@
-import { asc, desc } from 'drizzle-orm';
+import { asc, desc, eq } from 'drizzle-orm';
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 import { MontageDashboardView } from './_components/montage-dashboard-view';
 import { mapMontageRow, type MontageRow } from './utils';
 import { db } from '@/lib/db';
+import { requireUser } from '@/lib/auth/session';
 import {
 	montageAttachments,
 	montageChecklistItems,
@@ -20,6 +21,7 @@ import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
 
 export default async function MontazePage() {
+    const user = await requireUser();
     const r2Config = await tryGetR2Config();
     const publicBaseUrl = r2Config?.publicBaseUrl ?? null;
 
@@ -33,7 +35,15 @@ export default async function MontazePage() {
         description: def.description
     }));
 
+    let whereClause = undefined;
+    if (user.role === 'installer') {
+        whereClause = eq(montages.installerId, user.id);
+    } else if (user.role === 'measurer') {
+        whereClause = eq(montages.measurerId, user.id);
+    }
+
     const montageRows = await db.query.montages.findMany({
+        where: whereClause,
         orderBy: desc(montages.updatedAt),
         with: {
             notes: {

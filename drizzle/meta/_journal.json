@@ -281,6 +281,13 @@
       "when": 1764920957674,
       "tag": "0039_motionless_juggernaut",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "6",
+      "when": 1764947339520,
+      "tag": "0040_petite_sharon_carter",
+      "breakpoints": true
     }
   ]
 }

@@ -88,6 +88,10 @@ export type Montage = {
 	displayId: string | null;
 	materialStatus: MontageMaterialStatus;
 	installerStatus: MontageInstallerStatus;
+	installerId?: string | null;
+	measurerId?: string | null;
+	installer?: { id: string; name: string | null; email: string } | null;
+	measurer?: { id: string; name: string | null; email: string } | null;
 	createdAt: TimestampValue;
 	updatedAt: TimestampValue;
 	notes: MontageNote[];

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { type UserRole } from '@/lib/db/schema';
 
 const links = [
 	{ href: '/dashboard', label: 'Przegląd' },
@@ -19,13 +20,19 @@ const links = [
 	{ href: '/dashboard/settings', label: 'Ustawienia' },
 ];
 
-export function DashboardNav({ urgentOrdersCount = 0 }: { urgentOrdersCount?: number }) {
+export function DashboardNav({ urgentOrdersCount = 0, userRole = 'admin' }: { urgentOrdersCount?: number; userRole?: UserRole }) {
 	const pathname = usePathname();
+
+    const filteredLinks = links.filter(link => {
+        if (userRole === 'admin') return true;
+        const restrictedLinks = ['/dashboard/customers', '/dashboard/orders', '/dashboard/products', '/dashboard/mail', '/dashboard/settings'];
+        return !restrictedLinks.includes(link.href);
+    });
 
 	return (
 		<nav className="mb-8 pb-2 overflow-x-auto no-scrollbar">
 			<ul className="flex items-center gap-1 p-1 bg-zinc-100/50 dark:bg-zinc-900/50 rounded-full border border-zinc-200/50 dark:border-zinc-800/50 w-max mx-auto backdrop-blur-sm">
-				{links.map((link) => {
+				{filteredLinks.map((link) => {
 					const isActive = pathname === link.href || (link.href !== '/dashboard' && pathname?.startsWith(`${link.href}/`));
 
 					return (

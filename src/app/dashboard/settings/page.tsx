@@ -1,5 +1,6 @@
 import { desc, eq, sql } from 'drizzle-orm';
 import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
@@ -65,6 +66,10 @@ function levelBadgeClass(level: LogLevel) {
 
 export default async function SettingsPage() {
   const sessionUser = await requireUser();
+  
+  if (sessionUser.role !== 'admin') {
+      redirect('/dashboard');
+  }
   
   const user = await db.query.users.findFirst({
     where: eq(users.id, sessionUser.id),

@@ -14,7 +14,7 @@ import { logoutAction } from './actions';
 import { requireUser } from '@/lib/auth/session';
 import { getUrgentOrdersCount } from './orders/queries';
 import { db } from '@/lib/db';
-import { users } from '@/lib/db/schema';
+import { users, type UserRole } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
@@ -40,6 +40,8 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         ...sessionUser,
         mobileMenuConfig: userDetails?.mobileMenuConfig ? JSON.stringify(userDetails.mobileMenuConfig) : null
     };
+    
+    const userRole = sessionUser.role as UserRole;
     
     let urgentOrdersCount = 0;
     try {
@@ -83,12 +85,12 @@ export default async function DashboardLayout({ children }: { children: ReactNod
                 </header>
                 <main className="mx-auto w-full max-w-[1600px] p-0 md:px-5 md:py-8">
                     <div className="hidden md:block px-4 py-4 md:p-0 sticky top-[65px] z-40 bg-transparent">
-                        <DashboardNav urgentOrdersCount={urgentOrdersCount} />
+                        <DashboardNav urgentOrdersCount={urgentOrdersCount} userRole={userRole} />
                     </div>
                     {children}
                 </main>
             </div>
-            <MobileNav user={user} urgentOrdersCount={urgentOrdersCount} />
+            <MobileNav user={user} urgentOrdersCount={urgentOrdersCount} userRole={userRole} />
         </>
 	);
 }

@@ -18,10 +18,11 @@ import {
 } from "@/components/ui/dialog";
 import { updateMontageContactDetails } from "../../actions";
 import type { Montage } from "../../types";
+import { type UserRole } from '@/lib/db/schema';
 
 import { formatScheduleRange } from "../../utils";
 
-export function MontageClientCard({ montage }: { montage: Montage }) {
+export function MontageClientCard({ montage, userRole = 'admin' }: { montage: Montage; userRole?: UserRole }) {
   const [isEditing, setIsEditing] = useState(false);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
@@ -68,6 +69,7 @@ export function MontageClientCard({ montage }: { montage: Montage }) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">Dane Klienta</CardTitle>
+        {userRole === 'admin' && (
         <Dialog open={isEditing} onOpenChange={setIsEditing}>
           <DialogTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -138,6 +140,7 @@ export function MontageClientCard({ montage }: { montage: Montage }) {
             </form>
           </DialogContent>
         </Dialog>
+        )}
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-start gap-3">

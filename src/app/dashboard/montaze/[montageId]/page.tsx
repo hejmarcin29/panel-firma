@@ -37,7 +37,7 @@ export default async function MontageDetailsPage({ params, searchParams }: Monta
     const { tab } = await searchParams;
     const activeTab = typeof tab === 'string' ? tab : 'log';
 
-    await requireUser();
+    const user = await requireUser();
 
     const r2Config = await tryGetR2Config();
     const publicBaseUrl = r2Config?.publicBaseUrl ?? null;
@@ -103,12 +103,12 @@ export default async function MontageDetailsPage({ params, searchParams }: Monta
 
     return (
         <div className="flex min-h-screen flex-col bg-muted/10">
-            <MontageHeader montage={montage} statusOptions={statusOptions} />
+            <MontageHeader montage={montage} statusOptions={statusOptions} userRole={user.role} />
             
             <main className="container mx-auto grid gap-6 p-4 md:grid-cols-[350px_1fr] lg:grid-cols-[400px_1fr] lg:p-8">
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-1 md:gap-6">
-                    <MontageClientCard montage={montage} />
-                    <MontageMaterialCard montage={montage} />
+                    <MontageClientCard montage={montage} userRole={user.role} />
+                    <MontageMaterialCard montage={montage} userRole={user.role} />
                 </div>
 
                 <div className="space-y-6">

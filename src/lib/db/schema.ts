@@ -7,7 +7,7 @@ import {
 } from 'drizzle-orm/sqlite-core';
 import { relations, sql } from 'drizzle-orm';
 
-export const userRoles = ['owner', 'operator'] as const;
+export const userRoles = ['admin', 'measurer', 'installer'] as const;
 export const orderSources = ['woocommerce', 'manual'] as const;
 export const orderTypes = ['production', 'sample'] as const;
 export const orderStatuses = [
@@ -68,7 +68,8 @@ export const users = sqliteTable(
 		email: text('email').notNull(),
 		passwordHash: text('password_hash').notNull(),
 		name: text('name'),
-		role: text('role').$type<UserRole>().notNull().default('operator'),
+		role: text('role').$type<UserRole>().notNull().default('admin'),
+		isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
 		dashboardConfig: text('dashboard_config', { mode: 'json' }),
 		mobileMenuConfig: text('mobile_menu_config', { mode: 'json' }),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' })
@@ -432,6 +433,8 @@ export const montages = sqliteTable(
 		displayId: text('display_id'),
 		materialStatus: text('material_status').$type<MontageMaterialStatus>().notNull().default('none'),
 		installerStatus: text('installer_status').$type<MontageInstallerStatus>().notNull().default('none'),
+		installerId: text('installer_id').references(() => users.id, { onDelete: 'set null' }),
+		measurerId: text('measurer_id').references(() => users.id, { onDelete: 'set null' }),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' })
 			.notNull()
 			.default(sql`(strftime('%s','now') * 1000)`),
@@ -443,6 +446,8 @@ export const montages = sqliteTable(
 		statusIdx: index('montages_status_idx').on(table.status),
 		updatedIdx: index('montages_updated_at_idx').on(table.updatedAt),
 		displayIdIdx: uniqueIndex('montages_display_id_idx').on(table.displayId),
+		installerIdx: index('montages_installer_id_idx').on(table.installerId),
+		measurerIdx: index('montages_measurer_id_idx').on(table.measurerId),
 	})
 );
 
@@ -548,11 +553,21 @@ export const montageTasks = sqliteTable(
 	})
 );
 
-export const montagesRelations = relations(montages, ({ many }) => ({
+export const montagesRelations = relations(montages, ({ one, many }) => ({
 	notes: many(montageNotes),
 	attachments: many(montageAttachments),
 	checklistItems: many(montageChecklistItems),
 	tasks: many(montageTasks),
+	installer: one(users, {
+		fields: [montages.installerId],
+		references: [users.id],
+		relationName: 'montage_installer',
+	}),
+	measurer: one(users, {
+		fields: [montages.measurerId],
+		references: [users.id],
+		relationName: 'montage_measurer',
+	}),
 }));
 
 export const montageNotesRelations = relations(montageNotes, ({ one, many }) => ({

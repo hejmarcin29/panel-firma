@@ -17,13 +17,15 @@ import { cn } from "@/lib/utils";
 import type { Montage, StatusOption } from "../../types";
 import { updateMontageStatus } from "../../actions";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { type UserRole } from '@/lib/db/schema';
 
 interface MontageHeaderProps {
   montage: Montage;
   statusOptions: StatusOption[];
+  userRole?: UserRole;
 }
 
-export function MontageHeader({ montage, statusOptions }: MontageHeaderProps) {
+export function MontageHeader({ montage, statusOptions, userRole = 'admin' }: MontageHeaderProps) {
   const router = useRouter();
   const isMobile = useIsMobile();
   const [pending, startTransition] = useTransition();

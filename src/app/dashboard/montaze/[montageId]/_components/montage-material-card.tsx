@@ -18,8 +18,9 @@ import {
 } from "@/components/ui/dialog";
 import { updateMontageMaterialDetails } from "../../actions";
 import type { Montage, MaterialsEditHistoryEntry } from "../../types";
+import { type UserRole } from '@/lib/db/schema';
 
-export function MontageMaterialCard({ montage }: { montage: Montage }) {
+export function MontageMaterialCard({ montage, userRole = 'admin' }: { montage: Montage; userRole?: UserRole }) {
   const [isEditing, setIsEditing] = useState(false);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
@@ -88,6 +89,7 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">Materiały</CardTitle>
+        {userRole === 'admin' && (
         <Dialog open={isEditing} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -188,6 +190,7 @@ export function MontageMaterialCard({ montage }: { montage: Montage }) {
             )}
           </DialogContent>
         </Dialog>
+        )}
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Calculated Materials Section */}
