@@ -29,6 +29,7 @@ import { MobileMenuItem } from './actions';
 import { WooSettingsForm } from './integrations/_components/woo-settings-form';
 import { IntegrationLogs } from './integrations/_components/integration-logs';
 import { WpChangesSettings } from './_components/wp-changes-settings';
+import TeamPage from './team/page';
 
 type LogLevel = 'info' | 'warning' | 'error';
 
@@ -438,6 +439,9 @@ export default async function SettingsPage() {
 			wpChanges={
 				<WpChangesSettings />
 			}
+            teamSettings={
+                <TeamPage />
+            }
 		>
 			<Card>
 				<CardHeader>

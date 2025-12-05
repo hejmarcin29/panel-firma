@@ -1,7 +1,7 @@
 'use client';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Activity, Globe, Smartphone, Palette, RefreshCw } from 'lucide-react';
+import { Settings, Activity, Globe, Smartphone, Palette, RefreshCw, Users } from 'lucide-react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 interface SettingsViewProps {
@@ -13,9 +13,10 @@ interface SettingsViewProps {
   mobileMenuSettings: React.ReactNode;
   kpiSettings: React.ReactNode;
   wpChanges: React.ReactNode;
+  teamSettings: React.ReactNode;
 }
 
-export function SettingsView({ children, appearance, logs, integrations, montageSettings, mobileMenuSettings, kpiSettings, wpChanges }: SettingsViewProps) {
+export function SettingsView({ children, appearance, logs, integrations, montageSettings, mobileMenuSettings, kpiSettings, wpChanges, teamSettings }: SettingsViewProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -53,6 +54,13 @@ export function SettingsView({ children, appearance, logs, integrations, montage
             >
               <Settings className="h-4 w-4" />
               Ogólne
+            </TabsTrigger>
+            <TabsTrigger 
+              value="team" 
+              className="w-full justify-start gap-2 px-3 py-2 h-9 data-[state=active]:bg-muted data-[state=active]:shadow-none ring-offset-background transition-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <Users className="h-4 w-4" />
+              Zespół
             </TabsTrigger>
             <TabsTrigger 
               value="mobile-menu" 
@@ -106,6 +114,10 @@ export function SettingsView({ children, appearance, logs, integrations, montage
 
           <TabsContent value="general" className="m-0 space-y-4">
               {children}
+          </TabsContent>
+
+          <TabsContent value="team" className="m-0 space-y-4">
+            {teamSettings}
           </TabsContent>
 
           <TabsContent value="mobile-menu" className="m-0 space-y-4">
