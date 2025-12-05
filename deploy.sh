@@ -12,11 +12,14 @@ git reset --hard origin/main
 npm install
 
 # Wygeneruj klienta bazy danych
-# npm run db:generate
+npm run db:generate
+
+# Napraw strukturę bazy danych ręcznie (dla kolumn, które powodują błędy w push)
+node fix_db.js
 
 # Zaaplikuj migracje bazy danych
-# Używamy migrate, aby bezpiecznie aplikować zmiany z plików migracji
-npm run db:migrate
+# Używamy push, ponieważ historia migracji jest niespójna
+npx drizzle-kit push
 
 # Wyczyść cache Next.js (opcjonalne, ale pomaga przy problemach)
 # Usuwamy folder .next (build) oraz cache Data Cache
