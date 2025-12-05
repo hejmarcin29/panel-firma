@@ -18,8 +18,8 @@ import { logSystemEvent } from '@/lib/logging';
 
 export async function updateWooWebhookSecret(secret: string) {
 	const user = await requireUser();
-	if (user.role !== 'owner') {
-		throw new Error('Tylko wlasciciel moze zmieniac konfiguracje integracji.');
+	if (user.role !== 'admin') {
+		throw new Error('Tylko administrator moze zmieniac konfiguracje integracji.');
 	}
 
 	const trimmed = secret.trim();
@@ -45,8 +45,8 @@ export async function updateWooWebhookSecret(secret: string) {
 
 export async function testWooWebhookSecret() {
 	const user = await requireUser();
-	if (user.role !== 'owner') {
-		throw new Error('Tylko wlasciciel moze wykonywac test polaczenia.');
+	if (user.role !== 'admin') {
+		throw new Error('Tylko administrator moze wykonywac test polaczenia.');
 	}
 
 	const secret = await getAppSetting(appSettingKeys.wooWebhookSecret);
@@ -69,8 +69,8 @@ type UpdateR2ConfigInput = {
 
 export async function updateR2Config({ accountId, accessKeyId, secretAccessKey, bucketName, endpoint, publicBaseUrl, apiToken }: UpdateR2ConfigInput) {
 	const user = await requireUser();
-	if (user.role !== 'owner') {
-		throw new Error('Tylko wlasciciel moze zmieniac konfiguracje integracji.');
+	if (user.role !== 'admin') {
+		throw new Error('Tylko administrator moze zmieniac konfiguracje integracji.');
 	}
 
 	const trimmedAccountId = accountId.trim();
@@ -136,8 +136,8 @@ export async function updateR2Config({ accountId, accessKeyId, secretAccessKey, 
 
 export async function testR2Connection() {
 	const user = await requireUser();
-	if (user.role !== 'owner') {
-		throw new Error('Tylko wlasciciel moze wykonywac test polaczenia.');
+	if (user.role !== 'admin') {
+		throw new Error('Tylko administrator moze wykonywac test polaczenia.');
 	}
 
 	const config = await getR2Config();
@@ -154,8 +154,8 @@ export async function testR2Connection() {
 
 export async function updateMontageChecklistTemplatesAction(templates: MontageChecklistTemplate[]) {
 	const user = await requireUser();
-	if (user.role !== 'owner') {
-		throw new Error('Tylko właściciel może zmieniać szablony etapów.');
+	if (user.role !== 'admin') {
+		throw new Error('Tylko administrator może zmieniać szablony etapów.');
 	}
 
 	await setMontageChecklistTemplates({ templates, userId: user.id });
@@ -167,8 +167,8 @@ export async function updateMontageChecklistTemplatesAction(templates: MontageCh
 
 export async function updateMontageAutomationRulesAction(rules: MontageAutomationRule[]) {
 	const user = await requireUser();
-	if (user.role !== 'owner') {
-		throw new Error('Tylko właściciel może zmieniać reguły automatyzacji.');
+	if (user.role !== 'admin') {
+		throw new Error('Tylko administrator może zmieniać reguły automatyzacji.');
 	}
 
 	await setMontageAutomationRules(rules, user.id);
@@ -180,8 +180,8 @@ export async function updateMontageAutomationRulesAction(rules: MontageAutomatio
 
 export async function updateMontageStatusDefinitionsAction(statuses: MontageStatusDefinition[]) {
 	const user = await requireUser();
-	if (user.role !== 'owner') {
-		throw new Error('Tylko właściciel może zmieniać definicje statusów.');
+	if (user.role !== 'admin') {
+		throw new Error('Tylko administrator może zmieniać definicje statusów.');
 	}
 
 	await setMontageStatusDefinitions(statuses, user.id);
@@ -212,8 +212,8 @@ export async function updateMobileMenuConfig(config: MobileMenuItem[]) {
 
 export async function updateKpiSettings(montageThreatDays: number, orderUrgentDays: number) {
     const user = await requireUser();
-    if (user.role !== 'owner') {
-        throw new Error('Tylko właściciel może zmieniać ustawienia KPI.');
+    if (user.role !== 'admin') {
+        throw new Error('Tylko administrator może zmieniać ustawienia KPI.');
     }
 
     await setAppSetting({

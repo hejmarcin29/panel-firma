@@ -37,6 +37,8 @@ export function MontageHeader({ montage, statusOptions, userRole = 'admin' }: Mo
     });
   };
 
+  const canEditStatus = userRole === 'admin';
+
   return (
     <div className="sticky top-0 z-10 flex flex-col gap-4 border-b bg-background/95 px-4 py-4 backdrop-blur supports-backdrop-filter:bg-background/60 sm:px-6">
       <div className="flex items-center justify-between gap-4">
@@ -93,9 +95,9 @@ export function MontageHeader({ montage, statusOptions, userRole = 'admin' }: Mo
             <Select
                 value={montage.status}
                 onValueChange={handleStatusChange}
-                disabled={pending}
+                disabled={pending || !canEditStatus}
             >
-                <SelectTrigger className={cn("w-[180px]", pending && "opacity-50")}>
+                <SelectTrigger className={cn("w-[180px]", (pending || !canEditStatus) && "opacity-50")}>
                 <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>

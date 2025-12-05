@@ -62,7 +62,7 @@ export async function registerAction(_: RegisterFormState, formData: FormData): 
 		email,
 		name,
 		passwordHash,
-		role: 'owner',
+		role: 'admin',
 	});
 
 	await createSession(userId);
