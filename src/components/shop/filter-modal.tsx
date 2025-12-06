@@ -26,7 +26,7 @@ export function FilterModal({ isOpen, onClose, availableOptions, totalProducts }
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-full sm:w-[540px] flex flex-col p-0 h-[100dvh]">
+      <SheetContent side="right" className="w-full sm:w-[540px] flex flex-col p-0 h-dvh">
         <SheetHeader className="px-6 py-4 border-b">
           <SheetTitle>Filtrowanie</SheetTitle>
         </SheetHeader>
