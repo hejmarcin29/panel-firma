@@ -46,7 +46,8 @@ if command -v free &> /dev/null; then
 fi
 
 # Pomijamy lintowanie podczas builda, aby zaoszczędzić pamięć
-npx next build --webpack --no-lint
+# npx next build --webpack --no-lint
+npm run build
 
 # Zrestartuj aplikację (zakładając PM2)
 echo "Restartowanie aplikacji..."
