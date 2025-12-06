@@ -257,14 +257,14 @@ const timelineEvents: TimelineEvent[] = [
 ...montage.notes.map((n) => ({
 id: n.id,
 type: 'note' as TimelineEventType,
-date: new Date(n.createdAt),
+date: new Date(n.createdAt ?? new Date()),
 content: n.content,
 author: n.authorName,
 })),
 ...montage.tasks.map((t) => ({
 id: t.id,
 type: (t.completed ? 'task-completed' : 'task') as TimelineEventType,
-date: new Date(t.createdAt),
+date: new Date(t.createdAt ?? new Date()),
 content: t.content,
 author: undefined,
 })),
