@@ -32,7 +32,10 @@ echo "Synchronizacja schematu (drizzle-kit push)..."
 npm run db:push
 
 # Zbuduj aplikację
-npm run build
+# Ograniczamy zużycie pamięci poprzez zmniejszenie liczby wątków
+export NEXT_CPU_COUNT=1
+export NODE_OPTIONS="--max-old-space-size=2048"
+npm run build -- --no-lint
 
 # Zrestartuj aplikację (zakładając PM2)
 echo "Restartowanie aplikacji..."
