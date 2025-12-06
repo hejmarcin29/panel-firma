@@ -1,19 +1,16 @@
 'use client';
 
-import { useEffect, useRef, useState, useTransition, type ChangeEvent, type ElementType, type FormEvent } from 'react';
+import { useState, useTransition, type ChangeEvent, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDebouncedCallback } from 'use-debounce';
 import {
 CalendarDays,
 CheckCircle2Icon,
-ChevronDown,
 ClockIcon,
 FileIcon,
 Mail,
 MessageSquareIcon,
-PaperclipIcon,
 Phone,
-Plus,
 User,
 Loader2,
 Check
@@ -21,22 +18,12 @@ Check
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-Sheet,
-SheetContent,
-SheetDescription,
-SheetHeader,
-SheetTitle,
-SheetTrigger,
-} from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import {
 addMontageNote,
@@ -46,11 +33,9 @@ toggleMontageTask,
 updateMontageMaterialDetails,
 updateMontageContactDetails,
 updateMontageStatus,
-uploadChecklistAttachment,
+  uploadChecklistAttachment,
 } from '../actions';
-import { summarizeMaterialDetails } from '../utils';
 import type { MontageStatus } from '@/lib/db/schema';
-import { useIsMobile } from '@/hooks/use-mobile';
 import type { Montage, MontageAttachment, StatusOption, TimestampValue } from '../types';
 import { MontageMeasurementTab } from './montage-measurement-tab';
 
@@ -101,20 +86,17 @@ type TimelineEventType = 'note' | 'task' | 'task-completed' | 'milestone';
 type TimelineEvent = {
 id: string;
 type: TimelineEventType;
-date: Date;
-content: string;
-author?: string;
-meta?: Record<string, any>;
-};
-
-type Props = {
+  date: Date;
+  content: string;
+  author?: string;
+  meta?: Record<string, unknown>;
+};type Props = {
 montage: Montage;
 statusOptions: StatusOption[];
 };
 
 export function MontageCard({ montage, statusOptions }: Props) {
 const router = useRouter();
-const isMobile = useIsMobile();
 const [activeTab, setActiveTab] = useState('overview');
 
 // Status
@@ -195,7 +177,7 @@ scheduledInstallationDate: data.scheduledInstallationDate || null,
 setContactFeedback('Zapisano zmiany');
 setTimeout(() => setContactFeedback(null), 2000);
 router.refresh();
-} catch (err) {
+} catch {
 setContactError('Wystąpił błąd podczas zapisu.');
 } finally {
 setIsContactSaving(false);
@@ -228,7 +210,7 @@ await updateMontageMaterialDetails(montage.id, value);
 setMaterialsFeedback('Zapisano materiały');
 setTimeout(() => setMaterialsFeedback(null), 2000);
 router.refresh();
-} catch (err) {
+} catch {
 setMaterialsError('Błąd zapisu materiałów.');
 } finally {
 setIsMaterialsSaving(false);
@@ -253,7 +235,7 @@ startChecklistTransition(async () => {
 try {
 await toggleMontageChecklistItem(montage.id, itemId, completed);
 router.refresh();
-} catch (err) {
+} catch {
 setChecklistError('Nie udało się zaktualizować etapu.');
 } finally {
 setChecklistPendingId(null);
@@ -269,7 +251,7 @@ startChecklistTransition(async () => {
 try {
 await uploadChecklistAttachment(formData);
 router.refresh();
-} catch (err) {
+} catch {
 setChecklistError('Błąd wysyłania załącznika.');
 } finally {
 setChecklistPendingId(null);
