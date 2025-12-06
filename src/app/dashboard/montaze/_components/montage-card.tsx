@@ -219,7 +219,7 @@ const handleChecklistToggle = (itemId: string, completed: boolean) => {
 setChecklistPendingId(itemId);
 startChecklistTransition(async () => {
 try {
-await toggleMontageChecklistItem(montage.id, itemId, completed);
+        await toggleMontageChecklistItem({ itemId, montageId: montage.id, completed });
 router.refresh();
 } catch {
 setChecklistError('Nie udało się zaktualizować etapu.');
