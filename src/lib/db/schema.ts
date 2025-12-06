@@ -816,6 +816,24 @@ export const mailMessages = sqliteTable(
 	})
 );
 
+export const googleIntegrations = sqliteTable(
+	'google_integrations',
+	{
+		id: text('id').primaryKey(),
+		userId: text('user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		accessToken: text('access_token').notNull(),
+		refreshToken: text('refresh_token'),
+		scope: text('scope').notNull(),
+		tokenType: text('token_type'),
+		expiryDate: integer('expiry_date', { mode: 'number' }),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	}
+);
+
 export const manualOrdersRelations = relations(manualOrders, ({ many }) => ({
 	items: many(manualOrderItems),
 	attachments: many(orderAttachments),
