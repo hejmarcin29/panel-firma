@@ -37,6 +37,8 @@ export NEXT_CPU_COUNT=1
 export NEXT_TELEMETRY_DISABLED=1
 # Ustawiamy limit pamięci na 2.5GB (zostawiając 1.5GB dla systemu)
 export NODE_OPTIONS="--max-old-space-size=2560"
+# Wyłączamy lintowanie poprzez zmienną środowiskową (obsługiwaną w eslint.config.mjs)
+export SKIP_LINT=true
 
 # Sprawdź czy jest swap (tylko informacyjnie)
 if command -v free &> /dev/null; then
