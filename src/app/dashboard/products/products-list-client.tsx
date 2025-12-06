@@ -91,13 +91,13 @@ export function ProductsListClient({
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-20">Obraz</TableHead>
+                            <TableHead className="w-16 md:w-20">Obraz</TableHead>
                             <TableHead>Nazwa</TableHead>
-                            <TableHead>SKU</TableHead>
-                            <TableHead>Cena</TableHead>
-                            <TableHead>Stan</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Akcje</TableHead>
+                            <TableHead className="hidden md:table-cell">SKU</TableHead>
+                            <TableHead className="text-right md:text-left">Cena</TableHead>
+                            <TableHead className="hidden md:table-cell">Stan</TableHead>
+                            <TableHead className="hidden md:table-cell">Status</TableHead>
+                            <TableHead className="hidden md:table-cell text-right">Akcje</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -112,7 +112,7 @@ export function ProductsListClient({
                                 <TableRow key={product.id}>
                                     <TableCell>
                                         {product.images && product.images[0] ? (
-                                            <div className="relative h-12 w-12 rounded overflow-hidden">
+                                            <div className="relative h-10 w-10 md:h-12 md:w-12 rounded overflow-hidden">
                                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                                 <img 
                                                     src={product.images[0].src} 
@@ -121,24 +121,34 @@ export function ProductsListClient({
                                                 />
                                             </div>
                                         ) : (
-                                            <div className="h-12 w-12 bg-muted rounded flex items-center justify-center text-xs text-muted-foreground">
+                                            <div className="h-10 w-10 md:h-12 md:w-12 bg-muted rounded flex items-center justify-center text-xs text-muted-foreground">
                                                 Brak
                                             </div>
                                         )}
                                     </TableCell>
                                     <TableCell className="font-medium">
                                         <div className="flex flex-col">
-                                            <span>{product.name}</span>
-                                            <span className="text-xs text-muted-foreground truncate max-w-[200px]">
+                                            <a href={product.permalink} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                                                {product.name}
+                                            </a>
+                                            <span className="text-xs text-muted-foreground truncate max-w-[150px] md:max-w-[200px]">
                                                 {product.categories.map(c => c.name).join(', ')}
                                             </span>
+                                            {/* Mobile only status/stock info */}
+                                            <div className="flex md:hidden gap-2 mt-1 text-[10px]">
+                                                <span className={product.stock_status === 'instock' ? 'text-green-600' : 'text-red-600'}>
+                                                    {product.stock_status === 'instock' ? 'Dostępny' : 'Brak'}
+                                                </span>
+                                                <span className="text-muted-foreground">|</span>
+                                                <span>{product.sku || '-'}</span>
+                                            </div>
                                         </div>
                                     </TableCell>
-                                    <TableCell>{product.sku || '-'}</TableCell>
-                                    <TableCell>
+                                    <TableCell className="hidden md:table-cell">{product.sku || '-'}</TableCell>
+                                    <TableCell className="text-right md:text-left">
                                         <div dangerouslySetInnerHTML={{ __html: product.price_html }} />
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell className="hidden md:table-cell">
                                         {product.manage_stock ? (
                                             <span>{product.stock_quantity} szt.</span>
                                         ) : (
@@ -147,12 +157,12 @@ export function ProductsListClient({
                                             </span>
                                         )}
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell className="hidden md:table-cell">
                                         <Badge variant={product.status === 'publish' ? 'default' : 'secondary'}>
                                             {product.status}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell className="text-right">
+                                    <TableCell className="hidden md:table-cell text-right">
                                         <Button variant="ghost" size="icon" asChild>
                                             <a href={product.permalink} target="_blank" rel="noopener noreferrer">
                                                 <ExternalLink className="h-4 w-4" />

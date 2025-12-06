@@ -278,7 +278,7 @@ export function TaskList({ column: initialColumn }: TaskListProps) {
             </div>
 
             {/* Tasks List */}
-            <ScrollArea className="flex-1">
+            <div className="flex-1 overflow-y-auto">
                 <div className="p-4 pb-24 max-w-3xl mx-auto">
                     <motion.div 
                         className="flex flex-col gap-1"
@@ -390,7 +390,7 @@ export function TaskList({ column: initialColumn }: TaskListProps) {
                         )}
                     </motion.div>
                 </div>
-            </ScrollArea>
+            </div>
 
             {/* Quick Add Input - Fixed at bottom */}
             <div className="p-4 border-t bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">

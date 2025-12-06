@@ -36,7 +36,6 @@ import {
 
 import { ConfirmOrderButton } from './_components/confirm-order-button';
 import { OrdersStats } from './_components/orders-stats';
-import { OrderCard } from './_components/order-card';
 import { OrderStatusBadge } from './_components/order-status-badge';
 import type { Order } from './data';
 import { Edit, Mail } from 'lucide-react';
@@ -307,112 +306,102 @@ function OrdersTable({ orders }: { orders: Order[] }) {
   }
 
   return (
-    <>
-      {/* Mobile View */}
-      <div className="grid gap-4 md:hidden px-4 md:px-0">
-        {orders.map((order) => (
-          <OrderCard 
-            key={order.id} 
-            order={order} 
-            formatCurrency={formatCurrency}
-            formatDateTime={formatDateTime}
-          />
-        ))}
-      </div>
-
-      {/* Desktop View */}
-      <Card className="hidden md:block overflow-hidden border-none shadow-sm">
-        <Table>
-          <TableHeader className="bg-muted/50">
-            <TableRow>
-              <TableHead className="w-[250px]">Numer / Źródło</TableHead>
-              <TableHead className="w-[250px]">Klient</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Data</TableHead>
-              <TableHead className="text-right">Kwota</TableHead>
-              <TableHead className="text-right w-[100px]">Akcje</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {orders.map((order) => (
-              <TableRow 
-                key={order.id} 
-                className="hover:bg-muted/30 transition-colors cursor-pointer"
-                onClick={() => router.push(`/dashboard/orders/${order.id}`)}
-              >
-                <TableCell className="font-medium">
-                  <div className="flex flex-col gap-1">
-                    <Link 
-                      href={`/dashboard/orders/${order.id}`}
-                      className="hover:underline text-primary font-semibold text-base"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {order.reference}
-                    </Link>
-                    <span className="text-xs text-muted-foreground capitalize flex items-center gap-1">
-                      {order.source === 'woocommerce' ? 'WooCommerce' : 'Ręczne'}
-                    </span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-col gap-1">
-                    <span className="font-medium">{order.customer}</span>
-                    <span className="text-xs text-muted-foreground">{order.billing.email}</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <OrderStatusBadge status={order.status} />
-                    {order.requiresReview && (
-                      <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5 h-auto">Weryfikacja</Badge>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell className="text-muted-foreground text-sm">
-                  {formatDateTime(order.createdAt)}
-                </TableCell>
-                <TableCell className="text-right font-bold text-base">
-                  {formatCurrency(order.totals.totalGross, order.currency)}
-                </TableCell>
-                <TableCell className="text-right">
-                  <div 
-                    className="flex justify-end gap-2"
+    <div className="rounded-md border bg-card">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[140px] md:w-[250px]">Numer / Klient</TableHead>
+            <TableHead className="hidden md:table-cell w-[200px]">Klient (Szczegóły)</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="hidden md:table-cell">Data</TableHead>
+            <TableHead className="text-right">Kwota</TableHead>
+            <TableHead className="hidden md:table-cell text-right w-[100px]">Akcje</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {orders.map((order) => (
+            <TableRow 
+              key={order.id} 
+              className="hover:bg-muted/30 transition-colors cursor-pointer h-16"
+              onClick={() => router.push(`/dashboard/orders/${order.id}`)}
+            >
+              <TableCell className="font-medium align-middle">
+                <div className="flex flex-col gap-1">
+                  <Link 
+                    href={`/dashboard/orders/${order.id}`}
+                    className="hover:underline text-primary font-semibold text-base"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    {order.requiresReview && (
-                      <ConfirmOrderButton order={order} />
-                    )}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                          <span className="sr-only">Więcej opcji</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem asChild>
-                          <Link href={`/dashboard/orders/${order.id}`}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Szczegóły
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem disabled>
-                          <FileText className="mr-2 h-4 w-4" />
-                          Pobierz proformę
-                        </DropdownMenuItem>
-                        <DropdownMenuItem disabled>
-                          <Mail className="mr-2 h-4 w-4" />
-                          Wyślij wiadomość
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
-    </>
+                    {order.reference}
+                  </Link>
+                  {/* Mobile only customer name */}
+                  <span className="md:hidden text-xs text-muted-foreground truncate max-w-[120px]">
+                    {order.customer}
+                  </span>
+                  {/* Desktop source */}
+                  <span className="hidden md:flex text-xs text-muted-foreground capitalize items-center gap-1">
+                    {order.source === 'woocommerce' ? 'WooCommerce' : 'Ręczne'}
+                  </span>
+                </div>
+              </TableCell>
+              <TableCell className="hidden md:table-cell align-middle">
+                <div className="flex flex-col gap-1">
+                  <span className="font-medium">{order.customer}</span>
+                  <span className="text-xs text-muted-foreground">{order.billing.email}</span>
+                </div>
+              </TableCell>
+              <TableCell className="align-middle">
+                <div className="flex items-center gap-2">
+                  <OrderStatusBadge status={order.status} />
+                  {order.requiresReview && (
+                    <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5 h-auto">Weryfikacja</Badge>
+                  )}
+                </div>
+              </TableCell>
+              <TableCell className="hidden md:table-cell text-muted-foreground text-sm align-middle">
+                {formatDateTime(order.createdAt)}
+              </TableCell>
+              <TableCell className="text-right font-bold text-base align-middle">
+                {formatCurrency(order.totals.totalGross, order.currency)}
+              </TableCell>
+              <TableCell className="hidden md:table-cell text-right align-middle">
+                <div 
+                  className="flex justify-end gap-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {order.requiresReview && (
+                    <ConfirmOrderButton order={order} />
+                  )}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Więcej opcji</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem asChild>
+                        <Link href={`/dashboard/orders/${order.id}`}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Szczegóły
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem disabled>
+                        <FileText className="mr-2 h-4 w-4" />
+                        Pobierz proformę
+                      </DropdownMenuItem>
+                      <DropdownMenuItem disabled>
+                        <Mail className="mr-2 h-4 w-4" />
+                        Wyślij wiadomość
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }

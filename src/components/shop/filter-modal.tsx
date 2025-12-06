@@ -7,7 +7,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import { FILTERS_CONFIG } from '@/lib/filter-config';
 import { useProductFilters } from '@/hooks/use-product-filters';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface FilterOption {
   name: string;
@@ -32,7 +31,7 @@ export function FilterModal({ isOpen, onClose, availableOptions, totalProducts }
           <SheetTitle>Filtrowanie</SheetTitle>
         </SheetHeader>
         
-        <ScrollArea className="flex-1 px-6 py-4">
+        <div className="flex-1 overflow-y-auto px-6 py-4">
           <div className="space-y-6">
             <Accordion type="multiple" defaultValue={['categories', 'brands', 'price']}>
               {FILTERS_CONFIG.map((filter) => (
@@ -82,7 +81,7 @@ export function FilterModal({ isOpen, onClose, availableOptions, totalProducts }
               ))}
             </Accordion>
           </div>
-        </ScrollArea>
+        </div>
 
         <SheetFooter className="p-6 border-t bg-gray-50 sm:justify-between gap-4">
             <Button variant="outline" onClick={() => {
