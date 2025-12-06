@@ -63,23 +63,17 @@ setFormData(newData);
 debouncedSave(newData);
 };
 
-const handleTestConnection = async () => {
-setIsTesting(true);
-try {
-const result = await testR2Connection();
-if (result.success) {
-toast.success(result.message);
-} else {
-toast.error(result.message);
-}
-} catch {
-toast.error('Wystąpił błąd podczas testowania połączenia.');
-} finally {
-setIsTesting(false);
-}
-};
-
-return (
+  const handleTestConnection = async () => {
+    setIsTesting(true);
+    try {
+      const message = await testR2Connection();
+      toast.success(message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Wystąpił błąd podczas testowania połączenia.');
+    } finally {
+      setIsTesting(false);
+    }
+  };return (
 <div className='space-y-4'>
 <div className='flex items-center justify-between mb-4'>
 <div className='flex items-center gap-2'>
