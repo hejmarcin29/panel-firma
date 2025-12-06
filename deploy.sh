@@ -26,8 +26,10 @@ npm install
 npm run db:generate
 
 # Zaaplikuj migracje bazy danych
-echo "Migracja bazy danych..."
-npm run db:migrate
+# Używamy push zamiast migrate, aby uniknąć błędów "table already exists"
+# gdy baza nie jest zsynchronizowana z historią migracji.
+echo "Synchronizacja schematu (drizzle-kit push)..."
+npx drizzle-kit push
 
 # Zbuduj aplikację
 npm run build
