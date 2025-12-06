@@ -432,7 +432,7 @@ Szczegóły
 {montage.contactPhone && (
 <div className='flex items-center gap-2 text-sm'>
 <Phone className='size-4 text-muted-foreground' />
-<a href={	el:} className='hover:underline'>{montage.contactPhone}</a>
+<a href={`tel:${montage.contactPhone}`} className='hover:underline'>{montage.contactPhone}</a>
 </div>
 )}
 {installationAddress && (
