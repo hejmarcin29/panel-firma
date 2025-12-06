@@ -289,7 +289,7 @@ export function TaskList({ column: initialColumn }: TaskListProps) {
             </div>
 
             {/* Tasks List */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto pb-28 md:pb-32">
                 <div className="p-4 max-w-4xl mx-auto">
                     <motion.div 
                         className="flex flex-col gap-3"
@@ -391,10 +391,10 @@ export function TaskList({ column: initialColumn }: TaskListProps) {
                 </div>
             </div>
 
-            {/* Quick Add Input - Floating at bottom */}
-            <div className="p-4 md:p-6 bg-linear-to-t from-background via-background to-transparent pb-4 md:pb-6">
+            {/* Quick Add Input - Sticky footer */}
+            <div className="sticky bottom-0 left-0 right-0 p-4 md:p-6 bg-linear-to-t from-background via-background/95 to-background/0">
                 <div className="max-w-4xl mx-auto">
-                    <div className="flex items-center gap-2 bg-background/80 backdrop-blur-xl p-2 rounded-2xl border shadow-lg hover:shadow-xl transition-all duration-300 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50">
+                    <div className="flex items-center gap-2 bg-background/90 backdrop-blur-xl p-2 rounded-2xl border shadow-lg hover:shadow-xl transition-all duration-300 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50">
                         <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                             <Plus className="w-5 h-5 text-primary" />
                         </div>
