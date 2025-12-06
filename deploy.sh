@@ -29,7 +29,7 @@ npm run db:generate
 # Używamy push zamiast migrate, aby uniknąć błędów "table already exists"
 # gdy baza nie jest zsynchronizowana z historią migracji.
 echo "Synchronizacja schematu (drizzle-kit push)..."
-npx drizzle-kit push
+npm run db:push
 
 # Zbuduj aplikację
 npm run build
