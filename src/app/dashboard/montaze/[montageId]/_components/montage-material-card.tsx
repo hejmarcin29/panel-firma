@@ -1,6 +1,6 @@
 'use client';
 
-import { MapPin, Phone, Mail, Calendar, Edit2, Ruler, Loader2, Check, Plus, Trash2 } from "lucide-react";
+import { Edit2, Loader2, Check, Package } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useDebouncedCallback } from 'use-debounce';

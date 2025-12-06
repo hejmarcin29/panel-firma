@@ -406,7 +406,7 @@ Lista kontrolna
 <div className='h-2 w-full overflow-hidden rounded-full bg-muted'>
 <div 
 className='h-full bg-primary transition-all duration-500 ease-in-out' 
-style={{ width: ${totalChecklistItems > 0 ? (completedChecklistItems / totalChecklistItems) * 100 : 0}% }} 
+style={{ width: `${totalChecklistItems > 0 ? (completedChecklistItems / totalChecklistItems) * 100 : 0}%` }} 
 />
 </div>
 <p className='text-xs text-muted-foreground'>

@@ -47,7 +47,7 @@ formDataToSend.append('wooUrl', data.wooUrl);
 
 await saveWooSettings(formDataToSend);
 setTestResult(null);
-} catch (_) {
+} catch {
 toast.error('Błąd zapisu ustawień WooCommerce');
 } finally {
 setIsSaving(false);

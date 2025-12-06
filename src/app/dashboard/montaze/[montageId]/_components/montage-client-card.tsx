@@ -76,7 +76,7 @@ export function MontageClientCard({ montage, userRole = 'admin' }: { montage: Mo
         scheduledInstallationEndDate: data.scheduledInstallationEndAt,
       });
       router.refresh();
-    } catch (_) {
+    } catch {
       toast.error("Błąd zapisu danych");
     } finally {
       setIsSaving(false);

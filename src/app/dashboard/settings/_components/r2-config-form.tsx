@@ -50,7 +50,7 @@ setIsSaving(true);
 try {
 await updateR2Config(data);
 router.refresh();
-} catch (_) {
+} catch {
 toast.error('Błąd zapisu konfiguracji R2');
 } finally {
 setIsSaving(false);

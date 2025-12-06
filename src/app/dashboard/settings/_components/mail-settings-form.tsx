@@ -111,7 +111,7 @@ setSelectedAccountId(pendingAccountId);
 setPendingAccountId(null);
 }
 }, [accounts, pendingAccountId]);
-/* eslint-enable react-hooks/set-state-in-effect */
+
 
 const debouncedSave = useDebouncedCallback(async (values: FormValues) => {
 if (selectedAccountId === NEW_ACCOUNT_ID) return;
