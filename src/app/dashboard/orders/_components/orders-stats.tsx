@@ -14,7 +14,12 @@ export function OrdersStats({ orders }: OrdersStatsProps) {
   const totalRevenue = orders.reduce((acc, order) => acc + order.totals.totalGross, 0);
   
   const activeOrders = orders.filter(
-    (order) => order.status !== 'order.closed' && order.status !== 'cancelled'
+    (order) => 
+      order.status !== 'order.closed' && 
+      order.status !== 'Zakończone' &&
+      order.status !== 'cancelled' &&
+      order.status !== 'order.fulfillment_confirmed' &&
+      order.status !== 'order.final_invoice'
   ).length;
 
   const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;

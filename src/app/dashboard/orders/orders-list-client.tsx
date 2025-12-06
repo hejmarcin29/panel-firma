@@ -123,11 +123,18 @@ export function OrdersListClient({ initialOrders }: OrdersListClientProps) {
     const query = search.toLowerCase().trim();
     
     return ordersFilteredByDate.filter((order) => {
+      // Define what constitutes a "completed" order in your workflow
+      const isCompleted = 
+        order.status === 'order.closed' || 
+        order.status === 'Zakończone' ||
+        order.status === 'order.fulfillment_confirmed' || 
+        order.status === 'order.final_invoice';
+
       // Tab filtering
       if (activeTab === 'active') {
-        if (order.status === 'order.closed' || order.status === 'cancelled') return false;
+        if (isCompleted || order.status === 'cancelled') return false;
       } else if (activeTab === 'completed') {
-        if (order.status !== 'order.closed') return false;
+        if (!isCompleted) return false;
       }
 
       // Existing filters

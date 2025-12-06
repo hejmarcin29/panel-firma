@@ -34,7 +34,7 @@ export const supplierRequestStatuses = ['generated', 'sent', 'acknowledged', 'fu
 export const notificationChannels = ['email'] as const;
 export const notificationStatuses = ['pending', 'sent', 'failed'] as const;
 
-export const integrationNames = ['woocommerce', 'alior', 'email'] as const;
+export const integrationNames = ['woocommerce', 'alior', 'email', 'google'] as const;
 export const integrationLogLevels = ['info', 'warning', 'error'] as const;
 
 export const supplierMessageDirections = ['sent', 'received'] as const;
@@ -816,6 +816,30 @@ export const mailMessages = sqliteTable(
 	})
 );
 
+export const googleIntegrations = sqliteTable(
+	'google_integrations',
+	{
+		id: text('id').primaryKey(),
+		userId: text('user_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		accessToken: text('access_token').notNull(),
+		refreshToken: text('refresh_token'),
+		scope: text('scope').notNull(),
+		tokenType: text('token_type'),
+		expiryDate: integer('expiry_date', { mode: 'number' }),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+	},
+	(table) => ({
+		userIdIdx: index('google_integrations_user_id_idx').on(table.userId),
+	})
+);
+
 export const manualOrdersRelations = relations(manualOrders, ({ many }) => ({
 	items: many(manualOrderItems),
 	attachments: many(orderAttachments),
@@ -978,5 +1002,16 @@ export const documentsRelations = relations(documents, ({ one }) => ({
 		fields: [documents.orderId],
 		references: [orders.id],
 	}),
+}));
+
+export const googleIntegrationsRelations = relations(googleIntegrations, ({ one }) => ({
+	user: one(users, {
+		fields: [googleIntegrations.userId],
+		references: [users.id],
+	}),
+}));
+
+export const usersRelations = relations(users, ({ many }) => ({
+	googleIntegrations: many(googleIntegrations),
 }));
 

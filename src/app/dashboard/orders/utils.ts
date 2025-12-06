@@ -6,6 +6,7 @@ export const statusOptions = [
 	'Kompletacja zamówienia',
 	'Wydanie przewoźnikowi',
 	'Dostarczone do klienta',
+	'Zakończone',
 ] as const;
 
 export type StatusOption = (typeof statusOptions)[number];

@@ -393,7 +393,7 @@ export function TaskList({ column: initialColumn }: TaskListProps) {
             </div>
 
             {/* Quick Add Input - Fixed at bottom */}
-            <div className="p-4 border-t bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+            <div className="p-4 pb-6 md:pb-4 border-t bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 z-20">
                 <div className="max-w-3xl mx-auto flex items-center gap-2 bg-muted/50 p-2 rounded-lg border focus-within:ring-1 focus-within:ring-ring focus-within:border-primary transition-all">
                     <Plus className="w-5 h-5 text-muted-foreground ml-2" />
                     <Input 

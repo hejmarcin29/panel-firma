@@ -82,6 +82,7 @@ export function OrderStatusBadge({ status, className }: OrderStatusBadgeProps) {
         </Badge>
       );
     case 'order.closed':
+    case 'Zakończone':
       return (
         <Badge variant="secondary" className={cn("bg-gray-100 text-gray-600 gap-1.5", className)}>
           <CheckCircle2 className="h-3.5 w-3.5" />
