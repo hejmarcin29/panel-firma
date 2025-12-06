@@ -743,7 +743,7 @@ className='bg-background'
 <div className='rounded-xl border border-border/60 bg-card p-4 shadow-sm'>
 <div className='mb-1 flex items-center justify-between'>
 <span className='text-xs font-medium text-muted-foreground'>
-{formatTimestamp(event.date)} {event.author ? •  : ''}
+{formatTimestamp(event.date)} {event.author ? '•' : ''}
 </span>
 {event.type === 'task' || event.type === 'task-completed' ? (
 <Checkbox
