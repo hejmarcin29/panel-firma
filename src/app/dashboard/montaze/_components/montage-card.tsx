@@ -324,13 +324,13 @@ return (
 <h1 className='text-2xl font-bold tracking-tight text-foreground md:text-3xl'>{montage.clientName}</h1>
 <div className='flex flex-wrap items-center gap-3 text-sm text-muted-foreground'>
 {montage.contactPhone && (
-<a href={	el:} className='flex items-center gap-1.5 hover:text-foreground transition-colors'>
+<a href={`tel:${montage.contactPhone}`} className='flex items-center gap-1.5 hover:text-foreground transition-colors'>
 <Phone className='size-3.5' />
 {montage.contactPhone}
 </a>
 )}
 {montage.contactEmail && (
-<a href={mailto:} className='flex items-center gap-1.5 hover:text-foreground transition-colors'>
+<a href={`mailto:${montage.contactEmail}`} className='flex items-center gap-1.5 hover:text-foreground transition-colors'>
 <Mail className='size-3.5' />
 {montage.contactEmail}
 </a>

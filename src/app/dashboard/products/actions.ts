@@ -320,7 +320,6 @@ export async function getProductsFromDb(
         search = '', 
         scope = 'public',
         categoryId,
-        brandTermId,
         sort = 'date_desc'
     } = options;
 

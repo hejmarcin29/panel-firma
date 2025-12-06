@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { LayoutGrid, List, Calendar as CalendarIcon, CheckSquare } from "lucide-react";
+import { LayoutGrid, List, Calendar as CalendarIcon } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";

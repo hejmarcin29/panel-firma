@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDebouncedCallback } from 'use-debounce';
 import { Loader2, Check } from 'lucide-react';
@@ -50,7 +50,7 @@ setIsSaving(true);
 try {
 await updateR2Config(data);
 router.refresh();
-} catch (error) {
+} catch (_) {
 toast.error('Błąd zapisu konfiguracji R2');
 } finally {
 setIsSaving(false);

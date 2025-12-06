@@ -1,7 +1,7 @@
 "use client";
 
 import { MapPin, Phone, Mail, Calendar, Edit2, Ruler, Loader2, Check } from "lucide-react";
-import { useState, useTransition, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
 import { toast } from "sonner";
@@ -76,7 +76,7 @@ export function MontageClientCard({ montage, userRole = 'admin' }: { montage: Mo
         scheduledInstallationEndDate: data.scheduledInstallationEndAt,
       });
       router.refresh();
-    } catch (error) {
+    } catch (_) {
       toast.error("Błąd zapisu danych");
     } finally {
       setIsSaving(false);

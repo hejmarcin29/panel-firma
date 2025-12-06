@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -22,7 +22,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Button } from '@/components/ui/button';
-import { Pencil, Settings, Check, Loader2, X } from 'lucide-react';
+import { Pencil, Settings, Check, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,

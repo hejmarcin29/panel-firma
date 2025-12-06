@@ -1,4 +1,4 @@
-import { getProducts, getProductsFromDb, getCategories, getAttributes, getAttributeTerms, WooCommerceAttributeTerm } from './actions';
+import { getProductsFromDb, getCategories, getAttributes, getAttributeTerms, WooCommerceAttributeTerm } from './actions';
 import { ProductsListClient } from './products-list-client';
 import { requireUser } from '@/lib/auth/session';
 

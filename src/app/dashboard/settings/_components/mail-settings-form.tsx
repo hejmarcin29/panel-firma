@@ -84,19 +84,16 @@ const [syncResult, setSyncResult] = useState<{ status: 'success' | 'error'; mess
 const [isSaving, setIsSaving] = useState(false);
 const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
-const selectedAccount = useMemo(
-() => (selectedAccountId === NEW_ACCOUNT_ID ? null : findAccount(accounts, selectedAccountId)),
-[accounts, selectedAccountId],
-);
+  const selectedAccount = useMemo(
+    () => (selectedAccountId === NEW_ACCOUNT_ID ? null : findAccount(accounts, selectedAccountId)),
+    [accounts, selectedAccountId],
+  );
 
-/* eslint-disable react-hooks/set-state-in-effect */
-useEffect(() => {
-setFormValues(toFormValues(selectedAccount));
-setSyncResult(null);
-setLastSaved(null);
-}, [selectedAccount]);
-
-useEffect(() => {
+  useEffect(() => {
+    setFormValues(toFormValues(selectedAccount));
+    setSyncResult(null);
+    setLastSaved(null);
+  }, [selectedAccount]);useEffect(() => {
 if (state.status === 'success') {
 setPendingAccountId(state.accountId ?? null);
 router.refresh();

@@ -47,7 +47,6 @@ import {
 } from "../actions";
 import { useRouter } from "next/navigation";
 import { SwipeableTaskItem } from "../../zadania/_components/swipeable-task-item";
-import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 
 // Types based on schema

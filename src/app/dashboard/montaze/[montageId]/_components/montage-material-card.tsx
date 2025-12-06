@@ -1,8 +1,8 @@
 'use client';
 
-import { Package, Edit2, Loader2, Check } from 'lucide-react';
-import { useState, useTransition, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { MapPin, Phone, Mail, Calendar, Edit2, Ruler, Loader2, Check, Plus, Trash2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useDebouncedCallback } from 'use-debounce';
 
 import { Button } from '@/components/ui/button';
@@ -107,7 +107,7 @@ export function MontageMaterialCard({ montage, userRole = 'admin' }: { montage: 
               <Edit2 className='h-4 w-4' />
             </Button>
           </DialogTrigger>
-          <DialogContent className='max-h-[90vh] overflow-y-auto sm:max-w-xl' onPointerDownOutside={(e) => {
+          <DialogContent className='max-h-[90vh] overflow-y-auto sm:max-w-xl' onPointerDownOutside={() => {
               // Allow closing without confirmation since we have auto-save
           }}>
             <DialogHeader className='flex flex-row items-center justify-between'>

@@ -1,7 +1,6 @@
 import { db } from '@/lib/db';
 import { products } from '@/lib/db/schema';
 import { getAppSettings, appSettingKeys } from '@/lib/settings';
-import { sql } from 'drizzle-orm';
 
 interface WooCommerceProduct {
     id: number;
