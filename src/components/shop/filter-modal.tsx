@@ -26,12 +26,12 @@ export function FilterModal({ isOpen, onClose, availableOptions, totalProducts }
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-full sm:w-[540px] flex flex-col p-0">
+      <SheetContent side="right" className="w-full sm:w-[540px] flex flex-col p-0 h-[100dvh]">
         <SheetHeader className="px-6 py-4 border-b">
           <SheetTitle>Filtrowanie</SheetTitle>
         </SheetHeader>
         
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <div className="flex-1 overflow-y-auto px-6 py-4 min-h-0">
           <div className="space-y-6">
             <Accordion type="multiple" defaultValue={['categories', 'brands', 'price']}>
               {FILTERS_CONFIG.map((filter) => (

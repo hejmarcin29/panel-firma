@@ -1,4 +1,4 @@
-import { getProducts, getCategories, getAttributes, getAttributeTerms, WooCommerceAttributeTerm } from './actions';
+import { getProducts, getProductsFromDb, getCategories, getAttributes, getAttributeTerms, WooCommerceAttributeTerm } from './actions';
 import { ProductsListClient } from './products-list-client';
 import { requireUser } from '@/lib/auth/session';
 
@@ -28,7 +28,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     const perPage = 20;
 
     const [productsData, categories, attributes] = await Promise.all([
-        getProducts({
+        getProductsFromDb({
             page, 
             perPage, 
             categoryId, 

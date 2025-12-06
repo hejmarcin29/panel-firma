@@ -953,6 +953,24 @@ export const taskAttachmentsRelations = relations(taskAttachments, ({ one }) => 
 	}),
 }));
 
+export const products = sqliteTable('products', {
+	id: integer('id').primaryKey(), // WooCommerce ID
+	name: text('name').notNull(),
+	slug: text('slug').notNull(),
+	sku: text('sku'),
+	price: text('price'),
+	regularPrice: text('regular_price'),
+	salePrice: text('sale_price'),
+	status: text('status').notNull(),
+	stockStatus: text('stock_status'),
+	stockQuantity: integer('stock_quantity'),
+	imageUrl: text('image_url'),
+	categories: text('categories', { mode: 'json' }), // JSON array of category IDs
+	attributes: text('attributes', { mode: 'json' }), // JSON array of attributes
+	updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(sql`(strftime('%s','now') * 1000)`),
+	syncedAt: integer('synced_at', { mode: 'timestamp_ms' }).notNull().default(sql`(strftime('%s','now') * 1000)`),
+});
+
 export const customersRelations = relations(customers, ({ many }) => ({
 	orders: many(orders),
 }));

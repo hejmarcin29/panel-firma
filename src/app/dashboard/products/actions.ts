@@ -1,6 +1,14 @@
 'use server';
 
+import { db } from '@/lib/db';
+import { products } from '@/lib/db/schema';
+import { like, eq, and, desc, asc, count } from 'drizzle-orm';
 import { getAppSettings, appSettingKeys } from '@/lib/settings';
+import { syncProducts } from '@/lib/sync/products';
+
+export async function syncProductsAction() {
+    return await syncProducts();
+}
 
 export interface WooCommerceProduct {
     id: number;
@@ -293,4 +301,135 @@ export async function getAttributeTerms(attributeId: number): Promise<WooCommerc
         console.error('Error fetching attribute terms:', error);
         return [];
     }
+}
+
+export async function getProductsFromDb(
+    options: {
+        page?: number;
+        perPage?: number;
+        search?: string;
+        scope?: 'public' | 'private' | 'all';
+        categoryId?: number;
+        brandTermId?: number;
+        sort?: string;
+    } = {}
+): Promise<{ products: WooCommerceProduct[], total: number, totalPages: number }> {
+    const { 
+        page = 1, 
+        perPage = 20, 
+        search = '', 
+        scope = 'public',
+        categoryId,
+        brandTermId,
+        sort = 'date_desc'
+    } = options;
+
+    const offset = (page - 1) * perPage;
+    
+    let whereClause = undefined;
+    const conditions = [];
+
+    if (search) {
+        conditions.push(like(products.name, `%${search}%`));
+    }
+
+    if (scope === 'public') {
+        conditions.push(eq(products.status, 'publish'));
+    } else if (scope === 'private') {
+        conditions.push(eq(products.status, 'private'));
+    }
+
+    if (categoryId) {
+        conditions.push(like(products.categories, `%${categoryId}%`));
+    }
+    
+    if (conditions.length > 0) {
+        whereClause = and(...conditions);
+    }
+
+    const totalResult = await db.select({ count: count() }).from(products).where(whereClause);
+    const total = totalResult[0].count;
+    const totalPages = Math.ceil(total / perPage);
+
+    let orderBy = desc(products.updatedAt);
+    if (sort === 'date_asc') orderBy = asc(products.updatedAt);
+    if (sort === 'price_desc') orderBy = desc(products.price);
+    if (sort === 'price_asc') orderBy = asc(products.price);
+    if (sort === 'title_asc') orderBy = asc(products.name);
+    if (sort === 'title_desc') orderBy = desc(products.name);
+
+    const dbProducts = await db.select()
+        .from(products)
+        .where(whereClause)
+        .limit(perPage)
+        .offset(offset)
+        .orderBy(orderBy);
+
+    const mappedProducts: WooCommerceProduct[] = dbProducts.map(p => ({
+        id: p.id,
+        name: p.name,
+        slug: p.slug,
+        sku: p.sku || '',
+        price: p.price || '',
+        regular_price: p.regularPrice || '',
+        sale_price: p.salePrice || '',
+        status: p.status,
+        stock_status: p.stockStatus || 'instock',
+        stock_quantity: p.stockQuantity,
+        images: p.imageUrl ? [{ src: p.imageUrl, id: 0, date_created: '', date_created_gmt: '', date_modified: '', date_modified_gmt: '', name: '', alt: '' }] : [],
+        categories: p.categories ? JSON.parse(p.categories as string).map((id: number) => ({ id, name: '', slug: '' })) : [],
+        attributes: p.attributes ? JSON.parse(p.attributes as string) : [],
+        permalink: '',
+        date_created: '',
+        date_modified: p.updatedAt.toISOString(),
+        type: 'simple',
+        featured: false,
+        catalog_visibility: 'visible',
+        description: '',
+        short_description: '',
+        date_on_sale_from: null,
+        date_on_sale_from_gmt: null,
+        date_on_sale_to: null,
+        date_on_sale_to_gmt: null,
+        price_html: '',
+        on_sale: false,
+        purchasable: true,
+        total_sales: 0,
+        virtual: false,
+        downloadable: false,
+        downloads: [],
+        download_limit: 0,
+        download_expiry: 0,
+        external_url: '',
+        button_text: '',
+        tax_status: 'taxable',
+        tax_class: '',
+        manage_stock: false,
+        backorders: 'no',
+        backorders_allowed: false,
+        backordered: false,
+        sold_individually: false,
+        weight: '',
+        dimensions: { length: '', width: '', height: '' },
+        shipping_required: true,
+        shipping_taxable: true,
+        shipping_class: '',
+        shipping_class_id: 0,
+        reviews_allowed: true,
+        average_rating: '0.00',
+        rating_count: 0,
+        related_ids: [],
+        upsell_ids: [],
+        cross_sell_ids: [],
+        parent_id: 0,
+        purchase_note: '',
+        tags: [],
+        default_attributes: [],
+        variations: [],
+        grouped_products: [],
+        menu_order: 0,
+        meta_data: [],
+    }));
+
+    return { products: mappedProducts, total, totalPages };
 }

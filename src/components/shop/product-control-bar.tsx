@@ -8,12 +8,15 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { syncProductsAction } from '@/app/dashboard/products/actions';
+import { toast } from 'sonner';
 
 export function ProductControlBar({ totalProducts, onOpenFilters }: { totalProducts: number, onOpenFilters: () => void }) {
   const { searchParams, setSingleFilter } = useProductFilters();
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [isSyncing, setIsSyncing] = useState(false);
   
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -26,10 +29,20 @@ export function ProductControlBar({ totalProducts, onOpenFilters }: { totalProdu
 
   const currentScope = searchParams.get('scope') || 'public';
 
-  const handleRefresh = () => {
-    startTransition(() => {
-      router.refresh();
-    });
+  const handleSync = async () => {
+    setIsSyncing(true);
+    try {
+        await syncProductsAction();
+        toast.success('Zsynchronizowano produkty');
+        startTransition(() => {
+            router.refresh();
+        });
+    } catch (error) {
+        console.error(error);
+        toast.error('Błąd synchronizacji');
+    } finally {
+        setIsSyncing(false);
+    }
   };
 
   return (
@@ -121,10 +134,11 @@ export function ProductControlBar({ totalProducts, onOpenFilters }: { totalProdu
             <Button 
                 variant="ghost" 
                 size="icon" 
-                onClick={handleRefresh}
-                disabled={isPending}
+                onClick={handleSync}
+                disabled={isSyncing || isPending}
+                title="Synchronizuj produkty"
             >
-                <RefreshCw className={`h-4 w-4 ${isPending ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`h-4 w-4 ${isSyncing || isPending ? 'animate-spin' : ''}`} />
             </Button>
         </div>
       </div>
