@@ -30,7 +30,7 @@ import { ThemeSelector } from './_components/theme-selector';
 import { MobileMenuItem } from './actions';
 import { WooSettingsForm } from './integrations/_components/woo-settings-form';
 import { IntegrationLogs } from './integrations/_components/integration-logs';
-import { GoogleCalendarSettings } from './_components/google-calendar-settings';
+import { GoogleCalendarSettings } from './integrations/_components/google-calendar-settings';
 import { getGoogleIntegrationStatus } from './integrations/google-actions';
 import { WpChangesSettings } from './_components/wp-changes-settings';
 import TeamPage from './team/page';
