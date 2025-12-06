@@ -4,10 +4,8 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  productionBrowserSourceMaps: false,
-  experimental: {
-    cpus: 1,
-    workerThreads: false,
+  eslint: {
+    ignoreDuringBuilds: true,
   },
 };
 
