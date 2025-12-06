@@ -42,3 +42,7 @@ Przy tworzeniu lub modyfikowaniu ról użytkowników (np. Pomiarowiec, Montażys
 - Każda rola powinna mieć dedykowaną sekcję lub zakładkę "Pomoc" / "Instrukcja".
 - Instrukcja ta powinna wyjaśniać, jak korzystać z dostępnych dla nich funkcji.
 - Przy dodawaniu nowych funkcji dla danej roli, zaktualizuj również jej instrukcję.
+
+## Struktura i Konfiguracja Integracji
+- **Lokalizacja w UI:** Wszelkie konfiguracje zewnętrznych usług i integracji (np. Google, WooCommerce, Poczta, Cloudflare) muszą znajdować się w sekcji "Ustawienia" -> "Integracje". Nie twórz dla nich osobnych głównych zakładek w Ustawieniach, chyba że jest to absolutnie konieczne.
+- **Struktura plików:** Komponenty i akcje związane z integracjami powinny znajdować się w folderze `src/app/dashboard/settings/integrations/`. Zachowaj porządek w strukturze plików odpowiadający strukturze UI.
