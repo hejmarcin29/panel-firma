@@ -264,7 +264,7 @@ author: n.author?.name || n.author?.email,
 ...montage.tasks.map((t) => ({
 id: t.id,
 type: (t.completed ? 'task-completed' : 'task') as TimelineEventType,
-date: new Date(t.createdAt ?? new Date()),
+date: new Date(t.updatedAt ?? new Date()),
 content: t.title,
 author: undefined,
 })),
