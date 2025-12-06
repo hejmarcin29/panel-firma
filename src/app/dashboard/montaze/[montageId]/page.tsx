@@ -19,6 +19,7 @@ import { mapMontageRow, type MontageRow } from '../utils';
 import { MontageHeader } from './_components/montage-header';
 import { MontageClientCard } from './_components/montage-client-card';
 import { MontageMaterialCard } from './_components/montage-material-card';
+import { MontageTeamCard } from './_components/montage-team-card';
 import { MontageWorkflowTab } from './_components/montage-workflow-tab';
 import { MontageTasksTab } from './_components/montage-tasks-tab';
 import { MontageGalleryTab } from './_components/montage-gallery-tab';
@@ -38,6 +39,10 @@ export default async function MontageDetailsPage({ params, searchParams }: Monta
     const activeTab = typeof tab === 'string' ? tab : 'log';
 
     const user = await requireUser();
+
+    const allUsers = await db.query.users.findMany();
+    const installers = allUsers.filter(u => u.role === 'installer' || u.role === 'admin');
+    const measurers = allUsers.filter(u => u.role === 'measurer' || u.role === 'admin');
 
     const r2Config = await tryGetR2Config();
     const publicBaseUrl = r2Config?.publicBaseUrl ?? null;
@@ -108,6 +113,12 @@ export default async function MontageDetailsPage({ params, searchParams }: Monta
             <main className="container mx-auto grid gap-6 p-4 md:grid-cols-[350px_1fr] lg:grid-cols-[400px_1fr] lg:p-8">
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-1 md:gap-6">
                     <MontageClientCard montage={montage} userRole={user.role} />
+                    <MontageTeamCard 
+                        montage={montage} 
+                        installers={installers} 
+                        measurers={measurers} 
+                        userRole={user.role} 
+                    />
                     <MontageMaterialCard montage={montage} userRole={user.role} />
                 </div>
 

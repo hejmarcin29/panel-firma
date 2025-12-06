@@ -2,8 +2,9 @@
 
 import { db } from '@/lib/db';
 import { orders, montages, customers } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
+import { requireUser } from '@/lib/auth/session';
 
 export type CalendarEventType = 'order' | 'montage';
 
@@ -20,19 +21,54 @@ export interface CalendarEvent {
 }
 
 export async function getCalendarEvents(): Promise<{ scheduled: CalendarEvent[]; unscheduled: CalendarEvent[] }> {
-  const [ordersData, montagesData] = await Promise.all([
-    db
-      .select({
-        id: orders.id,
-        expectedShipDate: orders.expectedShipDate,
-        status: orders.status,
-        totalGross: orders.totalGross,
-        currency: orders.currency,
-        customerName: customers.name,
-      })
-      .from(orders)
-      .leftJoin(customers, eq(orders.customerId, customers.id)),
-    db
+  const user = await requireUser();
+  
+  let ordersData: {
+    id: string;
+    expectedShipDate: Date | null;
+    status: string;
+    totalGross: number;
+    currency: string;
+    customerName: string | null;
+  }[] = [];
+
+  let montagesData: {
+    id: string;
+    scheduledInstallationAt: Date | null;
+    scheduledInstallationEndAt: Date | null;
+    clientName: string;
+    address: string | null;
+    status: string;
+  }[] = [];
+
+  if (user.role === 'admin') {
+    const [fetchedOrders, fetchedMontages] = await Promise.all([
+      db
+        .select({
+          id: orders.id,
+          expectedShipDate: orders.expectedShipDate,
+          status: orders.status,
+          totalGross: orders.totalGross,
+          currency: orders.currency,
+          customerName: customers.name,
+        })
+        .from(orders)
+        .leftJoin(customers, eq(orders.customerId, customers.id)),
+      db
+        .select({
+          id: montages.id,
+          scheduledInstallationAt: montages.scheduledInstallationAt,
+          scheduledInstallationEndAt: montages.scheduledInstallationEndAt,
+          clientName: montages.clientName,
+          address: montages.address,
+          status: montages.status,
+        })
+        .from(montages),
+    ]);
+    ordersData = fetchedOrders;
+    montagesData = fetchedMontages;
+  } else if (user.role === 'installer') {
+    montagesData = await db
       .select({
         id: montages.id,
         scheduledInstallationAt: montages.scheduledInstallationAt,
@@ -41,8 +77,21 @@ export async function getCalendarEvents(): Promise<{ scheduled: CalendarEvent[];
         address: montages.address,
         status: montages.status,
       })
-      .from(montages),
-  ]);
+      .from(montages)
+      .where(eq(montages.installerId, user.id));
+  } else if (user.role === 'measurer') {
+    montagesData = await db
+      .select({
+        id: montages.id,
+        scheduledInstallationAt: montages.scheduledInstallationAt,
+        scheduledInstallationEndAt: montages.scheduledInstallationEndAt,
+        clientName: montages.clientName,
+        address: montages.address,
+        status: montages.status,
+      })
+      .from(montages)
+      .where(eq(montages.measurerId, user.id));
+  }
 
   const allOrders: CalendarEvent[] = ordersData.map((order) => ({
     id: order.id,
