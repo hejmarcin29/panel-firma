@@ -54,8 +54,6 @@
     "drizzle-orm": "^0.44.7",
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.23.25",
-    "google-auth-library": "^10.5.0",
-    "googleapis": "^166.0.0",
     "imapflow": "^1.1.1",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.553.0",
