@@ -147,7 +147,7 @@ billingAddress: montage.billingAddress ?? '',
 billingCity: montage.billingCity ?? '',
 installationAddress: montage.installationAddress ?? '',
 installationCity: montage.installationCity ?? '',
-scheduledInstallationDate: formatDateInputValue(montage.scheduledInstallationDate),
+scheduledInstallationDate: formatDateInputValue(montage.scheduledInstallationAt),
 });
   const [contactPending, startContactTransition] = useTransition();
   const [contactError, setContactError] = useState<string | null>(null);
@@ -362,7 +362,7 @@ Lista kontrolna
 </div>
 <div>
 <p className='text-xs font-medium text-muted-foreground'>Planowany montaż</p>
-<p className='text-sm font-semibold text-foreground'>{formatTimestamp(montage.scheduledInstallationDate)}</p>
+<p className='text-sm font-semibold text-foreground'>{formatTimestamp(montage.scheduledInstallationAt)}</p>
 </div>
 </div>
 </div>
