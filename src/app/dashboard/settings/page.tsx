@@ -30,6 +30,8 @@ import { ThemeSelector } from './_components/theme-selector';
 import { MobileMenuItem } from './actions';
 import { WooSettingsForm } from './integrations/_components/woo-settings-form';
 import { IntegrationLogs } from './integrations/_components/integration-logs';
+import { GoogleCalendarSettings } from './_components/google-calendar-settings';
+import { getGoogleIntegrationStatus } from './integrations/google-actions';
 import { WpChangesSettings } from './_components/wp-changes-settings';
 import TeamPage from './team/page';
 import { DocumentationView } from './_components/documentation-view';
@@ -83,6 +85,8 @@ export default async function SettingsPage() {
       // Should not happen if session is valid
       return null;
   }
+
+  const googleStatus = await getGoogleIntegrationStatus();
   
   // Parsowanie konfiguracji menu mobilnego
   let mobileMenuConfig: MobileMenuItem[] = [];
@@ -379,8 +383,9 @@ export default async function SettingsPage() {
 			}
 			integrations={
 				<Tabs defaultValue="woocommerce" className="w-full">
-					<TabsList className="grid w-full grid-cols-3 mb-4">
+					<TabsList className="grid w-full grid-cols-4 mb-4">
 						<TabsTrigger value="woocommerce">WooCommerce</TabsTrigger>
+						<TabsTrigger value="google">Google</TabsTrigger>
 						<TabsTrigger value="mail">Poczta</TabsTrigger>
 						<TabsTrigger value="storage">Magazyn plików</TabsTrigger>
 					</TabsList>
@@ -406,6 +411,9 @@ export default async function SettingsPage() {
 								}))} />
 							</div>
 						</div>
+					</TabsContent>
+					<TabsContent value="google">
+						<GoogleCalendarSettings isConnected={googleStatus.isConnected} />
 					</TabsContent>
 					<TabsContent value="mail">
 						<MailSettingsForm accounts={formattedMailAccounts} />
