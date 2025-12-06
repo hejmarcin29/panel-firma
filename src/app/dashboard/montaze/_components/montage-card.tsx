@@ -285,7 +285,7 @@ return (
 <div className='space-y-1.5'>
 <div className='flex items-center gap-2'>
 <Badge variant='outline' className='rounded-md border-primary/20 bg-primary/5 px-2 py-0.5 text-xs font-medium text-primary'>
-#{montage.orderNumber}
+#{montage.displayId}
 </Badge>
 <span className='text-xs text-muted-foreground'>Utworzono: {formatTimestamp(montage.createdAt)}</span>
 </div>
