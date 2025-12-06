@@ -3,15 +3,17 @@
 import { motion, useMotionValue, PanInfo } from "framer-motion";
 import { Check, Edit } from "lucide-react";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface SwipeableTaskItemProps {
   children: React.ReactNode;
   onComplete?: () => void;
   onEdit?: () => void;
   isCompleted?: boolean;
+  className?: string;
 }
 
-export function SwipeableTaskItem({ children, onComplete, onEdit }: SwipeableTaskItemProps) {
+export function SwipeableTaskItem({ children, onComplete, onEdit, className }: SwipeableTaskItemProps) {
   const x = useMotionValue(0);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isDragging, setIsDragging] = useState(false);
@@ -47,7 +49,7 @@ export function SwipeableTaskItem({ children, onComplete, onEdit }: SwipeableTas
         dragElastic={0.1} // Less elastic to feel more "solid" until threshold
         onDragStart={() => setIsDragging(true)}
         onDragEnd={handleDragEnd}
-        className="relative bg-card border rounded-xl shadow-sm z-10"
+        className={cn("relative bg-card border rounded-xl shadow-sm z-10", className)}
         whileTap={{ scale: 0.98 }}
         transition={{ type: "spring", stiffness: 400, damping: 30 }}
       >

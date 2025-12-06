@@ -1,8 +1,10 @@
 "use client";
 
-import { MapPin, Phone, Mail, Calendar, Edit2, Ruler } from "lucide-react";
-import { useState, useTransition } from "react";
+import { MapPin, Phone, Mail, Calendar, Edit2, Ruler, Loader2, Check } from "lucide-react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useDebouncedCallback } from "use-debounce";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { updateMontageContactDetails } from "../../actions";
 import type { Montage } from "../../types";
@@ -24,41 +27,71 @@ import { formatScheduleRange } from "../../utils";
 
 export function MontageClientCard({ montage, userRole = 'admin' }: { montage: Montage; userRole?: UserRole }) {
   const [isEditing, setIsEditing] = useState(false);
-  const [pending, startTransition] = useTransition();
+  const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    
-    startTransition(async () => {
+  // Local state for form fields
+  const [formData, setFormData] = useState({
+    contactPhone: montage.contactPhone || "",
+    contactEmail: montage.contactEmail || "",
+    installationAddress: montage.installationAddress || "",
+    installationCity: montage.installationCity || "",
+    scheduledInstallationAt: montage.scheduledInstallationAt 
+      ? new Date(montage.scheduledInstallationAt as string | number | Date).toISOString().split("T")[0] 
+      : "",
+    scheduledInstallationEndAt: montage.scheduledInstallationEndAt 
+      ? new Date(montage.scheduledInstallationEndAt as string | number | Date).toISOString().split("T")[0] 
+      : "",
+  });
+
+  // Update local state when prop changes (e.g. after refresh)
+  useEffect(() => {
+    setFormData({
+        contactPhone: montage.contactPhone || "",
+        contactEmail: montage.contactEmail || "",
+        installationAddress: montage.installationAddress || "",
+        installationCity: montage.installationCity || "",
+        scheduledInstallationAt: montage.scheduledInstallationAt 
+          ? new Date(montage.scheduledInstallationAt as string | number | Date).toISOString().split("T")[0] 
+          : "",
+        scheduledInstallationEndAt: montage.scheduledInstallationEndAt 
+          ? new Date(montage.scheduledInstallationEndAt as string | number | Date).toISOString().split("T")[0] 
+          : "",
+    });
+  }, [montage]);
+
+  const debouncedSave = useDebouncedCallback(async (data: typeof formData) => {
+    setIsSaving(true);
+    try {
       await updateMontageContactDetails({
         montageId: montage.id,
-        clientName: montage.clientName, // Required by type but not editable here for now
-        contactEmail: formData.get("contactEmail") as string,
-        contactPhone: formData.get("contactPhone") as string,
-        billingAddress: formData.get("billingAddress") as string,
-        installationAddress: formData.get("installationAddress") as string,
-        billingCity: formData.get("billingCity") as string,
-        installationCity: formData.get("installationCity") as string,
-        scheduledInstallationDate: formData.get("scheduledInstallationAt") as string,
-        scheduledInstallationEndDate: formData.get("scheduledInstallationEndAt") as string,
+        clientName: montage.clientName,
+        contactEmail: data.contactEmail,
+        contactPhone: data.contactPhone,
+        billingAddress: montage.billingAddress || "", // Preserve existing if not edited here
+        installationAddress: data.installationAddress,
+        billingCity: montage.billingCity || "", // Preserve existing
+        installationCity: data.installationCity,
+        scheduledInstallationDate: data.scheduledInstallationAt,
+        scheduledInstallationEndDate: data.scheduledInstallationEndAt,
       });
-      setIsEditing(false);
       router.refresh();
-    });
+    } catch (error) {
+      toast.error("Błąd zapisu danych");
+    } finally {
+      setIsSaving(false);
+    }
+  }, 1000);
+
+  const handleChange = (field: keyof typeof formData, value: string) => {
+    const newData = { ...formData, [field]: value };
+    setFormData(newData);
+    debouncedSave(newData);
   };
 
   const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
     (montage.installationAddress || "") + " " + (montage.installationCity || "")
   )}`;
-
-  const scheduledDate = montage.scheduledInstallationAt
-    ? new Date(montage.scheduledInstallationAt as string | number | Date).toISOString().split("T")[0]
-    : "";
-  const scheduledEndDate = montage.scheduledInstallationEndAt
-    ? new Date(montage.scheduledInstallationEndAt as string | number | Date).toISOString().split("T")[0]
-    : "";
 
   const formattedDate = formatScheduleRange(montage.scheduledInstallationAt, montage.scheduledInstallationEndAt);
   const forecastedDate = montage.forecastedInstallationDate 
@@ -79,22 +112,25 @@ export function MontageClientCard({ montage, userRole = 'admin' }: { montage: Mo
           <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>Edytuj dane klienta</DialogTitle>
+              <DialogDescription>
+                Zmiany są zapisywane automatycznie.
+              </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4 py-4">
+            <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="contactPhone">Telefon</Label>
                 <Input
                   id="contactPhone"
-                  name="contactPhone"
-                  defaultValue={montage.contactPhone || ""}
+                  value={formData.contactPhone}
+                  onChange={(e) => handleChange("contactPhone", e.target.value)}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="contactEmail">Email</Label>
                 <Input
                   id="contactEmail"
-                  name="contactEmail"
-                  defaultValue={montage.contactEmail || ""}
+                  value={formData.contactEmail}
+                  onChange={(e) => handleChange("contactEmail", e.target.value)}
                 />
               </div>
               <Separator />
@@ -102,16 +138,16 @@ export function MontageClientCard({ montage, userRole = 'admin' }: { montage: Mo
                 <Label htmlFor="installationAddress">Adres montażu</Label>
                 <Input
                   id="installationAddress"
-                  name="installationAddress"
-                  defaultValue={montage.installationAddress || ""}
+                  value={formData.installationAddress}
+                  onChange={(e) => handleChange("installationAddress", e.target.value)}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="installationCity">Miasto montażu</Label>
                 <Input
                   id="installationCity"
-                  name="installationCity"
-                  defaultValue={montage.installationCity || ""}
+                  value={formData.installationCity}
+                  onChange={(e) => handleChange("installationCity", e.target.value)}
                 />
               </div>
                <div className="grid grid-cols-2 gap-4">
@@ -119,25 +155,36 @@ export function MontageClientCard({ montage, userRole = 'admin' }: { montage: Mo
                     <Label htmlFor="scheduledInstallationAt">Data montażu (od)</Label>
                     <Input
                     id="scheduledInstallationAt"
-                    name="scheduledInstallationAt"
                     type="date"
-                    defaultValue={scheduledDate}
+                    value={formData.scheduledInstallationAt}
+                    onChange={(e) => handleChange("scheduledInstallationAt", e.target.value)}
                     />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="scheduledInstallationEndAt">Data montażu (do)</Label>
                     <Input
                     id="scheduledInstallationEndAt"
-                    name="scheduledInstallationEndAt"
                     type="date"
-                    defaultValue={scheduledEndDate}
+                    value={formData.scheduledInstallationEndAt}
+                    onChange={(e) => handleChange("scheduledInstallationEndAt", e.target.value)}
                     />
                 </div>
                </div>
-              <Button type="submit" disabled={pending} className="w-full">
-                {pending ? "Zapisywanie..." : "Zapisz zmiany"}
-              </Button>
-            </form>
+               
+               <div className="flex items-center justify-end gap-2 pt-2">
+                  {isSaving ? (
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        Zapisywanie...
+                    </span>
+                  ) : (
+                    <span className="text-xs text-emerald-600 flex items-center gap-1">
+                        <Check className="w-3 h-3" />
+                        Zapisano
+                    </span>
+                  )}
+               </div>
+            </div>
           </DialogContent>
         </Dialog>
         )}

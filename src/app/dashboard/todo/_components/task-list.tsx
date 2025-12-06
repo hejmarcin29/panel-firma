@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useDebouncedCallback } from "use-debounce";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { 
@@ -12,7 +13,10 @@ import {
   Paperclip, 
   Star,
   X,
-  ArrowLeft
+  ArrowLeft,
+  ArrowUp,
+  Loader2,
+  Check
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -125,7 +129,20 @@ export function TaskList({ column: initialColumn }: TaskListProps) {
         setIsSheetOpen(true);
     };
 
-    const handleSaveTaskDetails = async (taskId: string, content: string, description: string) => {
+    const [isSaving, setIsSaving] = useState(false);
+
+    const debouncedSaveTask = useDebouncedCallback(async (taskId: string, content: string, description: string) => {
+        setIsSaving(true);
+        try {
+            await updateTaskContent(taskId, content, description);
+        } catch {
+            toast.error("Błąd zapisu");
+        } finally {
+            setIsSaving(false);
+        }
+    }, 1000);
+
+    const handleTaskChange = (taskId: string, content: string, description: string) => {
         // Optimistic update
         setColumn(prev => ({
             ...prev,
@@ -137,12 +154,7 @@ export function TaskList({ column: initialColumn }: TaskListProps) {
             setSelectedTask({ ...selectedTask, content, description });
         }
 
-        try {
-            await updateTaskContent(taskId, content, description);
-            toast.success("Zapisano zmiany");
-        } catch {
-            toast.error("Błąd zapisu");
-        }
+        debouncedSaveTask(taskId, content, description);
     };
 
     const handleDeleteTask = async (taskId: string) => {
@@ -238,12 +250,12 @@ export function TaskList({ column: initialColumn }: TaskListProps) {
                             <Input 
                                 value={editingColumnTitle}
                                 onChange={(e) => setEditingColumnTitle(e.target.value)}
+                                onBlur={handleRenameColumn}
                                 onKeyDown={(e) => {
                                     if (e.key === "Enter") handleRenameColumn();
                                 }}
                                 autoFocus
                             />
-                            <Button size="sm" onClick={handleRenameColumn}>Zapisz</Button>
                         </div>
                     ) : (
                         <div className="flex flex-col">
@@ -279,9 +291,9 @@ export function TaskList({ column: initialColumn }: TaskListProps) {
 
             {/* Tasks List */}
             <div className="flex-1 overflow-y-auto">
-                <div className="p-4 pb-24 max-w-3xl mx-auto">
+                <div className="p-4 max-w-4xl mx-auto">
                     <motion.div 
-                        className="flex flex-col gap-1"
+                        className="flex flex-col gap-3"
                         variants={container}
                         initial="hidden"
                         animate="show"
@@ -291,39 +303,42 @@ export function TaskList({ column: initialColumn }: TaskListProps) {
                                 <SwipeableTaskItem
                                     onComplete={() => handleToggleTask(task.id, !task.completed)}
                                     onEdit={() => handleOpenTask(task)}
+                                    className={cn(
+                                        "group transition-all duration-300 bg-white/50 dark:bg-zinc-900/50 shadow-sm hover:shadow-md border border-transparent hover:border-border/50",
+                                        task.completed && "opacity-60"
+                                    )}
                                 >
-                                    <div 
-                                        className={cn(
-                                            "group flex items-start gap-3 p-3 rounded-md hover:bg-muted/50 transition-colors bg-card border mb-2",
-                                            task.completed && "opacity-60"
-                                        )}
-                                    >
+                                    <div className="flex items-center gap-4 p-4">
                                         <Checkbox 
                                             checked={task.completed} 
                                             onCheckedChange={(checked) => handleToggleTask(task.id, checked as boolean)}
-                                            className="mt-1 rounded-full w-5 h-5 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                                            className="h-6 w-6 rounded-full border-2 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground transition-all duration-300"
                                         />
                                         <div 
                                             className="flex-1 cursor-pointer" 
                                             onClick={() => handleOpenTask(task)}
                                         >
                                             <p className={cn(
-                                                "text-base leading-tight font-medium transition-all",
+                                                "text-base font-medium transition-all text-zinc-700 dark:text-zinc-200",
                                                 task.completed && "line-through text-muted-foreground"
                                             )}>
                                                 {task.content}
                                             </p>
-                                            <div className="flex flex-wrap gap-2 mt-1 items-center">
+                                            <div className="flex flex-wrap gap-2 mt-1.5 items-center">
                                                 {task.priority === 'urgent' && (
-                                                    <Badge variant="destructive" className="h-5 px-1.5 text-[10px]">Pilne</Badge>
+                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                                                        Pilne
+                                                    </span>
                                                 )}
                                                 {task.priority === 'important' && (
-                                                    <Badge variant="secondary" className="h-5 px-1.5 text-[10px] bg-amber-100 text-amber-800 hover:bg-amber-200">Ważne</Badge>
+                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                                                        Ważne
+                                                    </span>
                                                 )}
                                                 {task.description && (
-                                                    <p className="text-sm text-muted-foreground line-clamp-1 flex items-center gap-1">
+                                                    <p className="text-xs text-muted-foreground line-clamp-1 flex items-center gap-1">
                                                         <FileText className="w-3 h-3" />
-                                                        {task.description}
+                                                        Notatka
                                                     </p>
                                                 )}
                                             </div>
@@ -334,53 +349,38 @@ export function TaskList({ column: initialColumn }: TaskListProps) {
                         ))}
 
                         {completedTasks.length > 0 && (
-                            <div className="mt-6">
+                            <div className="mt-8">
                                 <Button 
                                     variant="ghost" 
                                     size="sm" 
-                                    className="text-muted-foreground text-xs mb-2"
+                                    className="text-muted-foreground text-xs mb-4 hover:bg-transparent hover:text-foreground p-0 h-auto font-medium"
                                     onClick={() => setShowCompleted(!showCompleted)}
                                 >
                                     {showCompleted ? "Ukryj" : "Pokaż"} zakończone ({completedTasks.length})
                                 </Button>
                                 
                                 {showCompleted && completedTasks.map((task) => (
-                                    <motion.div key={task.id} variants={itemVariant}>
+                                    <motion.div key={task.id} variants={itemVariant} className="mb-3">
                                         <SwipeableTaskItem
                                             onComplete={() => handleToggleTask(task.id, !task.completed)}
                                             onEdit={() => handleOpenTask(task)}
+                                            className={cn(
+                                                "group transition-all duration-300 bg-muted/30 opacity-60 hover:opacity-100 border-transparent shadow-none"
+                                            )}
                                         >
-                                            <div 
-                                                className={cn(
-                                                    "group flex items-start gap-3 p-3 rounded-md hover:bg-muted/50 transition-colors opacity-60 bg-muted/20 border mb-2"
-                                                )}
-                                            >
+                                            <div className="flex items-center gap-4 p-4">
                                                 <Checkbox 
                                                     checked={task.completed} 
                                                     onCheckedChange={(checked) => handleToggleTask(task.id, checked as boolean)}
-                                                    className="mt-1 rounded-full w-5 h-5 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                                                    className="h-6 w-6 rounded-full border-2 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
                                                 />
                                                 <div 
                                                     className="flex-1 cursor-pointer" 
                                                     onClick={() => handleOpenTask(task)}
                                                 >
-                                                    <p className="text-base leading-tight font-medium transition-all line-through text-muted-foreground">
+                                                    <p className="text-base font-medium transition-all line-through text-muted-foreground">
                                                         {task.content}
                                                     </p>
-                                                    <div className="flex flex-wrap gap-2 mt-1 items-center">
-                                                        {task.priority === 'urgent' && (
-                                                            <Badge variant="destructive" className="h-5 px-1.5 text-[10px]">Pilne</Badge>
-                                                        )}
-                                                        {task.priority === 'important' && (
-                                                            <Badge variant="secondary" className="h-5 px-1.5 text-[10px] bg-amber-100 text-amber-800 hover:bg-amber-200">Ważne</Badge>
-                                                        )}
-                                                        {task.description && (
-                                                            <p className="text-sm text-muted-foreground line-clamp-1 flex items-center gap-1">
-                                                                <FileText className="w-3 h-3" />
-                                                                {task.description}
-                                                            </p>
-                                                        )}
-                                                    </div>
                                                 </div>
                                             </div>
                                         </SwipeableTaskItem>
@@ -392,24 +392,33 @@ export function TaskList({ column: initialColumn }: TaskListProps) {
                 </div>
             </div>
 
-            {/* Quick Add Input - Fixed at bottom */}
-            <div className="p-4 border-t bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 pb-24 md:pb-4">
-                <div className="max-w-3xl mx-auto flex items-center gap-2 bg-muted/50 p-2 rounded-lg border focus-within:ring-1 focus-within:ring-ring focus-within:border-primary transition-all">
-                    <Plus className="w-5 h-5 text-muted-foreground ml-2" />
-                    <Input 
-                        placeholder="Dodaj zadanie..." 
-                        className="border-0 shadow-none focus-visible:ring-0 px-2 h-auto py-2 bg-transparent placeholder:text-muted-foreground text-base"
-                        value={newTaskInput}
-                        onChange={(e) => setNewTaskInput(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                                handleAddTask();
-                            }
-                        }}
-                    />
-                    <Button size="sm" onClick={handleAddTask} disabled={!newTaskInput.trim()}>
-                        Dodaj
-                    </Button>
+            {/* Quick Add Input - Floating at bottom */}
+            <div className="p-4 md:p-6 bg-linear-to-t from-background via-background to-transparent pb-4 md:pb-6">
+                <div className="max-w-4xl mx-auto">
+                    <div className="flex items-center gap-2 bg-background/80 backdrop-blur-xl p-2 rounded-2xl border shadow-lg hover:shadow-xl transition-all duration-300 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50">
+                        <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                            <Plus className="w-5 h-5 text-primary" />
+                        </div>
+                        <Input 
+                            placeholder="Dodaj nowe zadanie..." 
+                            className="border-0 shadow-none focus-visible:ring-0 px-2 h-12 bg-transparent placeholder:text-muted-foreground/70 text-lg"
+                            value={newTaskInput}
+                            onChange={(e) => setNewTaskInput(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    handleAddTask();
+                                }
+                            }}
+                        />
+                        <Button 
+                            size="icon" 
+                            onClick={handleAddTask} 
+                            disabled={!newTaskInput.trim()}
+                            className="h-10 w-10 rounded-xl shrink-0 transition-all duration-300"
+                        >
+                            <ArrowUp className="w-5 h-5" />
+                        </Button>
+                    </div>
                 </div>
             </div>
 
@@ -473,7 +482,7 @@ export function TaskList({ column: initialColumn }: TaskListProps) {
                                             }}
                                             value={selectedTask.content} 
                                             onChange={(e) => {
-                                                setSelectedTask({ ...selectedTask, content: e.target.value });
+                                                handleTaskChange(selectedTask.id, e.target.value, selectedTask.description || "");
                                                 e.target.style.height = 'auto';
                                                 e.target.style.height = e.target.scrollHeight + 'px';
                                             }}
@@ -595,7 +604,7 @@ export function TaskList({ column: initialColumn }: TaskListProps) {
                                         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Notatki</span>
                                         <Textarea 
                                             value={selectedTask.description || ""} 
-                                            onChange={(e) => setSelectedTask({ ...selectedTask, description: e.target.value })}
+                                            onChange={(e) => handleTaskChange(selectedTask.id, selectedTask.content, e.target.value)}
                                             className="min-h-[150px] resize-none border p-3 text-base leading-relaxed focus-visible:ring-1 bg-transparent shadow-sm placeholder:text-muted-foreground/70"
                                             placeholder="Dodaj szczegóły zadania..."
                                         />
@@ -617,13 +626,19 @@ export function TaskList({ column: initialColumn }: TaskListProps) {
                                         >
                                             <Trash2 className="h-5 w-5" />
                                         </Button>
-                                        <Button 
-                                            size="sm"
-                                            className="h-10 px-6"
-                                            onClick={() => handleSaveTaskDetails(selectedTask.id, selectedTask.content, selectedTask.description || "")}
-                                        >
-                                            Zapisz
-                                        </Button>
+                                        <div className="flex items-center gap-2 px-4">
+                                            {isSaving ? (
+                                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                                    Zapisywanie...
+                                                </span>
+                                            ) : (
+                                                <span className="text-xs text-emerald-600 flex items-center gap-1 opacity-0 transition-opacity duration-500 data-[visible=true]:opacity-100" data-visible={!isSaving}>
+                                                    <Check className="w-3 h-3" />
+                                                    Zapisano
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>

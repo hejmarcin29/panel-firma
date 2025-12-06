@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -12,17 +12,17 @@ import {
   DragStartEvent,
   DragOverEvent,
   DragEndEvent,
-} from "@dnd-kit/core";
+} from '@dnd-kit/core';
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
   useSortable,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { Button } from "@/components/ui/button";
-import { Pencil, Save, X, Settings } from "lucide-react";
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { Button } from '@/components/ui/button';
+import { Pencil, Settings, Check, Loader2, X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -30,38 +30,39 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useDebouncedCallback } from 'use-debounce';
 
-import { AgendaWidget, type AgendaItem } from "./agenda-widget";
-import { RecentActivity } from "./recent-activity";
-import { QuickActions } from "./quick-actions";
-import { TasksWidget } from "./tasks-widget";
-import { KPICards } from "./kpi-cards";
-import { MontageAlertsKPI, type MontageAlert } from "./montage-alerts-kpi";
-import { updateDashboardLayout, type DashboardLayoutConfig, type DashboardWidgetConfig } from "../actions";
-import { toast } from "sonner";
-import type { Montage } from "../montaze/types";
+import { AgendaWidget, type AgendaItem } from './agenda-widget';
+import { RecentActivity } from './recent-activity';
+import { QuickActions } from './quick-actions';
+import { TasksWidget } from './tasks-widget';
+import { KPICards } from './kpi-cards';
+import { MontageAlertsKPI, type MontageAlert } from './montage-alerts-kpi';
+import { updateDashboardLayout, type DashboardLayoutConfig, type DashboardWidgetConfig } from '../actions';
+import { toast } from 'sonner';
+import type { Montage } from '../montaze/types';
 
 // Widget Registry
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const WIDGET_COMPONENTS: Record<string, React.ComponentType<any>> = {
-  "kpi": KPICards,
-  "montage-alerts": MontageAlertsKPI,
-  "agenda": AgendaWidget,
-  "recent-activity": RecentActivity,
-  "quick-actions": QuickActions,
-  "tasks": TasksWidget,
+  'kpi': KPICards,
+  'montage-alerts': MontageAlertsKPI,
+  'agenda': AgendaWidget,
+  'recent-activity': RecentActivity,
+  'quick-actions': QuickActions,
+  'tasks': TasksWidget,
 };
 
 const WIDGET_LABELS: Record<string, string> = {
-    "kpi": "Statystyki (KPI)",
-    "montage-alerts": "Zagrożone Montaże",
-    "agenda": "Najbliższe montaże",
-    "recent-activity": "Ostatnia Aktywność",
-    "quick-actions": "Szybkie Akcje",
-    "tasks": "Zadania do wykonania",
+    'kpi': 'Statystyki (KPI)',
+    'montage-alerts': 'Zagrożone Montaże',
+    'agenda': 'Najbliższe montaże',
+    'recent-activity': 'Ostatnia Aktywność',
+    'quick-actions': 'Szybkie Akcje',
+    'tasks': 'Zadania do wykonania',
 };
 
 function WidgetSettingsDialog({ 
@@ -103,74 +104,74 @@ function WidgetSettingsDialog({
                         <DialogTitle>Konfiguracja: {WIDGET_LABELS[widget.type]}</DialogTitle>
                         <DialogDescription>Wybierz które karty mają być widoczne.</DialogDescription>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="flex items-center space-x-2">
+                    <div className='grid gap-4 py-4'>
+                        <div className='flex items-center space-x-2'>
                             <Checkbox 
-                                id="card-today" 
+                                id='card-today' 
                                 checked={visibleCards.includes('today')}
                                 onCheckedChange={() => toggleCard('today')}
                             />
-                            <Label htmlFor="card-today">Dzisiejsze montaże</Label>
+                            <Label htmlFor='card-today'>Dzisiejsze montaże</Label>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className='flex items-center space-x-2'>
                             <Checkbox 
-                                id="card-todo" 
+                                id='card-todo' 
                                 checked={visibleCards.includes('todo')}
                                 onCheckedChange={() => toggleCard('todo')}
                             />
-                            <Label htmlFor="card-todo">To Do (Osobiste)</Label>
+                            <Label htmlFor='card-todo'>To Do (Osobiste)</Label>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className='flex items-center space-x-2'>
                             <Checkbox 
-                                id="card-leads" 
+                                id='card-leads' 
                                 checked={visibleCards.includes('leads')}
                                 onCheckedChange={() => toggleCard('leads')}
                             />
-                            <Label htmlFor="card-leads">Nowe Leady</Label>
+                            <Label htmlFor='card-leads'>Nowe Leady</Label>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className='flex items-center space-x-2'>
                             <Checkbox 
-                                id="card-orders" 
+                                id='card-orders' 
                                 checked={visibleCards.includes('orders')}
                                 onCheckedChange={() => toggleCard('orders')}
                             />
-                            <Label htmlFor="card-orders">Nowe Zamówienia</Label>
+                            <Label htmlFor='card-orders'>Nowe Zamówienia</Label>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className='flex items-center space-x-2'>
                             <Checkbox 
-                                id="card-payments" 
+                                id='card-payments' 
                                 checked={visibleCards.includes('payments')}
                                 onCheckedChange={() => toggleCard('payments')}
                             />
-                            <Label htmlFor="card-payments">Oczekujące płatności</Label>
+                            <Label htmlFor='card-payments'>Oczekujące płatności</Label>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className='flex items-center space-x-2'>
                             <Checkbox 
-                                id="card-urgent" 
+                                id='card-urgent' 
                                 checked={visibleCards.includes('urgent')}
                                 onCheckedChange={() => toggleCard('urgent')}
                             />
-                            <Label htmlFor="card-urgent">Pilne Montaże</Label>
+                            <Label htmlFor='card-urgent'>Pilne Montaże</Label>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className='flex items-center space-x-2'>
                             <Checkbox 
-                                id="card-urgentOrders" 
+                                id='card-urgentOrders' 
                                 checked={visibleCards.includes('urgentOrders')}
                                 onCheckedChange={() => toggleCard('urgentOrders')}
                             />
-                            <Label htmlFor="card-urgentOrders">Pilne Zamówienia</Label>
+                            <Label htmlFor='card-urgentOrders'>Pilne Zamówienia</Label>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className='flex items-center space-x-2'>
                             <Checkbox 
-                                id="card-stalledOrders" 
+                                id='card-stalledOrders' 
                                 checked={visibleCards.includes('stalledOrders')}
                                 onCheckedChange={() => toggleCard('stalledOrders')}
                             />
-                            <Label htmlFor="card-stalledOrders">Brak Faktury</Label>
+                            <Label htmlFor='card-stalledOrders'>Brak Faktury</Label>
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button onClick={handleSave}>Zapisz</Button>
+                        <Button onClick={handleSave}>Zatwierdź</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -228,37 +229,37 @@ function SortableWidget({ widget, data, isEditing, onConfigure }: { id: string; 
   if (!Component) return null;
 
   // Map data to widget props
-  const props = widget.type === "agenda" ? { upcomingMontages: data.upcomingMontages } :
-                widget.type === "recent-activity" ? { recentMontages: data.recentMontages } :
-                widget.type === "tasks" ? { ...data.tasksStats, todoCount: data.kpiData.todoCount } :
-                widget.type === "kpi" ? { ...data.kpiData, settings: widget.settings } :
-                widget.type === "montage-alerts" ? { alerts: data.montageAlerts, threatDays: data.threatDays } :
+  const props = widget.type === 'agenda' ? { upcomingMontages: data.upcomingMontages } :
+                widget.type === 'recent-activity' ? { recentMontages: data.recentMontages } :
+                widget.type === 'tasks' ? { ...data.tasksStats, todoCount: data.kpiData.todoCount } :
+                widget.type === 'kpi' ? { ...data.kpiData, settings: widget.settings } :
+                widget.type === 'montage-alerts' ? { alerts: data.montageAlerts, threatDays: data.threatDays } :
                 {};
 
   return (
-    <div ref={setNodeRef} style={style} className="relative h-full">
+    <div ref={setNodeRef} style={style} className='relative h-full'>
         {isEditing && (
             <div 
                 {...attributes} 
                 {...listeners} 
-                className="absolute inset-0 z-50 bg-background/50 flex items-center justify-center border-2 border-dashed border-primary/50 rounded-lg cursor-grab active:cursor-grabbing hover:bg-background/70 transition-colors"
+                className='absolute inset-0 z-50 bg-background/50 flex items-center justify-center border-2 border-dashed border-primary/50 rounded-lg cursor-grab active:cursor-grabbing hover:bg-background/70 transition-colors'
             >
-                <div className="flex items-center gap-2">
-                    <span className="font-medium text-sm bg-background px-3 py-1 rounded-full shadow-sm border">
+                <div className='flex items-center gap-2'>
+                    <span className='font-medium text-sm bg-background px-3 py-1 rounded-full shadow-sm border'>
                         {WIDGET_LABELS[widget.type] || widget.type}
                     </span>
                     {widget.type === 'kpi' && (
                         <Button 
-                            variant="secondary" 
-                            size="icon" 
-                            className="h-7 w-7 rounded-full shadow-sm border"
+                            variant='secondary' 
+                            size='icon' 
+                            className='h-7 w-7 rounded-full shadow-sm border'
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onConfigure(widget);
                             }}
                             onPointerDown={(e) => e.stopPropagation()}
                         >
-                            <Settings className="h-3 w-3" />
+                            <Settings className='h-3 w-3' />
                         </Button>
                     )}
                 </div>
@@ -275,6 +276,9 @@ export function DashboardBuilder({ initialLayout, data }: DashboardBuilderProps)
   const [activeId, setActiveId] = useState<string | null>(null);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [selectedWidget, setSelectedWidget] = useState<DashboardWidgetConfig | null>(null);
+  
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -283,20 +287,21 @@ export function DashboardBuilder({ initialLayout, data }: DashboardBuilderProps)
     })
   );
 
-  const handleSave = async () => {
+  const debouncedSave = useDebouncedCallback(async (newLayout: DashboardLayoutConfig) => {
+      setIsSaving(true);
       try {
-          await updateDashboardLayout(layout);
-          setIsEditing(false);
-          toast.success("Układ zapisany");
-      } catch {
-          toast.error("Błąd zapisu układu");
+          await updateDashboardLayout(newLayout);
+          setLastSaved(new Date());
+      } catch (error) {
+          console.error('Failed to save layout:', error);
+          toast.error('Błąd zapisu układu');
+      } finally {
+          setIsSaving(false);
       }
-  };
+  }, 1000);
 
-  const handleCancel = () => {
-      setLayout(initialLayout);
-      setIsEditing(false);
-  };
+  // Trigger save whenever layout changes, but only if it's different from initial (to avoid initial save)
+  // Actually, we only want to trigger save on user interaction, so we'll call debouncedSave in handlers.
 
   function findContainer(id: string) {
     if (id in layout.columns) {
@@ -344,7 +349,7 @@ export function DashboardBuilder({ initialLayout, data }: DashboardBuilderProps)
         newIndex = overIndex >= 0 ? overIndex + modifier : overItems.length + 1;
       }
 
-      return {
+      const newLayout = {
         ...prev,
         columns: {
           ...prev.columns,
@@ -358,6 +363,9 @@ export function DashboardBuilder({ initialLayout, data }: DashboardBuilderProps)
           ],
         },
       };
+      
+      // We don't save on drag over, only on drag end
+      return newLayout;
     });
   };
 
@@ -380,41 +388,56 @@ export function DashboardBuilder({ initialLayout, data }: DashboardBuilderProps)
       );
 
       if (activeIndex !== overIndex) {
-        setLayout((prev) => ({
-          ...prev,
-          columns: {
-            ...prev.columns,
-            [activeContainer]: arrayMove(
-              prev.columns[activeContainer],
-              activeIndex,
-              overIndex
-            ),
-          },
-        }));
+        setLayout((prev) => {
+            const newLayout = {
+                ...prev,
+                columns: {
+                    ...prev.columns,
+                    [activeContainer]: arrayMove(
+                        prev.columns[activeContainer],
+                        activeIndex,
+                        overIndex
+                    ),
+                },
+            };
+            debouncedSave(newLayout);
+            return newLayout;
+        });
       }
+    } else {
+        // If we moved between containers (handled in DragOver), we still need to save the final state
+        debouncedSave(layout);
     }
 
     setActiveId(null);
   };
 
   return (
-    <div className="space-y-4">
-        <div className="flex justify-end">
+    <div className='space-y-4'>
+        <div className='flex justify-end items-center gap-4'>
+            <div className='flex items-center gap-2'>
+                {isSaving ? (
+                    <span className='text-xs text-muted-foreground flex items-center gap-1'>
+                        <Loader2 className='w-3 h-3 animate-spin' />
+                        Zapisywanie...
+                    </span>
+                ) : (
+                    <span className='text-xs text-emerald-600 flex items-center gap-1 opacity-0 transition-opacity duration-500 data-[visible=true]:opacity-100' data-visible={!!lastSaved}>
+                        <Check className='w-3 h-3' />
+                        Zapisano
+                    </span>
+                )}
+            </div>
+            
             {isEditing ? (
-                <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={handleCancel}>
-                        <X className="mr-2 h-4 w-4" />
-                        Anuluj
-                    </Button>
-                    <Button size="sm" onClick={handleSave}>
-                        <Save className="mr-2 h-4 w-4" />
-                        Zapisz układ
-                    </Button>
-                </div>
+                <Button size='sm' onClick={() => setIsEditing(false)}>
+                    <Check className='mr-2 h-4 w-4' />
+                    Zakończ edycję
+                </Button>
             ) : (
-                <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)}>
-                    <Pencil className="mr-2 h-4 w-4" />
-                    Edytuj układ
+                <Button variant='ghost' size='sm' onClick={() => setIsEditing(true)}>
+                    <Pencil className='mr-2 h-4 w-4' />
+                    Dostosuj układ
                 </Button>
             )}
         </div>
@@ -426,15 +449,15 @@ export function DashboardBuilder({ initialLayout, data }: DashboardBuilderProps)
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
         >
-            <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-3">
+            <div className='grid gap-6 md:grid-cols-1 lg:grid-cols-3'>
                 {/* Left Column (Main) */}
-                <div className="lg:col-span-2 space-y-6">
+                <div className='lg:col-span-2 space-y-6'>
                     <SortableContext
-                        id="left"
+                        id='left'
                         items={layout.columns.left.map((w) => w.id)}
                         strategy={verticalListSortingStrategy}
                     >
-                        <div className="space-y-6 min-h-[100px]">
+                        <div className='space-y-6 min-h-[100px]'>
                             {layout.columns.left.map((widget) => (
                                 <SortableWidget 
                                     key={widget.id} 
@@ -453,13 +476,13 @@ export function DashboardBuilder({ initialLayout, data }: DashboardBuilderProps)
                 </div>
 
                 {/* Right Column (Sidebar) */}
-                <div className="space-y-6">
+                <div className='space-y-6'>
                     <SortableContext
-                        id="right"
+                        id='right'
                         items={layout.columns.right.map((w) => w.id)}
                         strategy={verticalListSortingStrategy}
                     >
-                        <div className="space-y-6 min-h-[100px]">
+                        <div className='space-y-6 min-h-[100px]'>
                             {layout.columns.right.map((widget) => (
                                 <SortableWidget 
                                     key={widget.id} 
@@ -480,9 +503,9 @@ export function DashboardBuilder({ initialLayout, data }: DashboardBuilderProps)
             
             <DragOverlay>
                 {activeId ? (
-                    <div className="opacity-80">
+                    <div className='opacity-80'>
                          {/* Placeholder for drag overlay - simplified */}
-                         <div className="bg-background border rounded-lg p-4 shadow-lg">
+                         <div className='bg-background border rounded-lg p-4 shadow-lg'>
                             Przenoszenie...
                          </div>
                     </div>
@@ -509,10 +532,12 @@ export function DashboardBuilder({ initialLayout, data }: DashboardBuilderProps)
                           );
                         }
 
-                        return {
+                        const newLayout = {
                           ...prev,
                           columns: updatedColumns,
                         };
+                        debouncedSave(newLayout);
+                        return newLayout;
                     });
                 }}
             />

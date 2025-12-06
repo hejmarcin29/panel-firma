@@ -561,7 +561,7 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
                   </Button>
                   <div className="flex gap-2">
                     <Button type="button" variant="outline" onClick={() => setIsSketchOpen(false)}>Anuluj</Button>
-                    <Button type="button" onClick={saveSketch}>Zapisz szkic</Button>
+                    <Button type="button" onClick={saveSketch}>Zatwierdź</Button>
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground text-center">

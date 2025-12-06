@@ -379,11 +379,32 @@ export default async function SettingsPage() {
 			}
 			integrations={
 				<Tabs defaultValue="woocommerce" className="w-full">
-					<TabsList className="grid w-full grid-cols-3 mb-4">
-						<TabsTrigger value="woocommerce">WooCommerce</TabsTrigger>
-						<TabsTrigger value="mail">Poczta</TabsTrigger>
-						<TabsTrigger value="storage">Magazyn plików</TabsTrigger>
-					</TabsList>
+					<div className="mb-4">
+						{/* Mobile: Select */}
+						<div className="md:hidden">
+							{/* We need a client component to handle Select value change if we want to control Tabs, 
+							    but Tabs component from shadcn/ui doesn't easily support external control via Select 
+							    unless we wrap it in a client component. 
+							    Alternatively, we can just stack the tabs on mobile or use a scrollable list.
+							    The user said "scroll on top is uncomfortable".
+							    Let's try stacking them or making them look like buttons.
+							*/}
+							<TabsList className="flex flex-col h-auto w-full gap-2 bg-transparent p-0">
+								<TabsTrigger value="woocommerce" className="w-full justify-start border bg-background data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">WooCommerce</TabsTrigger>
+								<TabsTrigger value="mail" className="w-full justify-start border bg-background data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Poczta</TabsTrigger>
+								<TabsTrigger value="storage" className="w-full justify-start border bg-background data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Magazyn plików</TabsTrigger>
+							</TabsList>
+						</div>
+
+						{/* Desktop: Grid */}
+						<div className="hidden md:block">
+							<TabsList className="grid w-full grid-cols-3">
+								<TabsTrigger value="woocommerce">WooCommerce</TabsTrigger>
+								<TabsTrigger value="mail">Poczta</TabsTrigger>
+								<TabsTrigger value="storage">Magazyn plików</TabsTrigger>
+							</TabsList>
+						</div>
+					</div>
 					<TabsContent value="woocommerce" className="space-y-6">
 						<div className="grid gap-6 md:grid-cols-2">
 							<div className="space-y-6">

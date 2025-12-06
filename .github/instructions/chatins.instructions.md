@@ -42,3 +42,12 @@ Przy tworzeniu lub modyfikowaniu ról użytkowników (np. Pomiarowiec, Montażys
 - Każda rola powinna mieć dedykowaną sekcję lub zakładkę "Pomoc" / "Instrukcja".
 - Instrukcja ta powinna wyjaśniać, jak korzystać z dostępnych dla nich funkcji.
 - Przy dodawaniu nowych funkcji dla danej roli, zaktualizuj również jej instrukcję.
+
+## Interakcje i Zapisywanie Danych (Auto-save)
+W panelu operacyjnym (Dashboard) stosujemy zasadę **Auto-save** zamiast ręcznych przycisków "Zapisz".
+- **Edycja:** Wszelkie zmiany na istniejących rekordach mają być zapisywane automatycznie.
+  - Pola tekstowe (`Input`, `Textarea`): Zapis po chwili bezczynności (debounce, np. 500-1000ms) lub przy `onBlur`.
+  - Przełączniki (`Switch`, `Checkbox`) i Listy (`Select`): Zapis natychmiastowy przy zmianie wartości.
+- **Tworzenie:** Dla nowych obiektów (np. "Nowy Klient") zachowujemy przycisk "Utwórz" / "Dodaj", aby uniknąć tworzenia pustych rekordów.
+- **Feedback:** Użytkownik musi widzieć status operacji (np. mały wskaźnik "Zapisywanie...", "Zapisano" lub toast).
+- **Usuwanie:** Operacje destrukcyjne nadal wymagają potwierdzenia.

@@ -1,7 +1,10 @@
 'use client';
 
-import { useEffect, useState, useTransition, type FormEvent } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useDebouncedCallback } from 'use-debounce';
+import { Loader2, Check } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,271 +13,177 @@ import { Label } from '@/components/ui/label';
 import { testR2Connection, updateR2Config } from '../actions';
 
 type Props = {
-	initialAccountId: string;
-	initialAccessKeyId: string;
-	initialSecretAccessKey: string;
-	initialBucketName: string;
-	initialEndpoint: string;
-	initialPublicBaseUrl: string;
-	initialApiToken: string;
+initialAccountId: string;
+initialAccessKeyId: string;
+initialSecretAccessKey: string;
+initialBucketName: string;
+initialEndpoint: string;
+initialPublicBaseUrl: string;
+initialApiToken: string;
 };
 
-type ResultState = {
-	type: 'success' | 'error';
-	message: string;
-} | null;
-
 export function R2ConfigForm({
-	initialAccountId,
-	initialAccessKeyId,
-	initialSecretAccessKey,
-	initialBucketName,
-	initialEndpoint,
-	initialPublicBaseUrl,
-	initialApiToken,
+initialAccountId,
+initialAccessKeyId,
+initialSecretAccessKey,
+initialBucketName,
+initialEndpoint,
+initialPublicBaseUrl,
+initialApiToken,
 }: Props) {
-	const router = useRouter();
-	const [accountId, setAccountId] = useState(initialAccountId);
-	const [accessKeyId, setAccessKeyId] = useState(initialAccessKeyId);
-	const [secretAccessKey, setSecretAccessKey] = useState(initialSecretAccessKey);
-	const [bucketName, setBucketName] = useState(initialBucketName);
-	const [endpoint, setEndpoint] = useState(initialEndpoint);
-	const [publicBaseUrl, setPublicBaseUrl] = useState(initialPublicBaseUrl);
-	const [apiToken, setApiToken] = useState(initialApiToken);
-	const [result, setResult] = useState<ResultState>(null);
-	const [isPending, startTransition] = useTransition();
-	const [isTesting, startTesting] = useTransition();
+const router = useRouter();
+const [formData, setFormData] = useState({
+accountId: initialAccountId,
+accessKeyId: initialAccessKeyId,
+secretAccessKey: initialSecretAccessKey,
+bucketName: initialBucketName,
+endpoint: initialEndpoint,
+publicBaseUrl: initialPublicBaseUrl,
+apiToken: initialApiToken,
+});
 
-	useEffect(() => {
-		setAccountId(initialAccountId);
-	}, [initialAccountId]);
+const [isSaving, setIsSaving] = useState(false);
+const [isTesting, setIsTesting] = useState(false);
 
-	useEffect(() => {
-		setAccessKeyId(initialAccessKeyId);
-	}, [initialAccessKeyId]);
+const debouncedSave = useDebouncedCallback(async (data: typeof formData) => {
+setIsSaving(true);
+try {
+await updateR2Config(data);
+router.refresh();
+} catch (error) {
+toast.error('Błąd zapisu konfiguracji R2');
+} finally {
+setIsSaving(false);
+}
+}, 1000);
 
-	useEffect(() => {
-		setSecretAccessKey(initialSecretAccessKey);
-	}, [initialSecretAccessKey]);
+const handleChange = (field: keyof typeof formData, value: string) => {
+const newData = { ...formData, [field]: value };
+setFormData(newData);
+debouncedSave(newData);
+};
 
-	useEffect(() => {
-		setBucketName(initialBucketName);
-	}, [initialBucketName]);
+const handleTestConnection = async () => {
+setIsTesting(true);
+try {
+const result = await testR2Connection();
+if (result.success) {
+toast.success(result.message);
+} else {
+toast.error(result.message);
+}
+} catch {
+toast.error('Wystąpił błąd podczas testowania połączenia.');
+} finally {
+setIsTesting(false);
+}
+};
 
-	useEffect(() => {
-		setEndpoint(initialEndpoint);
-	}, [initialEndpoint]);
+return (
+<div className='space-y-4'>
+<div className='flex items-center justify-between mb-4'>
+<div className='flex items-center gap-2'>
+{isSaving ? (
+<span className='text-xs text-muted-foreground flex items-center gap-1'>
+<Loader2 className='w-3 h-3 animate-spin' />
+Zapisywanie...
+</span>
+) : (
+<span className='text-xs text-emerald-600 flex items-center gap-1 opacity-0 transition-opacity duration-500 data-[visible=true]:opacity-100' data-visible={!isSaving}>
+<Check className='w-3 h-3' />
+Zapisano
+</span>
+)}
+</div>
+</div>
 
-	useEffect(() => {
-		setPublicBaseUrl(initialPublicBaseUrl);
-	}, [initialPublicBaseUrl]);
+<div className='grid gap-4'>
+<div className='grid gap-2'>
+<Label htmlFor='r2-account-id'>Account ID</Label>
+<Input
+id='r2-account-id'
+value={formData.accountId}
+onChange={(e) => handleChange('accountId', e.target.value)}
+placeholder='np. 8f9e...'
+/>
+</div>
 
-	useEffect(() => {
-		setApiToken(initialApiToken);
-	}, [initialApiToken]);
+<div className='grid gap-2'>
+<Label htmlFor='r2-access-key-id'>Access Key ID</Label>
+<Input
+id='r2-access-key-id'
+value={formData.accessKeyId}
+onChange={(e) => handleChange('accessKeyId', e.target.value)}
+placeholder='np. 04d2...'
+/>
+</div>
 
-	const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-		event.preventDefault();
+<div className='grid gap-2'>
+<Label htmlFor='r2-secret-access-key'>Secret Access Key</Label>
+<Input
+id='r2-secret-access-key'
+type='password'
+value={formData.secretAccessKey}
+onChange={(e) => handleChange('secretAccessKey', e.target.value)}
+placeholder='••••••••'
+/>
+</div>
 
-		const formData = new FormData(event.currentTarget);
-		const nextAccountId = String(formData.get('r2-account-id') ?? '').trim();
-		const nextAccessKeyId = String(formData.get('r2-access-key-id') ?? '').trim();
-		const nextSecretAccessKey = String(formData.get('r2-secret-access-key') ?? '').trim();
-		const nextBucketName = String(formData.get('r2-bucket-name') ?? '').trim();
-		const nextEndpoint = String(formData.get('r2-endpoint') ?? '').trim();
-		const nextPublicBaseUrl = String(formData.get('r2-public-base-url') ?? '').trim();
-		const nextApiToken = String(formData.get('r2-api-token') ?? '').trim();
+<div className='grid gap-2'>
+<Label htmlFor='r2-bucket-name'>Bucket Name</Label>
+<Input
+id='r2-bucket-name'
+value={formData.bucketName}
+onChange={(e) => handleChange('bucketName', e.target.value)}
+placeholder='np. my-bucket'
+/>
+</div>
 
-		startTransition(() => {
-			updateR2Config({
-				accountId: nextAccountId,
-				accessKeyId: nextAccessKeyId,
-				secretAccessKey: nextSecretAccessKey,
-				bucketName: nextBucketName,
-				endpoint: nextEndpoint,
-				publicBaseUrl: nextPublicBaseUrl,
-				apiToken: nextApiToken,
-			})
-				.then(() => {
-					setResult({ type: 'success', message: 'Konfiguracja Cloudflare R2 zostala zapisana.' });
-					setAccountId(nextAccountId);
-					setAccessKeyId(nextAccessKeyId);
-					setSecretAccessKey(nextSecretAccessKey);
-					setBucketName(nextBucketName);
-					setEndpoint(nextEndpoint);
-					setPublicBaseUrl(nextPublicBaseUrl.replace(/\/$/, ''));
-					setApiToken(nextApiToken);
-					router.refresh();
-				})
-				.catch((error) => {
-					const message = error instanceof Error ? error.message : 'Nie udalo sie zapisac konfiguracji R2.';
-					setResult({ type: 'error', message });
-				});
-		});
-	};
+<div className='grid gap-2'>
+<Label htmlFor='r2-endpoint'>Endpoint (S3 API)</Label>
+<Input
+id='r2-endpoint'
+value={formData.endpoint}
+onChange={(e) => handleChange('endpoint', e.target.value)}
+placeholder='https://<accountid>.r2.cloudflarestorage.com'
+/>
+</div>
 
-	const handleReset = () => {
-		setAccountId(initialAccountId);
-		setAccessKeyId(initialAccessKeyId);
-		setSecretAccessKey(initialSecretAccessKey);
-		setBucketName(initialBucketName);
-		setEndpoint(initialEndpoint);
-		setPublicBaseUrl(initialPublicBaseUrl);
-		setApiToken(initialApiToken);
-		setResult(null);
-	};
+<div className='grid gap-2'>
+<Label htmlFor='r2-public-base-url'>Public Base URL (Custom Domain)</Label>
+<Input
+id='r2-public-base-url'
+value={formData.publicBaseUrl}
+onChange={(e) => handleChange('publicBaseUrl', e.target.value)}
+placeholder='https://cdn.example.com'
+/>
+</div>
 
-	const handleTest = () => {
-		startTesting(() => {
-			testR2Connection()
-				.then((message) => {
-					setResult({ type: 'success', message });
-				})
-				.catch((error) => {
-					const message = error instanceof Error ? error.message : 'Nie udalo sie przetestowac polaczenia.';
-					setResult({ type: 'error', message });
-				});
-		});
-	};
+<div className='grid gap-2'>
+<Label htmlFor='r2-api-token'>API Token (Read/Write)</Label>
+<Input
+id='r2-api-token'
+type='password'
+value={formData.apiToken}
+onChange={(e) => handleChange('apiToken', e.target.value)}
+placeholder='••••••••'
+/>
+<p className='text-xs text-muted-foreground'>
+Token API z uprawnieniami Admin Read & Write (potrzebny do presigned URLs).
+</p>
+</div>
+</div>
 
-	const isPristine =
-		accountId === initialAccountId &&
-		accessKeyId === initialAccessKeyId &&
-		secretAccessKey === initialSecretAccessKey &&
-		bucketName === initialBucketName &&
-		endpoint === initialEndpoint &&
-		publicBaseUrl === initialPublicBaseUrl &&
-		apiToken === initialApiToken;
-
-	return (
-		<form onSubmit={handleSubmit} className="space-y-4">
-			<div className="grid gap-4 md:grid-cols-2">
-				<div className="space-y-2">
-					<Label htmlFor="r2-account-id">Account ID</Label>
-					<Input
-						id="r2-account-id"
-						name="r2-account-id"
-						type="text"
-						autoComplete="off"
-						spellCheck={false}
-						value={accountId}
-						onChange={(event) => setAccountId(event.target.value)}
-						disabled={isPending}
-						placeholder="np. 85fcbaaf0..."
-					/>
-				</div>
-				<div className="space-y-2">
-					<Label htmlFor="r2-access-key-id">Access Key ID</Label>
-					<Input
-						id="r2-access-key-id"
-						name="r2-access-key-id"
-						type="text"
-						autoComplete="off"
-						spellCheck={false}
-						value={accessKeyId}
-						onChange={(event) => setAccessKeyId(event.target.value)}
-						disabled={isPending}
-						placeholder="Wklej identyfikator klucza"
-					/>
-				</div>
-			</div>
-			<div className="grid gap-4 md:grid-cols-2">
-				<div className="space-y-2">
-					<Label htmlFor="r2-secret-access-key">Secret Access Key</Label>
-					<Input
-						id="r2-secret-access-key"
-						name="r2-secret-access-key"
-						type="password"
-						autoComplete="off"
-						spellCheck={false}
-						value={secretAccessKey}
-						onChange={(event) => setSecretAccessKey(event.target.value)}
-						disabled={isPending}
-						placeholder="Sekretny klucz dostepowy"
-					/>
-				</div>
-				<div className="space-y-2">
-					<Label htmlFor="r2-bucket-name">Bucket</Label>
-					<Input
-						id="r2-bucket-name"
-						name="r2-bucket-name"
-						type="text"
-						autoComplete="off"
-						spellCheck={false}
-						value={bucketName}
-						onChange={(event) => setBucketName(event.target.value)}
-						disabled={isPending}
-						placeholder="Nazwa bucketa"
-					/>
-				</div>
-			</div>
-			<div className="space-y-2">
-				<Label htmlFor="r2-endpoint">Endpoint (S3)</Label>
-				<Input
-					id="r2-endpoint"
-					name="r2-endpoint"
-					type="url"
-					autoComplete="off"
-					spellCheck={false}
-					value={endpoint}
-					onChange={(event) => setEndpoint(event.target.value)}
-					disabled={isPending}
-					placeholder="https://...r2.cloudflarestorage.com"
-				/>
-			</div>
-			<div className="space-y-2">
-				<Label htmlFor="r2-public-base-url">Publiczny URL (r2.dev)</Label>
-				<Input
-					id="r2-public-base-url"
-					name="r2-public-base-url"
-					type="url"
-					autoComplete="off"
-					spellCheck={false}
-					value={publicBaseUrl}
-					onChange={(event) => setPublicBaseUrl(event.target.value)}
-					disabled={isPending}
-					placeholder="https://twoj-bucket.r2.dev"
-				/>
-				<p className="text-[11px] text-muted-foreground">Adres widoczny publicznie bez koncowego ukośnika.</p>
-			</div>
-			<div className="space-y-2">
-				<Label htmlFor="r2-api-token">API Token (opcjonalnie)</Label>
-				<Input
-					id="r2-api-token"
-					name="r2-api-token"
-					type="password"
-					autoComplete="off"
-					spellCheck={false}
-					value={apiToken}
-					onChange={(event) => setApiToken(event.target.value)}
-					disabled={isPending}
-					placeholder="Token do API Cloudflare"
-				/>
-				<p className="text-xs text-muted-foreground">
-					Token wykorzystasz przy wywolaniach REST do Cloudflare (nie jest wymagany dla S3 SDK).
-				</p>
-			</div>
-			{result && (
-				<p className={result.type === 'error' ? 'text-xs text-destructive' : 'text-xs text-muted-foreground'}>
-					{result.message}
-				</p>
-			)}
-			<div className="flex flex-wrap gap-2">
-				<Button type="submit" disabled={isPending}>
-					{isPending ? 'Zapisuje...' : 'Zapisz ustawienia'}
-				</Button>
-				<Button
-					type="button"
-					variant="secondary"
-					onClick={handleReset}
-					disabled={isPending || isPristine}
-				>
-					Przywroc
-				</Button>
-				<Button type="button" variant="outline" onClick={handleTest} disabled={isPending || isTesting}>
-					{isTesting ? 'Sprawdzanie...' : 'Sprawdz polaczenie'}
-				</Button>
-			</div>
-		</form>
-	);
+<div className='flex justify-end pt-4'>
+<Button
+type='button'
+variant='outline'
+onClick={handleTestConnection}
+disabled={isTesting}
+>
+{isTesting ? 'Testowanie...' : 'Testuj połączenie'}
+</Button>
+</div>
+</div>
+);
 }
