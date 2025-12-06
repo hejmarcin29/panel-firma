@@ -109,32 +109,31 @@ const [statusPending, startStatusTransition] = useTransition();
   };// Notes
 const [noteContent, setNoteContent] = useState('');
 const [notePending, startNoteTransition] = useTransition();
-const submitNote = (e: FormEvent) => {
-e.preventDefault();
-if (!noteContent.trim()) return;
-startNoteTransition(async () => {
-await addMontageNote(montage.id, noteContent);
-setNoteContent('');
-router.refresh();
-});
-};
-
-// Tasks
+  const submitNote = (e: FormEvent) => {
+    e.preventDefault();
+    if (!noteContent.trim()) return;
+    startNoteTransition(async () => {
+      const formData = new FormData();
+      formData.append('montageId', montage.id);
+      formData.append('content', noteContent);
+      await addMontageNote(formData);
+      setNoteContent('');
+      router.refresh();
+    });
+  };// Tasks
 const [taskContent, setTaskContent] = useState('');
 const [taskPending, startTaskTransition] = useTransition();
-const submitTask = (e: FormEvent) => {
-e.preventDefault();
-if (!taskContent.trim()) return;
+  const submitTask = (e: FormEvent) => {
+    e.preventDefault();
+    if (!taskContent.trim()) return;
+    startTaskTransition(async () => {
+      await addMontageTask({ montageId: montage.id, title: taskContent, source: 'manual' });
+      setTaskContent('');
+      router.refresh();
+    });
+  };const handleTaskToggle = (taskId: string, completed: boolean) => {
 startTaskTransition(async () => {
-await addMontageTask(montage.id, taskContent);
-setTaskContent('');
-router.refresh();
-});
-};
-
-const handleTaskToggle = (taskId: string, completed: boolean) => {
-startTaskTransition(async () => {
-await toggleMontageTask(taskId, completed);
+      await toggleMontageTask({ taskId, montageId: montage.id, completed });
 router.refresh();
 });
 };
@@ -160,7 +159,8 @@ scheduledInstallationDate: formatDateInputValue(montage.scheduledInstallationDat
 
     startContactTransition(async () => {
       try {
-        await updateMontageContactDetails(montage.id, {
+        await updateMontageContactDetails({
+          montageId: montage.id,
           clientName: data.clientName,
           contactPhone: data.contactPhone,
           contactEmail: data.contactEmail,
@@ -196,7 +196,7 @@ debouncedContactSave(newData);
 
     startMaterialsTransition(async () => {
       try {
-        await updateMontageMaterialDetails(montage.id, value);
+        await updateMontageMaterialDetails({ montageId: montage.id, materialDetails: value });
         router.refresh();
       } catch {
         setMaterialsError('Błąd zapisu materiałów.');
