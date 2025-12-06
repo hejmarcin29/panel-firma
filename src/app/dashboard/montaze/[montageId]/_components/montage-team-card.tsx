@@ -110,7 +110,7 @@ export function MontageTeamCard({ montage, installers, measurers, userRole = 'ad
                     ) : (
                         <div className="flex items-center gap-2">
                             <Users className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm font-medium">{getInstallerName(montage.installerId)}</span>
+                            <span className="text-sm font-medium">{getInstallerName(montage.installerId || null)}</span>
                         </div>
                     )}
                 </div>
@@ -134,7 +134,7 @@ export function MontageTeamCard({ montage, installers, measurers, userRole = 'ad
                     ) : (
                         <div className="flex items-center gap-2">
                             <Ruler className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm font-medium">{getMeasurerName(montage.measurerId)}</span>
+                            <span className="text-sm font-medium">{getMeasurerName(montage.measurerId || null)}</span>
                         </div>
                     )}
                 </div>
