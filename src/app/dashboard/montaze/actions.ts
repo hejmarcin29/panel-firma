@@ -993,36 +993,3 @@ export async function updateMontageRealizationStatus({
     revalidatePath(`${MONTAGE_DASHBOARD_PATH}/${montageId}`);
     revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
-
-export async function updateMontageTeam({
-  montageId,
-  installerId,
-  measurerId,
-}: {
-  montageId: string;
-  installerId?: string | null;
-  measurerId?: string | null;
-}) {
-  const user = await requireUser();
-  if (user.role !== 'admin') {
-    throw new Error('Brak uprawnień do zmiany zespołu.');
-  }
-
-  await db
-    .update(montages)
-    .set({
-      installerId: installerId,
-      measurerId: measurerId,
-      updatedAt: new Date(),
-    })
-    .where(eq(montages.id, montageId));
-
-  await logSystemEvent(
-    'montage.update_team',
-    `Zaktualizowano zespół dla montażu ${montageId}`,
-    user.id
-  );
-
-  revalidatePath(MONTAGE_DASHBOARD_PATH);
-  revalidatePath(`${MONTAGE_DASHBOARD_PATH}/${montageId}`);
-}

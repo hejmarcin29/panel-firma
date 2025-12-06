@@ -29,26 +29,9 @@ npm run db:generate
 # Używamy push zamiast migrate, aby uniknąć błędów "table already exists"
 # gdy baza nie jest zsynchronizowana z historią migracji.
 echo "Synchronizacja schematu (drizzle-kit push)..."
-npm run db:push
+npx drizzle-kit push
 
 # Zbuduj aplikację
-# Ograniczamy zużycie pamięci poprzez zmniejszenie liczby wątków
-export NEXT_CPU_COUNT=1
-export NEXT_TELEMETRY_DISABLED=1
-# Ustawiamy limit pamięci na 2.5GB (zostawiając 1.5GB dla systemu)
-export NODE_OPTIONS="--max-old-space-size=2560"
-# Wyłączamy lintowanie poprzez zmienną środowiskową (obsługiwaną w eslint.config.mjs)
-export SKIP_LINT=true
-
-# Sprawdź czy jest swap (tylko informacyjnie)
-if command -v free &> /dev/null; then
-    if [ $(free | awk '/^Swap:/ {print $2}') -eq 0 ]; then
-        echo "⚠️  OSTRZEŻENIE: Brak pliku wymiany (SWAP). Build może się nie udać."
-    fi
-fi
-
-# Pomijamy lintowanie podczas builda, aby zaoszczędzić pamięć
-# npx next build --webpack --no-lint
 npm run build
 
 # Zrestartuj aplikację (zakładając PM2)
