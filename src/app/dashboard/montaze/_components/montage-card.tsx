@@ -168,7 +168,7 @@ scheduledInstallationDate: formatDateInputValue(montage.scheduledInstallationAt)
           billingCity: data.billingCity,
           installationAddress: data.installationAddress,
           installationCity: data.installationCity,
-          scheduledInstallationDate: data.scheduledInstallationDate || null,
+          scheduledInstallationDate: data.scheduledInstallationDate || undefined,
         });
         router.refresh();
       } catch {
