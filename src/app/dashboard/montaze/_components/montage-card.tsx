@@ -101,14 +101,12 @@ const [activeTab, setActiveTab] = useState('overview');
 
 // Status
 const [statusPending, startStatusTransition] = useTransition();
-const handleStatusChange = (value: string) => {
-startStatusTransition(async () => {
-await updateMontageStatus(montage.id, value as MontageStatus);
-router.refresh();
-});
-};
-
-// Notes
+  const handleStatusChange = (value: string) => {
+    startStatusTransition(async () => {
+      await updateMontageStatus({ montageId: montage.id, status: value as MontageStatus });
+      router.refresh();
+    });
+  };// Notes
 const [noteContent, setNoteContent] = useState('');
 const [notePending, startNoteTransition] = useTransition();
 const submitNote = (e: FormEvent) => {
@@ -152,73 +150,61 @@ installationAddress: montage.installationAddress ?? '',
 installationCity: montage.installationCity ?? '',
 scheduledInstallationDate: formatDateInputValue(montage.scheduledInstallationDate),
 });
-const [contactPending, startContactTransition] = useTransition();
-const [contactFeedback, setContactFeedback] = useState<string | null>(null);
-const [contactError, setContactError] = useState<string | null>(null);
-const [isContactSaving, setIsContactSaving] = useState(false);
+  const [contactPending, startContactTransition] = useTransition();
+  const [contactError, setContactError] = useState<string | null>(null);
+  const [isContactSaving, setIsContactSaving] = useState(false);
 
-const debouncedContactSave = useDebouncedCallback(async (data: typeof contactDraft) => {
-setIsContactSaving(true);
-setContactFeedback(null);
-setContactError(null);
+  const debouncedContactSave = useDebouncedCallback(async (data: typeof contactDraft) => {
+    setIsContactSaving(true);
+    setContactError(null);
 
-startContactTransition(async () => {
-try {
-await updateMontageContactDetails(montage.id, {
-clientName: data.clientName,
-contactPhone: data.contactPhone,
-contactEmail: data.contactEmail,
-billingAddress: data.billingAddress,
-billingCity: data.billingCity,
-installationAddress: data.installationAddress,
-installationCity: data.installationCity,
-scheduledInstallationDate: data.scheduledInstallationDate || null,
-});
-setContactFeedback('Zapisano zmiany');
-setTimeout(() => setContactFeedback(null), 2000);
-router.refresh();
-} catch {
-setContactError('Wystąpił błąd podczas zapisu.');
-} finally {
-setIsContactSaving(false);
-}
-});
-}, 1000);
-
-const handleContactFieldChange = (field: keyof typeof contactDraft) => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    startContactTransition(async () => {
+      try {
+        await updateMontageContactDetails(montage.id, {
+          clientName: data.clientName,
+          contactPhone: data.contactPhone,
+          contactEmail: data.contactEmail,
+          billingAddress: data.billingAddress,
+          billingCity: data.billingCity,
+          installationAddress: data.installationAddress,
+          installationCity: data.installationCity,
+          scheduledInstallationDate: data.scheduledInstallationDate || null,
+        });
+        router.refresh();
+      } catch {
+        setContactError('Wystąpił błąd podczas zapisu.');
+      } finally {
+        setIsContactSaving(false);
+      }
+    });
+  }, 1000);const handleContactFieldChange = (field: keyof typeof contactDraft) => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
 const val = e.target.value;
 const newData = { ...contactDraft, [field]: val };
 setContactDraft(newData);
 debouncedContactSave(newData);
 };
 
-// Materials - Auto-save
-const [materialsDraft, setMaterialsDraft] = useState(montage.materialDetails ?? '');
-const [materialsPending, startMaterialsTransition] = useTransition();
-const [materialsFeedback, setMaterialsFeedback] = useState<string | null>(null);
-const [materialsError, setMaterialsError] = useState<string | null>(null);
-const [isMaterialsSaving, setIsMaterialsSaving] = useState(false);
+  // Materials - Auto-save
+  const [materialsDraft, setMaterialsDraft] = useState(montage.materialDetails ?? '');
+  const [materialsPending, startMaterialsTransition] = useTransition();
+  const [materialsError, setMaterialsError] = useState<string | null>(null);
+  const [isMaterialsSaving, setIsMaterialsSaving] = useState(false);
 
-const debouncedMaterialsSave = useDebouncedCallback(async (value: string) => {
-setIsMaterialsSaving(true);
-setMaterialsFeedback(null);
-setMaterialsError(null);
+  const debouncedMaterialsSave = useDebouncedCallback(async (value: string) => {
+    setIsMaterialsSaving(true);
+    setMaterialsError(null);
 
-startMaterialsTransition(async () => {
-try {
-await updateMontageMaterialDetails(montage.id, value);
-setMaterialsFeedback('Zapisano materiały');
-setTimeout(() => setMaterialsFeedback(null), 2000);
-router.refresh();
-} catch {
-setMaterialsError('Błąd zapisu materiałów.');
-} finally {
-setIsMaterialsSaving(false);
-}
-});
-}, 1000);
-
-const handleMaterialsChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    startMaterialsTransition(async () => {
+      try {
+        await updateMontageMaterialDetails(montage.id, value);
+        router.refresh();
+      } catch {
+        setMaterialsError('Błąd zapisu materiałów.');
+      } finally {
+        setIsMaterialsSaving(false);
+      }
+    });
+  }, 1000);const handleMaterialsChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
 const val = e.target.value;
 setMaterialsDraft(val);
 debouncedMaterialsSave(val);
