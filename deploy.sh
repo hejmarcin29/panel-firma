@@ -35,6 +35,8 @@ npm run db:push
 # Ograniczamy zużycie pamięci poprzez zmniejszenie liczby wątków
 export NEXT_CPU_COUNT=1
 export NEXT_TELEMETRY_DISABLED=1
+# Ustawiamy limit pamięci na 2.5GB (zostawiając 1.5GB dla systemu)
+export NODE_OPTIONS="--max-old-space-size=2560"
 
 # Sprawdź czy jest swap (tylko informacyjnie)
 if command -v free &> /dev/null; then
@@ -43,7 +45,8 @@ if command -v free &> /dev/null; then
     fi
 fi
 
-npm run build
+# Pomijamy lintowanie podczas builda, aby zaoszczędzić pamięć
+npx next build --webpack --no-lint
 
 # Zrestartuj aplikację (zakładając PM2)
 echo "Restartowanie aplikacji..."
