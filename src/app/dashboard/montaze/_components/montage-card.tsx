@@ -304,7 +304,7 @@ author: undefined,
 
 const totalChecklistItems = montage.checklistItems.length;
 const completedChecklistItems = montage.checklistItems.filter((i) => i.completed).length;
-const checklistProgressLabel = ${completedChecklistItems}/;
+const checklistProgressLabel = `${completedChecklistItems}/${totalChecklistItems}`;
 const openTasks = montage.tasks.filter((t) => !t.completed).length;
 
 return (

@@ -173,7 +173,7 @@ return (
                 <CardContent className='space-y-4'>
                     <div className='flex items-center justify-between'>
                         <div className='flex items-center gap-2'>
-                            <div className={h-3 w-3 rounded-full } />
+                            <div className={`h-3 w-3 rounded-full ${formData.consumerKey ? 'bg-green-500' : 'bg-gray-300'}`} />
                             <span className='text-sm text-muted-foreground'>
                                 {formData.consumerKey ? 'Klucze API zapisane' : 'Brak konfiguracji'}
                             </span>
