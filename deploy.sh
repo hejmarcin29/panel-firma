@@ -35,6 +35,7 @@ npm run db:push
 # Ograniczamy zużycie pamięci poprzez zmniejszenie liczby wątków
 export NEXT_CPU_COUNT=1
 export NODE_OPTIONS="--max-old-space-size=2048"
+export NEXT_TELEMETRY_DISABLED=1
 npm run build
 
 # Zrestartuj aplikację (zakładając PM2)

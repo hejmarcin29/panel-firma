@@ -1,15 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     ignoreBuildErrors: true,
   },
   productionBrowserSourceMaps: false,
   experimental: {
-    // Ograniczenie zużycia pamięci przez wyłączenie niektórych funkcji cache'owania w buildzie
     cpus: 1,
     workerThreads: false,
   },
