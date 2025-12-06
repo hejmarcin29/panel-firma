@@ -35,7 +35,7 @@ npm run db:push
 # Ograniczamy zużycie pamięci poprzez zmniejszenie liczby wątków
 export NEXT_CPU_COUNT=1
 export NODE_OPTIONS="--max-old-space-size=2048"
-npm run build -- --no-lint
+npm run build
 
 # Zrestartuj aplikację (zakładając PM2)
 echo "Restartowanie aplikacji..."
