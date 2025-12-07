@@ -169,6 +169,28 @@ export default async function MontazePage(props: any) {
         }
     }
 
+    // Filter status options based on view to show only relevant columns on the board
+    let filteredStatusOptions = statusOptions;
+    if (view === 'lead') {
+        filteredStatusOptions = statusOptions.filter(s => s.value === 'lead');
+    } else if (view === 'done') {
+        filteredStatusOptions = statusOptions.filter(s => s.value === 'completed');
+    } else {
+        // In-progress view
+        if (stage !== 'all') {
+             const statusMap: Record<string, string> = {
+                'before-measure': 'before_measurement',
+                'before-first-payment': 'before_first_payment',
+                'before-install': 'before_installation',
+                'before-invoice': 'before_final_invoice'
+            };
+            const targetStatus = statusMap[stage];
+            filteredStatusOptions = statusOptions.filter(s => s.value === targetStatus);
+        } else {
+            filteredStatusOptions = statusOptions.filter(s => s.value !== 'lead' && s.value !== 'completed');
+        }
+    }
+
     if (isOnlyInstaller) {
         return (
             <div className="flex flex-col h-[calc(100vh-4rem)] overflow-y-auto">
@@ -199,7 +221,7 @@ export default async function MontazePage(props: any) {
             <div className="flex-1 overflow-hidden md:py-6">
                 <MontageDashboardView 
                     montages={montagesList} 
-                    statusOptions={statusOptions}
+                    statusOptions={filteredStatusOptions}
                     threatDays={threatDays}
                     headerAction={
                         <Button asChild>

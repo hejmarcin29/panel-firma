@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { type ReactNode, Suspense } from 'react';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,7 +60,9 @@ export default async function DashboardLayout({ children }: { children: ReactNod
                 {/* Mobile Header */}
                 <header className="md:hidden flex items-center justify-between border-b bg-background/80 backdrop-blur-md px-4 py-3 sticky top-0 z-50">
                     <div className="flex items-center gap-2">
-                        <BackButton />
+                        <Suspense>
+                            <BackButton />
+                        </Suspense>
                         <span className="font-semibold">Panel firmy</span>
                     </div>
                     <RefreshButton />
@@ -69,7 +71,9 @@ export default async function DashboardLayout({ children }: { children: ReactNod
                 <header className="hidden md:block border-b bg-background/80 backdrop-blur-md sticky top-0 z-50">
                     <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between px-5 py-3">
                         <div className="flex items-center gap-4">
-                            <BackButton />
+                            <Suspense>
+                                <BackButton />
+                            </Suspense>
                             <Link href="/dashboard" className="text-lg font-semibold bg-clip-text text-transparent bg-linear-to-r from-primary to-purple-600">
                                 Panel firmy
                             </Link>

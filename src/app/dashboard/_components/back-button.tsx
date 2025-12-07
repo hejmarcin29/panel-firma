@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
@@ -8,6 +8,7 @@ import { ChevronLeft } from "lucide-react";
 export function BackButton() {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   // Optional: Hide on the main dashboard page if it feels redundant
   if (pathname === '/dashboard') {
@@ -15,6 +16,11 @@ export function BackButton() {
   }
 
   const getBackPath = () => {
+    // If we are in a tab view (e.g. montage details tabs), go back to the main details view
+    if (searchParams.get('tab') && pathname?.startsWith('/dashboard/montaze/')) {
+        return pathname;
+    }
+
     if (pathname?.startsWith('/dashboard/orders/')) return '/dashboard/orders';
     if (pathname?.startsWith('/dashboard/montaze/')) return '/dashboard/montaze';
     if (pathname?.startsWith('/dashboard/mail/')) return '/dashboard/mail';

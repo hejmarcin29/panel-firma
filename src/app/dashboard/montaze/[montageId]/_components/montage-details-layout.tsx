@@ -1,8 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { ArrowLeft, ClipboardList, LayoutList, Ruler, History, Image as ImageIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ClipboardList, LayoutList, Ruler, History, Image as ImageIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -37,12 +36,6 @@ export function MontageDetailsLayout({
   const handleTabChange = (value: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", value);
-    router.push(`${pathname}?${params.toString()}`);
-  };
-
-  const goBack = () => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete("tab");
     router.push(`${pathname}?${params.toString()}`);
   };
 
@@ -93,19 +86,14 @@ export function MontageDetailsLayout({
     // Mobile Detail View
     return (
       <div className="flex flex-col min-h-screen bg-background">
-        <div className="sticky top-0 z-10 flex items-center gap-2 border-b bg-background/95 px-4 h-14 backdrop-blur">
-          <Button variant="ghost" size="icon" onClick={goBack} className="-ml-2">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <span className="font-semibold">
-            {currentTab === 'log' && 'Dziennik'}
-            {currentTab === 'workflow' && 'Przebieg'}
-            {currentTab === 'measurement' && 'Pomiary'}
-            {currentTab === 'tasks' && 'Zadania'}
-            {currentTab === 'gallery' && 'Załączniki'}
-          </span>
-        </div>
         <div className="p-4">
+            <h2 className="text-lg font-semibold mb-4">
+                {currentTab === 'log' && 'Dziennik'}
+                {currentTab === 'workflow' && 'Przebieg'}
+                {currentTab === 'measurement' && 'Pomiary'}
+                {currentTab === 'tasks' && 'Zadania'}
+                {currentTab === 'gallery' && 'Załączniki'}
+            </h2>
             {/* Render specific tab content */}
             {currentTab === 'log' && tabs.log}
             {currentTab === 'workflow' && tabs.workflow}
