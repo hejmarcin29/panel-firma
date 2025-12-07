@@ -38,7 +38,6 @@ import { useDebouncedCallback } from 'use-debounce';
 import { AgendaWidget, type AgendaItem } from './agenda-widget';
 import { RecentActivity } from './recent-activity';
 import { QuickActions } from './quick-actions';
-import { TasksWidget } from './tasks-widget';
 import { KPICards } from './kpi-cards';
 import { MontageAlertsKPI, type MontageAlert } from './montage-alerts-kpi';
 import { updateDashboardLayout, type DashboardLayoutConfig, type DashboardWidgetConfig } from '../actions';
@@ -53,7 +52,6 @@ const WIDGET_COMPONENTS: Record<string, React.ComponentType<any>> = {
   'agenda': AgendaWidget,
   'recent-activity': RecentActivity,
   'quick-actions': QuickActions,
-  'tasks': TasksWidget,
 };
 
 const WIDGET_LABELS: Record<string, string> = {
@@ -62,7 +60,6 @@ const WIDGET_LABELS: Record<string, string> = {
     'agenda': 'Najbliższe montaże',
     'recent-activity': 'Ostatnia Aktywność',
     'quick-actions': 'Szybkie Akcje',
-    'tasks': 'Zadania do wykonania',
 };
 
 function WidgetSettingsDialog({ 
@@ -87,7 +84,7 @@ function WidgetSettingsDialog({
 
     // KPI Specific Settings
     if (widget.type === 'kpi') {
-        const visibleCards = (localSettings.visibleCards as string[] | undefined) || ['today', 'leads', 'payments', 'urgent', 'orders', 'todo', 'urgentOrders', 'stalledOrders'];
+        const visibleCards = (localSettings.visibleCards as string[] | undefined) || ['today', 'leads', 'payments', 'urgent', 'orders', 'urgentOrders', 'stalledOrders'];
         
         const toggleCard = (card: string) => {
             if (visibleCards.includes(card)) {
@@ -112,14 +109,6 @@ function WidgetSettingsDialog({
                                 onCheckedChange={() => toggleCard('today')}
                             />
                             <Label htmlFor='card-today'>Dzisiejsze montaże</Label>
-                        </div>
-                        <div className='flex items-center space-x-2'>
-                            <Checkbox 
-                                id='card-todo' 
-                                checked={visibleCards.includes('todo')}
-                                onCheckedChange={() => toggleCard('todo')}
-                            />
-                            <Label htmlFor='card-todo'>To Do (Osobiste)</Label>
                         </div>
                         <div className='flex items-center space-x-2'>
                             <Checkbox 

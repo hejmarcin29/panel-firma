@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { ArrowLeft, ClipboardList, LayoutList, Ruler, History, Image } from "lucide-react";
+import { ArrowLeft, ClipboardList, LayoutList, Ruler, History, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -80,7 +80,7 @@ export function MontageDetailsLayout({
                   onClick={() => handleTabChange("tasks")} 
               />
               <MenuButton 
-                  icon={<Image className="w-5 h-5" />} 
+                  icon={<ImageIcon className="w-5 h-5" />} 
                   label="Załączniki / Galeria" 
                   onClick={() => handleTabChange("gallery")} 
               />
@@ -156,20 +156,6 @@ export function MontageDetailsLayout({
       </main>
     </>
   );
-}
-
-function MenuButton({ icon, label, onClick }: { icon: React.ReactNode, label: string, onClick: () => void }) {
-    return (
-        <button 
-            onClick={onClick}
-            className="flex items-center gap-4 p-4 w-full bg-card border rounded-xl shadow-sm hover:bg-accent transition-colors text-left"
-        >
-            <div className="p-2 bg-primary/10 text-primary rounded-lg">
-                {icon}
-            </div>
-            <span className="font-medium">{label}</span>
-        </button>
-    )
 }
 
 function MenuButton({ icon, label, onClick }: { icon: React.ReactNode, label: string, onClick: () => void }) {

@@ -14,7 +14,6 @@ import {
 	montages,
     users,
     manualOrders,
-    boardTasks,
 } from '@/lib/db/schema';
 import { tryGetR2Config } from '@/lib/r2/config';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
@@ -202,29 +201,6 @@ export default async function DashboardPage() {
     });
     const urgentOrdersCount = urgentOrders.length;
 
-    // Fetch Personal Todo Count
-    const todoTasks = await db.select().from(boardTasks).where(eq(boardTasks.completed, false));
-    const todoCount = todoTasks.length;
-
-    // Fetch Reminder Tasks (Due today or past due, or Reminder today or past due)
-    const now = new Date();
-    const reminderTasks = todoTasks.filter(t => {
-        if (t.completed) return false;
-        
-        const isDue = t.dueDate && new Date(t.dueDate) <= now;
-        const isReminder = t.reminderAt && new Date(t.reminderAt) <= now;
-        const isUrgent = t.priority === 'urgent';
-        
-        return isDue || isReminder || isUrgent;
-    }).map(t => ({
-        id: t.id,
-        content: t.content,
-        reminderAt: t.reminderAt,
-        dueDate: t.dueDate,
-        priority: t.priority,
-        createdAt: t.createdAt
-    }));
-
     // Tasks Widget Data (Lite)
     const tasksMontagesRaw = allMontages.filter(m => m.tasks.some(t => !t.completed));
     const tasksCount = tasksMontagesRaw.length;
@@ -300,8 +276,8 @@ export default async function DashboardPage() {
                     tasksStats: {
                         tasksCount,
                         urgentCount,
-                        todoCount,
-                        reminderTasks
+                        todoCount: 0,
+                        reminderTasks: []
                     },
                     kpiData: {
                         todayMontagesCount,
@@ -309,7 +285,7 @@ export default async function DashboardPage() {
                         pendingPaymentsCount,
                         urgentTasksCount,
                         newOrdersCount,
-                        todoCount,
+                        todoCount: 0,
                         urgentOrdersCount,
                         stalledOrdersCount,
                         orderUrgentDays,

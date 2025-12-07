@@ -8,7 +8,6 @@ import { type UserRole } from '@/lib/db/schema';
 
 const links = [
 	{ href: '/dashboard', label: 'Przegląd' },
-    { href: '/dashboard/todo', label: 'To Do' },
     { href: '/dashboard/zadania', label: 'Zadania Montaże' },
 	{ href: '/dashboard/calendar', label: 'Kalendarz' },
 	{ href: '/dashboard/customers', label: 'Klienci' },

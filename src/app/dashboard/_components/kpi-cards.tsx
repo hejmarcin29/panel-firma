@@ -170,36 +170,6 @@ export function KPICards({
         </Card>
       )}
 
-      {visibleCards.includes('todo') && (
-        <Card className="bg-card border-border shadow-none relative overflow-hidden group">
-            <Link href="/dashboard/todo" className="absolute inset-0 z-10" />
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-                <div className="flex items-center gap-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                        Zadania ToDo
-                    </CardTitle>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <button type="button" className="cursor-help z-20 relative" onClick={(e) => e.preventDefault()}>
-                                <Info className="h-3 w-3 text-muted-foreground/50" />
-                            </button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>Liczba wszystkich niezrealizowanych zadań na liście ToDo.</p>
-                        </TooltipContent>
-                    </Tooltip>
-                </div>
-                <ListTodo className="h-4 w-4 text-pink-500" />
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-                <div className="text-2xl font-bold text-foreground">{todoCount}</div>
-                <p className="text-xs text-pink-500/80 flex items-center mt-1">
-                    Do zrobienia <ArrowUpRight className="h-3 w-3 ml-1" />
-                </p>
-            </CardContent>
-        </Card>
-      )}
-
       {visibleCards.includes('payments') && (
         <Card className="bg-card border-border shadow-none relative overflow-hidden group">
             <Link href="/dashboard/montaze" className="absolute inset-0 z-10" />
