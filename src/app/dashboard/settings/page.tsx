@@ -131,6 +131,8 @@ export default async function SettingsPage() {
 		kpiMontageThreatDays,
 		kpiOrderUrgentDays,
 		googleCalendarId,
+		googleClientEmail,
+		googlePrivateKey,
 	] = await Promise.all([
 		getAppSetting(appSettingKeys.wooWebhookSecret),
 		getAppSetting(appSettingKeys.wooConsumerKey),
@@ -149,6 +151,8 @@ export default async function SettingsPage() {
 		getAppSetting(appSettingKeys.kpiMontageThreatDays),
 		getAppSetting(appSettingKeys.kpiOrderUrgentDays),
 		getAppSetting(appSettingKeys.googleCalendarId),
+		getAppSetting(appSettingKeys.googleClientEmail),
+		getAppSetting(appSettingKeys.googlePrivateKey),
 	]);
 
     const statusOptions = montageStatusDefinitions.map(def => ({
@@ -446,7 +450,11 @@ export default async function SettingsPage() {
 						</div>
 					</TabsContent>
 					<TabsContent value="google">
-						<GoogleCalendarSettingsForm initialCalendarId={googleCalendarId ?? ''} />
+						<GoogleCalendarSettingsForm 
+							initialCalendarId={googleCalendarId ?? ''} 
+							initialClientEmail={googleClientEmail ?? ''}
+							initialPrivateKey={googlePrivateKey ?? ''}
+						/>
 					</TabsContent>
 					<TabsContent value="mail">
 						<MailSettingsForm accounts={formattedMailAccounts} />

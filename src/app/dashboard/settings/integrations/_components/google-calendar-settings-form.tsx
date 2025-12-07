@@ -13,17 +13,23 @@ import { saveGoogleCalendarSettings } from '../google-actions';
 
 interface GoogleCalendarSettingsFormProps {
   initialCalendarId: string;
+  initialClientEmail: string;
+  initialPrivateKey: string;
 }
 
-export function GoogleCalendarSettingsForm({ initialCalendarId }: GoogleCalendarSettingsFormProps) {
+export function GoogleCalendarSettingsForm({ initialCalendarId, initialClientEmail, initialPrivateKey }: GoogleCalendarSettingsFormProps) {
   const [calendarId, setCalendarId] = useState(initialCalendarId);
+  const [clientEmail, setClientEmail] = useState(initialClientEmail);
+  const [privateKey, setPrivateKey] = useState(initialPrivateKey);
   const [isSaving, setIsSaving] = useState(false);
 
-  const debouncedSave = useDebouncedCallback(async (value: string) => {
+  const debouncedSave = useDebouncedCallback(async () => {
     setIsSaving(true);
     try {
       const formData = new FormData();
-      formData.append('calendarId', value);
+      formData.append('calendarId', calendarId);
+      formData.append('clientEmail', clientEmail);
+      formData.append('privateKey', privateKey);
       await saveGoogleCalendarSettings(formData);
     } catch {
       toast.error('Błąd zapisu ustawień Kalendarza Google');
@@ -32,10 +38,10 @@ export function GoogleCalendarSettingsForm({ initialCalendarId }: GoogleCalendar
     }
   }, 1000);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (setter: (val: string) => void) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const value = e.target.value;
-    setCalendarId(value);
-    debouncedSave(value);
+    setter(value);
+    debouncedSave();
   };
 
   return (
@@ -52,26 +58,51 @@ export function GoogleCalendarSettingsForm({ initialCalendarId }: GoogleCalendar
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="calendarId">ID Kalendarza (Calendar ID)</Label>
-          <div className="relative">
-            <Input
-              id="calendarId"
-              placeholder="np. twoj.email@gmail.com"
-              value={calendarId}
-              onChange={handleChange}
-            />
-            {isSaving && (
-              <div className="absolute right-3 top-2.5">
-                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-              </div>
-            )}
-          </div>
+          <Input
+            id="calendarId"
+            placeholder="np. twoj.email@gmail.com"
+            value={calendarId}
+            onChange={handleChange(setCalendarId)}
+          />
           <p className="text-xs text-muted-foreground">
             To zazwyczaj Twój adres e-mail (dla głównego kalendarza) lub ID grupy.
-            <br />
-            <strong>Ważne:</strong> Pamiętaj, aby udostępnić ten kalendarz dla konta usługi (Service Account) z uprawnieniami do edycji.
-            Adres e-mail konta usługi znajdziesz w pliku <code>.env</code> (GOOGLE_CLIENT_EMAIL).
           </p>
         </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="clientEmail">E-mail Konta Usługi (Service Account Email)</Label>
+          <Input
+            id="clientEmail"
+            placeholder="np. panel-kalendarz@twoj-projekt.iam.gserviceaccount.com"
+            value={clientEmail}
+            onChange={handleChange(setClientEmail)}
+          />
+          <p className="text-xs text-muted-foreground">
+            Adres e-mail wygenerowany w Google Cloud Console (kończący się na .iam.gserviceaccount.com).
+            <strong> Pamiętaj, aby udostępnić swój kalendarz dla tego adresu!</strong>
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="privateKey">Klucz Prywatny (Private Key)</Label>
+          <textarea
+            id="privateKey"
+            className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            placeholder="-----BEGIN PRIVATE KEY----- ..."
+            value={privateKey}
+            onChange={handleChange(setPrivateKey)}
+          />
+          <p className="text-xs text-muted-foreground">
+            Cała zawartość klucza prywatnego z pliku JSON (włącznie z liniami BEGIN i END).
+          </p>
+        </div>
+
+        {isSaving && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Zapisywanie...
+            </div>
+        )}
       </CardContent>
     </Card>
   );

@@ -7,10 +7,24 @@ import { setAppSetting, appSettingKeys } from '@/lib/settings';
 export async function saveGoogleCalendarSettings(formData: FormData) {
   const user = await requireUser();
   const calendarId = formData.get('calendarId') as string;
+  const clientEmail = formData.get('clientEmail') as string;
+  const privateKey = formData.get('privateKey') as string;
 
   await setAppSetting({
     key: appSettingKeys.googleCalendarId,
     value: calendarId,
+    userId: user.id,
+  });
+
+  await setAppSetting({
+    key: appSettingKeys.googleClientEmail,
+    value: clientEmail,
+    userId: user.id,
+  });
+
+  await setAppSetting({
+    key: appSettingKeys.googlePrivateKey,
+    value: privateKey,
     userId: user.id,
   });
 

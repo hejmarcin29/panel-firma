@@ -23,6 +23,8 @@ export const appSettingKeys = {
 	kpiMontageThreatDays: 'kpi.montage_threat_days',
 	kpiOrderUrgentDays: 'kpi.order_urgent_days',
 	googleCalendarId: 'google.calendar_id',
+	googleClientEmail: 'google.client_email',
+	googlePrivateKey: 'google.private_key',
 } as const;
 
 export type AppSettingKey = (typeof appSettingKeys)[keyof typeof appSettingKeys];
@@ -58,6 +60,10 @@ function readEnvFallback(key: AppSettingKey): string | null {
 			return process.env.CLOUDFLARE_R2_PUBLIC_BASE_URL?.trim() || null;
 		case appSettingKeys.googleCalendarId:
 			return process.env.GOOGLE_CALENDAR_ID?.trim() || null;
+		case appSettingKeys.googleClientEmail:
+			return process.env.GOOGLE_CLIENT_EMAIL?.trim() || null;
+		case appSettingKeys.googlePrivateKey:
+			return process.env.GOOGLE_PRIVATE_KEY?.trim() || null;
 		default:
 			return null;
 	}
