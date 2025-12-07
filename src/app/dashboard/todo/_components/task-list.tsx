@@ -234,7 +234,7 @@ export function TaskList({ column: initialColumn }: TaskListProps) {
     const completedTasks = column.tasks.filter(t => t.completed);
 
     return (
-        <div className="flex flex-col h-full bg-background">
+        <div className="flex flex-col h-full bg-background overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
                 <div className="flex items-center gap-2 flex-1">
