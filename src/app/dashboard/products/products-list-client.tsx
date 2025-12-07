@@ -12,12 +12,20 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
-import { WooCommerceProduct, WooCommerceCategory, WooCommerceAttributeTerm } from './actions';
+import { ChevronLeft, ChevronRight, ExternalLink, Loader2, X, Settings2 } from 'lucide-react';
+import { WooCommerceProduct, WooCommerceCategory, WooCommerceAttributeTerm, bulkUpdateMontageSettings } from './actions';
 import { ProductControlBar } from '@/components/shop/product-control-bar';
 import { FilterModal } from '@/components/shop/filter-modal';
 import { ProductMontageSettings } from './_components/product-montage-settings';
+import { toast } from 'sonner';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface ProductsListClientProps {
     initialProducts: WooCommerceProduct[];
@@ -40,12 +48,45 @@ export function ProductsListClient({
     const searchParams = useSearchParams();
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [showDebug, setShowDebug] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const [isBulkActionPending, setIsBulkActionPending] = useState(false);
 
     const handlePageChange = (newPage: number) => {
         if (newPage < 1 || newPage > initialTotalPages) return;
         const params = new URLSearchParams(searchParams.toString());
         params.set('page', newPage.toString());
         router.push(`/dashboard/products?${params.toString()}`);
+    };
+
+    const handleSelectAll = (checked: boolean) => {
+        if (checked) {
+            setSelectedIds(initialProducts.map(p => p.id));
+        } else {
+            setSelectedIds([]);
+        }
+    };
+
+    const handleSelectOne = (checked: boolean, id: number) => {
+        if (checked) {
+            setSelectedIds(prev => [...prev, id]);
+        } else {
+            setSelectedIds(prev => prev.filter(i => i !== id));
+        }
+    };
+
+    const handleBulkAction = async (action: 'SET_PANEL' | 'SET_SKIRTING' | 'DISABLE') => {
+        if (selectedIds.length === 0) return;
+        
+        setIsBulkActionPending(true);
+        try {
+            await bulkUpdateMontageSettings(selectedIds, action);
+            toast.success(`Zaktualizowano ${selectedIds.length} produktów`);
+            setSelectedIds([]);
+        } catch {
+            toast.error('Wystąpił błąd podczas aktualizacji');
+        } finally {
+            setIsBulkActionPending(false);
+        }
     };
 
     // Prepare aggregations for FilterModal
@@ -77,6 +118,46 @@ export function ProductsListClient({
                     {showDebug ? 'Ukryj diagnostykę' : 'Diagnostyka'}
                 </Button>
             </div>
+
+            {selectedIds.length > 0 && (
+                <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-foreground text-background px-4 py-3 rounded-lg shadow-lg flex items-center gap-4 animate-in slide-in-from-bottom-4 fade-in duration-200">
+                    <div className="flex items-center gap-2">
+                        <span className="font-medium text-sm whitespace-nowrap">
+                            Zaznaczono: {selectedIds.length}
+                        </span>
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6 text-background hover:text-background/80 hover:bg-background/20 rounded-full"
+                            onClick={() => setSelectedIds([])}
+                        >
+                            <X className="h-3 w-3" />
+                        </Button>
+                    </div>
+                    
+                    <div className="h-4 w-px bg-background/20" />
+
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button size="sm" variant="secondary" disabled={isBulkActionPending} className="gap-2">
+                                {isBulkActionPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Settings2 className="h-3 w-3" />}
+                                Ustawienia Montażu
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="center">
+                            <DropdownMenuItem onClick={() => handleBulkAction('SET_PANEL')}>
+                                🛠️ Ustaw jako: PANELE
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleBulkAction('SET_SKIRTING')}>
+                                🛠️ Ustaw jako: LISTWY
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleBulkAction('DISABLE')} className="text-red-600 focus:text-red-600">
+                                🚫 Wyłącz z montażu
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            )}
 
             {showDebug && (
                 <Card className="mb-4">
@@ -120,6 +201,13 @@ export function ProductsListClient({
                 <Table>
                     <TableHeader>
                         <TableRow>
+                            <TableHead className="w-10">
+                                <Checkbox 
+                                    checked={initialProducts.length > 0 && selectedIds.length === initialProducts.length}
+                                    onCheckedChange={handleSelectAll}
+                                    aria-label="Zaznacz wszystko"
+                                />
+                            </TableHead>
                             <TableHead className="w-16 md:w-20">Obraz</TableHead>
                             <TableHead>Nazwa</TableHead>
                             <TableHead className="w-40">Do montażu</TableHead>
@@ -133,13 +221,20 @@ export function ProductsListClient({
                     <TableBody>
                         {initialProducts.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={7} className="h-24 text-center">
+                                <TableCell colSpan={8} className="h-24 text-center">
                                     Brak produktów spełniających kryteria.
                                 </TableCell>
                             </TableRow>
                         ) : (
                             initialProducts.map((product) => (
-                                <TableRow key={product.id}>
+                                <TableRow key={product.id} data-state={selectedIds.includes(product.id) ? "selected" : undefined}>
+                                    <TableCell>
+                                        <Checkbox 
+                                            checked={selectedIds.includes(product.id)}
+                                            onCheckedChange={(checked) => handleSelectOne(checked as boolean, product.id)}
+                                            aria-label={`Zaznacz ${product.name}`}
+                                        />
+                                    </TableCell>
                                     <TableCell>
                                         {product.images && product.images[0] ? (
                                             <div className="relative h-10 w-10 md:h-12 md:w-12 rounded overflow-hidden">

@@ -2,9 +2,37 @@
 
 import { db } from '@/lib/db';
 import { products } from '@/lib/db/schema';
-import { like, eq, and, desc, asc, count } from 'drizzle-orm';
+import { like, eq, and, desc, asc, count, inArray } from 'drizzle-orm';
 import { getAppSettings, appSettingKeys } from '@/lib/settings';
 import { syncProducts } from '@/lib/sync/products';
+import { revalidatePath } from 'next/cache';
+
+export async function bulkUpdateMontageSettings(
+    productIds: number[],
+    action: 'SET_PANEL' | 'SET_SKIRTING' | 'DISABLE'
+) {
+    if (!productIds.length) return { success: false };
+
+    let updateData: { isForMontage: boolean; montageType: 'panel' | 'skirting' | 'other' | null } = {
+        isForMontage: false,
+        montageType: null
+    };
+
+    if (action === 'SET_PANEL') {
+        updateData = { isForMontage: true, montageType: 'panel' };
+    } else if (action === 'SET_SKIRTING') {
+        updateData = { isForMontage: true, montageType: 'skirting' };
+    } else if (action === 'DISABLE') {
+        updateData = { isForMontage: false, montageType: null };
+    }
+
+    await db.update(products)
+        .set(updateData)
+        .where(inArray(products.id, productIds));
+
+    revalidatePath('/dashboard/products');
+    return { success: true };
+}
 
 export async function updateProductMontageSettings(
     productId: number, 
