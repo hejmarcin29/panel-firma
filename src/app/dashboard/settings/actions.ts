@@ -18,7 +18,7 @@ import { logSystemEvent } from '@/lib/logging';
 
 export async function updateWooWebhookSecret(secret: string) {
 	const user = await requireUser();
-	if (user.role !== 'admin') {
+	if (!user.roles.includes('admin')) {
 		throw new Error('Tylko administrator moze zmieniac konfiguracje integracji.');
 	}
 
@@ -45,7 +45,7 @@ export async function updateWooWebhookSecret(secret: string) {
 
 export async function testWooWebhookSecret() {
 	const user = await requireUser();
-	if (user.role !== 'admin') {
+	if (!user.roles.includes('admin')) {
 		throw new Error('Tylko administrator moze wykonywac test polaczenia.');
 	}
 
@@ -69,7 +69,7 @@ type UpdateR2ConfigInput = {
 
 export async function updateR2Config({ accountId, accessKeyId, secretAccessKey, bucketName, endpoint, publicBaseUrl, apiToken }: UpdateR2ConfigInput) {
 	const user = await requireUser();
-	if (user.role !== 'admin') {
+	if (!user.roles.includes('admin')) {
 		throw new Error('Tylko administrator moze zmieniac konfiguracje integracji.');
 	}
 
@@ -136,7 +136,7 @@ export async function updateR2Config({ accountId, accessKeyId, secretAccessKey, 
 
 export async function testR2Connection() {
 	const user = await requireUser();
-	if (user.role !== 'admin') {
+	if (!user.roles.includes('admin')) {
 		throw new Error('Tylko administrator moze wykonywac test polaczenia.');
 	}
 
@@ -154,7 +154,7 @@ export async function testR2Connection() {
 
 export async function updateMontageChecklistTemplatesAction(templates: MontageChecklistTemplate[]) {
 	const user = await requireUser();
-	if (user.role !== 'admin') {
+	if (!user.roles.includes('admin')) {
 		throw new Error('Tylko administrator może zmieniać szablony etapów.');
 	}
 
@@ -167,7 +167,7 @@ export async function updateMontageChecklistTemplatesAction(templates: MontageCh
 
 export async function updateMontageAutomationRulesAction(rules: MontageAutomationRule[]) {
 	const user = await requireUser();
-	if (user.role !== 'admin') {
+	if (!user.roles.includes('admin')) {
 		throw new Error('Tylko administrator może zmieniać reguły automatyzacji.');
 	}
 
@@ -180,7 +180,7 @@ export async function updateMontageAutomationRulesAction(rules: MontageAutomatio
 
 export async function updateMontageStatusDefinitionsAction(statuses: MontageStatusDefinition[]) {
 	const user = await requireUser();
-	if (user.role !== 'admin') {
+	if (!user.roles.includes('admin')) {
 		throw new Error('Tylko administrator może zmieniać definicje statusów.');
 	}
 
@@ -212,7 +212,7 @@ export async function updateMobileMenuConfig(config: MobileMenuItem[]) {
 
 export async function updateKpiSettings(montageThreatDays: number, orderUrgentDays: number) {
     const user = await requireUser();
-    if (user.role !== 'admin') {
+    if (!user.roles.includes('admin')) {
         throw new Error('Tylko administrator może zmieniać ustawienia KPI.');
     }
 

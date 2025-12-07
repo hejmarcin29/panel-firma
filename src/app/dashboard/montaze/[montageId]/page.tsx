@@ -105,9 +105,9 @@ export default async function MontageDetailsPage({ params, searchParams }: Monta
     return (
         <div className="flex min-h-screen flex-col bg-muted/10">
             <MontageDetailsLayout 
-                header={<MontageHeader montage={montage} statusOptions={statusOptions} userRole={user.role} />}
-                clientCard={<MontageClientCard montage={montage} userRole={user.role} />}
-                materialCard={<MontageMaterialCard montage={montage} userRole={user.role} />}
+                header={<MontageHeader montage={montage} statusOptions={statusOptions} userRoles={user.roles} />}
+                clientCard={<MontageClientCard montage={montage} userRoles={user.roles} />}
+                materialCard={<MontageMaterialCard montage={montage} userRoles={user.roles} />}
                 defaultTab={activeTab}
                 tabs={{
                     log: <MontageLogTab montage={montage} logs={logs} />,

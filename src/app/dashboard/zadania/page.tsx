@@ -1,14 +1,18 @@
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
+import { montages } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
 import { TasksList } from './_components/tasks-list';
 
 export const dynamic = 'force-dynamic';
 
 export default async function TasksPage() {
-    await requireUser();
+    const user = await requireUser();
+    const canSeeAll = user.roles.includes('admin') || user.roles.includes('measurer');
 
-    // Fetch All Montages with Tasks
+    // Fetch Montages with Tasks
     const allMontages = await db.query.montages.findMany({
+        where: !canSeeAll ? eq(montages.installerId, user.id) : undefined,
         with: {
             tasks: true
         }

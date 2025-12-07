@@ -1,4 +1,4 @@
-import { asc, desc, eq, and, inArray } from 'drizzle-orm';
+import { asc, desc, eq, and, inArray, or } from 'drizzle-orm';
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 export const dynamic = 'force-dynamic';
 
 import { MontageDashboardView } from './_components/montage-dashboard-view';
+import { InstallerDashboardView } from './_components/installer-dashboard-view';
 import { MontageViewTabs, MontageStageFilters } from './_components/montage-view-switcher';
 import { mapMontageRow, type MontageRow } from './utils';
 import { db } from '@/lib/db';
@@ -70,33 +71,46 @@ export default async function MontazePage(props: any) {
 
     const conditions: (ReturnType<typeof eq> | ReturnType<typeof inArray>)[] = [];
 
-    if (user.role === 'installer') {
+    // Special logic for installers: they see everything assigned to them
+    const isOnlyInstaller = user.roles.includes('installer') && !user.roles.includes('admin') && !user.roles.includes('measurer');
+
+    if (isOnlyInstaller) {
         conditions.push(eq(montages.installerId, user.id));
-    } else if (user.role === 'measurer') {
-        conditions.push(eq(montages.measurerId, user.id));
-    }
-
-    if (view === 'lead') {
-        conditions.push(eq(montages.status, 'lead'));
-    } else if (view === 'done') {
-        conditions.push(eq(montages.status, 'completed'));
     } else {
-        const inProgressStatuses = [
-            'before_measurement',
-            'before_first_payment',
-            'before_installation',
-            'before_final_invoice',
-        ];
-
-        let filteredStatuses = inProgressStatuses;
-        if (stage !== 'all') {
-            if (stage === 'before-measure') filteredStatuses = ['before_measurement'];
-            if (stage === 'before-first-payment') filteredStatuses = ['before_first_payment'];
-            if (stage === 'before-install') filteredStatuses = ['before_installation'];
-            if (stage === 'before-invoice') filteredStatuses = ['before_final_invoice'];
+        // Standard logic for other roles
+        if (!user.roles.includes('admin')) {
+             const userFilters = [];
+             if (user.roles.includes('installer')) userFilters.push(eq(montages.installerId, user.id));
+             if (user.roles.includes('measurer')) userFilters.push(eq(montages.measurerId, user.id));
+             
+             if (userFilters.length > 0) {
+                 const filter = or(...userFilters);
+                 if (filter) conditions.push(filter);
+             }
         }
 
-        conditions.push(inArray(montages.status, filteredStatuses));
+        if (view === 'lead') {
+            conditions.push(eq(montages.status, 'lead'));
+        } else if (view === 'done') {
+            conditions.push(eq(montages.status, 'completed'));
+        } else {
+            const inProgressStatuses = [
+                'before_measurement',
+                'before_first_payment',
+                'before_installation',
+                'before_final_invoice',
+            ];
+
+            let filteredStatuses = inProgressStatuses;
+            if (stage !== 'all') {
+                if (stage === 'before-measure') filteredStatuses = ['before_measurement'];
+                if (stage === 'before-first-payment') filteredStatuses = ['before_first_payment'];
+                if (stage === 'before-install') filteredStatuses = ['before_installation'];
+                if (stage === 'before-invoice') filteredStatuses = ['before_final_invoice'];
+            }
+
+            conditions.push(inArray(montages.status, filteredStatuses));
+        }
     }
 
     const montageRows = await db.query.montages.findMany({
@@ -151,6 +165,14 @@ export default async function MontazePage(props: any) {
                 description: 'Status usunięty lub nieznany'
             });
         }
+    }
+
+    if (isOnlyInstaller) {
+        return (
+            <div className="flex flex-col h-[calc(100vh-4rem)] overflow-y-auto">
+                <InstallerDashboardView montages={montagesList} />
+            </div>
+        );
     }
 
     return (

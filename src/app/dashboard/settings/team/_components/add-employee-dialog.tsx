@@ -15,13 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { createEmployee } from '../actions';
 import type { UserRole } from '@/lib/db/schema';
 
@@ -38,16 +32,19 @@ export function AddEmployeeDialog() {
     const name = formData.get('name') as string;
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
-    const role = formData.get('role') as UserRole;
+    
+    const roles: UserRole[] = [];
+    if (formData.get('role_measurer') === 'on') roles.push('measurer');
+    if (formData.get('role_installer') === 'on') roles.push('installer');
 
-    if (!name || !email || !password || !role) {
-        setError('Wypełnij wszystkie pola.');
+    if (!name || !email || !password || roles.length === 0) {
+        setError('Wypełnij wszystkie pola i wybierz przynajmniej jedną rolę.');
         return;
     }
 
     startTransition(async () => {
       try {
-        await createEmployee({ name, email, password, role });
+        await createEmployee({ name, email, password, roles });
         setOpen(false);
         // Reset form handled by dialog close usually, but we can force it if needed
       } catch (err) {
@@ -84,23 +81,23 @@ export function AddEmployeeDialog() {
             <Label htmlFor="password">Hasło tymczasowe</Label>
             <Input id="password" name="password" type="password" required minLength={6} />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="role">Rola</Label>
-            <Select name="role" defaultValue="installer">
-              <SelectTrigger>
-                <SelectValue placeholder="Wybierz rolę" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="admin">Administrator (Pełny dostęp)</SelectItem>
-                <SelectItem value="measurer">Pomiarowiec</SelectItem>
-                <SelectItem value="installer">Montażysta</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="space-y-3">
+            <Label>Role</Label>
+            <div className="flex flex-col gap-2 p-1">
+                <div className="flex items-center space-x-2">
+                    <Checkbox id="role_measurer" name="role_measurer" />
+                    <Label htmlFor="role_measurer" className="font-normal cursor-pointer">Pomiarowiec</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                    <Checkbox id="role_installer" name="role_installer" />
+                    <Label htmlFor="role_installer" className="font-normal cursor-pointer">Montażysta</Label>
+                </div>
+            </div>
             <div className="text-xs text-muted-foreground space-y-2 mt-2 p-3 bg-muted/50 rounded-md border">
                 <p><strong>Uprawnienia ról:</strong></p>
                 <ul className="list-disc pl-4 space-y-1">
                     <li>
-                        <span className="font-medium">Administrator:</span> Pełny dostęp do systemu (Zamówienia, Klienci, Poczta, Ustawienia).
+                        <span className="font-medium">Administrator:</span> Pełny dostęp do systemu (Tylko istniejący admini).
                     </li>
                     <li>
                         <span className="font-medium">Pomiarowiec / Montażysta:</span> Dostęp tylko do modułów operacyjnych:

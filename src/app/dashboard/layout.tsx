@@ -41,7 +41,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         mobileMenuConfig: userDetails?.mobileMenuConfig ? JSON.stringify(userDetails.mobileMenuConfig) : null
     };
     
-    const userRole = sessionUser.role as UserRole;
+    const userRoles = sessionUser.roles;
     
     let urgentOrdersCount = 0;
     try {
@@ -85,12 +85,12 @@ export default async function DashboardLayout({ children }: { children: ReactNod
                 </header>
                 <main className="mx-auto w-full max-w-[1600px] p-0 md:px-5 md:py-8">
                     <div className="hidden md:block px-4 py-4 md:p-0 sticky top-[65px] z-40 bg-transparent">
-                        <DashboardNav urgentOrdersCount={urgentOrdersCount} userRole={userRole} />
+                        <DashboardNav urgentOrdersCount={urgentOrdersCount} userRoles={userRoles} />
                     </div>
                     {children}
                 </main>
             </div>
-            <MobileNav user={user} urgentOrdersCount={urgentOrdersCount} userRole={userRole} />
+            <MobileNav user={user} urgentOrdersCount={urgentOrdersCount} userRoles={userRoles} />
         </>
 	);
 }

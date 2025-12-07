@@ -21,7 +21,7 @@ import { updateMontageMaterialDetails } from '../../actions';
 import type { Montage, MaterialsEditHistoryEntry } from '../../types';
 import { type UserRole } from '@/lib/db/schema';
 
-export function MontageMaterialCard({ montage, userRole = 'admin' }: { montage: Montage; userRole?: UserRole }) {
+export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montage: Montage; userRoles?: UserRole[] }) {
   const [isEditing, setIsEditing] = useState(false);
   const router = useRouter();
 
@@ -100,7 +100,7 @@ export function MontageMaterialCard({ montage, userRole = 'admin' }: { montage: 
     <Card>
       <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
         <CardTitle className='text-sm font-medium'>Materiały</CardTitle>
-        {userRole === 'admin' && (
+        {userRoles.includes('admin') && (
         <Dialog open={isEditing} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>
             <Button variant='ghost' size='icon' className='h-8 w-8'>

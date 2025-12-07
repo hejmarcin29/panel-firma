@@ -19,11 +19,11 @@ const links = [
 	{ href: '/dashboard/settings', label: 'Ustawienia' },
 ];
 
-export function DashboardNav({ urgentOrdersCount = 0, userRole = 'admin' }: { urgentOrdersCount?: number; userRole?: UserRole }) {
+export function DashboardNav({ urgentOrdersCount = 0, userRoles = ['admin'] }: { urgentOrdersCount?: number; userRoles?: UserRole[] }) {
 	const pathname = usePathname();
 
     const filteredLinks = links.filter(link => {
-        if (userRole === 'admin') return true;
+        if (userRoles.includes('admin')) return true;
         const restrictedLinks = ['/dashboard/customers', '/dashboard/orders', '/dashboard/products', '/dashboard/mail', '/dashboard/settings'];
         return !restrictedLinks.includes(link.href);
     });

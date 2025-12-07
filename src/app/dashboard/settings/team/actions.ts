@@ -17,7 +17,7 @@ export async function getTeamMembers() {
         id: users.id,
         name: users.name,
         email: users.email,
-        role: users.role,
+        roles: users.roles,
         isActive: users.isActive,
         createdAt: users.createdAt,
     })
@@ -29,16 +29,16 @@ export async function createEmployee({
     name,
     email,
     password,
-    role
+    roles
 }: {
     name: string;
     email: string;
     password: string;
-    role: UserRole;
+    roles: UserRole[];
 }) {
     const currentUser = await requireUser();
     
-    if (currentUser.role !== 'admin') {
+    if (!currentUser.roles.includes('admin')) {
         throw new Error('Brak uprawnień do dodawania pracowników.');
     }
 
@@ -57,7 +57,7 @@ export async function createEmployee({
         email,
         name,
         passwordHash,
-        role,
+        roles,
         isActive: true,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -69,7 +69,7 @@ export async function createEmployee({
 export async function toggleEmployeeStatus(userId: string, isActive: boolean) {
     const currentUser = await requireUser();
     
-    if (currentUser.role !== 'admin') {
+    if (!currentUser.roles.includes('admin')) {
         throw new Error('Brak uprawnień.');
     }
 
@@ -84,10 +84,10 @@ export async function toggleEmployeeStatus(userId: string, isActive: boolean) {
     revalidatePath(TEAM_SETTINGS_PATH);
 }
 
-export async function updateEmployeeRole(userId: string, role: UserRole) {
+export async function updateEmployeeRoles(userId: string, roles: UserRole[]) {
     const currentUser = await requireUser();
     
-    if (currentUser.role !== 'admin') {
+    if (!currentUser.roles.includes('admin')) {
         throw new Error('Brak uprawnień.');
     }
 
@@ -96,7 +96,7 @@ export async function updateEmployeeRole(userId: string, role: UserRole) {
     }
 
     await db.update(users)
-        .set({ role, updatedAt: new Date() })
+        .set({ roles, updatedAt: new Date() })
         .where(eq(users.id, userId));
 
     revalidatePath(TEAM_SETTINGS_PATH);

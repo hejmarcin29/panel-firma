@@ -25,7 +25,7 @@ import { type UserRole } from '@/lib/db/schema';
 
 import { formatScheduleRange } from "../../utils";
 
-export function MontageClientCard({ montage, userRole = 'admin' }: { montage: Montage; userRole?: UserRole }) {
+export function MontageClientCard({ montage, userRoles = ['admin'] }: { montage: Montage; userRoles?: UserRole[] }) {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
@@ -102,7 +102,7 @@ export function MontageClientCard({ montage, userRole = 'admin' }: { montage: Mo
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">Dane Klienta</CardTitle>
-        {userRole === 'admin' && (
+        {userRoles.includes('admin') && (
         <Dialog open={isEditing} onOpenChange={setIsEditing}>
           <DialogTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">

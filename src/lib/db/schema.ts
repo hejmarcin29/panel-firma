@@ -68,7 +68,7 @@ export const users = sqliteTable(
 		email: text('email').notNull(),
 		passwordHash: text('password_hash').notNull(),
 		name: text('name'),
-		role: text('role').$type<UserRole>().notNull().default('admin'),
+		roles: text('roles', { mode: 'json' }).$type<UserRole[]>().notNull().default(['admin']),
 		isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
 		dashboardConfig: text('dashboard_config', { mode: 'json' }),
 		mobileMenuConfig: text('mobile_menu_config', { mode: 'json' }),

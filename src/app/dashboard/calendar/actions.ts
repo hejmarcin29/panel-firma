@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { orders, montages, customers } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
+import { requireUser } from '@/lib/auth/session';
 
 export type CalendarEventType = 'order' | 'montage';
 
@@ -20,18 +21,25 @@ export interface CalendarEvent {
 }
 
 export async function getCalendarEvents(): Promise<{ scheduled: CalendarEvent[]; unscheduled: CalendarEvent[] }> {
+  const user = await requireUser();
+  const canSeeOrders = user.roles.includes('admin') || user.roles.includes('measurer');
+  const canSeeAllMontages = user.roles.includes('admin') || user.roles.includes('measurer');
+
   const [ordersData, montagesData] = await Promise.all([
-    db
-      .select({
-        id: orders.id,
-        expectedShipDate: orders.expectedShipDate,
-        status: orders.status,
-        totalGross: orders.totalGross,
-        currency: orders.currency,
-        customerName: customers.name,
-      })
-      .from(orders)
-      .leftJoin(customers, eq(orders.customerId, customers.id)),
+    // Installers don't see orders
+    !canSeeOrders 
+      ? Promise.resolve([]) 
+      : db
+        .select({
+          id: orders.id,
+          expectedShipDate: orders.expectedShipDate,
+          status: orders.status,
+          totalGross: orders.totalGross,
+          currency: orders.currency,
+          customerName: customers.name,
+        })
+        .from(orders)
+        .leftJoin(customers, eq(orders.customerId, customers.id)),
     db
       .select({
         id: montages.id,
@@ -41,7 +49,8 @@ export async function getCalendarEvents(): Promise<{ scheduled: CalendarEvent[];
         address: montages.address,
         status: montages.status,
       })
-      .from(montages),
+      .from(montages)
+      .where(!canSeeAllMontages ? eq(montages.installerId, user.id) : undefined),
   ]);
 
   const allOrders: CalendarEvent[] = ordersData.map((order) => ({

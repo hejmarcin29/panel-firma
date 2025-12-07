@@ -72,7 +72,7 @@ function levelBadgeClass(level: LogLevel) {
 export default async function SettingsPage() {
   const sessionUser = await requireUser();
   
-  if (sessionUser.role !== 'admin') {
+  if (!sessionUser.roles.includes('admin')) {
       redirect('/dashboard');
   }
   

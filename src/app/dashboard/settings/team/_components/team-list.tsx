@@ -14,8 +14,7 @@ import {
   DropdownMenuSub,
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
+  DropdownMenuCheckboxItem,
 } from '@/components/ui/dropdown-menu';
 import {
   Table,
@@ -26,14 +25,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { toggleEmployeeStatus, updateEmployeeRole } from '../actions';
+import { toggleEmployeeStatus, updateEmployeeRoles } from '../actions';
 import type { UserRole } from '@/lib/db/schema';
 
 interface TeamMember {
     id: string;
     name: string | null;
     email: string;
-    role: UserRole;
+    roles: UserRole[];
     isActive: boolean;
     createdAt: Date;
 }
@@ -69,10 +68,22 @@ export function TeamList({ members, currentUserId }: TeamListProps) {
     });
   };
 
-  const handleRoleChange = (userId: string, newRole: string) => {
+  const handleRoleToggle = (userId: string, role: UserRole, currentRoles: UserRole[]) => {
     startTransition(async () => {
         try {
-            await updateEmployeeRole(userId, newRole as UserRole);
+            let newRoles: UserRole[];
+            if (currentRoles.includes(role)) {
+                newRoles = currentRoles.filter(r => r !== role);
+            } else {
+                newRoles = [...currentRoles, role];
+            }
+            
+            if (newRoles.length === 0) {
+                alert('Użytkownik musi mieć przynajmniej jedną rolę.');
+                return;
+            }
+
+            await updateEmployeeRoles(userId, newRoles);
         } catch (e) {
             console.error(e);
             alert('Wystąpił błąd podczas zmiany roli.');
@@ -102,9 +113,13 @@ export function TeamList({ members, currentUserId }: TeamListProps) {
                 </div>
               </TableCell>
               <TableCell>
-                <div className="flex items-center gap-2">
-                    {roleIcons[member.role]}
-                    <span>{roleLabels[member.role]}</span>
+                <div className="flex flex-col gap-1">
+                    {member.roles.map(role => (
+                        <div key={role} className="flex items-center gap-2">
+                            {roleIcons[role]}
+                            <span className="text-sm">{roleLabels[role]}</span>
+                        </div>
+                    ))}
                 </div>
               </TableCell>
               <TableCell>
@@ -135,11 +150,24 @@ export function TeamList({ members, currentUserId }: TeamListProps) {
                             Zmień rolę
                         </DropdownMenuSubTrigger>
                         <DropdownMenuSubContent>
-                            <DropdownMenuRadioGroup value={member.role} onValueChange={(val) => handleRoleChange(member.id, val)}>
-                                <DropdownMenuRadioItem value="admin">Administrator</DropdownMenuRadioItem>
-                                <DropdownMenuRadioItem value="measurer">Pomiarowiec</DropdownMenuRadioItem>
-                                <DropdownMenuRadioItem value="installer">Montażysta</DropdownMenuRadioItem>
-                            </DropdownMenuRadioGroup>
+                            <DropdownMenuCheckboxItem 
+                                checked={member.roles.includes('admin')}
+                                onCheckedChange={() => handleRoleToggle(member.id, 'admin', member.roles)}
+                            >
+                                Administrator
+                            </DropdownMenuCheckboxItem>
+                            <DropdownMenuCheckboxItem 
+                                checked={member.roles.includes('measurer')}
+                                onCheckedChange={() => handleRoleToggle(member.id, 'measurer', member.roles)}
+                            >
+                                Pomiarowiec
+                            </DropdownMenuCheckboxItem>
+                            <DropdownMenuCheckboxItem 
+                                checked={member.roles.includes('installer')}
+                                onCheckedChange={() => handleRoleToggle(member.id, 'installer', member.roles)}
+                            >
+                                Montażysta
+                            </DropdownMenuCheckboxItem>
                         </DropdownMenuSubContent>
                     </DropdownMenuSub>
                   </DropdownMenuContent>

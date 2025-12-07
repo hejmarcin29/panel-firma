@@ -67,7 +67,7 @@ const menuLinks = [
   { href: "/dashboard/settings", label: "Ustawienia", icon: Settings },
 ];
 
-export function MobileNav({ user, urgentOrdersCount = 0, userRole = 'admin' }: { user: { name?: string | null; email?: string | null; mobileMenuConfig?: string | null }, urgentOrdersCount?: number, userRole?: UserRole }) {
+export function MobileNav({ user, urgentOrdersCount = 0, userRoles = ['admin'] }: { user: { name?: string | null; email?: string | null; mobileMenuConfig?: string | null }, urgentOrdersCount?: number, userRoles?: UserRole[] }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -103,7 +103,7 @@ export function MobileNav({ user, urgentOrdersCount = 0, userRole = 'admin' }: {
   const restrictedLinks = ['/dashboard/customers', '/dashboard/orders', '/dashboard/products', '/dashboard/mail', '/dashboard/settings'];
   
   const isAllowed = (href: string) => {
-      if (userRole === 'admin') return true;
+      if (userRoles.includes('admin')) return true;
       return !restrictedLinks.includes(href);
   };
 

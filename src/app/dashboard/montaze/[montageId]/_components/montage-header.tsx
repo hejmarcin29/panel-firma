@@ -22,10 +22,10 @@ import { type UserRole } from '@/lib/db/schema';
 interface MontageHeaderProps {
   montage: Montage;
   statusOptions: StatusOption[];
-  userRole?: UserRole;
+  userRoles?: UserRole[];
 }
 
-export function MontageHeader({ montage, statusOptions, userRole = 'admin' }: MontageHeaderProps) {
+export function MontageHeader({ montage, statusOptions, userRoles = ['admin'] }: MontageHeaderProps) {
   const router = useRouter();
   const isMobile = useIsMobile();
   const [pending, startTransition] = useTransition();
@@ -37,7 +37,7 @@ export function MontageHeader({ montage, statusOptions, userRole = 'admin' }: Mo
     });
   };
 
-  const canEditStatus = userRole === 'admin';
+  const canEditStatus = userRoles.includes('admin');
 
   return (
     <div className="sticky top-0 z-10 flex flex-col gap-4 border-b bg-background/95 px-4 py-4 backdrop-blur supports-backdrop-filter:bg-background/60 sm:px-6">

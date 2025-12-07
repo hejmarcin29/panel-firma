@@ -9,7 +9,7 @@ import { AddEmployeeDialog } from './_components/add-employee-dialog';
 export default async function TeamSettingsPage() {
     const user = await getCurrentUser();
     
-    if (!user || user.role !== 'admin') {
+    if (!user || !user.roles.includes('admin')) {
         redirect('/dashboard');
     }
 

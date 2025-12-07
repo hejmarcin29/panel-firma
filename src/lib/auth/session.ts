@@ -43,7 +43,7 @@ type SessionRecord = {
 		id: string;
 		email: string;
 		name: string | null;
-		role: UserRole;
+		roles: UserRole[];
 	};
 };
 
@@ -61,7 +61,7 @@ async function findSession(token: string): Promise<SessionRecord | null> {
 			userId: users.id,
 			email: users.email,
 			name: users.name,
-			role: users.role,
+			roles: users.roles,
 		})
 		.from(sessions)
 		.innerJoin(users, eq(users.id, sessions.userId))
@@ -79,7 +79,7 @@ async function findSession(token: string): Promise<SessionRecord | null> {
 			id: row.userId,
 			email: row.email,
 			name: row.name,
-			role: row.role,
+			roles: row.roles,
 		},
 	};
 }
