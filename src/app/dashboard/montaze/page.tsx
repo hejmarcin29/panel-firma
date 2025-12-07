@@ -155,9 +155,19 @@ export default async function MontazePage(props: any) {
 
     return (
         <div className="flex flex-col h-[calc(100vh-4rem)]">
-            <div className="hidden md:block border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-                <div className="flex h-16 items-center px-4 sm:px-6 justify-between gap-4">
-                    <h1 className="text-lg font-semibold">Centrum Montaży</h1>
+            <div className="border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+                <div className="flex flex-col md:flex-row md:h-16 md:items-center px-4 py-3 md:py-0 sm:px-6 justify-between gap-3 md:gap-4">
+                    <div className="flex items-center justify-between">
+                        <h1 className="text-lg font-semibold">Centrum Montaży</h1>
+                        <div className="md:hidden">
+                            <Button asChild size="sm" className="h-8 w-8 p-0 rounded-full">
+                                <Link href="/dashboard/montaze/nowy">
+                                    <Plus className="h-4 w-4" />
+                                    <span className="sr-only">Dodaj</span>
+                                </Link>
+                            </Button>
+                        </div>
+                    </div>
                     <MontageViewSwitcher />
                 </div>
             </div>

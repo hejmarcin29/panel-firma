@@ -20,13 +20,16 @@ type SystemLog = {
 };
 
 const ACTION_LABELS: Record<string, string> = {
-    'create_montage': 'Utworzono montaż',
+    'create_montage': 'Utworzono',
     'update_montage_status': 'Zmiana statusu',
     'update_montage_automation': 'Automatyzacja',
     'update_montage_statuses': 'Edycja statusów',
-    'update_webhook_secret': 'Konfiguracja webhooka',
+    'update_webhook_secret': 'Webhook',
     'update_r2_config': 'Konfiguracja R2',
-    'update_montage_templates': 'Edycja szablonów',
+    'update_montage_templates': 'Szablony',
+    'montage.update_realization_status': 'Status realizacji',
+    'montage.update_material_status': 'Status materiału',
+    'montage.update_installer_status': 'Status montażysty',
 };
 
 export function MontageLogTab({ montage, logs = [] }: { montage: Montage; logs?: SystemLog[] }) {

@@ -25,6 +25,8 @@ import { MontageGalleryTab } from './_components/montage-gallery-tab';
 import { MontageLogTab } from './_components/montage-log-tab';
 import { MontageMeasurementTab } from '../_components/montage-measurement-tab';
 
+import { MontageDetailsLayout } from './_components/montage-details-layout';
+
 type MontageDetailsPageParams = {
     params: Promise<{
         montageId: string;
@@ -103,41 +105,19 @@ export default async function MontageDetailsPage({ params, searchParams }: Monta
 
     return (
         <div className="flex min-h-screen flex-col bg-muted/10">
-            <MontageHeader montage={montage} statusOptions={statusOptions} userRole={user.role} />
-            
-            <main className="container mx-auto grid gap-6 p-4 md:grid-cols-[350px_1fr] lg:grid-cols-[400px_1fr] lg:p-8">
-                <div className="grid grid-cols-2 gap-4 md:grid-cols-1 md:gap-6">
-                    <MontageClientCard montage={montage} userRole={user.role} />
-                    <MontageMaterialCard montage={montage} userRole={user.role} />
-                </div>
-
-                <div className="space-y-6">
-                    <Tabs defaultValue={activeTab} className="w-full">
-                        <TabsList className="flex w-full overflow-x-auto md:grid md:grid-cols-5">
-                            <TabsTrigger value="log" className="flex-1">Dziennik</TabsTrigger>
-                            <TabsTrigger value="workflow" className="flex-1">Przebieg</TabsTrigger>
-                            <TabsTrigger value="measurement" className="flex-1">Pomiar</TabsTrigger>
-                            <TabsTrigger value="tasks" className="flex-1">Zadania</TabsTrigger>
-                            <TabsTrigger value="gallery" className="flex-1">Załączniki</TabsTrigger>
-                        </TabsList>
-                        <TabsContent value="log" className="mt-6">
-                            <MontageLogTab montage={montage} logs={logs} />
-                        </TabsContent>
-                        <TabsContent value="workflow" className="mt-6">
-                            <MontageWorkflowTab montage={montage} statusOptions={statusOptions} />
-                        </TabsContent>
-                        <TabsContent value="measurement" className="mt-6">
-                            <MontageMeasurementTab montage={montage} />
-                        </TabsContent>
-                        <TabsContent value="tasks" className="mt-6">
-                            <MontageTasksTab montage={montage} />
-                        </TabsContent>
-                        <TabsContent value="gallery" className="mt-6">
-                            <MontageGalleryTab montage={montage} />
-                        </TabsContent>
-                    </Tabs>
-                </div>
-            </main>
+            <MontageDetailsLayout 
+                header={<MontageHeader montage={montage} statusOptions={statusOptions} userRole={user.role} />}
+                clientCard={<MontageClientCard montage={montage} userRole={user.role} />}
+                materialCard={<MontageMaterialCard montage={montage} userRole={user.role} />}
+                defaultTab={activeTab}
+                tabs={{
+                    log: <MontageLogTab montage={montage} logs={logs} />,
+                    workflow: <MontageWorkflowTab montage={montage} statusOptions={statusOptions} />,
+                    measurement: <MontageMeasurementTab montage={montage} />,
+                    tasks: <MontageTasksTab montage={montage} />,
+                    gallery: <MontageGalleryTab montage={montage} />,
+                }}
+            />
         </div>
     );
 }

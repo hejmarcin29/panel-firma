@@ -70,19 +70,44 @@ export function ProductsListClient({
 
             <div className="flex items-center justify-between px-2">
                  <Button variant="outline" size="sm" onClick={() => setShowDebug(!showDebug)}>
-                    {showDebug ? 'Ukryj Debug' : 'Debug'}
+                    {showDebug ? 'Ukryj diagnostykę' : 'Diagnostyka'}
                 </Button>
             </div>
 
             {showDebug && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Debug Info</CardTitle>
+                <Card className="mb-4">
+                    <CardHeader className="py-3">
+                        <CardTitle className="text-sm font-medium">Diagnostyka danych</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <pre className="text-xs overflow-auto max-h-40">
-                            {JSON.stringify(Object.fromEntries(searchParams.entries()), null, 2)}
-                        </pre>
+                    <CardContent className="text-xs font-mono">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <h4 className="font-bold mb-1">Search Params:</h4>
+                                <pre className="bg-muted p-2 rounded overflow-auto max-h-40">
+                                    {JSON.stringify(Object.fromEntries(searchParams.entries()), null, 2)}
+                                </pre>
+                            </div>
+                            <div>
+                                <h4 className="font-bold mb-1">Stats:</h4>
+                                <ul className="list-disc list-inside">
+                                    <li>Total: {initialTotal}</li>
+                                    <li>Pages: {initialTotalPages}</li>
+                                    <li>Current Page: {currentPage}</li>
+                                    <li>Loaded Products: {initialProducts.length}</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div className="mt-4">
+                            <h4 className="font-bold mb-1">First Product Data (Preview):</h4>
+                            {initialProducts.length > 0 ? (
+                                <pre className="bg-muted p-2 rounded overflow-auto max-h-60">
+                                    {JSON.stringify(initialProducts[0], null, 2)}
+                                </pre>
+                            ) : (
+                                <p className="text-muted-foreground">No products loaded.</p>
+                            )}
+                        </div>
                     </CardContent>
                 </Card>
             )}
