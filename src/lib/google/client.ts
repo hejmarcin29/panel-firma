@@ -2,7 +2,7 @@ import { google } from 'googleapis';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
 
 export async function getGoogleAuth() {
-  let clientEmail = await getAppSetting(appSettingKeys.googleClientEmail);
+  const clientEmail = await getAppSetting(appSettingKeys.googleClientEmail);
   let privateKey = await getAppSetting(appSettingKeys.googlePrivateKey);
 
   // Fallback to env vars if not in DB (handled by getAppSetting fallback logic, but explicit check here for safety if needed)
