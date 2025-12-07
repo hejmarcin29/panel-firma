@@ -986,7 +986,7 @@ export async function updateMontageRealizationStatus({
 
     await logSystemEvent(
         'montage.update_realization_status',
-        `Zaktualizowano status realizacji dla montażu ${montageId}: ${changes.join(', ')}`,
+        `${changes.join(', ')} [${montageId}]`,
         user.id
     );
 

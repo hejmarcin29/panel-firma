@@ -133,7 +133,13 @@ export function MontageLogTab({ montage, logs = [] }: { montage: Montage; logs?:
                                 <Badge variant="outline" className="mr-2">
                                     {ACTION_LABELS[log.action] || log.action}
                                 </Badge>
-                                {log.details?.replace(montage.id, montage.displayId ? `${montage.displayId} (${montage.clientName})` : montage.clientName)}
+                                {(() => {
+                                    if (!log.details) return null;
+                                    let text = log.details;
+                                    text = text.replace(`Zaktualizowano status realizacji dla montażu ${montage.id}: `, '');
+                                    text = text.replace(` [${montage.id}]`, '');
+                                    return text.replace(montage.id, montage.displayId ? `${montage.displayId} (${montage.clientName})` : montage.clientName);
+                                })()}
                             </div>
                         </div>
                     </div>
