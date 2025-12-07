@@ -22,6 +22,7 @@ export const appSettingKeys = {
 	montageStatuses: 'montage.statuses',
 	kpiMontageThreatDays: 'kpi.montage_threat_days',
 	kpiOrderUrgentDays: 'kpi.order_urgent_days',
+	googleCalendarId: 'google.calendar_id',
 } as const;
 
 export type AppSettingKey = (typeof appSettingKeys)[keyof typeof appSettingKeys];
@@ -55,6 +56,8 @@ function readEnvFallback(key: AppSettingKey): string | null {
 			return process.env.CLOUDFLARE_R2_API_TOKEN?.trim() || null;
 		case appSettingKeys.r2PublicBaseUrl:
 			return process.env.CLOUDFLARE_R2_PUBLIC_BASE_URL?.trim() || null;
+		case appSettingKeys.googleCalendarId:
+			return process.env.GOOGLE_CALENDAR_ID?.trim() || null;
 		default:
 			return null;
 	}

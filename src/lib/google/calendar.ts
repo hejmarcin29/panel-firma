@@ -1,6 +1,5 @@
 import { getCalendarClient } from './client';
-
-const CALENDAR_ID = process.env.GOOGLE_CALENDAR_ID;
+import { getAppSetting, appSettingKeys } from '@/lib/settings';
 
 export type GoogleCalendarEvent = {
   summary: string;
@@ -8,16 +7,18 @@ export type GoogleCalendarEvent = {
   location?: string;
   start: { dateTime: string };
   end: { dateTime: string };
+  attendees?: { email: string }[];
 };
 
 export async function createGoogleCalendarEvent(event: GoogleCalendarEvent) {
-  if (!CALENDAR_ID) return null;
+  const calendarId = await getAppSetting(appSettingKeys.googleCalendarId);
+  if (!calendarId) return null;
   const calendar = await getCalendarClient();
   if (!calendar) return null;
 
   try {
     const response = await calendar.events.insert({
-      calendarId: CALENDAR_ID,
+      calendarId: calendarId,
       requestBody: event,
     });
     return response.data.id;
@@ -28,13 +29,14 @@ export async function createGoogleCalendarEvent(event: GoogleCalendarEvent) {
 }
 
 export async function updateGoogleCalendarEvent(eventId: string, event: Partial<GoogleCalendarEvent>) {
-  if (!CALENDAR_ID) return null;
+  const calendarId = await getAppSetting(appSettingKeys.googleCalendarId);
+  if (!calendarId) return null;
   const calendar = await getCalendarClient();
   if (!calendar) return null;
 
   try {
     await calendar.events.patch({
-      calendarId: CALENDAR_ID,
+      calendarId: calendarId,
       eventId: eventId,
       requestBody: event,
     });
@@ -46,13 +48,14 @@ export async function updateGoogleCalendarEvent(eventId: string, event: Partial<
 }
 
 export async function deleteGoogleCalendarEvent(eventId: string) {
-  if (!CALENDAR_ID) return null;
+  const calendarId = await getAppSetting(appSettingKeys.googleCalendarId);
+  if (!calendarId) return null;
   const calendar = await getCalendarClient();
   if (!calendar) return null;
 
   try {
     await calendar.events.delete({
-      calendarId: CALENDAR_ID,
+      calendarId: calendarId,
       eventId: eventId,
     });
     return true;

@@ -14,6 +14,7 @@ import {
 	type MontageStatus,
 	montageStatuses,
 	customers,
+	users,
 } from '@/lib/db/schema';
 import { uploadMontageObject } from '@/lib/r2/storage';
 import { getMontageChecklistTemplates } from '@/lib/montaze/checklist';
@@ -378,12 +379,24 @@ export async function createMontage({
 
     // Google Calendar Sync
     if (forecastedDate) {
+        let attendees: { email: string }[] = [];
+        if (installerId) {
+            const installer = await db.query.users.findFirst({
+                where: eq(users.id, installerId),
+                columns: { email: true }
+            });
+            if (installer?.email) {
+                attendees.push({ email: installer.email });
+            }
+        }
+
         const eventId = await createGoogleCalendarEvent({
             summary: `Montaż: ${trimmedName} (${displayId})`,
             description: `Montaż dla klienta: ${trimmedName}\nTelefon: ${contactPhone || 'Brak'}\nAdres: ${fallbackAddressLine || 'Brak'}\nSzczegóły: ${normalizedMaterialDetails || 'Brak'}`,
             location: fallbackAddressLine || '',
             start: { dateTime: forecastedDate.toISOString() },
             end: { dateTime: new Date(forecastedDate.getTime() + 60 * 60 * 1000).toISOString() }, // 1 hour default
+            attendees,
         });
 
         if (eventId) {
@@ -549,12 +562,25 @@ export async function updateMontageContactDetails({
     } else if (montage && !montage.googleEventId && scheduledInstallationAt) {
         // Create new event if it doesn't exist
         const endDate = scheduledInstallationEndAt || new Date(scheduledInstallationAt.getTime() + 60 * 60 * 1000);
+        
+        let attendees: { email: string }[] = [];
+        if (montage.installerId) {
+             const installer = await db.query.users.findFirst({
+                where: eq(users.id, montage.installerId),
+                columns: { email: true }
+            });
+            if (installer?.email) {
+                attendees.push({ email: installer.email });
+            }
+        }
+
         const eventId = await createGoogleCalendarEvent({
             summary: `Montaż: ${trimmedName} (${montage.displayId})`,
             description: `Montaż dla klienta: ${trimmedName}\nTelefon: ${normalizedPhone || 'Brak'}\nAdres: ${combinedAddress || 'Brak'}`,
             location: combinedAddress || '',
             start: { dateTime: scheduledInstallationAt.toISOString() },
             end: { dateTime: endDate.toISOString() },
+            attendees,
         });
 
         if (eventId) {
@@ -1055,6 +1081,28 @@ export async function updateMontageRealizationStatus({
     }
     if (measurerId !== undefined) {
         changes.push(`Zmieniono pomiarowca`);
+    }
+
+    // Sync Google Calendar if installer changed
+    if (installerId !== undefined) {
+        const montage = await db.query.montages.findFirst({
+            where: eq(montages.id, montageId),
+            columns: { googleEventId: true }
+        });
+
+        if (montage?.googleEventId) {
+            let attendees: { email: string }[] = [];
+            if (installerId) {
+                const installer = await db.query.users.findFirst({
+                    where: eq(users.id, installerId),
+                    columns: { email: true }
+                });
+                if (installer?.email) {
+                    attendees.push({ email: installer.email });
+                }
+            }
+            await updateGoogleCalendarEvent(montage.googleEventId, { attendees });
+        }
     }
 
     await logSystemEvent(

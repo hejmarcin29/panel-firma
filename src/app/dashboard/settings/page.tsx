@@ -30,6 +30,7 @@ import { ThemeSelector } from './_components/theme-selector';
 import { DensitySelector } from './_components/density-selector';
 import { MobileMenuItem } from './actions';
 import { WooSettingsForm } from './integrations/_components/woo-settings-form';
+import { GoogleCalendarSettingsForm } from './integrations/_components/google-calendar-settings-form';
 import { IntegrationLogs } from './integrations/_components/integration-logs';
 import { WpChangesSettings } from './_components/wp-changes-settings';
 import TeamPage from './team/page';
@@ -129,6 +130,7 @@ export default async function SettingsPage() {
 		montageStatusDefinitions,
 		kpiMontageThreatDays,
 		kpiOrderUrgentDays,
+		googleCalendarId,
 	] = await Promise.all([
 		getAppSetting(appSettingKeys.wooWebhookSecret),
 		getAppSetting(appSettingKeys.wooConsumerKey),
@@ -146,6 +148,7 @@ export default async function SettingsPage() {
 		getMontageStatusDefinitions(),
 		getAppSetting(appSettingKeys.kpiMontageThreatDays),
 		getAppSetting(appSettingKeys.kpiOrderUrgentDays),
+		getAppSetting(appSettingKeys.googleCalendarId),
 	]);
 
     const statusOptions = montageStatusDefinitions.map(def => ({
@@ -403,6 +406,7 @@ export default async function SettingsPage() {
 							*/}
 							<TabsList className="flex flex-col h-auto w-full gap-2 bg-transparent p-0">
 								<TabsTrigger value="woocommerce" className="w-full justify-start border bg-background data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">WooCommerce</TabsTrigger>
+								<TabsTrigger value="google" className="w-full justify-start border bg-background data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Kalendarz Google</TabsTrigger>
 								<TabsTrigger value="mail" className="w-full justify-start border bg-background data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Poczta</TabsTrigger>
 								<TabsTrigger value="storage" className="w-full justify-start border bg-background data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Magazyn plików</TabsTrigger>
 							</TabsList>
@@ -410,8 +414,9 @@ export default async function SettingsPage() {
 
 						{/* Desktop: Grid */}
 						<div className="hidden md:block">
-							<TabsList className="grid w-full grid-cols-3">
+							<TabsList className="grid w-full grid-cols-4">
 								<TabsTrigger value="woocommerce">WooCommerce</TabsTrigger>
+								<TabsTrigger value="google">Kalendarz Google</TabsTrigger>
 								<TabsTrigger value="mail">Poczta</TabsTrigger>
 								<TabsTrigger value="storage">Magazyn plików</TabsTrigger>
 							</TabsList>
@@ -439,6 +444,9 @@ export default async function SettingsPage() {
 								}))} />
 							</div>
 						</div>
+					</TabsContent>
+					<TabsContent value="google">
+						<GoogleCalendarSettingsForm initialCalendarId={googleCalendarId ?? ''} />
 					</TabsContent>
 					<TabsContent value="mail">
 						<MailSettingsForm accounts={formattedMailAccounts} />
