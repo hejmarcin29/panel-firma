@@ -34,9 +34,6 @@ type InProgressStage =
 // PageProps for this project treat searchParams as a Promise.
 // We normalise it inside the function instead.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-// Using a generic props type here because Next's generated PageProps
-// treat searchParams as a Promise. We normalise it inside.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default async function MontazePage(props: any) {
     const searchParams = (await props.searchParams) as
         | { view?: string; stage?: string }
