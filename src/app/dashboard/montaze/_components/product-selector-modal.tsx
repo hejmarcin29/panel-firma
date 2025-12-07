@@ -8,7 +8,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Search, Loader2, Check } from 'lucide-react';
 import { getMontageProducts } from '../actions';
 import { cn } from '@/lib/utils';
@@ -25,7 +24,7 @@ interface Product {
 interface ProductSelectorModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelect: (productName: string) => void;
+  onSelect: (product: Product) => void;
   type: 'panel' | 'skirting';
   currentValue?: string;
 }
@@ -43,6 +42,7 @@ export function ProductSelectorModal({
 
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsLoading(true);
       getMontageProducts(type)
         .then(setProducts)
@@ -83,7 +83,7 @@ export function ProductSelectorModal({
             ) : filteredProducts.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                     <p>Brak produktów do wyświetlenia.</p>
-                    <p className="text-sm">Upewnij się, że produkty są oznaczone jako "Do montażu" w panelu produktów.</p>
+                    <p className="text-sm">Upewnij się, że produkty są oznaczone jako &quot;Do montażu&quot; w panelu produktów.</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pb-4">
@@ -95,7 +95,7 @@ export function ProductSelectorModal({
                                 currentValue === product.name && "border-primary bg-accent ring-1 ring-primary"
                             )}
                             onClick={() => {
-                                onSelect(product.name);
+                                onSelect(product);
                                 onClose();
                             }}
                         >

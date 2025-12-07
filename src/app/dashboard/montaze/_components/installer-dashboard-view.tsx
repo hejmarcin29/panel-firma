@@ -98,7 +98,7 @@ function MontageCard({ montage, isToday = false, compact = false }: { montage: M
     <Link href={`/dashboard/montaze/${montage.id}`} className="block group">
       <Card className={cn(
         "transition-all duration-200 hover:shadow-md active:scale-[0.98]",
-        isToday ? "border-primary/50 shadow-sm bg-gradient-to-br from-card to-primary/5" : "hover:border-primary/30"
+        isToday ? "border-primary/50 shadow-sm bg-linear-to-br from-card to-primary/5" : "hover:border-primary/30"
       )}>
         <CardContent className="p-4">
           <div className="flex justify-between items-start mb-3">

@@ -34,7 +34,7 @@ export function ProductMontageSettings({
     try {
       await updateProductMontageSettings(productId, checked, montageType);
       toast.success('Zaktualizowano ustawienia montażu');
-    } catch (error) {
+    } catch {
       setIsForMontage(!checked); // Revert
       toast.error('Błąd aktualizacji');
     } finally {
@@ -48,7 +48,7 @@ export function ProductMontageSettings({
     try {
       await updateProductMontageSettings(productId, isForMontage, value);
       toast.success('Zaktualizowano typ produktu');
-    } catch (error) {
+    } catch {
       setMontageType(montageType); // Revert
       toast.error('Błąd aktualizacji');
     } finally {
@@ -73,7 +73,7 @@ export function ProductMontageSettings({
       {isForMontage && (
         <Select
           value={montageType || 'other'}
-          onValueChange={(val) => handleTypeChange(val as any)}
+          onValueChange={(val) => handleTypeChange(val as 'panel' | 'skirting' | 'other')}
           disabled={isPending}
         >
           <SelectTrigger className="h-7 text-xs">
