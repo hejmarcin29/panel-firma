@@ -80,23 +80,23 @@ export default async function MontazePage(props: any) {
     }
 
     if (view === 'lead') {
-        conditions.push(eq(montages.status, 'Lead'));
+        conditions.push(eq(montages.status, 'lead'));
     } else if (view === 'done') {
-        conditions.push(eq(montages.status, 'Zakończono'));
+        conditions.push(eq(montages.status, 'completed'));
     } else {
         const inProgressStatuses = [
-            'Przed pomiarem',
-            'Przed 1. wpłata',
-            'Przed montazem',
-            'Przed FV i protokołem',
+            'before_measurement',
+            'before_first_payment',
+            'before_installation',
+            'before_final_invoice',
         ];
 
         let filteredStatuses = inProgressStatuses;
         if (stage !== 'all') {
-            if (stage === 'before-measure') filteredStatuses = ['Przed pomiarem'];
-            if (stage === 'before-first-payment') filteredStatuses = ['Przed 1. wpłata'];
-            if (stage === 'before-install') filteredStatuses = ['Przed montazem'];
-            if (stage === 'before-invoice') filteredStatuses = ['Przed FV i protokołem'];
+            if (stage === 'before-measure') filteredStatuses = ['before_measurement'];
+            if (stage === 'before-first-payment') filteredStatuses = ['before_first_payment'];
+            if (stage === 'before-install') filteredStatuses = ['before_installation'];
+            if (stage === 'before-invoice') filteredStatuses = ['before_final_invoice'];
         }
 
         conditions.push(inArray(montages.status, filteredStatuses));
