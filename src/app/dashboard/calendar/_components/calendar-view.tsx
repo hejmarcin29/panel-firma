@@ -55,6 +55,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 interface CalendarViewProps {
   initialScheduledEvents: CalendarEvent[];
@@ -67,6 +68,7 @@ export function CalendarView({
   initialUnscheduledEvents,
   initialDate,
 }: CalendarViewProps) {
+  const router = useRouter();
   const [currentDate, setCurrentDate] = React.useState(initialDate);
   const [scheduledEvents, setScheduledEvents] = React.useState<CalendarEvent[]>(
     initialScheduledEvents
@@ -345,9 +347,11 @@ export function CalendarView({
                   return true;
                 })}
                 onEventClick={(event) => {
-                  toast.info(event.title, {
-                    description: `${format(event.date!, 'HH:mm')} - ${event.endDate ? format(event.endDate, 'HH:mm') : ''}`,
-                  });
+                  if (event.type === 'montage') {
+                    router.push(`/dashboard/montaze/${event.id}`);
+                  } else {
+                    router.push(`/dashboard/orders/${event.id}`);
+                  }
                 }}
               />
             ) : viewMode === 'month-compact' ? (

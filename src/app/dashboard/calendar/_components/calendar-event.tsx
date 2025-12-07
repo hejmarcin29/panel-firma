@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { MapPin, DollarSign, Clock, Calendar as CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
+import { useRouter } from 'next/navigation';
 import {
   HoverCard,
   HoverCardContent,
@@ -17,12 +18,23 @@ interface CalendarEventProps {
 }
 
 export function CalendarEventCard({ event, className }: CalendarEventProps) {
+  const router = useRouter();
   const isMontage = event.type === 'montage';
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isMontage) {
+      router.push(`/dashboard/montaze/${event.id}`);
+    } else {
+      router.push(`/dashboard/orders/${event.id}`);
+    }
+  };
 
   return (
     <HoverCard>
       <HoverCardTrigger asChild>
         <div
+          onClick={handleClick}
           className={cn(
             'group flex flex-col gap-1 rounded-md border px-2 py-1 text-xs font-medium shadow-sm transition-all hover:shadow-md cursor-pointer',
             isMontage

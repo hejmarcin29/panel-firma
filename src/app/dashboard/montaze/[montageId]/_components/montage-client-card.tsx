@@ -1,16 +1,22 @@
 "use client";
 
-import { MapPin, Phone, Mail, Calendar, Edit2, Ruler, Loader2, Check, Hammer, User } from "lucide-react";
+import { MapPin, Phone, Mail, Calendar as CalendarIcon, Edit2, Ruler, Loader2, Check, Hammer, User } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { pl } from "date-fns/locale";
+import { DateRange } from "react-day-picker";
 
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Dialog,
   DialogContent,
@@ -44,6 +50,11 @@ export function MontageClientCard({ montage, userRoles = ['admin'] }: { montage:
       : "",
   });
 
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: montage.scheduledInstallationAt ? new Date(montage.scheduledInstallationAt) : undefined,
+    to: montage.scheduledInstallationEndAt ? new Date(montage.scheduledInstallationEndAt) : undefined,
+  });
+
   // Update local state when prop changes (e.g. after refresh)
   useEffect(() => {
     setFormData({
@@ -57,6 +68,10 @@ export function MontageClientCard({ montage, userRoles = ['admin'] }: { montage:
         scheduledInstallationEndAt: montage.scheduledInstallationEndAt 
           ? new Date(montage.scheduledInstallationEndAt as string | number | Date).toISOString().split("T")[0] 
           : "",
+    });
+    setDateRange({
+        from: montage.scheduledInstallationAt ? new Date(montage.scheduledInstallationAt) : undefined,
+        to: montage.scheduledInstallationEndAt ? new Date(montage.scheduledInstallationEndAt) : undefined,
     });
   }, [montage]);
 
@@ -85,6 +100,21 @@ export function MontageClientCard({ montage, userRoles = ['admin'] }: { montage:
 
   const handleChange = (field: keyof typeof formData, value: string) => {
     const newData = { ...formData, [field]: value };
+    setFormData(newData);
+    debouncedSave(newData);
+  };
+
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    setDateRange(range);
+    
+    const newFrom = range?.from ? format(range.from, "yyyy-MM-dd") : "";
+    const newTo = range?.to ? format(range.to, "yyyy-MM-dd") : "";
+    
+    const newData = { 
+        ...formData, 
+        scheduledInstallationAt: newFrom,
+        scheduledInstallationEndAt: newTo 
+    };
     setFormData(newData);
     debouncedSave(newData);
   };
@@ -150,25 +180,42 @@ export function MontageClientCard({ montage, userRoles = ['admin'] }: { montage:
                   onChange={(e) => handleChange("installationCity", e.target.value)}
                 />
               </div>
-               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="scheduledInstallationAt">Data montażu (od)</Label>
-                    <Input
-                    id="scheduledInstallationAt"
-                    type="date"
-                    value={formData.scheduledInstallationAt}
-                    onChange={(e) => handleChange("scheduledInstallationAt", e.target.value)}
+               <div className="space-y-2">
+                <Label>Data montażu (zakres)</Label>
+                <Popover>
+                    <PopoverTrigger asChild>
+                    <Button
+                        variant={"outline"}
+                        className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !dateRange && "text-muted-foreground"
+                        )}
+                    >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dateRange?.from ? (
+                        dateRange.to ? (
+                            <>
+                            {format(dateRange.from, "dd.MM.yyyy", { locale: pl })} -{" "}
+                            {format(dateRange.to, "dd.MM.yyyy", { locale: pl })}
+                            </>
+                        ) : (
+                            format(dateRange.from, "dd.MM.yyyy", { locale: pl })
+                        )
+                        ) : (
+                        <span>Wybierz datę</span>
+                        )}
+                    </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                        mode="range"
+                        selected={dateRange}
+                        onSelect={handleDateRangeChange}
+                        numberOfMonths={2}
+                        locale={pl}
                     />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="scheduledInstallationEndAt">Data montażu (do)</Label>
-                    <Input
-                    id="scheduledInstallationEndAt"
-                    type="date"
-                    value={formData.scheduledInstallationEndAt}
-                    onChange={(e) => handleChange("scheduledInstallationEndAt", e.target.value)}
-                    />
-                </div>
+                    </PopoverContent>
+                </Popover>
                </div>
                
                <div className="flex items-center justify-end gap-2 pt-2">
@@ -239,7 +286,7 @@ export function MontageClientCard({ montage, userRoles = ['admin'] }: { montage:
         </div>
 
         <div className="flex items-center gap-3">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
             <div className="grid gap-0.5">
                 <span className="text-sm">
                     {formattedDate || (forecastedDate ? `Szac: ${forecastedDate}` : "Nie zaplanowano")}
