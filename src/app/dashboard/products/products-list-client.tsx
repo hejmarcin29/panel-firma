@@ -27,6 +27,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+function formatPrice(price: string | number) {
+    if (!price) return '-';
+    const numPrice = typeof price === 'string' ? parseFloat(price) : price;
+    if (isNaN(numPrice)) return price.toString();
+    return new Intl.NumberFormat('pl-PL', {
+        style: 'currency',
+        currency: 'PLN',
+    }).format(numPrice);
+}
+
 interface ProductsListClientProps {
     initialProducts: WooCommerceProduct[];
     initialTotal: number;
@@ -278,7 +288,20 @@ export function ProductsListClient({
                                     </TableCell>
                                     <TableCell className="hidden md:table-cell">{product.sku || '-'}</TableCell>
                                     <TableCell className="text-right md:text-left">
-                                        <div dangerouslySetInnerHTML={{ __html: product.price_html }} />
+                                        {product.on_sale && product.sale_price ? (
+                                            <div className="flex flex-col items-end md:items-start">
+                                                <span className="text-xs text-muted-foreground line-through">
+                                                    {formatPrice(product.regular_price)}
+                                                </span>
+                                                <span className="font-medium text-red-600">
+                                                    {formatPrice(product.sale_price)}
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            <span className="font-medium">
+                                                {formatPrice(product.price || product.regular_price)}
+                                            </span>
+                                        )}
                                     </TableCell>
                                     <TableCell className="hidden md:table-cell">
                                         {product.manage_stock ? (

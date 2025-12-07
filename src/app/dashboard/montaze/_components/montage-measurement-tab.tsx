@@ -278,7 +278,7 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
       </div>
 
       <div className="space-y-6">
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 grid-cols-1">
           {/* Floor Calculator */}
           <div className="space-y-3 p-4 border rounded-lg bg-muted/5">
             <h4 className="font-medium text-sm flex items-center gap-2">
@@ -323,7 +323,7 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
                             placeholder="np. Dąb Naturalny"
                             value={panelModel}
                             onChange={(e) => setPanelModel(e.target.value)}
-                            className="h-8 text-sm"
+                            className="h-8 text-sm flex-1"
                         />
                         <Button 
                             type="button" 
@@ -400,7 +400,7 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
                             placeholder="np. Biała MDF 8cm"
                             value={skirtingModel}
                             onChange={(e) => setSkirtingModel(e.target.value)}
-                            className="h-8 text-sm"
+                            className="h-8 text-sm flex-1"
                         />
                         <Button 
                             type="button" 
