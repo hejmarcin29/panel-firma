@@ -6,6 +6,18 @@ import { like, eq, and, desc, asc, count } from 'drizzle-orm';
 import { getAppSettings, appSettingKeys } from '@/lib/settings';
 import { syncProducts } from '@/lib/sync/products';
 
+export async function updateProductMontageSettings(
+    productId: number, 
+    isForMontage: boolean, 
+    montageType: 'panel' | 'skirting' | 'other' | null
+) {
+    await db.update(products)
+        .set({ isForMontage, montageType })
+        .where(eq(products.id, productId));
+    
+    return { success: true };
+}
+
 export async function syncProductsAction() {
     return await syncProducts();
 }
@@ -48,6 +60,8 @@ export interface WooCommerceProduct {
     stock_quantity: number | null;
     stock_status: string;
     backorders: string;
+    isForMontage?: boolean;
+    montageType?: 'panel' | 'skirting' | 'other' | null;
     backorders_allowed: boolean;
     backordered: boolean;
     sold_individually: boolean;
@@ -444,6 +458,8 @@ export async function getProductsFromDb(
         grouped_products: [],
         menu_order: 0,
         meta_data: [],
+        isForMontage: p.isForMontage ?? false,
+        montageType: p.montageType,
     }));
 
     return { products: mappedProducts, total, totalPages };

@@ -213,6 +213,11 @@ export function MontageClientCard({ montage, userRoles = ['admin'] }: { montage:
                         onSelect={handleDateRangeChange}
                         numberOfMonths={2}
                         locale={pl}
+                        classNames={{
+                            day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
+                            day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+                            day_today: "bg-accent text-accent-foreground",
+                        }}
                     />
                     </PopoverContent>
                 </Popover>

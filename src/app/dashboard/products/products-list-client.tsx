@@ -17,6 +17,7 @@ import { ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 import { WooCommerceProduct, WooCommerceCategory, WooCommerceAttributeTerm } from './actions';
 import { ProductControlBar } from '@/components/shop/product-control-bar';
 import { FilterModal } from '@/components/shop/filter-modal';
+import { ProductMontageSettings } from './_components/product-montage-settings';
 
 interface ProductsListClientProps {
     initialProducts: WooCommerceProduct[];
@@ -121,6 +122,7 @@ export function ProductsListClient({
                         <TableRow>
                             <TableHead className="w-16 md:w-20">Obraz</TableHead>
                             <TableHead>Nazwa</TableHead>
+                            <TableHead className="w-40">Do montażu</TableHead>
                             <TableHead className="hidden md:table-cell">SKU</TableHead>
                             <TableHead className="text-right md:text-left">Cena</TableHead>
                             <TableHead className="hidden md:table-cell">Stan</TableHead>
@@ -171,6 +173,13 @@ export function ProductsListClient({
                                                 <span>{product.sku || '-'}</span>
                                             </div>
                                         </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <ProductMontageSettings 
+                                            productId={product.id}
+                                            initialIsForMontage={product.isForMontage || false}
+                                            initialMontageType={product.montageType || null}
+                                        />
                                     </TableCell>
                                     <TableCell className="hidden md:table-cell">{product.sku || '-'}</TableCell>
                                     <TableCell className="text-right md:text-left">

@@ -29,7 +29,7 @@ export async function testGoogleCalendarConnection() {
     console.error('Google Calendar Test Error:', error);
     // Check for common errors
     if (error.code === 404) {
-         return { success: false, message: `Nie znaleziono kalendarza o ID: ${calendarId}. Sprawdź czy ID jest poprawne.` };
+         return { success: false, message: `Nie znaleziono kalendarza o ID: ${calendarId}. Sprawdź czy ID jest poprawne oraz czy udostępniłeś ten kalendarz dla adresu e-mail konta usługi (Service Account).` };
     }
     if (error.code === 403) {
          return { success: false, message: `Brak dostępu do kalendarza. Upewnij się, że udostępniłeś kalendarz dla adresu e-mail konta usługi.` };

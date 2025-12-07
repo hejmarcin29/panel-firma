@@ -390,9 +390,12 @@ export async function createMontage({
             }
         }
 
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') || '';
+        const montageUrl = appUrl ? `${appUrl}/dashboard/montaze/${montageId}` : '';
+
         const eventId = await createGoogleCalendarEvent({
             summary: `Montaż: ${trimmedName} (${displayId})`,
-            description: `Montaż dla klienta: ${trimmedName}\nTelefon: ${contactPhone || 'Brak'}\nAdres: ${fallbackAddressLine || 'Brak'}\nSzczegóły: ${normalizedMaterialDetails || 'Brak'}`,
+            description: `Montaż dla klienta: ${trimmedName}\nTelefon: ${contactPhone || 'Brak'}\nAdres: ${fallbackAddressLine || 'Brak'}\nSzczegóły: ${normalizedMaterialDetails || 'Brak'}${montageUrl ? `\n\nLink do montażu: ${montageUrl}` : ''}`,
             location: fallbackAddressLine || '',
             start: { dateTime: forecastedDate.toISOString() },
             end: { dateTime: new Date(forecastedDate.getTime() + 60 * 60 * 1000).toISOString() }, // 1 hour default
@@ -543,12 +546,15 @@ export async function updateMontageContactDetails({
         where: (table, { eq }) => eq(table.id, montageId),
     });
 
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') || '';
+    const montageUrl = appUrl ? `${appUrl}/dashboard/montaze/${montageId}` : '';
+
     if (montage && montage.googleEventId) {
         if (scheduledInstallationAt) {
             const endDate = scheduledInstallationEndAt || new Date(scheduledInstallationAt.getTime() + 60 * 60 * 1000);
             await updateGoogleCalendarEvent(montage.googleEventId, {
                 summary: `Montaż: ${trimmedName} (${montage.displayId})`,
-                description: `Montaż dla klienta: ${trimmedName}\nTelefon: ${normalizedPhone || 'Brak'}\nAdres: ${combinedAddress || 'Brak'}`,
+                description: `Montaż dla klienta: ${trimmedName}\nTelefon: ${normalizedPhone || 'Brak'}\nAdres: ${combinedAddress || 'Brak'}${montageUrl ? `\n\nLink do montażu: ${montageUrl}` : ''}`,
                 location: combinedAddress || '',
                 start: { dateTime: scheduledInstallationAt.toISOString() },
                 end: { dateTime: endDate.toISOString() },
@@ -576,7 +582,7 @@ export async function updateMontageContactDetails({
 
         const eventId = await createGoogleCalendarEvent({
             summary: `Montaż: ${trimmedName} (${montage.displayId})`,
-            description: `Montaż dla klienta: ${trimmedName}\nTelefon: ${normalizedPhone || 'Brak'}\nAdres: ${combinedAddress || 'Brak'}`,
+            description: `Montaż dla klienta: ${trimmedName}\nTelefon: ${normalizedPhone || 'Brak'}\nAdres: ${combinedAddress || 'Brak'}${montageUrl ? `\n\nLink do montażu: ${montageUrl}` : ''}`,
             location: combinedAddress || '',
             start: { dateTime: scheduledInstallationAt.toISOString() },
             end: { dateTime: endDate.toISOString() },
@@ -956,6 +962,28 @@ export async function updateMontageChecklistItemLabel({ montageId, itemId, label
 
 	await touchMontage(montageId);
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
+}
+
+import { products } from '@/lib/db/schema';
+
+export async function getMontageProducts(type: 'panel' | 'skirting') {
+    await requireUser();
+    
+    const results = await db.select({
+        id: products.id,
+        name: products.name,
+        sku: products.sku,
+        imageUrl: products.imageUrl,
+        stockStatus: products.stockStatus,
+        stockQuantity: products.stockQuantity,
+    })
+    .from(products)
+    .where(and(
+        eq(products.isForMontage, true),
+        eq(products.montageType, type)
+    ));
+
+    return results;
 }
 
 export async function updateMontageMeasurement({

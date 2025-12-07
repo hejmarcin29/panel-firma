@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { CalendarIcon, Eraser, Plus, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
+import { DateRange } from 'react-day-picker';
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -34,6 +35,8 @@ import type { Montage } from '../types';
 import { updateMontageMeasurement, addMontageTask, toggleMontageTask } from '../actions';
 
 import { Loader2, Check } from 'lucide-react';
+
+import { ProductSelectorModal } from './product-selector-modal';
 
 interface MontageMeasurementTabProps {
   montage: Montage;
@@ -68,16 +71,18 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
   const [additionalWorkDescription, setAdditionalWorkDescription] = useState(montage.measurementAdditionalWorkDescription || '');
 
   const [additionalInfo, setAdditionalInfo] = useState(montage.additionalInfo || '');
-  const [scheduledDate, setScheduledDate] = useState<Date | undefined>(
-    montage.scheduledInstallationAt ? new Date(montage.scheduledInstallationAt) : undefined
-  );
-  const [scheduledEndDate, setScheduledEndDate] = useState<Date | undefined>(
-    montage.scheduledInstallationEndAt ? new Date(montage.scheduledInstallationEndAt) : undefined
-  );
+  
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: montage.scheduledInstallationAt ? new Date(montage.scheduledInstallationAt) : undefined,
+    to: montage.scheduledInstallationEndAt ? new Date(montage.scheduledInstallationEndAt) : undefined,
+  });
 
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const isFirstRender = useRef(true);
+
+  const [isPanelSelectorOpen, setIsPanelSelectorOpen] = useState(false);
+  const [isSkirtingSelectorOpen, setIsSkirtingSelectorOpen] = useState(false);
 
   const saveData = useCallback(async () => {
       setIsSaving(true);
@@ -100,8 +105,8 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
           measurementAdditionalWorkDescription: additionalWorkDescription,
           additionalInfo,
           sketchUrl: sketchDataUrl,
-          scheduledInstallationAt: scheduledDate ? scheduledDate.getTime() : null,
-          scheduledInstallationEndAt: scheduledEndDate ? scheduledEndDate.getTime() : null,
+          scheduledInstallationAt: dateRange?.from ? dateRange.from.getTime() : null,
+          scheduledInstallationEndAt: dateRange?.to ? dateRange.to.getTime() : null,
         });
         setLastSaved(new Date());
       } catch (err) {
@@ -127,8 +132,7 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
     additionalWorkDescription,
     additionalInfo,
     sketchDataUrl,
-    scheduledDate,
-    scheduledEndDate
+    dateRange,
   ]);
 
   useEffect(() => {
@@ -313,13 +317,24 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
             <div className="space-y-2 pt-2 border-t border-dashed">
                 <div className="space-y-1">
                     <Label htmlFor="panelModel" className="text-xs text-muted-foreground">Model paneli</Label>
-                    <Input
-                    id="panelModel"
-                    placeholder="np. Dąb Naturalny"
-                    value={panelModel}
-                    onChange={(e) => setPanelModel(e.target.value)}
-                    className="h-8 text-sm"
-                    />
+                    <div className="flex gap-2">
+                        <Input
+                            id="panelModel"
+                            placeholder="np. Dąb Naturalny"
+                            value={panelModel}
+                            onChange={(e) => setPanelModel(e.target.value)}
+                            className="h-8 text-sm"
+                        />
+                        <Button 
+                            type="button" 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-8 px-2"
+                            onClick={() => setIsPanelSelectorOpen(true)}
+                        >
+                            Wybierz
+                        </Button>
+                    </div>
                 </div>
                 <div className="space-y-1">
                     <Label htmlFor="panelAdditionalMaterials" className="text-xs text-muted-foreground">Dodatkowe (podkład, folia...)</Label>
@@ -379,13 +394,24 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
             <div className="space-y-2 pt-2 border-t border-dashed">
                 <div className="space-y-1">
                     <Label htmlFor="skirtingModel" className="text-xs text-muted-foreground">Model listew</Label>
-                    <Input
-                    id="skirtingModel"
-                    placeholder="np. Biała MDF 8cm"
-                    value={skirtingModel}
-                    onChange={(e) => setSkirtingModel(e.target.value)}
-                    className="h-8 text-sm"
-                    />
+                    <div className="flex gap-2">
+                        <Input
+                            id="skirtingModel"
+                            placeholder="np. Biała MDF 8cm"
+                            value={skirtingModel}
+                            onChange={(e) => setSkirtingModel(e.target.value)}
+                            className="h-8 text-sm"
+                        />
+                        <Button 
+                            type="button" 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-8 px-2"
+                            onClick={() => setIsSkirtingSelectorOpen(true)}
+                        >
+                            Wybierz
+                        </Button>
+                    </div>
                 </div>
                 <div className="space-y-1">
                     <Label htmlFor="skirtingAdditionalMaterials" className="text-xs text-muted-foreground">Dodatkowe (klej, narożniki...)</Label>
@@ -491,54 +517,47 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
             </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4">
             <div className="space-y-2">
-              <Label>Data montażu (od)</Label>
+              <Label>Termin montażu</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant={"outline"}
                     className={cn(
                       "w-full justify-start text-left font-normal",
-                      !scheduledDate && "text-muted-foreground"
+                      !dateRange?.from && "text-muted-foreground"
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {scheduledDate ? format(scheduledDate, "PPP", { locale: pl }) : <span>Wybierz datę</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={scheduledDate}
-                    onSelect={setScheduledDate}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Data montażu (do)</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !scheduledEndDate && "text-muted-foreground"
+                    {dateRange?.from ? (
+                      dateRange.to ? (
+                        <>
+                          {format(dateRange.from, "PPP", { locale: pl })} -{" "}
+                          {format(dateRange.to, "PPP", { locale: pl })}
+                        </>
+                      ) : (
+                        format(dateRange.from, "PPP", { locale: pl })
+                      )
+                    ) : (
+                      <span>Wybierz termin montażu</span>
                     )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {scheduledEndDate ? format(scheduledEndDate, "PPP", { locale: pl }) : <span>Wybierz datę</span>}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
+                <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
-                    mode="single"
-                    selected={scheduledEndDate}
-                    onSelect={setScheduledEndDate}
                     initialFocus
+                    mode="range"
+                    defaultMonth={dateRange?.from}
+                    selected={dateRange}
+                    onSelect={setDateRange}
+                    numberOfMonths={2}
+                    locale={pl}
+                    classNames={{
+                        day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
+                        day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+                        day_today: "bg-accent text-accent-foreground",
+                    }}
                   />
                 </PopoverContent>
               </Popover>
@@ -663,7 +682,27 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
         </div>
 
         {/* Removed Save Button */}
-      </div>
-    </div>
-  );
+            </div>
+            
+            <ProductSelectorModal
+                isOpen={isPanelSelectorOpen}
+                onClose={() => setIsPanelSelectorOpen(false)}
+                onSelect={(product) => {
+                    setPanelModel(product.name);
+                    setIsPanelSelectorOpen(false);
+                }}
+                type="panel"
+            />
+
+            <ProductSelectorModal
+                isOpen={isSkirtingSelectorOpen}
+                onClose={() => setIsSkirtingSelectorOpen(false)}
+                onSelect={(product) => {
+                    setSkirtingModel(product.name);
+                    setIsSkirtingSelectorOpen(false);
+                }}
+                type="skirting"
+            />
+        </div>
+    );
 }

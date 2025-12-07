@@ -972,6 +972,8 @@ export const products = sqliteTable('products', {
 	imageUrl: text('image_url'),
 	categories: text('categories', { mode: 'json' }), // JSON array of category IDs
 	attributes: text('attributes', { mode: 'json' }), // JSON array of attributes
+	isForMontage: integer('is_for_montage', { mode: 'boolean' }).default(false),
+	montageType: text('montage_type').$type<'panel' | 'skirting' | 'other'>(),
 	updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(sql`(strftime('%s','now') * 1000)`),
 	syncedAt: integer('synced_at', { mode: 'timestamp_ms' }).notNull().default(sql`(strftime('%s','now') * 1000)`),
 });
