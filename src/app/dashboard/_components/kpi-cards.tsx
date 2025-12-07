@@ -5,7 +5,6 @@ import {
     AlertCircle, 
     Briefcase, 
     ShoppingCart, 
-    ListTodo, 
     CalendarDays, 
     ArrowUpRight,
     CreditCard,
@@ -24,7 +23,6 @@ interface KPICardsProps {
   pendingPaymentsCount: number;
   urgentTasksCount: number;
   newOrdersCount: number;
-  todoCount: number;
   urgentOrdersCount?: number;
   stalledOrdersCount?: number;
   orderUrgentDays?: number;
@@ -39,12 +37,11 @@ export function KPICards({
   pendingPaymentsCount,
   urgentTasksCount,
   newOrdersCount,
-  todoCount,
   urgentOrdersCount = 0,
   stalledOrdersCount = 0,
   settings
 }: KPICardsProps) {
-  const visibleCards = settings?.visibleCards || ['today', 'leads', 'payments', 'urgent', 'orders', 'todo', 'urgentOrders', 'stalledOrders'];
+  const visibleCards = settings?.visibleCards || ['today', 'leads', 'payments', 'urgent', 'orders', 'urgentOrders', 'stalledOrders'];
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 h-full">
