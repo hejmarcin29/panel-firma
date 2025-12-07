@@ -1,5 +1,4 @@
 import { getCalendarClient } from './client';
-import { logSystemEvent } from '@/lib/logging';
 
 const CALENDAR_ID = process.env.GOOGLE_CALENDAR_ID;
 

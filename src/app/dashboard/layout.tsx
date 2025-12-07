@@ -14,7 +14,7 @@ import { logoutAction } from './actions';
 import { requireUser } from '@/lib/auth/session';
 import { getUrgentOrdersCount } from './orders/queries';
 import { db } from '@/lib/db';
-import { users, type UserRole } from '@/lib/db/schema';
+import { users } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {

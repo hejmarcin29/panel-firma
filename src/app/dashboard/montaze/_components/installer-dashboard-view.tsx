@@ -1,12 +1,12 @@
 "use client";
 
-import { format, isToday, isTomorrow, isPast, isFuture, parseISO } from "date-fns";
+import { format, isToday, isFuture } from "date-fns";
 import { pl } from "date-fns/locale";
-import { MapPin, Phone, Calendar, Clock, Navigation, ChevronRight } from "lucide-react";
+import { MapPin, Phone, Calendar, Clock, Navigation } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { Montage } from "../types";
@@ -25,8 +25,6 @@ export function InstallerDashboardView({ montages }: InstallerDashboardViewProps
     if (!dateB) return -1;
     return dateA - dateB;
   });
-
-  const today = new Date();
   
   const todayMontages = sortedMontages.filter(m => 
     m.scheduledInstallationAt && isToday(new Date(m.scheduledInstallationAt))
