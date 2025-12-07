@@ -16,12 +16,10 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     const page = typeof resolvedSearchParams.page === 'string' ? parseInt(resolvedSearchParams.page) : 1;
     
     const categoryIds = typeof resolvedSearchParams.categories === 'string' ? resolvedSearchParams.categories : undefined;
-    const brandIds = typeof resolvedSearchParams.brands === 'string' ? resolvedSearchParams.brands : undefined;
     
-    // getProducts currently only supports single category/brand.
-    // I'll take the first one if multiple are selected for now, or update getProducts to support array if possible (not easy with standard WC API).
+    // getProducts currently only supports single category.
+    // I'll take the first one if multiple are selected for now.
     const categoryId = categoryIds ? parseInt(categoryIds.split(',')[0]) : undefined;
-    const brandTermId = brandIds ? parseInt(brandIds.split(',')[0]) : undefined;
 
     const scope = typeof resolvedSearchParams.scope === 'string' ? resolvedSearchParams.scope as 'public' | 'private' | 'all' : 'public';
     const search = typeof resolvedSearchParams.q === 'string' ? resolvedSearchParams.q : undefined;
@@ -33,33 +31,12 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         getAttributes()
     ]);
 
-    // Find "Brand" or "Marka" attribute
-    const brandAttribute = attributes.find(attr => 
-        attr.name.toLowerCase() === 'marka' || 
-        attr.name.toLowerCase() === 'brand' || 
-        attr.slug.toLowerCase().includes('brand') ||
-        attr.slug.toLowerCase().includes('marka')
-    );
-
-    let brandTerms: WooCommerceAttributeTerm[] = [];
-    let brandName: string | undefined;
-
-    if (brandAttribute) {
-        brandTerms = await getAttributeTerms(brandAttribute.id);
-        if (brandTermId) {
-            const term = brandTerms.find(t => t.id === brandTermId);
-            if (term) {
-                brandName = term.name;
-            }
-        }
-    }
-
     // Fetch other attribute terms
     const otherAttributeTerms: Record<string, WooCommerceAttributeTerm[]> = {};
     const attributeFilters: Record<string, string> = {};
 
     const filterPromises = FILTERS_CONFIG
-        .filter(f => f.id !== 'categories' && f.id !== 'brands' && f.id !== 'price')
+        .filter(f => f.id !== 'categories' && f.id !== 'price')
         .map(async (filter) => {
             const attr = attributes.find(a => a.slug === filter.id);
             if (attr) {
@@ -84,8 +61,6 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         page, 
         perPage, 
         categoryId, 
-        brandTermId,
-        brandName,
         attributeFilters,
         scope,
         search,
@@ -99,7 +74,6 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             initialTotalPages={productsData.totalPages}
             currentPage={page}
             categories={categories}
-            brandTerms={brandTerms}
             otherAttributeTerms={otherAttributeTerms}
         />
     );

@@ -5,11 +5,13 @@ import { useDebouncedCallback } from 'use-debounce';
 import { Loader2, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-import { saveGoogleCalendarSettings } from '../google-actions';
+import { saveGoogleCalendarSettings, testGoogleCalendarConnection } from '../google-actions';
 
 interface GoogleCalendarSettingsFormProps {
   initialCalendarId: string;
@@ -22,6 +24,8 @@ export function GoogleCalendarSettingsForm({ initialCalendarId, initialClientEma
   const [clientEmail, setClientEmail] = useState(initialClientEmail);
   const [privateKey, setPrivateKey] = useState(initialPrivateKey);
   const [isSaving, setIsSaving] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
 
   const debouncedSave = useDebouncedCallback(async () => {
     setIsSaving(true);
@@ -31,6 +35,7 @@ export function GoogleCalendarSettingsForm({ initialCalendarId, initialClientEma
       formData.append('clientEmail', clientEmail);
       formData.append('privateKey', privateKey);
       await saveGoogleCalendarSettings(formData);
+      setTestResult(null); // Reset test result on change
     } catch {
       toast.error('Błąd zapisu ustawień Kalendarza Google');
     } finally {
@@ -42,6 +47,24 @@ export function GoogleCalendarSettingsForm({ initialCalendarId, initialClientEma
     const value = e.target.value;
     setter(value);
     debouncedSave();
+  };
+
+  const handleTestConnection = async () => {
+    setIsTesting(true);
+    setTestResult(null);
+    try {
+        const result = await testGoogleCalendarConnection();
+        setTestResult(result);
+        if (result.success) {
+            toast.success(result.message);
+        } else {
+            toast.error(result.message);
+        }
+    } catch (error) {
+        toast.error('Wystąpił błąd podczas testowania połączenia.');
+    } finally {
+        setIsTesting(false);
+    }
   };
 
   return (
@@ -97,11 +120,38 @@ export function GoogleCalendarSettingsForm({ initialCalendarId, initialClientEma
           </p>
         </div>
 
-        {isSaving && (
+        <div className="flex items-center justify-between pt-4">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Zapisywanie...
+                {isSaving && (
+                    <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Zapisywanie...
+                    </>
+                )}
             </div>
+            <Button 
+                variant="outline" 
+                onClick={handleTestConnection} 
+                disabled={isTesting || isSaving || !calendarId || !clientEmail || !privateKey}
+            >
+                {isTesting ? (
+                    <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Testowanie...
+                    </>
+                ) : (
+                    'Testuj połączenie'
+                )}
+            </Button>
+        </div>
+
+        {testResult && (
+            <Alert variant={testResult.success ? 'default' : 'destructive'} className={testResult.success ? 'border-emerald-500 text-emerald-600' : ''}>
+                <AlertTitle>{testResult.success ? 'Sukces' : 'Błąd'}</AlertTitle>
+                <AlertDescription>
+                    {testResult.message}
+                </AlertDescription>
+            </Alert>
         )}
       </CardContent>
     </Card>

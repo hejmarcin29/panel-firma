@@ -14,8 +14,8 @@ export const FILTERS_CONFIG: FilterConfig[] = [
     type: 'checkbox',
   },
   {
-    id: 'brands',
-    label: 'Marka',
+    id: 'pa_kolekcja',
+    label: 'Kolekcja',
     type: 'checkbox',
   },
   {

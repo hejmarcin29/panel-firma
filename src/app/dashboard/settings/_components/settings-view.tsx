@@ -11,8 +11,10 @@ import {
   RefreshCw,
   Users,
   BookOpen,
+  ArrowLeft,
 } from "lucide-react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 interface SettingsViewProps {
   children: React.ReactNode;
@@ -43,7 +45,9 @@ export function SettingsView({
   const router = useRouter();
   const pathname = usePathname();
   
-  const currentTab = searchParams.get('tab') || 'appearance';
+  const tabParam = searchParams.get('tab');
+  const currentTab = tabParam || 'appearance';
+  const isMobileMenuOpen = !tabParam;
 
   const handleTabChange = (value: string) => {
       const params = new URLSearchParams(searchParams.toString());
@@ -51,20 +55,36 @@ export function SettingsView({
       router.push(`${pathname}?${params.toString()}`);
   };
 
+  const handleBack = () => {
+    router.push(pathname);
+  };
+
   return (
     <div className="space-y-4 md:space-y-6 p-4 md:p-6">
-      <div>
-        <h1 className="text-xl md:text-2xl font-semibold tracking-tight">Ustawienia</h1>
-        <p className="text-sm text-muted-foreground hidden md:block">
-          Zarządzaj konfiguracją aplikacji, integracjami i kontami pocztowymi.
-        </p>
+      <div className="flex items-center gap-2">
+        {!isMobileMenuOpen && (
+            <Button 
+                variant="ghost" 
+                size="icon" 
+                className="md:hidden -ml-2" 
+                onClick={handleBack}
+            >
+                <ArrowLeft className="h-5 w-5" />
+            </Button>
+        )}
+        <div>
+            <h1 className="text-xl md:text-2xl font-semibold tracking-tight">Ustawienia</h1>
+            <p className="text-sm text-muted-foreground hidden md:block">
+            Zarządzaj konfiguracją aplikacji, integracjami i kontami pocztowymi.
+            </p>
+        </div>
       </div>
 
-      {/* Mobile settings hub */}
-      <div className="grid gap-2 md:hidden">
+      {/* Mobile settings hub - visible only when no tab is selected on mobile */}
+      <div className={cn("grid gap-2 md:hidden", !isMobileMenuOpen && "hidden")}>
         <Button
-          variant={currentTab === "appearance" ? "secondary" : "ghost"}
-          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3"
+          variant="ghost"
+          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3 bg-card border shadow-sm"
           onClick={() => handleTabChange("appearance")}
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -77,8 +97,8 @@ export function SettingsView({
         </Button>
 
         <Button
-          variant={currentTab === "general" ? "secondary" : "ghost"}
-          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3"
+          variant="ghost"
+          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3 bg-card border shadow-sm"
           onClick={() => handleTabChange("general")}
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
@@ -91,8 +111,8 @@ export function SettingsView({
         </Button>
 
         <Button
-          variant={currentTab === "team" ? "secondary" : "ghost"}
-          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3"
+          variant="ghost"
+          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3 bg-card border shadow-sm"
           onClick={() => handleTabChange("team")}
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
@@ -105,8 +125,8 @@ export function SettingsView({
         </Button>
 
         <Button
-          variant={currentTab === "integrations" ? "secondary" : "ghost"}
-          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3"
+          variant="ghost"
+          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3 bg-card border shadow-sm"
           onClick={() => handleTabChange("integrations")}
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
@@ -119,8 +139,8 @@ export function SettingsView({
         </Button>
 
         <Button
-          variant={currentTab === "kpi" ? "secondary" : "ghost"}
-          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3"
+          variant="ghost"
+          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3 bg-card border shadow-sm"
           onClick={() => handleTabChange("kpi")}
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
@@ -133,8 +153,8 @@ export function SettingsView({
         </Button>
 
         <Button
-          variant={currentTab === "mobile-menu" ? "secondary" : "ghost"}
-          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3"
+          variant="ghost"
+          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3 bg-card border shadow-sm"
           onClick={() => handleTabChange("mobile-menu")}
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
@@ -147,8 +167,8 @@ export function SettingsView({
         </Button>
 
         <Button
-          variant={currentTab === "montage" ? "secondary" : "ghost"}
-          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3"
+          variant="ghost"
+          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3 bg-card border shadow-sm"
           onClick={() => handleTabChange("montage")}
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
@@ -161,8 +181,8 @@ export function SettingsView({
         </Button>
 
         <Button
-          variant={currentTab === "wp-changes" ? "secondary" : "ghost"}
-          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3"
+          variant="ghost"
+          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3 bg-card border shadow-sm"
           onClick={() => handleTabChange("wp-changes")}
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
@@ -175,8 +195,8 @@ export function SettingsView({
         </Button>
 
         <Button
-          variant={currentTab === "logs" ? "secondary" : "ghost"}
-          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3"
+          variant="ghost"
+          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3 bg-card border shadow-sm"
           onClick={() => handleTabChange("logs")}
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
@@ -189,8 +209,8 @@ export function SettingsView({
         </Button>
 
         <Button
-          variant={currentTab === "documentation" ? "secondary" : "ghost"}
-          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3"
+          variant="ghost"
+          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3 bg-card border shadow-sm"
           onClick={() => handleTabChange("documentation")}
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
@@ -206,7 +226,7 @@ export function SettingsView({
       <Tabs
         value={currentTab}
         onValueChange={handleTabChange}
-        className="flex flex-col md:flex-row gap-4 md:gap-8"
+        className={cn("flex flex-col md:flex-row gap-4 md:gap-8", isMobileMenuOpen && "hidden md:flex")}
       >
         <aside className="w-full md:w-64 shrink-0 hidden md:block">
           <TabsList className="flex flex-col h-auto w-full justify-start bg-transparent p-0 gap-2 overflow-visible">

@@ -33,7 +33,7 @@ export function FilterModal({ isOpen, onClose, availableOptions, totalProducts }
         
         <div className="flex-1 overflow-y-auto px-6 py-4 min-h-0">
           <div className="space-y-6">
-            <Accordion type="multiple" defaultValue={['categories', 'brands', 'price']}>
+            <Accordion type="multiple" defaultValue={['categories', 'pa_kolekcja', 'price']}>
               {FILTERS_CONFIG.map((filter) => (
                 <AccordionItem key={filter.id} value={filter.id}>
                   <AccordionTrigger className="text-base font-medium">

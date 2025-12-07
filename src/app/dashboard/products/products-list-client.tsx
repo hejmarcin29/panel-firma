@@ -24,7 +24,6 @@ interface ProductsListClientProps {
     initialTotalPages: number;
     currentPage: number;
     categories: WooCommerceCategory[];
-    brandTerms: WooCommerceAttributeTerm[];
     otherAttributeTerms?: Record<string, WooCommerceAttributeTerm[]>;
 }
 
@@ -34,7 +33,6 @@ export function ProductsListClient({
     initialTotalPages,
     currentPage,
     categories,
-    brandTerms,
     otherAttributeTerms = {}
 }: ProductsListClientProps) {
     const router = useRouter();
@@ -52,7 +50,6 @@ export function ProductsListClient({
     // Prepare aggregations for FilterModal
     const aggregations: Record<string, { name: string; slug: string; count: number }[]> = {
         categories: categories.map(c => ({ name: c.name, slug: c.id.toString(), count: c.count })),
-        brands: brandTerms.map(b => ({ name: b.name, slug: b.id.toString(), count: b.count })),
     };
 
     // Add other attributes to aggregations

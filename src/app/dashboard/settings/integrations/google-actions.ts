@@ -2,7 +2,40 @@
 
 import { revalidatePath } from 'next/cache';
 import { requireUser } from '@/lib/auth/session';
-import { setAppSetting, appSettingKeys } from '@/lib/settings';
+import { setAppSetting, appSettingKeys, getAppSetting } from '@/lib/settings';
+import { getCalendarClient } from '@/lib/google/client';
+
+export async function testGoogleCalendarConnection() {
+  await requireUser();
+  
+  const calendarId = await getAppSetting(appSettingKeys.googleCalendarId);
+  if (!calendarId) {
+    return { success: false, message: 'Brak skonfigurowanego ID kalendarza.' };
+  }
+
+  const calendar = await getCalendarClient();
+  if (!calendar) {
+    return { success: false, message: 'Błąd autoryzacji (sprawdź e-mail i klucz prywatny).' };
+  }
+
+  try {
+    // Try to get the calendar details to verify access
+    await calendar.calendars.get({
+      calendarId: calendarId,
+    });
+    return { success: true, message: `Połączono z kalendarzem: ${calendarId}` };
+  } catch (error: any) {
+    console.error('Google Calendar Test Error:', error);
+    // Check for common errors
+    if (error.code === 404) {
+         return { success: false, message: `Nie znaleziono kalendarza o ID: ${calendarId}. Sprawdź czy ID jest poprawne.` };
+    }
+    if (error.code === 403) {
+         return { success: false, message: `Brak dostępu do kalendarza. Upewnij się, że udostępniłeś kalendarz dla adresu e-mail konta usługi.` };
+    }
+    return { success: false, message: `Błąd połączenia: ${error.message || 'Nieznany błąd'}` };
+  }
+}
 
 export async function saveGoogleCalendarSettings(formData: FormData) {
   const user = await requireUser();
