@@ -1,6 +1,7 @@
 import { getProductsFromDb, getCategories, getAttributes, getAttributeTerms, WooCommerceAttributeTerm } from './actions';
 import { ProductsListClient } from './products-list-client';
 import { requireUser } from '@/lib/auth/session';
+import { FILTERS_CONFIG } from '@/lib/filter-config';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,16 +28,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     const sort = typeof resolvedSearchParams.sort === 'string' ? resolvedSearchParams.sort : undefined;
     const perPage = 20;
 
-    const [productsData, categories, attributes] = await Promise.all([
-        getProductsFromDb({
-            page, 
-            perPage, 
-            categoryId, 
-            brandTermId,
-            scope,
-            search,
-            sort
-        }),
+    const [categories, attributes] = await Promise.all([
         getCategories(),
         getAttributes()
     ]);
@@ -50,9 +42,55 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     );
 
     let brandTerms: WooCommerceAttributeTerm[] = [];
+    let brandName: string | undefined;
+
     if (brandAttribute) {
         brandTerms = await getAttributeTerms(brandAttribute.id);
+        if (brandTermId) {
+            const term = brandTerms.find(t => t.id === brandTermId);
+            if (term) {
+                brandName = term.name;
+            }
+        }
     }
+
+    // Fetch other attribute terms
+    const otherAttributeTerms: Record<string, WooCommerceAttributeTerm[]> = {};
+    const attributeFilters: Record<string, string> = {};
+
+    const filterPromises = FILTERS_CONFIG
+        .filter(f => f.id !== 'categories' && f.id !== 'brands' && f.id !== 'price')
+        .map(async (filter) => {
+            const attr = attributes.find(a => a.slug === filter.id);
+            if (attr) {
+                const terms = await getAttributeTerms(attr.id);
+                otherAttributeTerms[filter.id] = terms;
+                
+                // Check if this filter is active in searchParams
+                const paramValue = resolvedSearchParams[filter.id];
+                if (typeof paramValue === 'string') {
+                    const termId = parseInt(paramValue.split(',')[0]);
+                    const term = terms.find(t => t.id === termId);
+                    if (term) {
+                        attributeFilters[filter.id] = term.name;
+                    }
+                }
+            }
+        });
+
+    await Promise.all(filterPromises);
+
+    const productsData = await getProductsFromDb({
+        page, 
+        perPage, 
+        categoryId, 
+        brandTermId,
+        brandName,
+        attributeFilters,
+        scope,
+        search,
+        sort
+    });
 
     return (
         <ProductsListClient 
@@ -62,6 +100,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             currentPage={page}
             categories={categories}
             brandTerms={brandTerms}
+            otherAttributeTerms={otherAttributeTerms}
         />
     );
 }

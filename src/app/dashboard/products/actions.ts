@@ -311,6 +311,8 @@ export async function getProductsFromDb(
         scope?: 'public' | 'private' | 'all';
         categoryId?: number;
         brandTermId?: number;
+        brandName?: string;
+        attributeFilters?: Record<string, string>;
         sort?: string;
     } = {}
 ): Promise<{ products: WooCommerceProduct[], total: number, totalPages: number }> {
@@ -320,6 +322,8 @@ export async function getProductsFromDb(
         search = '', 
         scope = 'public',
         categoryId,
+        brandName,
+        attributeFilters,
         sort = 'date_desc'
     } = options;
 
@@ -340,6 +344,18 @@ export async function getProductsFromDb(
 
     if (categoryId) {
         conditions.push(like(products.categories, `%${categoryId}%`));
+    }
+
+    if (brandName) {
+        conditions.push(like(products.attributes, `%${brandName}%`));
+    }
+
+    if (attributeFilters) {
+        Object.values(attributeFilters).forEach(termName => {
+            if (termName) {
+                conditions.push(like(products.attributes, `%${termName}%`));
+            }
+        });
     }
     
     if (conditions.length > 0) {

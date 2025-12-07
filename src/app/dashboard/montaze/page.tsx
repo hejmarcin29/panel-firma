@@ -148,6 +148,8 @@ export default async function MontazePage(props: any) {
                     uploader: true,
                 },
             },
+            installer: true,
+            measurer: true,
         },
     });
 

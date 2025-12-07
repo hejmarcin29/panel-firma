@@ -151,6 +151,8 @@ type CreateMontageInput = {
 	forecastedInstallationDate?: string;
 	materialDetails?: string;
     customerUpdateStrategy?: 'update' | 'keep';
+    installerId?: string;
+    measurerId?: string;
 };
 
 export type CustomerConflictData = {
@@ -186,6 +188,8 @@ export async function createMontage({
 	forecastedInstallationDate,
 	materialDetails,
     customerUpdateStrategy,
+    installerId,
+    measurerId,
 }: CreateMontageInput): Promise<CreateMontageResult> {
 	const user = await requireUser();
 
@@ -346,6 +350,8 @@ export async function createMontage({
                 scheduledInstallationAt: null,
                 scheduledInstallationEndAt: null,
                 forecastedInstallationDate: forecastedDate,
+                installerId: installerId || null,
+                measurerId: measurerId || null,
                 materialDetails: normalizedMaterialDetails,
                 measurementDetails: normalizedMaterialDetails, // Sync on create
                 status: 'lead',
@@ -939,17 +945,23 @@ export async function updateMontageMeasurement({
 export async function updateMontageRealizationStatus({
     montageId,
     materialStatus,
-    installerStatus
+    installerStatus,
+    installerId,
+    measurerId
 }: {
     montageId: string;
     materialStatus?: 'none' | 'ordered' | 'in_stock' | 'delivered';
     installerStatus?: 'none' | 'informed' | 'confirmed';
+    installerId?: string | null;
+    measurerId?: string | null;
 }) {
     const user = await requireUser();
 
     const updateData: { 
         materialStatus?: 'none' | 'ordered' | 'in_stock' | 'delivered'; 
         installerStatus?: 'none' | 'informed' | 'confirmed';
+        installerId?: string | null;
+        measurerId?: string | null;
         updatedAt: Date;
     } = {
         updatedAt: new Date()
@@ -957,6 +969,8 @@ export async function updateMontageRealizationStatus({
     
     if (materialStatus !== undefined) updateData.materialStatus = materialStatus;
     if (installerStatus !== undefined) updateData.installerStatus = installerStatus;
+    if (installerId !== undefined) updateData.installerId = installerId;
+    if (measurerId !== undefined) updateData.measurerId = measurerId;
 
     // If nothing to update (except updatedAt), return
     if (Object.keys(updateData).length <= 1) return;
@@ -982,6 +996,12 @@ export async function updateMontageRealizationStatus({
             'confirmed': 'Potwierdzony'
         };
         changes.push(`Status montażysty: ${labels[installerStatus] || installerStatus}`);
+    }
+    if (installerId !== undefined) {
+        changes.push(`Zmieniono montażystę`);
+    }
+    if (measurerId !== undefined) {
+        changes.push(`Zmieniono pomiarowca`);
     }
 
     await logSystemEvent(

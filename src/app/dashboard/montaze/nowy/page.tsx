@@ -2,8 +2,14 @@ import { CreateMontageForm } from '../_components/create-montage-form';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
+import { db } from '@/lib/db';
+import { users } from '@/lib/db/schema';
+import { like } from 'drizzle-orm';
 
-export default function NewMontagePage() {
+export default async function NewMontagePage() {
+    const installers = await db.select({ id: users.id, name: users.name, email: users.email }).from(users).where(like(users.roles, '%"installer"%'));
+    const measurers = await db.select({ id: users.id, name: users.name, email: users.email }).from(users).where(like(users.roles, '%"measurer"%'));
+
     return (
         <div className="container mx-auto py-6 max-w-3xl">
             <div className="mb-6">
@@ -18,7 +24,7 @@ export default function NewMontagePage() {
                     Uzupełnij dane kontaktowe, adresowe oraz materiały. Lista kontrolna zostanie dodana automatycznie.
                 </p>
             </div>
-            <CreateMontageForm />
+            <CreateMontageForm installers={installers} measurers={measurers} />
         </div>
     );
 }

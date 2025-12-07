@@ -121,7 +121,7 @@ export function MontageDetailsLayout({
   return (
     <>
       {header}
-      <main className="container mx-auto grid gap-6 p-4 md:grid-cols-[350px_1fr] lg:grid-cols-[400px_1fr] lg:p-8">
+      <main className="container mx-auto grid gap-6 p-4 md:grid-cols-[350px_1fr] lg:grid-cols-[400px_1fr] lg:p-8 items-start">
           <div className="grid grid-cols-2 gap-4 md:grid-cols-1 md:gap-6">
               {clientCard}
               {materialCard}

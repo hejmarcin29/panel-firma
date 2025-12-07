@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, Phone, Mail, Calendar, Edit2, Ruler, Loader2, Check } from "lucide-react";
+import { MapPin, Phone, Mail, Calendar, Edit2, Ruler, Loader2, Check, Hammer, User } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
@@ -249,6 +249,30 @@ export function MontageClientCard({ montage, userRoles = ['admin'] }: { montage:
                         (Szacowany: {forecastedDate})
                     </span>
                 )}
+            </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+            <Hammer className="h-4 w-4 text-muted-foreground" />
+            <div className="grid gap-0.5">
+                <span className="text-sm">
+                    {montage.installer?.name || "Brak montażysty"}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                    Montażysta
+                </span>
+            </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+            <User className="h-4 w-4 text-muted-foreground" />
+            <div className="grid gap-0.5">
+                <span className="text-sm">
+                    {montage.measurer?.name || "Brak pomiarowca"}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                    Pomiarowiec
+                </span>
             </div>
         </div>
 

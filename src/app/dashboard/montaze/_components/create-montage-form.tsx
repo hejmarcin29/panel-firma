@@ -18,6 +18,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { createMontage, type CustomerConflictData } from '../actions';
 
@@ -43,6 +50,8 @@ type FormState = {
 
 	forecastedInstallationDate: string;
 	materialDetails: string;
+    installerId: string;
+    measurerId: string;
 };
 
 const initialState: FormState = {
@@ -60,13 +69,19 @@ const initialState: FormState = {
     installationPostalCode: '',
 	forecastedInstallationDate: '',
 	materialDetails: '',
+    installerId: '',
+    measurerId: '',
 };
+
+type UserOption = { id: string; name: string | null; email: string };
 
 type CreateMontageFormProps = {
 	onSuccess?: () => void;
+    installers?: UserOption[];
+    measurers?: UserOption[];
 };
 
-export function CreateMontageForm({ onSuccess }: CreateMontageFormProps) {
+export function CreateMontageForm({ onSuccess, installers = [], measurers = [] }: CreateMontageFormProps) {
 	const router = useRouter();
 	const [form, setForm] = useState<FormState>(initialState);
 	const [feedback, setFeedback] = useState<string | null>(null);
@@ -129,6 +144,8 @@ export function CreateMontageForm({ onSuccess }: CreateMontageFormProps) {
 					forecastedInstallationDate: form.forecastedInstallationDate || undefined,
 					materialDetails: form.materialDetails,
                     customerUpdateStrategy: strategy,
+                    installerId: form.installerId === 'none' || !form.installerId ? undefined : form.installerId,
+                    measurerId: form.measurerId === 'none' || !form.measurerId ? undefined : form.measurerId,
 				});
 
                 if (result.status === 'conflict') {
@@ -370,6 +387,42 @@ export function CreateMontageForm({ onSuccess }: CreateMontageFormProps) {
 						Wstępna data. Konkretny termin ustalisz po pomiarach.
 					</p>
 				</div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <Label>Przypisz montażystę</Label>
+                        <Select 
+                            value={form.installerId} 
+                            onValueChange={(val) => setForm(prev => ({ ...prev, installerId: val }))}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Wybierz" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="none">Brak</SelectItem>
+                                {installers.map(u => (
+                                    <SelectItem key={u.id} value={u.id}>{u.name || u.email}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div>
+                        <Label>Przypisz pomiarowca</Label>
+                        <Select 
+                            value={form.measurerId} 
+                            onValueChange={(val) => setForm(prev => ({ ...prev, measurerId: val }))}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Wybierz" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="none">Brak</SelectItem>
+                                {measurers.map(u => (
+                                    <SelectItem key={u.id} value={u.id}>{u.name || u.email}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
 			</div>
 			<div>
 				<Label htmlFor="montage-material">Materiały i ilości</Label>

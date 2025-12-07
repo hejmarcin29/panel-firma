@@ -33,12 +33,18 @@ type MontageDetailsPageParams = {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
+import { like } from 'drizzle-orm';
+import { users } from '@/lib/db/schema';
+
 export default async function MontageDetailsPage({ params, searchParams }: MontageDetailsPageParams) {
     const { montageId } = await params;
     const { tab } = await searchParams;
     const activeTab = typeof tab === 'string' ? tab : 'log';
 
     const user = await requireUser();
+
+    const installers = await db.select({ id: users.id, name: users.name, email: users.email }).from(users).where(like(users.roles, '%"installer"%'));
+    const measurers = await db.select({ id: users.id, name: users.name, email: users.email }).from(users).where(like(users.roles, '%"measurer"%'));
 
     const r2Config = await tryGetR2Config();
     const publicBaseUrl = r2Config?.publicBaseUrl ?? null;
@@ -87,6 +93,8 @@ export default async function MontageDetailsPage({ params, searchParams }: Monta
                     uploader: true,
                 },
             },
+            installer: true,
+            measurer: true,
         },
     });
 
@@ -111,7 +119,7 @@ export default async function MontageDetailsPage({ params, searchParams }: Monta
                 defaultTab={activeTab}
                 tabs={{
                     log: <MontageLogTab montage={montage} logs={logs} />,
-                    workflow: <MontageWorkflowTab montage={montage} statusOptions={statusOptions} />,
+                    workflow: <MontageWorkflowTab montage={montage} statusOptions={statusOptions} installers={installers} measurers={measurers} />,
                     measurement: <MontageMeasurementTab montage={montage} />,
                     tasks: <MontageTasksTab montage={montage} />,
                     gallery: <MontageGalleryTab montage={montage} />,

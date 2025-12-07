@@ -25,7 +25,19 @@ import {
 } from "../../actions";
 import type { Montage, StatusOption } from "../../types";
 
-export function MontageWorkflowTab({ montage, statusOptions }: { montage: Montage; statusOptions: StatusOption[] }) {
+type UserOption = { id: string; name: string | null; email: string };
+
+export function MontageWorkflowTab({ 
+    montage, 
+    statusOptions,
+    installers = [],
+    measurers = []
+}: { 
+    montage: Montage; 
+    statusOptions: StatusOption[];
+    installers?: UserOption[];
+    measurers?: UserOption[];
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [isEditing, setIsEditing] = useState(false);
@@ -95,16 +107,26 @@ export function MontageWorkflowTab({ montage, statusOptions }: { montage: Montag
     });
   };
 
-  const handleRealizationStatusChange = (field: 'materialStatus' | 'installerStatus', value: string) => {
+  const handleRealizationStatusChange = (field: 'materialStatus' | 'installerStatus' | 'installerId' | 'measurerId', value: string) => {
     startTransition(async () => {
-        const updateData: { montageId: string; materialStatus?: 'none' | 'ordered' | 'in_stock' | 'delivered'; installerStatus?: 'none' | 'informed' | 'confirmed' } = {
+        const updateData: { 
+            montageId: string; 
+            materialStatus?: 'none' | 'ordered' | 'in_stock' | 'delivered'; 
+            installerStatus?: 'none' | 'informed' | 'confirmed';
+            installerId?: string | null;
+            measurerId?: string | null;
+        } = {
             montageId: montage.id
         };
         
         if (field === 'materialStatus') {
             updateData.materialStatus = value as 'none' | 'ordered' | 'in_stock' | 'delivered';
-        } else {
+        } else if (field === 'installerStatus') {
             updateData.installerStatus = value as 'none' | 'informed' | 'confirmed';
+        } else if (field === 'installerId') {
+            updateData.installerId = value === 'none' ? null : value;
+        } else if (field === 'measurerId') {
+            updateData.measurerId = value === 'none' ? null : value;
         }
 
         await updateMontageRealizationStatus(updateData);
@@ -216,6 +238,48 @@ export function MontageWorkflowTab({ montage, statusOptions }: { montage: Montag
                             <SelectItem value="none">Brak</SelectItem>
                             <SelectItem value="informed">Poinformowany</SelectItem>
                             <SelectItem value="confirmed">Potwierdzony</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="flex flex-col gap-2 p-4 rounded-lg border bg-card">
+                    <div className="space-y-0.5">
+                        <Label htmlFor="measurer-select" className="text-base font-medium">Przypisz Pomiarowca</Label>
+                        <p className="text-sm text-muted-foreground">Osoba odpowiedzialna za pomiar</p>
+                    </div>
+                    <Select 
+                        value={montage.measurerId || "none"} 
+                        onValueChange={(value) => handleRealizationStatusChange('measurerId', value)}
+                    >
+                        <SelectTrigger id="measurer-select">
+                            <SelectValue placeholder="Wybierz pomiarowca" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="none">Brak</SelectItem>
+                            {measurers.map(u => (
+                                <SelectItem key={u.id} value={u.id}>{u.name || u.email}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="flex flex-col gap-2 p-4 rounded-lg border bg-card">
+                    <div className="space-y-0.5">
+                        <Label htmlFor="installer-select" className="text-base font-medium">Przypisz Montażystę</Label>
+                        <p className="text-sm text-muted-foreground">Osoba odpowiedzialna za montaż</p>
+                    </div>
+                    <Select 
+                        value={montage.installerId || "none"} 
+                        onValueChange={(value) => handleRealizationStatusChange('installerId', value)}
+                    >
+                        <SelectTrigger id="installer-select">
+                            <SelectValue placeholder="Wybierz montażystę" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="none">Brak</SelectItem>
+                            {installers.map(u => (
+                                <SelectItem key={u.id} value={u.id}>{u.name || u.email}</SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                 </div>

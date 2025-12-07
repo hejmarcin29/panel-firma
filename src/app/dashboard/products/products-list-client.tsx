@@ -25,6 +25,7 @@ interface ProductsListClientProps {
     currentPage: number;
     categories: WooCommerceCategory[];
     brandTerms: WooCommerceAttributeTerm[];
+    otherAttributeTerms?: Record<string, WooCommerceAttributeTerm[]>;
 }
 
 export function ProductsListClient({ 
@@ -33,7 +34,8 @@ export function ProductsListClient({
     initialTotalPages,
     currentPage,
     categories,
-    brandTerms
+    brandTerms,
+    otherAttributeTerms = {}
 }: ProductsListClientProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -48,11 +50,15 @@ export function ProductsListClient({
     };
 
     // Prepare aggregations for FilterModal
-    const aggregations = {
+    const aggregations: Record<string, { name: string; slug: string; count: number }[]> = {
         categories: categories.map(c => ({ name: c.name, slug: c.id.toString(), count: c.count })),
         brands: brandTerms.map(b => ({ name: b.name, slug: b.id.toString(), count: b.count })),
-        // Other attributes would go here if fetched
     };
+
+    // Add other attributes to aggregations
+    Object.entries(otherAttributeTerms).forEach(([slug, terms]) => {
+        aggregations[slug] = terms.map(t => ({ name: t.name, slug: t.id.toString(), count: t.count }));
+    });
 
     return (
         <div className="space-y-4">

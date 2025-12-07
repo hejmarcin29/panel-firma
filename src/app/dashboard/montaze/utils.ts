@@ -66,6 +66,8 @@ export type MontageRow = typeof montages.$inferSelect & {
 			uploader: typeof users.$inferSelect | null;
 		}
 	>;
+    installer?: typeof users.$inferSelect | null;
+    measurer?: typeof users.$inferSelect | null;
 };
 
 function mapAttachment(
@@ -168,6 +170,10 @@ export function mapMontageRow(row: MontageRow, publicBaseUrl: string | null): Mo
 		updatedAt: row.updatedAt,
         materialStatus: row.materialStatus ?? 'none',
         installerStatus: row.installerStatus ?? 'none',
+        installerId: row.installerId,
+        measurerId: row.measurerId,
+        installer: row.installer ? { id: row.installer.id, name: row.installer.name, email: row.installer.email } : null,
+        measurer: row.measurer ? { id: row.measurer.id, name: row.measurer.name, email: row.measurer.email } : null,
 		notes: row.notes.map((note) => mapNote(note, publicBaseUrl)),
 		attachments: row.attachments.map((attachment) => mapAttachment(attachment, publicBaseUrl)),
 		tasks: row.tasks.map(mapTask),

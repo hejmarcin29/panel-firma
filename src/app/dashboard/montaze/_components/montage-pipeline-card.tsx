@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Phone, Mail, MapPin, CheckSquare } from 'lucide-react';
+import { Phone, Mail, MapPin, CheckSquare, Hammer, User } from 'lucide-react';
 import Link from 'next/link';
 
 import { cn } from '@/lib/utils';
@@ -126,6 +126,23 @@ export function MontagePipelineCard({ montage, threatDays }: Props) {
                             <div className="line-clamp-2">
                                 {addressLine}{cityLine ? `, ${cityLine}` : ''}
                             </div>
+                        </div>
+                    )}
+
+                    {(montage.installer || montage.measurer) && (
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1">
+                            {montage.installer && (
+                                <div className="flex items-center gap-1.5" title={`Montażysta: ${montage.installer.name || montage.installer.email}`}>
+                                    <Hammer className="h-3 w-3 shrink-0" />
+                                    <span className="truncate max-w-[100px]">{initials(montage.installer.name || montage.installer.email)}</span>
+                                </div>
+                            )}
+                            {montage.measurer && (
+                                <div className="flex items-center gap-1.5" title={`Pomiarowiec: ${montage.measurer.name || montage.measurer.email}`}>
+                                    <User className="h-3 w-3 shrink-0" />
+                                    <span className="truncate max-w-[100px]">{initials(montage.measurer.name || montage.measurer.email)}</span>
+                                </div>
+                            )}
                         </div>
                     )}
                 </CardHeader>
