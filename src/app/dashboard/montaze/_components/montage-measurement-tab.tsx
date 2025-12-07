@@ -11,6 +11,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -58,6 +60,13 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
   const [skirtingWaste, setSkirtingWaste] = useState<string>(montage.skirtingWaste?.toString() || '5');
   const [modelsApproved, setModelsApproved] = useState(montage.modelsApproved || false);
 
+  const [installationMethod, setInstallationMethod] = useState<'click' | 'glue'>(
+    (montage.measurementInstallationMethod as 'click' | 'glue') || 'click'
+  );
+  const [subfloorCondition, setSubfloorCondition] = useState(montage.measurementSubfloorCondition || 'good');
+  const [additionalWorkNeeded, setAdditionalWorkNeeded] = useState(montage.measurementAdditionalWorkNeeded || false);
+  const [additionalWorkDescription, setAdditionalWorkDescription] = useState(montage.measurementAdditionalWorkDescription || '');
+
   const [additionalInfo, setAdditionalInfo] = useState(montage.additionalInfo || '');
   const [scheduledDate, setScheduledDate] = useState<Date | undefined>(
     montage.scheduledInstallationAt ? new Date(montage.scheduledInstallationAt) : undefined
@@ -85,6 +94,10 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
           skirtingModel,
           skirtingWaste: parseFloat(skirtingWaste),
           modelsApproved,
+          measurementInstallationMethod: installationMethod,
+          measurementSubfloorCondition: subfloorCondition,
+          measurementAdditionalWorkNeeded: additionalWorkNeeded,
+          measurementAdditionalWorkDescription: additionalWorkDescription,
           additionalInfo,
           sketchUrl: sketchDataUrl,
           scheduledInstallationAt: scheduledDate ? scheduledDate.getTime() : null,
@@ -108,6 +121,10 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
     skirtingModel,
     skirtingWaste,
     modelsApproved,
+    installationMethod,
+    subfloorCondition,
+    additionalWorkNeeded,
+    additionalWorkDescription,
     additionalInfo,
     sketchDataUrl,
     scheduledDate,
@@ -389,6 +406,67 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
                 </span>
             </div>
           </div>
+        </div>
+
+        {/* Technical Details */}
+        <div className="grid gap-6 md:grid-cols-2 p-4 border rounded-lg bg-muted/5">
+            <div className="space-y-4">
+                <div className="space-y-2">
+                    <Label>Sposób montażu</Label>
+                    <RadioGroup value={installationMethod} onValueChange={(v) => setInstallationMethod(v as 'click' | 'glue')} className="flex gap-4">
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="click" id="method-click" />
+                            <Label htmlFor="method-click">Pływająca (Click)</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="glue" id="method-glue" />
+                            <Label htmlFor="method-glue">Klejona</Label>
+                        </div>
+                    </RadioGroup>
+                </div>
+
+                <div className="space-y-2">
+                    <Label>Stan podłoża</Label>
+                    <Select value={subfloorCondition} onValueChange={setSubfloorCondition}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Wybierz stan podłoża" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="ideal">Idealne (bez uwag)</SelectItem>
+                            <SelectItem value="good">Dobre (drobne nierówności)</SelectItem>
+                            <SelectItem value="bad">Złe (wymaga szlifowania/naprawy)</SelectItem>
+                            <SelectItem value="critical">Krytyczne (wymaga wylewki)</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <Label htmlFor="additionalWork" className="flex flex-col gap-1">
+                        <span>Dodatkowe prace</span>
+                        <span className="font-normal text-xs text-muted-foreground">Czy wymagane są dodatkowe prace przygotowawcze?</span>
+                    </Label>
+                    <Switch
+                        id="additionalWork"
+                        checked={additionalWorkNeeded}
+                        onCheckedChange={setAdditionalWorkNeeded}
+                    />
+                </div>
+                
+                {additionalWorkNeeded && (
+                    <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                        <Label htmlFor="additionalWorkDesc">Opis prac dodatkowych</Label>
+                        <Textarea
+                            id="additionalWorkDesc"
+                            placeholder="Opisz co trzeba zrobić (np. szlifowanie, gruntowanie, wylewka...)"
+                            value={additionalWorkDescription}
+                            onChange={(e) => setAdditionalWorkDescription(e.target.value)}
+                            className="h-20"
+                        />
+                    </div>
+                )}
+            </div>
         </div>
 
         <div className="space-y-2">

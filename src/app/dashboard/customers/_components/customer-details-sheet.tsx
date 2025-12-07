@@ -40,6 +40,29 @@ function formatCurrency(amount: number) {
 	}).format(amount / 100); // Assuming amount is in grosze
 }
 
+const STATUS_LABELS: Record<string, string> = {
+  'lead': 'Lead',
+  'before_measurement': 'Przed pomiarem',
+  'before_first_payment': 'Przed 1. wpłatą',
+  'before_installation': 'Przed montażem',
+  'before_final_invoice': 'Przed FV i protokołem',
+  'completed': 'Zakończony',
+  'cancelled': 'Anulowany',
+};
+
+const ORDER_STATUS_LABELS: Record<string, string> = {
+  'order.received': 'Otrzymano',
+  'order.pending_proforma': 'Oczekuje na proformę',
+  'order.proforma_issued': 'Wystawiono proformę',
+  'order.awaiting_payment': 'Oczekuje na płatność',
+  'order.paid': 'Opłacono',
+  'order.advance_invoice': 'Faktura zaliczkowa',
+  'order.forwarded_to_supplier': 'Przekazano do dostawcy',
+  'order.fulfillment_confirmed': 'Potwierdzono realizację',
+  'order.final_invoice': 'Faktura końcowa',
+  'order.closed': 'Zamknięte',
+};
+
 export function CustomerDetailsSheet({ customer, isOpen, onClose }: CustomerDetailsSheetProps) {
     // Handle back button
     useEffect(() => {
@@ -179,7 +202,7 @@ export function CustomerDetailsSheet({ customer, isOpen, onClose }: CustomerDeta
 											</div>
 											<div className="flex items-center gap-3">
 												<Badge variant="secondary" className="text-xs font-normal">
-													{order.status}
+													{ORDER_STATUS_LABELS[order.status] || order.status}
 												</Badge>
 												<ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-50 transition-opacity" />
 											</div>
@@ -222,7 +245,7 @@ export function CustomerDetailsSheet({ customer, isOpen, onClose }: CustomerDeta
 											</div>
 											<div className="flex items-center gap-3">
 												<Badge variant="outline" className="text-xs font-normal">
-													{montage.status}
+													{STATUS_LABELS[montage.status] || montage.status}
 												</Badge>
 												<ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-50 transition-opacity" />
 											</div>

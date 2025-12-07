@@ -8,6 +8,16 @@ interface RecentActivityProps {
   recentMontages: Montage[];
 }
 
+const STATUS_LABELS: Record<string, string> = {
+  'lead': 'Lead',
+  'before_measurement': 'Przed pomiarem',
+  'before_first_payment': 'Przed 1. wpłatą',
+  'before_installation': 'Przed montażem',
+  'before_final_invoice': 'Przed FV i protokołem',
+  'completed': 'Zakończony',
+  'cancelled': 'Anulowany',
+};
+
 function initials(name: string) {
     return name
         .split(' ')
@@ -37,7 +47,7 @@ export function RecentActivity({ recentMontages }: RecentActivityProps) {
                 <div className="ml-4 space-y-1">
                     <p className="text-sm font-medium leading-none">{montage.clientName}</p>
                     <p className="text-xs text-muted-foreground">
-                    {montage.displayId ? `Montaż ${montage.displayId}` : 'Montaż'} • {montage.status}
+                    {montage.displayId ? `Montaż ${montage.displayId}` : 'Montaż'} • {STATUS_LABELS[montage.status] || montage.status}
                     </p>
                 </div>
                 <div className="ml-auto font-medium text-xs text-muted-foreground">

@@ -78,6 +78,10 @@ export type Montage = {
 	skirtingModel: string | null;
 	skirtingWaste: number | null;
 	modelsApproved: boolean;
+	measurementInstallationMethod: 'click' | 'glue' | null;
+	measurementSubfloorCondition: string | null;
+	measurementAdditionalWorkNeeded: boolean;
+	measurementAdditionalWorkDescription: string | null;
 	finalPanelAmount: number | null;
 	finalSkirtingLength: number | null;
 	materialsEditHistory: MaterialsEditHistoryEntry[] | null;

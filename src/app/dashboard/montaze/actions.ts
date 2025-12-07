@@ -974,6 +974,10 @@ export async function updateMontageMeasurement({
 	sketchUrl,
 	scheduledInstallationAt,
 	scheduledInstallationEndAt,
+    measurementInstallationMethod,
+    measurementSubfloorCondition,
+    measurementAdditionalWorkNeeded,
+    measurementAdditionalWorkDescription,
 }: {
 	montageId: string;
 	measurementDetails: string;
@@ -990,6 +994,10 @@ export async function updateMontageMeasurement({
 	sketchUrl?: string | null;
 	scheduledInstallationAt: number | null;
 	scheduledInstallationEndAt: number | null;
+    measurementInstallationMethod?: 'click' | 'glue' | null;
+    measurementSubfloorCondition?: string | null;
+    measurementAdditionalWorkNeeded?: boolean;
+    measurementAdditionalWorkDescription?: string | null;
 }) {
 	await requireUser();
 
@@ -1011,6 +1019,10 @@ export async function updateMontageMeasurement({
 			sketchUrl,
 			scheduledInstallationAt: scheduledInstallationAt ? new Date(scheduledInstallationAt) : null,
 			scheduledInstallationEndAt: scheduledInstallationEndAt ? new Date(scheduledInstallationEndAt) : null,
+            measurementInstallationMethod,
+            measurementSubfloorCondition,
+            measurementAdditionalWorkNeeded,
+            measurementAdditionalWorkDescription,
 			finalPanelAmount: null, // Reset to auto-calculation on measurement update
 			finalSkirtingLength: null, // Reset to auto-calculation on measurement update
 			updatedAt: new Date(),
