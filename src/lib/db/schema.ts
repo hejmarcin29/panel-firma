@@ -435,6 +435,7 @@ export const montages = sqliteTable(
 		installerStatus: text('installer_status').$type<MontageInstallerStatus>().notNull().default('none'),
 		installerId: text('installer_id').references(() => users.id, { onDelete: 'set null' }),
 		measurerId: text('measurer_id').references(() => users.id, { onDelete: 'set null' }),
+        googleEventId: text('google_event_id'),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' })
 			.notNull()
 			.default(sql`(strftime('%s','now') * 1000)`),

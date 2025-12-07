@@ -21,6 +21,7 @@ import { getMontageAutomationRules } from '@/lib/montaze/automation';
 import { logSystemEvent } from '@/lib/logging';
 import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
 import type { MaterialsEditHistoryEntry } from './types';
+import { createGoogleCalendarEvent, updateGoogleCalendarEvent, deleteGoogleCalendarEvent } from '@/lib/google/calendar';
 
 const MONTAGE_DASHBOARD_PATH = '/dashboard/montaze';
 const MAX_ATTACHMENT_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
@@ -375,6 +376,21 @@ export async function createMontage({
         throw new Error('Nie udało się wygenerować unikalnego numeru montażu. Spróbuj ponownie.');
     }
 
+    // Google Calendar Sync
+    if (forecastedDate) {
+        const eventId = await createGoogleCalendarEvent({
+            summary: `Montaż: ${trimmedName} (${displayId})`,
+            description: `Montaż dla klienta: ${trimmedName}\nTelefon: ${contactPhone || 'Brak'}\nAdres: ${fallbackAddressLine || 'Brak'}\nSzczegóły: ${normalizedMaterialDetails || 'Brak'}`,
+            location: fallbackAddressLine || '',
+            start: { dateTime: forecastedDate.toISOString() },
+            end: { dateTime: new Date(forecastedDate.getTime() + 60 * 60 * 1000).toISOString() }, // 1 hour default
+        });
+
+        if (eventId) {
+            await db.update(montages).set({ googleEventId: eventId }).where(eq(montages.id, montageId));
+        }
+    }
+
 	if (templates.length > 0) {
 		await db.insert(montageChecklistItems).values(
 			templates.map((template, index) => ({
@@ -508,6 +524,43 @@ export async function updateMontageContactDetails({
 			updatedAt: new Date(),
 		})
 		.where(eq(montages.id, montageId));
+
+    // Google Calendar Sync
+    const montage = await db.query.montages.findFirst({
+        where: (table, { eq }) => eq(table.id, montageId),
+    });
+
+    if (montage && montage.googleEventId) {
+        if (scheduledInstallationAt) {
+            const endDate = scheduledInstallationEndAt || new Date(scheduledInstallationAt.getTime() + 60 * 60 * 1000);
+            await updateGoogleCalendarEvent(montage.googleEventId, {
+                summary: `Montaż: ${trimmedName} (${montage.displayId})`,
+                description: `Montaż dla klienta: ${trimmedName}\nTelefon: ${normalizedPhone || 'Brak'}\nAdres: ${combinedAddress || 'Brak'}`,
+                location: combinedAddress || '',
+                start: { dateTime: scheduledInstallationAt.toISOString() },
+                end: { dateTime: endDate.toISOString() },
+            });
+        } else {
+            // If date is removed, maybe delete event? Or keep it?
+            // For now, let's delete it if date is removed
+            await deleteGoogleCalendarEvent(montage.googleEventId);
+            await db.update(montages).set({ googleEventId: null }).where(eq(montages.id, montageId));
+        }
+    } else if (montage && !montage.googleEventId && scheduledInstallationAt) {
+        // Create new event if it doesn't exist
+        const endDate = scheduledInstallationEndAt || new Date(scheduledInstallationAt.getTime() + 60 * 60 * 1000);
+        const eventId = await createGoogleCalendarEvent({
+            summary: `Montaż: ${trimmedName} (${montage.displayId})`,
+            description: `Montaż dla klienta: ${trimmedName}\nTelefon: ${normalizedPhone || 'Brak'}\nAdres: ${combinedAddress || 'Brak'}`,
+            location: combinedAddress || '',
+            start: { dateTime: scheduledInstallationAt.toISOString() },
+            end: { dateTime: endDate.toISOString() },
+        });
+
+        if (eventId) {
+            await db.update(montages).set({ googleEventId: eventId }).where(eq(montages.id, montageId));
+        }
+    }
 
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 	revalidatePath(`${MONTAGE_DASHBOARD_PATH}/${montageId}`);
