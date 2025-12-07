@@ -32,6 +32,7 @@ echo "Synchronizacja schematu (drizzle-kit push)..."
 npx drizzle-kit push
 
 # Zbuduj aplikację
+export NODE_OPTIONS="--max-old-space-size=4096"
 npm run build
 
 # Zrestartuj aplikację (zakładając PM2)
