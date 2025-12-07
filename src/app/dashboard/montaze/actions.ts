@@ -379,7 +379,7 @@ export async function createMontage({
 
     // Google Calendar Sync
     if (forecastedDate) {
-        let attendees: { email: string }[] = [];
+        const attendees: { email: string }[] = [];
         if (installerId) {
             const installer = await db.query.users.findFirst({
                 where: eq(users.id, installerId),
@@ -563,7 +563,7 @@ export async function updateMontageContactDetails({
         // Create new event if it doesn't exist
         const endDate = scheduledInstallationEndAt || new Date(scheduledInstallationAt.getTime() + 60 * 60 * 1000);
         
-        let attendees: { email: string }[] = [];
+        const attendees: { email: string }[] = [];
         if (montage.installerId) {
              const installer = await db.query.users.findFirst({
                 where: eq(users.id, montage.installerId),
@@ -1091,7 +1091,7 @@ export async function updateMontageRealizationStatus({
         });
 
         if (montage?.googleEventId) {
-            let attendees: { email: string }[] = [];
+            const attendees: { email: string }[] = [];
             if (installerId) {
                 const installer = await db.query.users.findFirst({
                     where: eq(users.id, installerId),
