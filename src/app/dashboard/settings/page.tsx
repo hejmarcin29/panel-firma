@@ -27,6 +27,7 @@ import { SettingsView } from './_components/settings-view';
 import { MobileMenuSettings } from './_components/mobile-menu-settings';
 import { KpiSettingsForm } from './_components/kpi-settings-form';
 import { ThemeSelector } from './_components/theme-selector';
+import { DensitySelector } from './_components/density-selector';
 import { MobileMenuItem } from './actions';
 import { WooSettingsForm } from './integrations/_components/woo-settings-form';
 import { IntegrationLogs } from './integrations/_components/integration-logs';
@@ -267,6 +268,17 @@ export default async function SettingsPage() {
                         </CardHeader>
                         <CardContent>
                             <ThemeSelector />
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Gęstość interfejsu</CardTitle>
+                            <CardDescription>
+                                Dostosuj ilość informacji widocznych na ekranie.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <DensitySelector />
                         </CardContent>
                     </Card>
                 </div>

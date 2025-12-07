@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 export const dynamic = 'force-dynamic';
 
 import { MontageDashboardView } from './_components/montage-dashboard-view';
-import { MontageViewSwitcher } from './_components/montage-view-switcher';
+import { MontageViewTabs, MontageStageFilters } from './_components/montage-view-switcher';
 import { mapMontageRow, type MontageRow } from './utils';
 import { db } from '@/lib/db';
 import { requireUser } from '@/lib/auth/session';
@@ -155,7 +155,7 @@ export default async function MontazePage(props: any) {
 
     return (
         <div className="flex flex-col h-[calc(100vh-4rem)]">
-            <div className="border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+            <div className="border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 z-10">
                 <div className="flex flex-col md:flex-row md:h-16 md:items-center px-4 py-3 md:py-0 sm:px-6 justify-between gap-3 md:gap-4">
                     <div className="flex items-center justify-between">
                         <h1 className="text-lg font-semibold">Centrum Montaży</h1>
@@ -168,8 +168,9 @@ export default async function MontazePage(props: any) {
                             </Button>
                         </div>
                     </div>
-                    <MontageViewSwitcher />
+                    <MontageViewTabs />
                 </div>
+                <MontageStageFilters />
             </div>
             <div className="flex-1 overflow-hidden md:py-6">
                 <MontageDashboardView 
