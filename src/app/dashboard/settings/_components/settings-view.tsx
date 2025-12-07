@@ -1,8 +1,18 @@
-'use client';
+"use client";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Activity, Globe, Smartphone, Palette, RefreshCw, Users, BookOpen } from 'lucide-react';
-import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import {
+  Settings,
+  Activity,
+  Globe,
+  Smartphone,
+  Palette,
+  RefreshCw,
+  Users,
+  BookOpen,
+} from "lucide-react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
 interface SettingsViewProps {
   children: React.ReactNode;
@@ -17,7 +27,18 @@ interface SettingsViewProps {
   documentation: React.ReactNode;
 }
 
-export function SettingsView({ children, appearance, logs, integrations, montageSettings, mobileMenuSettings, kpiSettings, wpChanges, teamSettings, documentation }: SettingsViewProps) {
+export function SettingsView({
+  children,
+  appearance,
+  logs,
+  integrations,
+  montageSettings,
+  mobileMenuSettings,
+  kpiSettings,
+  wpChanges,
+  teamSettings,
+  documentation,
+}: SettingsViewProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -39,9 +60,156 @@ export function SettingsView({ children, appearance, logs, integrations, montage
         </p>
       </div>
 
-      <Tabs value={currentTab} onValueChange={handleTabChange} className="flex flex-col md:flex-row gap-4 md:gap-8">
-        <aside className="w-full md:w-64 shrink-0">
-          <TabsList className="flex flex-row md:flex-col h-auto w-full justify-start bg-transparent p-0 gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0 no-scrollbar">
+      {/* Mobile settings hub */}
+      <div className="grid gap-2 md:hidden">
+        <Button
+          variant={currentTab === "appearance" ? "secondary" : "ghost"}
+          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3"
+          onClick={() => handleTabChange("appearance")}
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Palette className="h-4 w-4" />
+          </span>
+          <span className="flex flex-col text-left">
+            <span className="text-sm font-medium">Wygląd</span>
+            <span className="text-xs text-muted-foreground">Motyw panelu i tryb ciemny.</span>
+          </span>
+        </Button>
+
+        <Button
+          variant={currentTab === "general" ? "secondary" : "ghost"}
+          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3"
+          onClick={() => handleTabChange("general")}
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
+            <Settings className="h-4 w-4" />
+          </span>
+          <span className="flex flex-col text-left">
+            <span className="text-sm font-medium">Ogólne</span>
+            <span className="text-xs text-muted-foreground">Podstawowe ustawienia systemu.</span>
+          </span>
+        </Button>
+
+        <Button
+          variant={currentTab === "team" ? "secondary" : "ghost"}
+          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3"
+          onClick={() => handleTabChange("team")}
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
+            <Users className="h-4 w-4" />
+          </span>
+          <span className="flex flex-col text-left">
+            <span className="text-sm font-medium">Zespół</span>
+            <span className="text-xs text-muted-foreground">Konta użytkowników i role.</span>
+          </span>
+        </Button>
+
+        <Button
+          variant={currentTab === "integrations" ? "secondary" : "ghost"}
+          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3"
+          onClick={() => handleTabChange("integrations")}
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
+            <Globe className="h-4 w-4" />
+          </span>
+          <span className="flex flex-col text-left">
+            <span className="text-sm font-medium">Integracje</span>
+            <span className="text-xs text-muted-foreground">WooCommerce, Google i inne.</span>
+          </span>
+        </Button>
+
+        <Button
+          variant={currentTab === "kpi" ? "secondary" : "ghost"}
+          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3"
+          onClick={() => handleTabChange("kpi")}
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
+            <Activity className="h-4 w-4" />
+          </span>
+          <span className="flex flex-col text-left">
+            <span className="text-sm font-medium">KPI / Alerty</span>
+            <span className="text-xs text-muted-foreground">Progi ostrzeżeń dla montaży i zamówień.</span>
+          </span>
+        </Button>
+
+        <Button
+          variant={currentTab === "mobile-menu" ? "secondary" : "ghost"}
+          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3"
+          onClick={() => handleTabChange("mobile-menu")}
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
+            <Smartphone className="h-4 w-4" />
+          </span>
+          <span className="flex flex-col text-left">
+            <span className="text-sm font-medium">Menu mobilne</span>
+            <span className="text-xs text-muted-foreground">Konfiguracja skrótów w aplikacji.</span>
+          </span>
+        </Button>
+
+        <Button
+          variant={currentTab === "montage" ? "secondary" : "ghost"}
+          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3"
+          onClick={() => handleTabChange("montage")}
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
+            <Activity className="h-4 w-4" />
+          </span>
+          <span className="flex flex-col text-left">
+            <span className="text-sm font-medium">Montaże</span>
+            <span className="text-xs text-muted-foreground">Etapy, automatyzacje i statusy montaży.</span>
+          </span>
+        </Button>
+
+        <Button
+          variant={currentTab === "wp-changes" ? "secondary" : "ghost"}
+          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3"
+          onClick={() => handleTabChange("wp-changes")}
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
+            <RefreshCw className="h-4 w-4" />
+          </span>
+          <span className="flex flex-col text-left">
+            <span className="text-sm font-medium">Zmiany WP</span>
+            <span className="text-xs text-muted-foreground">Śledzenie zmian wysyłanych do WordPressa.</span>
+          </span>
+        </Button>
+
+        <Button
+          variant={currentTab === "logs" ? "secondary" : "ghost"}
+          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3"
+          onClick={() => handleTabChange("logs")}
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
+            <Activity className="h-4 w-4" />
+          </span>
+          <span className="flex flex-col text-left">
+            <span className="text-sm font-medium">Logi systemowe</span>
+            <span className="text-xs text-muted-foreground">Ostatnie zdarzenia i błędy w systemie.</span>
+          </span>
+        </Button>
+
+        <Button
+          variant={currentTab === "documentation" ? "secondary" : "ghost"}
+          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3"
+          onClick={() => handleTabChange("documentation")}
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
+            <BookOpen className="h-4 w-4" />
+          </span>
+          <span className="flex flex-col text-left">
+            <span className="text-sm font-medium">Dokumentacja</span>
+            <span className="text-xs text-muted-foreground">Opis logiki biznesowej i procesów.</span>
+          </span>
+        </Button>
+      </div>
+
+      <Tabs
+        value={currentTab}
+        onValueChange={handleTabChange}
+        className="flex flex-col md:flex-row gap-4 md:gap-8"
+      >
+        <aside className="w-full md:w-64 shrink-0 hidden md:block">
+          <TabsList className="flex flex-col h-auto w-full justify-start bg-transparent p-0 gap-2 overflow-visible">
             <TabsTrigger 
               value="appearance" 
               className="w-full justify-start gap-2 px-3 py-2 h-9 data-[state=active]:bg-muted data-[state=active]:shadow-none ring-offset-background transition-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
