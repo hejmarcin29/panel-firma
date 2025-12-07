@@ -60,7 +60,7 @@ export function GoogleCalendarSettingsForm({ initialCalendarId, initialClientEma
         } else {
             toast.error(result.message);
         }
-    } catch (error) {
+    } catch {
         toast.error('Wystąpił błąd podczas testowania połączenia.');
     } finally {
         setIsTesting(false);

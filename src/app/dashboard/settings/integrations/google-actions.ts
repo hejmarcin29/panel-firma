@@ -24,6 +24,7 @@ export async function testGoogleCalendarConnection() {
       calendarId: calendarId,
     });
     return { success: true, message: `Połączono z kalendarzem: ${calendarId}` };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error('Google Calendar Test Error:', error);
     // Check for common errors
