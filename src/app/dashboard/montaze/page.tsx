@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 export const dynamic = 'force-dynamic';
 
 import { MontageDashboardView } from './_components/montage-dashboard-view';
+import { MontageViewSwitcher } from './_components/montage-view-switcher';
 import { mapMontageRow, type MontageRow } from './utils';
 import { db } from '@/lib/db';
 import { requireUser } from '@/lib/auth/session';
@@ -33,8 +34,13 @@ type InProgressStage =
 // PageProps for this project treat searchParams as a Promise.
 // We normalise it inside the function instead.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// Using a generic props type here because Next's generated PageProps
+// treat searchParams as a Promise. We normalise it inside.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default async function MontazePage(props: any) {
-    const searchParams = await props.searchParams;
+    const searchParams = (await props.searchParams) as
+        | { view?: string; stage?: string }
+        | undefined;
     const user = await requireUser();
     const r2Config = await tryGetR2Config();
     const publicBaseUrl = r2Config?.publicBaseUrl ?? null;
@@ -153,8 +159,9 @@ export default async function MontazePage(props: any) {
     return (
         <div className="flex flex-col h-[calc(100vh-4rem)]">
             <div className="hidden md:block border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-                <div className="flex h-16 items-center px-4 sm:px-6">
+                <div className="flex h-16 items-center px-4 sm:px-6 justify-between gap-4">
                     <h1 className="text-lg font-semibold">Centrum Montaży</h1>
+                    <MontageViewSwitcher />
                 </div>
             </div>
             <div className="flex-1 overflow-hidden md:py-6">
