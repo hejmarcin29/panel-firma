@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Plus, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
@@ -9,8 +9,9 @@ import { Badge } from '@/components/ui/badge';
 import { createQuote } from '@/app/dashboard/wyceny/actions';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import type { Montage } from '../../types';
 
-export function MontageQuotes({ montageId, quotes }: { montageId: string, quotes: any[] }) {
+export function MontageQuotes({ montageId, quotes }: { montageId: string, quotes: Montage['quotes'] }) {
     const router = useRouter();
 
     const handleCreate = async () => {
@@ -18,7 +19,7 @@ export function MontageQuotes({ montageId, quotes }: { montageId: string, quotes
             const id = await createQuote(montageId);
             toast.success('Utworzono nową wycenę');
             router.push(`/dashboard/wyceny/${id}`);
-        } catch (error) {
+        } catch {
             toast.error('Błąd tworzenia wyceny');
         }
     };

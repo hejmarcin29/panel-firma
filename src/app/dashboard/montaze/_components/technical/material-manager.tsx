@@ -66,7 +66,7 @@ export function MaterialManager({ montageId, initialData, role }: MaterialManage
     setData(prev => ({ ...prev, items: [...prev.items, newItem] }));
   };
 
-  const updateItem = (id: string, field: keyof MaterialItem, value: any) => {
+  const updateItem = (id: string, field: keyof MaterialItem, value: string | number) => {
     setData(prev => ({
         ...prev,
         items: prev.items.map(item => item.id === id ? { ...item, [field]: value } : item)

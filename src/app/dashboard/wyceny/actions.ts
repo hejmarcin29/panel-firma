@@ -43,7 +43,7 @@ export async function updateQuote(id: string, data: {
     notes?: string;
 }) {
     // Calculate totals if items are updated
-    let updates: any = { ...data };
+    const updates: Partial<typeof quotes.$inferInsert> = { ...data };
     
     if (data.items) {
         const totalNet = data.items.reduce((sum, item) => sum + item.totalNet, 0);

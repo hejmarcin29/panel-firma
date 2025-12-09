@@ -1,6 +1,6 @@
 import { asc, desc, eq, and, inArray, or } from 'drizzle-orm';
 import Link from 'next/link';
-import { Plus } from 'lucide-react';
+import { Plus, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export const dynamic = 'force-dynamic';
@@ -205,7 +205,13 @@ export default async function MontazePage(props: any) {
                 <div className="flex flex-col md:flex-row md:h-16 md:items-center px-4 py-3 md:py-0 sm:px-6 justify-between gap-3 md:gap-4">
                     <div className="flex items-center justify-between">
                         <h1 className="text-lg font-semibold">Centrum Montaży</h1>
-                        <div className="md:hidden">
+                        <div className="flex items-center gap-2 md:hidden">
+                            <Button asChild size="sm" variant="outline" className="h-8 w-8 p-0 rounded-full">
+                                <Link href="/dashboard/montaze/ekipy">
+                                    <span className="sr-only">Ekipy</span>
+                                    <Users className="h-4 w-4" />
+                                </Link>
+                            </Button>
                             <Button asChild size="sm" className="h-8 w-8 p-0 rounded-full">
                                 <Link href="/dashboard/montaze/nowy">
                                     <Plus className="h-4 w-4" />
@@ -224,12 +230,20 @@ export default async function MontazePage(props: any) {
                     statusOptions={filteredStatusOptions}
                     threatDays={threatDays}
                     headerAction={
-                        <Button asChild>
-                            <Link href="/dashboard/montaze/nowy">
-                                <Plus className="mr-2 h-4 w-4" />
-                                Dodaj montaż
-                            </Link>
-                        </Button>
+                        <div className="flex gap-2">
+                            <Button asChild variant="outline">
+                                <Link href="/dashboard/montaze/ekipy">
+                                    <Users className="mr-2 h-4 w-4" />
+                                    Baza Ekip
+                                </Link>
+                            </Button>
+                            <Button asChild>
+                                <Link href="/dashboard/montaze/nowy">
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Dodaj montaż
+                                </Link>
+                            </Button>
+                        </div>
                     }
                 />
             </div>

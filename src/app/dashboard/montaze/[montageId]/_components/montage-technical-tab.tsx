@@ -1,8 +1,8 @@
 'use client';
 
-import { AuditForm } from './technical/audit-form';
-import { MaterialManager } from './technical/material-manager';
-import type { Montage } from '../../utils';
+import { AuditForm } from '../../_components/technical/audit-form';
+import { MaterialManager } from '../../_components/technical/material-manager';
+import type { Montage } from '../../types';
 import type { TechnicalAuditData, MaterialLogData } from '../../technical-data';
 
 interface MontageTechnicalTabProps {
@@ -13,7 +13,6 @@ interface MontageTechnicalTabProps {
 export function MontageTechnicalTab({ montage, userRoles }: MontageTechnicalTabProps) {
   const isAdmin = userRoles.includes('admin');
   const isMeasurer = userRoles.includes('measurer');
-  const isInstaller = userRoles.includes('installer');
 
   // Determine role for components
   let role: 'admin' | 'installer' | 'measurer' = 'installer';

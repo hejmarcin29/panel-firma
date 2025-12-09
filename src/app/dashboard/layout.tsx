@@ -11,7 +11,7 @@ import { LogoutButton } from './_components/logout-button';
 import { BackButton } from './_components/back-button';
 import { RefreshButton } from './_components/refresh-button';
 import { logoutAction } from './actions';
-import { requireUser, getCurrentSession } from '@/lib/auth/session';
+import { getCurrentSession } from '@/lib/auth/session';
 import { getUrgentOrdersCount } from './orders/queries';
 import { db } from '@/lib/db';
 import { users } from '@/lib/db/schema';

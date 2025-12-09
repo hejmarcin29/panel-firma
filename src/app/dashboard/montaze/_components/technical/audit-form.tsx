@@ -1,10 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Loader2, Save } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,16 +19,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 import { updateTechnicalAudit } from '../../technical-actions';
 import type { TechnicalAuditData } from '../../technical-data';
-
-const auditSchema = z.object({
-  humidity: z.number().min(0).max(100).nullable(),
-  humidityMethod: z.enum(['CM', 'electric', 'other']),
-  flatness: z.enum(['ok', 'grinding', 'leveling']).nullable(),
-  subfloorType: z.enum(['concrete', 'anhydrite', 'osb', 'other']).nullable(),
-  heating: z.boolean(),
-  heatingProtocol: z.boolean(),
-  notes: z.string(),
-});
 
 interface AuditFormProps {
   montageId: string;
@@ -61,7 +48,7 @@ export function AuditForm({ montageId, initialData, readOnly = false }: AuditFor
     });
   };
 
-  const handleChange = (field: keyof TechnicalAuditData, value: any) => {
+  const handleChange = (field: keyof TechnicalAuditData, value: string | number | boolean | null) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 

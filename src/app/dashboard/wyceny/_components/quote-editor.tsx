@@ -14,9 +14,17 @@ import { updateQuote } from '../actions';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 import type { QuoteItem, QuoteStatus } from '@/lib/db/schema';
+import type { Montage } from '@/app/dashboard/montaze/types';
+import type { TechnicalAuditData } from '@/app/dashboard/montaze/technical-data';
 
 type QuoteEditorProps = {
-    quote: any; // Type this properly
+    quote: {
+        id: string;
+        items: QuoteItem[];
+        status: QuoteStatus;
+        notes: string | null;
+        montage: Montage;
+    };
 };
 
 export function QuoteEditor({ quote }: QuoteEditorProps) {
@@ -32,7 +40,7 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
         return { totalNet: net, totalGross: gross };
     };
 
-    const updateItem = (index: number, field: keyof QuoteItem, value: any) => {
+    const updateItem = (index: number, field: keyof QuoteItem, value: string | number) => {
         const newItems = [...items];
         newItems[index] = { ...newItems[index], [field]: value };
         
@@ -66,7 +74,7 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
     };
 
     const handleSmartImport = () => {
-        const audit = quote.montage.technicalAudit;
+        const audit = quote.montage.technicalAudit as TechnicalAuditData | null;
         // Even if audit is missing, we can import basic montage data
         
         const newItems = [...items];
@@ -105,7 +113,7 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
         }
 
         // Check for additional work in audit
-        if (audit && audit.subfloorCondition === 'uneven') {
+        if (audit && audit.flatness === 'leveling') {
              newItems.push({
                 id: Math.random().toString(36).substr(2, 9),
                 name: 'Wylewka samopoziomująca (robocizna)',
@@ -138,7 +146,7 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
             });
             toast.success('Wycena zapisana.');
             router.refresh();
-        } catch (error) {
+        } catch {
             toast.error('Błąd zapisu.');
         } finally {
             setIsSaving(false);
@@ -269,7 +277,7 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
                             
                             <div className="pt-4 border-t">
                                 <Label>Status</Label>
-                                <Select value={status} onValueChange={(v: any) => setStatus(v)}>
+                                <Select value={status} onValueChange={(v: QuoteStatus) => setStatus(v)}>
                                     <SelectTrigger>
                                         <SelectValue />
                                     </SelectTrigger>

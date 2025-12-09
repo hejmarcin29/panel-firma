@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Loader2, Plus, Trash2 } from 'lucide-react';
@@ -23,7 +23,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -72,18 +71,21 @@ const profileSchema = z.object({
 
 export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDetailsSheetProps) {
     const [activeTab, setActiveTab] = useState('general');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [montages, setMontages] = useState<any[]>([]);
     const [isLoadingMontages, setIsLoadingMontages] = useState(false);
     const [isPending, startTransition] = useTransition();
 
     const form = useForm<z.infer<typeof profileSchema>>({
-        resolver: zodResolver(profileSchema),
+        resolver: zodResolver(profileSchema) as Resolver<z.infer<typeof profileSchema>>,
         defaultValues: {
             workScope: '',
             operationArea: '',
             pricing: [],
         },
     });
+
+    const pricing = useWatch({ control: form.control, name: 'pricing' });
 
     useEffect(() => {
         if (member?.installerProfile) {
@@ -103,6 +105,7 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
 
     useEffect(() => {
         if (open && member && member.roles.includes('installer') && activeTab === 'history') {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setIsLoadingMontages(true);
             getInstallerMontages(member.id)
                 .then(setMontages)
@@ -224,7 +227,7 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
                                     </div>
                                     
                                     <div className="space-y-2">
-                                        {form.watch('pricing')?.map((_, index) => (
+                                        {pricing?.map((_, index) => (
                                             <div key={index} className="flex gap-2 items-start">
                                                 <FormField
                                                     control={form.control}
