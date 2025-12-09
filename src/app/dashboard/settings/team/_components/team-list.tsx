@@ -1,7 +1,7 @@
 'use client';
 
-import { useTransition } from 'react';
-import { MoreHorizontal, Shield, ShieldAlert, ShieldCheck, UserCog } from 'lucide-react';
+import { useState, useTransition } from 'react';
+import { MoreHorizontal, Shield, ShieldAlert, ShieldCheck, UserCog, LogIn, Settings2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -25,8 +25,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { toggleEmployeeStatus, updateEmployeeRoles } from '../actions';
-import type { UserRole } from '@/lib/db/schema';
+import { toggleEmployeeStatus, updateEmployeeRoles, impersonateUserAction } from '../actions';
+import type { UserRole, InstallerProfile } from '@/lib/db/schema';
+import { EmployeeDetailsSheet } from './employee-details-sheet';
 
 interface TeamMember {
     id: string;
@@ -35,6 +36,7 @@ interface TeamMember {
     roles: UserRole[];
     isActive: boolean;
     createdAt: Date;
+    installerProfile: InstallerProfile | null;
 }
 
 interface TeamListProps {
@@ -56,6 +58,8 @@ const roleIcons: Record<UserRole, React.ReactNode> = {
 
 export function TeamList({ members, currentUserId }: TeamListProps) {
   const [isPending, startTransition] = useTransition();
+  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const handleStatusToggle = (userId: string, currentStatus: boolean) => {
     startTransition(async () => {
@@ -91,92 +95,126 @@ export function TeamList({ members, currentUserId }: TeamListProps) {
     });
   };
 
+  const handleImpersonate = (userId: string) => {
+    if (!confirm('Czy na pewno chcesz zalogować się jako ten użytkownik?')) return;
+    
+    startTransition(async () => {
+        try {
+            await impersonateUserAction(userId);
+        } catch (e) {
+            console.error(e);
+            alert('Wystąpił błąd podczas logowania.');
+        }
+    });
+  };
+
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Pracownik</TableHead>
-            <TableHead>Rola</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Data dodania</TableHead>
-            <TableHead className="w-[50px]"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {members.map((member) => (
-            <TableRow key={member.id}>
-              <TableCell>
-                <div className="flex flex-col">
-                    <span className="font-medium">{member.name}</span>
-                    <span className="text-xs text-muted-foreground">{member.email}</span>
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="flex flex-col gap-1">
-                    {member.roles.map(role => (
-                        <div key={role} className="flex items-center gap-2">
-                            {roleIcons[role]}
-                            <span className="text-sm">{roleLabels[role]}</span>
-                        </div>
-                    ))}
-                </div>
-              </TableCell>
-              <TableCell>
-                <Badge variant={member.isActive ? 'default' : 'destructive'}>
-                    {member.isActive ? 'Aktywny' : 'Zablokowany'}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                {new Date(member.createdAt).toLocaleDateString('pl-PL')}
-              </TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0" disabled={member.id === currentUserId || isPending}>
-                      <span className="sr-only">Otwórz menu</span>
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Akcje</DropdownMenuLabel>
-                    <DropdownMenuItem onClick={() => handleStatusToggle(member.id, member.isActive)}>
-                        {member.isActive ? 'Zablokuj dostęp' : 'Odblokuj dostęp'}
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuSub>
-                        <DropdownMenuSubTrigger>
-                            <UserCog className="mr-2 h-4 w-4" />
-                            Zmień rolę
-                        </DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent>
-                            <DropdownMenuCheckboxItem 
-                                checked={member.roles.includes('admin')}
-                                onCheckedChange={() => handleRoleToggle(member.id, 'admin', member.roles)}
-                            >
-                                Administrator
-                            </DropdownMenuCheckboxItem>
-                            <DropdownMenuCheckboxItem 
-                                checked={member.roles.includes('measurer')}
-                                onCheckedChange={() => handleRoleToggle(member.id, 'measurer', member.roles)}
-                            >
-                                Pomiarowiec
-                            </DropdownMenuCheckboxItem>
-                            <DropdownMenuCheckboxItem 
-                                checked={member.roles.includes('installer')}
-                                onCheckedChange={() => handleRoleToggle(member.id, 'installer', member.roles)}
-                            >
-                                Montażysta
-                            </DropdownMenuCheckboxItem>
-                        </DropdownMenuSubContent>
-                    </DropdownMenuSub>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
+    <>
+        <div className="rounded-md border">
+        <Table>
+            <TableHeader>
+            <TableRow>
+                <TableHead>Pracownik</TableHead>
+                <TableHead>Rola</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Data dodania</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+            </TableHeader>
+            <TableBody>
+            {members.map((member) => (
+                <TableRow key={member.id}>
+                <TableCell>
+                    <div className="flex flex-col">
+                        <span className="font-medium">{member.name}</span>
+                        <span className="text-xs text-muted-foreground">{member.email}</span>
+                    </div>
+                </TableCell>
+                <TableCell>
+                    <div className="flex flex-col gap-1">
+                        {member.roles.map(role => (
+                            <div key={role} className="flex items-center gap-2">
+                                {roleIcons[role]}
+                                <span className="text-sm">{roleLabels[role]}</span>
+                            </div>
+                        ))}
+                    </div>
+                </TableCell>
+                <TableCell>
+                    <Badge variant={member.isActive ? 'default' : 'destructive'}>
+                        {member.isActive ? 'Aktywny' : 'Zablokowany'}
+                    </Badge>
+                </TableCell>
+                <TableCell>
+                    {new Date(member.createdAt).toLocaleDateString('pl-PL')}
+                </TableCell>
+                <TableCell>
+                    <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0" disabled={member.id === currentUserId || isPending}>
+                        <span className="sr-only">Otwórz menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Akcje</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => {
+                            setSelectedMember(member);
+                            setIsSheetOpen(true);
+                        }}>
+                            <Settings2 className="mr-2 h-4 w-4" />
+                            Szczegóły
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handleStatusToggle(member.id, member.isActive)}>
+                            {member.isActive ? 'Zablokuj dostęp' : 'Odblokuj dostęp'}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>
+                                <UserCog className="mr-2 h-4 w-4" />
+                                <span className="ml-2">Zmień rolę</span>
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuSubContent>
+                                <DropdownMenuCheckboxItem 
+                                    checked={member.roles.includes('admin')}
+                                    onCheckedChange={() => handleRoleToggle(member.id, 'admin', member.roles)}
+                                >
+                                    Administrator
+                                </DropdownMenuCheckboxItem>
+                                <DropdownMenuCheckboxItem 
+                                    checked={member.roles.includes('measurer')}
+                                    onCheckedChange={() => handleRoleToggle(member.id, 'measurer', member.roles)}
+                                >
+                                    Pomiarowiec
+                                </DropdownMenuCheckboxItem>
+                                <DropdownMenuCheckboxItem 
+                                    checked={member.roles.includes('installer')}
+                                    onCheckedChange={() => handleRoleToggle(member.id, 'installer', member.roles)}
+                                >
+                                    Montażysta
+                                </DropdownMenuCheckboxItem>
+                            </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handleImpersonate(member.id)}>
+                            <LogIn className="mr-2 h-4 w-4" />
+                            Zaloguj jako
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                    </DropdownMenu>
+                </TableCell>
+                </TableRow>
+            ))}
+            </TableBody>
+        </Table>
+        </div>
+
+        <EmployeeDetailsSheet 
+            member={selectedMember} 
+            open={isSheetOpen} 
+            onOpenChange={setIsSheetOpen} 
+        />
+    </>
   );
 }

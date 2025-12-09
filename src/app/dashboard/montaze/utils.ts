@@ -12,6 +12,7 @@ import {
 	montageNotes,
 	montageTasks,
 	montages,
+    quotes,
 	type MontageStatus,
 	users,
 } from '@/lib/db/schema';
@@ -66,6 +67,7 @@ export type MontageRow = typeof montages.$inferSelect & {
 			uploader: typeof users.$inferSelect | null;
 		}
 	>;
+    quotes: Array<typeof quotes.$inferSelect>;
     installer?: typeof users.$inferSelect | null;
     measurer?: typeof users.$inferSelect | null;
 };
@@ -178,6 +180,15 @@ export function mapMontageRow(row: MontageRow, publicBaseUrl: string | null): Mo
         measurerId: row.measurerId,
         installer: row.installer ? { id: row.installer.id, name: row.installer.name, email: row.installer.email } : null,
         measurer: row.measurer ? { id: row.measurer.id, name: row.measurer.name, email: row.measurer.email } : null,
+        technicalAudit: row.technicalAudit,
+        materialLog: row.materialLog,
+        quotes: row.quotes.map(q => ({
+            id: q.id,
+            status: q.status,
+            totalNet: q.totalNet,
+            totalGross: q.totalGross,
+            createdAt: q.createdAt,
+        })),
 		notes: row.notes.map((note) => mapNote(note, publicBaseUrl)),
 		attachments: row.attachments.map((attachment) => mapAttachment(attachment, publicBaseUrl)),
 		tasks: row.tasks.map(mapTask),

@@ -61,6 +61,16 @@ export type MontageStatus = string;
 export type MontageMaterialStatus = 'none' | 'ordered' | 'in_stock' | 'delivered';
 export type MontageInstallerStatus = 'none' | 'informed' | 'confirmed';
 
+export type InstallerProfile = {
+	workScope?: string;
+	operationArea?: string;
+	pricing?: {
+		serviceName: string;
+		price: number;
+		unit: string;
+	}[];
+};
+
 export const users = sqliteTable(
 	'users',
 	{
@@ -72,6 +82,7 @@ export const users = sqliteTable(
 		isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
 		dashboardConfig: text('dashboard_config', { mode: 'json' }),
 		mobileMenuConfig: text('mobile_menu_config', { mode: 'json' }),
+		installerProfile: text('installer_profile', { mode: 'json' }).$type<InstallerProfile>(),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' })
 			.notNull()
 			.default(sql`(strftime('%s','now') * 1000)`),
@@ -99,6 +110,7 @@ export const sessions = sqliteTable(
 		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
 			.notNull()
 			.default(sql`(strftime('%s','now') * 1000)`),
+		originalUserId: text('original_user_id').references(() => users.id, { onDelete: 'set null' }),
 	},
 	(table) => ({
 		expiresIdx: index('sessions_expires_at_idx').on(table.expiresAt),
@@ -393,6 +405,8 @@ export const appSettings = sqliteTable(
 	})
 );
 
+import type { TechnicalAuditData, MaterialLogData } from '@/app/dashboard/montaze/technical-data';
+
 export const montages = sqliteTable(
 	'montages',
 	{
@@ -440,6 +454,8 @@ export const montages = sqliteTable(
 		installerId: text('installer_id').references(() => users.id, { onDelete: 'set null' }),
 		measurerId: text('measurer_id').references(() => users.id, { onDelete: 'set null' }),
         googleEventId: text('google_event_id'),
+        technicalAudit: text('technical_audit', { mode: 'json' }).$type<TechnicalAuditData>(),
+        materialLog: text('material_log', { mode: 'json' }).$type<MaterialLogData>(),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' })
 			.notNull()
 			.default(sql`(strftime('%s','now') * 1000)`),
@@ -573,6 +589,7 @@ export const montagesRelations = relations(montages, ({ one, many }) => ({
 		references: [users.id],
 		relationName: 'montage_measurer',
 	}),
+    quotes: many(quotes),
 }));
 
 export const montageNotesRelations = relations(montageNotes, ({ one, many }) => ({
@@ -956,6 +973,54 @@ export const taskAttachmentsRelations = relations(taskAttachments, ({ one }) => 
 		fields: [taskAttachments.taskId],
 		references: [boardTasks.id],
 	}),
+}));
+
+export const quoteStatuses = ['draft', 'sent', 'accepted', 'rejected'] as const;
+export type QuoteStatus = (typeof quoteStatuses)[number];
+
+export type QuoteItem = {
+    id: string;
+    name: string;
+    quantity: number;
+    unit: string;
+    priceNet: number;
+    vatRate: number;
+    priceGross: number;
+    totalNet: number;
+    totalGross: number;
+};
+
+export const quotes = sqliteTable(
+    'quotes',
+    {
+        id: text('id').primaryKey(),
+        montageId: text('montage_id')
+            .notNull()
+            .references(() => montages.id, { onDelete: 'cascade' }),
+        status: text('status').$type<QuoteStatus>().notNull().default('draft'),
+        items: text('items', { mode: 'json' }).$type<QuoteItem[]>().notNull().default([]),
+        totalNet: integer('total_net', { mode: 'number' }).notNull().default(0),
+        totalGross: integer('total_gross', { mode: 'number' }).notNull().default(0),
+        validUntil: integer('valid_until', { mode: 'timestamp_ms' }),
+        notes: text('notes'),
+        createdAt: integer('created_at', { mode: 'timestamp_ms' })
+            .notNull()
+            .default(sql`(strftime('%s','now') * 1000)`),
+        updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+            .notNull()
+            .default(sql`(strftime('%s','now') * 1000)`),
+    },
+    (table) => ({
+        montageIdx: index('quotes_montage_id_idx').on(table.montageId),
+        statusIdx: index('quotes_status_idx').on(table.status),
+    })
+);
+
+export const quotesRelations = relations(quotes, ({ one }) => ({
+    montage: one(montages, {
+        fields: [quotes.montageId],
+        references: [montages.id],
+    }),
 }));
 
 export const products = sqliteTable('products', {

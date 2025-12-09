@@ -5,10 +5,38 @@ import { eq, desc } from 'drizzle-orm';
 import { hash } from 'bcryptjs';
 
 import { db } from '@/lib/db';
-import { users, type UserRole } from '@/lib/db/schema';
-import { requireUser } from '@/lib/auth/session';
+import { users, montages, type UserRole, type InstallerProfile } from '@/lib/db/schema';
+import { requireUser, impersonateUser } from '@/lib/auth/session';
 
 const TEAM_SETTINGS_PATH = '/dashboard/settings/team';
+
+export async function impersonateUserAction(userId: string) {
+    await impersonateUser(userId);
+}
+
+export async function getInstallerMontages(installerId: string) {
+    await requireUser();
+    
+    return db.query.montages.findMany({
+        where: eq(montages.installerId, installerId),
+        orderBy: [desc(montages.createdAt)],
+        limit: 20,
+    });
+}
+
+export async function updateInstallerProfile(userId: string, profile: InstallerProfile) {
+    const currentUser = await requireUser();
+    
+    if (!currentUser.roles.includes('admin')) {
+        throw new Error('Brak uprawnień.');
+    }
+
+    await db.update(users)
+        .set({ installerProfile: profile, updatedAt: new Date() })
+        .where(eq(users.id, userId));
+
+    revalidatePath(TEAM_SETTINGS_PATH);
+}
 
 export async function getTeamMembers() {
     await requireUser();
@@ -20,6 +48,7 @@ export async function getTeamMembers() {
         roles: users.roles,
         isActive: users.isActive,
         createdAt: users.createdAt,
+        installerProfile: users.installerProfile,
     })
     .from(users)
     .orderBy(desc(users.createdAt));

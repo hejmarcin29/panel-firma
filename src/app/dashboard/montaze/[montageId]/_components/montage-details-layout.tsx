@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { ClipboardList, LayoutList, Ruler, History, Image as ImageIcon } from "lucide-react";
+import { ClipboardList, LayoutList, Ruler, History, Image as ImageIcon, HardHat, FileText } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -15,6 +15,8 @@ interface MontageDetailsLayoutProps {
     measurement: React.ReactNode;
     tasks: React.ReactNode;
     gallery: React.ReactNode;
+    technical: React.ReactNode;
+    quotes: React.ReactNode;
   };
   defaultTab?: string;
 }
@@ -68,6 +70,16 @@ export function MontageDetailsLayout({
                   onClick={() => handleTabChange("measurement")} 
               />
               <MenuButton 
+                  icon={<HardHat className="w-5 h-5" />} 
+                  label="Techniczne / Materiały" 
+                  onClick={() => handleTabChange("technical")} 
+              />
+              <MenuButton 
+                  icon={<FileText className="w-5 h-5" />} 
+                  label="Wyceny" 
+                  onClick={() => handleTabChange("quotes")} 
+              />
+              <MenuButton 
                   icon={<ClipboardList className="w-5 h-5" />} 
                   label="Zadania" 
                   onClick={() => handleTabChange("tasks")} 
@@ -98,6 +110,8 @@ export function MontageDetailsLayout({
             {currentTab === 'log' && tabs.log}
             {currentTab === 'workflow' && tabs.workflow}
             {currentTab === 'measurement' && tabs.measurement}
+            {currentTab === 'technical' && tabs.technical}
+            {currentTab === 'quotes' && tabs.quotes}
             {currentTab === 'tasks' && tabs.tasks}
             {currentTab === 'gallery' && tabs.gallery}
         </div>
@@ -117,10 +131,12 @@ export function MontageDetailsLayout({
 
           <div className="space-y-6">
               <Tabs value={currentTab === 'overview' ? defaultTab : currentTab} onValueChange={handleTabChange} className="w-full">
-                  <TabsList className="flex w-full overflow-x-auto md:grid md:grid-cols-5">
+                  <TabsList className="flex w-full overflow-x-auto md:grid md:grid-cols-7">
                       <TabsTrigger value="log" className="flex-1">Dziennik</TabsTrigger>
                       <TabsTrigger value="workflow" className="flex-1">Przebieg</TabsTrigger>
                       <TabsTrigger value="measurement" className="flex-1">Pomiar</TabsTrigger>
+                      <TabsTrigger value="technical" className="flex-1">Techniczne</TabsTrigger>
+                      <TabsTrigger value="quotes" className="flex-1">Wyceny</TabsTrigger>
                       <TabsTrigger value="tasks" className="flex-1">Zadania</TabsTrigger>
                       <TabsTrigger value="gallery" className="flex-1">Załączniki</TabsTrigger>
                   </TabsList>
@@ -132,6 +148,12 @@ export function MontageDetailsLayout({
                   </TabsContent>
                   <TabsContent value="measurement" className="mt-6">
                       {tabs.measurement}
+                  </TabsContent>
+                  <TabsContent value="technical" className="mt-6">
+                      {tabs.technical}
+                  </TabsContent>
+                  <TabsContent value="quotes" className="mt-6">
+                      {tabs.quotes}
                   </TabsContent>
                   <TabsContent value="tasks" className="mt-6">
                       {tabs.tasks}

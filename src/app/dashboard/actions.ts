@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 
-import { signOut } from '@/lib/auth/session';
+import { signOut, stopImpersonating } from '@/lib/auth/session';
 import { requireUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
@@ -12,6 +12,10 @@ import { revalidatePath } from "next/cache";
 export async function logoutAction() {
 	await signOut();
 	redirect('/login');
+}
+
+export async function stopImpersonatingAction() {
+    await stopImpersonating();
 }
 
 export interface DashboardWidgetConfig {

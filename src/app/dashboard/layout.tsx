@@ -11,16 +11,23 @@ import { LogoutButton } from './_components/logout-button';
 import { BackButton } from './_components/back-button';
 import { RefreshButton } from './_components/refresh-button';
 import { logoutAction } from './actions';
-import { requireUser } from '@/lib/auth/session';
+import { requireUser, getCurrentSession } from '@/lib/auth/session';
 import { getUrgentOrdersCount } from './orders/queries';
 import { db } from '@/lib/db';
 import { users } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { ImpersonationBanner } from './_components/impersonation-banner';
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
 	let sessionUser;
+    let isImpersonating = false;
     try {
-        sessionUser = await requireUser();
+        const session = await getCurrentSession();
+        if (!session) {
+             redirect('/login');
+        }
+        sessionUser = session.user;
+        isImpersonating = !!session.originalUserId;
     } catch (error) {
         // Rethrow redirect errors (NEXT_REDIRECT)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -52,6 +59,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
 	return (
         <>
+            {isImpersonating && <ImpersonationBanner />}
             <div className="min-h-dvh bg-zinc-50/50 dark:bg-zinc-950 pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-0 relative isolate">
                 {/* Background Pattern */}
                 <div className="absolute inset-0 -z-10 h-full w-full bg-white dark:bg-zinc-950 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-size-[14px_24px] mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>

@@ -9,6 +9,7 @@ import {
     montageNotes,
     montageTasks,
     systemLogs,
+    quotes,
 } from '@/lib/db/schema';
 import { tryGetR2Config } from '@/lib/r2/config';
 import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
@@ -23,6 +24,8 @@ import { MontageTasksTab } from './_components/montage-tasks-tab';
 import { MontageGalleryTab } from './_components/montage-gallery-tab';
 import { MontageLogTab } from './_components/montage-log-tab';
 import { MontageMeasurementTab } from '../_components/montage-measurement-tab';
+import { MontageTechnicalTab } from './_components/montage-technical-tab';
+import { MontageQuotes } from './_components/montage-quotes';
 
 import { MontageDetailsLayout } from './_components/montage-details-layout';
 
@@ -95,6 +98,9 @@ export default async function MontageDetailsPage({ params, searchParams }: Monta
             },
             installer: true,
             measurer: true,
+            quotes: {
+                orderBy: desc(quotes.createdAt),
+            },
         },
     });
 
@@ -121,6 +127,8 @@ export default async function MontageDetailsPage({ params, searchParams }: Monta
                     log: <MontageLogTab montage={montage} logs={logs} />,
                     workflow: <MontageWorkflowTab montage={montage} statusOptions={statusOptions} installers={installers} measurers={measurers} />,
                     measurement: <MontageMeasurementTab montage={montage} />,
+                    technical: <MontageTechnicalTab montage={montage} userRoles={user.roles} />,
+                    quotes: <MontageQuotes montageId={montage.id} quotes={montage.quotes} />,
                     tasks: <MontageTasksTab montage={montage} />,
                     gallery: <MontageGalleryTab montage={montage} />,
                 }}

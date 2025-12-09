@@ -39,6 +39,7 @@ const cookieConfig: CookieOptions = {
 type SessionRecord = {
 	id: string;
 	expiresAt: number;
+	originalUserId?: string | null;
 	user: {
 		id: string;
 		email: string;
@@ -58,6 +59,7 @@ async function findSession(token: string): Promise<SessionRecord | null> {
 		.select({
 			sessionId: sessions.id,
 			expiresAt: sessions.expiresAt,
+			originalUserId: sessions.originalUserId,
 			userId: users.id,
 			email: users.email,
 			name: users.name,
@@ -75,6 +77,7 @@ async function findSession(token: string): Promise<SessionRecord | null> {
 	return {
 		id: row.sessionId,
 		expiresAt: row.expiresAt ?? 0,
+		originalUserId: row.originalUserId,
 		user: {
 			id: row.userId,
 			email: row.email,
@@ -89,7 +92,7 @@ async function removeSessionByToken(token: string) {
 	await db.delete(sessions).where(eq(sessions.tokenHash, tokenHash));
 }
 
-export async function createSession(userId: string) {
+export async function createSession(userId: string, originalUserId?: string) {
 	const token = randomBytes(32).toString('hex');
 	const tokenHash = hashToken(token);
 	const expiresAt = Date.now() + SESSION_TTL_MS;
@@ -99,6 +102,7 @@ export async function createSession(userId: string) {
 		userId,
 		tokenHash,
 		expiresAt,
+		originalUserId,
 	});
 
 	const cookieStore = await getCookieStore();
@@ -106,6 +110,50 @@ export async function createSession(userId: string) {
 		...cookieConfig,
 		maxAge: SESSION_TTL_MS / 1000,
 	});
+}
+
+export async function impersonateUser(targetUserId: string) {
+	const currentUser = await requireUser();
+	
+	// Only admin can impersonate
+	if (!currentUser.roles.includes('admin')) {
+		throw new Error('Unauthorized');
+	}
+
+	// If already impersonating, use the original originalUserId
+	const currentSession = await getCurrentSession();
+	const originalUserId = currentSession?.originalUserId || currentUser.id;
+
+	// Remove current session
+	const cookieStore = await getCookieStore();
+	const token = cookieStore.get(SESSION_COOKIE)?.value as string | undefined;
+	if (token) {
+		await removeSessionByToken(token);
+	}
+
+	// Create new session for target user with originalUserId
+	await createSession(targetUserId, originalUserId);
+	redirect('/dashboard');
+}
+
+export async function stopImpersonating() {
+	const session = await getCurrentSession();
+	if (!session || !session.originalUserId) {
+		return;
+	}
+
+	const originalUserId = session.originalUserId;
+
+	// Remove current session
+	const cookieStore = await getCookieStore();
+	const token = cookieStore.get(SESSION_COOKIE)?.value as string | undefined;
+	if (token) {
+		await removeSessionByToken(token);
+	}
+
+	// Create new session for original user
+	await createSession(originalUserId);
+	redirect('/dashboard/users');
 }
 
 export async function getCurrentSession(): Promise<SessionRecord | null> {

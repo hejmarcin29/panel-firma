@@ -96,6 +96,15 @@ export type Montage = {
 	measurerId?: string | null;
 	installer?: { id: string; name: string | null; email: string } | null;
 	measurer?: { id: string; name: string | null; email: string } | null;
+    technicalAudit?: unknown;
+    materialLog?: unknown;
+    quotes: {
+        id: string;
+        status: string;
+        totalNet: number;
+        totalGross: number;
+        createdAt: TimestampValue;
+    }[];
 	createdAt: TimestampValue;
 	updatedAt: TimestampValue;
 	notes: MontageNote[];
