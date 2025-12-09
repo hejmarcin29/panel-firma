@@ -23,7 +23,14 @@ type QuoteEditorProps = {
         items: QuoteItem[];
         status: QuoteStatus;
         notes: string | null;
-        montage: Montage;
+        montage: {
+            id: string;
+            clientName: string;
+            installationAddress: string | null;
+            floorArea: number | null;
+            skirtingLength: number | null;
+            technicalAudit: unknown;
+        };
     };
 };
 
@@ -188,10 +195,10 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead className="min-w-[200px]">Nazwa</TableHead>
-                                        <TableHead className="w-[80px]">Ilość</TableHead>
+                                        <TableHead className="w-20">Ilość</TableHead>
                                         <TableHead className="w-[60px]">J.m.</TableHead>
                                         <TableHead className="w-[100px]">Cena Netto</TableHead>
-                                        <TableHead className="w-[80px]">VAT</TableHead>
+                                        <TableHead className="w-20">VAT</TableHead>
                                         <TableHead className="w-[120px] text-right">Wartość Brutto</TableHead>
                                         <TableHead className="w-[50px]"></TableHead>
                                     </TableRow>
