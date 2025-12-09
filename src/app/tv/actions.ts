@@ -1,8 +1,8 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { montages, users } from '@/lib/db/schema';
-import { desc, eq, inArray, and, gte } from 'drizzle-orm';
+import { montages } from '@/lib/db/schema';
+import { desc } from 'drizzle-orm';
 import { requireUser } from '@/lib/auth/session';
 
 export type TvMontage = {

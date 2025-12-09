@@ -3,25 +3,25 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getTvData, TvColumn, TvMontage } from '../actions';
-import { Clock, MapPin, User, Ruler, Hammer, AlertCircle } from 'lucide-react';
+import { MapPin, Ruler, Hammer, AlertCircle } from 'lucide-react';
 
 export function TvBoard() {
     const [columns, setColumns] = useState<TvColumn[]>([]);
     const [loading, setLoading] = useState(true);
     const [lastUpdated, setLastUpdated] = useState(new Date());
 
-    const fetchData = async () => {
-        try {
-            const data = await getTvData();
-            setColumns(data);
-            setLastUpdated(new Date());
-            setLoading(false);
-        } catch (error) {
-            console.error('Failed to fetch TV data', error);
-        }
-    };
-
     useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const data = await getTvData();
+                setColumns(data);
+                setLastUpdated(new Date());
+                setLoading(false);
+            } catch (error) {
+                console.error('Failed to fetch TV data', error);
+            }
+        };
+
         fetchData();
         // Auto-refresh every 30 seconds
         const interval = setInterval(fetchData, 30000);
