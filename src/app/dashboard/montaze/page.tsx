@@ -150,6 +150,7 @@ export default async function MontazePage(props: any) {
             },
             installer: true,
             measurer: true,
+            quotes: true,
         },
     });
 
