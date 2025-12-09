@@ -152,6 +152,7 @@ export default async function DashboardPage() {
                     uploader: true,
                 },
             },
+            quotes: true,
         },
     });
 
