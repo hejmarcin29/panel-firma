@@ -2,8 +2,9 @@ import { getQuote } from '../actions';
 import { QuoteEditor } from '../_components/quote-editor';
 import { notFound } from 'next/navigation';
 
-export default async function QuotePage({ params }: { params: { quoteId: string } }) {
-    const quote = await getQuote(params.quoteId);
+export default async function QuotePage({ params }: { params: Promise<{ quoteId: string }> }) {
+    const { quoteId } = await params;
+    const quote = await getQuote(quoteId);
 
     if (!quote) {
         notFound();
