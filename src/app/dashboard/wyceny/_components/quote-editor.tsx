@@ -14,7 +14,6 @@ import { updateQuote } from '../actions';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 import type { QuoteItem, QuoteStatus } from '@/lib/db/schema';
-import type { Montage } from '@/app/dashboard/montaze/types';
 import type { TechnicalAuditData } from '@/app/dashboard/montaze/technical-data';
 
 type QuoteEditorProps = {
