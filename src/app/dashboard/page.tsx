@@ -1,4 +1,4 @@
-import { desc, eq, asc, and, lt } from 'drizzle-orm';
+import { desc, eq, asc, and, lt, or } from 'drizzle-orm';
 import { differenceInCalendarDays } from 'date-fns';
 import { parseTaskOverrides } from '@/app/dashboard/orders/utils';
 
@@ -189,7 +189,10 @@ export default async function DashboardPage() {
 
     // Fetch New Orders Count
     const newOrders = await db.query.manualOrders.findMany({
-        where: eq(manualOrders.status, 'Zamówienie utworzone'),
+        where: or(
+            eq(manualOrders.status, 'Zamówienie utworzone'),
+            eq(manualOrders.requiresReview, true)
+        ),
     });
     const newOrdersCount = newOrders.length;
 

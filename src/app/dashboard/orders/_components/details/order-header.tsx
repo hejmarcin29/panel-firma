@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { OrderStatusForm } from '../order-status-form';
+import { ConfirmOrderButton } from '../confirm-order-button';
 import type { Order } from '../../data';
 import { formatDate } from './utils';
 
@@ -47,7 +48,8 @@ export function OrderHeader({ order }: OrderHeaderProps) {
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:pl-6">
-        <div className="w-full sm:w-auto">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            {order.requiresReview && <ConfirmOrderButton order={order} />}
             <OrderStatusForm orderId={order.id} currentStatus={order.status} />
         </div>
         
