@@ -45,7 +45,7 @@ export function MontageQuotes({ montageId, quotes }: { montageId: string, quotes
                                 <div>
                                     <div className="font-medium">Wycena #{quote.id.slice(0, 8)}</div>
                                     <div className="text-sm text-muted-foreground">
-                                        {new Date(quote.createdAt).toLocaleDateString('pl-PL')}
+                                        {quote.createdAt ? new Date(quote.createdAt).toLocaleDateString('pl-PL') : '-'}
                                     </div>
                                 </div>
                             </div>
