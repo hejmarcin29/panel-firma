@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 import { quotes, type QuoteItem, type QuoteStatus } from '@/lib/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
-import { nanoid } from 'nanoid';
+import { randomUUID } from 'crypto';
 
 export async function getQuotes() {
     return await db.query.quotes.findMany({
@@ -25,7 +25,7 @@ export async function getQuote(id: string) {
 }
 
 export async function createQuote(montageId: string) {
-    const id = nanoid();
+    const id = randomUUID();
     await db.insert(quotes).values({
         id,
         montageId,
@@ -33,6 +33,7 @@ export async function createQuote(montageId: string) {
         items: [],
     });
     revalidatePath('/dashboard/wyceny');
+    revalidatePath(`/dashboard/montaze/${montageId}`);
     return id;
 }
 
