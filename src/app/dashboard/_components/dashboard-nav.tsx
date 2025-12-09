@@ -14,6 +14,7 @@ const links = [
 	{ href: '/dashboard/orders', label: 'Zamówienia' },
 	{ href: '/dashboard/products', label: 'Produkty' },
 	{ href: '/dashboard/montaze', label: 'Montaże' },
+    { href: '/tv', label: 'TV' },
     { href: '/dashboard/wyceny', label: 'Wyceny' },
 	{ href: '/dashboard/montaze/galeria', label: 'Galeria' },
 	{ href: '/dashboard/mail', label: 'Poczta' },
