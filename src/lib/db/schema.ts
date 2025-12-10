@@ -8,10 +8,9 @@ import {
     boolean,
     timestamp,
     json,
-    serial,
     doublePrecision
 } from 'drizzle-orm/pg-core';
-import { relations, sql } from 'drizzle-orm';
+import { relations } from 'drizzle-orm';
 
 export const userRoles = ['admin', 'measurer', 'installer', 'architect'] as const;
 export const orderSources = ['woocommerce', 'manual'] as const;
