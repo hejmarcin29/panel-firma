@@ -4,11 +4,11 @@ import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 import { db } from '@/lib/db';
 import { users } from '@/lib/db/schema';
-import { like } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 
 export default async function NewMontagePage() {
-    const installers = await db.select({ id: users.id, name: users.name, email: users.email }).from(users).where(like(users.roles, '%"installer"%'));
-    const measurers = await db.select({ id: users.id, name: users.name, email: users.email }).from(users).where(like(users.roles, '%"measurer"%'));
+    const installers = await db.select({ id: users.id, name: users.name, email: users.email }).from(users).where(sql`${users.roles}::text LIKE '%"installer"%'`);
+    const measurers = await db.select({ id: users.id, name: users.name, email: users.email }).from(users).where(sql`${users.roles}::text LIKE '%"measurer"%'`);
 
     return (
         <div className="container mx-auto py-6 max-w-3xl">
