@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db';
 import { products } from '@/lib/db/schema';
-import { like, eq, and, desc, asc, count, inArray } from 'drizzle-orm';
+import { like, eq, and, desc, asc, count, inArray, sql } from 'drizzle-orm';
 import { getAppSettings, appSettingKeys } from '@/lib/settings';
 import { syncProducts } from '@/lib/sync/products';
 import { revalidatePath } from 'next/cache';
@@ -385,17 +385,17 @@ export async function getProductsFromDb(
     }
 
     if (categoryId) {
-        conditions.push(like(products.categories, `%${categoryId}%`));
+        conditions.push(sql`${products.categories}::text LIKE ${`%${categoryId}%`}`);
     }
 
     if (brandName) {
-        conditions.push(like(products.attributes, `%${brandName}%`));
+        conditions.push(sql`${products.attributes}::text LIKE ${`%${brandName}%`}`);
     }
 
     if (attributeFilters) {
         Object.values(attributeFilters).forEach(termName => {
             if (termName) {
-                conditions.push(like(products.attributes, `%${termName}%`));
+                conditions.push(sql`${products.attributes}::text LIKE ${`%${termName}%`}`);
             }
         });
     }
