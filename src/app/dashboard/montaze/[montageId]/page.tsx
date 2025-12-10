@@ -48,6 +48,7 @@ export default async function MontageDetailsPage({ params, searchParams }: Monta
 
     const installers = await db.select({ id: users.id, name: users.name, email: users.email }).from(users).where(like(users.roles, '%"installer"%'));
     const measurers = await db.select({ id: users.id, name: users.name, email: users.email }).from(users).where(like(users.roles, '%"measurer"%'));
+    const architects = await db.select({ id: users.id, name: users.name, email: users.email }).from(users).where(like(users.roles, '%"architect"%'));
 
     const r2Config = await tryGetR2Config();
     const publicBaseUrl = r2Config?.publicBaseUrl ?? null;
@@ -98,6 +99,7 @@ export default async function MontageDetailsPage({ params, searchParams }: Monta
             },
             installer: true,
             measurer: true,
+            architect: true,
             quotes: {
                 orderBy: desc(quotes.createdAt),
             },
@@ -120,7 +122,7 @@ export default async function MontageDetailsPage({ params, searchParams }: Monta
         <div className="flex min-h-screen flex-col bg-muted/10">
             <MontageDetailsLayout 
                 header={<MontageHeader montage={montage} statusOptions={statusOptions} userRoles={user.roles} />}
-                clientCard={<MontageClientCard montage={montage} userRoles={user.roles} installers={installers} measurers={measurers} />}
+                clientCard={<MontageClientCard montage={montage} userRoles={user.roles} installers={installers} measurers={measurers} architects={architects} />}
                 materialCard={<MontageMaterialCard montage={montage} userRoles={user.roles} />}
                 defaultTab={activeTab}
                 tabs={{

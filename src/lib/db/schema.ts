@@ -4,10 +4,11 @@ import {
 	sqliteTable,
 	text,
 	uniqueIndex,
+	real,
 } from 'drizzle-orm/sqlite-core';
 import { relations, sql } from 'drizzle-orm';
 
-export const userRoles = ['admin', 'measurer', 'installer'] as const;
+export const userRoles = ['admin', 'measurer', 'installer', 'architect'] as const;
 export const orderSources = ['woocommerce', 'manual'] as const;
 export const orderTypes = ['production', 'sample'] as const;
 export const orderStatuses = [
@@ -72,6 +73,13 @@ export type InstallerProfile = {
 	}[];
 };
 
+export type ArchitectProfile = {
+	companyName?: string;
+	nip?: string;
+	bankAccount?: string;
+	commissionRate?: number; // PLN per m2
+};
+
 export const users = sqliteTable(
 	'users',
 	{
@@ -84,6 +92,7 @@ export const users = sqliteTable(
 		dashboardConfig: text('dashboard_config', { mode: 'json' }),
 		mobileMenuConfig: text('mobile_menu_config', { mode: 'json' }),
 		installerProfile: text('installer_profile', { mode: 'json' }).$type<InstallerProfile>(),
+		architectProfile: text('architect_profile', { mode: 'json' }).$type<ArchitectProfile>(),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' })
 			.notNull()
 			.default(sql`(strftime('%s','now') * 1000)`),
@@ -134,6 +143,7 @@ export const customers = sqliteTable(
 		shippingCity: text('shipping_city'),
 		shippingPostalCode: text('shipping_postal_code'),
 		shippingCountry: text('shipping_country'),
+		architectId: text('architect_id').references(() => users.id, { onDelete: 'set null' }),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' })
 			.notNull()
 			.default(sql`(strftime('%s','now') * 1000)`),
@@ -455,6 +465,7 @@ export const montages = sqliteTable(
 		installerStatus: text('installer_status').$type<MontageInstallerStatus>().notNull().default('none'),
 		installerId: text('installer_id').references(() => users.id, { onDelete: 'set null' }),
 		measurerId: text('measurer_id').references(() => users.id, { onDelete: 'set null' }),
+		architectId: text('architect_id').references(() => users.id, { onDelete: 'set null' }),
         googleEventId: text('google_event_id'),
         technicalAudit: text('technical_audit', { mode: 'json' }).$type<TechnicalAuditData>(),
         materialLog: text('material_log', { mode: 'json' }).$type<MaterialLogData>(),
@@ -471,6 +482,7 @@ export const montages = sqliteTable(
 		displayIdIdx: uniqueIndex('montages_display_id_idx').on(table.displayId),
 		installerIdx: index('montages_installer_id_idx').on(table.installerId),
 		measurerIdx: index('montages_measurer_id_idx').on(table.measurerId),
+		architectIdx: index('montages_architect_id_idx').on(table.architectId),
 	})
 );
 
@@ -581,6 +593,7 @@ export const montagesRelations = relations(montages, ({ one, many }) => ({
 	attachments: many(montageAttachments),
 	checklistItems: many(montageChecklistItems),
 	tasks: many(montageTasks),
+	commissions: many(commissions, { relationName: 'commission_montage' }),
 	installer: one(users, {
 		fields: [montages.installerId],
 		references: [users.id],
@@ -590,6 +603,11 @@ export const montagesRelations = relations(montages, ({ one, many }) => ({
 		fields: [montages.measurerId],
 		references: [users.id],
 		relationName: 'montage_measurer',
+	}),
+	architect: one(users, {
+		fields: [montages.architectId],
+		references: [users.id],
+		relationName: 'montage_architect',
 	}),
     quotes: many(quotes),
 }));
@@ -1070,5 +1088,56 @@ export const documentsRelations = relations(documents, ({ one }) => ({
 		fields: [documents.orderId],
 		references: [orders.id],
 	}),
+}));
+
+export const commissionStatuses = ['pending', 'approved', 'paid'] as const;
+export type CommissionStatus = (typeof commissionStatuses)[number];
+
+export const commissions = sqliteTable(
+	'commissions',
+	{
+		id: text('id').primaryKey(),
+		architectId: text('architect_id')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		montageId: text('montage_id')
+			.notNull()
+			.references(() => montages.id, { onDelete: 'cascade' }),
+		amount: integer('amount', { mode: 'number' }).notNull(), // in minor units (grosze)
+		rate: real('rate').notNull(), // PLN per m2
+		area: real('area').notNull(), // m2
+		status: text('status').$type<CommissionStatus>().notNull().default('pending'),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.notNull()
+			.default(sql`(strftime('%s','now') * 1000)`),
+		approvedAt: integer('approved_at', { mode: 'timestamp_ms' }),
+		paidAt: integer('paid_at', { mode: 'timestamp_ms' }),
+	},
+	(table) => ({
+		architectIdx: index('commissions_architect_id_idx').on(table.architectId),
+		montageIdx: index('commissions_montage_id_idx').on(table.montageId),
+		statusIdx: index('commissions_status_idx').on(table.status),
+	})
+);
+
+export const commissionsRelations = relations(commissions, ({ one }) => ({
+	architect: one(users, {
+		fields: [commissions.architectId],
+		references: [users.id],
+		relationName: 'commission_architect',
+	}),
+	montage: one(montages, {
+		fields: [commissions.montageId],
+		references: [montages.id],
+		relationName: 'commission_montage',
+	}),
+}));
+
+export const usersRelations = relations(users, ({ many }) => ({
+	commissions: many(commissions, { relationName: 'commission_architect' }),
+	architectMontages: many(montages, { relationName: 'montage_architect' }),
 }));
 

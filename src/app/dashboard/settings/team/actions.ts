@@ -5,7 +5,7 @@ import { eq, desc } from 'drizzle-orm';
 import { hash } from 'bcryptjs';
 
 import { db } from '@/lib/db';
-import { users, montages, type UserRole, type InstallerProfile } from '@/lib/db/schema';
+import { users, montages, commissions, type UserRole, type InstallerProfile, type ArchitectProfile } from '@/lib/db/schema';
 import { requireUser, impersonateUser } from '@/lib/auth/session';
 
 const TEAM_SETTINGS_PATH = '/dashboard/settings/team';
@@ -38,6 +38,32 @@ export async function updateInstallerProfile(userId: string, profile: InstallerP
     revalidatePath(TEAM_SETTINGS_PATH);
 }
 
+export async function updateArchitectProfile(userId: string, profile: ArchitectProfile) {
+    const currentUser = await requireUser();
+    
+    if (!currentUser.roles.includes('admin')) {
+        throw new Error('Brak uprawnień.');
+    }
+
+    await db.update(users)
+        .set({ architectProfile: profile, updatedAt: new Date() })
+        .where(eq(users.id, userId));
+
+    revalidatePath(TEAM_SETTINGS_PATH);
+}
+
+export async function getArchitectCommissions(architectId: string) {
+    await requireUser();
+    
+    return db.query.commissions.findMany({
+        where: eq(commissions.architectId, architectId),
+        with: {
+            montage: true,
+        },
+        orderBy: [desc(commissions.createdAt)],
+    });
+}
+
 export async function getTeamMembers() {
     await requireUser();
     
@@ -49,6 +75,7 @@ export async function getTeamMembers() {
         isActive: users.isActive,
         createdAt: users.createdAt,
         installerProfile: users.installerProfile,
+        architectProfile: users.architectProfile,
     })
     .from(users)
     .orderBy(desc(users.createdAt));

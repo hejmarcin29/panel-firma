@@ -17,6 +17,12 @@ import {
   DropdownMenuCheckboxItem,
 } from '@/components/ui/dropdown-menu';
 import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
+import {
   Table,
   TableBody,
   TableCell,
@@ -26,7 +32,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toggleEmployeeStatus, updateEmployeeRoles, impersonateUserAction } from '../actions';
-import type { UserRole, InstallerProfile } from '@/lib/db/schema';
+import type { UserRole, InstallerProfile, ArchitectProfile } from '@/lib/db/schema';
 import { EmployeeDetailsSheet } from './employee-details-sheet';
 
 interface TeamMember {
@@ -37,6 +43,7 @@ interface TeamMember {
     isActive: boolean;
     createdAt: Date;
     installerProfile: InstallerProfile | null;
+    architectProfile: ArchitectProfile | null;
 }
 
 interface TeamListProps {
@@ -48,18 +55,23 @@ const roleLabels: Record<UserRole, string> = {
     admin: 'Administrator',
     measurer: 'Pomiarowiec',
     installer: 'Montażysta',
+    architect: 'Architekt',
 };
 
 const roleIcons: Record<UserRole, React.ReactNode> = {
     admin: <ShieldAlert className="h-4 w-4 text-red-600" />,
     measurer: <ShieldCheck className="h-4 w-4 text-blue-600" />,
     installer: <Shield className="h-4 w-4 text-green-600" />,
+    architect: <UserCog className="h-4 w-4 text-purple-600" />,
 };
 
 export function TeamList({ members, currentUserId }: TeamListProps) {
   const [isPending, startTransition] = useTransition();
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+
+  const employees = members.filter(m => !m.roles.includes('architect'));
+  const architects = members.filter(m => m.roles.includes('architect'));
 
   const handleStatusToggle = (userId: string, currentStatus: boolean) => {
     startTransition(async () => {
@@ -108,13 +120,12 @@ export function TeamList({ members, currentUserId }: TeamListProps) {
     });
   };
 
-  return (
-    <>
-        <div className="rounded-md border">
+  const renderMembersTable = (list: TeamMember[]) => (
+    <div className="rounded-md border">
         <Table>
             <TableHeader>
             <TableRow>
-                <TableHead>Pracownik</TableHead>
+                <TableHead>Użytkownik</TableHead>
                 <TableHead>Rola</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Data dodania</TableHead>
@@ -122,7 +133,7 @@ export function TeamList({ members, currentUserId }: TeamListProps) {
             </TableRow>
             </TableHeader>
             <TableBody>
-            {members.map((member) => (
+            {list.map((member) => (
                 <TableRow key={member.id}>
                 <TableCell>
                     <div className="flex flex-col">
@@ -194,6 +205,12 @@ export function TeamList({ members, currentUserId }: TeamListProps) {
                                 >
                                     Montażysta
                                 </DropdownMenuCheckboxItem>
+                                <DropdownMenuCheckboxItem 
+                                    checked={member.roles.includes('architect')}
+                                    onCheckedChange={() => handleRoleToggle(member.id, 'architect', member.roles)}
+                                >
+                                    Architekt
+                                </DropdownMenuCheckboxItem>
                             </DropdownMenuSubContent>
                         </DropdownMenuSub>
                         <DropdownMenuSeparator />
@@ -208,7 +225,23 @@ export function TeamList({ members, currentUserId }: TeamListProps) {
             ))}
             </TableBody>
         </Table>
-        </div>
+    </div>
+  );
+
+  return (
+    <>
+        <Tabs defaultValue="employees" className="w-full">
+            <TabsList>
+                <TabsTrigger value="employees">Pracownicy ({employees.length})</TabsTrigger>
+                <TabsTrigger value="architects">Architekci ({architects.length})</TabsTrigger>
+            </TabsList>
+            <TabsContent value="employees" className="mt-4">
+                {renderMembersTable(employees)}
+            </TabsContent>
+            <TabsContent value="architects" className="mt-4">
+                {renderMembersTable(architects)}
+            </TabsContent>
+        </Tabs>
 
         <EmployeeDetailsSheet 
             member={selectedMember} 

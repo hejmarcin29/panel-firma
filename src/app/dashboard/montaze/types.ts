@@ -95,8 +95,10 @@ export type Montage = {
 	installerStatus: MontageInstallerStatus;
 	installerId?: string | null;
 	measurerId?: string | null;
+	architectId?: string | null;
 	installer?: { id: string; name: string | null; email: string } | null;
 	measurer?: { id: string; name: string | null; email: string } | null;
+	architect?: { id: string; name: string | null; email: string } | null;
     technicalAudit?: unknown;
     materialLog?: unknown;
     quotes: {

@@ -73,15 +73,19 @@ export default async function MontazePage(props: any) {
 
     // Special logic for installers: they see everything assigned to them
     const isOnlyInstaller = user.roles.includes('installer') && !user.roles.includes('admin') && !user.roles.includes('measurer');
+    const isOnlyArchitect = user.roles.includes('architect') && !user.roles.includes('admin');
 
     if (isOnlyInstaller) {
         conditions.push(eq(montages.installerId, user.id));
+    } else if (isOnlyArchitect) {
+        conditions.push(eq(montages.architectId, user.id));
     } else {
         // Standard logic for other roles
         if (!user.roles.includes('admin')) {
              const userFilters = [];
              if (user.roles.includes('installer')) userFilters.push(eq(montages.installerId, user.id));
              if (user.roles.includes('measurer')) userFilters.push(eq(montages.measurerId, user.id));
+             if (user.roles.includes('architect')) userFilters.push(eq(montages.architectId, user.id));
              
              if (userFilters.length > 0) {
                  const filter = or(...userFilters);
@@ -150,6 +154,7 @@ export default async function MontazePage(props: any) {
             },
             installer: true,
             measurer: true,
+            architect: true,
             quotes: true,
         },
     });

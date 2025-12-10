@@ -1,5 +1,5 @@
 import { desc, eq, asc, and, lt, or } from 'drizzle-orm';
-import { differenceInCalendarDays } from 'date-fns';
+import { differenceInCalendarDays, addBusinessDays, isWithinInterval, startOfDay } from 'date-fns';
 import { parseTaskOverrides } from '@/app/dashboard/orders/utils';
 
 export const dynamic = 'force-dynamic';
@@ -26,6 +26,7 @@ const DEFAULT_LAYOUT: DashboardLayoutConfig = {
     columns: {
         left: [
             { id: 'alerts-1', type: 'montage-alerts' },
+            { id: 'upcoming-1', type: 'upcoming-montages' },
             { id: 'kpi-1', type: 'kpi' },
             { id: 'quick-1', type: 'quick-actions' },
             { id: 'recent-1', type: 'recent-activity' },
@@ -166,16 +167,45 @@ export default async function DashboardPage() {
     });
 
     // Calculate Stats
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    const today = startOfDay(new Date());
+    
+    // Upcoming Montages Logic
+    const limit7Days = addBusinessDays(today, 7);
+    const limit3Days = addBusinessDays(today, 3);
+    const tomorrow = addBusinessDays(today, 1);
 
-    const todayMontagesCount = allMontages.filter(m => {
-        if (!m.scheduledInstallationAt) return false;
-        const date = new Date(m.scheduledInstallationAt);
-        return date >= today && date < tomorrow;
-    }).length;
+    const montages7Days: { id: string; clientName: string; scheduledInstallationAt: Date | string | number | null; status: string }[] = [];
+    const montages3Days: { id: string; clientName: string; scheduledInstallationAt: Date | string | number | null; status: string }[] = [];
+    const montagesInProgress: { id: string; clientName: string; scheduledInstallationAt: Date | string | number | null; status: string }[] = [];
+
+    for (const m of allMontages) {
+        if (m.status === 'completed' || m.status === 'lead') continue;
+
+        const simpleMontage = {
+            id: m.id,
+            clientName: m.clientName || 'Klient',
+            scheduledInstallationAt: m.scheduledInstallationAt,
+            status: m.status
+        };
+
+        if (m.scheduledInstallationAt) {
+            const date = new Date(m.scheduledInstallationAt);
+            
+            // In Progress: Date is today or past
+            if (date < tomorrow) { 
+                 montagesInProgress.push(simpleMontage);
+            } 
+            // Future: Within 3 days
+            else if (date <= limit3Days) {
+                montages3Days.push(simpleMontage);
+                montages7Days.push(simpleMontage);
+            }
+            // Future: Within 7 days
+            else if (date <= limit7Days) {
+                montages7Days.push(simpleMontage);
+            }
+        }
+    }
 
     const upcomingMontages = allMontages
         .filter(m => m.scheduledInstallationAt && new Date(m.scheduledInstallationAt) >= today)
@@ -305,7 +335,6 @@ export default async function DashboardPage() {
                         reminderTasks: []
                     },
                     kpiData: {
-                        todayMontagesCount,
                         newLeadsCount,
                         pendingPaymentsCount,
                         urgentTasksCount,

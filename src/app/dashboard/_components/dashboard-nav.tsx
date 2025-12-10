@@ -18,6 +18,7 @@ const links = [
 	{ href: '/dashboard/montaze/galeria', label: 'Galeria' },
 	{ href: '/dashboard/mail', label: 'Poczta' },
 	{ href: '/dashboard/settings', label: 'Ustawienia' },
+    { href: '/dashboard/wallet', label: 'Portfel' },
 ];
 
 export function DashboardNav({ urgentOrdersCount = 0, userRoles = ['admin'] }: { urgentOrdersCount?: number; userRoles?: UserRole[] }) {
@@ -25,9 +26,22 @@ export function DashboardNav({ urgentOrdersCount = 0, userRoles = ['admin'] }: {
 
     const filteredLinks = links.filter(link => {
         if (userRoles.includes('admin')) return true;
-        const restrictedLinks = ['/dashboard/customers', '/dashboard/orders', '/dashboard/products', '/dashboard/mail', '/dashboard/settings'];
+        
+        if (userRoles.includes('architect')) {
+             const allowedLinks = ['/dashboard', '/dashboard/montaze', '/dashboard/wallet'];
+             return allowedLinks.includes(link.href);
+        }
+
+        const restrictedLinks = ['/dashboard/customers', '/dashboard/orders', '/dashboard/products', '/dashboard/mail', '/dashboard/settings', '/dashboard/wallet'];
         return !restrictedLinks.includes(link.href);
     });
+
+    const getLabel = (link: typeof links[0]) => {
+        if (userRoles.includes('architect') && link.href === '/dashboard/montaze') {
+            return 'Moje Projekty';
+        }
+        return link.label;
+    };
 
 	return (
 		<nav className="mb-8 pb-2 overflow-x-auto no-scrollbar">
@@ -53,7 +67,7 @@ export function DashboardNav({ urgentOrdersCount = 0, userRoles = ['admin'] }: {
 										: 'text-muted-foreground hover:text-foreground hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50',
 								)}
 							>
-								{link.label}
+								{getLabel(link)}
                                 {link.href === '/dashboard/orders' && urgentOrdersCount > 0 && (
                                     <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>

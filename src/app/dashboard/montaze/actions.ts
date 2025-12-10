@@ -15,6 +15,7 @@ import {
 	montageStatuses,
 	customers,
 	users,
+    commissions,
 } from '@/lib/db/schema';
 import { uploadMontageObject } from '@/lib/r2/storage';
 import { getMontageChecklistTemplates } from '@/lib/montaze/checklist';
@@ -444,6 +445,43 @@ export async function updateMontageStatus({ montageId, status }: UpdateMontageSt
 		.update(montages)
 		.set({ status: resolved, updatedAt: new Date() })
 		.where(eq(montages.id, montageId));
+
+    if (resolved === 'completed') {
+        const montageWithArchitect = await db.query.montages.findFirst({
+            where: eq(montages.id, montageId),
+            with: {
+                architect: true,
+            }
+        });
+
+        if (montageWithArchitect && montageWithArchitect.architectId && montageWithArchitect.architect && montageWithArchitect.architect.architectProfile?.commissionRate) {
+            const existingCommission = await db.query.commissions.findFirst({
+                where: eq(commissions.montageId, montageId),
+            });
+
+            if (!existingCommission) {
+                const rate = montageWithArchitect.architect.architectProfile.commissionRate;
+                const area = montageWithArchitect.floorArea || 0;
+                const amount = Math.round(area * rate * 100); // in grosze
+
+                if (amount > 0) {
+                    await db.insert(commissions).values({
+                        id: crypto.randomUUID(),
+                        architectId: montageWithArchitect.architectId,
+                        montageId: montageId,
+                        amount,
+                        rate,
+                        area,
+                        status: 'pending',
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                    });
+                    
+                    await logSystemEvent('create_commission', `Utworzono prowizję dla architekta ${montageWithArchitect.architect.name} za montaż ${montageWithArchitect.clientName}`, user.id);
+                }
+            }
+        }
+    }
 
     const statusDefinitions = await getMontageStatusDefinitions();
     const statusLabel = statusDefinitions.find(d => d.id === resolved)?.label || resolved;
@@ -1067,7 +1105,8 @@ export async function updateMontageRealizationStatus({
     materialClaimType,
     installerStatus,
     installerId,
-    measurerId
+    measurerId,
+    architectId
 }: {
     montageId: string;
     materialStatus?: 'none' | 'ordered' | 'in_stock' | 'delivered';
@@ -1075,6 +1114,7 @@ export async function updateMontageRealizationStatus({
     installerStatus?: 'none' | 'informed' | 'confirmed';
     installerId?: string | null;
     measurerId?: string | null;
+    architectId?: string | null;
 }) {
     const user = await requireUser();
 
@@ -1084,6 +1124,7 @@ export async function updateMontageRealizationStatus({
         installerStatus?: 'none' | 'informed' | 'confirmed';
         installerId?: string | null;
         measurerId?: string | null;
+        architectId?: string | null;
         updatedAt: Date;
     } = {
         updatedAt: new Date()
@@ -1094,6 +1135,7 @@ export async function updateMontageRealizationStatus({
     if (installerStatus !== undefined) updateData.installerStatus = installerStatus;
     if (installerId !== undefined) updateData.installerId = installerId;
     if (measurerId !== undefined) updateData.measurerId = measurerId;
+    if (architectId !== undefined) updateData.architectId = architectId;
 
     // If nothing to update (except updatedAt), return
     if (Object.keys(updateData).length <= 1) return;

@@ -40,6 +40,7 @@ import { RecentActivity } from './recent-activity';
 import { QuickActions } from './quick-actions';
 import { KPICards } from './kpi-cards';
 import { MontageAlertsKPI, type MontageAlert, type MontageAlertItem } from './montage-alerts-kpi';
+import { UpcomingMontagesKPI, type MontageSimple } from './upcoming-montages-kpi';
 import { updateDashboardLayout, type DashboardLayoutConfig, type DashboardWidgetConfig } from '../actions';
 import { toast } from 'sonner';
 import type { Montage } from '../montaze/types';
@@ -49,6 +50,7 @@ import type { Montage } from '../montaze/types';
 const WIDGET_COMPONENTS: Record<string, React.ComponentType<any>> = {
   'kpi': KPICards,
   'montage-alerts': MontageAlertsKPI,
+  'upcoming-montages': UpcomingMontagesKPI,
   'agenda': AgendaWidget,
   'recent-activity': RecentActivity,
   'quick-actions': QuickActions,
@@ -57,6 +59,7 @@ const WIDGET_COMPONENTS: Record<string, React.ComponentType<any>> = {
 const WIDGET_LABELS: Record<string, string> = {
     'kpi': 'Statystyki (KPI)',
     'montage-alerts': 'Zagrożone Montaże',
+    'upcoming-montages': 'Harmonogram prac',
     'agenda': 'Najbliższe montaże',
     'recent-activity': 'Ostatnia Aktywność',
     'quick-actions': 'Szybkie Akcje',
@@ -84,7 +87,7 @@ function WidgetSettingsDialog({
 
     // KPI Specific Settings
     if (widget.type === 'kpi') {
-        const visibleCards = (localSettings.visibleCards as string[] | undefined) || ['today', 'leads', 'payments', 'urgent', 'orders', 'urgentOrders', 'stalledOrders'];
+        const visibleCards = (localSettings.visibleCards as string[] | undefined) || ['leads', 'payments', 'urgent', 'orders', 'urgentOrders', 'stalledOrders'];
         
         const toggleCard = (card: string) => {
             if (visibleCards.includes(card)) {
@@ -102,14 +105,6 @@ function WidgetSettingsDialog({
                         <DialogDescription>Wybierz które karty mają być widoczne.</DialogDescription>
                     </DialogHeader>
                     <div className='grid gap-4 py-4'>
-                        <div className='flex items-center space-x-2'>
-                            <Checkbox 
-                                id='card-today' 
-                                checked={visibleCards.includes('today')}
-                                onCheckedChange={() => toggleCard('today')}
-                            />
-                            <Label htmlFor='card-today'>Dzisiejsze montaże</Label>
-                        </div>
                         <div className='flex items-center space-x-2'>
                             <Checkbox 
                                 id='card-leads' 
@@ -182,7 +177,6 @@ interface DashboardBuilderProps {
         reminderTasks: { id: string; content: string; reminderAt: Date | null; dueDate: Date | null }[];
     };
     kpiData: {
-        todayMontagesCount: number;
         newLeadsCount: number;
         pendingPaymentsCount: number;
         urgentTasksCount: number;
@@ -191,6 +185,11 @@ interface DashboardBuilderProps {
         urgentOrdersCount?: number;
         stalledOrdersCount?: number;
         orderUrgentDays?: number;
+    };
+    upcomingMontagesStats: {
+        montages7Days: MontageSimple[];
+        montages3Days: MontageSimple[];
+        montagesInProgress: MontageSimple[];
     };
     montageAlerts: MontageAlertItem[];
     threatDays?: number;
@@ -223,6 +222,7 @@ function SortableWidget({ widget, data, isEditing, onConfigure }: { id: string; 
                 widget.type === 'tasks' ? { ...data.tasksStats, todoCount: data.kpiData.todoCount } :
                 widget.type === 'kpi' ? { ...data.kpiData, settings: widget.settings, montageThreatDays: data.threatDays } :
                 widget.type === 'montage-alerts' ? { alerts: data.montageAlerts, threatDays: data.threatDays } :
+                widget.type === 'upcoming-montages' ? { ...data.upcomingMontagesStats } :
                 {};
 
   return (

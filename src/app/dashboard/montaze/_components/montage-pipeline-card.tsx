@@ -129,7 +129,7 @@ export function MontagePipelineCard({ montage, threatDays }: Props) {
                         </div>
                     )}
 
-                    {(montage.installer || montage.measurer) && (
+                    {(montage.installer || montage.measurer || montage.architect) && (
                         <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1">
                             {montage.installer && (
                                 <div className="flex items-center gap-1.5" title={`Montażysta: ${montage.installer.name || montage.installer.email}`}>
@@ -141,6 +141,12 @@ export function MontagePipelineCard({ montage, threatDays }: Props) {
                                 <div className="flex items-center gap-1.5" title={`Pomiarowiec: ${montage.measurer.name || montage.measurer.email}`}>
                                     <User className="h-3 w-3 shrink-0" />
                                     <span className="truncate max-w-[100px]">{initials(montage.measurer.name || montage.measurer.email)}</span>
+                                </div>
+                            )}
+                            {montage.architect && (
+                                <div className="flex items-center gap-1.5" title={`Architekt: ${montage.architect.name || montage.architect.email}`}>
+                                    <User className="h-3 w-3 shrink-0 text-purple-500" />
+                                    <span className="truncate max-w-[100px] text-purple-600">{initials(montage.architect.name || montage.architect.email)}</span>
                                 </div>
                             )}
                         </div>

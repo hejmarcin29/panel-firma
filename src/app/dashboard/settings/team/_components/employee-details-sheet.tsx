@@ -40,8 +40,8 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 
-import { updateInstallerProfile, getInstallerMontages } from '../actions';
-import type { UserRole, InstallerProfile } from '@/lib/db/schema';
+import { updateInstallerProfile, getInstallerMontages, updateArchitectProfile, getArchitectCommissions } from '../actions';
+import type { UserRole, InstallerProfile, ArchitectProfile } from '@/lib/db/schema';
 
 interface TeamMember {
     id: string;
@@ -51,6 +51,7 @@ interface TeamMember {
     isActive: boolean;
     createdAt: Date;
     installerProfile?: InstallerProfile | null;
+    architectProfile?: ArchitectProfile | null;
 }
 
 interface EmployeeDetailsSheetProps {
@@ -69,11 +70,21 @@ const profileSchema = z.object({
     })).optional(),
 });
 
+const architectProfileSchema = z.object({
+    companyName: z.string().optional(),
+    nip: z.string().optional(),
+    bankAccount: z.string().optional(),
+    commissionRate: z.coerce.number().min(0, "Stawka musi być dodatnia").optional(),
+});
+
 export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDetailsSheetProps) {
     const [activeTab, setActiveTab] = useState('general');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [montages, setMontages] = useState<any[]>([]);
     const [isLoadingMontages, setIsLoadingMontages] = useState(false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [commissions, setCommissions] = useState<any[]>([]);
+    const [isLoadingCommissions, setIsLoadingCommissions] = useState(false);
     const [isPending, startTransition] = useTransition();
 
     const form = useForm<z.infer<typeof profileSchema>>({
@@ -82,6 +93,16 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
             workScope: '',
             operationArea: '',
             pricing: [],
+        },
+    });
+
+    const architectForm = useForm<z.infer<typeof architectProfileSchema>>({
+        resolver: zodResolver(architectProfileSchema),
+        defaultValues: {
+            companyName: '',
+            nip: '',
+            bankAccount: '',
+            commissionRate: 0,
         },
     });
 
@@ -101,7 +122,23 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
                 pricing: [],
             });
         }
-    }, [member, form]);
+
+        if (member?.architectProfile) {
+            architectForm.reset({
+                companyName: member.architectProfile.companyName || '',
+                nip: member.architectProfile.nip || '',
+                bankAccount: member.architectProfile.bankAccount || '',
+                commissionRate: member.architectProfile.commissionRate || 0,
+            });
+        } else {
+            architectForm.reset({
+                companyName: '',
+                nip: '',
+                bankAccount: '',
+                commissionRate: 0,
+            });
+        }
+    }, [member, form, architectForm]);
 
     useEffect(() => {
         if (open && member && member.roles.includes('installer') && activeTab === 'history') {
@@ -110,6 +147,13 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
             getInstallerMontages(member.id)
                 .then(setMontages)
                 .finally(() => setIsLoadingMontages(false));
+        }
+
+        if (open && member && member.roles.includes('architect') && activeTab === 'history') {
+            setIsLoadingCommissions(true);
+            getArchitectCommissions(member.id)
+                .then(setCommissions)
+                .finally(() => setIsLoadingCommissions(false));
         }
     }, [open, member, activeTab]);
 
@@ -125,9 +169,22 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
         });
     };
 
+    const onArchitectSubmit = (values: z.infer<typeof architectProfileSchema>) => {
+        if (!member) return;
+        
+        startTransition(async () => {
+            try {
+                await updateArchitectProfile(member.id, values);
+            } catch (error) {
+                console.error(error);
+            }
+        });
+    };
+
     if (!member) return null;
 
     const isInstaller = member.roles.includes('installer');
+    const isArchitect = member.roles.includes('architect');
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
@@ -142,8 +199,12 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
                     <TabsList className="grid w-full grid-cols-3">
                         <TabsTrigger value="general">Ogólne</TabsTrigger>
-                        <TabsTrigger value="profile" disabled={!isInstaller}>Profil Montażysty</TabsTrigger>
-                        <TabsTrigger value="history" disabled={!isInstaller}>Historia</TabsTrigger>
+                        <TabsTrigger value="profile" disabled={!isInstaller && !isArchitect}>
+                            {isArchitect ? 'Profil Architekta' : 'Profil Montażysty'}
+                        </TabsTrigger>
+                        <TabsTrigger value="history" disabled={!isInstaller && !isArchitect}>
+                            {isArchitect ? 'Realizacje' : 'Historia'}
+                        </TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="general" className="space-y-4 mt-4">
@@ -170,6 +231,7 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
                     </TabsContent>
 
                     <TabsContent value="profile" className="space-y-4 mt-4">
+                        {isInstaller && (
                         <Form {...form}>
                             <form onChange={form.handleSubmit(onSubmit)} className="space-y-4">
                                 <FormField
@@ -281,10 +343,71 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
                                 {isPending && <div className="text-xs text-muted-foreground">Zapisywanie...</div>}
                             </form>
                         </Form>
+                        )}
+                        {isArchitect && (
+                            <Form {...architectForm}>
+                                <form onChange={architectForm.handleSubmit(onArchitectSubmit)} className="space-y-4">
+                                    <FormField
+                                        control={architectForm.control}
+                                        name="companyName"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Nazwa firmy</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="Nazwa firmy" {...field} onBlur={architectForm.handleSubmit(onArchitectSubmit)} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={architectForm.control}
+                                        name="nip"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>NIP</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="NIP" {...field} onBlur={architectForm.handleSubmit(onArchitectSubmit)} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={architectForm.control}
+                                        name="bankAccount"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Numer konta</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="Numer konta" {...field} onBlur={architectForm.handleSubmit(onArchitectSubmit)} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={architectForm.control}
+                                        name="commissionRate"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Stawka prowizji (PLN/m²)</FormLabel>
+                                                <FormControl>
+                                                    <Input type="number" placeholder="0.00" {...field} onBlur={architectForm.handleSubmit(onArchitectSubmit)} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    {isPending && <div className="text-xs text-muted-foreground">Zapisywanie...</div>}
+                                </form>
+                            </Form>
+                        )}
                     </TabsContent>
 
                     <TabsContent value="history" className="mt-4">
-                        {isLoadingMontages ? (
+                        {isInstaller && (
+                        isLoadingMontages ? (
                             <div className="flex justify-center py-8">
                                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                             </div>
@@ -321,6 +444,53 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
                                     </TableBody>
                                 </Table>
                             </div>
+                        )
+                        )}
+                        {isArchitect && (
+                            isLoadingCommissions ? (
+                                <div className="flex justify-center py-8">
+                                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                                </div>
+                            ) : (
+                                <div className="border rounded-md">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Data</TableHead>
+                                                <TableHead>Klient</TableHead>
+                                                <TableHead>Metraż</TableHead>
+                                                <TableHead>Stawka</TableHead>
+                                                <TableHead>Prowizja</TableHead>
+                                                <TableHead>Status</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {commissions.length === 0 ? (
+                                                <TableRow>
+                                                    <TableCell colSpan={6} className="text-center text-muted-foreground">
+                                                        Brak historii prowizji
+                                                    </TableCell>
+                                                </TableRow>
+                                            ) : (
+                                                commissions.map((comm) => (
+                                                    <TableRow key={comm.id}>
+                                                        <TableCell>
+                                                            {comm.createdAt ? new Date(comm.createdAt).toLocaleDateString('pl-PL') : '-'}
+                                                        </TableCell>
+                                                        <TableCell>{comm.montage?.clientName}</TableCell>
+                                                        <TableCell>{comm.area} m²</TableCell>
+                                                        <TableCell>{comm.rate} PLN</TableCell>
+                                                        <TableCell>{(comm.amount / 100).toFixed(2)} PLN</TableCell>
+                                                        <TableCell>
+                                                            <Badge variant="outline">{comm.status}</Badge>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            )
                         )}
                     </TabsContent>
                 </Tabs>

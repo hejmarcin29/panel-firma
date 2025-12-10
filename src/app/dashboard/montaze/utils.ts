@@ -70,6 +70,7 @@ export type MontageRow = typeof montages.$inferSelect & {
     quotes: Array<typeof quotes.$inferSelect>;
     installer?: typeof users.$inferSelect | null;
     measurer?: typeof users.$inferSelect | null;
+    architect?: typeof users.$inferSelect | null;
 };
 
 function mapAttachment(
@@ -178,8 +179,10 @@ export function mapMontageRow(row: MontageRow, publicBaseUrl: string | null): Mo
         installerStatus: row.installerStatus ?? 'none',
         installerId: row.installerId,
         measurerId: row.measurerId,
+        architectId: row.architectId,
         installer: row.installer ? { id: row.installer.id, name: row.installer.name, email: row.installer.email } : null,
         measurer: row.measurer ? { id: row.measurer.id, name: row.measurer.name, email: row.measurer.email } : null,
+        architect: row.architect ? { id: row.architect.id, name: row.architect.name, email: row.architect.email } : null,
         technicalAudit: row.technicalAudit,
         materialLog: row.materialLog,
         quotes: row.quotes.map(q => ({

@@ -42,12 +42,14 @@ export function MontageClientCard({
     montage, 
     userRoles = ['admin'],
     installers = [],
-    measurers = []
+    measurers = [],
+    architects = []
 }: { 
     montage: Montage; 
     userRoles?: UserRole[];
     installers?: { id: string; name: string | null; email: string }[];
     measurers?: { id: string; name: string | null; email: string }[];
+    architects?: { id: string; name: string | null; email: string }[];
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -165,6 +167,14 @@ export function MontageClientCard({
       await updateMontageRealizationStatus({
           montageId: montage.id,
           measurerId: value === 'none' ? null : value
+      });
+      router.refresh();
+  };
+
+  const handleArchitectChange = async (value: string) => {
+      await updateMontageRealizationStatus({
+          montageId: montage.id,
+          architectId: value === 'none' ? null : value
       });
       router.refresh();
   };
@@ -423,6 +433,35 @@ export function MontageClientCard({
                 ) : (
                     <span className={cn("text-sm font-medium", !montage.measurerId ? "text-red-600" : "text-green-600")}>
                         {montage.measurer?.name || "Brak pomiarowca"}
+                    </span>
+                )}
+            </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+            <User className="h-4 w-4 text-muted-foreground" />
+            <div className="grid gap-1 w-full">
+                <span className="text-xs text-muted-foreground">Architekt</span>
+                {userRoles.includes('admin') ? (
+                    <Select
+                        value={montage.architectId || "none"}
+                        onValueChange={handleArchitectChange}
+                    >
+                        <SelectTrigger className={cn("h-8 w-full text-sm", !montage.architectId ? "text-red-600 border-red-200 bg-red-50" : "text-purple-600 border-purple-200 bg-purple-50")}>
+                            <SelectValue placeholder="Wybierz architekta" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="none">Brak przypisania</SelectItem>
+                            {architects.map((architect) => (
+                                <SelectItem key={architect.id} value={architect.id}>
+                                    {architect.name || architect.email}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                ) : (
+                    <span className={cn("text-sm font-medium", !montage.architectId ? "text-red-600" : "text-purple-600")}>
+                        {montage.architect?.name || "Brak architekta"}
                     </span>
                 )}
             </div>

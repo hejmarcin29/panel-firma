@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, Upload, X } from "lucide-react";
-import Image from "next/image";
 import { toast } from "sonner";
 import { uploadLogo, removeLogo } from "../actions";
 
@@ -79,11 +78,11 @@ export function LogoSettings({ currentLogoUrl }: LogoSettingsProps) {
                 <div className="flex items-center gap-6">
                     <div className="relative h-24 w-24 border rounded-lg flex items-center justify-center bg-muted/50 overflow-hidden">
                         {logoUrl ? (
-                            <Image 
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img 
                                 src={logoUrl} 
                                 alt="Logo firmy" 
-                                fill 
-                                className="object-contain p-2" 
+                                className="w-full h-full object-contain p-2" 
                             />
                         ) : (
                             <span className="text-xs text-muted-foreground text-center px-2">Brak logo</span>

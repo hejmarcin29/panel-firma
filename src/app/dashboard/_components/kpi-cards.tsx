@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/tooltip";
 
 interface KPICardsProps {
-  todayMontagesCount: number;
   newLeadsCount: number;
   pendingPaymentsCount: number;
   urgentTasksCount: number;
@@ -33,7 +32,6 @@ interface KPICardsProps {
 }
 
 export function KPICards({
-  todayMontagesCount,
   newLeadsCount,
   pendingPaymentsCount,
   urgentTasksCount,
@@ -43,7 +41,7 @@ export function KPICards({
   montageThreatDays = 7,
   settings
 }: KPICardsProps) {
-  const visibleCards = settings?.visibleCards || ['today', 'leads', 'payments', 'urgent', 'orders', 'urgentOrders', 'stalledOrders'];
+  const visibleCards = settings?.visibleCards || ['leads', 'payments', 'urgent', 'orders', 'urgentOrders', 'stalledOrders'];
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 h-full">
@@ -132,38 +130,6 @@ export function KPICards({
                 <div className="text-2xl font-bold text-foreground">{newOrdersCount}</div>
                 <p className="text-xs text-emerald-500/80 flex items-center mt-1">
                     Do weryfikacji <ArrowUpRight className="h-3 w-3 ml-1" />
-                </p>
-            </CardContent>
-        </Card>
-      )}
-
-      {visibleCards.includes('today') && (
-        <Card className="bg-card border-border shadow-none relative overflow-hidden group">
-            <Link href="/dashboard/montaze" className="absolute inset-0 z-10" />
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-                <div className="flex items-center gap-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
-                        Zaplanowane na Dziś
-                    </CardTitle>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <button type="button" className="cursor-help z-20 relative" onClick={(e) => e.preventDefault()}>
-                                <Info className="h-4 w-4 text-muted-foreground/50" />
-                            </button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>Montaże, które mają wpisaną dzisiejszą datę realizacji w kalendarzu. Kliknij, aby zobaczyć listę ekip i adresów.</p>
-                        </TooltipContent>
-                    </Tooltip>
-                </div>
-                <CalendarDays className="h-4 w-4 text-purple-500" />
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-                <div className="text-xl font-bold text-foreground truncate">
-                    {todayMontagesCount > 0 ? `${todayMontagesCount} montaży` : new Date().toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' })}
-                </div>
-                <p className="text-xs text-purple-500/80 mt-1 truncate">
-                    {new Date().toLocaleDateString('pl-PL', { weekday: 'long' })}
                 </p>
             </CardContent>
         </Card>
