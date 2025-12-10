@@ -25,6 +25,11 @@ export function DashboardNav({ urgentOrdersCount = 0, userRoles = ['admin'] }: {
 	const pathname = usePathname();
 
     const filteredLinks = links.filter(link => {
+        // Special case for Wallet: Only show if user is explicitly an architect
+        if (link.href === '/dashboard/wallet') {
+            return userRoles.includes('architect');
+        }
+
         if (userRoles.includes('admin')) return true;
         
         if (userRoles.includes('architect')) {

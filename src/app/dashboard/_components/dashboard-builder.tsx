@@ -59,7 +59,7 @@ const WIDGET_COMPONENTS: Record<string, React.ComponentType<any>> = {
 const WIDGET_LABELS: Record<string, string> = {
     'kpi': 'Statystyki (KPI)',
     'montage-alerts': 'Zagrożone Montaże',
-    'upcoming-montages': 'Harmonogram prac',
+    'upcoming-montages': 'Harmonogram montaży',
     'agenda': 'Najbliższe montaże',
     'recent-activity': 'Ostatnia Aktywność',
     'quick-actions': 'Szybkie Akcje',

@@ -88,7 +88,7 @@ export function UpcomingMontagesKPI({ montages7Days, montages3Days, montagesInPr
             <Card className="h-full">
                 <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">
-                        Harmonogram prac
+                        Harmonogram montaży
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -125,7 +125,7 @@ export function UpcomingMontagesKPI({ montages7Days, montages3Days, montagesInPr
 
             <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                    <DialogTitle>Harmonogram prac</DialogTitle>
+                    <DialogTitle>Harmonogram montaży</DialogTitle>
                 </DialogHeader>
                 
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

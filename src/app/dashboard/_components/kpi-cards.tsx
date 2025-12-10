@@ -50,7 +50,7 @@ export function KPICards({
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
                 <div className="flex items-center gap-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">
-                        Zagrożone Terminy / Brak Kontaktu
+                        Wiszące montaże
                     </CardTitle>
                     <Tooltip>
                         <TooltipTrigger asChild>
@@ -59,7 +59,7 @@ export function KPICards({
                             </button>
                         </TooltipTrigger>
                         <TooltipContent>
-                            <p>Lista montaży, w których nie odnotowano żadnej zmiany statusu ani aktywności przez ponad {montageThreatDays} dni. Wymagają pilnego kontaktu z klientem lub ekipą.</p>
+                            <p>Nie odnotowano w nich żadnej zmiany statusu ani aktywności przez określoną liczbę dni (domyślnie {montageThreatDays}).</p>
                         </TooltipContent>
                     </Tooltip>
                 </div>
@@ -68,7 +68,7 @@ export function KPICards({
             <CardContent className="p-4 pt-0">
                 <div className="text-2xl font-bold text-foreground">{urgentTasksCount}</div>
                 <p className="text-xs text-orange-500/80 flex items-center mt-1">
-                    Wymagają uwagi <ArrowUpRight className="h-3 w-3 ml-1" />
+                    bez daty montażu <ArrowUpRight className="h-3 w-3 ml-1" />
                 </p>
             </CardContent>
         </Card>
@@ -80,7 +80,7 @@ export function KPICards({
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
                 <div className="flex items-center gap-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">
-                        Otwarte Zapytania Ofertowe
+                        Nowy Lead Montaż
                     </CardTitle>
                     <Tooltip>
                         <TooltipTrigger asChild>

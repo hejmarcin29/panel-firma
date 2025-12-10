@@ -36,6 +36,7 @@ export function AddEmployeeDialog() {
     const roles: UserRole[] = [];
     if (formData.get('role_measurer') === 'on') roles.push('measurer');
     if (formData.get('role_installer') === 'on') roles.push('installer');
+    if (formData.get('role_architect') === 'on') roles.push('architect');
 
     if (!name || !email || !password || roles.length === 0) {
         setError('Wypełnij wszystkie pola i wybierz przynajmniej jedną rolę.');
@@ -92,6 +93,10 @@ export function AddEmployeeDialog() {
                     <Checkbox id="role_installer" name="role_installer" />
                     <Label htmlFor="role_installer" className="font-normal cursor-pointer">Montażysta</Label>
                 </div>
+                <div className="flex items-center space-x-2">
+                    <Checkbox id="role_architect" name="role_architect" />
+                    <Label htmlFor="role_architect" className="font-normal cursor-pointer">Architekt</Label>
+                </div>
             </div>
             <div className="text-xs text-muted-foreground space-y-2 mt-2 p-3 bg-muted/50 rounded-md border">
                 <p><strong>Uprawnienia ról:</strong></p>
@@ -100,15 +105,13 @@ export function AddEmployeeDialog() {
                         <span className="font-medium">Administrator:</span> Pełny dostęp do systemu (Tylko istniejący admini).
                     </li>
                     <li>
-                        <span className="font-medium">Pomiarowiec / Montażysta:</span> Dostęp tylko do modułów operacyjnych:
-                        <br/>
-                        - Montaże i Galeria
-                        <br/>
-                        - Kalendarz i Zadania
-                        <br/>
-                        - Pulpit i To Do
-                        <br/>
-                        <span className="italic text-red-500/80">Brak dostępu do: Zamówień, Klientów, Produktów, Poczty i Ustawień.</span>
+                        <span className="font-medium">Pomiarowiec / Montażysta:</span> Dostęp tylko do modułów operacyjnych (Montaże, Kalendarz, Zadania).
+                    </li>
+                    <li>
+                        <span className="font-medium">Architekt:</span> Dostęp do przypisanych zleceń i podgląd prowizji.
+                    </li>
+                    <li>
+                        <span className="italic text-red-500/80">Brak dostępu do: Zamówień, Klientów, Produktów, Poczty i Ustawień (dla ról nie-admin).</span>
                     </li>
                 </ul>
             </div>
