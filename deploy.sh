@@ -25,7 +25,10 @@ npm install
 # Sprawdź i załaduj zmienne środowiskowe
 if [ -f .env ]; then
   echo "Ładowanie zmiennych z .env..."
-  export $(grep -v '^#' .env | xargs)
+  # Usuń znaki CR (Windows line endings) w locie i załaduj zmienne
+  set -a
+  source <(sed 's/\r$//' .env | grep -v '^#' | grep -v '^\s*$')
+  set +a
 else
   echo "OSTRZEŻENIE: Brak pliku .env!"
 fi
