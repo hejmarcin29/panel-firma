@@ -5,6 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Clock, MapPin, CalendarDays } from "lucide-react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 
 export interface AgendaItem {
     id: string;
@@ -20,6 +21,21 @@ interface AgendaWidgetProps {
 }
 
 export function AgendaWidget({ upcomingMontages }: AgendaWidgetProps) {
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const item = {
+    hidden: { opacity: 0, x: -20 },
+    show: { opacity: 1, x: 0 }
+  };
+
   return (
     <Card className="h-full">
       <CardHeader>
@@ -31,10 +47,15 @@ export function AgendaWidget({ upcomingMontages }: AgendaWidgetProps) {
           {upcomingMontages.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">Brak nadchodzących montaży.</p>
           ) : (
-            <div className="space-y-3">
+            <motion.div 
+              className="space-y-3"
+              variants={container}
+              initial="hidden"
+              animate="show"
+            >
               {upcomingMontages.map((montage) => (
+                <motion.div variants={item} key={montage.id}>
                 <Link 
-                    key={montage.id} 
                     href={`/dashboard/montaze/${montage.id}`}
                     className="relative flex items-start gap-4 p-4 rounded-xl border bg-card hover:bg-accent/50 transition-all group"
                 >
@@ -71,8 +92,9 @@ export function AgendaWidget({ upcomingMontages }: AgendaWidgetProps) {
                     </div>
                   </div>
                 </Link>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           )}
         </ScrollArea>
       </CardContent>

@@ -9,6 +9,7 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { useState } from "react";
+import { motion } from "framer-motion";
 
 export interface MontageSimple {
     id: string;
@@ -22,6 +23,21 @@ interface UpcomingMontagesKPIProps {
     montages3Days: MontageSimple[];
     montagesInProgress: MontageSimple[];
 }
+
+const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+};
+
+const item = {
+    hidden: { opacity: 0, x: -20 },
+    show: { opacity: 1, x: 0 }
+};
 
 const StatBox = ({ 
     label, 
@@ -54,10 +70,15 @@ const StatBox = ({
 const MontageList = ({ items }: { items: MontageSimple[] }) => (
     <ScrollArea className="h-[50vh] pr-4">
         {items.length > 0 ? (
-            <div className="space-y-3">
+            <motion.div 
+                className="space-y-3"
+                variants={container}
+                initial="hidden"
+                animate="show"
+            >
                 {items.map((m) => (
+                    <motion.div variants={item} key={m.id}>
                     <Link 
-                        key={m.id} 
                         href={`/dashboard/montaze/${m.id}`}
                         className="block p-3 rounded-md border hover:bg-accent/50 transition-colors"
                     >
@@ -70,8 +91,9 @@ const MontageList = ({ items }: { items: MontageSimple[] }) => (
                             </span>
                         </div>
                     </Link>
+                    </motion.div>
                 ))}
-            </div>
+            </motion.div>
         ) : (
             <div className="text-center py-8 text-muted-foreground">
                 Brak montaży w tej kategorii.

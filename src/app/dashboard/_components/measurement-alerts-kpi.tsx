@@ -6,6 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Link from "next/link";
+import { motion } from "framer-motion";
 
 export interface MeasurementAlert {
     id: string;
@@ -23,6 +24,21 @@ export interface MeasurementAlertItem {
 export function MeasurementAlertsKPI({ alerts }: { alerts: MeasurementAlertItem[] }) {
     const alertCount = alerts.length;
     const hasAlerts = alertCount > 0;
+
+    const container = {
+        hidden: { opacity: 0 },
+        show: {
+          opacity: 1,
+          transition: {
+            staggerChildren: 0.1
+          }
+        }
+    };
+    
+    const item = {
+        hidden: { opacity: 0, y: 20 },
+        show: { opacity: 1, y: 0 }
+    };
 
     return (
         <Dialog>
@@ -64,9 +80,14 @@ export function MeasurementAlertsKPI({ alerts }: { alerts: MeasurementAlertItem[
                 </DialogHeader>
                 <ScrollArea className="h-full max-h-[60vh] pr-4">
                     {hasAlerts ? (
-                        <div className="space-y-4">
+                        <motion.div 
+                            className="space-y-4"
+                            variants={container}
+                            initial="hidden"
+                            animate="show"
+                        >
                             {alerts.map(({ montage, issues }) => (
-                                <div key={montage.id} className="border rounded-lg p-4 bg-card">
+                                <motion.div variants={item} key={montage.id} className="border rounded-lg p-4 bg-card">
                                     <div className="flex justify-between items-start mb-2">
                                         <div>
                                             <Link 
@@ -94,9 +115,9 @@ export function MeasurementAlertsKPI({ alerts }: { alerts: MeasurementAlertItem[
                                             </div>
                                         ))}
                                     </div>
-                                </div>
+                                </motion.div>
                             ))}
-                        </div>
+                        </motion.div>
                     ) : (
                         <div className="text-center py-8 text-muted-foreground">
                             Brak zagrożonych tematów sprzedażowych.

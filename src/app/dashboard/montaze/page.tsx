@@ -106,20 +106,20 @@ export default async function MontazePage(props: any) {
         conditions.push(eq(montages.installerId, user.id));
     } else if (isOnlyArchitect) {
         conditions.push(eq(montages.architectId, user.id));
-    } else {
+    } else if (!user.roles.includes('admin')) {
         // Standard logic for other roles
-        if (!user.roles.includes('admin')) {
-             const userFilters = [];
-             if (user.roles.includes('installer')) userFilters.push(eq(montages.installerId, user.id));
-             if (user.roles.includes('measurer')) userFilters.push(eq(montages.measurerId, user.id));
-             if (user.roles.includes('architect')) userFilters.push(eq(montages.architectId, user.id));
-             
-             if (userFilters.length > 0) {
-                 const filter = or(...userFilters);
-                 if (filter) conditions.push(filter);
-             }
-        }
+         const userFilters = [];
+         if (user.roles.includes('installer')) userFilters.push(eq(montages.installerId, user.id));
+         if (user.roles.includes('measurer')) userFilters.push(eq(montages.measurerId, user.id));
+         if (user.roles.includes('architect')) userFilters.push(eq(montages.architectId, user.id));
+         
+         if (userFilters.length > 0) {
+             const filter = or(...userFilters);
+             if (filter) conditions.push(filter);
+         }
+    }
 
+    if (!isOnlyInstaller) {
         if (view === 'lead') {
             conditions.push(eq(montages.status, 'lead'));
         } else if (view === 'done') {
@@ -239,12 +239,14 @@ export default async function MontazePage(props: any) {
                     <div className="flex items-center justify-between">
                         <h1 className="text-lg font-semibold">Centrum Montaży</h1>
                         <div className="flex items-center gap-2 md:hidden">
-                            <Button asChild size="sm" variant="outline" className="h-8 w-8 p-0 rounded-full">
-                                <Link href="/dashboard/montaze/ekipy">
-                                    <span className="sr-only">Ekipy</span>
-                                    <Users className="h-4 w-4" />
-                                </Link>
-                            </Button>
+                            {!isOnlyArchitect && (
+                                <Button asChild size="sm" variant="outline" className="h-8 w-8 p-0 rounded-full">
+                                    <Link href="/dashboard/montaze/ekipy">
+                                        <span className="sr-only">Ekipy</span>
+                                        <Users className="h-4 w-4" />
+                                    </Link>
+                                </Button>
+                            )}
                             <Button asChild size="sm" className="h-8 w-8 p-0 rounded-full">
                                 <Link href="/dashboard/montaze/nowy">
                                     <Plus className="h-4 w-4" />
@@ -265,12 +267,14 @@ export default async function MontazePage(props: any) {
                     alertSettings={alertSettings}
                     headerAction={
                         <div className="flex gap-2">
-                            <Button asChild variant="outline">
-                                <Link href="/dashboard/montaze/ekipy">
-                                    <Users className="mr-2 h-4 w-4" />
-                                    Baza Ekip
-                                </Link>
-                            </Button>
+                            {!isOnlyArchitect && (
+                                <Button asChild variant="outline">
+                                    <Link href="/dashboard/montaze/ekipy">
+                                        <Users className="mr-2 h-4 w-4" />
+                                        Baza Ekip
+                                    </Link>
+                                </Button>
+                            )}
                             <Button asChild>
                                 <Link href="/dashboard/montaze/nowy">
                                     <Plus className="mr-2 h-4 w-4" />
