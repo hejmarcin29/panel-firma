@@ -148,7 +148,7 @@ export function MontageClientCard({
   const handleInstallerStatusChange = async (value: string) => {
       await updateMontageRealizationStatus({
           montageId: montage.id,
-          installerStatus: value as any
+          installerStatus: value as 'none' | 'informed' | 'confirmed'
       });
       router.refresh();
   };

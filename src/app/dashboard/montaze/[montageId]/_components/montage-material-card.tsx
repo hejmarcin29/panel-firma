@@ -107,7 +107,7 @@ export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montag
   const handleMaterialStatusChange = async (value: string) => {
       await updateMontageRealizationStatus({
           montageId: montage.id,
-          materialStatus: value as any
+          materialStatus: value as 'none' | 'ordered' | 'in_stock' | 'delivered'
       });
       router.refresh();
   };
