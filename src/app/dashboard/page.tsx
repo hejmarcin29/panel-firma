@@ -72,9 +72,6 @@ export default async function DashboardPage() {
     const kpiAlertMissingInstallerStatusDays = await getAppSetting(appSettingKeys.kpiAlertMissingInstallerStatusDays);
     const missingInstallerStatusDays = Number(kpiAlertMissingInstallerStatusDays ?? 7);
 
-    const kpiAlertMissingMeasurerDays = await getAppSetting(appSettingKeys.kpiAlertMissingMeasurerDays);
-    const missingMeasurerDays = Number(kpiAlertMissingMeasurerDays ?? 14);
-
     const kpiAlertMissingInstallerDays = await getAppSetting(appSettingKeys.kpiAlertMissingInstallerDays);
     const missingInstallerDays = Number(kpiAlertMissingInstallerDays ?? 14);
 

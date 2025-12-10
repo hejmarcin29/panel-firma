@@ -254,7 +254,7 @@ export function KpiSettingsForm({
             </div>
 
             <div className="grid gap-2">
-                <Label htmlFor="materialOrderedDays">Materiał tylko "Zamówiony"</Label>
+                <Label htmlFor="materialOrderedDays">Materiał tylko &quot;Zamówiony&quot;</Label>
                 <Input
                 id="materialOrderedDays"
                 type="number"
@@ -270,7 +270,7 @@ export function KpiSettingsForm({
             </div>
 
             <div className="grid gap-2">
-                <Label htmlFor="materialInstockDays">Materiał tylko "Na magazynie"</Label>
+                <Label htmlFor="materialInstockDays">Materiał tylko &quot;Na magazynie&quot;</Label>
                 <Input
                 id="materialInstockDays"
                 type="number"

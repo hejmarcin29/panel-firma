@@ -138,6 +138,9 @@ export default async function SettingsPage() {
         kpiAlertMissingInstallerDays,
         kpiAlertMaterialOrderedDays,
         kpiAlertMaterialInstockDays,
+        kpiAlertLeadNoMeasurerDays,
+        kpiAlertQuoteDelayDays,
+        kpiAlertOfferStalledDays,
 		googleCalendarId,
 		googleClientEmail,
 		googlePrivateKey,
@@ -165,6 +168,9 @@ export default async function SettingsPage() {
         getAppSetting(appSettingKeys.kpiAlertMissingInstallerDays),
         getAppSetting(appSettingKeys.kpiAlertMaterialOrderedDays),
         getAppSetting(appSettingKeys.kpiAlertMaterialInstockDays),
+        getAppSetting(appSettingKeys.kpiAlertLeadNoMeasurerDays),
+        getAppSetting(appSettingKeys.kpiAlertQuoteDelayDays),
+        getAppSetting(appSettingKeys.kpiAlertOfferStalledDays),
 		getAppSetting(appSettingKeys.googleCalendarId),
 		getAppSetting(appSettingKeys.googleClientEmail),
 		getAppSetting(appSettingKeys.googlePrivateKey),
@@ -526,6 +532,9 @@ export default async function SettingsPage() {
                     initialAlertMissingInstallerDays={Number(kpiAlertMissingInstallerDays ?? 14)}
                     initialAlertMaterialOrderedDays={Number(kpiAlertMaterialOrderedDays ?? 5)}
                     initialAlertMaterialInstockDays={Number(kpiAlertMaterialInstockDays ?? 2)}
+                    initialAlertLeadNoMeasurerDays={Number(kpiAlertLeadNoMeasurerDays ?? 3)}
+                    initialAlertQuoteDelayDays={Number(kpiAlertQuoteDelayDays ?? 3)}
+                    initialAlertOfferStalledDays={Number(kpiAlertOfferStalledDays ?? 7)}
 				/>
 			}
 			wpChanges={
