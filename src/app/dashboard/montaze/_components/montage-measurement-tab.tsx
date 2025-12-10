@@ -69,6 +69,7 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
   const [subfloorCondition, setSubfloorCondition] = useState(montage.measurementSubfloorCondition || 'good');
   const [additionalWorkNeeded, setAdditionalWorkNeeded] = useState(montage.measurementAdditionalWorkNeeded || false);
   const [additionalWorkDescription, setAdditionalWorkDescription] = useState(montage.measurementAdditionalWorkDescription || '');
+  const [separateSkirting, setSeparateSkirting] = useState(montage.measurementSeparateSkirting || false);
 
   const [additionalInfo, setAdditionalInfo] = useState(montage.additionalInfo || '');
   
@@ -103,6 +104,7 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
           measurementSubfloorCondition: subfloorCondition,
           measurementAdditionalWorkNeeded: additionalWorkNeeded,
           measurementAdditionalWorkDescription: additionalWorkDescription,
+          measurementSeparateSkirting: separateSkirting,
           additionalInfo,
           sketchUrl: sketchDataUrl,
           scheduledInstallationAt: dateRange?.from ? dateRange.from.getTime() : null,
@@ -130,6 +132,7 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
     subfloorCondition,
     additionalWorkNeeded,
     additionalWorkDescription,
+    separateSkirting,
     additionalInfo,
     sketchDataUrl,
     dateRange,
@@ -430,6 +433,15 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
                 <span className="text-lg font-bold">
                     {skirtingLength ? (parseFloat(skirtingLength) * (1 + parseInt(skirtingWaste)/100)).toFixed(2) : '0.00'} mb
                 </span>
+            </div>
+            
+            <div className="pt-2 border-t flex items-center space-x-2">
+                <Checkbox 
+                    id="separateSkirting" 
+                    checked={separateSkirting} 
+                    onCheckedChange={(checked) => setSeparateSkirting(checked as boolean)} 
+                />
+                <Label htmlFor="separateSkirting" className="text-sm font-medium">Zalecany montaż listew w osobnym terminie</Label>
             </div>
           </div>
         </div>

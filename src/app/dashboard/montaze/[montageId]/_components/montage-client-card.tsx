@@ -200,6 +200,8 @@ export function MontageClientCard({
   )}`;
 
   const formattedDate = formatScheduleRange(montage.scheduledInstallationAt, montage.scheduledInstallationEndAt);
+  const formattedSkirtingDate = formatScheduleRange(montage.scheduledSkirtingInstallationAt, montage.scheduledSkirtingInstallationEndAt);
+  
   const forecastedDate = montage.forecastedInstallationDate 
     ? new Date(montage.forecastedInstallationDate as string | number | Date).toLocaleDateString('pl-PL')
     : null;
@@ -473,6 +475,11 @@ export function MontageClientCard({
                 <span className="text-sm">
                     {formattedDate || (forecastedDate ? `Szac: ${forecastedDate}` : "Nie zaplanowano")}
                 </span>
+                {formattedSkirtingDate && (
+                    <span className="text-xs text-amber-600 font-medium">
+                        Listwy: {formattedSkirtingDate}
+                    </span>
+                )}
                 {formattedDate && forecastedDate && (
                     <span className="text-xs text-muted-foreground">
                         (Szacowany: {forecastedDate})

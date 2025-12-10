@@ -445,6 +445,7 @@ export const montages = sqliteTable(
 		measurementSubfloorCondition: text('measurement_subfloor_condition'),
 		measurementAdditionalWorkNeeded: integer('measurement_additional_work_needed', { mode: 'boolean' }).default(false),
 		measurementAdditionalWorkDescription: text('measurement_additional_work_description'),
+        measurementSeparateSkirting: integer('measurement_separate_skirting', { mode: 'boolean' }).default(false),
 		floorArea: integer('floor_area', { mode: 'number' }),
 		floorDetails: text('floor_details'),
 		skirtingLength: integer('skirting_length', { mode: 'number' }),

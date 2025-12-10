@@ -1068,6 +1068,7 @@ export async function updateMontageMeasurement({
     measurementSubfloorCondition,
     measurementAdditionalWorkNeeded,
     measurementAdditionalWorkDescription,
+    measurementSeparateSkirting,
 }: {
 	montageId: string;
 	measurementDetails: string;
@@ -1088,6 +1089,7 @@ export async function updateMontageMeasurement({
     measurementSubfloorCondition?: string | null;
     measurementAdditionalWorkNeeded?: boolean;
     measurementAdditionalWorkDescription?: string | null;
+    measurementSeparateSkirting?: boolean;
 }) {
 	await requireUser();
 
@@ -1098,6 +1100,7 @@ export async function updateMontageMeasurement({
 			materialDetails: measurementDetails, // Sync with materialDetails
 			floorArea,
 			floorDetails,
+            measurementSeparateSkirting,
 			skirtingLength,
 			skirtingDetails,
 			panelModel,
