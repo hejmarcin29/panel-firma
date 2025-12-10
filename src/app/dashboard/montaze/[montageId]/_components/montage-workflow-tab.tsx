@@ -12,6 +12,16 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { 
     toggleMontageChecklistItem, 
@@ -43,6 +53,8 @@ export function MontageWorkflowTab({
   const [isEditing, setIsEditing] = useState(false);
   const [newItemLabel, setNewItemLabel] = useState("");
   const [newItemAttachment, setNewItemAttachment] = useState(false);
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
 
   const handleToggle = (itemId: string, completed: boolean) => {
     if (isEditing) return;
@@ -101,6 +113,21 @@ export function MontageWorkflowTab({
   };
 
   const handleStatusChange = (status: string) => {
+    const newStatusIndex = statusOptions.findIndex(o => o.value === status);
+    const beforeFirstPaymentIndex = statusOptions.findIndex(o => o.value === 'before_first_payment');
+    
+    // If trying to move past 'before_first_payment'
+    if (newStatusIndex > beforeFirstPaymentIndex) {
+        const fvIssued = montage.checklistItems?.find(i => i.label === "Wystawiono FV zaliczkową")?.completed;
+        const fvPaid = montage.checklistItems?.find(i => i.label === "Zapłacono FV zaliczkową")?.completed;
+
+        if (!fvIssued || !fvPaid) {
+            setAlertMessage("Nie można przejść do kolejnego etapu. Upewnij się, że wystawiono i opłacono fakturę zaliczkową.");
+            setAlertOpen(true);
+            return;
+        }
+    }
+
     startTransition(async () => {
         await updateMontageStatus({ montageId: montage.id, status });
         router.refresh();
@@ -173,10 +200,9 @@ export function MontageWorkflowTab({
             <div className="grid gap-4 sm:grid-cols-2">
                 <div className={cn(
                     "flex flex-col gap-2 p-4 rounded-lg border transition-colors",
-                    materialAlert?.level === 'critical' ? "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-900" :
-                    materialAlert?.level === 'error' ? "bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-900" :
-                    materialAlert?.level === 'warning' ? "bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-900" :
-                    montage.materialStatus === 'delivered' ? "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-900" : "bg-card"
+                    montage.materialStatus === 'none' ? "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-900" :
+                    montage.materialStatus === 'ordered' ? "bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-900" :
+                    (montage.materialStatus === 'in_stock' || montage.materialStatus === 'delivered') ? "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-900" : "bg-card"
                 )}>
                     <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
@@ -221,6 +247,8 @@ export function MontageWorkflowTab({
 
                 <div className={cn(
                     "flex flex-col gap-2 p-4 rounded-lg border transition-colors",
+                    montage.installerStatus === 'none' ? "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-900" :
+                    montage.installerStatus === 'informed' ? "bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-900" :
                     montage.installerStatus === 'confirmed' ? "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-900" : "bg-card"
                 )}>
                     <div className="space-y-0.5">
@@ -242,7 +270,11 @@ export function MontageWorkflowTab({
                     </Select>
                 </div>
 
-                <div className="flex flex-col gap-2 p-4 rounded-lg border bg-card">
+                <div className={cn(
+                    "flex flex-col gap-2 p-4 rounded-lg border transition-colors",
+                    !montage.measurerId ? "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-900" :
+                    "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-900"
+                )}>
                     <div className="space-y-0.5">
                         <Label htmlFor="measurer-select" className="text-base font-medium">Przypisz Pomiarowca</Label>
                         <p className="text-sm text-muted-foreground">Osoba odpowiedzialna za pomiar</p>
@@ -263,7 +295,11 @@ export function MontageWorkflowTab({
                     </Select>
                 </div>
 
-                <div className="flex flex-col gap-2 p-4 rounded-lg border bg-card">
+                <div className={cn(
+                    "flex flex-col gap-2 p-4 rounded-lg border transition-colors",
+                    !montage.installerId ? "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-900" :
+                    "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-900"
+                )}>
                     <div className="space-y-0.5">
                         <Label htmlFor="installer-select" className="text-base font-medium">Przypisz Montażystę</Label>
                         <p className="text-sm text-muted-foreground">Osoba odpowiedzialna za montaż</p>
@@ -462,6 +498,20 @@ export function MontageWorkflowTab({
                 </div>
             )}
         </Card>
+
+        <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Wymagane działania</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        {alertMessage}
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogAction onClick={() => setAlertOpen(false)}>Rozumiem</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </div>
   );
 }
