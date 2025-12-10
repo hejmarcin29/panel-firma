@@ -68,3 +68,10 @@ Przy każdej implementacji, modyfikacji lub naprawie błędu, **ZAWSZE** analizu
 - **Spójność Danych:** Upewnij się, że zmiany w strukturze danych lub statusach nie "psują" raportów, widoków KPI, widoku TV czy uprawnień użytkowników.
 - **Zależności:** Sprawdź, czy modyfikowany komponent nie jest używany w innych, nieoczywistych miejscach (np. ten sam komponent w Dashboardzie i w widoku Klienta).
 - **Cel:** Twoim zadaniem jest nie tylko "dowiezienie feature'a", ale zapewnienie, że cały ekosystem (Panel Admina, Panel Pracownika, TV, Automatyzacje) pozostaje spójny i stabilny.
+
+## Konfiguracja Serwera i Wdrożenie
+- **Katalog Aplikacji:** Aplikacja na serwerze produkcyjnym (VPS) znajduje się w katalogu `/srv/panel/`.
+- **Plik .env:** Plik konfiguracyjny `.env` (zawierający `DATABASE_URL` i inne sekrety) **MUSI** znajdować się w `/srv/panel/.env`.
+- **PM2:** Procesy są zarządzane przez PM2 i uruchamiane z katalogu `/srv/panel/`.
+- **Użytkownik:** Aplikacja działa na koncie `deploy`.
+- **Baza Danych:** PostgreSQL. Connection string w `.env` musi używać użytkownika `panel_user` (nie `deploy`).
