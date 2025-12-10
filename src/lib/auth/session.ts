@@ -38,7 +38,7 @@ const cookieConfig: CookieOptions = {
 
 type SessionRecord = {
 	id: string;
-	expiresAt: number;
+	expiresAt: Date;
 	originalUserId?: string | null;
 	user: {
 		id: string;
@@ -76,7 +76,7 @@ async function findSession(token: string): Promise<SessionRecord | null> {
 
 	return {
 		id: row.sessionId,
-		expiresAt: row.expiresAt ?? 0,
+		expiresAt: row.expiresAt ?? new Date(0),
 		originalUserId: row.originalUserId,
 		user: {
 			id: row.userId,
@@ -95,7 +95,7 @@ async function removeSessionByToken(token: string) {
 export async function createSession(userId: string, originalUserId?: string) {
 	const token = randomBytes(32).toString('hex');
 	const tokenHash = hashToken(token);
-	const expiresAt = Date.now() + SESSION_TTL_MS;
+	const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
 
 	await db.insert(sessions).values({
 		id: randomUUID(),
@@ -170,7 +170,7 @@ export async function getCurrentSession(): Promise<SessionRecord | null> {
 		return null;
 	}
 
-	if (session.expiresAt < Date.now()) {
+	if (session.expiresAt.getTime() < Date.now()) {
 		await removeSessionByToken(token);
 		cookieStore.delete(SESSION_COOKIE);
 		return null;

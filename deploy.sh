@@ -25,9 +25,6 @@ npm install
 # Wygeneruj klienta bazy danych
 npm run db:generate
 
-# Napraw indeksy (jeśli istnieją, usuń je, aby drizzle-kit mógł je odtworzyć)
-node fix_db_index.js
-
 # Zaaplikuj migracje bazy danych
 # Używamy push zamiast migrate, aby uniknąć błędów "table already exists"
 # gdy baza nie jest zsynchronizowana z historią migracji.

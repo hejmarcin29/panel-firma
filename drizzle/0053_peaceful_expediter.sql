@@ -1,1 +1,0 @@
-ALTER TABLE `montages` ADD `measurement_separate_skirting` integer DEFAULT false;

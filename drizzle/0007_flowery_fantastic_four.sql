@@ -1,1 +1,0 @@
-DROP TABLE `wfirma_tokens`;

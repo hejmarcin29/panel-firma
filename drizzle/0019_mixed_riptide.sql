@@ -1,1 +1,0 @@
-ALTER TABLE `montages` ADD `scheduled_installation_end_at` integer;

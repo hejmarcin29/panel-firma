@@ -148,7 +148,7 @@ export async function upsertMailAccount(_: UpsertState, formData: FormData): Pro
 		signature: normalizeNullable(data.signature),
 		nextSyncAt: null,
 		error: null,
-		updatedAt: sql`(strftime('%s','now') * 1000)`,
+		updatedAt: new Date(),
 	};
 
 	const secret = encodeSecret(password?.trim() ? password : undefined);
@@ -185,7 +185,7 @@ export async function upsertMailAccount(_: UpsertState, formData: FormData): Pro
 			id,
 			...values,
 			passwordSecret: secret ?? null,
-			createdAt: sql`(strftime('%s','now') * 1000)`,
+			createdAt: new Date(),
 		});
 	}
 
@@ -269,7 +269,7 @@ async function markAccountError(accountId: string, message: string): Promise<voi
 			status: 'error',
 			error: message,
 			nextSyncAt: null,
-			updatedAt: sql`(strftime('%s','now') * 1000)`,
+			updatedAt: new Date(),
 		})
 		.where(eq(mailAccounts.id, accountId));
 }
@@ -890,9 +890,9 @@ export async function syncMailAccount(accountId: string): Promise<SyncResult> {
 		.set({
 			status: 'connected',
 			error: null,
-			lastSyncAt: sql`(strftime('%s','now') * 1000)`,
-			nextSyncAt: sql`((strftime('%s','now') + ${NEXT_SYNC_DELAY_SECONDS}) * 1000)`,
-			updatedAt: sql`(strftime('%s','now') * 1000)`,
+			lastSyncAt: new Date(),
+			nextSyncAt: new Date(Date.now() + NEXT_SYNC_DELAY_SECONDS * 1000),
+			updatedAt: new Date(),
 		})
 		.where(eq(mailAccounts.id, accountId));
 

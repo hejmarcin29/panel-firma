@@ -1,1 +1,0 @@
-ALTER TABLE `montages` ADD `sketch_url` text;

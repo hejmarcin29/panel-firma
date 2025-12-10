@@ -1,1 +1,0 @@
-ALTER TABLE `users` ADD `mobile_menu_config` text;

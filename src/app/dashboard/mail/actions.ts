@@ -86,7 +86,7 @@ export async function toggleMailMessageRead(messageId: string, read: boolean): P
 		.update(mailMessages)
 		.set({
 			isRead: read,
-			updatedAt: sql`(strftime('%s','now') * 1000)`,
+			updatedAt: new Date(),
 		})
 		.where(eq(mailMessages.id, messageId))
 		.returning();

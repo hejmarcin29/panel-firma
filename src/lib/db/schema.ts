@@ -1,11 +1,16 @@
 import {
 	index,
 	integer,
-	sqliteTable,
+	pgTable,
 	text,
 	uniqueIndex,
 	real,
-} from 'drizzle-orm/sqlite-core';
+    boolean,
+    timestamp,
+    json,
+    serial,
+    doublePrecision
+} from 'drizzle-orm/pg-core';
 import { relations, sql } from 'drizzle-orm';
 
 export const userRoles = ['admin', 'measurer', 'installer', 'architect'] as const;
@@ -80,32 +85,28 @@ export type ArchitectProfile = {
 	commissionRate?: number; // PLN per m2
 };
 
-export const users = sqliteTable(
+export const users = pgTable(
 	'users',
 	{
 		id: text('id').primaryKey(),
 		email: text('email').notNull(),
 		passwordHash: text('password_hash').notNull(),
 		name: text('name'),
-		roles: text('roles', { mode: 'json' }).$type<UserRole[]>().notNull().default(['admin']),
-		isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
-		dashboardConfig: text('dashboard_config', { mode: 'json' }),
-		mobileMenuConfig: text('mobile_menu_config', { mode: 'json' }),
-		installerProfile: text('installer_profile', { mode: 'json' }).$type<InstallerProfile>(),
-		architectProfile: text('architect_profile', { mode: 'json' }).$type<ArchitectProfile>(),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
-		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
+		roles: json('roles').$type<UserRole[]>().notNull().default(['admin']),
+		isActive: boolean('is_active').notNull().default(true),
+		dashboardConfig: json('dashboard_config'),
+		mobileMenuConfig: json('mobile_menu_config'),
+		installerProfile: json('installer_profile').$type<InstallerProfile>(),
+		architectProfile: json('architect_profile').$type<ArchitectProfile>(),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
+		updatedAt: timestamp('updated_at').notNull().defaultNow(),
 	},
 	(table) => ({
 		emailIdx: uniqueIndex('users_email_idx').on(table.email),
 	})
 );
 
-export const sessions = sqliteTable(
+export const sessions = pgTable(
 	'sessions',
 	{
 		id: text('id').primaryKey(),
@@ -113,13 +114,9 @@ export const sessions = sqliteTable(
 			.notNull()
 			.references(() => users.id, { onDelete: 'cascade' }),
 		tokenHash: text('token_hash').notNull().unique(),
-		expiresAt: integer('expires_at', { mode: 'number' }).notNull(),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
-		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
+		expiresAt: timestamp('expires_at').notNull(),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
+		updatedAt: timestamp('updated_at').notNull().defaultNow(),
 		originalUserId: text('original_user_id').references(() => users.id, { onDelete: 'set null' }),
 	},
 	(table) => ({
@@ -127,7 +124,7 @@ export const sessions = sqliteTable(
 	})
 );
 
-export const customers = sqliteTable(
+export const customers = pgTable(
 	'customers',
 	{
 		id: text('id').primaryKey(),
@@ -144,12 +141,8 @@ export const customers = sqliteTable(
 		shippingPostalCode: text('shipping_postal_code'),
 		shippingCountry: text('shipping_country'),
 		architectId: text('architect_id').references(() => users.id, { onDelete: 'set null' }),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
-		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
+		updatedAt: timestamp('updated_at').notNull().defaultNow(),
 	},
 	(table) => ({
 		emailIdx: uniqueIndex('customers_email_idx').on(table.email),
@@ -157,7 +150,7 @@ export const customers = sqliteTable(
 	})
 );
 
-export const orders = sqliteTable(
+export const orders = pgTable(
 	'orders',
 	{
 		id: text('id').primaryKey(),
@@ -168,16 +161,12 @@ export const orders = sqliteTable(
 			onDelete: 'set null',
 		}),
 		// monetary values stored in minor units (e.g. grosze)
-		totalNet: integer('total_net', { mode: 'number' }).notNull(),
-		totalGross: integer('total_gross', { mode: 'number' }).notNull(),
+		totalNet: integer('total_net').notNull(),
+		totalGross: integer('total_gross').notNull(),
 		currency: text('currency').notNull(),
-		expectedShipDate: integer('expected_ship_date', { mode: 'timestamp_ms' }),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
-		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
+		expectedShipDate: timestamp('expected_ship_date'),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
+		updatedAt: timestamp('updated_at').notNull().defaultNow(),
 	},
 	(table) => ({
 		statusIdx: index('orders_status_idx').on(table.status),
@@ -186,7 +175,7 @@ export const orders = sqliteTable(
 	})
 );
 
-export const orderItems = sqliteTable(
+export const orderItems = pgTable(
 	'order_items',
 	{
 		id: text('id').primaryKey(),
@@ -196,18 +185,18 @@ export const orderItems = sqliteTable(
 		sku: text('sku'),
 		name: text('name').notNull(),
 		quantity: integer('quantity').notNull(),
-		unitPrice: integer('unit_price', { mode: 'number' }).notNull(),
-		taxRate: integer('tax_rate', { mode: 'number' }).notNull(),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+		unitPrice: integer('unit_price').notNull(),
+		taxRate: integer('tax_rate').notNull(),
+		createdAt: timestamp('created_at')
 			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
+			.defaultNow(),
 	},
 	(table) => ({
 		orderIdx: index('order_items_order_id_idx').on(table.orderId),
 	})
 );
 
-export const documents = sqliteTable(
+export const documents = pgTable(
 	'documents',
 	{
 		id: text('id').primaryKey(),
@@ -217,15 +206,11 @@ export const documents = sqliteTable(
 		type: text('type').$type<DocumentType>().notNull(),
 		status: text('status').$type<DocumentStatus>().notNull(),
 		number: text('number'),
-		issueDate: integer('issue_date', { mode: 'timestamp_ms' }),
+		issueDate: timestamp('issue_date'),
 		pdfUrl: text('pdf_url'),
-		grossAmount: integer('gross_amount', { mode: 'number' }),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
-		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
+		grossAmount: integer('gross_amount'),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
+		updatedAt: timestamp('updated_at').notNull().defaultNow(),
 	},
 	(table) => ({
 		typeIdx: index('documents_type_idx').on(table.type),
@@ -233,7 +218,7 @@ export const documents = sqliteTable(
 	})
 );
 
-export const documentEvents = sqliteTable(
+export const documentEvents = pgTable(
 	'document_events',
 	{
 		id: text('id').primaryKey(),
@@ -243,16 +228,14 @@ export const documentEvents = sqliteTable(
 		status: text('status').$type<DocumentStatus>().notNull(),
 		actorId: text('actor_id'),
 		note: text('note'),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
 	},
 	(table) => ({
 		documentIdx: index('document_events_document_id_idx').on(table.documentId),
 	})
 );
 
-export const payments = sqliteTable(
+export const payments = pgTable(
 	'payments',
 	{
 		id: text('id').primaryKey(),
@@ -260,17 +243,13 @@ export const payments = sqliteTable(
 			.notNull()
 			.references(() => orders.id, { onDelete: 'cascade' }),
 		status: text('status').$type<PaymentStatus>().notNull(),
-		amount: integer('amount', { mode: 'number' }).notNull(),
+		amount: integer('amount').notNull(),
 		currency: text('currency').notNull(),
-		paymentDate: integer('payment_date', { mode: 'timestamp_ms' }),
+		paymentDate: timestamp('payment_date'),
 		bankOperationId: text('bank_operation_id').unique(),
 		rawReference: text('raw_reference'),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
-		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
+		updatedAt: timestamp('updated_at').notNull().defaultNow(),
 	},
 	(table) => ({
 		statusIdx: index('payments_status_idx').on(table.status),
@@ -278,7 +257,7 @@ export const payments = sqliteTable(
 	})
 );
 
-export const paymentMatches = sqliteTable(
+export const paymentMatches = pgTable(
 	'payment_matches',
 	{
 		id: text('id').primaryKey(),
@@ -288,13 +267,11 @@ export const paymentMatches = sqliteTable(
 		confidenceScore: integer('confidence_score'),
 		matchedBy: text('matched_by').$type<(typeof paymentMatchedBy)[number]>().notNull(),
 		notes: text('notes'),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
 	}
 );
 
-export const supplierRequests = sqliteTable(
+export const supplierRequests = pgTable(
 	'supplier_requests',
 	{
 		id: text('id').primaryKey(),
@@ -302,24 +279,20 @@ export const supplierRequests = sqliteTable(
 			.notNull()
 			.references(() => orders.id, { onDelete: 'cascade' }),
 		status: text('status').$type<SupplierRequestStatus>().notNull(),
-		sentAt: integer('sent_at', { mode: 'timestamp_ms' }),
-		responseReceivedAt: integer('response_received_at', { mode: 'timestamp_ms' }),
+		sentAt: timestamp('sent_at'),
+		responseReceivedAt: timestamp('response_received_at'),
 		carrier: text('carrier'),
 		trackingNumber: text('tracking_number'),
 		payload: text('payload'),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
-		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
+		updatedAt: timestamp('updated_at').notNull().defaultNow(),
 	},
 	(table) => ({
 		statusIdx: index('supplier_requests_status_idx').on(table.status),
 	})
 );
 
-export const supplierMessages = sqliteTable(
+export const supplierMessages = pgTable(
 	'supplier_messages',
 	{
 		id: text('id').primaryKey(),
@@ -330,16 +303,14 @@ export const supplierMessages = sqliteTable(
 		medium: text('medium').$type<SupplierMessageMedium>().notNull(),
 		subject: text('subject'),
 		body: text('body'),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
 	},
 	(table) => ({
 		supplierRequestIdx: index('supplier_messages_request_idx').on(table.supplierRequestId),
 	})
 );
 
-export const notifications = sqliteTable(
+export const notifications = pgTable(
 	'notifications',
 	{
 		id: text('id').primaryKey(),
@@ -348,15 +319,11 @@ export const notifications = sqliteTable(
 		templateCode: text('template_code').notNull(),
 		recipient: text('recipient').notNull(),
 		status: text('status').$type<NotificationStatus>().notNull(),
-		sentAt: integer('sent_at', { mode: 'timestamp_ms' }),
+		sentAt: timestamp('sent_at'),
 		providerMessageId: text('provider_message_id'),
 		error: text('error'),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
-		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
+		updatedAt: timestamp('updated_at').notNull().defaultNow(),
 	},
 	(table) => ({
 		orderIdx: index('notifications_order_id_idx').on(table.orderId),
@@ -364,7 +331,7 @@ export const notifications = sqliteTable(
 	})
 );
 
-export const integrationLogs = sqliteTable(
+export const integrationLogs = pgTable(
 	'integration_logs',
 	{
 		id: text('id').primaryKey(),
@@ -376,13 +343,11 @@ export const integrationLogs = sqliteTable(
 			.notNull(),
 		message: text('message').notNull(),
 		meta: text('meta'),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
 	}
 );
 
-export const systemLogs = sqliteTable(
+export const systemLogs = pgTable(
 	'system_logs',
 	{
 		id: text('id').primaryKey(),
@@ -391,9 +356,7 @@ export const systemLogs = sqliteTable(
 		details: text('details'),
 		ipAddress: text('ip_address'),
 		userAgent: text('user_agent'),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
 	},
 	(table) => ({
 		userIdIdx: index('system_logs_user_id_idx').on(table.userId),
@@ -401,14 +364,12 @@ export const systemLogs = sqliteTable(
 	})
 );
 
-export const appSettings = sqliteTable(
+export const appSettings = pgTable(
 	'app_settings',
 	{
 		key: text('key').primaryKey(),
 		value: text('value').notNull(),
-		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
+		updatedAt: timestamp('updated_at').notNull().defaultNow(),
 		updatedBy: text('updated_by').references(() => users.id, { onDelete: 'set null' }),
 	},
 	(table) => ({
@@ -418,7 +379,7 @@ export const appSettings = sqliteTable(
 
 import type { TechnicalAuditData, MaterialLogData } from '@/app/dashboard/montaze/technical-data';
 
-export const montages = sqliteTable(
+export const montages = pgTable(
 	'montages',
 	{
 		id: text('id').primaryKey(),
@@ -432,35 +393,35 @@ export const montages = sqliteTable(
 		installationCity: text('installation_city'),
 		billingPostalCode: text('billing_postal_code'),
 		installationPostalCode: text('installation_postal_code'),
-		isCompany: integer('is_company', { mode: 'boolean' }).notNull().default(false),
+		isCompany: boolean('is_company').notNull().default(false),
 		companyName: text('company_name'),
 		nip: text('nip'),
-		scheduledInstallationAt: integer('scheduled_installation_at', { mode: 'timestamp_ms' }),
-		scheduledInstallationEndAt: integer('scheduled_installation_end_at', { mode: 'timestamp_ms' }),
-        scheduledSkirtingInstallationAt: integer('scheduled_skirting_installation_at', { mode: 'timestamp_ms' }),
-        scheduledSkirtingInstallationEndAt: integer('scheduled_skirting_installation_end_at', { mode: 'timestamp_ms' }),
+		scheduledInstallationAt: timestamp('scheduled_installation_at'),
+		scheduledInstallationEndAt: timestamp('scheduled_installation_end_at'),
+        scheduledSkirtingInstallationAt: timestamp('scheduled_skirting_installation_at'),
+        scheduledSkirtingInstallationEndAt: timestamp('scheduled_skirting_installation_end_at'),
 		materialDetails: text('material_details'),
 		measurementDetails: text('measurement_details'),
 		measurementInstallationMethod: text('measurement_installation_method').$type<'click' | 'glue'>(),
 		measurementSubfloorCondition: text('measurement_subfloor_condition'),
-		measurementAdditionalWorkNeeded: integer('measurement_additional_work_needed', { mode: 'boolean' }).default(false),
+		measurementAdditionalWorkNeeded: boolean('measurement_additional_work_needed').default(false),
 		measurementAdditionalWorkDescription: text('measurement_additional_work_description'),
-        measurementSeparateSkirting: integer('measurement_separate_skirting', { mode: 'boolean' }).default(false),
-		floorArea: integer('floor_area', { mode: 'number' }),
+        measurementSeparateSkirting: boolean('measurement_separate_skirting').default(false),
+		floorArea: doublePrecision('floor_area'),
 		floorDetails: text('floor_details'),
-		skirtingLength: integer('skirting_length', { mode: 'number' }),
+		skirtingLength: doublePrecision('skirting_length'),
 		skirtingDetails: text('skirting_details'),
 		panelModel: text('panel_model'),
-		panelWaste: integer('panel_waste', { mode: 'number' }),
+		panelWaste: doublePrecision('panel_waste'),
 		skirtingModel: text('skirting_model'),
-		skirtingWaste: integer('skirting_waste', { mode: 'number' }),
-		modelsApproved: integer('models_approved', { mode: 'boolean' }).notNull().default(false),
-		finalPanelAmount: integer('final_panel_amount', { mode: 'number' }),
-		finalSkirtingLength: integer('final_skirting_length', { mode: 'number' }),
-		materialsEditHistory: text('materials_edit_history', { mode: 'json' }),
+		skirtingWaste: doublePrecision('skirting_waste'),
+		modelsApproved: boolean('models_approved').notNull().default(false),
+		finalPanelAmount: doublePrecision('final_panel_amount'),
+		finalSkirtingLength: doublePrecision('final_skirting_length'),
+		materialsEditHistory: json('materials_edit_history'),
 		additionalInfo: text('additional_info'),
 		sketchUrl: text('sketch_url'),
-		forecastedInstallationDate: integer('forecasted_installation_date', { mode: 'timestamp_ms' }),
+		forecastedInstallationDate: timestamp('forecasted_installation_date'),
 		status: text('status').$type<MontageStatus>().notNull().default('lead'),
 		displayId: text('display_id'),
 		materialStatus: text('material_status').$type<MontageMaterialStatus>().notNull().default('none'),
@@ -470,14 +431,10 @@ export const montages = sqliteTable(
 		measurerId: text('measurer_id').references(() => users.id, { onDelete: 'set null' }),
 		architectId: text('architect_id').references(() => users.id, { onDelete: 'set null' }),
         googleEventId: text('google_event_id'),
-        technicalAudit: text('technical_audit', { mode: 'json' }).$type<TechnicalAuditData>(),
-        materialLog: text('material_log', { mode: 'json' }).$type<MaterialLogData>(),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
-		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
+        technicalAudit: json('technical_audit').$type<TechnicalAuditData>(),
+        materialLog: json('material_log').$type<MaterialLogData>(),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
+		updatedAt: timestamp('updated_at').notNull().defaultNow(),
 	},
 	(table) => ({
 		statusIdx: index('montages_status_idx').on(table.status),
@@ -489,7 +446,7 @@ export const montages = sqliteTable(
 	})
 );
 
-export const montageNotes = sqliteTable(
+export const montageNotes = pgTable(
 	'montage_notes',
 	{
 		id: text('id').primaryKey(),
@@ -498,9 +455,7 @@ export const montageNotes = sqliteTable(
 			.references(() => montages.id, { onDelete: 'cascade' }),
 		content: text('content').notNull(),
 		createdBy: text('created_by').references(() => users.id, { onDelete: 'set null' }),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
 	},
 	(table) => ({
 		montageIdx: index('montage_notes_montage_id_idx').on(table.montageId),
@@ -508,7 +463,7 @@ export const montageNotes = sqliteTable(
 	})
 );
 
-export const montageAttachments = sqliteTable(
+export const montageAttachments = pgTable(
 	'montage_attachments',
 	{
 		id: text('id').primaryKey(),
@@ -524,9 +479,7 @@ export const montageAttachments = sqliteTable(
 		title: text('title'),
 		url: text('url').notNull(),
 		uploadedBy: text('uploaded_by').references(() => users.id, { onDelete: 'set null' }),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
 	},
 	(table) => ({
 		montageIdx: index('montage_attachments_montage_id_idx').on(table.montageId),
@@ -535,7 +488,7 @@ export const montageAttachments = sqliteTable(
 	})
 );
 
-export const montageChecklistItems = sqliteTable(
+export const montageChecklistItems = pgTable(
 	'montage_checklist_items',
 	{
 		id: text('id').primaryKey(),
@@ -544,22 +497,18 @@ export const montageChecklistItems = sqliteTable(
 			.references(() => montages.id, { onDelete: 'cascade' }),
 		templateId: text('template_id').notNull(),
 		label: text('label').notNull(),
-		allowAttachment: integer('allow_attachment', { mode: 'boolean' })
+		allowAttachment: boolean('allow_attachment')
 			.notNull()
 			.default(false),
 		attachmentId: text('attachment_id').references(() => montageAttachments.id, {
 			onDelete: 'set null',
 		}),
-		completed: integer('completed', { mode: 'boolean' })
+		completed: boolean('completed')
 			.notNull()
 			.default(false),
-		orderIndex: integer('order_index', { mode: 'number' }).notNull(),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
-		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
+		orderIndex: integer('order_index').notNull(),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
+		updatedAt: timestamp('updated_at').notNull().defaultNow(),
 	},
 	(table) => ({
 		montageIdx: index('montage_checklist_items_montage_id_idx').on(table.montageId),
@@ -567,7 +516,7 @@ export const montageChecklistItems = sqliteTable(
 	})
 );
 
-export const montageTasks = sqliteTable(
+export const montageTasks = pgTable(
 	'montage_tasks',
 	{
 		id: text('id').primaryKey(),
@@ -576,14 +525,10 @@ export const montageTasks = sqliteTable(
 			.references(() => montages.id, { onDelete: 'cascade' }),
 		title: text('title').notNull(),
 		source: text('source').notNull().default('manual'),
-		completed: integer('completed', { mode: 'boolean' }).notNull().default(false),
+		completed: boolean('completed').notNull().default(false),
 		orderIndex: integer('order_index'),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
-		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
+		updatedAt: timestamp('updated_at').notNull().defaultNow(),
 	},
 	(table) => ({
 		montageIdx: index('montage_tasks_montage_id_idx').on(table.montageId),
@@ -665,7 +610,7 @@ export const montageTasksRelations = relations(montageTasks, ({ one, many }) => 
 	attachments: many(montageAttachments),
 }));
 
-export const manualOrders = sqliteTable(
+export const manualOrders = pgTable(
 	'manual_orders',
 	{
 		id: text('id').primaryKey(),
@@ -678,18 +623,18 @@ export const manualOrders = sqliteTable(
 		source: text('source').$type<OrderSource>().notNull().default('manual'),
 		type: text('type').$type<OrderType>().notNull().default('production'),
 		sourceOrderId: text('source_order_id'),
-		requiresReview: integer('requires_review', { mode: 'boolean' })
+		requiresReview: boolean('requires_review')
 			.notNull()
 			.default(false),
-		totalNet: integer('total_net', { mode: 'number' }).notNull(),
-		totalGross: integer('total_gross', { mode: 'number' }).notNull(),
+		totalNet: integer('total_net').notNull(),
+		totalGross: integer('total_gross').notNull(),
 		billingName: text('billing_name').notNull(),
 		billingStreet: text('billing_street').notNull(),
 		billingPostalCode: text('billing_postal_code').notNull(),
 		billingCity: text('billing_city').notNull(),
 		billingPhone: text('billing_phone').notNull(),
 		billingEmail: text('billing_email').notNull(),
-		shippingSameAsBilling: integer('shipping_same_as_billing', { mode: 'boolean' })
+		shippingSameAsBilling: boolean('shipping_same_as_billing')
 			.notNull()
 			.default(false),
 		shippingName: text('shipping_name'),
@@ -700,12 +645,8 @@ export const manualOrders = sqliteTable(
 		shippingEmail: text('shipping_email'),
 		paymentMethod: text('payment_method'),
 		shippingMethod: text('shipping_method'),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
-		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
+		updatedAt: timestamp('updated_at').notNull().defaultNow(),
 	},
 	(table) => ({
 		referenceIdx: uniqueIndex('manual_orders_reference_idx').on(table.reference),
@@ -715,7 +656,7 @@ export const manualOrders = sqliteTable(
 	})
 );
 
-export const orderAttachments = sqliteTable(
+export const orderAttachments = pgTable(
 	'order_attachments',
 	{
 		id: text('id').primaryKey(),
@@ -725,9 +666,7 @@ export const orderAttachments = sqliteTable(
 		title: text('title'),
 		url: text('url').notNull(),
 		uploadedBy: text('uploaded_by').references(() => users.id, { onDelete: 'set null' }),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
 	},
 	(table) => ({
 		orderIdx: index('order_attachments_order_id_idx').on(table.orderId),
@@ -735,7 +674,7 @@ export const orderAttachments = sqliteTable(
 	})
 );
 
-export const manualOrderItems = sqliteTable(
+export const manualOrderItems = pgTable(
 	'manual_order_items',
 	{
 		id: text('id').primaryKey(),
@@ -743,22 +682,20 @@ export const manualOrderItems = sqliteTable(
 			.notNull()
 			.references(() => manualOrders.id, { onDelete: 'cascade' }),
 		product: text('product').notNull(),
-		quantity: integer('quantity', { mode: 'number' }).notNull(),
-		unitPrice: integer('unit_price', { mode: 'number' }).notNull(),
-		vatRate: integer('vat_rate', { mode: 'number' }).notNull(),
-		unitPricePerSquareMeter: integer('unit_price_per_square_meter', { mode: 'number' }),
-		totalNet: integer('total_net', { mode: 'number' }).notNull(),
-		totalGross: integer('total_gross', { mode: 'number' }).notNull(),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
+		quantity: integer('quantity').notNull(),
+		unitPrice: integer('unit_price').notNull(),
+		vatRate: integer('vat_rate').notNull(),
+		unitPricePerSquareMeter: integer('unit_price_per_square_meter'),
+		totalNet: integer('total_net').notNull(),
+		totalGross: integer('total_gross').notNull(),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
 	},
 	(table) => ({
 		orderIdx: index('manual_order_items_order_id_idx').on(table.orderId),
 	})
 );
 
-export const mailAccounts = sqliteTable(
+export const mailAccounts = pgTable(
 	'mail_accounts',
 	{
 		id: text('id').primaryKey(),
@@ -766,24 +703,20 @@ export const mailAccounts = sqliteTable(
 		email: text('email').notNull(),
 		provider: text('provider'),
 		status: text('status').$type<MailAccountStatus>().notNull().default('disabled'),
-		lastSyncAt: integer('last_sync_at', { mode: 'timestamp_ms' }),
-		nextSyncAt: integer('next_sync_at', { mode: 'timestamp_ms' }),
+		lastSyncAt: timestamp('last_sync_at'),
+		nextSyncAt: timestamp('next_sync_at'),
 		imapHost: text('imap_host'),
-		imapPort: integer('imap_port', { mode: 'number' }),
-		imapSecure: integer('imap_secure', { mode: 'boolean' }).notNull().default(true),
+		imapPort: integer('imap_port'),
+		imapSecure: boolean('imap_secure').notNull().default(true),
 		smtpHost: text('smtp_host'),
-		smtpPort: integer('smtp_port', { mode: 'number' }),
-		smtpSecure: integer('smtp_secure', { mode: 'boolean' }).notNull().default(true),
+		smtpPort: integer('smtp_port'),
+		smtpSecure: boolean('smtp_secure').notNull().default(true),
 		username: text('username').notNull(),
 		passwordSecret: text('password_secret'),
 		signature: text('signature'),
 		error: text('error'),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
-		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
+		updatedAt: timestamp('updated_at').notNull().defaultNow(),
 	},
 	(table) => ({
 		emailIdx: uniqueIndex('mail_accounts_email_idx').on(table.email),
@@ -791,7 +724,7 @@ export const mailAccounts = sqliteTable(
 	})
 );
 
-export const mailFolders = sqliteTable(
+export const mailFolders = pgTable(
 	'mail_folders',
 	{
 		id: text('id').primaryKey(),
@@ -802,14 +735,10 @@ export const mailFolders = sqliteTable(
 		kind: text('kind').$type<MailFolderKind>().notNull().default('custom'),
 		remoteId: text('remote_id'),
 		path: text('path'),
-		sortOrder: integer('sort_order', { mode: 'number' }).default(0),
-		unreadCount: integer('unread_count', { mode: 'number' }).default(0),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
-		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
+		sortOrder: integer('sort_order').default(0),
+		unreadCount: integer('unread_count').default(0),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
+		updatedAt: timestamp('updated_at').notNull().defaultNow(),
 	},
 	(table) => ({
 		accountIdx: index('mail_folders_account_id_idx').on(table.accountId),
@@ -818,7 +747,7 @@ export const mailFolders = sqliteTable(
 	})
 );
 
-export const mailMessages = sqliteTable(
+export const mailMessages = pgTable(
 	'mail_messages',
 	{
 		id: text('id').primaryKey(),
@@ -841,17 +770,13 @@ export const mailMessages = sqliteTable(
 		messageId: text('message_id'),
 		threadId: text('thread_id'),
 		externalId: text('external_id'),
-		receivedAt: integer('received_at', { mode: 'timestamp_ms' }),
-		internalDate: integer('internal_date', { mode: 'timestamp_ms' }),
-		isRead: integer('is_read', { mode: 'boolean' }).notNull().default(false),
-		isStarred: integer('is_starred', { mode: 'boolean' }).notNull().default(false),
-		hasAttachments: integer('has_attachments', { mode: 'boolean' }).notNull().default(false),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
-		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
+		receivedAt: timestamp('received_at'),
+		internalDate: timestamp('internal_date'),
+		isRead: boolean('is_read').notNull().default(false),
+		isStarred: boolean('is_starred').notNull().default(false),
+		hasAttachments: boolean('has_attachments').notNull().default(false),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
+		updatedAt: timestamp('updated_at').notNull().defaultNow(),
 	},
 	(table) => ({
 		accountIdx: index('mail_messages_account_id_idx').on(table.accountId),
@@ -915,25 +840,21 @@ export const systemLogsRelations = relations(systemLogs, ({ one }) => ({
 	}),
 }));
 
-export const boardColumns = sqliteTable(
+export const boardColumns = pgTable(
 	'board_columns',
 	{
 		id: text('id').primaryKey(),
 		title: text('title').notNull(),
-		orderIndex: integer('order_index', { mode: 'number' }).notNull().default(0),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
-		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
+		orderIndex: integer('order_index').notNull().default(0),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
+		updatedAt: timestamp('updated_at').notNull().defaultNow(),
 	},
 	(table) => ({
 		orderIdx: index('board_columns_order_idx').on(table.orderIndex),
 	})
 );
 
-export const boardTasks = sqliteTable(
+export const boardTasks = pgTable(
 	'board_tasks',
 	{
 		id: text('id').primaryKey(),
@@ -942,17 +863,13 @@ export const boardTasks = sqliteTable(
 			.references(() => boardColumns.id, { onDelete: 'cascade' }),
 		content: text('content').notNull(),
 		description: text('description'),
-		completed: integer('completed', { mode: 'boolean' }).notNull().default(false),
-		orderIndex: integer('order_index', { mode: 'number' }).notNull().default(0),
+		completed: boolean('completed').notNull().default(false),
+		orderIndex: integer('order_index').notNull().default(0),
 		priority: text('priority').notNull().default('normal'),
-		dueDate: integer('due_date', { mode: 'timestamp_ms' }),
-		reminderAt: integer('reminder_at', { mode: 'timestamp_ms' }),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
-		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
+		dueDate: timestamp('due_date'),
+		reminderAt: timestamp('reminder_at'),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
+		updatedAt: timestamp('updated_at').notNull().defaultNow(),
 	},
 	(table) => ({
 		columnIdx: index('board_tasks_column_id_idx').on(table.columnId),
@@ -960,7 +877,7 @@ export const boardTasks = sqliteTable(
 	})
 );
 
-export const taskAttachments = sqliteTable(
+export const taskAttachments = pgTable(
 	'task_attachments',
 	{
 		id: text('id').primaryKey(),
@@ -970,9 +887,7 @@ export const taskAttachments = sqliteTable(
 		fileUrl: text('file_url').notNull(),
 		fileName: text('file_name').notNull(),
 		fileType: text('file_type'),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
 	},
 	(table) => ({
 		taskIdx: index('task_attachments_task_id_idx').on(table.taskId),
@@ -1013,7 +928,7 @@ export type QuoteItem = {
     totalGross: number;
 };
 
-export const quotes = sqliteTable(
+export const quotes = pgTable(
     'quotes',
     {
         id: text('id').primaryKey(),
@@ -1021,17 +936,13 @@ export const quotes = sqliteTable(
             .notNull()
             .references(() => montages.id, { onDelete: 'cascade' }),
         status: text('status').$type<QuoteStatus>().notNull().default('draft'),
-        items: text('items', { mode: 'json' }).$type<QuoteItem[]>().notNull().default([]),
-        totalNet: integer('total_net', { mode: 'number' }).notNull().default(0),
-        totalGross: integer('total_gross', { mode: 'number' }).notNull().default(0),
-        validUntil: integer('valid_until', { mode: 'timestamp_ms' }),
+        items: json('items').$type<QuoteItem[]>().notNull().default([]),
+        totalNet: integer('total_net').notNull().default(0),
+        totalGross: integer('total_gross').notNull().default(0),
+        validUntil: timestamp('valid_until'),
         notes: text('notes'),
-        createdAt: integer('created_at', { mode: 'timestamp_ms' })
-            .notNull()
-            .default(sql`(strftime('%s','now') * 1000)`),
-        updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
-            .notNull()
-            .default(sql`(strftime('%s','now') * 1000)`),
+        createdAt: timestamp('created_at').notNull().defaultNow(),
+        updatedAt: timestamp('updated_at').notNull().defaultNow(),
     },
     (table) => ({
         montageIdx: index('quotes_montage_id_idx').on(table.montageId),
@@ -1046,7 +957,7 @@ export const quotesRelations = relations(quotes, ({ one }) => ({
     }),
 }));
 
-export const products = sqliteTable('products', {
+export const products = pgTable('products', {
 	id: integer('id').primaryKey(), // WooCommerce ID
 	name: text('name').notNull(),
 	slug: text('slug').notNull(),
@@ -1058,12 +969,12 @@ export const products = sqliteTable('products', {
 	stockStatus: text('stock_status'),
 	stockQuantity: integer('stock_quantity'),
 	imageUrl: text('image_url'),
-	categories: text('categories', { mode: 'json' }), // JSON array of category IDs
-	attributes: text('attributes', { mode: 'json' }), // JSON array of attributes
-	isForMontage: integer('is_for_montage', { mode: 'boolean' }).default(false),
+	categories: json('categories'), // JSON array of category IDs
+	attributes: json('attributes'), // JSON array of attributes
+	isForMontage: boolean('is_for_montage').default(false),
 	montageType: text('montage_type').$type<'panel' | 'skirting' | 'other'>(),
-	updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull().default(sql`(strftime('%s','now') * 1000)`),
-	syncedAt: integer('synced_at', { mode: 'timestamp_ms' }).notNull().default(sql`(strftime('%s','now') * 1000)`),
+	updatedAt: timestamp('updated_at').notNull().defaultNow(),
+	syncedAt: timestamp('synced_at').notNull().defaultNow(),
 });
 
 export const customersRelations = relations(customers, ({ many }) => ({
@@ -1096,7 +1007,7 @@ export const documentsRelations = relations(documents, ({ one }) => ({
 export const commissionStatuses = ['pending', 'approved', 'paid'] as const;
 export type CommissionStatus = (typeof commissionStatuses)[number];
 
-export const commissions = sqliteTable(
+export const commissions = pgTable(
 	'commissions',
 	{
 		id: text('id').primaryKey(),
@@ -1106,18 +1017,14 @@ export const commissions = sqliteTable(
 		montageId: text('montage_id')
 			.notNull()
 			.references(() => montages.id, { onDelete: 'cascade' }),
-		amount: integer('amount', { mode: 'number' }).notNull(), // in minor units (grosze)
+		amount: integer('amount').notNull(), // in minor units (grosze)
 		rate: real('rate').notNull(), // PLN per m2
 		area: real('area').notNull(), // m2
 		status: text('status').$type<CommissionStatus>().notNull().default('pending'),
-		createdAt: integer('created_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
-		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
-			.notNull()
-			.default(sql`(strftime('%s','now') * 1000)`),
-		approvedAt: integer('approved_at', { mode: 'timestamp_ms' }),
-		paidAt: integer('paid_at', { mode: 'timestamp_ms' }),
+		createdAt: timestamp('created_at').notNull().defaultNow(),
+		updatedAt: timestamp('updated_at').notNull().defaultNow(),
+		approvedAt: timestamp('approved_at'),
+		paidAt: timestamp('paid_at'),
 	},
 	(table) => ({
 		architectIdx: index('commissions_architect_id_idx').on(table.architectId),
