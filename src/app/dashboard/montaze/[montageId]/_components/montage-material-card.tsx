@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/dialog';
 import { updateMontageMaterialDetails, updateMontageRealizationStatus } from '../../actions';
 import type { Montage, MaterialsEditHistoryEntry } from '../../types';
-import { type UserRole } from '@/lib/db/schema';
+import { type UserRole, type MontageMaterialClaimType } from '@/lib/db/schema';
 import {
   Select,
   SelectContent,
@@ -112,15 +112,13 @@ export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montag
       router.refresh();
   };
 
-  const handleClaimTypeChange = async (value: string) => {
-      await updateMontageRealizationStatus({
-          montageId: montage.id,
-          materialClaimType: value as any
-      });
-      router.refresh();
-  };
-
-  const getMaterialStatusColor = (status: string) => {
+    const handleClaimTypeChange = async (value: string) => {
+        await updateMontageRealizationStatus({
+            montageId: montage.id,
+            materialClaimType: value as MontageMaterialClaimType
+        });
+        router.refresh();
+    };  const getMaterialStatusColor = (status: string) => {
       switch (status) {
           case 'none': return 'bg-red-100 text-red-800 border-red-200';
           case 'ordered': return 'bg-orange-100 text-orange-800 border-orange-200';
