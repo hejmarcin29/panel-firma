@@ -126,6 +126,7 @@ export function KPICards({
                 </p>
             </CardContent>
         </Card>
+        </motion.div>
       )}
 
       {visibleCards.includes('orders') && (
