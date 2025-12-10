@@ -17,9 +17,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { updateMontageMaterialDetails } from '../../actions';
+import { updateMontageMaterialDetails, updateMontageRealizationStatus } from '../../actions';
 import type { Montage, MaterialsEditHistoryEntry } from '../../types';
 import { type UserRole } from '@/lib/db/schema';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montage: Montage; userRoles?: UserRole[] }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -96,12 +104,46 @@ export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montag
     debouncedSave(newData);
   };
 
+  const handleMaterialStatusChange = async (value: string) => {
+      await updateMontageRealizationStatus({
+          montageId: montage.id,
+          materialStatus: value as any
+      });
+      router.refresh();
+  };
+
+  const getMaterialStatusColor = (status: string) => {
+      switch (status) {
+          case 'none': return 'bg-red-100 text-red-800 border-red-200';
+          case 'ordered': return 'bg-orange-100 text-orange-800 border-orange-200';
+          case 'in_stock':
+          case 'delivered': return 'bg-green-100 text-green-800 border-green-200';
+          default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      }
+  };
+
   return (
     <Card>
-      <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-        <CardTitle className='text-sm font-medium'>Materiały</CardTitle>
-        {userRoles.includes('admin') && (
-        <Dialog open={isEditing} onOpenChange={handleOpenChange}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">Materiały</CardTitle>
+        <div className="flex items-center gap-2">
+            <Select
+                value={montage.materialStatus}
+                onValueChange={handleMaterialStatusChange}
+                disabled={!userRoles.includes('admin')}
+            >
+                <SelectTrigger className={cn("h-8 w-[140px] text-xs font-medium border", getMaterialStatusColor(montage.materialStatus))}>
+                    <SelectValue placeholder="Status materiału" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="none">Brak</SelectItem>
+                    <SelectItem value="ordered">Zamówiono</SelectItem>
+                    <SelectItem value="in_stock">Na magazynie</SelectItem>
+                    <SelectItem value="delivered">Dostarczono</SelectItem>
+                </SelectContent>
+            </Select>
+            {userRoles.includes('admin') && (
+            <Dialog open={isEditing} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>
             <Button variant='ghost' size='icon' className='h-8 w-8'>
               <Edit2 className='h-4 w-4' />
@@ -216,6 +258,7 @@ export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montag
           </DialogContent>
         </Dialog>
         )}
+        </div>
       </CardHeader>
       <CardContent className='space-y-4'>
         {/* Calculated Materials Section */}

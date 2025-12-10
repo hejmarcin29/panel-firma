@@ -25,13 +25,30 @@ import {
   DialogTrigger,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { updateMontageContactDetails } from "../../actions";
+import { updateMontageContactDetails, updateMontageRealizationStatus } from "../../actions";
 import type { Montage } from "../../types";
 import { type UserRole } from '@/lib/db/schema';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { formatScheduleRange } from "../../utils";
 
-export function MontageClientCard({ montage, userRoles = ['admin'] }: { montage: Montage; userRoles?: UserRole[] }) {
+export function MontageClientCard({ 
+    montage, 
+    userRoles = ['admin'],
+    installers = [],
+    measurers = []
+}: { 
+    montage: Montage; 
+    userRoles?: UserRole[];
+    installers?: { id: string; name: string | null; email: string }[];
+    measurers?: { id: string; name: string | null; email: string }[];
+}) {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
@@ -127,6 +144,39 @@ export function MontageClientCard({ montage, userRoles = ['admin'] }: { montage:
   const forecastedDate = montage.forecastedInstallationDate 
     ? new Date(montage.forecastedInstallationDate as string | number | Date).toLocaleDateString('pl-PL')
     : null;
+
+  const handleInstallerStatusChange = async (value: string) => {
+      await updateMontageRealizationStatus({
+          montageId: montage.id,
+          installerStatus: value as any
+      });
+      router.refresh();
+  };
+
+  const handleInstallerChange = async (value: string) => {
+      await updateMontageRealizationStatus({
+          montageId: montage.id,
+          installerId: value === 'none' ? null : value
+      });
+      router.refresh();
+  };
+
+  const handleMeasurerChange = async (value: string) => {
+      await updateMontageRealizationStatus({
+          montageId: montage.id,
+          measurerId: value === 'none' ? null : value
+      });
+      router.refresh();
+  };
+
+  const getInstallerStatusColor = (status: string) => {
+      switch (status) {
+          case 'none': return 'text-red-600 bg-red-50 border-red-200';
+          case 'informed': return 'text-orange-600 bg-orange-50 border-orange-200';
+          case 'confirmed': return 'text-green-600 bg-green-50 border-green-200';
+          default: return 'text-muted-foreground';
+      }
+  };
 
   return (
     <Card>
@@ -306,25 +356,75 @@ export function MontageClientCard({ montage, userRoles = ['admin'] }: { montage:
 
         <div className="flex items-center gap-3">
             <Hammer className="h-4 w-4 text-muted-foreground" />
-            <div className="grid gap-0.5">
-                <span className="text-sm">
-                    {montage.installer?.name || "Brak montażysty"}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                    Montażysta
-                </span>
+            <div className="grid gap-1 w-full">
+                <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">Montażysta</span>
+                    <Select
+                        value={montage.installerStatus}
+                        onValueChange={handleInstallerStatusChange}
+                        disabled={!userRoles.includes('admin')}
+                    >
+                        <SelectTrigger className={cn("h-6 w-[130px] text-[10px] font-medium border", getInstallerStatusColor(montage.installerStatus))}>
+                            <SelectValue placeholder="Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="none">Brak</SelectItem>
+                            <SelectItem value="informed">Poinformowany</SelectItem>
+                            <SelectItem value="confirmed">Potwierdzony</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                {userRoles.includes('admin') ? (
+                    <Select
+                        value={montage.installerId || "none"}
+                        onValueChange={handleInstallerChange}
+                    >
+                        <SelectTrigger className={cn("h-8 w-full text-sm", !montage.installerId ? "text-red-600 border-red-200 bg-red-50" : "text-green-600 border-green-200 bg-green-50")}>
+                            <SelectValue placeholder="Wybierz montażystę" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="none">Brak przypisania</SelectItem>
+                            {installers.map((installer) => (
+                                <SelectItem key={installer.id} value={installer.id}>
+                                    {installer.name || installer.email}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                ) : (
+                    <span className={cn("text-sm font-medium", !montage.installerId ? "text-red-600" : "text-green-600")}>
+                        {montage.installer?.name || "Brak montażysty"}
+                    </span>
+                )}
             </div>
         </div>
 
         <div className="flex items-center gap-3">
             <User className="h-4 w-4 text-muted-foreground" />
-            <div className="grid gap-0.5">
-                <span className="text-sm">
-                    {montage.measurer?.name || "Brak pomiarowca"}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                    Pomiarowiec
-                </span>
+            <div className="grid gap-1 w-full">
+                <span className="text-xs text-muted-foreground">Pomiarowiec</span>
+                {userRoles.includes('admin') ? (
+                    <Select
+                        value={montage.measurerId || "none"}
+                        onValueChange={handleMeasurerChange}
+                    >
+                        <SelectTrigger className={cn("h-8 w-full text-sm", !montage.measurerId ? "text-red-600 border-red-200 bg-red-50" : "text-green-600 border-green-200 bg-green-50")}>
+                            <SelectValue placeholder="Wybierz pomiarowca" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="none">Brak przypisania</SelectItem>
+                            {measurers.map((measurer) => (
+                                <SelectItem key={measurer.id} value={measurer.id}>
+                                    {measurer.name || measurer.email}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                ) : (
+                    <span className={cn("text-sm font-medium", !montage.measurerId ? "text-red-600" : "text-green-600")}>
+                        {montage.measurer?.name || "Brak pomiarowca"}
+                    </span>
+                )}
             </div>
         </div>
 
