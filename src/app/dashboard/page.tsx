@@ -343,7 +343,12 @@ export default async function DashboardPage() {
                         urgentOrdersCount,
                         stalledOrdersCount,
                         orderUrgentDays,
-                    }
+                    },
+                    upcomingMontagesStats: {
+                        montages7Days,
+                        montages3Days,
+                        montagesInProgress,
+                    },
                 }}
             />
         </div>

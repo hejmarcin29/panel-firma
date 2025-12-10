@@ -80,7 +80,7 @@ export default async function WalletPage() {
                                     <TableCell>
                                         {commission.montage ? (
                                             <a href={`/dashboard/montaze/${commission.montage.id}`} className="hover:underline">
-                                                {commission.montage.clientName} ({commission.montage.city})
+                                                {commission.montage.clientName} ({commission.montage.installationCity || commission.montage.billingCity || '-'})
                                             </a>
                                         ) : 'Usunięty montaż'}
                                     </TableCell>

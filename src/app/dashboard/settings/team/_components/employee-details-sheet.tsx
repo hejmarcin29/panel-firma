@@ -97,7 +97,7 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
     });
 
     const architectForm = useForm<z.infer<typeof architectProfileSchema>>({
-        resolver: zodResolver(architectProfileSchema),
+        resolver: zodResolver(architectProfileSchema) as Resolver<z.infer<typeof architectProfileSchema>>,
         defaultValues: {
             companyName: '',
             nip: '',
