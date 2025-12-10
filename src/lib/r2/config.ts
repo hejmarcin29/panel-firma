@@ -37,7 +37,7 @@ export async function getR2Config(): Promise<R2Config> {
 		accessKeyId,
 		secretAccessKey,
 		bucketName,
-		endpoint: endpoint.startsWith('https://') ? endpoint : `https://${endpoint}`,
+		endpoint,
 		publicBaseUrl: publicBaseUrl.replace(/\/$/, ''),
 		apiToken,
 	};
