@@ -62,7 +62,7 @@ export function KPICards({
                             </button>
                         </TooltipTrigger>
                         <TooltipContent>
-                            <p>Montaże, które nie zmieniły statusu przez ponad {montageThreatDays} dni.</p>
+                            <p>Lista montaży, w których nie odnotowano żadnej zmiany statusu ani aktywności przez ponad {montageThreatDays} dni. Wymagają pilnego kontaktu z klientem lub ekipą.</p>
                         </TooltipContent>
                     </Tooltip>
                 </div>
@@ -92,7 +92,7 @@ export function KPICards({
                             </button>
                         </TooltipTrigger>
                         <TooltipContent>
-                            <p>Nowe zapytania ofertowe, które są w trakcie procesowania.</p>
+                            <p>Liczba aktywnych tematów na etapie &apos;Lead&apos;, które wymagają przygotowania wyceny lub kontaktu wstępnego z klientem.</p>
                         </TooltipContent>
                     </Tooltip>
                 </div>
@@ -122,7 +122,7 @@ export function KPICards({
                             </button>
                         </TooltipTrigger>
                         <TooltipContent>
-                            <p>Zamówienia, które wpłynęły i oczekują na weryfikację lub płatność.</p>
+                            <p>Nowe zamówienia ze sklepu lub wprowadzone ręcznie, które mają status &apos;Utworzone&apos; i wymagają potwierdzenia dostępności towaru lub zaksięgowania wpłaty.</p>
                         </TooltipContent>
                     </Tooltip>
                 </div>
@@ -152,7 +152,7 @@ export function KPICards({
                             </button>
                         </TooltipTrigger>
                         <TooltipContent>
-                            <p>Liczba montaży zaplanowanych w kalendarzu na dzisiejszą datę.</p>
+                            <p>Montaże, które mają wpisaną dzisiejszą datę realizacji w kalendarzu. Kliknij, aby zobaczyć listę ekip i adresów.</p>
                         </TooltipContent>
                     </Tooltip>
                 </div>
@@ -184,7 +184,7 @@ export function KPICards({
                             </button>
                         </TooltipTrigger>
                         <TooltipContent>
-                            <p>Liczba montaży, które zostały zakończone, ale nie odnotowano jeszcze pełnej płatności od klienta.</p>
+                            <p>Montaże ze statusem &apos;Zakończone&apos;, dla których suma wpłat jest mniejsza niż wartość zlecenia. Wymagają windykacji lub uzupełnienia płatności w systemie.</p>
                         </TooltipContent>
                     </Tooltip>
                 </div>
@@ -214,7 +214,7 @@ export function KPICards({
                             </button>
                         </TooltipTrigger>
                         <TooltipContent>
-                            <p>Zamówienia, które nie zmieniły statusu przez dłuższy czas, co może sugerować zator.</p>
+                            <p>Zamówienia, które utknęły na wczesnym etapie (np. &apos;W realizacji&apos;) i nie były aktualizowane przez ponad 3 dni. Sprawdź, czy towar jest dostępny.</p>
                         </TooltipContent>
                     </Tooltip>
                 </div>
@@ -244,7 +244,7 @@ export function KPICards({
                             </button>
                         </TooltipTrigger>
                         <TooltipContent>
-                            <p>Zamówienia przyjęte przez magazyn bez faktury końcowej (stare lub koniec miesiąca).</p>
+                            <p>Zamówienia, które zostały już wydane z magazynu lub zrealizowane, ale w systemie brakuje oznaczenia o wystawieniu faktury końcowej.</p>
                         </TooltipContent>
                     </Tooltip>
                 </div>
