@@ -132,6 +132,12 @@ export default async function SettingsPage() {
 		montageStatusDefinitions,
 		kpiMontageThreatDays,
 		kpiOrderUrgentDays,
+        kpiAlertMissingMaterialStatusDays,
+        kpiAlertMissingInstallerStatusDays,
+        kpiAlertMissingMeasurerDays,
+        kpiAlertMissingInstallerDays,
+        kpiAlertMaterialOrderedDays,
+        kpiAlertMaterialInstockDays,
 		googleCalendarId,
 		googleClientEmail,
 		googlePrivateKey,
@@ -153,6 +159,12 @@ export default async function SettingsPage() {
 		getMontageStatusDefinitions(),
 		getAppSetting(appSettingKeys.kpiMontageThreatDays),
 		getAppSetting(appSettingKeys.kpiOrderUrgentDays),
+        getAppSetting(appSettingKeys.kpiAlertMissingMaterialStatusDays),
+        getAppSetting(appSettingKeys.kpiAlertMissingInstallerStatusDays),
+        getAppSetting(appSettingKeys.kpiAlertMissingMeasurerDays),
+        getAppSetting(appSettingKeys.kpiAlertMissingInstallerDays),
+        getAppSetting(appSettingKeys.kpiAlertMaterialOrderedDays),
+        getAppSetting(appSettingKeys.kpiAlertMaterialInstockDays),
 		getAppSetting(appSettingKeys.googleCalendarId),
 		getAppSetting(appSettingKeys.googleClientEmail),
 		getAppSetting(appSettingKeys.googlePrivateKey),
@@ -508,6 +520,12 @@ export default async function SettingsPage() {
 				<KpiSettingsForm 
 					initialMontageThreatDays={Number(kpiMontageThreatDays ?? 7)}
 					initialOrderUrgentDays={Number(kpiOrderUrgentDays ?? 3)}
+                    initialAlertMissingMaterialStatusDays={Number(kpiAlertMissingMaterialStatusDays ?? 7)}
+                    initialAlertMissingInstallerStatusDays={Number(kpiAlertMissingInstallerStatusDays ?? 7)}
+                    initialAlertMissingMeasurerDays={Number(kpiAlertMissingMeasurerDays ?? 14)}
+                    initialAlertMissingInstallerDays={Number(kpiAlertMissingInstallerDays ?? 14)}
+                    initialAlertMaterialOrderedDays={Number(kpiAlertMaterialOrderedDays ?? 5)}
+                    initialAlertMaterialInstockDays={Number(kpiAlertMaterialInstockDays ?? 2)}
 				/>
 			}
 			wpChanges={

@@ -26,6 +26,7 @@ const DEFAULT_LAYOUT: DashboardLayoutConfig = {
     columns: {
         left: [
             { id: 'alerts-1', type: 'montage-alerts' },
+            { id: 'measurement-alerts-1', type: 'measurement-alerts' },
             { id: 'upcoming-1', type: 'upcoming-montages' },
             { id: 'kpi-1', type: 'kpi' },
             { id: 'quick-1', type: 'quick-actions' },
@@ -64,6 +65,33 @@ export default async function DashboardPage() {
 
     const kpiOrderUrgentDays = await getAppSetting(appSettingKeys.kpiOrderUrgentDays);
     const orderUrgentDays = Number(kpiOrderUrgentDays ?? 3);
+
+    const kpiAlertMissingMaterialStatusDays = await getAppSetting(appSettingKeys.kpiAlertMissingMaterialStatusDays);
+    const missingMaterialStatusDays = Number(kpiAlertMissingMaterialStatusDays ?? 7);
+
+    const kpiAlertMissingInstallerStatusDays = await getAppSetting(appSettingKeys.kpiAlertMissingInstallerStatusDays);
+    const missingInstallerStatusDays = Number(kpiAlertMissingInstallerStatusDays ?? 7);
+
+    const kpiAlertMissingMeasurerDays = await getAppSetting(appSettingKeys.kpiAlertMissingMeasurerDays);
+    const missingMeasurerDays = Number(kpiAlertMissingMeasurerDays ?? 14);
+
+    const kpiAlertMissingInstallerDays = await getAppSetting(appSettingKeys.kpiAlertMissingInstallerDays);
+    const missingInstallerDays = Number(kpiAlertMissingInstallerDays ?? 14);
+
+    const kpiAlertMaterialOrderedDays = await getAppSetting(appSettingKeys.kpiAlertMaterialOrderedDays);
+    const materialOrderedDays = Number(kpiAlertMaterialOrderedDays ?? 5);
+
+    const kpiAlertMaterialInstockDays = await getAppSetting(appSettingKeys.kpiAlertMaterialInstockDays);
+    const materialInstockDays = Number(kpiAlertMaterialInstockDays ?? 2);
+
+    const kpiAlertLeadNoMeasurerDays = await getAppSetting(appSettingKeys.kpiAlertLeadNoMeasurerDays);
+    const leadNoMeasurerDays = Number(kpiAlertLeadNoMeasurerDays ?? 3);
+
+    const kpiAlertQuoteDelayDays = await getAppSetting(appSettingKeys.kpiAlertQuoteDelayDays);
+    const quoteDelayDays = Number(kpiAlertQuoteDelayDays ?? 3);
+
+    const kpiAlertOfferStalledDays = await getAppSetting(appSettingKeys.kpiAlertOfferStalledDays);
+    const offerStalledDays = Number(kpiAlertOfferStalledDays ?? 7);
 
     // Fetch User Config
     let dbUser = null;
@@ -105,6 +133,18 @@ export default async function DashboardPage() {
                         columns: {
                             ...layout.columns,
                             left: [{ id: 'alerts-1', type: 'montage-alerts' }, ...layout.columns.left]
+                        }
+                    };
+                }
+
+                // Migration: Ensure Measurement Alerts widget exists
+                const hasMeasurementAlerts = [...layout.columns.left, ...layout.columns.right].some(w => w.type === 'measurement-alerts');
+                if (!hasMeasurementAlerts) {
+                    layout = {
+                        ...layout,
+                        columns: {
+                            ...layout.columns,
+                            left: [{ id: 'measurement-alerts-1', type: 'measurement-alerts' }, ...layout.columns.left]
                         }
                     };
                 }
@@ -162,7 +202,8 @@ export default async function DashboardPage() {
     // Fetch All Montages (Lightweight for Stats)
     const allMontages = await db.query.montages.findMany({
         with: {
-            tasks: true
+            tasks: true,
+            quotes: true,
         }
     });
 
@@ -255,21 +296,40 @@ export default async function DashboardPage() {
 
         const issues: string[] = [];
         
-        // 1. Red Statuses (Always check for active montages)
-        if (m.materialStatus === 'none') issues.push("Brak statusu materiału");
-        if (m.installerStatus === 'none') issues.push("Brak statusu montażu");
-        if (!m.measurerId) issues.push("Brak przypisanego pomiarowca");
-        if (!m.installerId) issues.push("Brak przypisanego montażysty");
-
-        // 2. Material Time Warnings (Exclamation Mark Logic)
+        // Calculate days until installation
+        let daysUntilInstallation = null;
         if (m.scheduledInstallationAt) {
             const date = new Date(m.scheduledInstallationAt);
-            const days = differenceInCalendarDays(date, today);
+            daysUntilInstallation = differenceInCalendarDays(date, today);
+        }
+
+        // Only check if we have a date (otherwise it falls into "No Date" urgent bucket)
+        if (daysUntilInstallation !== null) {
+            // 1. Red Statuses (Check based on configured days)
+            // We check if the montage is within the alert window (e.g. <= 7 days)
+            // We include overdue tasks (days < 0) in alerts too
             
-            // Only check for upcoming/recent
-            if (days >= 0) {
-                if (days <= 5 && m.materialStatus === 'ordered') issues.push("Materiał tylko zamówiony (bliski termin)");
-                if (days <= 2 && m.materialStatus === 'in_stock') issues.push("Materiał tylko na magazynie (bardzo bliski termin)");
+            if (daysUntilInstallation <= missingMaterialStatusDays && m.materialStatus === 'none') {
+                issues.push("Brak statusu materiału");
+            }
+            
+            if (daysUntilInstallation <= missingInstallerStatusDays && m.installerStatus === 'none') {
+                issues.push("Brak statusu montażu");
+            }
+            
+            if (daysUntilInstallation <= missingInstallerDays && !m.installerId) {
+                issues.push("Brak przypisanego montażysty");
+            }
+
+            // 2. Material Time Warnings (Exclamation Mark Logic)
+            // Only for future/today (not past, as past is already a problem)
+            if (daysUntilInstallation >= 0) {
+                if (daysUntilInstallation <= materialOrderedDays && m.materialStatus === 'ordered') {
+                    issues.push("Materiał tylko zamówiony (bliski termin)");
+                }
+                if (daysUntilInstallation <= materialInstockDays && m.materialStatus === 'in_stock') {
+                    issues.push("Materiał tylko na magazynie (bardzo bliski termin)");
+                }
             }
         }
         
@@ -285,6 +345,49 @@ export default async function DashboardPage() {
         if (dateA) return -1;
         if (dateB) return 1;
         return 0;
+    });
+
+    // Measurement Alerts Logic
+    const measurementAlerts = allMontages.map(m => {
+        if (m.status === 'completed') return null;
+
+        const issues: string[] = [];
+        const createdAt = new Date(m.createdAt);
+        const updatedAt = new Date(m.updatedAt);
+        const daysSinceCreation = differenceInCalendarDays(today, createdAt);
+        const daysSinceUpdate = differenceInCalendarDays(today, updatedAt);
+
+        // 1. Lead bez pomiarowca (X dni)
+        if (m.status === 'lead' && !m.measurerId && daysSinceCreation >= leadNoMeasurerDays) {
+            issues.push(`Lead bez pomiarowca od ${daysSinceCreation} dni`);
+        }
+
+        // 2. Opóźniona wycena (X dni po pomiarze)
+        // Condition: Measurer assigned, no quote sent (or all drafts), and last update > X days
+        const hasSentQuote = m.quotes.some(q => q.status === 'sent' || q.status === 'accepted');
+        if (m.measurerId && !hasSentQuote && daysSinceUpdate >= quoteDelayDays) {
+             issues.push(`Opóźniona wycena (${daysSinceUpdate} dni bez oferty)`);
+        }
+
+        // 3. Oferta stoi w miejscu (X dni bez zmiany statusu)
+        // Condition: Quote sent, but not accepted/rejected, and last update > X days
+        const sentQuotes = m.quotes.filter(q => q.status === 'sent');
+        for (const quote of sentQuotes) {
+            const quoteDate = new Date(quote.updatedAt);
+            const daysSinceQuoteUpdate = differenceInCalendarDays(today, quoteDate);
+            if (daysSinceQuoteUpdate >= offerStalledDays) {
+                issues.push(`Oferta stoi w miejscu od ${daysSinceQuoteUpdate} dni`);
+                break; // Only report once per montage
+            }
+        }
+
+        if (issues.length > 0) {
+            return { montage: m, issues };
+        }
+        return null;
+    }).filter((item): item is { montage: typeof allMontages[0], issues: string[] } => item !== null)
+    .sort((a, b) => {
+        return new Date(a.montage.createdAt).getTime() - new Date(b.montage.createdAt).getTime();
     });
 
     // Stalled Orders Logic
@@ -327,6 +430,7 @@ export default async function DashboardPage() {
                     upcomingMontages,
                     recentMontages,
                     montageAlerts,
+                    measurementAlerts,
                     threatDays,
                     tasksStats: {
                         tasksCount,

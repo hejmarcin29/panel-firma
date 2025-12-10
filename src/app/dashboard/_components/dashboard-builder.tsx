@@ -40,6 +40,7 @@ import { RecentActivity } from './recent-activity';
 import { QuickActions } from './quick-actions';
 import { KPICards } from './kpi-cards';
 import { MontageAlertsKPI, type MontageAlertItem } from './montage-alerts-kpi';
+import { MeasurementAlertsKPI, type MeasurementAlertItem } from './measurement-alerts-kpi';
 import { UpcomingMontagesKPI, type MontageSimple } from './upcoming-montages-kpi';
 import { updateDashboardLayout, type DashboardLayoutConfig, type DashboardWidgetConfig } from '../actions';
 import { toast } from 'sonner';
@@ -50,6 +51,7 @@ import type { Montage } from '../montaze/types';
 const WIDGET_COMPONENTS: Record<string, React.ComponentType<any>> = {
   'kpi': KPICards,
   'montage-alerts': MontageAlertsKPI,
+  'measurement-alerts': MeasurementAlertsKPI,
   'upcoming-montages': UpcomingMontagesKPI,
   'agenda': AgendaWidget,
   'recent-activity': RecentActivity,
@@ -59,6 +61,7 @@ const WIDGET_COMPONENTS: Record<string, React.ComponentType<any>> = {
 const WIDGET_LABELS: Record<string, string> = {
     'kpi': 'Statystyki (KPI)',
     'montage-alerts': 'Zagrożone Montaże',
+    'measurement-alerts': 'Zagrożone Pomiary/Oferty',
     'upcoming-montages': 'Harmonogram montaży',
     'agenda': 'Najbliższe montaże',
     'recent-activity': 'Ostatnia Aktywność',
@@ -192,6 +195,7 @@ interface DashboardBuilderProps {
         montagesInProgress: MontageSimple[];
     };
     montageAlerts: MontageAlertItem[];
+    measurementAlerts: MeasurementAlertItem[];
     threatDays?: number;
   };
 }
@@ -222,6 +226,7 @@ function SortableWidget({ widget, data, isEditing, onConfigure }: { id: string; 
                 widget.type === 'tasks' ? { ...data.tasksStats, todoCount: data.kpiData.todoCount } :
                 widget.type === 'kpi' ? { ...data.kpiData, settings: widget.settings, montageThreatDays: data.threatDays } :
                 widget.type === 'montage-alerts' ? { alerts: data.montageAlerts, threatDays: data.threatDays } :
+                widget.type === 'measurement-alerts' ? { alerts: data.measurementAlerts } :
                 widget.type === 'upcoming-montages' ? { ...data.upcomingMontagesStats } :
                 {};
 

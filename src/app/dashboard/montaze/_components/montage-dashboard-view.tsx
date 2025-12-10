@@ -9,16 +9,17 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { MontagePipelineBoard } from "./montage-pipeline-board";
-import type { Montage, StatusOption } from "../types";
+import type { Montage, StatusOption, AlertSettings } from "../types";
 
 interface MontageDashboardViewProps {
   montages: Montage[];
   statusOptions: StatusOption[];
   headerAction?: React.ReactNode;
   threatDays: number;
+  alertSettings: AlertSettings;
 }
 
-export function MontageDashboardView({ montages, statusOptions, headerAction, threatDays }: MontageDashboardViewProps) {
+export function MontageDashboardView({ montages, statusOptions, headerAction, threatDays, alertSettings }: MontageDashboardViewProps) {
   const [view, setView] = useState<"board" | "list" | "calendar">("board");
 
   return (
@@ -47,7 +48,7 @@ export function MontageDashboardView({ montages, statusOptions, headerAction, th
 
       <div className="flex-1 overflow-auto">
         {view === "board" && (
-            <MontagePipelineBoard montages={montages} statusOptions={statusOptions} threatDays={threatDays} />
+            <MontagePipelineBoard montages={montages} statusOptions={statusOptions} threatDays={threatDays} alertSettings={alertSettings} />
         )}
         {view === "list" && (
             <div className="p-4 sm:p-6">

@@ -150,7 +150,10 @@ export function MontageWorkflowTab({
         } else if (field === 'installerStatus') {
             updateData.installerStatus = value as 'none' | 'informed' | 'confirmed';
         } else if (field === 'installerId') {
-            updateData.installerId = value === 'none' ? null : value;
+            const newInstallerId = value === 'none' ? null : value;
+            updateData.installerId = newInstallerId;
+            // Logic: If installer assigned -> default to 'informed'. If removed -> 'none'.
+            updateData.installerStatus = newInstallerId ? 'informed' : 'none';
         } else if (field === 'measurerId') {
             updateData.measurerId = value === 'none' ? null : value;
         }
@@ -262,8 +265,8 @@ export function MontageWorkflowTab({
                             <SelectValue placeholder="Wybierz status" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="none">Brak</SelectItem>
-                            <SelectItem value="informed">Poinformowany</SelectItem>
+                            <SelectItem value="none">Niepoinformowany</SelectItem>
+                            <SelectItem value="informed">Niepotwierdzony</SelectItem>
                             <SelectItem value="confirmed">Potwierdzony</SelectItem>
                         </SelectContent>
                     </Select>

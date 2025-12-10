@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-import type { Montage, StatusOption } from "../types";
+import type { Montage, StatusOption, AlertSettings } from "../types";
 import { MontagePipelineCard } from "./montage-pipeline-card";
 import { updateMontageStatus } from "../actions";
 import type { MontageStatus } from "@/lib/db/schema";
@@ -72,12 +72,14 @@ function DraggableMontageCard({
   status,
   disabled,
   threatDays,
+  alertSettings,
 }: {
   montage: Montage;
   statusOptions: StatusOption[];
   status: MontageStatus;
   disabled: boolean;
   threatDays: number;
+  alertSettings: AlertSettings;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: montage.id,
@@ -100,7 +102,7 @@ function DraggableMontageCard({
       {...(!disabled ? attributes : {})}
       {...(!disabled ? listeners : {})}
     >
-      <MontagePipelineCard montage={montage} statusOptions={statusOptions} threatDays={threatDays} />
+      <MontagePipelineCard montage={montage} statusOptions={statusOptions} threatDays={threatDays} alertSettings={alertSettings} />
     </div>
   );
 }
@@ -111,12 +113,14 @@ function PipelineColumn({
   statusOptions,
   isPending,
   threatDays,
+  alertSettings,
 }: {
   status: StatusOption;
   items: Montage[];
   statusOptions: StatusOption[];
   isPending: boolean;
   threatDays: number;
+  alertSettings: AlertSettings;
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id: status.value,
@@ -166,6 +170,7 @@ function PipelineColumn({
                 statusOptions={statusOptions}
                 disabled={isPending}
                 threatDays={threatDays}
+                alertSettings={alertSettings}
               />
             ))
           )}
@@ -179,9 +184,10 @@ type MontagePipelineBoardProps = {
   montages: Montage[];
   statusOptions: StatusOption[];
   threatDays: number;
+  alertSettings: AlertSettings;
 };
 
-export function MontagePipelineBoard({ montages, statusOptions, threatDays }: MontagePipelineBoardProps) {
+export function MontagePipelineBoard({ montages, statusOptions, threatDays, alertSettings }: MontagePipelineBoardProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const sensors = useSensors(
@@ -272,13 +278,14 @@ export function MontagePipelineBoard({ montages, statusOptions, threatDays }: Mo
               statusOptions={statusOptions}
               isPending={isPending}
               threatDays={threatDays}
+              alertSettings={alertSettings}
             />
           ))}
         </div>
         <DragOverlay>
           {activeMontage ? (
             <div className="w-[280px]">
-              <MontagePipelineCard montage={activeMontage} statusOptions={statusOptions} threatDays={threatDays} />
+              <MontagePipelineCard montage={activeMontage} statusOptions={statusOptions} threatDays={threatDays} alertSettings={alertSettings} />
             </div>
           ) : null}
         </DragOverlay>

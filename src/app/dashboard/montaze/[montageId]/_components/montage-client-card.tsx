@@ -156,9 +156,14 @@ export function MontageClientCard({
   };
 
   const handleInstallerChange = async (value: string) => {
+      const newInstallerId = value === 'none' ? null : value;
+      // Logic: If installer assigned -> default to 'informed' (yellow/orange). If removed -> 'none' (red).
+      const newStatus = newInstallerId ? 'informed' : 'none';
+
       await updateMontageRealizationStatus({
           montageId: montage.id,
-          installerId: value === 'none' ? null : value
+          installerId: newInstallerId,
+          installerStatus: newStatus
       });
       router.refresh();
   };
@@ -378,8 +383,8 @@ export function MontageClientCard({
                             <SelectValue placeholder="Status" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="none">Brak</SelectItem>
-                            <SelectItem value="informed">Poinformowany</SelectItem>
+                            <SelectItem value="none">Niepoinformowany</SelectItem>
+                            <SelectItem value="informed">Niepotwierdzony</SelectItem>
                             <SelectItem value="confirmed">Potwierdzony</SelectItem>
                         </SelectContent>
                     </Select>

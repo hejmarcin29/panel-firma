@@ -46,6 +46,33 @@ export default async function MontazePage(props: any) {
     const kpiMontageThreatDays = await getAppSetting(appSettingKeys.kpiMontageThreatDays);
     const threatDays = Number(kpiMontageThreatDays ?? 7);
 
+    const kpiAlertMissingMaterialStatusDays = await getAppSetting(appSettingKeys.kpiAlertMissingMaterialStatusDays);
+    const missingMaterialStatusDays = Number(kpiAlertMissingMaterialStatusDays ?? 7);
+
+    const kpiAlertMissingInstallerStatusDays = await getAppSetting(appSettingKeys.kpiAlertMissingInstallerStatusDays);
+    const missingInstallerStatusDays = Number(kpiAlertMissingInstallerStatusDays ?? 7);
+
+    const kpiAlertMissingMeasurerDays = await getAppSetting(appSettingKeys.kpiAlertMissingMeasurerDays);
+    const missingMeasurerDays = Number(kpiAlertMissingMeasurerDays ?? 14);
+
+    const kpiAlertMissingInstallerDays = await getAppSetting(appSettingKeys.kpiAlertMissingInstallerDays);
+    const missingInstallerDays = Number(kpiAlertMissingInstallerDays ?? 14);
+
+    const kpiAlertMaterialOrderedDays = await getAppSetting(appSettingKeys.kpiAlertMaterialOrderedDays);
+    const materialOrderedDays = Number(kpiAlertMaterialOrderedDays ?? 5);
+
+    const kpiAlertMaterialInstockDays = await getAppSetting(appSettingKeys.kpiAlertMaterialInstockDays);
+    const materialInstockDays = Number(kpiAlertMaterialInstockDays ?? 2);
+
+    const alertSettings = {
+        missingMaterialStatusDays,
+        missingInstallerStatusDays,
+        missingMeasurerDays,
+        missingInstallerDays,
+        materialOrderedDays,
+        materialInstockDays
+    };
+
     const statusDefinitions = await getMontageStatusDefinitions();
     const statusOptions = statusDefinitions.map(def => ({
         value: def.id,
@@ -235,6 +262,7 @@ export default async function MontazePage(props: any) {
                     montages={montagesList} 
                     statusOptions={filteredStatusOptions}
                     threatDays={threatDays}
+                    alertSettings={alertSettings}
                     headerAction={
                         <div className="flex gap-2">
                             <Button asChild variant="outline">

@@ -210,7 +210,20 @@ export async function updateMobileMenuConfig(config: MobileMenuItem[]) {
     revalidatePath('/dashboard');
 }
 
-export async function updateKpiSettings(montageThreatDays: number, orderUrgentDays: number) {
+export async function updateKpiSettings(
+    montageThreatDays: number, 
+    orderUrgentDays: number,
+    alertMissingMaterialStatusDays: number,
+    alertMissingInstallerStatusDays: number,
+    alertMissingMeasurerDays: number,
+    alertMissingInstallerDays: number,
+    alertMaterialOrderedDays: number,
+    alertMaterialInstockDays: number,
+    // New params
+    alertLeadNoMeasurerDays: number,
+    alertQuoteDelayDays: number,
+    alertOfferStalledDays: number
+) {
     const user = await requireUser();
     if (!user.roles.includes('admin')) {
         throw new Error('Tylko administrator może zmieniać ustawienia KPI.');
@@ -228,11 +241,66 @@ export async function updateKpiSettings(montageThreatDays: number, orderUrgentDa
         userId: user.id,
     });
 
-    await logSystemEvent('update_kpi_settings', `Zaktualizowano ustawienia KPI: Montaże=${montageThreatDays} dni, Zamówienia=${orderUrgentDays} dni`, user.id);
+    await setAppSetting({
+        key: appSettingKeys.kpiAlertMissingMaterialStatusDays,
+        value: String(alertMissingMaterialStatusDays),
+        userId: user.id,
+    });
+
+    await setAppSetting({
+        key: appSettingKeys.kpiAlertMissingInstallerStatusDays,
+        value: String(alertMissingInstallerStatusDays),
+        userId: user.id,
+    });
+
+    await setAppSetting({
+        key: appSettingKeys.kpiAlertMissingMeasurerDays,
+        value: String(alertMissingMeasurerDays),
+        userId: user.id,
+    });
+
+    await setAppSetting({
+        key: appSettingKeys.kpiAlertMissingInstallerDays,
+        value: String(alertMissingInstallerDays),
+        userId: user.id,
+    });
+
+    await setAppSetting({
+        key: appSettingKeys.kpiAlertMaterialOrderedDays,
+        value: String(alertMaterialOrderedDays),
+        userId: user.id,
+    });
+
+    await setAppSetting({
+        key: appSettingKeys.kpiAlertMaterialInstockDays,
+        value: String(alertMaterialInstockDays),
+        userId: user.id,
+    });
+
+    await setAppSetting({
+        key: appSettingKeys.kpiAlertLeadNoMeasurerDays,
+        value: String(alertLeadNoMeasurerDays),
+        userId: user.id,
+    });
+
+    await setAppSetting({
+        key: appSettingKeys.kpiAlertQuoteDelayDays,
+        value: String(alertQuoteDelayDays),
+        userId: user.id,
+    });
+
+    await setAppSetting({
+        key: appSettingKeys.kpiAlertOfferStalledDays,
+        value: String(alertOfferStalledDays),
+        userId: user.id,
+    });
+
+    await logSystemEvent('update_kpi_settings', `Zaktualizowano ustawienia KPI`, user.id);
 
     revalidatePath('/dashboard/settings');
     revalidatePath('/dashboard/montaze');
     revalidatePath('/dashboard/orders');
+    revalidatePath('/dashboard');
 }
 
 export async function uploadLogo(formData: FormData) {

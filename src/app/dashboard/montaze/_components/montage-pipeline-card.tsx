@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 
-import type { Montage, StatusOption } from '../types';
+import type { Montage, StatusOption, AlertSettings } from '../types';
 import { summarizeMaterialDetails, formatScheduleRange } from '../utils';
 
 function countCompleted(tasks: Montage['tasks']): number {
@@ -45,9 +45,10 @@ type Props = {
 	montage: Montage;
 	statusOptions: StatusOption[];
     threatDays: number;
+    alertSettings?: AlertSettings;
 };
 
-export function MontagePipelineCard({ montage, threatDays }: Props) {
+export function MontagePipelineCard({ montage, threatDays, alertSettings }: Props) {
 	const completedTasks = useMemo(() => countCompleted(montage.tasks), [montage.tasks]);
 	const totalTasks = montage.tasks.length;
 	const materialsSummary = useMemo(
@@ -77,8 +78,22 @@ export function MontagePipelineCard({ montage, threatDays }: Props) {
         const scheduled = new Date(dateToCheck);
         const diffTime = scheduled.getTime() - now.getTime();
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays >= 0 && diffDays <= threatDays;
-    }, [montage.scheduledInstallationAt, montage.forecastedInstallationDate, montage.status, threatDays]);
+        
+        // Check general threat days
+        if (diffDays >= 0 && diffDays <= threatDays) return true;
+
+        // Check specific alerts if settings are provided
+        if (alertSettings && diffDays >= 0) {
+             if (diffDays <= alertSettings.missingMaterialStatusDays && montage.materialStatus === 'none') return true;
+             if (diffDays <= alertSettings.missingInstallerStatusDays && montage.installerStatus === 'none') return true;
+             if (diffDays <= alertSettings.missingMeasurerDays && !montage.measurerId) return true;
+             if (diffDays <= alertSettings.missingInstallerDays && !montage.installerId) return true;
+             if (diffDays <= alertSettings.materialOrderedDays && montage.materialStatus === 'ordered') return true;
+             if (diffDays <= alertSettings.materialInstockDays && montage.materialStatus === 'in_stock') return true;
+        }
+
+        return false;
+    }, [montage, threatDays, alertSettings]);
 
     return (
         <Link href={`/dashboard/montaze/${montage.id}`} className="block group">

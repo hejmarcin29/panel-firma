@@ -121,3 +121,13 @@ export type StatusOption = {
 	label: string;
 	description: string;
 };
+
+export type AlertSettings = {
+    missingMaterialStatusDays: number;
+    missingInstallerStatusDays: number;
+    missingMeasurerDays: number;
+    missingInstallerDays: number;
+    materialOrderedDays: number;
+    materialInstockDays: number;
+};
+
