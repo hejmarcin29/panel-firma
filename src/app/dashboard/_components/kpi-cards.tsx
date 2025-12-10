@@ -26,6 +26,7 @@ interface KPICardsProps {
   urgentOrdersCount?: number;
   stalledOrdersCount?: number;
   orderUrgentDays?: number;
+  montageThreatDays?: number;
   settings?: {
       visibleCards?: string[];
   };
@@ -39,6 +40,7 @@ export function KPICards({
   newOrdersCount,
   urgentOrdersCount = 0,
   stalledOrdersCount = 0,
+  montageThreatDays = 7,
   settings
 }: KPICardsProps) {
   const visibleCards = settings?.visibleCards || ['today', 'leads', 'payments', 'urgent', 'orders', 'urgentOrders', 'stalledOrders'];
@@ -51,16 +53,16 @@ export function KPICards({
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
                 <div className="flex items-center gap-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">
-                        Pilne Montaże
+                        Zagrożone Terminy / Brak Kontaktu
                     </CardTitle>
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <button type="button" className="cursor-help z-20 relative" onClick={(e) => e.preventDefault()}>
-                                <Info className="h-3 w-3 text-muted-foreground/50" />
+                                <Info className="h-4 w-4 text-muted-foreground/50" />
                             </button>
                         </TooltipTrigger>
                         <TooltipContent>
-                            <p>Montaże, które wymagają natychmiastowej uwagi (np. brak kontaktu, opóźnienia).</p>
+                            <p>Montaże, które nie zmieniły statusu przez ponad {montageThreatDays} dni.</p>
                         </TooltipContent>
                     </Tooltip>
                 </div>
@@ -81,12 +83,12 @@ export function KPICards({
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
                 <div className="flex items-center gap-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">
-                        Aktywne Leady
+                        Otwarte Zapytania Ofertowe
                     </CardTitle>
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <button type="button" className="cursor-help z-20 relative" onClick={(e) => e.preventDefault()}>
-                                <Info className="h-3 w-3 text-muted-foreground/50" />
+                                <Info className="h-4 w-4 text-muted-foreground/50" />
                             </button>
                         </TooltipTrigger>
                         <TooltipContent>
@@ -111,12 +113,12 @@ export function KPICards({
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
                 <div className="flex items-center gap-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">
-                        Nowe Zamówienia
+                        Zamówienia do Weryfikacji
                     </CardTitle>
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <button type="button" className="cursor-help z-20 relative" onClick={(e) => e.preventDefault()}>
-                                <Info className="h-3 w-3 text-muted-foreground/50" />
+                                <Info className="h-4 w-4 text-muted-foreground/50" />
                             </button>
                         </TooltipTrigger>
                         <TooltipContent>
@@ -141,12 +143,12 @@ export function KPICards({
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
                 <div className="flex items-center gap-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">
-                        Dzisiaj
+                        Zaplanowane na Dziś
                     </CardTitle>
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <button type="button" className="cursor-help z-20 relative" onClick={(e) => e.preventDefault()}>
-                                <Info className="h-3 w-3 text-muted-foreground/50" />
+                                <Info className="h-4 w-4 text-muted-foreground/50" />
                             </button>
                         </TooltipTrigger>
                         <TooltipContent>
@@ -173,12 +175,12 @@ export function KPICards({
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
                 <div className="flex items-center gap-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">
-                        Płatności
+                        Nierozliczone Montaże (Brak Wpłaty)
                     </CardTitle>
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <button type="button" className="cursor-help z-20 relative" onClick={(e) => e.preventDefault()}>
-                                <Info className="h-3 w-3 text-muted-foreground/50" />
+                                <Info className="h-4 w-4 text-muted-foreground/50" />
                             </button>
                         </TooltipTrigger>
                         <TooltipContent>
@@ -203,12 +205,12 @@ export function KPICards({
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
                 <div className="flex items-center gap-2">
                     <CardTitle className="text-sm font-medium text-red-600">
-                        Pilne Zamówienia
+                        Zatory w Realizacji Zamówień
                     </CardTitle>
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <button type="button" className="cursor-help z-20 relative" onClick={(e) => e.preventDefault()}>
-                                <Info className="h-3 w-3 text-red-600/50" />
+                                <Info className="h-4 w-4 text-red-600/50" />
                             </button>
                         </TooltipTrigger>
                         <TooltipContent>
@@ -233,12 +235,12 @@ export function KPICards({
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
                 <div className="flex items-center gap-2">
                     <CardTitle className="text-sm font-medium text-orange-600">
-                        Brak Faktury
+                        Do Wystawienia Faktury Końcowej
                     </CardTitle>
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <button type="button" className="cursor-help z-20 relative" onClick={(e) => e.preventDefault()}>
-                                <Info className="h-3 w-3 text-orange-600/50" />
+                                <Info className="h-4 w-4 text-orange-600/50" />
                             </button>
                         </TooltipTrigger>
                         <TooltipContent>

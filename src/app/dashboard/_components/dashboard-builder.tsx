@@ -221,7 +221,7 @@ function SortableWidget({ widget, data, isEditing, onConfigure }: { id: string; 
   const props = widget.type === 'agenda' ? { upcomingMontages: data.upcomingMontages } :
                 widget.type === 'recent-activity' ? { recentMontages: data.recentMontages } :
                 widget.type === 'tasks' ? { ...data.tasksStats, todoCount: data.kpiData.todoCount } :
-                widget.type === 'kpi' ? { ...data.kpiData, settings: widget.settings } :
+                widget.type === 'kpi' ? { ...data.kpiData, settings: widget.settings, montageThreatDays: data.threatDays } :
                 widget.type === 'montage-alerts' ? { alerts: data.montageAlerts, threatDays: data.threatDays } :
                 {};
 
