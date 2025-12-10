@@ -36,9 +36,9 @@ fi
 # Wygeneruj klienta bazy danych
 npm run db:generate
 
-# Zaaplikuj migracje bazy danych
-echo "Aplikowanie migracji..."
-npm run db:migrate
+# Synchronizuj schemat bazy danych (push zamiast migrate dla bezpieczeństwa przy zmianach deweloperskich)
+echo "Synchronizacja schematu bazy danych..."
+npx drizzle-kit push
 
 # Zbuduj aplikację
 export NODE_OPTIONS="--max-old-space-size=4096"
