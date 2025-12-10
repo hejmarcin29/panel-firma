@@ -46,7 +46,7 @@ export function TvBoard() {
             {/* Header */}
             <header className="flex justify-between items-center mb-8 px-2">
                 <div className="flex items-center gap-4">
-                    <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                    <h1 className="text-4xl font-bold bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                         Panel Realizacji
                     </h1>
                     <div className="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-400 flex items-center gap-2">
@@ -76,7 +76,7 @@ export function TvBoard() {
 
 function Column({ column }: { column: TvColumn }) {
     return (
-        <div className={`flex flex-col h-full rounded-2xl bg-gradient-to-b ${column.color} border border-white/5 backdrop-blur-sm overflow-hidden`}>
+        <div className={`flex flex-col h-full rounded-2xl bg-linear-to-b ${column.color} border border-white/5 backdrop-blur-sm overflow-hidden`}>
             {/* Column Header */}
             <div className="p-4 border-b border-white/5 flex justify-between items-center bg-black/20">
                 <h2 className="font-semibold text-lg tracking-wide text-white/90">

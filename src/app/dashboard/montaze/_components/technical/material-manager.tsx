@@ -157,7 +157,7 @@ export function MaterialManager({ montageId, initialData, role }: MaterialManage
                             <TableCell>
                                 {isAdmin ? (
                                     <Select value={item.unit} onValueChange={(v) => updateItem(item.id, 'unit', v)}>
-                                        <SelectTrigger className="w-[80px]">
+                                        <SelectTrigger className="w-20">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
