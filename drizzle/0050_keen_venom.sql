@@ -1,0 +1,1 @@
+ALTER TABLE `montages` ADD `material_claim_type` text;

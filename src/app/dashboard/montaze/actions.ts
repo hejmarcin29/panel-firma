@@ -1064,12 +1064,14 @@ export async function updateMontageMeasurement({
 export async function updateMontageRealizationStatus({
     montageId,
     materialStatus,
+    materialClaimType,
     installerStatus,
     installerId,
     measurerId
 }: {
     montageId: string;
     materialStatus?: 'none' | 'ordered' | 'in_stock' | 'delivered';
+    materialClaimType?: 'installer_pickup' | 'company_delivery' | 'courier' | 'client_pickup' | null;
     installerStatus?: 'none' | 'informed' | 'confirmed';
     installerId?: string | null;
     measurerId?: string | null;
@@ -1078,6 +1080,7 @@ export async function updateMontageRealizationStatus({
 
     const updateData: { 
         materialStatus?: 'none' | 'ordered' | 'in_stock' | 'delivered'; 
+        materialClaimType?: 'installer_pickup' | 'company_delivery' | 'courier' | 'client_pickup' | null;
         installerStatus?: 'none' | 'informed' | 'confirmed';
         installerId?: string | null;
         measurerId?: string | null;
@@ -1087,6 +1090,7 @@ export async function updateMontageRealizationStatus({
     };
     
     if (materialStatus !== undefined) updateData.materialStatus = materialStatus;
+    if (materialClaimType !== undefined) updateData.materialClaimType = materialClaimType;
     if (installerStatus !== undefined) updateData.installerStatus = installerStatus;
     if (installerId !== undefined) updateData.installerId = installerId;
     if (measurerId !== undefined) updateData.measurerId = measurerId;

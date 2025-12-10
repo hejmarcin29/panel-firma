@@ -112,6 +112,14 @@ export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montag
       router.refresh();
   };
 
+  const handleClaimTypeChange = async (value: string) => {
+      await updateMontageRealizationStatus({
+          montageId: montage.id,
+          materialClaimType: value as any
+      });
+      router.refresh();
+  };
+
   const getMaterialStatusColor = (status: string) => {
       switch (status) {
           case 'none': return 'bg-red-100 text-red-800 border-red-200';
@@ -142,6 +150,25 @@ export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montag
                     <SelectItem value="delivered">Dostarczono</SelectItem>
                 </SelectContent>
             </Select>
+            
+            {montage.materialStatus !== 'none' && (
+                <Select
+                    value={montage.materialClaimType || "installer_pickup"}
+                    onValueChange={handleClaimTypeChange}
+                    disabled={!userRoles.includes('admin')}
+                >
+                    <SelectTrigger className="h-8 w-[140px] text-xs font-medium border bg-white">
+                        <SelectValue placeholder="Sposób odbioru" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="installer_pickup">Odbiór własny (Montażysta)</SelectItem>
+                        <SelectItem value="company_delivery">Dostawa firmowa</SelectItem>
+                        <SelectItem value="courier">Kurier</SelectItem>
+                        <SelectItem value="client_pickup">Odbiór własny (Klient)</SelectItem>
+                    </SelectContent>
+                </Select>
+            )}
+
             {userRoles.includes('admin') && (
             <Dialog open={isEditing} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>

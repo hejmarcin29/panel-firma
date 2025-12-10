@@ -59,6 +59,7 @@ export type MailFolderKind = (typeof mailFolderKinds)[number];
 export type MailAccountStatus = (typeof mailAccountStatuses)[number];
 export type MontageStatus = string;
 export type MontageMaterialStatus = 'none' | 'ordered' | 'in_stock' | 'delivered';
+export type MontageMaterialClaimType = 'installer_pickup' | 'company_delivery' | 'courier' | 'client_pickup';
 export type MontageInstallerStatus = 'none' | 'informed' | 'confirmed';
 
 export type InstallerProfile = {
@@ -450,6 +451,7 @@ export const montages = sqliteTable(
 		status: text('status').$type<MontageStatus>().notNull().default('lead'),
 		displayId: text('display_id'),
 		materialStatus: text('material_status').$type<MontageMaterialStatus>().notNull().default('none'),
+        materialClaimType: text('material_claim_type').$type<MontageMaterialClaimType>(),
 		installerStatus: text('installer_status').$type<MontageInstallerStatus>().notNull().default('none'),
 		installerId: text('installer_id').references(() => users.id, { onDelete: 'set null' }),
 		measurerId: text('measurer_id').references(() => users.id, { onDelete: 'set null' }),
