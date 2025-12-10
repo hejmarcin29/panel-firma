@@ -67,6 +67,8 @@ export type Montage = {
 	installationCity: string | null;
 	scheduledInstallationAt: TimestampValue;
 	scheduledInstallationEndAt: TimestampValue;
+    scheduledSkirtingInstallationAt?: TimestampValue;
+    scheduledSkirtingInstallationEndAt?: TimestampValue;
 	materialDetails: string | null;
 	measurementDetails: string | null;
 	floorArea: number | null;

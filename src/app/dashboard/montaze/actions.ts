@@ -499,6 +499,8 @@ type UpdateMontageContactDetailsInput = {
 	contactEmail?: string;
 	scheduledInstallationDate?: string;
 	scheduledInstallationEndDate?: string;
+    scheduledSkirtingInstallationDate?: string;
+    scheduledSkirtingInstallationEndDate?: string;
 	billingAddress?: string;
 	billingCity?: string;
 	installationAddress?: string;
@@ -512,6 +514,8 @@ export async function updateMontageContactDetails({
 	contactEmail,
 	scheduledInstallationDate,
 	scheduledInstallationEndDate,
+    scheduledSkirtingInstallationDate,
+    scheduledSkirtingInstallationEndDate,
 	billingAddress,
 	billingCity,
 	installationAddress,
@@ -558,6 +562,24 @@ export async function updateMontageContactDetails({
 		scheduledInstallationEndAt = parsed;
 	}
 
+    let scheduledSkirtingInstallationAt: Date | null = null;
+    if (scheduledSkirtingInstallationDate && scheduledSkirtingInstallationDate.trim()) {
+        const parsed = new Date(`${scheduledSkirtingInstallationDate}T00:00:00`);
+        if (Number.isNaN(parsed.getTime())) {
+            throw new Error('Podaj prawidłową datę montażu listew.');
+        }
+        scheduledSkirtingInstallationAt = parsed;
+    }
+
+    let scheduledSkirtingInstallationEndAt: Date | null = null;
+    if (scheduledSkirtingInstallationEndDate && scheduledSkirtingInstallationEndDate.trim()) {
+        const parsed = new Date(`${scheduledSkirtingInstallationEndDate}T00:00:00`);
+        if (Number.isNaN(parsed.getTime())) {
+            throw new Error('Podaj prawidłową datę zakończenia montażu listew.');
+        }
+        scheduledSkirtingInstallationEndAt = parsed;
+    }
+
 	const fallbackAddress = normalizedInstallationAddress ?? normalizedBillingAddress;
 	const fallbackCity = normalizedInstallationCity ?? normalizedBillingCity;
 	const combinedAddress = [fallbackAddress, fallbackCity].filter(Boolean).join(', ') || null;
@@ -575,6 +597,8 @@ export async function updateMontageContactDetails({
 			address: combinedAddress,
 			scheduledInstallationAt,
 			scheduledInstallationEndAt,
+            scheduledSkirtingInstallationAt,
+            scheduledSkirtingInstallationEndAt,
 			updatedAt: new Date(),
 		})
 		.where(eq(montages.id, montageId));

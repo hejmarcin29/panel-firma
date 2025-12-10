@@ -437,6 +437,8 @@ export const montages = sqliteTable(
 		nip: text('nip'),
 		scheduledInstallationAt: integer('scheduled_installation_at', { mode: 'timestamp_ms' }),
 		scheduledInstallationEndAt: integer('scheduled_installation_end_at', { mode: 'timestamp_ms' }),
+        scheduledSkirtingInstallationAt: integer('scheduled_skirting_installation_at', { mode: 'timestamp_ms' }),
+        scheduledSkirtingInstallationEndAt: integer('scheduled_skirting_installation_end_at', { mode: 'timestamp_ms' }),
 		materialDetails: text('material_details'),
 		measurementDetails: text('measurement_details'),
 		measurementInstallationMethod: text('measurement_installation_method').$type<'click' | 'glue'>(),
