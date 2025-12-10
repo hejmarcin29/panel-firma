@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calendar, Clock, PlayCircle } from "lucide-react";
+import { Calendar, Clock, PlayCircle, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
@@ -23,63 +23,65 @@ interface UpcomingMontagesKPIProps {
     montagesInProgress: MontageSimple[];
 }
 
+const StatBox = ({ 
+    label, 
+    count, 
+    icon: Icon, 
+    tabValue,
+    colorClass = "text-primary",
+    setActiveTab
+}: { 
+    label: string; 
+    count: number; 
+    icon: LucideIcon; 
+    tabValue: string;
+    colorClass?: string;
+    setActiveTab: (val: string) => void;
+}) => (
+    <DialogTrigger asChild onClick={() => setActiveTab(tabValue)}>
+        <div className="flex flex-col items-center justify-center p-2 rounded-lg hover:bg-accent/50 cursor-pointer transition-colors flex-1 text-center">
+            <Icon className={`h-5 w-5 mb-1 ${colorClass}`} />
+            <span className={`text-2xl font-bold ${count > 0 ? colorClass : "text-muted-foreground"}`}>
+                {count}
+            </span>
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
+                {label}
+            </span>
+        </div>
+    </DialogTrigger>
+);
+
+const MontageList = ({ items }: { items: MontageSimple[] }) => (
+    <ScrollArea className="h-[50vh] pr-4">
+        {items.length > 0 ? (
+            <div className="space-y-3">
+                {items.map((m) => (
+                    <Link 
+                        key={m.id} 
+                        href={`/dashboard/montaze/${m.id}`}
+                        className="block p-3 rounded-md border hover:bg-accent/50 transition-colors"
+                    >
+                        <div className="flex justify-between items-center">
+                            <span className="font-medium">{m.clientName}</span>
+                            <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded">
+                                {m.scheduledInstallationAt 
+                                    ? format(new Date(m.scheduledInstallationAt), "d MMM", { locale: pl }) 
+                                    : "Brak daty"}
+                            </span>
+                        </div>
+                    </Link>
+                ))}
+            </div>
+        ) : (
+            <div className="text-center py-8 text-muted-foreground">
+                Brak montaży w tej kategorii.
+            </div>
+        )}
+    </ScrollArea>
+);
+
 export function UpcomingMontagesKPI({ montages7Days, montages3Days, montagesInProgress }: UpcomingMontagesKPIProps) {
     const [activeTab, setActiveTab] = useState<string>("7days");
-
-    const StatBox = ({ 
-        label, 
-        count, 
-        icon: Icon, 
-        tabValue,
-        colorClass = "text-primary" 
-    }: { 
-        label: string; 
-        count: number; 
-        icon: any; 
-        tabValue: string;
-        colorClass?: string;
-    }) => (
-        <DialogTrigger asChild onClick={() => setActiveTab(tabValue)}>
-            <div className="flex flex-col items-center justify-center p-2 rounded-lg hover:bg-accent/50 cursor-pointer transition-colors flex-1 text-center">
-                <Icon className={`h-5 w-5 mb-1 ${colorClass}`} />
-                <span className={`text-2xl font-bold ${count > 0 ? colorClass : "text-muted-foreground"}`}>
-                    {count}
-                </span>
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
-                    {label}
-                </span>
-            </div>
-        </DialogTrigger>
-    );
-
-    const MontageList = ({ items }: { items: MontageSimple[] }) => (
-        <ScrollArea className="h-[50vh] pr-4">
-            {items.length > 0 ? (
-                <div className="space-y-3">
-                    {items.map((m) => (
-                        <Link 
-                            key={m.id} 
-                            href={`/dashboard/montaze/${m.id}`}
-                            className="block p-3 rounded-md border hover:bg-accent/50 transition-colors"
-                        >
-                            <div className="flex justify-between items-center">
-                                <span className="font-medium">{m.clientName}</span>
-                                <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded">
-                                    {m.scheduledInstallationAt 
-                                        ? format(new Date(m.scheduledInstallationAt), "d MMM", { locale: pl }) 
-                                        : "Brak daty"}
-                                </span>
-                            </div>
-                        </Link>
-                    ))}
-                </div>
-            ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                    Brak montaży w tej kategorii.
-                </div>
-            )}
-        </ScrollArea>
-    );
 
     return (
         <Dialog>
@@ -97,6 +99,7 @@ export function UpcomingMontagesKPI({ montages7Days, montages3Days, montagesInPr
                             icon={Calendar} 
                             tabValue="7days"
                             colorClass="text-blue-600 dark:text-blue-400"
+                            setActiveTab={setActiveTab}
                         />
                         <div className="w-px bg-border my-2" />
                         <StatBox 
@@ -105,6 +108,7 @@ export function UpcomingMontagesKPI({ montages7Days, montages3Days, montagesInPr
                             icon={Clock} 
                             tabValue="3days"
                             colorClass="text-amber-600 dark:text-amber-400"
+                            setActiveTab={setActiveTab}
                         />
                         <div className="w-px bg-border my-2" />
                         <StatBox 
@@ -113,6 +117,7 @@ export function UpcomingMontagesKPI({ montages7Days, montages3Days, montagesInPr
                             icon={PlayCircle} 
                             tabValue="inprogress"
                             colorClass="text-emerald-600 dark:text-emerald-400"
+                            setActiveTab={setActiveTab}
                         />
                     </div>
                 </CardContent>

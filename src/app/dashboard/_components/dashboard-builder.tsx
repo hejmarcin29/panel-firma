@@ -39,7 +39,7 @@ import { AgendaWidget, type AgendaItem } from './agenda-widget';
 import { RecentActivity } from './recent-activity';
 import { QuickActions } from './quick-actions';
 import { KPICards } from './kpi-cards';
-import { MontageAlertsKPI, type MontageAlert, type MontageAlertItem } from './montage-alerts-kpi';
+import { MontageAlertsKPI, type MontageAlertItem } from './montage-alerts-kpi';
 import { UpcomingMontagesKPI, type MontageSimple } from './upcoming-montages-kpi';
 import { updateDashboardLayout, type DashboardLayoutConfig, type DashboardWidgetConfig } from '../actions';
 import { toast } from 'sonner';

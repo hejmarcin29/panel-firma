@@ -5,7 +5,6 @@ import {
     AlertCircle, 
     Briefcase, 
     ShoppingCart, 
-    CalendarDays, 
     ArrowUpRight,
     CreditCard,
     Info
