@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { Montage } from "../montaze/types";
+import { motion } from "framer-motion";
 
 interface RecentActivityProps {
   recentMontages: Montage[];
@@ -28,6 +29,21 @@ function initials(name: string) {
 }
 
 export function RecentActivity({ recentMontages }: RecentActivityProps) {
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const item = {
+    hidden: { opacity: 0, x: -20 },
+    show: { opacity: 1, x: 0 }
+  };
+
   return (
     <Card className="h-full">
       <CardHeader>
@@ -35,12 +51,17 @@ export function RecentActivity({ recentMontages }: RecentActivityProps) {
         <CardDescription>Ostatnio aktualizowane montaże</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-8">
+        <motion.div 
+          className="space-y-8"
+          variants={container}
+          initial="hidden"
+          animate="show"
+        >
           {recentMontages.length === 0 ? (
              <p className="text-sm text-muted-foreground text-center py-8">Brak ostatniej aktywności.</p>
           ) : (
             recentMontages.map((montage) => (
-                <div key={montage.id} className="flex items-center">
+                <motion.div key={montage.id} variants={item} className="flex items-center">
                 <Avatar className="h-9 w-9">
                     <AvatarFallback>{initials(montage.clientName)}</AvatarFallback>
                 </Avatar>
@@ -53,10 +74,10 @@ export function RecentActivity({ recentMontages }: RecentActivityProps) {
                 <div className="ml-auto font-medium text-xs text-muted-foreground">
                     {montage.updatedAt ? new Date(montage.updatedAt).toLocaleDateString() : ''}
                 </div>
-                </div>
+                </motion.div>
             ))
           )}
-        </div>
+        </motion.div>
       </CardContent>
     </Card>
   );

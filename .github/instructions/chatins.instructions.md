@@ -7,6 +7,11 @@ Provide project context and coding guidelines that AI should follow when generat
 - Unikaj stałych pasków bocznych (sidebarów) w widokach sklepu.
 - Do filtrowania preferuj rozwiązania typu Modal (okno dialogowe) lub Drawer (tymczasowy panel wysuwany), spójnie dla wersji desktop i mobile.
 - Celem jest maksymalizacja przestrzeni na prezentację produktów (siatka na pełną szerokość).
+- **Animacje i "Look & Feel" (Top 2025):**
+  - Panel ma być przyjemny dla oka i płynny.
+  - Stosuj subtelne animacje wejścia (fade-in, slide-up, staggered children) dla list, kart i widgetów (np. przy użyciu `framer-motion` lub `tailwindcss-animate`).
+  - Elementy interaktywne powinny dawać natychmiastowy feedback wizualny.
+  - Unikaj "sztywnych" przejść; interfejs ma "oddychać".
 
 ## Role i Uprawnienia (RBAC)
 System posiada 3 główne role użytkowników:

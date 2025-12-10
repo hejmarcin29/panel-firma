@@ -15,6 +15,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { motion } from "framer-motion";
 
 interface KPICardsProps {
   newLeadsCount: number;
@@ -42,10 +43,31 @@ export function KPICards({
 }: KPICardsProps) {
   const visibleCards = settings?.visibleCards || ['leads', 'payments', 'urgent', 'orders', 'urgentOrders', 'stalledOrders'];
 
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 }
+  };
+
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 h-full">
+    <motion.div 
+      className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 h-full"
+      variants={container}
+      initial="hidden"
+      animate="show"
+    >
       {visibleCards.includes('urgent') && (
-        <Card className="bg-card border-border shadow-none relative overflow-hidden group">
+        <motion.div variants={item} className="h-full">
+        <Card className="bg-card border-border shadow-none relative overflow-hidden group h-full">
             <Link href="/dashboard/montaze?filter=urgent" className="absolute inset-0 z-10" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
                 <div className="flex items-center gap-2">
@@ -72,10 +94,12 @@ export function KPICards({
                 </p>
             </CardContent>
         </Card>
+        </motion.div>
       )}
 
       {visibleCards.includes('leads') && (
-        <Card className="bg-card border-border shadow-none relative overflow-hidden group">
+        <motion.div variants={item} className="h-full">
+        <Card className="bg-card border-border shadow-none relative overflow-hidden group h-full">
             <Link href="/dashboard/montaze" className="absolute inset-0 z-10" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
                 <div className="flex items-center gap-2">
@@ -105,7 +129,8 @@ export function KPICards({
       )}
 
       {visibleCards.includes('orders') && (
-        <Card className="bg-card border-border shadow-none relative overflow-hidden group">
+        <motion.div variants={item} className="h-full">
+        <Card className="bg-card border-border shadow-none relative overflow-hidden group h-full">
             <Link href="/dashboard/orders" className="absolute inset-0 z-10" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
                 <div className="flex items-center gap-2">
@@ -132,10 +157,12 @@ export function KPICards({
                 </p>
             </CardContent>
         </Card>
+        </motion.div>
       )}
 
       {visibleCards.includes('payments') && (
-        <Card className="bg-card border-border shadow-none relative overflow-hidden group">
+        <motion.div variants={item} className="h-full">
+        <Card className="bg-card border-border shadow-none relative overflow-hidden group h-full">
             <Link href="/dashboard/montaze" className="absolute inset-0 z-10" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
                 <div className="flex items-center gap-2">
@@ -162,10 +189,12 @@ export function KPICards({
                 </p>
             </CardContent>
         </Card>
+        </motion.div>
       )}
 
       {visibleCards.includes('urgentOrders') && urgentOrdersCount > 0 && (
-        <Card className="shadow-none relative overflow-hidden group border-red-500/20 bg-red-500/5">
+        <motion.div variants={item} className="h-full">
+        <Card className="shadow-none relative overflow-hidden group border-red-500/20 bg-red-500/5 h-full">
             <Link href="/dashboard/orders" className="absolute inset-0 z-10" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
                 <div className="flex items-center gap-2">
@@ -192,10 +221,12 @@ export function KPICards({
                 </p>
             </CardContent>
         </Card>
+        </motion.div>
       )}
 
       {visibleCards.includes('stalledOrders') && stalledOrdersCount > 0 && (
-        <Card className="shadow-none relative overflow-hidden group border-orange-500/20 bg-orange-500/5">
+        <motion.div variants={item} className="h-full">
+        <Card className="shadow-none relative overflow-hidden group border-orange-500/20 bg-orange-500/5 h-full">
             <Link href="/dashboard/orders" className="absolute inset-0 z-10" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
                 <div className="flex items-center gap-2">
@@ -222,7 +253,8 @@ export function KPICards({
                 </p>
             </CardContent>
         </Card>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 }

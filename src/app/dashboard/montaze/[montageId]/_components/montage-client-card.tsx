@@ -373,7 +373,7 @@ export function MontageClientCard({
             <Hammer className="h-4 w-4 text-muted-foreground" />
             <div className="grid gap-1 w-full">
                 <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">Montażysta</span>
+                    <span className="text-xs text-muted-foreground">Montażysta potwierdził</span>
                     <Select
                         value={montage.installerStatus}
                         onValueChange={handleInstallerStatusChange}
@@ -383,9 +383,8 @@ export function MontageClientCard({
                             <SelectValue placeholder="Status" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="none">Niepoinformowany</SelectItem>
-                            <SelectItem value="informed">Niepotwierdzony</SelectItem>
-                            <SelectItem value="confirmed">Potwierdzony</SelectItem>
+                            <SelectItem value="none">Nie</SelectItem>
+                            <SelectItem value="confirmed">Tak</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>

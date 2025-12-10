@@ -254,8 +254,8 @@ export function MontageWorkflowTab({
                     montage.installerStatus === 'confirmed' ? "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-900" : "bg-card"
                 )}>
                     <div className="space-y-0.5">
-                        <Label htmlFor="installer-status" className="text-base font-medium">Status Montażysty</Label>
-                        <p className="text-sm text-muted-foreground">Status ustaleń z montażystą</p>
+                        <Label htmlFor="installer-status" className="text-base font-medium">Montażysta potwierdził</Label>
+                        <p className="text-sm text-muted-foreground">Czy montażysta potwierdził termin?</p>
                     </div>
                     <Select 
                         value={montage.installerStatus} 
@@ -265,9 +265,8 @@ export function MontageWorkflowTab({
                             <SelectValue placeholder="Wybierz status" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="none">Niepoinformowany</SelectItem>
-                            <SelectItem value="informed">Niepotwierdzony</SelectItem>
-                            <SelectItem value="confirmed">Potwierdzony</SelectItem>
+                            <SelectItem value="none">Nie</SelectItem>
+                            <SelectItem value="confirmed">Tak</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>

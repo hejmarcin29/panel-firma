@@ -200,6 +200,8 @@ interface DashboardBuilderProps {
   };
 }
 
+import { motion } from 'framer-motion';
+
 function SortableWidget({ widget, data, isEditing, onConfigure }: { id: string; widget: DashboardWidgetConfig; data: DashboardBuilderProps['data']; isEditing: boolean; onConfigure: (widget: DashboardWidgetConfig) => void }) {
   const {
     attributes,
@@ -231,7 +233,14 @@ function SortableWidget({ widget, data, isEditing, onConfigure }: { id: string; 
                 {};
 
   return (
-    <div ref={setNodeRef} style={style} className='relative h-full'>
+    <motion.div 
+        ref={setNodeRef} 
+        style={style} 
+        className='relative h-full'
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
+    >
         {isEditing && (
             <div 
                 {...attributes} 
@@ -260,7 +269,7 @@ function SortableWidget({ widget, data, isEditing, onConfigure }: { id: string; 
             </div>
         )}
         <Component {...props} />
-    </div>
+    </motion.div>
   );
 }
 
