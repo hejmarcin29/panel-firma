@@ -64,7 +64,6 @@ const menuLinks = [
   { href: "/dashboard/orders", label: "Zamówienia", icon: Package },
   { href: "/dashboard/products", label: "Produkty", icon: ShoppingBag },
   { href: "/dashboard/montaze", label: "Montaże", icon: Hammer },
-  { href: "/tv", label: "TV", icon: Monitor },
   { href: "/dashboard/mail", label: "Poczta", icon: Mail },
   { href: "/dashboard/montaze/galeria", label: "Galeria", icon: ImageIcon },
   { href: "/dashboard/settings", label: "Ustawienia", icon: Settings },

@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, FileText, Mail } from "lucide-react";
+import { PlusCircle, FileText, Mail, Monitor } from "lucide-react";
 import Link from "next/link";
 
 export function QuickActions() {
@@ -29,6 +29,12 @@ export function QuickActions() {
             <Link href="/dashboard/mail">
                 <Mail className="mr-2 h-4 w-4" />
                 Sprawdź Pocztę
+            </Link>
+        </Button>
+        <Button asChild className="w-full justify-start" variant="outline">
+            <Link href="/tv">
+                <Monitor className="mr-2 h-4 w-4" />
+                Widok TV
             </Link>
         </Button>
       </CardContent>
