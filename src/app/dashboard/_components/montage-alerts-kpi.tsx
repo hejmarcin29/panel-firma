@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangle, Info } from "lucide-react";
+import { AlertTriangle, Info, Settings } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -50,18 +50,23 @@ export function MontageAlertsKPI({ alerts }: { alerts: MontageAlertItem[] }) {
                         <CardTitle className="text-sm font-medium">
                             Zagrożone montaże
                         </CardTitle>
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <button className="focus:outline-none" onClick={(e) => e.stopPropagation()}>
-                                    <Info className="h-4 w-4 text-muted-foreground" />
-                                </button>
-                            </PopoverTrigger>
-                            <PopoverContent className="max-w-xs">
-                                <p className="text-sm">
-                                    Lista montaży wymagających uwagi (brak statusów, brak przypisań, zagrożone terminy materiałowe).
-                                </p>
-                            </PopoverContent>
-                        </Popover>
+                        <div className="flex items-center gap-2">
+                            <Link href="/dashboard/settings?tab=kpi" onClick={(e) => e.stopPropagation()}>
+                                <Settings className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
+                            </Link>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <button className="focus:outline-none" onClick={(e) => e.stopPropagation()}>
+                                        <Info className="h-4 w-4 text-muted-foreground" />
+                                    </button>
+                                </PopoverTrigger>
+                                <PopoverContent className="max-w-xs">
+                                    <p className="text-sm">
+                                        Lista montaży wymagających uwagi (brak statusów, brak przypisań, zagrożone terminy materiałowe).
+                                    </p>
+                                </PopoverContent>
+                            </Popover>
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <div className="flex items-center justify-between">

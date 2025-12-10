@@ -325,7 +325,11 @@ export default async function DashboardPage() {
                     issues.push("Materiał tylko zamówiony (bliski termin)");
                 }
                 if (daysUntilInstallation <= materialInstockDays && m.materialStatus === 'in_stock') {
-                    issues.push("Materiał tylko na magazynie (bardzo bliski termin)");
+                    // Jeśli odbiór własny (montażysta lub klient), to status "Na magazynie" jest poprawny
+                    const isPickup = m.materialClaimType === 'installer_pickup' || m.materialClaimType === 'client_pickup';
+                    if (!isPickup) {
+                        issues.push("Materiał tylko na magazynie (bardzo bliski termin)");
+                    }
                 }
             }
         }

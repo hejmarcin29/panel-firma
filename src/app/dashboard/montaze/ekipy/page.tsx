@@ -5,11 +5,16 @@ import { InstallersList } from './_components/installers-list';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
 export default async function InstallersPage() {
-    await requireUser();
+    const user = await requireUser();
+
+    if (user.roles.includes('architect') && !user.roles.includes('admin')) {
+        redirect('/dashboard/montaze');
+    }
 
     // Fetch users who have the 'installer' role
     // Since roles is a JSON array, we can't easily query it with SQL 'LIKE' or 'contains' in a standard way across all DBs,
