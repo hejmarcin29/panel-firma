@@ -25,6 +25,7 @@ export const appSettingKeys = {
 	googleCalendarId: 'google.calendar_id',
 	googleClientEmail: 'google.client_email',
 	googlePrivateKey: 'google.private_key',
+    systemLogoUrl: 'system.logo_url',
 } as const;
 
 export type AppSettingKey = (typeof appSettingKeys)[keyof typeof appSettingKeys];

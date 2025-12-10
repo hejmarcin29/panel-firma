@@ -36,6 +36,8 @@ import { WpChangesSettings } from './_components/wp-changes-settings';
 import TeamPage from './team/page';
 import { DocumentationView } from './_components/documentation-view';
 
+import { LogoSettings } from './_components/logo-settings';
+
 type LogLevel = 'info' | 'warning' | 'error';
 
 type LogRow = {
@@ -133,6 +135,7 @@ export default async function SettingsPage() {
 		googleCalendarId,
 		googleClientEmail,
 		googlePrivateKey,
+        systemLogoUrl,
 	] = await Promise.all([
 		getAppSetting(appSettingKeys.wooWebhookSecret),
 		getAppSetting(appSettingKeys.wooConsumerKey),
@@ -153,6 +156,7 @@ export default async function SettingsPage() {
 		getAppSetting(appSettingKeys.googleCalendarId),
 		getAppSetting(appSettingKeys.googleClientEmail),
 		getAppSetting(appSettingKeys.googlePrivateKey),
+        getAppSetting(appSettingKeys.systemLogoUrl),
 	]);
 
     const statusOptions = montageStatusDefinitions.map(def => ({
@@ -266,6 +270,7 @@ export default async function SettingsPage() {
             }
             appearance={
                 <div className="grid gap-4">
+                    <LogoSettings currentLogoUrl={systemLogoUrl ?? null} />
                     <Card>
                         <CardHeader>
                             <CardTitle>Motyw aplikacji</CardTitle>

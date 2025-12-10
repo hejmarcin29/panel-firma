@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { eq } from 'drizzle-orm';
 
-import { HeadBucketCommand } from '@aws-sdk/client-s3';
+import { HeadBucketCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
@@ -233,6 +233,67 @@ export async function updateKpiSettings(montageThreatDays: number, orderUrgentDa
     revalidatePath('/dashboard/settings');
     revalidatePath('/dashboard/montaze');
     revalidatePath('/dashboard/orders');
+}
+
+export async function uploadLogo(formData: FormData) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) {
+        throw new Error('Tylko administrator może zmieniać logo.');
+    }
+
+    const file = formData.get('file') as File;
+    if (!file) {
+        throw new Error('Nie wybrano pliku.');
+    }
+
+    if (!file.type.startsWith('image/')) {
+        throw new Error('Nieprawidłowy format pliku.');
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+        throw new Error('Plik jest za duży (max 2MB).');
+    }
+
+    const r2Config = await getR2Config();
+    const client = createR2Client(r2Config);
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const key = `system/logo-${Date.now()}.${file.name.split('.').pop()}`;
+
+    await client.send(new PutObjectCommand({
+        Bucket: r2Config.bucketName,
+        Key: key,
+        Body: buffer,
+        ContentType: file.type,
+    }));
+
+    const url = `${r2Config.publicBaseUrl}/${key}`;
+
+    await setAppSetting({
+        key: appSettingKeys.systemLogoUrl,
+        value: url,
+        userId: user.id,
+    });
+
+    await logSystemEvent('update_logo', 'Zaktualizowano logo systemu', user.id);
+    revalidatePath('/', 'layout');
+    return url;
+}
+
+export async function removeLogo() {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) {
+        throw new Error('Tylko administrator może usuwać logo.');
+    }
+
+    await setAppSetting({
+        key: appSettingKeys.systemLogoUrl,
+        value: '',
+        userId: user.id,
+    });
+
+    await logSystemEvent('remove_logo', 'Usunięto logo systemu', user.id);
+    revalidatePath('/', 'layout');
 }
 
 

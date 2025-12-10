@@ -3,6 +3,7 @@ import { type ReactNode, Suspense } from 'react';
 export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
+import Image from 'next/image';
 
 import { redirect } from 'next/navigation';
 import { DashboardNav } from './_components/dashboard-nav';
@@ -17,6 +18,7 @@ import { db } from '@/lib/db';
 import { users } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { ImpersonationBanner } from './_components/impersonation-banner';
+import { getAppSetting, appSettingKeys } from '@/lib/settings';
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
 	let sessionUser;
@@ -57,6 +59,9 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         console.error('Failed to fetch urgent orders count:', error);
     }
 
+    const systemLogoUrl = await getAppSetting(appSettingKeys.systemLogoUrl);
+    const logoSrc = systemLogoUrl || "/logo.png";
+
 	return (
         <>
             {isImpersonating && <ImpersonationBanner />}
@@ -71,6 +76,9 @@ export default async function DashboardLayout({ children }: { children: ReactNod
                         <Suspense>
                             <BackButton />
                         </Suspense>
+                        <div className="relative h-8 w-8">
+                             <Image src={logoSrc} alt="Logo" fill className="object-contain" priority />
+                        </div>
                         <span className="font-semibold">Panel firmy</span>
                     </div>
                     <RefreshButton />
@@ -82,8 +90,13 @@ export default async function DashboardLayout({ children }: { children: ReactNod
                             <Suspense>
                                 <BackButton />
                             </Suspense>
-                            <Link href="/dashboard" className="text-lg font-semibold bg-clip-text text-transparent bg-linear-to-r from-primary to-purple-600">
-                                Panel firmy
+                            <Link href="/dashboard" className="flex items-center gap-2">
+                                <div className="relative h-8 w-8">
+                                    <Image src={logoSrc} alt="Logo" fill className="object-contain" priority />
+                                </div>
+                                <span className="text-lg font-semibold bg-clip-text text-transparent bg-linear-to-r from-primary to-purple-600">
+                                    Panel firmy
+                                </span>
                             </Link>
                         </div>
                         <div className="flex items-center gap-4 text-sm">
