@@ -218,26 +218,44 @@ export default async function DashboardPage() {
         return date < today;
     }).length;
 
-    // Alerts Logic (Next X working days)
-    const montageAlerts = allMontages.filter(m => {
-        if (!m.scheduledInstallationAt) return false;
-        const date = new Date(m.scheduledInstallationAt);
-        
-        // Filter out past dates (before today 00:00)
-        if (date < today) return false;
-        
-        const days = differenceInCalendarDays(date, today);
-        
-        // Material Alerts
-        if (days <= 10 && m.materialStatus === 'none') return true;
-        if (days <= 5 && (m.materialStatus === 'none' || m.materialStatus === 'ordered')) return true;
-        if (days <= 2 && (m.materialStatus === 'none' || m.materialStatus === 'ordered' || m.materialStatus === 'in_stock')) return true;
-        
-        // Installer Alerts (using threatDays default)
-        if (days <= threatDays && m.installerStatus !== 'confirmed') return true;
+    // Alerts Logic (Red Statuses & Material Warnings)
+    const montageAlerts = allMontages.map(m => {
+        // Skip completed or leads
+        if (m.status === 'completed' || m.status === 'lead') return null;
 
-        return false;
-    }).sort((a, b) => new Date(a.scheduledInstallationAt!).getTime() - new Date(b.scheduledInstallationAt!).getTime());
+        const issues: string[] = [];
+        
+        // 1. Red Statuses (Always check for active montages)
+        if (m.materialStatus === 'none') issues.push("Brak statusu materiału");
+        if (m.installerStatus === 'none') issues.push("Brak statusu montażu");
+        if (!m.measurerId) issues.push("Brak przypisanego pomiarowca");
+        if (!m.installerId) issues.push("Brak przypisanego montażysty");
+
+        // 2. Material Time Warnings (Exclamation Mark Logic)
+        if (m.scheduledInstallationAt) {
+            const date = new Date(m.scheduledInstallationAt);
+            const days = differenceInCalendarDays(date, today);
+            
+            // Only check for upcoming/recent
+            if (days >= 0) {
+                if (days <= 5 && m.materialStatus === 'ordered') issues.push("Materiał tylko zamówiony (bliski termin)");
+                if (days <= 2 && m.materialStatus === 'in_stock') issues.push("Materiał tylko na magazynie (bardzo bliski termin)");
+            }
+        }
+        
+        if (issues.length > 0) {
+             return { montage: m, issues };
+        }
+        return null;
+    }).filter((item): item is { montage: typeof allMontages[0], issues: string[] } => item !== null)
+    .sort((a, b) => {
+        const dateA = a.montage.scheduledInstallationAt ? new Date(a.montage.scheduledInstallationAt).getTime() : 0;
+        const dateB = b.montage.scheduledInstallationAt ? new Date(b.montage.scheduledInstallationAt).getTime() : 0;
+        if (dateA && dateB) return dateA - dateB;
+        if (dateA) return -1;
+        if (dateB) return 1;
+        return 0;
+    });
 
     // Stalled Orders Logic
     const allOrders = await db.query.manualOrders.findMany();

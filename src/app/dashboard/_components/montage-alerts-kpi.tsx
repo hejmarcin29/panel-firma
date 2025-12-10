@@ -3,7 +3,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle, Info } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import Link from "next/link";
+import { format } from "date-fns";
+import { pl } from "date-fns/locale";
 
 export interface MontageAlert {
     id: string;
@@ -13,65 +17,98 @@ export interface MontageAlert {
     installerStatus: 'none' | 'informed' | 'confirmed';
 }
 
-export function MontageAlertsKPI({ alerts }: { alerts: MontageAlert[], threatDays?: number }) {
+export interface MontageAlertItem {
+    montage: MontageAlert;
+    issues: string[];
+}
+
+export function MontageAlertsKPI({ alerts }: { alerts: MontageAlertItem[] }) {
     const alertCount = alerts.length;
     const hasAlerts = alertCount > 0;
 
     return (
-        <Card className={hasAlerts ? "border-destructive/50 shadow-sm" : ""}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                    <Link href="/dashboard/montaze" className="hover:underline">
-                        Zagrożone montaże
-                    </Link>
-                </CardTitle>
-                <Popover>
-                    <PopoverTrigger asChild>
-                        <button className="focus:outline-none">
-                            <Info className="h-4 w-4 text-muted-foreground" />
-                        </button>
-                    </PopoverTrigger>
-                    <PopoverContent className="max-w-xs">
-                        <p className="text-sm">Licznik pokazuje montaże zaplanowane na najbliższe dni, które nie spełniają wymogów KPI (materiał, montażysta).</p>
-                    </PopoverContent>
-                </Popover>
-            </CardHeader>
-            <CardContent>
-                <Link href="/dashboard/montaze" className="block group">
-                    <div className="flex items-center justify-between group-hover:opacity-80 transition-opacity">
-                        <div className={hasAlerts ? "text-2xl font-bold text-destructive" : "text-2xl font-bold"}>
-                            {alertCount}
+        <Dialog>
+            <DialogTrigger asChild>
+                <Card className={`cursor-pointer transition-colors hover:bg-accent/50 ${hasAlerts ? "border-destructive/50 shadow-sm" : ""}`}>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">
+                            Zagrożone montaże
+                        </CardTitle>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <button className="focus:outline-none" onClick={(e) => e.stopPropagation()}>
+                                    <Info className="h-4 w-4 text-muted-foreground" />
+                                </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="max-w-xs">
+                                <p className="text-sm">
+                                    Lista montaży wymagających uwagi (brak statusów, brak przypisań, zagrożone terminy materiałowe).
+                                </p>
+                            </PopoverContent>
+                        </Popover>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex items-center justify-between">
+                            <div className={hasAlerts ? "text-2xl font-bold text-destructive" : "text-2xl font-bold"}>
+                                {alertCount}
+                            </div>
+                            {hasAlerts && <AlertTriangle className="h-4 w-4 text-destructive" />}
                         </div>
-                        {hasAlerts && <AlertTriangle className="h-4 w-4 text-destructive" />}
-                    </div>
-                </Link>
-                <p className="text-xs text-muted-foreground mt-1">
-                    {hasAlerts ? "Wymagają natychmiastowej uwagi" : "Wszystko pod kontrolą"}
-                </p>
-                
-                {hasAlerts && (
-                    <div className="mt-4 space-y-2">
-                        {alerts.slice(0, 3).map(m => (
-                            <Link key={m.id} href={`/dashboard/montaze/${m.id}`} className="block">
-                                <div className="text-sm p-2 bg-destructive/10 rounded border border-destructive/20 hover:bg-destructive/20 transition-colors">
-                                    <div className="font-medium">{m.clientName}</div>
-                                    <div className="text-xs text-muted-foreground">
-                                        {m.scheduledInstallationAt ? new Date(m.scheduledInstallationAt).toLocaleDateString('pl-PL') : 'Brak daty'}
-                                        {m.materialStatus !== 'delivered' && <span className="ml-2 text-destructive font-medium">• Problem z materiałem</span>}
-                                        {m.installerStatus !== 'confirmed' && <span className="ml-2 text-destructive font-medium">• Brak montażysty</span>}
+                        <p className="text-xs text-muted-foreground mt-1">
+                            {hasAlerts ? "Kliknij, aby zobaczyć szczegóły" : "Wszystko pod kontrolą"}
+                        </p>
+                    </CardContent>
+                </Card>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[80vh]">
+                <DialogHeader>
+                    <DialogTitle>Zagrożone montaże ({alertCount})</DialogTitle>
+                </DialogHeader>
+                <ScrollArea className="h-full max-h-[60vh] pr-4">
+                    {hasAlerts ? (
+                        <div className="space-y-4">
+                            {alerts.map(({ montage, issues }) => (
+                                <div key={montage.id} className="border rounded-lg p-4 bg-card">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <div>
+                                            <Link 
+                                                href={`/dashboard/montaze/${montage.id}`}
+                                                className="font-semibold hover:underline text-lg"
+                                            >
+                                                {montage.clientName}
+                                            </Link>
+                                            <div className="text-sm text-muted-foreground">
+                                                {montage.scheduledInstallationAt 
+                                                    ? format(new Date(montage.scheduledInstallationAt), "d MMMM yyyy", { locale: pl })
+                                                    : "Brak daty"}
+                                            </div>
+                                        </div>
+                                        <Link 
+                                            href={`/dashboard/montaze/${montage.id}`}
+                                            className="text-sm bg-primary/10 text-primary px-3 py-1 rounded-md hover:bg-primary/20"
+                                        >
+                                            Otwórz
+                                        </Link>
+                                    </div>
+                                    <div className="space-y-1">
+                                        {issues.map((issue, idx) => (
+                                            <div key={idx} className="flex items-center text-sm text-destructive font-medium">
+                                                <AlertTriangle className="h-3 w-3 mr-2" />
+                                                {issue}
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
-                            </Link>
-                        ))}
-                        {alertCount > 3 && (
-                            <Link href="/dashboard/montaze" className="text-xs text-muted-foreground hover:underline block text-center">
-                                + {alertCount - 3} więcej
-                            </Link>
-                        )}
-                    </div>
-                )}
-            </CardContent>
-        </Card>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                            Brak zagrożonych montaży.
+                        </div>
+                    )}
+                </ScrollArea>
+            </DialogContent>
+        </Dialog>
     );
 }
 

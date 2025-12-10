@@ -159,7 +159,7 @@ export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montag
                         <SelectValue placeholder="Sposób odbioru" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="installer_pickup">Odbiór własny (Montażysta)</SelectItem>
+                        <SelectItem value="installer_pickup">Odbiór przez montażystę</SelectItem>
                         <SelectItem value="company_delivery">Dostawa firmowa</SelectItem>
                         <SelectItem value="courier">Kurier</SelectItem>
                         <SelectItem value="client_pickup">Odbiór własny (Klient)</SelectItem>

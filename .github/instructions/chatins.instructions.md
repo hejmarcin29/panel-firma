@@ -56,3 +56,10 @@ W panelu operacyjnym (Dashboard) stosujemy zasadę **Auto-save** zamiast ręczny
 Przy implementacji nowych, kluczowych funkcjonalności biznesowych (np. nowe statusy, ważne alerty, KPI), **ZAWSZE** rozważ ich uwzględnienie w widoku TV (`/tv`).
 - Jeśli nowa funkcja wpływa na przepływ pracy (workflow), zaktualizuj logikę w `src/app/tv/actions.ts`.
 - Widok TV ma służyć jako "centrum dowodzenia" dla hali/biura, więc musi odzwierciedlać najważniejsze zmiany w czasie rzeczywistym.
+
+## Integralność Systemu i Analiza Wpływu
+Przy każdej implementacji, modyfikacji lub naprawie błędu, **ZAWSZE** analizuj system jako całość.
+- **Analiza Wsteczna:** Przed wprowadzeniem zmian zastanów się, czy nowa funkcjonalność nie narusza istniejącej logiki biznesowej, automatyzacji lub przepływów pracy (workflows).
+- **Spójność Danych:** Upewnij się, że zmiany w strukturze danych lub statusach nie "psują" raportów, widoków KPI, widoku TV czy uprawnień użytkowników.
+- **Zależności:** Sprawdź, czy modyfikowany komponent nie jest używany w innych, nieoczywistych miejscach (np. ten sam komponent w Dashboardzie i w widoku Klienta).
+- **Cel:** Twoim zadaniem jest nie tylko "dowiezienie feature'a", ale zapewnienie, że cały ekosystem (Panel Admina, Panel Pracownika, TV, Automatyzacje) pozostaje spójny i stabilny.

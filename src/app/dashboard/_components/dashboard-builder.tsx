@@ -39,7 +39,7 @@ import { AgendaWidget, type AgendaItem } from './agenda-widget';
 import { RecentActivity } from './recent-activity';
 import { QuickActions } from './quick-actions';
 import { KPICards } from './kpi-cards';
-import { MontageAlertsKPI, type MontageAlert } from './montage-alerts-kpi';
+import { MontageAlertsKPI, type MontageAlert, type MontageAlertItem } from './montage-alerts-kpi';
 import { updateDashboardLayout, type DashboardLayoutConfig, type DashboardWidgetConfig } from '../actions';
 import { toast } from 'sonner';
 import type { Montage } from '../montaze/types';
@@ -192,7 +192,7 @@ interface DashboardBuilderProps {
         stalledOrdersCount?: number;
         orderUrgentDays?: number;
     };
-    montageAlerts: MontageAlert[];
+    montageAlerts: MontageAlertItem[];
     threatDays?: number;
   };
 }
