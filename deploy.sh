@@ -22,6 +22,14 @@ echo "--- Uruchamianie Deploy v1 ---"
 # Zainstaluj zależności
 npm install
 
+# Sprawdź i załaduj zmienne środowiskowe
+if [ -f .env ]; then
+  echo "Ładowanie zmiennych z .env..."
+  export $(grep -v '^#' .env | xargs)
+else
+  echo "OSTRZEŻENIE: Brak pliku .env!"
+fi
+
 # Wygeneruj klienta bazy danych
 npm run db:generate
 
