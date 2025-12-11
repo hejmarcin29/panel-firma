@@ -427,22 +427,22 @@ export async function getProductsFromDb(
         if (typeof p.categories === 'string') {
             try {
                 categories = JSON.parse(p.categories);
-            } catch (e) {
+            } catch {
                 categories = [];
             }
         } else if (Array.isArray(p.categories)) {
             categories = p.categories as number[];
         }
 
-        let attributes: any[] = [];
+        let attributes: WooCommerceProduct['attributes'] = [];
         if (typeof p.attributes === 'string') {
             try {
                 attributes = JSON.parse(p.attributes);
-            } catch (e) {
+            } catch {
                 attributes = [];
             }
         } else if (Array.isArray(p.attributes)) {
-            attributes = p.attributes as any[];
+            attributes = p.attributes as WooCommerceProduct['attributes'];
         }
 
         return {

@@ -328,7 +328,7 @@ export async function createMontage({
 		}
 	}
 
-    let finalMontageId = leadId || crypto.randomUUID();
+    const finalMontageId = leadId || crypto.randomUUID();
     let finalDisplayId = '';
 
     if (leadId) {

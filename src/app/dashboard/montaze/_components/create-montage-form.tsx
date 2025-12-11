@@ -111,14 +111,14 @@ export function CreateMontageForm({ onSuccess, installers = [], measurers = [], 
         
         const lead = leads.find(l => l.id === leadId);
         if (lead) {
-            setForm(prev => ({
+            setForm({
                 ...initialState, // Reset first
                 clientName: lead.clientName,
                 contactPhone: lead.contactPhone || '',
                 billingAddress: lead.address || '',
                 installationAddress: lead.address || '',
                 materialDetails: lead.materialDetails || '',
-            }));
+            });
             setSameAsBilling(true);
         }
     };
