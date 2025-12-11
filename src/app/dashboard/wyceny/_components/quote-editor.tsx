@@ -24,6 +24,26 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
+type ProductAttribute = {
+    id: number;
+    name: string;
+    slug: string;
+    options: string[];
+};
+
+type Product = {
+    id: number;
+    name: string;
+    price: string | null;
+    attributes: unknown;
+};
+
+function getProductAttribute(product: Product, slug: string): ProductAttribute | undefined {
+    const attributes = product.attributes as ProductAttribute[];
+    if (!Array.isArray(attributes)) return undefined;
+    return attributes.find((a) => a.slug === slug);
+}
+
 type QuoteEditorProps = {
     quote: {
         id: string;
@@ -53,7 +73,7 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
     const [isSending, setIsSending] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
     const [importDialogOpen, setImportDialogOpen] = useState(false);
-    const [availableProducts, setAvailableProducts] = useState<any[]>([]);
+    const [availableProducts, setAvailableProducts] = useState<Product[]>([]);
 
     const calculateItemTotal = (item: QuoteItem) => {
         const net = item.quantity * item.priceNet;
@@ -107,7 +127,7 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
         }
     };
 
-    const executeSmartImport = (selectedProduct?: any) => {
+    const executeSmartImport = (selectedProduct?: Product) => {
         const audit = quote.montage.technicalAudit as TechnicalAuditData | null;
         const newItems = [...items];
         let importedCount = 0;
@@ -130,12 +150,13 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
 
         // Import Selected Product (Material)
         if (selectedProduct) {
+            const attributes = selectedProduct.attributes as ProductAttribute[];
             // Check if it's a skirting board (has length attribute)
-            const lengthAttr = selectedProduct.attributes?.find((a: any) => a.slug === 'pa_dlugosc');
+            const lengthAttr = attributes?.find((a) => a.slug === 'pa_dlugosc');
             
             if (lengthAttr && quote.montage.skirtingLength) {
                 // SKIRTING BOARD LOGIC
-                let quantityMb = quote.montage.skirtingLength;
+                const quantityMb = quote.montage.skirtingLength;
                 
                 // Add waste (from montage settings or default 5%)
                 const wastePercent = quote.montage.skirtingWaste ?? 5;
@@ -166,8 +187,9 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
                 }
             } else if (quote.montage.floorArea) {
                 // PANEL LOGIC (Default)
+                const attributes = selectedProduct.attributes as ProductAttribute[];
                 let quantity = quote.montage.floorArea;
-                let unit = 'm2';
+                const unit = 'm2';
                 let notes = '';
 
                 // Add waste (from montage settings or default 5%)
@@ -175,7 +197,7 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
                 const quantityWithWaste = quantity * (1 + wastePercent / 100);
                 
                 // Check for package quantity attribute
-                const packageAttr = selectedProduct.attributes?.find((a: any) => a.slug === 'pa_ilosc_opakowanie');
+                const packageAttr = attributes?.find((a) => a.slug === 'pa_ilosc_opakowanie');
                 
                 // Recalculate packages with waste
                 if (packageAttr && packageAttr.options && packageAttr.options.length > 0) {
@@ -370,9 +392,9 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
                                                             <span className="font-mono text-sm">{product.price} zł</span>
                                                         </div>
                                                         <div className="flex gap-2 mt-1">
-                                                            {product.attributes?.find((a: any) => a.slug === 'pa_ilosc_opakowanie') && (
+                                                            {getProductAttribute(product, 'pa_ilosc_opakowanie') && (
                                                                 <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
-                                                                    Paczka: {product.attributes.find((a: any) => a.slug === 'pa_ilosc_opakowanie').options[0]} m²
+                                                                    Paczka: {getProductAttribute(product, 'pa_ilosc_opakowanie')?.options[0]} m²
                                                                 </span>
                                                             )}
                                                         </div>
