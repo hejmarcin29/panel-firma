@@ -22,7 +22,7 @@ export default async function LoginPage() {
     if (systemLogoUrl && !systemLogoUrl.startsWith('http') && !systemLogoUrl.startsWith('/')) {
         systemLogoUrl = `https://${systemLogoUrl}`;
     }
-    const logoSrc = systemLogoUrl || "/logo.png";
+    const logoSrc = systemLogoUrl || "/window.svg";
 
 	return (
 		<main className="flex min-h-screen items-center justify-center bg-muted px-4 py-12">

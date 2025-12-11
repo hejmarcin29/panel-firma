@@ -62,7 +62,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     if (systemLogoUrl && !systemLogoUrl.startsWith('http') && !systemLogoUrl.startsWith('/')) {
         systemLogoUrl = `https://${systemLogoUrl}`;
     }
-    const logoSrc = systemLogoUrl || "/logo.png";
+    const logoSrc = systemLogoUrl || "/window.svg";
 
 	return (
         <>
