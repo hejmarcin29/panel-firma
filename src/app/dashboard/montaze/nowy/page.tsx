@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 import { db } from '@/lib/db';
-import { users, montages } from '@/lib/db/schema';
-import { sql, eq, desc } from 'drizzle-orm';
+import { montages } from '@/lib/db/schema';
+import { eq, desc } from 'drizzle-orm';
 
 export default async function NewMontagePage() {
     const allUsers = await db.query.users.findMany({

@@ -36,8 +36,6 @@ type MontageDetailsPageParams = {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
-import { users } from '@/lib/db/schema';
-
 export default async function MontageDetailsPage({ params, searchParams }: MontageDetailsPageParams) {
     const { montageId } = await params;
     const { tab } = await searchParams;
