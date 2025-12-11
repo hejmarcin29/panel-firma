@@ -243,6 +243,22 @@ export async function createMontage({
 			});
 		}
 
+        // 3. Try by NIP if provided
+        if (normalizedNip) {
+            const customerWithNip = await db.query.customers.findFirst({
+                where: (table, { eq }) => eq(table.taxId, normalizedNip),
+            });
+
+            if (customerWithNip) {
+                if (existingCustomer && existingCustomer.id !== customerWithNip.id) {
+                    throw new Error('Podany NIP jest już przypisany do innego klienta.');
+                }
+                if (!existingCustomer) {
+                    existingCustomer = customerWithNip;
+                }
+            }
+        }
+
 		const customerData = {
 			name: (isCompany && normalizedCompanyName) ? normalizedCompanyName : trimmedName,
 			email: normalizedEmail,
@@ -336,7 +352,13 @@ export async function createMontage({
             where: eq(montages.id, leadId),
         });
         if (!existingLead) throw new Error('Lead not found');
-        finalDisplayId = existingLead.displayId!;
+        
+        if (!existingLead.displayId) {
+            finalDisplayId = await generateNextMontageId();
+            await db.update(montages).set({ displayId: finalDisplayId }).where(eq(montages.id, leadId));
+        } else {
+            finalDisplayId = existingLead.displayId;
+        }
         
         await db.update(montages).set({
             clientName: trimmedName,
@@ -389,7 +411,7 @@ export async function createMontage({
                     measurerId: measurerId || null,
                     materialDetails: normalizedMaterialDetails,
                     measurementDetails: normalizedMaterialDetails,
-                    status: 'lead',
+                    status: 'before_measurement',
                     createdAt: now,
                     updatedAt: now,
                 });
