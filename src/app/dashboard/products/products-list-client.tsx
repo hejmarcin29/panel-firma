@@ -26,6 +26,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ProductDetailsDialog } from './_components/product-details-dialog';
 
 function formatPrice(price: string | number) {
     if (!price) return '-';
@@ -60,6 +61,7 @@ export function ProductsListClient({
     const [showDebug, setShowDebug] = useState(false);
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [isBulkActionPending, setIsBulkActionPending] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState<WooCommerceProduct | null>(null);
 
     const handlePageChange = (newPage: number) => {
         if (newPage < 1 || newPage > initialTotalPages) return;
@@ -263,9 +265,12 @@ export function ProductsListClient({
                                     </TableCell>
                                     <TableCell className="font-medium">
                                         <div className="flex flex-col">
-                                            <a href={product.permalink} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                                            <button 
+                                                onClick={() => setSelectedProduct(product)}
+                                                className="text-left hover:underline font-medium focus:outline-none"
+                                            >
                                                 {product.name}
-                                            </a>
+                                            </button>
                                             <span className="text-xs text-muted-foreground truncate max-w-[150px] md:max-w-[200px]">
                                                 {product.categories.map(c => c.name).join(', ')}
                                             </span>
@@ -380,6 +385,12 @@ export function ProductsListClient({
                     </Button>
                 </div>
             )}
+
+            <ProductDetailsDialog 
+                product={selectedProduct} 
+                isOpen={!!selectedProduct} 
+                onClose={() => setSelectedProduct(null)} 
+            />
         </div>
     );
 }
