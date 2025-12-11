@@ -46,8 +46,8 @@ export default async function MontageDetailsPage({ params, searchParams }: Monta
     const user = await requireUser();
 
     const allUsers = await db.select({ id: users.id, name: users.name, email: users.email, roles: users.roles }).from(users);
-    const installers = allUsers.filter(u => u.roles.includes('installer'));
-    const measurers = allUsers.filter(u => u.roles.includes('measurer'));
+    const installers = allUsers.filter(u => u.roles.includes('installer') || u.roles.includes('admin') || u.roles.includes('measurer'));
+    const measurers = allUsers.filter(u => u.roles.includes('measurer') || u.roles.includes('admin'));
     const architects = allUsers.filter(u => u.roles.includes('architect'));
 
     const r2Config = await tryGetR2Config();
