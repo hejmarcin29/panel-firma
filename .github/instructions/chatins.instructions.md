@@ -75,3 +75,8 @@ Przy każdej implementacji, modyfikacji lub naprawie błędu, **ZAWSZE** analizu
 - **PM2:** Procesy są zarządzane przez PM2 i uruchamiane z katalogu `/srv/panel/`.
 - **Użytkownik:** Aplikacja działa na koncie `deploy`.
 - **Baza Danych:** PostgreSQL. Connection string w `.env` musi używać użytkownika `panel_user` (nie `deploy`).
+
+## Praca z Bazą Danych (PostgreSQL + Drizzle)
+- **Unikaj `LIKE` na kolumnach JSON:** W PostgreSQL kolumny typu JSON (np. `roles`, `categories`) są strukturami danych, a nie tekstem. Używanie operatora `LIKE` (np. `WHERE roles LIKE '%admin%'`) prowadzi do błędów.
+- **Preferuj `db.query`:** Korzystaj z API `db.query.table.findMany()` zamiast surowych zapytań SQL (`db.select().where(sql...)`). Drizzle automatycznie obsługuje mapowanie typów JSON na obiekty JS.
+- **Filtrowanie w JS:** Dla małych zbiorów danych (np. lista użytkowników, statusy), bezpieczniej i czytelniej jest pobrać wszystkie rekordy i przefiltrować je w JavaScript (`.filter()`), zamiast tworzyć skomplikowane rzutowania typów w SQL.

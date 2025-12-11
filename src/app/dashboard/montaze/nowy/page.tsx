@@ -7,8 +7,17 @@ import { users, montages } from '@/lib/db/schema';
 import { sql, eq, desc } from 'drizzle-orm';
 
 export default async function NewMontagePage() {
-    const installers = await db.select({ id: users.id, name: users.name, email: users.email }).from(users).where(sql`${users.roles}::text LIKE '%"installer"%'`);
-    const measurers = await db.select({ id: users.id, name: users.name, email: users.email }).from(users).where(sql`${users.roles}::text LIKE '%"measurer"%'`);
+    const allUsers = await db.query.users.findMany({
+        columns: {
+            id: true,
+            name: true,
+            email: true,
+            roles: true,
+        }
+    });
+
+    const installers = allUsers.filter(u => u.roles?.includes('installer') || u.roles?.includes('admin'));
+    const measurers = allUsers.filter(u => u.roles?.includes('measurer') || u.roles?.includes('admin'));
     
     const leads = await db.query.montages.findMany({
         where: eq(montages.status, 'lead'),
