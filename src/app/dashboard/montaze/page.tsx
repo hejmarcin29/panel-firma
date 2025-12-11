@@ -1,4 +1,4 @@
-import { asc, desc, eq, and, inArray, or } from 'drizzle-orm';
+import { asc, desc, eq, and, inArray, or, sql } from 'drizzle-orm';
 import Link from 'next/link';
 import { Plus, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 import { MontageDashboardView } from './_components/montage-dashboard-view';
 import { InstallerDashboardView } from './_components/installer-dashboard-view';
 import { MontageViewTabs, MontageStageFilters } from './_components/montage-view-switcher';
+import { MontageSortSelect } from './_components/montage-sort-select';
 import { AddLeadModal } from './_components/add-lead-modal';
 import { mapMontageRow, type MontageRow } from './utils';
 import { db } from '@/lib/db';
@@ -22,6 +23,7 @@ import {
 import { tryGetR2Config } from '@/lib/r2/config';
 import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
+import { SORT_OPTIONS, type SortOption } from './constants';
 
 type MontageView = 'lead' | 'in-progress' | 'done';
 
@@ -38,7 +40,7 @@ type InProgressStage =
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default async function MontazePage(props: any) {
     const searchParams = (await props.searchParams) as
-        | { view?: string; stage?: string }
+        | { view?: string; stage?: string; sort?: string }
         | undefined;
     const user = await requireUser();
     const r2Config = await tryGetR2Config();
@@ -97,6 +99,8 @@ export default async function MontazePage(props: any) {
             ? searchParams.stage
             : 'all';
 
+    const sort = (searchParams?.sort as SortOption) || SORT_OPTIONS.LAST_ACTIVITY;
+
     const conditions: (ReturnType<typeof eq> | ReturnType<typeof inArray>)[] = [];
 
     // Special logic for installers: they see everything assigned to them
@@ -145,9 +149,21 @@ export default async function MontazePage(props: any) {
         }
     }
 
+    let orderByClause;
+    if (sort === SORT_OPTIONS.SMART_DATE) {
+        orderByClause = [
+            asc(sql`COALESCE(${montages.scheduledInstallationAt}, ${montages.forecastedInstallationDate})`),
+            desc(montages.createdAt)
+        ];
+    } else if (sort === SORT_OPTIONS.STAGNATION) {
+        orderByClause = asc(montages.updatedAt);
+    } else {
+        orderByClause = desc(montages.updatedAt);
+    }
+
     const montageRows = await db.query.montages.findMany({
         where: conditions.length ? and(...conditions) : undefined,
-        orderBy: desc(montages.updatedAt),
+        orderBy: orderByClause,
         with: {
             notes: {
                 orderBy: desc(montageNotes.createdAt),
@@ -256,7 +272,10 @@ export default async function MontazePage(props: any) {
                             </Button>
                         </div>
                     </div>
-                    <MontageViewTabs />
+                    <div className="flex items-center gap-2">
+                        <MontageSortSelect />
+                        <MontageViewTabs />
+                    </div>
                 </div>
                 <MontageStageFilters />
             </div>

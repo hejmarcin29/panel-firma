@@ -53,7 +53,13 @@ export function IntegrationLogs({ logs }: IntegrationLogsProps) {
 									<p className="text-sm font-medium mt-1">{log.message}</p>
                                     {!!log.meta && (
                                         <pre className="text-[10px] bg-muted p-2 rounded overflow-x-auto mt-1">
-                                            {JSON.stringify(typeof log.meta === 'string' ? JSON.parse(log.meta) : log.meta, null, 2)}
+                                            {(() => {
+                                                try {
+                                                    return JSON.stringify(typeof log.meta === 'string' ? JSON.parse(log.meta) : log.meta, null, 2);
+                                                } catch {
+                                                    return String(log.meta);
+                                                }
+                                            })()}
                                         </pre>
                                     )}
 								</div>

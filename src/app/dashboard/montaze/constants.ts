@@ -39,3 +39,17 @@ export const statusOptions: StatusOption[] = montageStatuses.map((value) => ({
 	label: statusLabels[value].label,
 	description: statusLabels[value].description,
 }));
+
+export const SORT_OPTIONS = {
+    SMART_DATE: 'smart-date',
+    STAGNATION: 'stagnation',
+    LAST_ACTIVITY: 'last-activity',
+} as const;
+
+export type SortOption = typeof SORT_OPTIONS[keyof typeof SORT_OPTIONS];
+
+export const sortLabels: Record<SortOption, string> = {
+    [SORT_OPTIONS.SMART_DATE]: 'Termin Realizacji (Smart)',
+    [SORT_OPTIONS.STAGNATION]: 'Najdłużej w etapie',
+    [SORT_OPTIONS.LAST_ACTIVITY]: 'Ostatnia aktywność',
+};

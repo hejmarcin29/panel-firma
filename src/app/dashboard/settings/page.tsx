@@ -94,9 +94,13 @@ export default async function SettingsPage() {
     if (user.mobileMenuConfig) {
       // Drizzle with mode: 'json' returns object/array directly, no need to parse if typed correctly
       // But let's check if it's string or object just in case
-      mobileMenuConfig = typeof user.mobileMenuConfig === 'string' 
+      const parsed = typeof user.mobileMenuConfig === 'string' 
         ? JSON.parse(user.mobileMenuConfig) 
-        : user.mobileMenuConfig as MobileMenuItem[];
+        : user.mobileMenuConfig;
+      
+      if (Array.isArray(parsed)) {
+        mobileMenuConfig = parsed as MobileMenuItem[];
+      }
     }
   } catch (e) {
     console.error("Failed to parse mobile menu config", e);

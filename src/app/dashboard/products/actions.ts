@@ -426,7 +426,10 @@ export async function getProductsFromDb(
         let categories: number[] = [];
         if (typeof p.categories === 'string') {
             try {
-                categories = JSON.parse(p.categories);
+                const parsed = JSON.parse(p.categories);
+                if (Array.isArray(parsed)) {
+                    categories = parsed;
+                }
             } catch {
                 categories = [];
             }
@@ -437,7 +440,10 @@ export async function getProductsFromDb(
         let attributes: WooCommerceProduct['attributes'] = [];
         if (typeof p.attributes === 'string') {
             try {
-                attributes = JSON.parse(p.attributes);
+                const parsed = JSON.parse(p.attributes);
+                if (Array.isArray(parsed)) {
+                    attributes = parsed;
+                }
             } catch {
                 attributes = [];
             }

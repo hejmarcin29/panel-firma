@@ -113,19 +113,23 @@ export function MobileNav({ user, urgentOrdersCount = 0, userRoles = ['admin'] }
 
   if (user.mobileMenuConfig) {
     try {
-      const config: MobileMenuItem[] = typeof user.mobileMenuConfig === 'string' 
+      const parsed = typeof user.mobileMenuConfig === 'string' 
         ? JSON.parse(user.mobileMenuConfig) 
-        : user.mobileMenuConfig as MobileMenuItem[];
-      const enabledLinks = config
-        .filter(item => item.visible && isAllowed(item.href))
-        .map(item => ({
-          href: item.href,
-          label: item.label,
-          icon: iconMap[item.iconName] || Home // Fallback icon
-        }));
-      
-      if (enabledLinks.length > 0) {
-        displayedLinks = enabledLinks;
+        : user.mobileMenuConfig;
+
+      if (Array.isArray(parsed)) {
+        const config = parsed as MobileMenuItem[];
+        const enabledLinks = config
+          .filter(item => item.visible && isAllowed(item.href))
+          .map(item => ({
+            href: item.href,
+            label: item.label,
+            icon: iconMap[item.iconName] || Home // Fallback icon
+          }));
+        
+        if (enabledLinks.length > 0) {
+          displayedLinks = enabledLinks;
+        }
       }
     } catch (e) {
       console.error("Failed to parse mobile menu config", e);
