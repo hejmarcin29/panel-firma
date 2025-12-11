@@ -58,7 +58,10 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         console.error('Failed to fetch urgent orders count:', error);
     }
 
-    const systemLogoUrl = await getAppSetting(appSettingKeys.systemLogoUrl);
+    let systemLogoUrl = await getAppSetting(appSettingKeys.systemLogoUrl);
+    if (systemLogoUrl && !systemLogoUrl.startsWith('http') && !systemLogoUrl.startsWith('/')) {
+        systemLogoUrl = `https://${systemLogoUrl}`;
+    }
     const logoSrc = systemLogoUrl || "/logo.png";
 
 	return (

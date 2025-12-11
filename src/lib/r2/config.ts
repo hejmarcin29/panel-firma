@@ -32,13 +32,18 @@ export async function getR2Config(): Promise<R2Config> {
 		(async () => (await getAppSetting(appSettingKeys.r2ApiToken))?.trim() ?? null)(),
 	]);
 
+    let formattedBaseUrl = publicBaseUrl.replace(/\/$/, '');
+    if (!formattedBaseUrl.startsWith('http://') && !formattedBaseUrl.startsWith('https://')) {
+        formattedBaseUrl = `https://${formattedBaseUrl}`;
+    }
+
 	return {
 		accountId,
 		accessKeyId,
 		secretAccessKey,
 		bucketName,
 		endpoint,
-		publicBaseUrl: publicBaseUrl.replace(/\/$/, ''),
+		publicBaseUrl: formattedBaseUrl,
 		apiToken,
 	};
 }

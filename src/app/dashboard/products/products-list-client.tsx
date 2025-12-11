@@ -288,20 +288,44 @@ export function ProductsListClient({
                                     </TableCell>
                                     <TableCell className="hidden md:table-cell">{product.sku || '-'}</TableCell>
                                     <TableCell className="text-right md:text-left">
-                                        {product.on_sale && product.sale_price ? (
-                                            <div className="flex flex-col items-end md:items-start">
-                                                <span className="text-xs text-muted-foreground line-through">
-                                                    {formatPrice(product.regular_price)}
-                                                </span>
-                                                <span className="font-medium text-red-600">
-                                                    {formatPrice(product.sale_price)}
-                                                </span>
-                                            </div>
-                                        ) : (
-                                            <span className="font-medium">
-                                                {formatPrice(product.price || product.regular_price)}
-                                            </span>
-                                        )}
+                                        {(() => {
+                                            const currentPrice = product.on_sale && product.sale_price 
+                                                ? product.sale_price 
+                                                : (product.price || product.regular_price);
+                                            
+                                            const netPrice = typeof currentPrice === 'string' ? parseFloat(currentPrice) : currentPrice;
+                                            
+                                            if (!netPrice || isNaN(netPrice)) {
+                                                return <span className="text-muted-foreground">-</span>;
+                                            }
+
+                                            const gross8 = Math.ceil(netPrice * 1.08) + 1;
+                                            const gross23 = netPrice * 1.23;
+
+                                            return (
+                                                <div className="flex flex-col gap-0.5 text-xs">
+                                                    {product.on_sale && product.sale_price && (
+                                                        <span className="text-[10px] text-muted-foreground line-through mb-1">
+                                                            {formatPrice(product.regular_price)}
+                                                        </span>
+                                                    )}
+                                                    <div className="flex items-center justify-end md:justify-start gap-1">
+                                                        <span className={product.on_sale ? "font-bold text-red-600" : "font-medium"}>
+                                                            {formatPrice(netPrice)}
+                                                        </span>
+                                                        <span className="text-[10px] text-muted-foreground">netto</span>
+                                                    </div>
+                                                    <div className="flex items-center justify-end md:justify-start gap-1 text-muted-foreground">
+                                                        <span>{formatPrice(gross8)}</span>
+                                                        <span className="text-[10px]">(8%)</span>
+                                                    </div>
+                                                    <div className="flex items-center justify-end md:justify-start gap-1 text-muted-foreground">
+                                                        <span>{formatPrice(gross23)}</span>
+                                                        <span className="text-[10px]">(23%)</span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
                                     </TableCell>
                                     <TableCell className="hidden md:table-cell">
                                         {product.manage_stock ? (

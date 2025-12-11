@@ -18,7 +18,10 @@ export default async function LoginPage() {
 		redirect('/dashboard');
 	}
 
-    const systemLogoUrl = await getAppSetting(appSettingKeys.systemLogoUrl);
+    let systemLogoUrl = await getAppSetting(appSettingKeys.systemLogoUrl);
+    if (systemLogoUrl && !systemLogoUrl.startsWith('http') && !systemLogoUrl.startsWith('/')) {
+        systemLogoUrl = `https://${systemLogoUrl}`;
+    }
     const logoSrc = systemLogoUrl || "/logo.png";
 
 	return (
