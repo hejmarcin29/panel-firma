@@ -57,6 +57,7 @@ type QuoteEditorProps = {
             floorArea: number | null;
             skirtingLength: number | null;
             panelModel: string | null;
+            skirtingModel: string | null;
             panelWaste: number | null;
             skirtingWaste: number | null;
             technicalAudit: unknown;
@@ -74,6 +75,22 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
     const [isImporting, setIsImporting] = useState(false);
     const [importDialogOpen, setImportDialogOpen] = useState(false);
     const [availableProducts, setAvailableProducts] = useState<Product[]>([]);
+
+    // Filter products based on montage models
+    const filteredProducts = availableProducts.filter(product => {
+        const searchTerms = [
+            quote.montage.panelModel,
+            quote.montage.skirtingModel
+        ].filter(Boolean).map(t => t?.toLowerCase());
+
+        if (searchTerms.length === 0) return true; // Show all if no models specified
+
+        const productName = product.name.toLowerCase();
+        return searchTerms.some(term => term && productName.includes(term));
+    });
+
+    // If we have filtered results, use them. Otherwise show all (fallback)
+    const productsDisplay = filteredProducts.length > 0 ? filteredProducts : availableProducts;
 
     const calculateItemTotal = (item: QuoteItem) => {
         const net = item.quantity * item.priceNet;
@@ -201,7 +218,7 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
                 
                 // Recalculate packages with waste
                 if (packageAttr && packageAttr.options && packageAttr.options.length > 0) {
-                    const packageSize = parseFloat(packageAttr.options[0]);
+                    const packageSize = parseFloat(packageAttr.options[0].replace(',', '.'));
                     if (!isNaN(packageSize) && packageSize > 0) {
                         const packagesNeeded = Math.ceil(quantityWithWaste / packageSize);
                         quantity = packagesNeeded * packageSize;
@@ -379,7 +396,7 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
                                                     </span>
                                                 </div>
                                             </Button>
-                                            {availableProducts.map((product) => (
+                                            {productsDisplay.map((product) => (
                                                 <Button
                                                     key={product.id}
                                                     variant="ghost"

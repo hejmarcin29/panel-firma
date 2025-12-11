@@ -323,10 +323,11 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
                     <div className="flex gap-2">
                         <Input
                             id="panelModel"
-                            placeholder="np. Dąb Naturalny"
+                            placeholder="Kliknij aby wybrać z listy..."
                             value={panelModel}
-                            onChange={(e) => setPanelModel(e.target.value)}
-                            className="h-8 text-sm flex-1"
+                            readOnly
+                            onClick={() => setIsPanelSelectorOpen(true)}
+                            className="h-8 text-sm flex-1 cursor-pointer bg-muted/50"
                         />
                         <Button 
                             type="button" 
@@ -400,10 +401,11 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
                     <div className="flex gap-2">
                         <Input
                             id="skirtingModel"
-                            placeholder="np. Biała MDF 8cm"
+                            placeholder="Kliknij aby wybrać z listy..."
                             value={skirtingModel}
-                            onChange={(e) => setSkirtingModel(e.target.value)}
-                            className="h-8 text-sm flex-1"
+                            readOnly
+                            onClick={() => setIsSkirtingSelectorOpen(true)}
+                            className="h-8 text-sm flex-1 cursor-pointer bg-muted/50"
                         />
                         <Button 
                             type="button" 
