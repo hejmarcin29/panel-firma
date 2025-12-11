@@ -156,6 +156,7 @@ type CreateMontageInput = {
     customerUpdateStrategy?: 'update' | 'keep';
     installerId?: string;
     measurerId?: string;
+    leadId?: string;
 };
 
 export type CustomerConflictData = {
@@ -193,6 +194,7 @@ export async function createMontage({
     customerUpdateStrategy,
     installerId,
     measurerId,
+    leadId,
 }: CreateMontageInput): Promise<CreateMontageResult> {
 	const user = await requireUser();
 
@@ -202,8 +204,6 @@ export async function createMontage({
 	}
 
 	const now = new Date();
-	const montageId = crypto.randomUUID();
-    const displayId = await generateNextMontageId();
 	const templates = await getMontageChecklistTemplates();
 	const normalizedBilling = billingAddress?.trim() ? billingAddress.trim() : null;
 	const normalizedInstallation = installationAddress?.trim() ? installationAddress.trim() : null;
@@ -328,54 +328,86 @@ export async function createMontage({
 		}
 	}
 
-    // Retry logic for unique displayId
-    let saved = false;
-    let attempts = 0;
-    while (!saved && attempts < 3) {
-        try {
-            const displayId = await generateNextMontageId();
-            await db.insert(montages).values({
-                id: montageId,
-                displayId,
-                clientName: trimmedName,
-                contactPhone: contactPhone?.trim() ?? null,
-                contactEmail: contactEmail?.trim() ?? null,
-                address: fallbackAddressLine,
-                billingAddress: normalizedBilling,
-                installationAddress: normalizedInstallation,
-                billingCity: normalizedBillingCity,
-                installationCity: normalizedInstallationCity,
-                billingPostalCode: normalizedBillingPostalCode,
-                installationPostalCode: normalizedInstallationPostalCode,
-                isCompany: isCompany ?? false,
-                companyName: normalizedCompanyName,
-                nip: normalizedNip,
-                scheduledInstallationAt: null,
-                scheduledInstallationEndAt: null,
-                forecastedInstallationDate: forecastedDate,
-                installerId: installerId || null,
-                measurerId: measurerId || null,
-                materialDetails: normalizedMaterialDetails,
-                measurementDetails: normalizedMaterialDetails, // Sync on create
-                status: 'lead',
-                createdAt: now,
-                updatedAt: now,
-            });
-            saved = true;
-        } catch (e: unknown) {
-            const message = e instanceof Error ? e.message : String(e);
-            if (message.includes('UNIQUE constraint failed: montages.display_id')) {
-                attempts++;
-                // Wait a bit before retrying to reduce collision chance
-                await new Promise(resolve => setTimeout(resolve, 100));
-            } else {
-                throw e;
+    let finalMontageId = leadId || crypto.randomUUID();
+    let finalDisplayId = '';
+
+    if (leadId) {
+        const existingLead = await db.query.montages.findFirst({
+            where: eq(montages.id, leadId),
+        });
+        if (!existingLead) throw new Error('Lead not found');
+        finalDisplayId = existingLead.displayId!;
+        
+        await db.update(montages).set({
+            clientName: trimmedName,
+            contactPhone: contactPhone?.trim() ?? null,
+            contactEmail: contactEmail?.trim() ?? null,
+            address: fallbackAddressLine,
+            billingAddress: normalizedBilling,
+            installationAddress: normalizedInstallation,
+            billingCity: normalizedBillingCity,
+            installationCity: normalizedInstallationCity,
+            billingPostalCode: normalizedBillingPostalCode,
+            installationPostalCode: normalizedInstallationPostalCode,
+            isCompany: isCompany ?? false,
+            companyName: normalizedCompanyName,
+            nip: normalizedNip,
+            forecastedInstallationDate: forecastedDate,
+            installerId: installerId || null,
+            measurerId: measurerId || null,
+            materialDetails: normalizedMaterialDetails,
+            measurementDetails: normalizedMaterialDetails,
+            status: 'before_measurement',
+            updatedAt: now,
+        }).where(eq(montages.id, leadId));
+    } else {
+        let saved = false;
+        let attempts = 0;
+        while (!saved && attempts < 3) {
+            try {
+                finalDisplayId = await generateNextMontageId();
+                await db.insert(montages).values({
+                    id: finalMontageId,
+                    displayId: finalDisplayId,
+                    clientName: trimmedName,
+                    contactPhone: contactPhone?.trim() ?? null,
+                    contactEmail: contactEmail?.trim() ?? null,
+                    address: fallbackAddressLine,
+                    billingAddress: normalizedBilling,
+                    installationAddress: normalizedInstallation,
+                    billingCity: normalizedBillingCity,
+                    installationCity: normalizedInstallationCity,
+                    billingPostalCode: normalizedBillingPostalCode,
+                    installationPostalCode: normalizedInstallationPostalCode,
+                    isCompany: isCompany ?? false,
+                    companyName: normalizedCompanyName,
+                    nip: normalizedNip,
+                    scheduledInstallationAt: null,
+                    scheduledInstallationEndAt: null,
+                    forecastedInstallationDate: forecastedDate,
+                    installerId: installerId || null,
+                    measurerId: measurerId || null,
+                    materialDetails: normalizedMaterialDetails,
+                    measurementDetails: normalizedMaterialDetails,
+                    status: 'lead',
+                    createdAt: now,
+                    updatedAt: now,
+                });
+                saved = true;
+            } catch (e: unknown) {
+                const message = e instanceof Error ? e.message : String(e);
+                if (message.includes('UNIQUE constraint failed: montages.display_id')) {
+                    attempts++;
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                } else {
+                    throw e;
+                }
             }
         }
-    }
 
-    if (!saved) {
-        throw new Error('Nie udało się wygenerować unikalnego numeru montażu. Spróbuj ponownie.');
+        if (!saved) {
+            throw new Error('Nie udało się wygenerować unikalnego numeru montażu. Spróbuj ponownie.');
+        }
     }
 
     // Google Calendar Sync
@@ -392,10 +424,10 @@ export async function createMontage({
         }
 
         const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') || '';
-        const montageUrl = appUrl ? `${appUrl}/dashboard/montaze/${montageId}` : '';
+        const montageUrl = appUrl ? `${appUrl}/dashboard/montaze/${finalMontageId}` : '';
 
         const eventId = await createGoogleCalendarEvent({
-            summary: `Montaż: ${trimmedName} (${displayId})`,
+            summary: `Montaż: ${trimmedName} (${finalDisplayId})`,
             description: `Montaż dla klienta: ${trimmedName}\nTelefon: ${contactPhone || 'Brak'}\nAdres: ${fallbackAddressLine || 'Brak'}\nSzczegóły: ${normalizedMaterialDetails || 'Brak'}${montageUrl ? `\n\nLink do montażu: ${montageUrl}` : ''}`,
             location: fallbackAddressLine || '',
             start: { dateTime: forecastedDate.toISOString() },
@@ -404,30 +436,36 @@ export async function createMontage({
         });
 
         if (eventId) {
-            await db.update(montages).set({ googleEventId: eventId }).where(eq(montages.id, montageId));
+            await db.update(montages).set({ googleEventId: eventId }).where(eq(montages.id, finalMontageId));
         }
     }
 
 	if (templates.length > 0) {
-		await db.insert(montageChecklistItems).values(
-			templates.map((template, index) => ({
-				id: crypto.randomUUID(),
-				montageId,
-				templateId: template.id,
-				label: template.label,
-				allowAttachment: template.allowAttachment,
-				completed: false,
-				orderIndex: index,
-				createdAt: now,
-				updatedAt: now,
-			}))
-		);
+        const existingItems = await db.query.montageChecklistItems.findFirst({
+            where: eq(montageChecklistItems.montageId, finalMontageId),
+        });
+
+        if (!existingItems) {
+            await db.insert(montageChecklistItems).values(
+                templates.map((template, index) => ({
+                    id: crypto.randomUUID(),
+                    montageId: finalMontageId,
+                    templateId: template.id,
+                    label: template.label,
+                    allowAttachment: template.allowAttachment,
+                    completed: false,
+                    orderIndex: index,
+                    createdAt: now,
+                    updatedAt: now,
+                }))
+            );
+        }
 	}
 
-	await logSystemEvent('create_montage', `Utworzono montaż ${displayId} dla ${trimmedName}`, user.id);
+	await logSystemEvent('create_montage', `Utworzono/zaktualizowano montaż ${finalDisplayId} dla ${trimmedName}`, user.id);
 
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
-    return { status: 'success', montageId };
+    return { status: 'success', montageId: finalMontageId };
 }
 
 type UpdateMontageStatusInput = {
@@ -1226,4 +1264,38 @@ export async function updateMontageRealizationStatus({
 
     revalidatePath(`${MONTAGE_DASHBOARD_PATH}/${montageId}`);
     revalidatePath(MONTAGE_DASHBOARD_PATH);
+}
+
+export async function createLead(data: {
+    clientName: string;
+    contactPhone?: string;
+    address?: string;
+    description?: string;
+}) {
+    const user = await requireUser();
+    
+    const trimmedName = data.clientName.trim();
+    if (!trimmedName) {
+        throw new Error('Podaj nazwę klienta.');
+    }
+
+    const displayId = await generateNextMontageId();
+    const montageId = crypto.randomUUID();
+    const now = new Date();
+
+    await db.insert(montages).values({
+        id: montageId,
+        displayId,
+        clientName: trimmedName,
+        contactPhone: data.contactPhone?.trim() || null,
+        address: data.address?.trim() || null,
+        materialDetails: data.description?.trim() || null,
+        status: 'lead',
+        createdAt: now,
+        updatedAt: now,
+    });
+
+    await logSystemEvent('create_lead', `Utworzono lead ${displayId} dla ${trimmedName}`, user.id);
+    revalidatePath(MONTAGE_DASHBOARD_PATH);
+    return { status: 'success', montageId };
 }

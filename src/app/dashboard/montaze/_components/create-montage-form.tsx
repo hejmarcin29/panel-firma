@@ -75,13 +75,24 @@ const initialState: FormState = {
 
 type UserOption = { id: string; name: string | null; email: string };
 
+type LeadOption = {
+    id: string;
+    clientName: string;
+    displayId: string | null;
+    createdAt: Date;
+    contactPhone: string | null;
+    address: string | null;
+    materialDetails: string | null;
+};
+
 type CreateMontageFormProps = {
 	onSuccess?: () => void;
     installers?: UserOption[];
     measurers?: UserOption[];
+    leads?: LeadOption[];
 };
 
-export function CreateMontageForm({ onSuccess, installers = [], measurers = [] }: CreateMontageFormProps) {
+export function CreateMontageForm({ onSuccess, installers = [], measurers = [], leads = [] }: CreateMontageFormProps) {
 	const router = useRouter();
 	const [form, setForm] = useState<FormState>(initialState);
 	const [feedback, setFeedback] = useState<string | null>(null);
@@ -89,6 +100,28 @@ export function CreateMontageForm({ onSuccess, installers = [], measurers = [] }
 	const [isPending, startTransition] = useTransition();
 	const [sameAsBilling, setSameAsBilling] = useState(true);
     const [conflictData, setConflictData] = useState<{ existing: CustomerConflictData, new: CustomerConflictData } | null>(null);
+    const [selectedLeadId, setSelectedLeadId] = useState<string>('none');
+
+    const handleLeadChange = (leadId: string) => {
+        setSelectedLeadId(leadId);
+        if (leadId === 'none') {
+            setForm(initialState);
+            return;
+        }
+        
+        const lead = leads.find(l => l.id === leadId);
+        if (lead) {
+            setForm(prev => ({
+                ...initialState, // Reset first
+                clientName: lead.clientName,
+                contactPhone: lead.contactPhone || '',
+                billingAddress: lead.address || '',
+                installationAddress: lead.address || '',
+                materialDetails: lead.materialDetails || '',
+            }));
+            setSameAsBilling(true);
+        }
+    };
 
 	const handleInputChange = (key: keyof FormState) => (
 		event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -146,6 +179,7 @@ export function CreateMontageForm({ onSuccess, installers = [], measurers = [] }
                     customerUpdateStrategy: strategy,
                     installerId: form.installerId === 'none' || !form.installerId ? undefined : form.installerId,
                     measurerId: form.measurerId === 'none' || !form.measurerId ? undefined : form.measurerId,
+                    leadId: selectedLeadId === 'none' ? undefined : selectedLeadId,
 				});
 
                 if (result.status === 'conflict') {
@@ -222,6 +256,24 @@ export function CreateMontageForm({ onSuccess, installers = [], measurers = [] }
             </AlertDialog>
 
 		<form onSubmit={handleSubmit} className="space-y-4 rounded-xl border bg-background p-4 shadow-sm">
+            {leads.length > 0 && (
+                <div className="mb-6 p-4 border rounded-lg bg-muted/50">
+                    <Label htmlFor="lead-select" className="mb-2 block">Wybierz z Leadów (opcjonalnie)</Label>
+                    <Select value={selectedLeadId} onValueChange={handleLeadChange}>
+                        <SelectTrigger id="lead-select">
+                            <SelectValue placeholder="Wybierz lead..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="none">-- Nowy montaż (czysty formularz) --</SelectItem>
+                            {leads.map(lead => (
+                                <SelectItem key={lead.id} value={lead.id}>
+                                    {lead.displayId} - {lead.clientName} ({new Date(lead.createdAt).toLocaleDateString()})
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            )}
 			<div>
 				<Label htmlFor="montage-client">Klient (Osoba kontaktowa)</Label>
 				<Input

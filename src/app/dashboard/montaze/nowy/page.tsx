@@ -3,12 +3,26 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 import { db } from '@/lib/db';
-import { users } from '@/lib/db/schema';
-import { sql } from 'drizzle-orm';
+import { users, montages } from '@/lib/db/schema';
+import { sql, eq, desc } from 'drizzle-orm';
 
 export default async function NewMontagePage() {
     const installers = await db.select({ id: users.id, name: users.name, email: users.email }).from(users).where(sql`${users.roles}::text LIKE '%"installer"%'`);
     const measurers = await db.select({ id: users.id, name: users.name, email: users.email }).from(users).where(sql`${users.roles}::text LIKE '%"measurer"%'`);
+    
+    const leads = await db.query.montages.findMany({
+        where: eq(montages.status, 'lead'),
+        orderBy: desc(montages.createdAt),
+        columns: {
+            id: true,
+            clientName: true,
+            displayId: true,
+            createdAt: true,
+            contactPhone: true,
+            address: true,
+            materialDetails: true,
+        }
+    });
 
     return (
         <div className="container mx-auto py-6 max-w-3xl">
@@ -24,7 +38,7 @@ export default async function NewMontagePage() {
                     Uzupełnij dane kontaktowe, adresowe oraz materiały. Lista kontrolna zostanie dodana automatycznie.
                 </p>
             </div>
-            <CreateMontageForm installers={installers} measurers={measurers} />
+            <CreateMontageForm installers={installers} measurers={measurers} leads={leads} />
         </div>
     );
 }

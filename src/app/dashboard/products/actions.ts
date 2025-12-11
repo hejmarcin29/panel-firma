@@ -422,73 +422,97 @@ export async function getProductsFromDb(
         .offset(offset)
         .orderBy(orderBy);
 
-    const mappedProducts: WooCommerceProduct[] = dbProducts.map(p => ({
-        id: p.id,
-        name: p.name,
-        slug: p.slug,
-        sku: p.sku || '',
-        price: p.price || '',
-        regular_price: p.regularPrice || '',
-        sale_price: p.salePrice || '',
-        status: p.status,
-        stock_status: p.stockStatus || 'instock',
-        stock_quantity: p.stockQuantity,
-        images: p.imageUrl ? [{ src: p.imageUrl, id: 0, date_created: '', date_created_gmt: '', date_modified: '', date_modified_gmt: '', name: '', alt: '' }] : [],
-        categories: p.categories ? JSON.parse(p.categories as string).map((id: number) => ({ id, name: '', slug: '' })) : [],
-        attributes: p.attributes ? JSON.parse(p.attributes as string) : [],
-        permalink: '',
-        date_created: '',
-        date_modified: p.updatedAt.toISOString(),
-        type: 'simple',
-        featured: false,
-        catalog_visibility: 'visible',
-        description: '',
-        short_description: '',
-        date_on_sale_from: null,
-        date_on_sale_from_gmt: null,
-        date_on_sale_to: null,
-        date_on_sale_to_gmt: null,
-        price_html: '',
-        on_sale: false,
-        purchasable: true,
-        total_sales: 0,
-        virtual: false,
-        downloadable: false,
-        downloads: [],
-        download_limit: 0,
-        download_expiry: 0,
-        external_url: '',
-        button_text: '',
-        tax_status: 'taxable',
-        tax_class: '',
-        manage_stock: false,
-        backorders: 'no',
-        backorders_allowed: false,
-        backordered: false,
-        sold_individually: false,
-        weight: '',
-        dimensions: { length: '', width: '', height: '' },
-        shipping_required: true,
-        shipping_taxable: true,
-        shipping_class: '',
-        shipping_class_id: 0,
-        reviews_allowed: true,
-        average_rating: '0.00',
-        rating_count: 0,
-        related_ids: [],
-        upsell_ids: [],
-        cross_sell_ids: [],
-        parent_id: 0,
-        purchase_note: '',
-        tags: [],
-        default_attributes: [],
-        variations: [],
-        grouped_products: [],
-        menu_order: 0,
-        meta_data: [],
-        isForMontage: p.isForMontage ?? false,
-        montageType: p.montageType,
-    }));
+    const mappedProducts: WooCommerceProduct[] = dbProducts.map(p => {
+        let categories: number[] = [];
+        if (typeof p.categories === 'string') {
+            try {
+                categories = JSON.parse(p.categories);
+            } catch (e) {
+                categories = [];
+            }
+        } else if (Array.isArray(p.categories)) {
+            categories = p.categories as number[];
+        }
+
+        let attributes: any[] = [];
+        if (typeof p.attributes === 'string') {
+            try {
+                attributes = JSON.parse(p.attributes);
+            } catch (e) {
+                attributes = [];
+            }
+        } else if (Array.isArray(p.attributes)) {
+            attributes = p.attributes as any[];
+        }
+
+        return {
+            id: p.id,
+            name: p.name,
+            slug: p.slug,
+            sku: p.sku || '',
+            price: p.price || '',
+            regular_price: p.regularPrice || '',
+            sale_price: p.salePrice || '',
+            status: p.status,
+            stock_status: p.stockStatus || 'instock',
+            stock_quantity: p.stockQuantity,
+            images: p.imageUrl ? [{ src: p.imageUrl, id: 0, date_created: '', date_created_gmt: '', date_modified: '', date_modified_gmt: '', name: '', alt: '' }] : [],
+            categories: categories.map((id: number) => ({ id, name: '', slug: '' })),
+            attributes: attributes,
+            permalink: '',
+            date_created: '',
+            date_modified: p.updatedAt.toISOString(),
+            type: 'simple',
+            featured: false,
+            catalog_visibility: 'visible',
+            description: '',
+            short_description: '',
+            date_on_sale_from: null,
+            date_on_sale_from_gmt: null,
+            date_on_sale_to: null,
+            date_on_sale_to_gmt: null,
+            price_html: '',
+            on_sale: false,
+            purchasable: true,
+            total_sales: 0,
+            virtual: false,
+            downloadable: false,
+            downloads: [],
+            download_limit: 0,
+            download_expiry: 0,
+            external_url: '',
+            button_text: '',
+            tax_status: 'taxable',
+            tax_class: '',
+            manage_stock: false,
+            backorders: 'no',
+            backorders_allowed: false,
+            backordered: false,
+            sold_individually: false,
+            weight: '',
+            dimensions: { length: '', width: '', height: '' },
+            shipping_required: true,
+            shipping_taxable: true,
+            shipping_class: '',
+            shipping_class_id: 0,
+            reviews_allowed: true,
+            average_rating: '0.00',
+            rating_count: 0,
+            related_ids: [],
+            upsell_ids: [],
+            cross_sell_ids: [],
+            parent_id: 0,
+            purchase_note: '',
+            tags: [],
+            default_attributes: [],
+            variations: [],
+            grouped_products: [],
+            menu_order: 0,
+            meta_data: [],
+            isForMontage: p.isForMontage ?? false,
+            montageType: p.montageType,
+        };
+    });
 
     return { products: mappedProducts, total, totalPages };
 }

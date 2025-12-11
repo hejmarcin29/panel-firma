@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 import { MontageDashboardView } from './_components/montage-dashboard-view';
 import { InstallerDashboardView } from './_components/installer-dashboard-view';
 import { MontageViewTabs, MontageStageFilters } from './_components/montage-view-switcher';
+import { AddLeadModal } from './_components/add-lead-modal';
 import { mapMontageRow, type MontageRow } from './utils';
 import { db } from '@/lib/db';
 import { requireUser } from '@/lib/auth/session';
@@ -275,6 +276,7 @@ export default async function MontazePage(props: any) {
                                     </Link>
                                 </Button>
                             )}
+                            <AddLeadModal />
                             <Button asChild>
                                 <Link href="/dashboard/montaze/nowy">
                                     <Plus className="mr-2 h-4 w-4" />
