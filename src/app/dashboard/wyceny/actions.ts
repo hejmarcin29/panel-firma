@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { quotes, type QuoteItem, type QuoteStatus, mailAccounts, montages } from '@/lib/db/schema';
+import { quotes, type QuoteItem, type QuoteStatus, mailAccounts, montages, products } from '@/lib/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { randomUUID } from 'crypto';
@@ -230,4 +230,16 @@ export async function getMontagesForQuoteSelection() {
         ...m,
         hasQuote: quoteMontageIds.has(m.id)
     }));
+}
+
+export async function getProductsForQuote() {
+    return await db.query.products.findMany({
+        where: eq(products.status, 'publish'),
+        columns: {
+            id: true,
+            name: true,
+            price: true,
+            attributes: true,
+        }
+    });
 }

@@ -39,11 +39,18 @@ export function NewQuoteDialog() {
 
     useEffect(() => {
         if (open) {
-            setLoading(true);
-            getMontagesForQuoteSelection()
-                .then(setMontages)
-                .catch(() => toast.error('Nie udało się pobrać listy montaży'))
-                .finally(() => setLoading(false));
+            const load = async () => {
+                setLoading(true);
+                try {
+                    const data = await getMontagesForQuoteSelection();
+                    setMontages(data);
+                } catch {
+                    toast.error('Nie udało się pobrać listy montaży');
+                } finally {
+                    setLoading(false);
+                }
+            };
+            load();
         }
     }, [open]);
 

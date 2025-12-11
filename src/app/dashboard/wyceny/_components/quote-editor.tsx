@@ -10,11 +10,19 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Trash2, Plus, Wand2, Save, Printer, Mail } from 'lucide-react';
-import { updateQuote, sendQuoteEmail } from '../actions';
+import { updateQuote, sendQuoteEmail, getProductsForQuote } from '../actions';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 import type { QuoteItem, QuoteStatus } from '@/lib/db/schema';
 import type { TechnicalAuditData } from '@/app/dashboard/montaze/technical-data';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 type QuoteEditorProps = {
     quote: {
@@ -28,6 +36,9 @@ type QuoteEditorProps = {
             installationAddress: string | null;
             floorArea: number | null;
             skirtingLength: number | null;
+            panelModel: string | null;
+            panelWaste: number | null;
+            skirtingWaste: number | null;
             technicalAudit: unknown;
         };
     };
@@ -40,6 +51,9 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
     const [notes, setNotes] = useState(quote.notes || '');
     const [isSaving, setIsSaving] = useState(false);
     const [isSending, setIsSending] = useState(false);
+    const [isImporting, setIsImporting] = useState(false);
+    const [importDialogOpen, setImportDialogOpen] = useState(false);
+    const [availableProducts, setAvailableProducts] = useState<any[]>([]);
 
     const calculateItemTotal = (item: QuoteItem) => {
         const net = item.quantity * item.priceNet;
@@ -80,14 +94,25 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
         setItems(items.filter((_, i) => i !== index));
     };
 
-    const handleSmartImport = () => {
+    const handleSmartImport = async () => {
+        setIsImporting(true);
+        try {
+            const products = await getProductsForQuote();
+            setAvailableProducts(products);
+            setImportDialogOpen(true);
+        } catch {
+            toast.error('Nie udało się pobrać produktów');
+        } finally {
+            setIsImporting(false);
+        }
+    };
+
+    const executeSmartImport = (selectedProduct?: any) => {
         const audit = quote.montage.technicalAudit as TechnicalAuditData | null;
-        // Even if audit is missing, we can import basic montage data
-        
         const newItems = [...items];
         let importedCount = 0;
 
-        // Import Floor Area
+        // Import Floor Area (Service)
         if (quote.montage.floorArea) {
             newItems.push({
                 id: Math.random().toString(36).substr(2, 9),
@@ -103,7 +128,87 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
             importedCount++;
         }
 
-        // Import Skirting
+        // Import Selected Product (Material)
+        if (selectedProduct) {
+            // Check if it's a skirting board (has length attribute)
+            const lengthAttr = selectedProduct.attributes?.find((a: any) => a.slug === 'pa_dlugosc');
+            
+            if (lengthAttr && quote.montage.skirtingLength) {
+                // SKIRTING BOARD LOGIC
+                let quantityMb = quote.montage.skirtingLength;
+                
+                // Add waste (from montage settings or default 5%)
+                const wastePercent = quote.montage.skirtingWaste ?? 5;
+                const quantityMbWithWaste = quantityMb * (1 + wastePercent / 100);
+                
+                // Parse length from attribute (e.g. "2.4 metra")
+                const lengthStr = lengthAttr.options?.[0] || '0';
+                const lengthPerPiece = parseFloat(lengthStr.replace(',', '.').replace(/[^0-9.]/g, ''));
+                
+                if (!isNaN(lengthPerPiece) && lengthPerPiece > 0) {
+                    const piecesNeeded = Math.ceil(quantityMbWithWaste / lengthPerPiece);
+                    const notes = `(Zapotrzebowanie: ${quantityMbWithWaste.toFixed(2)} mb [zapas ${wastePercent}%], ${piecesNeeded} szt. po ${lengthPerPiece} mb)`;
+                    
+                    const priceNet = parseFloat(selectedProduct.price || '0');
+
+                    newItems.push({
+                        id: Math.random().toString(36).substr(2, 9),
+                        name: selectedProduct.name + ` ${notes}`,
+                        quantity: piecesNeeded,
+                        unit: 'szt',
+                        priceNet: priceNet,
+                        vatRate: 0.23,
+                        priceGross: priceNet * 1.23,
+                        totalNet: piecesNeeded * priceNet,
+                        totalGross: piecesNeeded * priceNet * 1.23,
+                    });
+                    importedCount++;
+                }
+            } else if (quote.montage.floorArea) {
+                // PANEL LOGIC (Default)
+                let quantity = quote.montage.floorArea;
+                let unit = 'm2';
+                let notes = '';
+
+                // Add waste (from montage settings or default 5%)
+                const wastePercent = quote.montage.panelWaste ?? 5;
+                const quantityWithWaste = quantity * (1 + wastePercent / 100);
+                
+                // Check for package quantity attribute
+                const packageAttr = selectedProduct.attributes?.find((a: any) => a.slug === 'pa_ilosc_opakowanie');
+                
+                // Recalculate packages with waste
+                if (packageAttr && packageAttr.options && packageAttr.options.length > 0) {
+                    const packageSize = parseFloat(packageAttr.options[0]);
+                    if (!isNaN(packageSize) && packageSize > 0) {
+                        const packagesNeeded = Math.ceil(quantityWithWaste / packageSize);
+                        quantity = packagesNeeded * packageSize;
+                        notes = `(Pełne opakowania: ${packagesNeeded} op. po ${packageSize} m2 [zapas ${wastePercent}%])`;
+                    } else {
+                        quantity = quantityWithWaste;
+                    }
+                } else {
+                    quantity = quantityWithWaste;
+                }
+
+                const priceNet = parseFloat(selectedProduct.price || '0');
+                
+                newItems.push({
+                    id: Math.random().toString(36).substr(2, 9),
+                    name: selectedProduct.name + (notes ? ` ${notes}` : ''),
+                    quantity: Number(quantity.toFixed(2)),
+                    unit: unit,
+                    priceNet: priceNet,
+                    vatRate: 0.23, // Material VAT
+                    priceGross: priceNet * 1.23,
+                    totalNet: quantity * priceNet,
+                    totalGross: quantity * priceNet * 1.23,
+                });
+                importedCount++;
+            }
+        }
+
+        // Import Skirting (Service)
         if (quote.montage.skirtingLength) {
             newItems.push({
                 id: Math.random().toString(36).substr(2, 9),
@@ -141,6 +246,7 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
         } else {
             toast.info('Brak danych do zaimportowania.');
         }
+        setImportDialogOpen(false);
     };
 
     const handleSave = async () => {
@@ -212,7 +318,7 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
                     </Button>
                     <Button variant="outline" onClick={handleSmartImport}>
                         <Wand2 className="w-4 h-4 mr-2" />
-                        Inteligentny Import
+                        Dodaj Materiał
                     </Button>
                     <Button onClick={handleSave} disabled={isSaving}>
                         <Save className="w-4 h-4 mr-2" />
@@ -223,8 +329,65 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 quote-print-area">
                 <Card className="lg:col-span-2 print-full-width print-border-none">
-                    <CardHeader className="print:hidden">
+                    <CardHeader className="print:hidden flex flex-row items-center justify-between">
                         <CardTitle>Pozycje</CardTitle>
+                        <div className="flex gap-2">
+                            <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+                                <DialogTrigger asChild>
+                                    <Button variant="outline" onClick={handleSmartImport} disabled={isImporting}>
+                                        <Wand2 className="w-4 h-4 mr-2" />
+                                        Dodaj Materiał
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-3xl h-[80vh] flex flex-col">
+                                    <DialogHeader>
+                                        <DialogTitle>Wybierz produkt do importu</DialogTitle>
+                                    </DialogHeader>
+                                    <ScrollArea className="flex-1 border rounded-md p-2">
+                                        <div className="space-y-2">
+                                            <Button
+                                                variant="ghost"
+                                                className="w-full justify-start font-normal"
+                                                onClick={() => executeSmartImport(undefined)}
+                                            >
+                                                <div className="flex flex-col items-start text-left">
+                                                    <span className="font-medium">Tylko usługi (bez materiału)</span>
+                                                    <span className="text-xs text-muted-foreground">
+                                                        Importuje tylko montaż i listwy na podstawie pomiaru
+                                                    </span>
+                                                </div>
+                                            </Button>
+                                            {availableProducts.map((product) => (
+                                                <Button
+                                                    key={product.id}
+                                                    variant="ghost"
+                                                    className="w-full justify-start h-auto py-3"
+                                                    onClick={() => executeSmartImport(product)}
+                                                >
+                                                    <div className="flex flex-col items-start text-left w-full">
+                                                        <div className="flex justify-between w-full">
+                                                            <span className="font-medium">{product.name}</span>
+                                                            <span className="font-mono text-sm">{product.price} zł</span>
+                                                        </div>
+                                                        <div className="flex gap-2 mt-1">
+                                                            {product.attributes?.find((a: any) => a.slug === 'pa_ilosc_opakowanie') && (
+                                                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
+                                                                    Paczka: {product.attributes.find((a: any) => a.slug === 'pa_ilosc_opakowanie').options[0]} m²
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </Button>
+                                            ))}
+                                        </div>
+                                    </ScrollArea>
+                                </DialogContent>
+                            </Dialog>
+                            <Button onClick={addItem} variant="outline">
+                                <Plus className="w-4 h-4 mr-2" />
+                                Dodaj pozycję
+                            </Button>
+                        </div>
                     </CardHeader>
                     <CardContent className="print:p-0">
                         <div className="print:mb-8 hidden print:block">
