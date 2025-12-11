@@ -113,7 +113,9 @@ export function MobileNav({ user, urgentOrdersCount = 0, userRoles = ['admin'] }
 
   if (user.mobileMenuConfig) {
     try {
-      const config: MobileMenuItem[] = JSON.parse(user.mobileMenuConfig);
+      const config: MobileMenuItem[] = typeof user.mobileMenuConfig === 'string' 
+        ? JSON.parse(user.mobileMenuConfig) 
+        : user.mobileMenuConfig as MobileMenuItem[];
       const enabledLinks = config
         .filter(item => item.visible && isAllowed(item.href))
         .map(item => ({
