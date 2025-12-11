@@ -340,7 +340,7 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
                     </Button>
                     <Button variant="outline" onClick={handleSmartImport}>
                         <Wand2 className="w-4 h-4 mr-2" />
-                        Dodaj Materiał
+                        Inteligentny Import
                     </Button>
                     <Button onClick={handleSave} disabled={isSaving}>
                         <Save className="w-4 h-4 mr-2" />
@@ -358,12 +358,12 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
                                 <DialogTrigger asChild>
                                     <Button variant="outline" onClick={handleSmartImport} disabled={isImporting}>
                                         <Wand2 className="w-4 h-4 mr-2" />
-                                        Dodaj Materiał
+                                        Inteligentny Import
                                     </Button>
                                 </DialogTrigger>
                                 <DialogContent className="max-w-3xl h-[80vh] flex flex-col">
                                     <DialogHeader>
-                                        <DialogTitle>Wybierz produkt do importu</DialogTitle>
+                                        <DialogTitle>Inteligentny Import z Pomiaru</DialogTitle>
                                     </DialogHeader>
                                     <ScrollArea className="flex-1 border rounded-md p-2">
                                         <div className="space-y-2">
