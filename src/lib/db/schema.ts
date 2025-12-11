@@ -931,6 +931,7 @@ export const quotes = pgTable(
     'quotes',
     {
         id: text('id').primaryKey(),
+        number: text('number'),
         montageId: text('montage_id')
             .notNull()
             .references(() => montages.id, { onDelete: 'cascade' }),

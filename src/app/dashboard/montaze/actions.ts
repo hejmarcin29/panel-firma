@@ -1249,11 +1249,41 @@ export async function updateMontageRealizationStatus({
         };
         changes.push(`Status montażysty: ${labels[installerStatus] || installerStatus}`);
     }
+    
     if (installerId !== undefined) {
-        changes.push(`Zmieniono montażystę`);
+        if (installerId) {
+            const installer = await db.query.users.findFirst({
+                where: eq(users.id, installerId),
+                columns: { name: true, email: true }
+            });
+            changes.push(`Zmieniono montażystę na: ${installer?.name || installer?.email || 'Nieznany'}`);
+        } else {
+            changes.push(`Usunięto montażystę`);
+        }
     }
+
     if (measurerId !== undefined) {
-        changes.push(`Zmieniono pomiarowca`);
+        if (measurerId) {
+            const measurer = await db.query.users.findFirst({
+                where: eq(users.id, measurerId),
+                columns: { name: true, email: true }
+            });
+            changes.push(`Zmieniono pomiarowca na: ${measurer?.name || measurer?.email || 'Nieznany'}`);
+        } else {
+            changes.push(`Usunięto pomiarowca`);
+        }
+    }
+
+    if (architectId !== undefined) {
+        if (architectId) {
+            const architect = await db.query.users.findFirst({
+                where: eq(users.id, architectId),
+                columns: { name: true, email: true }
+            });
+            changes.push(`Zmieniono architekta na: ${architect?.name || architect?.email || 'Nieznany'}`);
+        } else {
+            changes.push(`Usunięto architekta`);
+        }
     }
 
     // Sync Google Calendar if installer changed

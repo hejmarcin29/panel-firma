@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { quotes, type QuoteItem, type QuoteStatus, mailAccounts } from '@/lib/db/schema';
+import { quotes, type QuoteItem, type QuoteStatus, mailAccounts, montages } from '@/lib/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { randomUUID } from 'crypto';
@@ -76,7 +76,7 @@ export async function sendQuoteEmail(quoteId: string) {
 
     const html = `
         <div style="font-family: sans-serif; max-width: 800px; margin: 0 auto;">
-            <h2>Wycena #${quote.id.slice(0, 8)}</h2>
+            <h2>Wycena #${quote.number || quote.id.slice(0, 8)}</h2>
             <p>Dzień dobry,</p>
             <p>Przesyłamy wycenę dla zlecenia: <strong>${quote.montage.clientName}</strong></p>
             
@@ -114,7 +114,7 @@ export async function sendQuoteEmail(quoteId: string) {
     await transporter.sendMail({
         from: `${account.displayName} <${account.email}>`,
         to: quote.montage.contactEmail,
-        subject: `Wycena #${quote.id.slice(0, 8)} - ${quote.montage.clientName}`,
+        subject: `Wycena #${quote.number || quote.id.slice(0, 8)} - ${quote.montage.clientName}`,
         html,
     });
 
@@ -146,9 +146,28 @@ export async function getQuote(id: string) {
 
 export async function createQuote(montageId: string) {
     const id = randomUUID();
+
+    const montage = await db.query.montages.findFirst({
+        where: eq(montages.id, montageId),
+        columns: {
+            displayId: true,
+        }
+    });
+
+    if (!montage) {
+        throw new Error('Montaż nie istnieje');
+    }
+
+    const existingQuotes = await db.query.quotes.findMany({
+        where: eq(quotes.montageId, montageId),
+    });
+
+    const quoteNumber = `${montage.displayId || 'M/UNKNOWN'}/W${existingQuotes.length + 1}`;
+
     await db.insert(quotes).values({
         id,
         montageId,
+        number: quoteNumber,
         status: 'draft',
         items: [],
     });
@@ -185,4 +204,30 @@ export async function updateQuote(id: string, data: {
 export async function deleteQuote(id: string) {
     await db.delete(quotes).where(eq(quotes.id, id));
     revalidatePath('/dashboard/wyceny');
+}
+
+export async function getMontagesForQuoteSelection() {
+    const allMontages = await db.query.montages.findMany({
+        orderBy: [desc(montages.createdAt)],
+        columns: {
+            id: true,
+            clientName: true,
+            createdAt: true,
+            status: true,
+            displayId: true,
+        }
+    });
+
+    const allQuotes = await db.query.quotes.findMany({
+        columns: {
+            montageId: true,
+        }
+    });
+
+    const quoteMontageIds = new Set(allQuotes.map(q => q.montageId));
+
+    return allMontages.map(m => ({
+        ...m,
+        hasQuote: quoteMontageIds.has(m.id)
+    }));
 }

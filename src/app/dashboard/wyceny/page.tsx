@@ -1,9 +1,9 @@
 import { getQuotes } from './actions';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { NewQuoteDialog } from './_components/new-quote-dialog';
 
 export default async function QuotesPage() {
     const quotes = await getQuotes();
@@ -12,12 +12,7 @@ export default async function QuotesPage() {
         <div className="p-6 space-y-6">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold">Wyceny</h1>
-                <Button asChild>
-                    <Link href="/dashboard/montaze">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Nowa Wycena (z Montażu)
-                    </Link>
-                </Button>
+                <NewQuoteDialog />
             </div>
 
             <div className="border rounded-lg bg-white dark:bg-zinc-900">
@@ -36,7 +31,7 @@ export default async function QuotesPage() {
                     <tbody>
                         {quotes.map((quote) => (
                             <tr key={quote.id} className="border-b last:border-0 hover:bg-muted/50 transition-colors">
-                                <td className="p-4 font-mono">{quote.id.slice(0, 8)}</td>
+                                <td className="p-4 font-mono">{quote.number || quote.id.slice(0, 8)}</td>
                                 <td className="p-4">
                                     <div className="font-medium">{quote.montage.clientName}</div>
                                     <div className="text-xs text-muted-foreground">{quote.montage.installationAddress}</div>
