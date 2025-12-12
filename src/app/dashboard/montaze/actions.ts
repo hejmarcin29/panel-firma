@@ -1122,8 +1122,10 @@ export async function updateMontageMeasurement({
 	skirtingLength,
 	skirtingDetails,
 	panelModel,
+    panelProductId,
 	panelWaste,
 	skirtingModel,
+    skirtingProductId,
 	skirtingWaste,
 	modelsApproved,
 	additionalInfo,
@@ -1360,4 +1362,18 @@ export async function createLead(data: {
     await logSystemEvent('create_lead', `Utworzono lead ${displayId} dla ${trimmedName}`, user.id);
     revalidatePath(MONTAGE_DASHBOARD_PATH);
     return { status: 'success', montageId };
+}
+
+export async function deleteMontage(id: string) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) {
+        throw new Error('Brak uprawnień');
+    }
+
+    await db.update(montages)
+        .set({ deletedAt: new Date() })
+        .where(eq(montages.id, id));
+    
+    await logSystemEvent('delete_montage', `Usunięto montaż ${id}`, user.id);
+    revalidatePath(MONTAGE_DASHBOARD_PATH);
 }

@@ -1,9 +1,8 @@
 import { getQuotes } from './actions';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { NewQuoteDialog } from './_components/new-quote-dialog';
+import { QuoteActionsMenu } from './_components/quote-actions-menu';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { NewQuoteDialog } from './_components/new-quote-dialog';
 
 export default async function QuotesPage() {
     const quotes = await getQuotes();
@@ -25,7 +24,7 @@ export default async function QuotesPage() {
                             <th className="p-4 font-medium text-right">Wartość Netto</th>
                             <th className="p-4 font-medium text-right">Wartość Brutto</th>
                             <th className="p-4 font-medium">Data utworzenia</th>
-                            <th className="p-4 font-medium"></th>
+                            <th className="p-4 font-medium w-[50px]"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -54,11 +53,10 @@ export default async function QuotesPage() {
                                     {new Date(quote.createdAt).toLocaleDateString('pl-PL')}
                                 </td>
                                 <td className="p-4 text-right">
-                                    <Button variant="ghost" size="sm" asChild>
-                                        <Link href={`/dashboard/wyceny/${quote.id}`}>
-                                            Edytuj
-                                        </Link>
-                                    </Button>
+                                    <QuoteActionsMenu 
+                                        quoteId={quote.id} 
+                                        quoteNumber={quote.number || quote.id.slice(0, 8)} 
+                                    />
                                 </td>
                             </tr>
                         ))}

@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db';
 import { quotes, type QuoteItem, type QuoteStatus, mailAccounts, montages, products } from '@/lib/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, isNull } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { randomUUID } from 'crypto';
 import { createTransport } from 'nodemailer';
@@ -128,6 +128,7 @@ export async function sendQuoteEmail(quoteId: string) {
 
 export async function getQuotes() {
     return await db.query.quotes.findMany({
+        where: isNull(quotes.deletedAt),
         with: {
             montage: true,
         },
@@ -202,7 +203,9 @@ export async function updateQuote(id: string, data: {
 }
 
 export async function deleteQuote(id: string) {
-    await db.delete(quotes).where(eq(quotes.id, id));
+    await db.update(quotes)
+        .set({ deletedAt: new Date() })
+        .where(eq(quotes.id, id));
     revalidatePath('/dashboard/wyceny');
 }
 

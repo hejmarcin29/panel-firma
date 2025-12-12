@@ -35,6 +35,8 @@ import { IntegrationLogs } from './integrations/_components/integration-logs';
 import { WpChangesSettings } from './_components/wp-changes-settings';
 import TeamPage from './team/page';
 import { DocumentationView } from './_components/documentation-view';
+import { TrashView } from './_components/trash-view';
+import { getDeletedQuotes, getDeletedCustomers, getDeletedMontages, getDeletedProducts } from './actions';
 
 import { LogoSettings } from './_components/logo-settings';
 
@@ -149,6 +151,10 @@ export default async function SettingsPage() {
 		googleClientEmail,
 		googlePrivateKey,
         systemLogoUrl,
+        deletedQuotes,
+        deletedCustomers,
+        deletedMontages,
+        deletedProducts,
 	] = await Promise.all([
 		getAppSetting(appSettingKeys.wooWebhookSecret),
 		getAppSetting(appSettingKeys.wooConsumerKey),
@@ -179,6 +185,10 @@ export default async function SettingsPage() {
 		getAppSetting(appSettingKeys.googleClientEmail),
 		getAppSetting(appSettingKeys.googlePrivateKey),
         getAppSetting(appSettingKeys.systemLogoUrl),
+        getDeletedQuotes(),
+        getDeletedCustomers(),
+        getDeletedMontages(),
+        getDeletedProducts(),
 	]);
 
     const statusOptions = montageStatusDefinitions.map(def => ({
@@ -546,6 +556,14 @@ export default async function SettingsPage() {
 			}
             teamSettings={
                 <TeamPage />
+            }
+            trash={
+                <TrashView 
+                    deletedQuotes={deletedQuotes} 
+                    deletedCustomers={deletedCustomers}
+                    deletedMontages={deletedMontages}
+                    deletedProducts={deletedProducts}
+                />
             }
 		>
 			<Card>

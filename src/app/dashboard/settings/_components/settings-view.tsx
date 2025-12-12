@@ -12,6 +12,7 @@ import {
   Users,
   BookOpen,
   ArrowLeft,
+  Trash2,
 } from "lucide-react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,7 @@ interface SettingsViewProps {
   wpChanges: React.ReactNode;
   teamSettings: React.ReactNode;
   documentation: React.ReactNode;
+  trash: React.ReactNode;
 }
 
 export function SettingsView({
@@ -40,6 +42,7 @@ export function SettingsView({
   wpChanges,
   teamSettings,
   documentation,
+  trash,
 }: SettingsViewProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -221,6 +224,20 @@ export function SettingsView({
             <span className="text-xs text-muted-foreground">Opis logiki biznesowej i procesów.</span>
           </span>
         </Button>
+
+        <Button
+          variant="ghost"
+          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3 bg-card border shadow-sm"
+          onClick={() => handleTabChange("trash")}
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
+            <Trash2 className="h-4 w-4" />
+          </span>
+          <span className="flex flex-col text-left">
+            <span className="text-sm font-medium">Kosz</span>
+            <span className="text-xs text-muted-foreground">Przywracanie usuniętych elementów.</span>
+          </span>
+        </Button>
       </div>
 
       <Tabs
@@ -300,6 +317,13 @@ export function SettingsView({
               <Activity className="h-4 w-4" />
               Logi systemowe
             </TabsTrigger>
+            <TabsTrigger 
+              value="trash" 
+              className="w-full justify-start gap-2 px-3 py-2 h-9 data-[state=active]:bg-muted data-[state=active]:shadow-none ring-offset-background transition-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <Trash2 className="h-4 w-4" />
+              Kosz
+            </TabsTrigger>
           </TabsList>
         </aside>
 
@@ -326,6 +350,10 @@ export function SettingsView({
 
           <TabsContent value="kpi" className="m-0 space-y-4">
             {kpiSettings}
+          </TabsContent>
+
+          <TabsContent value="trash" className="m-0 space-y-4">
+            {trash}
           </TabsContent>
 
           <TabsContent value="integrations" className="m-0 space-y-4">

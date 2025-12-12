@@ -22,6 +22,34 @@
       "when": 1765577683142,
       "tag": "0002_flimsy_maelstrom",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1765579043938,
+      "tag": "0003_melted_prowler",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1765579514878,
+      "tag": "0004_sparkling_energizer",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1765579730307,
+      "tag": "0005_hard_micromacro",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1765580200138,
+      "tag": "0006_smiling_imperial_guard",
+      "breakpoints": true
     }
   ]
 }

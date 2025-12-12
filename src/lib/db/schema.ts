@@ -140,6 +140,7 @@ export const customers = pgTable(
 		shippingPostalCode: text('shipping_postal_code'),
 		shippingCountry: text('shipping_country'),
 		architectId: text('architect_id').references(() => users.id, { onDelete: 'set null' }),
+		deletedAt: timestamp('deleted_at'),
 		createdAt: timestamp('created_at').notNull().defaultNow(),
 		updatedAt: timestamp('updated_at').notNull().defaultNow(),
 	},
@@ -434,6 +435,7 @@ export const montages = pgTable(
         googleEventId: text('google_event_id'),
         technicalAudit: json('technical_audit').$type<TechnicalAuditData>(),
         materialLog: json('material_log').$type<MaterialLogData>(),
+		deletedAt: timestamp('deleted_at'),
 		createdAt: timestamp('created_at').notNull().defaultNow(),
 		updatedAt: timestamp('updated_at').notNull().defaultNow(),
 	},
@@ -944,6 +946,7 @@ export const quotes = pgTable(
         totalGross: integer('total_gross').notNull().default(0),
         validUntil: timestamp('valid_until'),
         notes: text('notes'),
+        deletedAt: timestamp('deleted_at'),
         createdAt: timestamp('created_at').notNull().defaultNow(),
         updatedAt: timestamp('updated_at').notNull().defaultNow(),
     },
@@ -976,6 +979,7 @@ export const products = pgTable('products', {
 	attributes: json('attributes'), // JSON array of attributes
 	isForMontage: boolean('is_for_montage').default(false),
 	montageType: text('montage_type').$type<'panel' | 'skirting' | 'other'>(),
+	deletedAt: timestamp('deleted_at'),
 	updatedAt: timestamp('updated_at').notNull().defaultNow(),
 	syncedAt: timestamp('synced_at').notNull().defaultNow(),
 });

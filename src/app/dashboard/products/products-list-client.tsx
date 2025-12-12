@@ -14,8 +14,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChevronLeft, ChevronRight, ExternalLink, Loader2, X, Settings2 } from 'lucide-react';
-import { WooCommerceProduct, WooCommerceCategory, WooCommerceAttributeTerm, bulkUpdateMontageSettings } from './actions';
+import { ChevronLeft, ChevronRight, ExternalLink, Loader2, X, Settings2, MoreHorizontal, Trash2 } from 'lucide-react';
+import { WooCommerceProduct, WooCommerceCategory, WooCommerceAttributeTerm, bulkUpdateMontageSettings, deleteProduct } from './actions';
 import { ProductControlBar } from '@/components/shop/product-control-bar';
 import { FilterModal } from '@/components/shop/filter-modal';
 import { ProductMontageSettings } from './_components/product-montage-settings';
@@ -62,6 +62,7 @@ export function ProductsListClient({
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [isBulkActionPending, setIsBulkActionPending] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<WooCommerceProduct | null>(null);
+    const [isDeleting, setIsDeleting] = useState<number | null>(null);
 
     const handlePageChange = (newPage: number) => {
         if (newPage < 1 || newPage > initialTotalPages) return;
@@ -110,6 +111,18 @@ export function ProductsListClient({
     Object.entries(otherAttributeTerms).forEach(([slug, terms]) => {
         aggregations[slug] = terms.map(t => ({ name: t.name, slug: t.id.toString(), count: t.count }));
     });
+
+    const handleDelete = async (id: number) => {
+        setIsDeleting(id);
+        try {
+            await deleteProduct(id);
+            toast.success('Produkt został przeniesiony do kosza');
+        } catch {
+            toast.error('Błąd podczas usuwania produktu');
+        } finally {
+            setIsDeleting(null);
+        }
+    };
 
     return (
         <div className="space-y-4">
@@ -347,11 +360,32 @@ export function ProductsListClient({
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="hidden md:table-cell text-right">
-                                        <Button variant="ghost" size="icon" asChild>
-                                            <a href={product.permalink} target="_blank" rel="noopener noreferrer">
-                                                <ExternalLink className="h-4 w-4" />
-                                            </a>
-                                        </Button>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon">
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem asChild>
+                                                    <a href={product.permalink} target="_blank" rel="noopener noreferrer" className="flex items-center cursor-pointer">
+                                                        <ExternalLink className="mr-2 h-4 w-4" />
+                                                        Zobacz w sklepie
+                                                    </a>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem 
+                                                    className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDelete(product.id);
+                                                    }}
+                                                    disabled={isDeleting === product.id}
+                                                >
+                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                    {isDeleting === product.id ? 'Usuwanie...' : 'Usuń'}
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
                                     </TableCell>
                                 </TableRow>
                             ))

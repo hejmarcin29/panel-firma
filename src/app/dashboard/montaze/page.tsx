@@ -1,4 +1,4 @@
-import { asc, desc, eq, and, inArray, or, sql } from 'drizzle-orm';
+import { asc, desc, eq, and, inArray, or, sql, isNull } from 'drizzle-orm';
 import Link from 'next/link';
 import { Plus, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -101,7 +101,9 @@ export default async function MontazePage(props: any) {
 
     const sort = (searchParams?.sort as SortOption) || SORT_OPTIONS.LAST_ACTIVITY;
 
-    const conditions: (ReturnType<typeof eq> | ReturnType<typeof inArray>)[] = [];
+    const conditions: (ReturnType<typeof eq> | ReturnType<typeof inArray> | ReturnType<typeof isNull>)[] = [
+        isNull(montages.deletedAt)
+    ];
 
     // Special logic for installers: they see everything assigned to them
     const isOnlyInstaller = user.roles.includes('installer') && !user.roles.includes('admin') && !user.roles.includes('measurer');

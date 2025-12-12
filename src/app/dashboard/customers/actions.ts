@@ -2,7 +2,8 @@
 
 import { db } from '@/lib/db';
 import { customers, montages, manualOrders } from '@/lib/db/schema';
-import { desc, eq, ilike, or, inArray } from 'drizzle-orm';
+import { desc, eq, ilike, or, inArray, isNull, and } from 'drizzle-orm';
+import { revalidatePath } from 'next/cache';
 
 export type CustomerWithStats = typeof customers.$inferSelect & {
 	ordersCount: number;
@@ -17,13 +18,16 @@ export type CustomerDetails = typeof customers.$inferSelect & {
 
 export async function getCustomers(query?: string): Promise<CustomerWithStats[]> {
 	const searchFilter = query
-		? or(
+		? and(
+            isNull(customers.deletedAt),
+            or(
 				ilike(customers.name, `%${query}%`),
 				ilike(customers.email, `%${query}%`),
 				ilike(customers.phone, `%${query}%`),
 				ilike(customers.billingCity, `%${query}%`)
-		  )
-		: undefined;
+		    )
+        )
+		: isNull(customers.deletedAt);
 
 	const rows = await db.query.customers.findMany({
 		where: searchFilter,
@@ -112,4 +116,11 @@ export async function getCustomerDetails(customerId: string): Promise<CustomerDe
         orders: customerOrders,
 		montages: customerMontages,
 	};
+}
+
+export async function deleteCustomer(id: string) {
+    await db.update(customers)
+        .set({ deletedAt: new Date() })
+        .where(eq(customers.id, id));
+    revalidatePath('/dashboard/customers');
 }

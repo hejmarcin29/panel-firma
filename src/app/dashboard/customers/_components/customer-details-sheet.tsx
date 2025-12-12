@@ -11,12 +11,24 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Phone, Mail, MapPin, Package, Hammer, ExternalLink, Building2 } from 'lucide-react';
-import { CustomerDetails } from '../actions';
+import { Phone, Mail, MapPin, Package, Hammer, ExternalLink, Building2, Trash2 } from 'lucide-react';
+import { CustomerDetails, deleteCustomer } from '../actions';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import Link from 'next/link';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface CustomerDetailsSheetProps {
 	customer: CustomerDetails | null;
@@ -64,6 +76,8 @@ const ORDER_STATUS_LABELS: Record<string, string> = {
 };
 
 export function CustomerDetailsSheet({ customer, isOpen, onClose }: CustomerDetailsSheetProps) {
+    const [isDeleting, setIsDeleting] = useState(false);
+
     // Handle back button
     useEffect(() => {
         if (isOpen) {
@@ -256,6 +270,45 @@ export function CustomerDetailsSheet({ customer, isOpen, onClose }: CustomerDeta
 								<p className="text-sm text-muted-foreground italic">Brak powiązanych montaży (po emailu).</p>
 							)}
 						</div>
+
+                        <div className="pt-6 border-t mt-6">
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="destructive" className="w-full">
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Usuń klienta
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Czy na pewno chcesz usunąć tego klienta?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            Klient zostanie przeniesiony do kosza. Będziesz mógł go przywrócić w ustawieniach przez 365 dni.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Anuluj</AlertDialogCancel>
+                                        <AlertDialogAction
+                                            onClick={async () => {
+                                                setIsDeleting(true);
+                                                try {
+                                                    await deleteCustomer(customer.id);
+                                                    toast.success('Klient został usunięty');
+                                                    onClose();
+                                                } catch {
+                                                    toast.error('Błąd podczas usuwania klienta');
+                                                } finally {
+                                                    setIsDeleting(false);
+                                                }
+                                            }}
+                                            className="bg-red-600 hover:bg-red-700"
+                                        >
+                                            {isDeleting ? 'Usuwanie...' : 'Usuń'}
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        </div>
 					</div>
 				</ScrollArea>
 			</DialogContent>

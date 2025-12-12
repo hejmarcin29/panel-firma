@@ -1,13 +1,13 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { eq } from 'drizzle-orm';
+import { eq, isNotNull, desc } from 'drizzle-orm';
 
 import { HeadBucketCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
-import { users } from '@/lib/db/schema';
+import { users, quotes, customers, montages, products } from '@/lib/db/schema';
 import { appSettingKeys, getAppSetting, setAppSetting } from '@/lib/settings';
 import { createR2Client } from '@/lib/r2/client';
 import { getR2Config } from '@/lib/r2/config';
@@ -362,6 +362,132 @@ export async function removeLogo() {
 
     await logSystemEvent('remove_logo', 'Usunięto logo systemu', user.id);
     revalidatePath('/', 'layout');
+}
+
+// --- TRASH ACTIONS ---
+
+export async function getDeletedQuotes() {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) return [];
+
+    return await db.query.quotes.findMany({
+        where: isNotNull(quotes.deletedAt),
+        with: {
+            montage: true,
+        },
+        orderBy: [desc(quotes.deletedAt)],
+    });
+}
+
+export async function restoreQuote(id: string) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) {
+        throw new Error('Brak uprawnień');
+    }
+
+    await db.update(quotes)
+        .set({ deletedAt: null })
+        .where(eq(quotes.id, id));
+    
+    await logSystemEvent('restore_quote', `Przywrócono wycenę ${id}`, user.id);
+    revalidatePath('/dashboard/settings');
+    revalidatePath('/dashboard/wyceny');
+}
+
+export async function permanentDeleteQuote(id: string) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) {
+        throw new Error('Brak uprawnień');
+    }
+
+    await db.delete(quotes).where(eq(quotes.id, id));
+    
+    await logSystemEvent('permanent_delete_quote', `Trwale usunięto wycenę ${id}`, user.id);
+    revalidatePath('/dashboard/settings');
+}
+
+export async function getDeletedCustomers() {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) return [];
+
+    return await db.query.customers.findMany({
+        where: isNotNull(customers.deletedAt),
+        orderBy: [desc(customers.deletedAt)],
+    });
+}
+
+export async function restoreCustomer(id: string) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) {
+        throw new Error('Brak uprawnień');
+    }
+
+    await db.update(customers)
+        .set({ deletedAt: null })
+        .where(eq(customers.id, id));
+    
+    await logSystemEvent('restore_customer', `Przywrócono klienta ${id}`, user.id);
+    revalidatePath('/dashboard/settings');
+    revalidatePath('/dashboard/customers');
+}
+
+export async function permanentDeleteCustomer(id: string) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) {
+        throw new Error('Brak uprawnień');
+    }
+
+    await db.delete(customers).where(eq(customers.id, id));
+    
+    await logSystemEvent('permanent_delete_customer', `Trwale usunięto klienta ${id}`, user.id);
+    revalidatePath('/dashboard/settings');
+}
+
+export async function getDeletedMontages() {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) return [];
+
+    return await db.query.montages.findMany({
+        where: isNotNull(montages.deletedAt),
+        orderBy: [desc(montages.deletedAt)],
+    });
+}
+
+export async function restoreMontage(id: string) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) {
+        throw new Error('Brak uprawnień');
+    }
+
+    await db.update(montages)
+        .set({ deletedAt: null })
+        .where(eq(montages.id, id));
+    
+    await logSystemEvent('restore_montage', `Przywrócono montaż ${id}`, user.id);
+    revalidatePath('/dashboard/settings');
+    revalidatePath('/dashboard/montaze');
+}
+
+export async function permanentDeleteMontage(id: string) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) {
+        throw new Error('Brak uprawnień');
+    }
+
+    await db.delete(montages).where(eq(montages.id, id));
+    
+    await logSystemEvent('permanent_delete_montage', `Trwale usunięto montaż ${id}`, user.id);
+    revalidatePath('/dashboard/settings');
+}
+
+export async function getDeletedProducts() {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) return [];
+
+    return await db.query.products.findMany({
+        where: isNotNull(products.deletedAt),
+        orderBy: [desc(products.deletedAt)],
+    });
 }
 
 

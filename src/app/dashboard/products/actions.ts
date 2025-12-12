@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db';
 import { products } from '@/lib/db/schema';
-import { like, eq, and, desc, asc, count, inArray, sql } from 'drizzle-orm';
+import { like, eq, and, desc, asc, count, inArray, sql, isNull } from 'drizzle-orm';
 import { getAppSettings, appSettingKeys } from '@/lib/settings';
 import { syncProducts } from '@/lib/sync/products';
 import { revalidatePath } from 'next/cache';
@@ -372,7 +372,9 @@ export async function getProductsFromDb(
     const offset = (page - 1) * perPage;
     
     let whereClause = undefined;
-    const conditions = [];
+    const conditions = [
+        isNull(products.deletedAt)
+    ];
 
     if (search) {
         conditions.push(like(products.name, `%${search}%`));
@@ -521,4 +523,28 @@ export async function getProductsFromDb(
     });
 
     return { products: mappedProducts, total, totalPages };
+}
+
+export async function deleteProduct(id: number) {
+    await db.update(products)
+        .set({ deletedAt: new Date() })
+        .where(eq(products.id, id));
+    
+    revalidatePath('/dashboard/products');
+}
+
+export async function restoreProduct(id: number) {
+    await db.update(products)
+        .set({ deletedAt: null })
+        .where(eq(products.id, id));
+    
+    revalidatePath('/dashboard/products');
+    revalidatePath('/dashboard/settings');
+}
+
+export async function permanentDeleteProduct(id: number) {
+    await db.delete(products)
+        .where(eq(products.id, id));
+    
+    revalidatePath('/dashboard/settings');
 }
