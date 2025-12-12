@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { ProductSelectorModal } from '../../_components/product-selector-modal';
 
 export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montage: Montage; userRoles?: UserRole[] }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -38,11 +39,16 @@ export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montag
     finalPanelAmount: montage.finalPanelAmount?.toString() || '',
     finalSkirtingLength: montage.finalSkirtingLength?.toString() || '',
     panelModel: montage.panelModel || '',
+    panelProductId: montage.panelProductId || null,
     skirtingModel: montage.skirtingModel || '',
+    skirtingProductId: montage.skirtingProductId || null,
     floorDetails: montage.floorDetails || '',
     skirtingDetails: montage.skirtingDetails || '',
     materialDetails: montage.measurementDetails || montage.materialDetails || '',
   });
+
+  const [isPanelSelectorOpen, setIsPanelSelectorOpen] = useState(false);
+  const [isSkirtingSelectorOpen, setIsSkirtingSelectorOpen] = useState(false);
 
   const [isSaving, setIsSaving] = useState(false);
 
@@ -88,7 +94,9 @@ export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montag
         finalPanelAmount: data.finalPanelAmount ? parseFloat(data.finalPanelAmount) : null,
         finalSkirtingLength: data.finalSkirtingLength ? parseFloat(data.finalSkirtingLength) : null,
         panelModel: data.panelModel || null,
+        panelProductId: data.panelProductId,
         skirtingModel: data.skirtingModel || null,
+        skirtingProductId: data.skirtingProductId,
         floorDetails: data.floorDetails || null,
         skirtingDetails: data.skirtingDetails || null,
       });
@@ -209,12 +217,23 @@ export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montag
                         (Wyliczono z pomiaru: {calculatedPanelAmount || 0} m²)
                     </div>
                 </div>
-                <Input 
-                    name='panelModel' 
-                    placeholder='Model paneli'
-                    value={formData.panelModel}
-                    onChange={(e) => handleChange('panelModel', e.target.value)}
-                />
+                <div className="flex gap-2">
+                    <Input 
+                        name='panelModel' 
+                        placeholder='Model paneli'
+                        value={formData.panelModel}
+                        readOnly
+                        onClick={() => setIsPanelSelectorOpen(true)}
+                        className="cursor-pointer bg-muted/50"
+                    />
+                    <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => setIsPanelSelectorOpen(true)}
+                    >
+                        Wybierz
+                    </Button>
+                </div>
                 <Input 
                     name='floorDetails' 
                     placeholder='Dodatkowe materiały do paneli'
@@ -238,12 +257,23 @@ export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montag
                         (Wyliczono z pomiaru: {calculatedSkirtingLength || 0} mb)
                     </div>
                 </div>
-                <Input 
-                    name='skirtingModel' 
-                    placeholder='Model listew'
-                    value={formData.skirtingModel}
-                    onChange={(e) => handleChange('skirtingModel', e.target.value)}
-                />
+                <div className="flex gap-2">
+                    <Input 
+                        name='skirtingModel' 
+                        placeholder='Model listew'
+                        value={formData.skirtingModel}
+                        readOnly
+                        onClick={() => setIsSkirtingSelectorOpen(true)}
+                        className="cursor-pointer bg-muted/50"
+                    />
+                    <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => setIsSkirtingSelectorOpen(true)}
+                    >
+                        Wybierz
+                    </Button>
+                </div>
                 <Input 
                     name='skirtingDetails' 
                     placeholder='Dodatkowe materiały do listew'
@@ -285,6 +315,45 @@ export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montag
         )}
         </div>
       </CardHeader>
+      
+      <ProductSelectorModal
+        isOpen={isPanelSelectorOpen}
+        onClose={() => setIsPanelSelectorOpen(false)}
+        onSelect={(product) => {
+            setFormData(prev => ({
+                ...prev,
+                panelModel: product.name,
+                panelProductId: product.id
+            }));
+            setIsPanelSelectorOpen(false);
+            debouncedSave({
+                ...formData,
+                panelModel: product.name,
+                panelProductId: product.id
+            });
+        }}
+        type="panel"
+      />
+
+      <ProductSelectorModal
+        isOpen={isSkirtingSelectorOpen}
+        onClose={() => setIsSkirtingSelectorOpen(false)}
+        onSelect={(product) => {
+            setFormData(prev => ({
+                ...prev,
+                skirtingModel: product.name,
+                skirtingProductId: product.id
+            }));
+            setIsSkirtingSelectorOpen(false);
+            debouncedSave({
+                ...formData,
+                skirtingModel: product.name,
+                skirtingProductId: product.id
+            });
+        }}
+        type="skirting"
+      />
+
       <CardContent className='space-y-4'>
         {/* Calculated Materials Section */}
         {(calculatedPanelAmount || calculatedSkirtingLength) && (

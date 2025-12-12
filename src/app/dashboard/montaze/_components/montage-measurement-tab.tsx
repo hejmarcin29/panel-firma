@@ -58,8 +58,10 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
   const [skirtingAdditionalMaterials, setSkirtingAdditionalMaterials] = useState(montage.skirtingDetails || '');
   
   const [panelModel, setPanelModel] = useState(montage.panelModel || '');
+  const [panelProductId, setPanelProductId] = useState<number | null>(montage.panelProductId || null);
   const [panelWaste, setPanelWaste] = useState<string>(montage.panelWaste?.toString() || '5');
   const [skirtingModel, setSkirtingModel] = useState(montage.skirtingModel || '');
+  const [skirtingProductId, setSkirtingProductId] = useState<number | null>(montage.skirtingProductId || null);
   const [skirtingWaste, setSkirtingWaste] = useState<string>(montage.skirtingWaste?.toString() || '5');
   const [modelsApproved, setModelsApproved] = useState(montage.modelsApproved || false);
 
@@ -96,8 +98,10 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
           skirtingLength: skirtingLength ? parseFloat(skirtingLength) : null,
           skirtingDetails: skirtingAdditionalMaterials,
           panelModel,
+          panelProductId,
           panelWaste: parseFloat(panelWaste),
           skirtingModel,
+          skirtingProductId,
           skirtingWaste: parseFloat(skirtingWaste),
           modelsApproved,
           measurementInstallationMethod: installationMethod,
@@ -703,6 +707,7 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
                 onClose={() => setIsPanelSelectorOpen(false)}
                 onSelect={(product) => {
                     setPanelModel(product.name);
+                    setPanelProductId(product.id);
                     setIsPanelSelectorOpen(false);
                 }}
                 type="panel"
@@ -713,6 +718,7 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
                 onClose={() => setIsSkirtingSelectorOpen(false)}
                 onSelect={(product) => {
                     setSkirtingModel(product.name);
+                    setSkirtingProductId(product.id);
                     setIsSkirtingSelectorOpen(false);
                 }}
                 type="skirting"

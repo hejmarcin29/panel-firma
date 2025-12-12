@@ -411,8 +411,10 @@ export const montages = pgTable(
 		skirtingLength: doublePrecision('skirting_length'),
 		skirtingDetails: text('skirting_details'),
 		panelModel: text('panel_model'),
+		panelProductId: integer('panel_product_id'),
 		panelWaste: doublePrecision('panel_waste'),
 		skirtingModel: text('skirting_model'),
+		skirtingProductId: integer('skirting_product_id'),
 		skirtingWaste: doublePrecision('skirting_waste'),
 		modelsApproved: boolean('models_approved').notNull().default(false),
 		finalPanelAmount: doublePrecision('final_panel_amount'),
@@ -917,6 +919,7 @@ export type QuoteStatus = (typeof quoteStatuses)[number];
 
 export type QuoteItem = {
     id: string;
+    productId?: number;
     name: string;
     quantity: number;
     unit: string;

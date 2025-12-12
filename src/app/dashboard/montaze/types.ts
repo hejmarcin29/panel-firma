@@ -76,8 +76,10 @@ export type Montage = {
 	skirtingLength: number | null;
 	skirtingDetails: string | null;
 	panelModel: string | null;
+    panelProductId?: number | null;
 	panelWaste: number | null;
 	skirtingModel: string | null;
+    skirtingProductId?: number | null;
 	skirtingWaste: number | null;
 	modelsApproved: boolean;
 	measurementInstallationMethod: 'click' | 'glue' | null;

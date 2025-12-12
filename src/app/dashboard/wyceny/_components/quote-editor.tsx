@@ -57,7 +57,9 @@ type QuoteEditorProps = {
             floorArea: number | null;
             skirtingLength: number | null;
             panelModel: string | null;
+            panelProductId?: number | null;
             skirtingModel: string | null;
+            skirtingProductId?: number | null;
             panelWaste: number | null;
             skirtingWaste: number | null;
             technicalAudit: unknown;
@@ -78,6 +80,10 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
 
     // Filter products based on montage models
     const filteredProducts = availableProducts.filter(product => {
+        // Check IDs first
+        if (quote.montage.panelProductId === product.id) return true;
+        if (quote.montage.skirtingProductId === product.id) return true;
+
         const searchTerms = [
             quote.montage.panelModel,
             quote.montage.skirtingModel
@@ -191,6 +197,7 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
 
                     newItems.push({
                         id: Math.random().toString(36).substr(2, 9),
+                        productId: selectedProduct.id,
                         name: selectedProduct.name + ` ${notes}`,
                         quantity: piecesNeeded,
                         unit: 'szt',
@@ -234,6 +241,7 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
                 
                 newItems.push({
                     id: Math.random().toString(36).substr(2, 9),
+                    productId: selectedProduct.id,
                     name: selectedProduct.name + (notes ? ` ${notes}` : ''),
                     quantity: Number(quantity.toFixed(2)),
                     unit: unit,

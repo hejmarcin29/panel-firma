@@ -80,3 +80,11 @@ Przy każdej implementacji, modyfikacji lub naprawie błędu, **ZAWSZE** analizu
 - **Unikaj `LIKE` na kolumnach JSON:** W PostgreSQL kolumny typu JSON (np. `roles`, `categories`) są strukturami danych, a nie tekstem. Używanie operatora `LIKE` (np. `WHERE roles LIKE '%admin%'`) prowadzi do błędów.
 - **Preferuj `db.query`:** Korzystaj z API `db.query.table.findMany()` zamiast surowych zapytań SQL (`db.select().where(sql...)`). Drizzle automatycznie obsługuje mapowanie typów JSON na obiekty JS.
 - **Filtrowanie w JS:** Dla małych zbiorów danych (np. lista użytkowników, statusy), bezpieczniej i czytelniej jest pobrać wszystkie rekordy i przefiltrować je w JavaScript (`.filter()`), zamiast tworzyć skomplikowane rzutowania typów w SQL.
+
+## Praca z Produktami (ID vs Nazwa)
+- **Zasada ID:** Wszelkie operacje na produktach (zapisywanie w pomiarach, wycenach, zamówieniach, logach materiałowych) **MUSZĄ** opierać się na `product_id` (ID z bazy danych), a nie na nazwie produktu.
+- **Cel:** Zapewnienie spójności danych w przypadku zmiany nazwy produktu w sklepie/bazie.
+- **Implementacja:**
+  - W tabelach (np. `montages`, `quote_items`) przechowuj `product_id` (integer).
+  - Nazwę produktu (`product_name`) można przechowywać dodatkowo jako "snapshot" w momencie zapisu (dla celów historycznych/czytelności), ale logika biznesowa (np. import do wyceny, stany magazynowe) musi korzystać z ID.
+  - Przy pobieraniu danych (np. do edycji), zawsze odświeżaj informacje o produkcie (cena, atrybuty) na podstawie ID.

@@ -900,7 +900,9 @@ type UpdateMontageMaterialsInput = {
 	finalPanelAmount?: number | null;
 	finalSkirtingLength?: number | null;
 	panelModel?: string | null;
+    panelProductId?: number | null;
 	skirtingModel?: string | null;
+    skirtingProductId?: number | null;
 	floorDetails?: string | null;
 	skirtingDetails?: string | null;
 	materialsEditHistory?: MaterialsEditHistoryEntry[];
@@ -912,7 +914,9 @@ export async function updateMontageMaterialDetails({
 	finalPanelAmount,
 	finalSkirtingLength,
 	panelModel,
+    panelProductId,
 	skirtingModel,
+    skirtingProductId,
 	floorDetails,
 	skirtingDetails,
 	materialsEditHistory,
@@ -929,7 +933,9 @@ export async function updateMontageMaterialDetails({
 			finalPanelAmount,
 			finalSkirtingLength,
 			panelModel,
+            panelProductId,
 			skirtingModel,
+            skirtingProductId,
 			floorDetails,
 			skirtingDetails,
 			materialsEditHistory,
@@ -1137,8 +1143,10 @@ export async function updateMontageMeasurement({
 	skirtingLength: number | null;
 	skirtingDetails: string;
 	panelModel: string;
+    panelProductId?: number | null;
 	panelWaste: number;
 	skirtingModel: string;
+    skirtingProductId?: number | null;
 	skirtingWaste: number;
 	modelsApproved: boolean;
 	additionalInfo: string;
@@ -1164,8 +1172,10 @@ export async function updateMontageMeasurement({
 			skirtingLength,
 			skirtingDetails,
 			panelModel,
+            panelProductId,
 			panelWaste,
 			skirtingModel,
+            skirtingProductId,
 			skirtingWaste,
 			modelsApproved,
 			additionalInfo,
