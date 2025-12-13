@@ -50,6 +50,20 @@
       "when": 1765580200138,
       "tag": "0006_smiling_imperial_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1765646357638,
+      "tag": "0007_jazzy_vance_astro",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1765646519198,
+      "tag": "0008_yielding_stranger",
+      "breakpoints": true
     }
   ]
 }

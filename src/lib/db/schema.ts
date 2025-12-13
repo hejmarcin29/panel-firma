@@ -1056,5 +1056,37 @@ export const commissionsRelations = relations(commissions, ({ one }) => ({
 export const usersRelations = relations(users, ({ many }) => ({
 	commissions: many(commissions, { relationName: 'commission_architect' }),
 	architectMontages: many(montages, { relationName: 'montage_architect' }),
+    assignedProducts: many(architectProducts),
+}));
+
+export const architectProducts = pgTable(
+    'architect_products',
+    {
+        id: text('id').primaryKey(),
+        architectId: text('architect_id')
+            .notNull()
+            .references(() => users.id, { onDelete: 'cascade' }),
+        productId: integer('product_id')
+            .notNull()
+            .references(() => products.id, { onDelete: 'cascade' }),
+        isExclusive: boolean('is_exclusive').default(false),
+        createdAt: timestamp('created_at').notNull().defaultNow(),
+    },
+    (table) => ({
+        architectIdx: index('architect_products_architect_id_idx').on(table.architectId),
+        productIdx: index('architect_products_product_id_idx').on(table.productId),
+        uniqueAssignment: uniqueIndex('architect_products_unique_idx').on(table.architectId, table.productId),
+    })
+);
+
+export const architectProductsRelations = relations(architectProducts, ({ one }) => ({
+    architect: one(users, {
+        fields: [architectProducts.architectId],
+        references: [users.id],
+    }),
+    product: one(products, {
+        fields: [architectProducts.productId],
+        references: [products.id],
+    }),
 }));
 

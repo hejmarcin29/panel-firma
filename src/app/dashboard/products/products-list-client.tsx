@@ -27,6 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ProductDetailsDialog } from './_components/product-details-dialog';
+import { VisibilityManager } from './_components/visibility-manager';
 
 function formatPrice(price: string | number) {
     if (!price) return '-';
@@ -126,6 +127,10 @@ export function ProductsListClient({
 
     return (
         <div className="space-y-4">
+            <div className="flex justify-end mb-2">
+                <VisibilityManager products={initialProducts.map(p => ({ id: p.id, name: p.name, sku: p.sku }))} />
+            </div>
+
             <ProductControlBar 
                 totalProducts={initialTotal} 
                 onOpenFilters={() => setIsFilterOpen(true)} 

@@ -1,11 +1,50 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { products } from '@/lib/db/schema';
+import { products, architectProducts, users } from '@/lib/db/schema';
 import { like, eq, and, desc, asc, count, inArray, sql, isNull } from 'drizzle-orm';
 import { getAppSettings, appSettingKeys } from '@/lib/settings';
 import { syncProducts } from '@/lib/sync/products';
 import { revalidatePath } from 'next/cache';
+import { randomUUID } from 'crypto';
+
+export async function getArchitects() {
+    // Note: Drizzle query builder for JSON arrays is tricky, using raw SQL for reliability
+    const result = await db.execute(sql`
+        SELECT id, name, email FROM users 
+        WHERE roles::jsonb ? 'architect'
+    `);
+    return result.rows as { id: string; name: string; email: string }[];
+}
+
+export async function getAssignedProducts(architectId: string) {
+    const assignments = await db.query.architectProducts.findMany({
+        where: eq(architectProducts.architectId, architectId),
+        with: {
+            product: true
+        }
+    });
+    return assignments.map(a => a.product);
+}
+
+export async function toggleProductAssignment(architectId: string, productId: number, isAssigned: boolean) {
+    if (isAssigned) {
+        // Assign
+        await db.insert(architectProducts).values({
+            id: randomUUID(),
+            architectId,
+            productId: productId.toString(), // Assuming product ID is number in DB but text in relation or vice versa, checking schema... products.id is integer in schema.ts
+        }).onConflictDoNothing();
+    } else {
+        // Unassign
+        await db.delete(architectProducts)
+            .where(and(
+                eq(architectProducts.architectId, architectId),
+                eq(architectProducts.productId, productId.toString())
+            ));
+    }
+    revalidatePath('/dashboard/products');
+}
 
 export async function bulkUpdateMontageSettings(
     productIds: number[],

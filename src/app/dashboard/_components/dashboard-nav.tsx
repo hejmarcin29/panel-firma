@@ -19,21 +19,22 @@ const links = [
 	{ href: '/dashboard/mail', label: 'Poczta' },
 	{ href: '/dashboard/settings', label: 'Ustawienia' },
     { href: '/dashboard/wallet', label: 'Portfel' },
+    { href: '/dashboard/showroom', label: 'Showroom' },
 ];
 
 export function DashboardNav({ urgentOrdersCount = 0, userRoles = ['admin'] }: { urgentOrdersCount?: number; userRoles?: UserRole[] }) {
 	const pathname = usePathname();
 
     const filteredLinks = links.filter(link => {
-        // Special case for Wallet: Only show if user is explicitly an architect
-        if (link.href === '/dashboard/wallet') {
+        // Special case for Wallet & Showroom: Only show if user is explicitly an architect
+        if (link.href === '/dashboard/wallet' || link.href === '/dashboard/showroom') {
             return userRoles.includes('architect');
         }
 
         if (userRoles.includes('admin')) return true;
         
         if (userRoles.includes('architect')) {
-             const allowedLinks = ['/dashboard', '/dashboard/montaze', '/dashboard/wallet'];
+             const allowedLinks = ['/dashboard', '/dashboard/montaze', '/dashboard/wallet', '/dashboard/showroom'];
              return allowedLinks.includes(link.href);
         }
 

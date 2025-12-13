@@ -1,0 +1,1 @@
+ALTER TABLE "architect_products" ALTER COLUMN "product_id" SET DATA TYPE integer;
