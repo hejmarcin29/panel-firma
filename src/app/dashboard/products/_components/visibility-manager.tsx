@@ -6,7 +6,6 @@ import {
     Dialog,
     DialogContent,
     DialogDescription,
-    DialogFooter,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
@@ -24,7 +23,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
-import { Check, ChevronsUpDown, Users, ShieldCheck } from 'lucide-react';
+import { Check, ChevronsUpDown, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getArchitects, getAssignedProducts, toggleProductAssignment } from '../actions';
 import { toast } from 'sonner';
@@ -49,18 +48,15 @@ export function VisibilityManager({ products }: VisibilityManagerProps) {
         }
     }, [open]);
 
-    useEffect(() => {
-        if (selectedArchitect) {
-            setIsLoading(true);
-            getAssignedProducts(selectedArchitect)
-                .then(products => {
-                    setAssignedProductIds(products.map(p => p.id));
-                })
-                .finally(() => setIsLoading(false));
-        } else {
-            setAssignedProductIds([]);
+    const fetchAssignedProducts = async (architectId: string) => {
+        setIsLoading(true);
+        try {
+            const products = await getAssignedProducts(architectId);
+            setAssignedProductIds(products.map(p => p.id));
+        } finally {
+            setIsLoading(false);
         }
-    }, [selectedArchitect]);
+    };
 
     const handleToggle = async (productId: number, checked: boolean) => {
         if (!selectedArchitect) return;
@@ -72,31 +68,12 @@ export function VisibilityManager({ products }: VisibilityManagerProps) {
 
         try {
             await toggleProductAssignment(selectedArchitect, productId, checked);
-        } catch (error) {
+        } catch {
             toast.error('Błąd zapisu');
             // Revert
             setAssignedProductIds(prev => 
                 !checked ? [...prev, productId] : prev.filter(id => id !== productId)
             );
-        }
-    };
-
-    const handleBulkAssign = async () => {
-        if (!selectedArchitect) return;
-        const allIds = products.map(p => p.id.toString()); // Action expects strings for bulk? No, let's check action.
-        // Action expects strings in bulkAssignProducts signature in previous step? 
-        // Let's check actions.ts content again. It was `productIds: string[]`.
-        // But schema is integer. I should fix actions.ts to accept numbers or convert.
-        // Let's assume I'll fix actions.ts to accept numbers or I convert here.
-        // Wait, schema is integer now.
-        
-        setIsLoading(true);
-        try {
-            // We need to fix actions.ts to handle numbers correctly first.
-            // For now, let's just implement UI logic assuming actions work.
-             toast.info('Funkcja masowa w przygotowaniu');
-        } finally {
-            setIsLoading(false);
         }
     };
 
@@ -146,6 +123,7 @@ export function VisibilityManager({ products }: VisibilityManagerProps) {
                                                     value={architect.name || architect.email}
                                                     onSelect={() => {
                                                         setSelectedArchitect(architect.id);
+                                                        fetchAssignedProducts(architect.id);
                                                         setComboboxOpen(false);
                                                     }}
                                                 >
