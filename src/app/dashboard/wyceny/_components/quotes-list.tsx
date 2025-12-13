@@ -1,5 +1,4 @@
-'use client';
-
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
@@ -37,6 +36,11 @@ const statusMap: Record<string, { label: string; variant: 'default' | 'secondary
 
 export function QuotesList({ quotes }: QuotesListProps) {
     const isMobile = useIsMobile();
+    const router = useRouter();
+
+    const handleRowClick = (quoteId: string) => {
+        router.push(`/dashboard/wyceny/${quoteId}`);
+    };
 
     if (quotes.length === 0) {
         return (
@@ -58,8 +62,9 @@ export function QuotesList({ quotes }: QuotesListProps) {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.3, delay: index * 0.05 }}
+                            onClick={() => handleRowClick(quote.id)}
                         >
-                            <Card className="overflow-hidden border-l-4 border-l-primary/20">
+                            <Card className="overflow-hidden border-l-4 border-l-primary/20 active:scale-[0.98] transition-transform">
                                 <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between space-y-0">
                                     <div className="space-y-1">
                                         <CardTitle className="text-base font-semibold leading-none">
@@ -94,10 +99,12 @@ export function QuotesList({ quotes }: QuotesListProps) {
                                                 <Calendar className="h-3 w-3" />
                                                 {format(new Date(quote.createdAt), 'dd MMM', { locale: pl })}
                                             </div>
-                                            <QuoteActionsMenu 
-                                                quoteId={quote.id} 
-                                                quoteNumber={quote.number || quote.id.slice(0, 8)} 
-                                            />
+                                            <div onClick={(e) => e.stopPropagation()}>
+                                                <QuoteActionsMenu 
+                                                    quoteId={quote.id} 
+                                                    quoteNumber={quote.number || quote.id.slice(0, 8)} 
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                 </CardContent>
@@ -128,7 +135,11 @@ export function QuotesList({ quotes }: QuotesListProps) {
                         const status = statusMap[quote.status] || { label: quote.status, variant: 'outline' };
                         
                         return (
-                            <tr key={quote.id} className="border-b last:border-0 hover:bg-muted/50 transition-colors">
+                            <tr 
+                                key={quote.id} 
+                                className="border-b last:border-0 hover:bg-muted/50 transition-colors cursor-pointer"
+                                onClick={() => handleRowClick(quote.id)}
+                            >
                                 <td className="p-4 font-mono">{quote.number || quote.id.slice(0, 8)}</td>
                                 <td className="p-4">
                                     <div className="font-medium">{quote.montage.clientName}</div>
@@ -144,7 +155,7 @@ export function QuotesList({ quotes }: QuotesListProps) {
                                 <td className="p-4 text-muted-foreground">
                                     {format(new Date(quote.createdAt), 'dd.MM.yyyy')}
                                 </td>
-                                <td className="p-4 text-right">
+                                <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
                                     <QuoteActionsMenu 
                                         quoteId={quote.id} 
                                         quoteNumber={quote.number || quote.id.slice(0, 8)} 

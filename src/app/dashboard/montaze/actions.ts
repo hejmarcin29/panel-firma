@@ -1246,7 +1246,7 @@ export async function updateMontageRealizationStatus({
     const changes: string[] = [];
     if (materialStatus) {
         const labels: Record<string, string> = {
-            'none': 'Brak',
+            'none': 'Niezamówiono',
             'ordered': 'Zamówiono',
             'in_stock': 'Na magazynie',
             'delivered': 'Dostarczono'

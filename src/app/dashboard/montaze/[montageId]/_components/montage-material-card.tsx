@@ -150,7 +150,7 @@ export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montag
                     <SelectValue placeholder="Status materiału" />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="none">Brak</SelectItem>
+                    <SelectItem value="none">Niezamówiono</SelectItem>
                     <SelectItem value="ordered">Zamówiono</SelectItem>
                     <SelectItem value="in_stock">Na magazynie</SelectItem>
                     <SelectItem value="delivered">Dostarczono</SelectItem>

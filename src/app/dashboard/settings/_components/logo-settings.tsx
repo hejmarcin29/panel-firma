@@ -74,8 +74,8 @@ export function LogoSettings({ currentLogoUrl }: LogoSettingsProps) {
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                <div className="flex items-center gap-6">
-                    <div className="relative h-24 w-24 border rounded-lg flex items-center justify-center bg-muted/50 overflow-hidden">
+                <div className="flex items-start gap-6">
+                    <div className="relative h-24 w-24 border rounded-lg flex items-center justify-center bg-muted/50 overflow-hidden shrink-0">
                         {logoUrl ? (
                             /* eslint-disable-next-line @next/next/no-img-element */
                             <img 
@@ -87,7 +87,7 @@ export function LogoSettings({ currentLogoUrl }: LogoSettingsProps) {
                             <span className="text-xs text-muted-foreground text-center px-2">Brak logo</span>
                         )}
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2 flex-1">
                         <div className="flex gap-2">
                             <Button 
                                 variant="outline" 
@@ -115,6 +115,11 @@ export function LogoSettings({ currentLogoUrl }: LogoSettingsProps) {
                         <p className="text-xs text-muted-foreground">
                             Max 2MB. Formaty: PNG, JPG, SVG.
                         </p>
+                        {logoUrl && (
+                            <div className="text-[10px] text-muted-foreground bg-muted p-2 rounded break-all font-mono">
+                                {logoUrl}
+                            </div>
+                        )}
                     </div>
                 </div>
                 <Input 

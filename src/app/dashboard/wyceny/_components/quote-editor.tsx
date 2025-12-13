@@ -10,7 +10,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Trash2, Plus, Wand2, Save, Printer, Mail } from 'lucide-react';
-import { updateQuote, sendQuoteEmail, getProductsForQuote } from '../actions';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 import type { QuoteItem, QuoteStatus } from '@/lib/db/schema';
@@ -22,7 +21,18 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { updateQuote, sendQuoteEmail, getProductsForQuote, deleteQuote } from '../actions';
 
 type ProductAttribute = {
     id: number;
@@ -77,6 +87,8 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
     const [isImporting, setIsImporting] = useState(false);
     const [importDialogOpen, setImportDialogOpen] = useState(false);
     const [availableProducts, setAvailableProducts] = useState<Product[]>([]);
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Filter products based on montage models
     const filteredProducts = availableProducts.filter(product => {
@@ -330,6 +342,20 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
         }
     };
 
+    const handleDelete = async () => {
+        setIsDeleting(true);
+        try {
+            await deleteQuote(quote.id);
+            toast.success('Wycena została usunięta');
+            router.push('/dashboard/wyceny');
+        } catch {
+            toast.error('Nie udało się usunąć wyceny');
+        } finally {
+            setIsDeleting(false);
+            setShowDeleteDialog(false);
+        }
+    };
+
     const totalNet = items.reduce((sum, item) => sum + item.totalNet, 0);
     const totalGross = items.reduce((sum, item) => sum + item.totalGross, 0);
 
@@ -355,6 +381,10 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
                     </p>
                 </div>
                 <div className="flex gap-2">
+                    <Button variant="destructive" onClick={() => setShowDeleteDialog(true)}>
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Usuń
+                    </Button>
                     <Button variant="outline" onClick={handlePrint}>
                         <Printer className="w-4 h-4 mr-2" />
                         Drukuj / PDF
@@ -602,6 +632,30 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
                     <p className="whitespace-pre-wrap text-sm">{notes}</p>
                 </div>
             </div>
+
+            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Czy na pewno chcesz usunąć tę wycenę?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Tej operacji nie można cofnąć. Wycena zostanie trwale usunięta z systemu.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeleting}>Anuluj</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleDelete();
+                            }}
+                            disabled={isDeleting}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            {isDeleting ? 'Usuwanie...' : 'Usuń'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

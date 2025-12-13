@@ -134,6 +134,14 @@ export function CustomersView({ initialCustomers }: CustomersViewProps) {
 											{customer.taxId && (
 												<span className="text-xs text-muted-foreground">NIP: {customer.taxId}</span>
 											)}
+                                            {(customer.billingCity || customer.billingStreet) && (
+                                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1 md:hidden">
+                                                    <MapPin className="h-3 w-3 shrink-0" />
+                                                    <span className="truncate max-w-[150px]">
+                                                        {customer.billingCity} {customer.billingStreet ? `, ${customer.billingStreet}` : ''}
+                                                    </span>
+                                                </div>
+                                            )}
 										</div>
 									</TableCell>
 									<TableCell className="hidden md:table-cell">
