@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { Montage } from "../montaze/types";
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 interface RecentActivityProps {
   recentMontages: Montage[];
@@ -61,19 +62,24 @@ export function RecentActivity({ recentMontages }: RecentActivityProps) {
              <p className="text-sm text-muted-foreground text-center py-8">Brak ostatniej aktywności.</p>
           ) : (
             recentMontages.map((montage) => (
-                <motion.div key={montage.id} variants={item} className="flex items-center">
-                <Avatar className="h-9 w-9">
-                    <AvatarFallback>{initials(montage.clientName)}</AvatarFallback>
-                </Avatar>
-                <div className="ml-4 space-y-1">
-                    <p className="text-sm font-medium leading-none">{montage.clientName}</p>
-                    <p className="text-xs text-muted-foreground">
-                    {montage.displayId ? `Montaż ${montage.displayId}` : 'Montaż'} • {STATUS_LABELS[montage.status] || montage.status}
-                    </p>
-                </div>
-                <div className="ml-auto font-medium text-xs text-muted-foreground">
-                    {montage.updatedAt ? new Date(montage.updatedAt).toLocaleDateString() : ''}
-                </div>
+                <motion.div key={montage.id} variants={item}>
+                  <Link 
+                    href={`/dashboard/montaze/${montage.id}`}
+                    className="flex items-center p-2 -mx-2 rounded-md hover:bg-muted/50 transition-colors cursor-pointer"
+                  >
+                    <Avatar className="h-9 w-9">
+                        <AvatarFallback>{initials(montage.clientName)}</AvatarFallback>
+                    </Avatar>
+                    <div className="ml-4 space-y-1">
+                        <p className="text-sm font-medium leading-none">{montage.clientName}</p>
+                        <p className="text-xs text-muted-foreground">
+                        {montage.displayId ? `Montaż ${montage.displayId}` : 'Montaż'} • {STATUS_LABELS[montage.status] || montage.status}
+                        </p>
+                    </div>
+                    <div className="ml-auto font-medium text-xs text-muted-foreground">
+                        {montage.updatedAt ? new Date(montage.updatedAt).toLocaleDateString() : ''}
+                    </div>
+                  </Link>
                 </motion.div>
             ))
           )}
