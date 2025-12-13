@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Heart, Download, ShoppingBag, Search, Filter, X, ArrowRight, Loader2 } from 'lucide-react';
 import { getAssignedProducts } from '../products/actions';
+import { requestSamples } from './actions';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import {
@@ -19,6 +20,8 @@ import {
     SheetTrigger,
     SheetFooter,
 } from "@/components/ui/sheet";
+import { useUser } from '@/lib/auth/client';
+import { cn } from '@/lib/utils';
 
 interface Product {
     id: number;
@@ -29,7 +32,8 @@ interface Product {
     attributes: { name: string; options: string[] }[];
 }
 
-export default function ShowroomPage({ user }: { user: { id: string; name: string } }) {
+export default function ShowroomPage() {
+    const { user } = useUser();
     const [products, setProducts] = useState<Product[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -37,13 +41,15 @@ export default function ShowroomPage({ user }: { user: { id: string; name: strin
     const [isMoodboardOpen, setIsMoodboardOpen] = useState(false);
 
     useEffect(() => {
-        getAssignedProducts(user.id)
-            .then((data) => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                setProducts(data as any[]); // Casting because of type mismatch in action return vs interface
-            })
-            .finally(() => setIsLoading(false));
-    }, [user.id]);
+        if (user?.id) {
+            getAssignedProducts(user.id)
+                .then((data) => {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    setProducts(data as any[]); // Casting because of type mismatch in action return vs interface
+                })
+                .finally(() => setIsLoading(false));
+        }
+    }, [user?.id]);
 
     const filteredProducts = products.filter(p => 
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -59,9 +65,19 @@ export default function ShowroomPage({ user }: { user: { id: string; name: strin
         }
     };
 
-    const handleRequestSamples = () => {
-        toast.success('Wysłano prośbę o próbki do opiekuna handlowego.');
-        setIsMoodboardOpen(false);
+    const handleRequestSamples = async () => {
+        try {
+            setIsLoading(true);
+            await requestSamples(favorites);
+            toast.success('Wysłano prośbę o próbki do opiekuna handlowego.');
+            setFavorites([]);
+            setIsMoodboardOpen(false);
+        } catch (error) {
+            toast.error('Wystąpił błąd podczas wysyłania prośby.');
+            console.error(error);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const favoriteProducts = products.filter(p => favorites.includes(p.id));
@@ -216,7 +232,12 @@ export default function ShowroomPage({ user }: { user: { id: string; name: strin
                         <Button className="w-full h-12 text-base" onClick={handleRequestSamples} disabled={favorites.length === 0}>
                             Zamów Próbki (Kurier)
                         </Button>
-                        <Button variant="outline" className="w-full" disabled={favorites.length === 0}>
+                        <Button 
+                            variant="outline" 
+                            className="w-full" 
+                            disabled={favorites.length === 0}
+                            onClick={() => toast.info('Generowanie PDF w przygotowaniu')}
+                        >
                             Pobierz Karty Produktów (PDF)
                         </Button>
                     </SheetFooter>

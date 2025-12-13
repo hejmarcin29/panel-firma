@@ -9,12 +9,15 @@ import { revalidatePath } from 'next/cache';
 import { randomUUID } from 'crypto';
 
 export async function getArchitects() {
-    // Note: Drizzle query builder for JSON arrays is tricky, using raw SQL for reliability
-    const result = await db.execute(sql`
-        SELECT id, name, email FROM users 
-        WHERE roles::jsonb ? 'architect'
-    `);
-    return result.rows as { id: string; name: string; email: string }[];
+    const result = await db.select({
+        id: users.id,
+        name: users.name,
+        email: users.email
+    })
+    .from(users)
+    .where(sql`roles::jsonb ? 'architect'`);
+    
+    return result;
 }
 
 export async function getAssignedProducts(architectId: string) {
@@ -33,14 +36,14 @@ export async function toggleProductAssignment(architectId: string, productId: nu
         await db.insert(architectProducts).values({
             id: randomUUID(),
             architectId,
-            productId: productId.toString(), // Assuming product ID is number in DB but text in relation or vice versa, checking schema... products.id is integer in schema.ts
+            productId: productId,
         }).onConflictDoNothing();
     } else {
         // Unassign
         await db.delete(architectProducts)
             .where(and(
                 eq(architectProducts.architectId, architectId),
-                eq(architectProducts.productId, productId.toString())
+                eq(architectProducts.productId, productId)
             ));
     }
     revalidatePath('/dashboard/products');

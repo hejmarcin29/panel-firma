@@ -4,6 +4,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { DensityProvider } from "@/components/density-provider";
 import { VersionChecker } from "@/components/system/version-checker";
+import { UserProvider } from "@/lib/auth/client";
+import { getCurrentSession } from "@/lib/auth/session";
 import { cookies } from "next/headers";
 import "./globals.css";
 
@@ -42,12 +44,14 @@ export default async function RootLayout({
 }>) {
   const cookieStore = await cookies();
   const density = (cookieStore.get("density")?.value as "comfortable" | "compact") || "comfortable";
+  const session = await getCurrentSession();
 
   return (
     <html lang="pl" suppressHydrationWarning data-density={density}>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} antialiased overflow-x-hidden`}
       >
+        <UserProvider initialUser={session?.user ?? null}>
         <DensityProvider initialDensity={density}>
           <ThemeProvider
               attribute="class"
@@ -60,6 +64,7 @@ export default async function RootLayout({
               <VersionChecker />
           </ThemeProvider>
         </DensityProvider>
+        </UserProvider>
       </body>
     </html>
   );

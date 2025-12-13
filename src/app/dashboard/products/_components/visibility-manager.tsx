@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/popover';
 import { Check, ChevronsUpDown, Users, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getArchitects, getAssignedProducts, toggleProductAssignment, bulkAssignProducts, bulkUnassignProducts } from '../actions';
+import { getArchitects, getAssignedProducts, toggleProductAssignment } from '../actions';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -37,7 +37,7 @@ interface VisibilityManagerProps {
 
 export function VisibilityManager({ products }: VisibilityManagerProps) {
     const [open, setOpen] = useState(false);
-    const [architects, setArchitects] = useState<{ id: string; name: string; email: string }[]>([]);
+    const [architects, setArchitects] = useState<{ id: string; name: string | null; email: string }[]>([]);
     const [selectedArchitect, setSelectedArchitect] = useState<string | null>(null);
     const [assignedProductIds, setAssignedProductIds] = useState<number[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -129,7 +129,7 @@ export function VisibilityManager({ products }: VisibilityManagerProps) {
                                     className="w-full justify-between"
                                 >
                                     {selectedArchitect
-                                        ? architects.find((a) => a.id === selectedArchitect)?.name
+                                        ? (architects.find((a) => a.id === selectedArchitect)?.name || architects.find((a) => a.id === selectedArchitect)?.email)
                                         : "Wybierz..."}
                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                 </Button>
@@ -143,7 +143,7 @@ export function VisibilityManager({ products }: VisibilityManagerProps) {
                                             {architects.map((architect) => (
                                                 <CommandItem
                                                     key={architect.id}
-                                                    value={architect.name}
+                                                    value={architect.name || architect.email}
                                                     onSelect={() => {
                                                         setSelectedArchitect(architect.id);
                                                         setComboboxOpen(false);
@@ -156,7 +156,7 @@ export function VisibilityManager({ products }: VisibilityManagerProps) {
                                                         )}
                                                     />
                                                     <div className="flex flex-col">
-                                                        <span>{architect.name}</span>
+                                                        <span>{architect.name || architect.email}</span>
                                                         <span className="text-xs text-muted-foreground">{architect.email}</span>
                                                     </div>
                                                 </CommandItem>
