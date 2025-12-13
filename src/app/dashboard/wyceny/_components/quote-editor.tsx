@@ -9,9 +9,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Trash2, Plus, Wand2, Save, Printer, Mail } from 'lucide-react';
+import { Trash2, Plus, Wand2, Save, Printer, Mail, MoreHorizontal, ArrowLeft, Calculator } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-mobile';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import Link from 'next/link';
 import type { QuoteItem, QuoteStatus } from '@/lib/db/schema';
 import type { TechnicalAuditData } from '@/app/dashboard/montaze/technical-data';
 import {
@@ -79,6 +87,7 @@ type QuoteEditorProps = {
 
 export function QuoteEditor({ quote }: QuoteEditorProps) {
     const router = useRouter();
+    const isMobile = useIsMobile();
     const [items, setItems] = useState<QuoteItem[]>(quote.items || []);
     const [status, setStatus] = useState<QuoteStatus>(quote.status);
     const [notes, setNotes] = useState(quote.notes || '');
@@ -358,6 +367,251 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
 
     const totalNet = items.reduce((sum, item) => sum + item.totalNet, 0);
     const totalGross = items.reduce((sum, item) => sum + item.totalGross, 0);
+
+    if (isMobile) {
+        return (
+            <div className="space-y-4 pb-24">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="icon" asChild className="-ml-2">
+                            <Link href="/dashboard/wyceny">
+                                <ArrowLeft className="w-5 h-5" />
+                            </Link>
+                        </Button>
+                        <div>
+                            <h2 className="font-semibold text-sm">{quote.montage.clientName}</h2>
+                            <p className="text-xs text-muted-foreground truncate max-w-[200px]">
+                                {quote.montage.installationAddress}
+                            </p>
+                        </div>
+                    </div>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="w-5 h-5" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={handlePrint}>
+                                <Printer className="w-4 h-4 mr-2" /> Drukuj / PDF
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleSendEmail} disabled={isSending}>
+                                <Mail className="w-4 h-4 mr-2" /> Wyślij Email
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleSmartImport}>
+                                <Wand2 className="w-4 h-4 mr-2" /> Importuj z pomiaru
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                                className="text-destructive focus:text-destructive" 
+                                onClick={() => setShowDeleteDialog(true)}
+                            >
+                                <Trash2 className="w-4 h-4 mr-2" /> Usuń wycenę
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+
+                <div className="space-y-3">
+                    {items.map((item, index) => (
+                        <Card key={item.id} className="overflow-hidden border-l-4 border-l-primary/20">
+                            <CardContent className="p-3 space-y-3">
+                                <div className="flex justify-between items-start gap-2">
+                                    <Input 
+                                        value={item.name} 
+                                        onChange={(e) => updateItem(index, 'name', e.target.value)}
+                                        placeholder="Nazwa usługi/produktu"
+                                        className="font-medium h-9 text-sm"
+                                    />
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-9 w-9 shrink-0 text-muted-foreground hover:text-destructive"
+                                        onClick={() => removeItem(index)}
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                                
+                                <div className="grid grid-cols-3 gap-2">
+                                    <div className="space-y-1">
+                                        <Label className="text-[10px] uppercase text-muted-foreground">Ilość</Label>
+                                        <Input 
+                                            type="number" 
+                                            value={item.quantity} 
+                                            onChange={(e) => updateItem(index, 'quantity', parseFloat(e.target.value) || 0)}
+                                            className="h-8 text-sm"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-[10px] uppercase text-muted-foreground">Jedn.</Label>
+                                        <Input 
+                                            value={item.unit} 
+                                            onChange={(e) => updateItem(index, 'unit', e.target.value)}
+                                            className="h-8 text-sm"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-[10px] uppercase text-muted-foreground">VAT</Label>
+                                        <Select 
+                                            value={item.vatRate.toString()} 
+                                            onValueChange={(v) => updateItem(index, 'vatRate', parseFloat(v))}
+                                        >
+                                            <SelectTrigger className="h-8 text-sm">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="0.08">8%</SelectItem>
+                                                <SelectItem value="0.23">23%</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2 pt-1">
+                                    <div className="space-y-1">
+                                        <Label className="text-[10px] uppercase text-muted-foreground">Cena Netto</Label>
+                                        <Input 
+                                            type="number" 
+                                            value={item.priceNet} 
+                                            onChange={(e) => updateItem(index, 'priceNet', parseFloat(e.target.value) || 0)}
+                                            className="h-8 text-sm"
+                                        />
+                                    </div>
+                                    <div className="space-y-1 text-right">
+                                        <Label className="text-[10px] uppercase text-muted-foreground">Wartość Brutto</Label>
+                                        <div className="h-8 flex items-center justify-end font-semibold text-sm">
+                                            {formatCurrency(item.totalGross)}
+                                        </div>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
+                    
+                    <Button variant="outline" className="w-full border-dashed h-12" onClick={addItem}>
+                        <Plus className="w-4 h-4 mr-2" /> Dodaj pozycję
+                    </Button>
+                </div>
+
+                <Card>
+                    <CardContent className="p-4 space-y-4">
+                        <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">Suma Netto:</span>
+                                <span>{formatCurrency(totalNet)}</span>
+                            </div>
+                            <div className="flex justify-between text-base font-bold">
+                                <span>Suma Brutto:</span>
+                                <span className="text-primary">{formatCurrency(totalGross)}</span>
+                            </div>
+                        </div>
+                        
+                        <div className="space-y-2 pt-2 border-t">
+                            <Label>Status</Label>
+                            <Select value={status} onValueChange={(v: QuoteStatus) => setStatus(v)}>
+                                <SelectTrigger>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="draft">Szkic</SelectItem>
+                                    <SelectItem value="sent">Wysłana</SelectItem>
+                                    <SelectItem value="accepted">Zaakceptowana</SelectItem>
+                                    <SelectItem value="rejected">Odrzucona</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>Notatki</Label>
+                            <Textarea 
+                                value={notes} 
+                                onChange={(e) => setNotes(e.target.value)} 
+                                placeholder="Notatki..."
+                                className="min-h-[80px]"
+                            />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t z-10 flex gap-2 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+                    <Button className="w-full h-12 text-base font-semibold shadow-lg" onClick={handleSave} disabled={isSaving}>
+                        <Save className="w-5 h-5 mr-2" />
+                        {isSaving ? 'Zapisywanie...' : 'Zapisz zmiany'}
+                    </Button>
+                </div>
+
+                <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+                    <DialogContent className="max-w-3xl h-[80vh] flex flex-col">
+                        <DialogHeader>
+                            <DialogTitle>Inteligentny Import z Pomiaru</DialogTitle>
+                        </DialogHeader>
+                        <ScrollArea className="flex-1 border rounded-md p-2">
+                            <div className="space-y-2">
+                                <Button
+                                    variant="ghost"
+                                    className="w-full justify-start font-normal"
+                                    onClick={() => executeSmartImport(undefined)}
+                                >
+                                    <div className="flex flex-col items-start text-left">
+                                        <span className="font-semibold">Importuj tylko usługi</span>
+                                        <span className="text-xs text-muted-foreground">
+                                            Dodaje montaż paneli ({quote.montage.floorArea} m²)
+                                        </span>
+                                    </div>
+                                </Button>
+                                
+                                {productsDisplay.map((product) => (
+                                    <Button
+                                        key={product.id}
+                                        variant="ghost"
+                                        className="w-full justify-start font-normal h-auto py-3"
+                                        onClick={() => executeSmartImport(product)}
+                                    >
+                                        <div className="flex flex-col items-start text-left w-full">
+                                            <span className="font-semibold truncate w-full">{product.name}</span>
+                                            <div className="flex justify-between w-full text-xs text-muted-foreground mt-1">
+                                                <span>Cena: {product.price} zł</span>
+                                                {quote.montage.panelProductId === product.id && (
+                                                    <span className="text-primary font-medium">Wybrany w pomiarze (Panele)</span>
+                                                )}
+                                                {quote.montage.skirtingProductId === product.id && (
+                                                    <span className="text-primary font-medium">Wybrany w pomiarze (Listwy)</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </Button>
+                                ))}
+                            </div>
+                        </ScrollArea>
+                    </DialogContent>
+                </Dialog>
+
+                <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Czy na pewno chcesz usunąć tę wycenę?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Tej operacji nie można cofnąć. Wycena zostanie trwale usunięta z systemu.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel disabled={isDeleting}>Anuluj</AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    handleDelete();
+                                }}
+                                disabled={isDeleting}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                                {isDeleting ? 'Usuwanie...' : 'Usuń'}
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
