@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Heart, Download, ShoppingBag, Search, Filter, X, ArrowRight, Loader2 } from 'lucide-react';
 import { getAssignedProducts } from '../products/actions';
-import { requestSamples } from './actions';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import {
@@ -62,21 +61,6 @@ export default function ShowroomPage() {
         );
         if (!favorites.includes(id)) {
             toast.success('Dodano do Moodboardu');
-        }
-    };
-
-    const handleRequestSamples = async () => {
-        try {
-            setIsLoading(true);
-            await requestSamples(favorites);
-            toast.success('Wysłano prośbę o próbki do opiekuna handlowego.');
-            setFavorites([]);
-            setIsMoodboardOpen(false);
-        } catch (error) {
-            toast.error('Wystąpił błąd podczas wysyłania prośby.');
-            console.error(error);
-        } finally {
-            setIsLoading(false);
         }
     };
 
@@ -195,7 +179,7 @@ export default function ShowroomPage() {
                     <SheetHeader>
                         <SheetTitle className="font-serif text-2xl">Twój Moodboard</SheetTitle>
                         <SheetDescription>
-                            Wybrane produkty ({favorites.length}). Możesz zamówić próbki lub pobrać materiały.
+                            Wybrane produkty ({favorites.length}).
                         </SheetDescription>
                     </SheetHeader>
 
@@ -229,9 +213,6 @@ export default function ShowroomPage() {
                     </div>
 
                     <SheetFooter className="flex-col gap-3 sm:flex-col">
-                        <Button className="w-full h-12 text-base" onClick={handleRequestSamples} disabled={favorites.length === 0}>
-                            Zamów Próbki (Kurier)
-                        </Button>
                         <Button 
                             variant="outline" 
                             className="w-full" 
