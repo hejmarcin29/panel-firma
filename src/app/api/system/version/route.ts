@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/form';
+import { NextResponse } from 'next/server';
 
 // Ta zmienna zostanie zainicjowana TYLKO RAZ w momencie startu procesu Node.js (PM2)
 // Po każdym restarcie serwera (deployu) będzie miała nową wartość.

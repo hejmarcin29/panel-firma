@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { RefreshCw, ArrowUpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const CHECK_INTERVAL = 60 * 1000; // Sprawdzaj co minutę
