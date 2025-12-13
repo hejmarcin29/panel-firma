@@ -20,6 +20,7 @@ import { getAppSetting, appSettingKeys } from '@/lib/settings';
 
 import { mapMontageRow, type MontageRow } from './montaze/utils';
 import { DashboardBuilder } from './_components/dashboard-builder';
+import { ArchitectDashboard } from './_components/architect-dashboard';
 import type { DashboardLayoutConfig } from './actions';
 
 const DEFAULT_LAYOUT: DashboardLayoutConfig = {
@@ -59,6 +60,38 @@ export default async function DashboardPage() {
 
     const r2Config = await tryGetR2Config();
     const publicBaseUrl = r2Config?.publicBaseUrl ?? null;
+
+    // --- ARCHITECT DASHBOARD LOGIC ---
+    if (user.roles.includes('architect') && !user.roles.includes('admin')) {
+        const architectProjects = await db.query.montages.findMany({
+            where: eq(montages.architectId, user.id),
+            orderBy: desc(montages.updatedAt),
+            columns: {
+                id: true,
+                clientName: true,
+                status: true,
+                address: true,
+                updatedAt: true,
+                scheduledInstallationAt: true,
+            }
+        });
+
+        const activeProjects = architectProjects.filter(p => p.status !== 'completed' && p.status !== 'cancelled').length;
+        const completedProjects = architectProjects.filter(p => p.status === 'completed').length;
+
+        return (
+            <ArchitectDashboard 
+                user={user} 
+                projects={architectProjects}
+                stats={{
+                    activeProjects,
+                    completedProjects,
+                    totalCommission: 0 // Placeholder
+                }}
+            />
+        );
+    }
+    // ---------------------------------
 
     const kpiMontageThreatDays = await getAppSetting(appSettingKeys.kpiMontageThreatDays);
     const threatDays = Number(kpiMontageThreatDays ?? 7);
