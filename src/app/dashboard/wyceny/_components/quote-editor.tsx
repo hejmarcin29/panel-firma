@@ -125,7 +125,7 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
             quantity: 1,
             unit: 'szt',
             priceNet: 0,
-            vatRate: 0.23,
+            vatRate: 0.08,
             priceGross: 0,
             totalNet: 0,
             totalGross: 0,
@@ -202,10 +202,10 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
                         quantity: piecesNeeded,
                         unit: 'szt',
                         priceNet: priceNet,
-                        vatRate: 0.23,
-                        priceGross: priceNet * 1.23,
+                        vatRate: 0.08,
+                        priceGross: priceNet * 1.08,
                         totalNet: piecesNeeded * priceNet,
-                        totalGross: piecesNeeded * priceNet * 1.23,
+                        totalGross: piecesNeeded * priceNet * 1.08,
                     });
                     importedCount++;
                 }
@@ -246,10 +246,10 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
                     quantity: Number(quantity.toFixed(2)),
                     unit: unit,
                     priceNet: priceNet,
-                    vatRate: 0.23, // Material VAT
-                    priceGross: priceNet * 1.23,
+                    vatRate: 0.08, // Material VAT
+                    priceGross: priceNet * 1.08,
                     totalNet: quantity * priceNet,
-                    totalGross: quantity * priceNet * 1.23,
+                    totalGross: quantity * priceNet * 1.08,
                 });
                 importedCount++;
             }

@@ -326,7 +326,8 @@ export async function uploadLogo(formData: FormData) {
     const client = createR2Client(r2Config);
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const key = `system/logo-${Date.now()}.${file.name.split('.').pop()}`;
+    const extension = file.name.split('.').pop()?.toLowerCase() || 'png';
+    const key = `system/logo-${Date.now()}.${extension}`;
 
     await client.send(new PutObjectCommand({
         Bucket: r2Config.bucketName,
@@ -345,6 +346,7 @@ export async function uploadLogo(formData: FormData) {
 
     await logSystemEvent('update_logo', 'Zaktualizowano logo systemu', user.id);
     revalidatePath('/', 'layout');
+    revalidatePath('/dashboard', 'layout');
     return url;
 }
 
@@ -488,6 +490,27 @@ export async function getDeletedProducts() {
         where: isNotNull(products.deletedAt),
         orderBy: [desc(products.deletedAt)],
     });
+}
+
+export async function updateCompanySettings(data: {
+    name: string;
+    address: string;
+    nip: string;
+    bankName: string;
+    bankAccount: string;
+}) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) {
+        throw new Error('Unauthorized');
+    }
+
+    await setAppSetting({ key: appSettingKeys.companyName, value: data.name, userId: user.id });
+    await setAppSetting({ key: appSettingKeys.companyAddress, value: data.address, userId: user.id });
+    await setAppSetting({ key: appSettingKeys.companyNip, value: data.nip, userId: user.id });
+    await setAppSetting({ key: appSettingKeys.companyBankName, value: data.bankName, userId: user.id });
+    await setAppSetting({ key: appSettingKeys.companyBankAccount, value: data.bankAccount, userId: user.id });
+
+    revalidatePath('/dashboard/settings');
 }
 
 

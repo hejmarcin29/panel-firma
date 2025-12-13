@@ -36,6 +36,11 @@ export const appSettingKeys = {
 	googleClientEmail: 'google.client_email',
 	googlePrivateKey: 'google.private_key',
     systemLogoUrl: 'system.logo_url',
+    companyName: 'company.name',
+    companyAddress: 'company.address',
+    companyNip: 'company.nip',
+    companyBankName: 'company.bank_name',
+    companyBankAccount: 'company.bank_account',
 } as const;
 
 export type AppSettingKey = (typeof appSettingKeys)[keyof typeof appSettingKeys];

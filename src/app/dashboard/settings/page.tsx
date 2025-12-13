@@ -39,6 +39,7 @@ import { TrashView } from './_components/trash-view';
 import { getDeletedQuotes, getDeletedCustomers, getDeletedMontages, getDeletedProducts } from './actions';
 
 import { LogoSettings } from './_components/logo-settings';
+import { CompanySettingsForm } from './_components/company-settings-form';
 
 type LogLevel = 'info' | 'warning' | 'error';
 
@@ -155,6 +156,11 @@ export default async function SettingsPage() {
         deletedCustomers,
         deletedMontages,
         deletedProducts,
+        companyName,
+        companyAddress,
+        companyNip,
+        companyBankName,
+        companyBankAccount,
 	] = await Promise.all([
 		getAppSetting(appSettingKeys.wooWebhookSecret),
 		getAppSetting(appSettingKeys.wooConsumerKey),
@@ -189,6 +195,11 @@ export default async function SettingsPage() {
         getDeletedCustomers(),
         getDeletedMontages(),
         getDeletedProducts(),
+        getAppSetting(appSettingKeys.companyName),
+        getAppSetting(appSettingKeys.companyAddress),
+        getAppSetting(appSettingKeys.companyNip),
+        getAppSetting(appSettingKeys.companyBankName),
+        getAppSetting(appSettingKeys.companyBankAccount),
 	]);
 
     const statusOptions = montageStatusDefinitions.map(def => ({
@@ -566,39 +577,48 @@ export default async function SettingsPage() {
                 />
             }
 		>
-			<Card>
-				<CardHeader>
-					<CardTitle>Status integracji</CardTitle>
-					<CardDescription>Podglad biezacych danych z backendu.</CardDescription>
-				</CardHeader>
-				<CardContent className="space-y-4">
-					<dl className="grid gap-3 text-sm">
-						<div>
-							<dt className="text-muted-foreground">Zamowienia do potwierdzenia</dt>
-							<dd className="text-base font-semibold">{pendingReviewCount}</dd>
-						</div>
-						<div>
-							<dt className="text-muted-foreground">Ostatnie zdarzenie webhooka</dt>
-							<dd className="flex flex-wrap items-center gap-2">
-								{lastEvent ? (
-									<>
-										<Badge className={levelBadgeClass(lastEvent.level)}>{lastEvent.level}</Badge>
-										<span>{formatTimestamp(lastEvent.createdAt)}</span>
-									</>
-								) : (
-									<span>Brak zdarzen</span>
-								)}
-							</dd>
-						</div>
-						<div>
-							<dt className="text-muted-foreground">Ostatnia wiadomosc</dt>
-							<dd className="text-xs text-foreground/80">
-								{lastEvent?.message ?? 'Brak wpisow w logach integracji.'}
-							</dd>
-						</div>
-					</dl>
-				</CardContent>
-			</Card>
+            <div className="space-y-6">
+                <CompanySettingsForm
+                    initialName={companyName ?? ''}
+                    initialAddress={companyAddress ?? ''}
+                    initialNip={companyNip ?? ''}
+                    initialBankName={companyBankName ?? ''}
+                    initialBankAccount={companyBankAccount ?? ''}
+                />
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Status integracji</CardTitle>
+                        <CardDescription>Podglad biezacych danych z backendu.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <dl className="grid gap-3 text-sm">
+                            <div>
+                                <dt className="text-muted-foreground">Zamowienia do potwierdzenia</dt>
+                                <dd className="text-base font-semibold">{pendingReviewCount}</dd>
+                            </div>
+                            <div>
+                                <dt className="text-muted-foreground">Ostatnie zdarzenie webhooka</dt>
+                                <dd className="flex flex-wrap items-center gap-2">
+                                    {lastEvent ? (
+                                        <>
+                                            <Badge className={levelBadgeClass(lastEvent.level)}>{lastEvent.level}</Badge>
+                                            <span>{formatTimestamp(lastEvent.createdAt)}</span>
+                                        </>
+                                    ) : (
+                                        <span>Brak zdarzen</span>
+                                    )}
+                                </dd>
+                            </div>
+                            <div>
+                                <dt className="text-muted-foreground">Ostatnia wiadomosc</dt>
+                                <dd className="text-xs text-foreground/80">
+                                    {lastEvent?.message ?? 'Brak wpisow w logach integracji.'}
+                                </dd>
+                            </div>
+                        </dl>
+                    </CardContent>
+                </Card>
+            </div>
 		</SettingsView>
 	);
 }

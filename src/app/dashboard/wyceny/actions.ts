@@ -7,6 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { randomUUID } from 'crypto';
 import { createTransport } from 'nodemailer';
 import { formatCurrency } from '@/lib/utils';
+import { getAppSetting, appSettingKeys } from '@/lib/settings';
 
 function decodeSecret(secret: string | null | undefined): string | null {
     if (!secret) {
@@ -64,6 +65,20 @@ export async function sendQuoteEmail(quoteId: string) {
         },
     });
 
+    const [
+        companyName,
+        companyAddress,
+        companyNip,
+        companyBankName,
+        companyBankAccount,
+    ] = await Promise.all([
+        getAppSetting(appSettingKeys.companyName),
+        getAppSetting(appSettingKeys.companyAddress),
+        getAppSetting(appSettingKeys.companyNip),
+        getAppSetting(appSettingKeys.companyBankName),
+        getAppSetting(appSettingKeys.companyBankAccount),
+    ]);
+
     const itemsHtml = quote.items.map(item => `
         <tr>
             <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.name}</td>
@@ -106,6 +121,20 @@ export async function sendQuoteEmail(quoteId: string) {
             </table>
 
             ${quote.notes ? `<p><strong>Uwagi:</strong><br>${quote.notes}</p>` : ''}
+            
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
+                <p><strong>Dane sprzedawcy:</strong></p>
+                <p>${companyName || ''}</p>
+                <p>${companyAddress || ''}</p>
+                <p>NIP: ${companyNip || ''}</p>
+                ${companyBankName && companyBankAccount ? `
+                    <p style="margin-top: 10px;">
+                        <strong>Konto bankowe:</strong><br>
+                        ${companyBankName}<br>
+                        ${companyBankAccount}
+                    </p>
+                ` : ''}
+            </div>
             
             <p>Z poważaniem,<br>${account.displayName}</p>
         </div>
