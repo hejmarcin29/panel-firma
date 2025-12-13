@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { DensityProvider } from "@/components/density-provider";
+import { VersionChecker } from "@/components/system/version-checker";
 import { cookies } from "next/headers";
 import "./globals.css";
 
@@ -51,6 +52,7 @@ export default async function RootLayout({
             >
               {children}
               <Toaster position="top-center" />
+              <VersionChecker />
           </ThemeProvider>
         </DensityProvider>
       </body>
