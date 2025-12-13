@@ -13,6 +13,14 @@ Provide project context and coding guidelines that AI should follow when generat
   - Elementy interaktywne powinny dawać natychmiastowy feedback wizualny.
   - Unikaj "sztywnych" przejść; interfejs ma "oddychać".
 
+## Mobile UI Patterns (Mobile-First)
+- **Edytory i Listy Szczegółowe:**
+  - **Unikaj tabel na mobile:** Zamiast tabel, stosuj układ **Kart (Card Layout)**. Każdy wiersz danych (np. pozycja wyceny) powinien być osobną kartą.
+  - **Grid wewnątrz Karty:** Układaj pola formularzy wewnątrz karty w siatce (`grid-cols-2` lub `grid-cols-3`), aby maksymalnie wykorzystać szerokość ekranu, ale uniknąć poziomego przewijania.
+  - **Sticky Footer:** Główna akcja (np. "Zapisz") powinna być "przyklejona" do dołu ekranu (`fixed bottom-...`), ale **musi uwzględniać dolny pasek nawigacyjny** (`bottom-[calc(4rem+env(safe-area-inset-bottom))]`).
+  - **Menu Kontekstowe:** Akcje drugorzędne (Usuń, Drukuj) chowaj w menu rozwijanym (Dropdown Menu) w nagłówku karty lub widoku.
+  - **Nagłówki:** Na mobile stosuj uproszczone nagłówki.
+
 ## Role i Uprawnienia (RBAC)
 System posiada 3 główne role użytkowników:
 

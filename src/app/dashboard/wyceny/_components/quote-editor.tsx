@@ -370,7 +370,7 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
 
     if (isMobile) {
         return (
-            <div className="space-y-4 pb-24">
+            <div className="space-y-4 pb-48">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <Button variant="ghost" size="icon" asChild className="-ml-2">
@@ -533,7 +533,7 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
                     </CardContent>
                 </Card>
 
-                <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t z-10 flex gap-2 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+                <div className="fixed bottom-[calc(4rem+env(safe-area-inset-bottom))] left-0 right-0 p-4 bg-background border-t z-40 flex gap-2 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
                     <Button className="w-full h-12 text-base font-semibold shadow-lg" onClick={handleSave} disabled={isSaving}>
                         <Save className="w-5 h-5 mr-2" />
                         {isSaving ? 'Zapisywanie...' : 'Zapisz zmiany'}
