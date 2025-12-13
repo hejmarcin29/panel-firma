@@ -18,9 +18,20 @@ import { createLead } from '../actions';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
-export function AddLeadModal() {
-    const [open, setOpen] = useState(false);
+export function AddLeadModal({ 
+    open: controlledOpen, 
+    onOpenChange: controlledOnOpenChange 
+}: { 
+    open?: boolean; 
+    onOpenChange?: (open: boolean) => void; 
+} = {}) {
+    const [internalOpen, setInternalOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
+
+    const isControlled = controlledOpen !== undefined;
+    const open = isControlled ? controlledOpen : internalOpen;
+    const setOpen = isControlled ? controlledOnOpenChange! : setInternalOpen;
+
     const [formData, setFormData] = useState({
         clientName: '',
         contactPhone: '',
@@ -55,12 +66,14 @@ export function AddLeadModal() {
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button variant="outline">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Dodaj Lead
-                </Button>
-            </DialogTrigger>
+            {!isControlled && (
+                <DialogTrigger asChild>
+                    <Button variant="outline">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Dodaj Lead
+                    </Button>
+                </DialogTrigger>
+            )}
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                     <DialogTitle>Dodaj nowy lead</DialogTitle>
