@@ -1,8 +1,10 @@
+'use client';
+
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
-import { Calendar, MapPin, FileText, CreditCard } from 'lucide-react';
+import { Calendar, MapPin, FileText } from 'lucide-react';
 
 import { useIsMobile } from '@/hooks/use-mobile';
 import { formatCurrency } from '@/lib/utils';
