@@ -334,6 +334,7 @@ export async function uploadLogo(formData: FormData) {
         Key: key,
         Body: buffer,
         ContentType: file.type,
+        ACL: 'public-read',
     }));
 
     const url = `${r2Config.publicBaseUrl}/${key}`;
