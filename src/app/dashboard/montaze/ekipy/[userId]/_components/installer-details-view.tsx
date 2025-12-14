@@ -25,7 +25,13 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 // Types
-import type { User, Montage, InstallerProfile } from "@/lib/db/schema";
+import { users, montages, montageTasks, type InstallerProfile } from "@/lib/db/schema";
+
+type User = typeof users.$inferSelect;
+type MontageTask = typeof montageTasks.$inferSelect;
+type Montage = typeof montages.$inferSelect & {
+    tasks: MontageTask[];
+};
 
 interface InstallerDetailsViewProps {
     installer: User & { installerProfile: InstallerProfile | null };

@@ -13,9 +13,6 @@ export default async function InstallerDetailsPage({ params }: { params: Promise
 
     const user = await db.query.users.findFirst({
         where: eq(users.id, userId),
-        with: {
-            installerProfile: true,
-        }
     });
 
     if (!user || !user.roles.includes('installer')) {
@@ -23,11 +20,6 @@ export default async function InstallerDetailsPage({ params }: { params: Promise
     }
 
     // Fetch montages assigned to this installer
-    // We need to check if the user is in the assignedInstallers JSON array
-    // Since we can't easily do JSON array contains in all SQL dialects via Drizzle query builder yet for this specific case without raw SQL,
-    // and we want to be safe, we'll fetch montages and filter or use a raw query if performance is needed.
-    // For now, fetching recent montages and filtering is acceptable for the scale.
-    
     const allMontages = await db.query.montages.findMany({
         orderBy: [desc(montages.createdAt)],
         with: {
@@ -36,7 +28,7 @@ export default async function InstallerDetailsPage({ params }: { params: Promise
     });
 
     const installerMontages = allMontages.filter(m => 
-        Array.isArray(m.assignedInstallers) && m.assignedInstallers.includes(userId)
+        m.installerId === userId
     );
 
     return (
