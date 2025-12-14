@@ -17,20 +17,10 @@ const UserContext = createContext<{ user: User | null; isLoading: boolean }>({
 
 export function UserProvider({ children, initialUser }: { children: React.ReactNode; initialUser: User | null }) {
     const [user, setUser] = useState<User | null>(initialUser);
-    const [isLoading, setIsLoading] = useState(!initialUser);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        if (!initialUser) {
-            getCurrentSession()
-                .then((session) => {
-                    setUser(session?.user ?? null);
-                    setIsLoading(false);
-                })
-                .catch((err) => {
-                    console.error("Failed to retrieve session:", err);
-                    setIsLoading(false);
-                });
-        }
+        setUser(initialUser);
     }, [initialUser]);
 
     return (
