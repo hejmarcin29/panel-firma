@@ -527,7 +527,7 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
                                 value={notes} 
                                 onChange={(e) => setNotes(e.target.value)} 
                                 placeholder="Notatki..."
-                                className="min-h-[80px]"
+                                className="min-h-20"
                             />
                         </div>
                     </CardContent>

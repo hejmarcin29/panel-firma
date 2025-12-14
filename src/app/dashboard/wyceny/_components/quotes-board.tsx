@@ -139,7 +139,7 @@ function PipelineColumn({
     <div
       ref={setNodeRef}
       className={cn(
-        "min-w-[85vw] sm:min-w-[350px] md:min-w-[300px] xl:min-w-[280px] snap-center snap-always flex-shrink-0",
+        "min-w-[85vw] sm:min-w-[350px] md:min-w-[300px] xl:min-w-[280px] snap-center snap-always shrink-0",
         "transition",
         isOver && "scale-[1.01]"
       )}
