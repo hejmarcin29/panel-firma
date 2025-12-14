@@ -20,6 +20,7 @@ Provide project context and coding guidelines that AI should follow when generat
   - **Sticky Footer:** Główna akcja (np. "Zapisz") powinna być "przyklejona" do dołu ekranu (`fixed bottom-...`), ale **musi uwzględniać dolny pasek nawigacyjny** (`bottom-[calc(4rem+env(safe-area-inset-bottom))]`).
   - **Menu Kontekstowe:** Akcje drugorzędne (Usuń, Drukuj) chowaj w menu rozwijanym (Dropdown Menu) w nagłówku karty lub widoku.
   - **Nagłówki:** Na mobile stosuj uproszczone nagłówki.
+  - **Scroll Snapping:** Stosuj naturalne zachowanie przewijania (`snap-stop: normal`), które pozwala na przewinięcie wielu elementów przy mocnym pociągnięciu (momentum), a jednocześnie precyzyjne zatrzymanie na elemencie przy wolnym przewijaniu. Unikaj wymuszania zatrzymania na każdym elemencie (`snap-always`), chyba że jest to krytyczne dla UX (np. stepper).
 
 ## Role i Uprawnienia (RBAC)
 System posiada 3 główne role użytkowników:

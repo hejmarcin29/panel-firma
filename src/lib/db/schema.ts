@@ -435,6 +435,7 @@ export const montages = pgTable(
 		installerId: text('installer_id').references(() => users.id, { onDelete: 'set null' }),
 		measurerId: text('measurer_id').references(() => users.id, { onDelete: 'set null' }),
 		architectId: text('architect_id').references(() => users.id, { onDelete: 'set null' }),
+		customerId: text('customer_id').references(() => customers.id, { onDelete: 'set null' }),
         googleEventId: text('google_event_id'),
         technicalAudit: json('technical_audit').$type<TechnicalAuditData>(),
         materialLog: json('material_log').$type<MaterialLogData>(),
@@ -987,8 +988,12 @@ export const products = pgTable('products', {
 	syncedAt: timestamp('synced_at').notNull().defaultNow(),
 });
 
-export const customersRelations = relations(customers, ({ many }) => ({
+export const customersRelations = relations(customers, ({ many, one }) => ({
 	orders: many(orders),
+	architect: one(users, {
+		fields: [customers.architectId],
+		references: [users.id],
+	}),
 }));
 
 export const ordersRelations = relations(orders, ({ one, many }) => ({
