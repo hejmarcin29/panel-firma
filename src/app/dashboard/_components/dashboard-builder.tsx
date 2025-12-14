@@ -218,6 +218,7 @@ function SortableWidget({ widget, data, isEditing, onConfigure }: { id: string; 
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+    touchAction: isEditing ? 'none' : 'auto', // Explicitly allow touch actions when not editing
   };
 
   const Component = WIDGET_COMPONENTS[widget.type];
@@ -286,7 +287,11 @@ export function DashboardBuilder({ initialLayout, data }: DashboardBuilderProps)
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+        activationConstraint: {
+            distance: 8,
+        },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })

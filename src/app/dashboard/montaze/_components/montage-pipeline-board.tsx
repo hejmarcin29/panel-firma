@@ -1,6 +1,6 @@
 "use client";
 
-import { type CSSProperties, useEffect, useMemo, useState, useTransition } from "react";
+import { type CSSProperties, useEffect, useMemo, useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   DndContext,
@@ -130,6 +130,7 @@ function PipelineColumn({
   return (
     <div
       ref={setNodeRef}
+      data-status={status.value}
       className={cn(
         "min-w-[85vw] sm:min-w-[350px] md:min-w-[300px] xl:min-w-[280px] snap-center snap-always flex-shrink-0",
         "transition",
@@ -195,6 +196,54 @@ export function MontagePipelineBoard({ montages, statusOptions, threatDays, aler
       activationConstraint: { distance: 6 },
     })
   );
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [activeStatus, setActiveStatus] = useState<string>(statusOptions[0]?.value);
+
+  const handleScroll = () => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const children = Array.from(container.children) as HTMLElement[];
+    
+    let maxVisibleWidth = 0;
+    let currentActive = activeStatus;
+
+    for (const child of children) {
+        if (!child.getAttribute('data-status')) continue;
+        
+        const childRect = child.getBoundingClientRect();
+        
+        const visibleLeft = Math.max(containerRect.left, childRect.left);
+        const visibleRight = Math.min(containerRect.right, childRect.right);
+        
+        const visibleWidth = Math.max(0, visibleRight - visibleLeft);
+        
+        if (visibleWidth > maxVisibleWidth) {
+            maxVisibleWidth = visibleWidth;
+            const status = child.getAttribute('data-status');
+            if (status) currentActive = status;
+        }
+    }
+    
+    if (currentActive !== activeStatus) {
+        setActiveStatus(currentActive);
+    }
+  };
+
+  const scrollToColumn = (status: string) => {
+      const container = scrollContainerRef.current;
+      if (!container) return;
+      
+      const child = Array.from(container.children).find(c => c.getAttribute('data-status') === status) as HTMLElement;
+      if (child) {
+          child.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          // Optimistically set active status
+          setActiveStatus(status);
+      }
+  };
+
 
   const canonicalBoard = useMemo(() => buildBoard(statusOptions, montages), [statusOptions, montages]);
   const [board, setBoard] = useState<Record<MontageStatus, Montage[]>>(() => cloneBoard(canonicalBoard));
@@ -263,6 +312,24 @@ export function MontagePipelineBoard({ montages, statusOptions, threatDays, aler
     <div className="space-y-3">
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
 
+      {/* Mobile Status Nav */}
+      <div className="flex md:hidden overflow-x-auto gap-2 pb-2 px-4 scrollbar-hide snap-x">
+        {statusOptions.map((status) => (
+          <button
+            key={status.value}
+            onClick={() => scrollToColumn(status.value)}
+            className={cn(
+              "px-3 py-1.5 text-xs font-medium rounded-full whitespace-nowrap transition-all snap-start border",
+              activeStatus === status.value
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-background text-muted-foreground border-border hover:bg-muted"
+            )}
+          >
+            {status.label}
+          </button>
+        ))}
+      </div>
+
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
@@ -270,7 +337,12 @@ export function MontagePipelineBoard({ montages, statusOptions, threatDays, aler
         onDragStart={handleDragStart}
         onDragCancel={() => setActiveId(null)}
       >
-        <div className="flex flex-nowrap overflow-x-auto snap-x snap-mandatory gap-4 px-4 pb-6 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
+        <div 
+            ref={scrollContainerRef}
+            onScroll={handleScroll}
+            className="flex flex-nowrap overflow-x-auto snap-x snap-mandatory gap-4 px-4 pb-6 scrollbar-hide" 
+            style={{ scrollbarWidth: 'none' }}
+        >
           {statusOptions.map((status) => (
             <PipelineColumn
               key={status.value}

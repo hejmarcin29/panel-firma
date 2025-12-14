@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { MontagePipelineBoard } from "./montage-pipeline-board";
 import type { Montage, StatusOption, AlertSettings } from "../types";
+import { cn } from "@/lib/utils";
 
 interface MontageDashboardViewProps {
   montages: Montage[];
@@ -46,7 +47,7 @@ export function MontageDashboardView({ montages, statusOptions, headerAction, th
         {headerAction && <div className="hidden md:block shrink-0">{headerAction}</div>}
       </div>
 
-      <div className="flex-1 overflow-auto">
+      <div className={cn("flex-1", view === "board" ? "overflow-y-auto overflow-x-hidden" : "overflow-auto")}>
         {view === "board" && (
             <MontagePipelineBoard montages={montages} statusOptions={statusOptions} threatDays={threatDays} alertSettings={alertSettings} />
         )}

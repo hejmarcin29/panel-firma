@@ -1,9 +1,11 @@
 "use client";
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { ClipboardList, LayoutList, Ruler, History, Image as ImageIcon, HardHat, FileText } from "lucide-react";
+import { useRef, useState, useEffect } from "react";
+import { ClipboardList, LayoutList, Ruler, History, Image as ImageIcon, HardHat, FileText, Info } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 interface MontageDetailsLayoutProps {
   header: React.ReactNode;
@@ -34,6 +36,10 @@ export function MontageDetailsLayout({
   const searchParams = useSearchParams();
   
   const currentTab = searchParams.get("tab") || (isMobile ? "overview" : defaultTab);
+  
+  const [activeMobileTab, setActiveMobileTab] = useState("info");
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const tabsRef = useRef<HTMLDivElement>(null);
 
   const handleTabChange = (value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -41,79 +47,87 @@ export function MontageDetailsLayout({
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  if (isMobile) {
-    if (currentTab === "overview") {
-      return (
-        <>
-          {header}
-          <div className="flex flex-col gap-6 p-4">
-            <div className="grid gap-4">
-              {clientCard}
-              {materialCard}
-            </div>
-            
-            <div className="grid grid-cols-1 gap-3">
-              <h3 className="font-medium text-muted-foreground mb-2">Menu Montażu</h3>
-              <MenuButton 
-                  icon={<History className="w-5 h-5" />} 
-                  label="Dziennik Zdarzeń" 
-                  onClick={() => handleTabChange("log")} 
-              />
-              <MenuButton 
-                  icon={<LayoutList className="w-5 h-5" />} 
-                  label="Przebieg (Workflow)" 
-                  onClick={() => handleTabChange("workflow")} 
-              />
-              <MenuButton 
-                  icon={<Ruler className="w-5 h-5" />} 
-                  label="Pomiary" 
-                  onClick={() => handleTabChange("measurement")} 
-              />
-              <MenuButton 
-                  icon={<HardHat className="w-5 h-5" />} 
-                  label="Techniczne / Materiały" 
-                  onClick={() => handleTabChange("technical")} 
-              />
-              <MenuButton 
-                  icon={<FileText className="w-5 h-5" />} 
-                  label="Wyceny" 
-                  onClick={() => handleTabChange("quotes")} 
-              />
-              <MenuButton 
-                  icon={<ClipboardList className="w-5 h-5" />} 
-                  label="Zadania" 
-                  onClick={() => handleTabChange("tasks")} 
-              />
-              <MenuButton 
-                  icon={<ImageIcon className="w-5 h-5" />} 
-                  label="Załączniki / Galeria" 
-                  onClick={() => handleTabChange("gallery")} 
-              />
-            </div>
-          </div>
-        </>
-      );
-    }
+  const scrollToTab = (tabId: string) => {
+    setActiveMobileTab(tabId);
+    const container = scrollContainerRef.current;
+    if (!container) return;
 
-    // Mobile Detail View
+    const index = mobileTabs.findIndex(t => t.id === tabId);
+    if (index !== -1) {
+        container.scrollTo({
+            left: container.clientWidth * index,
+            behavior: 'smooth'
+        });
+    }
+  };
+
+  const mobileTabs = [
+    { id: 'info', label: 'Info', icon: <Info className="w-4 h-4" />, content: <div className="space-y-4 p-4 pb-24">{clientCard}{materialCard}</div> },
+    { id: 'tasks', label: 'Zadania', icon: <ClipboardList className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.tasks}</div> },
+    { id: 'gallery', label: 'Galeria', icon: <ImageIcon className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.gallery}</div> },
+    { id: 'log', label: 'Dziennik', icon: <History className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.log}</div> },
+    { id: 'workflow', label: 'Przebieg', icon: <LayoutList className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.workflow}</div> },
+    { id: 'measurement', label: 'Pomiary', icon: <Ruler className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.measurement}</div> },
+    { id: 'technical', label: 'Techniczne', icon: <HardHat className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.technical}</div> },
+    { id: 'quotes', label: 'Wyceny', icon: <FileText className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.quotes}</div> },
+  ];
+
+  const handleScroll = () => {
+      const container = scrollContainerRef.current;
+      if (!container) return;
+
+      const scrollLeft = container.scrollLeft;
+      const width = container.clientWidth;
+      const index = Math.round(scrollLeft / width);
+      
+      const newActiveTab = mobileTabs[index]?.id;
+      if (newActiveTab && newActiveTab !== activeMobileTab) {
+          setActiveMobileTab(newActiveTab);
+          
+          // Scroll tab into view
+          const tabsContainer = tabsRef.current;
+          const activeTabElement = tabsContainer?.querySelector(`[data-tab="${newActiveTab}"]`);
+          if (activeTabElement) {
+              activeTabElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          }
+      }
+  };
+
+  if (isMobile) {
     return (
-      <div className="flex flex-col min-h-screen bg-background">
-        <div className="p-4">
-            <h2 className="text-lg font-semibold mb-4">
-                {currentTab === 'log' && 'Dziennik'}
-                {currentTab === 'workflow' && 'Przebieg'}
-                {currentTab === 'measurement' && 'Pomiary'}
-                {currentTab === 'tasks' && 'Zadania'}
-                {currentTab === 'gallery' && 'Załączniki'}
-            </h2>
-            {/* Render specific tab content */}
-            {currentTab === 'log' && tabs.log}
-            {currentTab === 'workflow' && tabs.workflow}
-            {currentTab === 'measurement' && tabs.measurement}
-            {currentTab === 'technical' && tabs.technical}
-            {currentTab === 'quotes' && tabs.quotes}
-            {currentTab === 'tasks' && tabs.tasks}
-            {currentTab === 'gallery' && tabs.gallery}
+      <div className="flex flex-col h-[100dvh] bg-background overflow-hidden">
+        <div className="shrink-0 z-10 bg-background border-b shadow-sm">
+            {header}
+            <div ref={tabsRef} className="flex overflow-x-auto scrollbar-hide px-2 pb-0">
+                {mobileTabs.map(tab => (
+                    <button
+                        key={tab.id}
+                        data-tab={tab.id}
+                        onClick={() => scrollToTab(tab.id)}
+                        className={cn(
+                            "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap",
+                            activeMobileTab === tab.id 
+                                ? "border-primary text-primary" 
+                                : "border-transparent text-muted-foreground hover:text-foreground"
+                        )}
+                    >
+                        {tab.icon}
+                        {tab.label}
+                    </button>
+                ))}
+            </div>
+        </div>
+        
+        <div 
+            ref={scrollContainerRef}
+            onScroll={handleScroll}
+            className="flex-1 flex overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+        >
+            {mobileTabs.map(tab => (
+                <div key={tab.id} className="min-w-full h-full overflow-y-auto snap-center bg-muted/5">
+                    {tab.content}
+                </div>
+            ))}
         </div>
       </div>
     );
@@ -168,16 +182,3 @@ export function MontageDetailsLayout({
   );
 }
 
-function MenuButton({ icon, label, onClick }: { icon: React.ReactNode, label: string, onClick: () => void }) {
-    return (
-        <button 
-            onClick={onClick}
-            className="flex items-center gap-4 p-4 w-full bg-card border rounded-xl shadow-sm hover:bg-accent transition-colors text-left"
-        >
-            <div className="p-2 bg-primary/10 text-primary rounded-lg">
-                {icon}
-            </div>
-            <span className="font-medium">{label}</span>
-        </button>
-    )
-}
