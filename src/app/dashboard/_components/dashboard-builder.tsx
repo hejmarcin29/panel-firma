@@ -214,14 +214,6 @@ function SortableWidget({ widget, data, isEditing, onConfigure }: { id: string; 
     isDragging,
   } = useSortable({ id: widget.id, disabled: !isEditing });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-    // When not editing, we want default browser behavior (auto) to allow scrolling
-    touchAction: isEditing ? 'none' : undefined,
-  };
-
   const Component = WIDGET_COMPONENTS[widget.type];
 
   if (!Component) return null;
@@ -236,6 +228,21 @@ function SortableWidget({ widget, data, isEditing, onConfigure }: { id: string; 
                 widget.type === 'upcoming-montages' ? { ...data.upcomingMontagesStats } :
                 {};
 
+  if (!isEditing) {
+      return (
+          <div className="h-full">
+              <Component {...props} />
+          </div>
+      );
+  }
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    touchAction: 'none',
+  };
+
   return (
     <motion.div 
         ref={setNodeRef} 
@@ -245,33 +252,31 @@ function SortableWidget({ widget, data, isEditing, onConfigure }: { id: string; 
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
     >
-        {isEditing && (
-            <div 
-                {...attributes} 
-                {...listeners} 
-                className='absolute inset-0 z-50 bg-background/50 flex items-center justify-center border-2 border-dashed border-primary/50 rounded-lg cursor-grab active:cursor-grabbing hover:bg-background/70 transition-colors'
-            >
-                <div className='flex items-center gap-2'>
-                    <span className='font-medium text-sm bg-background px-3 py-1 rounded-full shadow-sm border'>
-                        {WIDGET_LABELS[widget.type] || widget.type}
-                    </span>
-                    {widget.type === 'kpi' && (
-                        <Button 
-                            variant='secondary' 
-                            size='icon' 
-                            className='h-7 w-7 rounded-full shadow-sm border'
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onConfigure(widget);
-                            }}
-                            onPointerDown={(e) => e.stopPropagation()}
-                        >
-                            <Settings className='h-3 w-3' />
-                        </Button>
-                    )}
-                </div>
+        <div 
+            {...attributes} 
+            {...listeners} 
+            className='absolute inset-0 z-50 bg-background/50 flex items-center justify-center border-2 border-dashed border-primary/50 rounded-lg cursor-grab active:cursor-grabbing hover:bg-background/70 transition-colors'
+        >
+            <div className='flex items-center gap-2'>
+                <span className='font-medium text-sm bg-background px-3 py-1 rounded-full shadow-sm border'>
+                    {WIDGET_LABELS[widget.type] || widget.type}
+                </span>
+                {widget.type === 'kpi' && (
+                    <Button 
+                        variant='secondary' 
+                        size='icon' 
+                        className='h-7 w-7 rounded-full shadow-sm border'
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onConfigure(widget);
+                        }}
+                        onPointerDown={(e) => e.stopPropagation()}
+                    >
+                        <Settings className='h-3 w-3' />
+                    </Button>
+                )}
             </div>
-        )}
+        </div>
         <Component {...props} />
     </motion.div>
   );
