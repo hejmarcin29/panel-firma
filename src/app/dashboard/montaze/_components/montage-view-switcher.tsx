@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -95,11 +96,21 @@ export function MontageViewTabs() {
 
 export function MontageStageFilters() {
   const { currentView, currentStage, setStage } = useMontageFilters();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      const activeElement = scrollContainerRef.current.querySelector('[data-active="true"]');
+      if (activeElement) {
+        activeElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }
+  }, [currentStage]);
 
   if (currentView !== "in-progress") return null;
 
   return (
-    <div className="w-full overflow-x-auto border-t bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+    <div ref={scrollContainerRef} className="w-full overflow-x-auto border-t bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
       <div className="flex items-center gap-2 p-2 px-4 sm:px-6 min-w-max">
         <StageChip
           label="Wszystkie w trakcie"
@@ -141,6 +152,7 @@ function StageChip({ label, active, onClick }: StageChipProps) {
   return (
     <button
       type="button"
+      data-active={active}
       onClick={onClick}
       className={cn(
         "rounded-full px-3 py-1.5 border text-[11px] font-medium transition-colors whitespace-nowrap",

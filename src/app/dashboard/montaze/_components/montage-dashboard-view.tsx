@@ -9,6 +9,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { MontagePipelineBoard } from "./montage-pipeline-board";
+import { MontageViewTabs } from "./montage-view-switcher";
 import type { Montage, StatusOption, AlertSettings } from "../types";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +28,8 @@ export function MontageDashboardView({ montages, statusOptions, headerAction, th
     <div className="flex flex-col gap-4 h-full pt-4 md:pt-0">
       <div className="flex flex-col gap-4 px-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+            <MontageViewTabs />
+            <div className="w-px h-6 bg-border mx-2 shrink-0" />
             <Tabs value={view} onValueChange={(v) => setView(v as "board" | "list" | "calendar")} className="w-auto">
                 <TabsList>
                     <TabsTrigger value="board">
