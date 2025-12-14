@@ -292,9 +292,11 @@ export function DashboardBuilder({ initialLayout, data }: DashboardBuilderProps)
         activationConstraint: {
             distance: 8,
         },
+        disabled: !isEditing,
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
+      disabled: !isEditing,
     })
   );
 
@@ -493,7 +495,7 @@ export function DashboardBuilder({ initialLayout, data }: DashboardBuilderProps)
                             <div className={cn(
                                 "flex flex-nowrap gap-4",
                                 // Mobile: Horizontal Scroll with Snap
-                                "overflow-x-auto snap-x snap-mandatory pb-6 scrollbar-hide",
+                                "overflow-x-auto snap-x snap-mandatory pb-6 scrollbar-hide touch-pan-x",
                                 // Desktop: Normal Grid/Stack behavior (resetting flex/scroll)
                                 "md:grid md:grid-cols-1 md:overflow-visible md:pb-0 md:snap-none"
                             )} style={{ scrollbarWidth: 'none' }}>
