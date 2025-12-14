@@ -2,7 +2,6 @@
 
 import { type CSSProperties, useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { MoreHorizontal } from "lucide-react";
 import {
   DndContext,
   DragEndEvent,
@@ -263,13 +262,6 @@ export function MontagePipelineBoard({ montages, statusOptions, threatDays, aler
   return (
     <div className="space-y-3">
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
-
-      <div className="md:hidden px-4 mb-2">
-          <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <MoreHorizontal className="h-3 w-3" />
-              Przesuwaj w bok, aby zobaczyć inne etapy
-          </p>
-      </div>
 
       <DndContext
         sensors={sensors}

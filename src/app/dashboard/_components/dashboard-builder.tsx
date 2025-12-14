@@ -35,6 +35,8 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useDebouncedCallback } from 'use-debounce';
 
+import { cn } from '@/lib/utils';
+
 import { AgendaWidget, type AgendaItem } from './agenda-widget';
 import { RecentActivity } from './recent-activity';
 import { QuickActions } from './quick-actions';
@@ -455,13 +457,17 @@ export function DashboardBuilder({ initialLayout, data }: DashboardBuilderProps)
             <div className='grid gap-6 md:grid-cols-1 lg:grid-cols-3'>
                 {/* Left Column (Main) */}
                 <div className='lg:col-span-2 space-y-6'>
+                    {/* Critical Alerts Section - Always Vertical */}
                     <SortableContext
                         id='left'
                         items={layout.columns.left.map((w) => w.id)}
                         strategy={verticalListSortingStrategy}
                     >
-                        <div className='space-y-6 min-h-[100px]'>
-                            {layout.columns.left.map((widget) => (
+                        <div className='space-y-6'>
+                            {/* Filter and render ONLY alerts first */}
+                            {layout.columns.left
+                                .filter(w => w.type.includes('alert'))
+                                .map((widget) => (
                                 <SortableWidget 
                                     key={widget.id} 
                                     id={widget.id} 
@@ -474,6 +480,39 @@ export function DashboardBuilder({ initialLayout, data }: DashboardBuilderProps)
                                     }}
                                 />
                             ))}
+                        </div>
+
+                        {/* Swipeable Section for Non-Critical Widgets */}
+                        <div className="mt-6">
+                            <div className={cn(
+                                "flex flex-nowrap gap-4",
+                                // Mobile: Horizontal Scroll with Snap
+                                "overflow-x-auto snap-x snap-mandatory pb-6 scrollbar-hide",
+                                // Desktop: Normal Grid/Stack behavior (resetting flex/scroll)
+                                "md:grid md:grid-cols-1 md:overflow-visible md:pb-0 md:snap-none"
+                            )} style={{ scrollbarWidth: 'none' }}>
+                                {layout.columns.left
+                                    .filter(w => !w.type.includes('alert'))
+                                    .map((widget) => (
+                                    <div key={widget.id} className={cn(
+                                        // Mobile: Card sizing for swipe
+                                        "min-w-[85vw] sm:min-w-[350px] snap-center snap-always flex-shrink-0",
+                                        // Desktop: Full width
+                                        "md:min-w-0 md:w-full"
+                                    )}>
+                                        <SortableWidget 
+                                            id={widget.id} 
+                                            widget={widget} 
+                                            data={data} 
+                                            isEditing={isEditing} 
+                                            onConfigure={(w) => {
+                                                setSelectedWidget(w);
+                                                setSettingsDialogOpen(true);
+                                            }}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </SortableContext>
                 </div>

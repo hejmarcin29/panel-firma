@@ -21,10 +21,15 @@ export function UserProvider({ children, initialUser }: { children: React.ReactN
 
     useEffect(() => {
         if (!initialUser) {
-            getCurrentSession().then((session) => {
-                setUser(session?.user ?? null);
-                setIsLoading(false);
-            });
+            getCurrentSession()
+                .then((session) => {
+                    setUser(session?.user ?? null);
+                    setIsLoading(false);
+                })
+                .catch((err) => {
+                    console.error("Failed to retrieve session:", err);
+                    setIsLoading(false);
+                });
         }
     }, [initialUser]);
 
