@@ -2,6 +2,7 @@
 
 import { type CSSProperties, useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { MoreHorizontal } from "lucide-react";
 import {
   DndContext,
   DragEndEvent,
@@ -131,7 +132,7 @@ function PipelineColumn({
     <div
       ref={setNodeRef}
       className={cn(
-        "min-w-[260px] flex-1 xl:w-[280px]",
+        "min-w-[85vw] sm:min-w-[350px] md:min-w-[300px] xl:min-w-[280px] snap-center snap-always flex-shrink-0",
         "transition",
         isOver && "scale-[1.01]"
       )}
@@ -262,6 +263,14 @@ export function MontagePipelineBoard({ montages, statusOptions, threatDays, aler
   return (
     <div className="space-y-3">
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
+
+      <div className="md:hidden px-4 mb-2">
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <MoreHorizontal className="h-3 w-3" />
+              Przesuwaj w bok, aby zobaczyć inne etapy
+          </p>
+      </div>
+
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
@@ -269,7 +278,7 @@ export function MontagePipelineBoard({ montages, statusOptions, threatDays, aler
         onDragStart={handleDragStart}
         onDragCancel={() => setActiveId(null)}
       >
-        <div className="flex flex-wrap gap-4 px-4 pb-6 xl:flex-nowrap xl:overflow-x-auto">
+        <div className="flex flex-nowrap overflow-x-auto snap-x snap-mandatory gap-4 px-4 pb-6 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
           {statusOptions.map((status) => (
             <PipelineColumn
               key={status.value}
