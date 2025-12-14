@@ -48,6 +48,7 @@ export const supplierMessageMediums = ['email', 'phone', 'note'] as const;
 export const mailFolderKinds = ['inbox', 'sent', 'drafts', 'spam', 'trash', 'archive', 'custom'] as const;
 export const mailAccountStatuses = ['disabled', 'connected', 'disconnected', 'error'] as const;
 export const montageStatuses = ['lead', 'before_measurement', 'before_first_payment', 'before_installation', 'before_final_invoice', 'completed'] as const;
+export const customerSources = ['internet', 'social_media', 'recommendation', 'architect', 'event', 'drive_by', 'other'] as const;
 
 export type UserRole = (typeof userRoles)[number];
 export type OrderStatus = (typeof orderStatuses)[number];
@@ -63,6 +64,7 @@ export type SupplierMessageMedium = (typeof supplierMessageMediums)[number];
 export type MailFolderKind = (typeof mailFolderKinds)[number];
 export type MailAccountStatus = (typeof mailAccountStatuses)[number];
 export type MontageStatus = string;
+export type CustomerSource = (typeof customerSources)[number];
 export type MontageMaterialStatus = 'none' | 'ordered' | 'in_stock' | 'delivered';
 export type MontageMaterialClaimType = 'installer_pickup' | 'company_delivery' | 'courier' | 'client_pickup';
 export type MontageInstallerStatus = 'none' | 'informed' | 'confirmed';
@@ -139,6 +141,7 @@ export const customers = pgTable(
 		shippingCity: text('shipping_city'),
 		shippingPostalCode: text('shipping_postal_code'),
 		shippingCountry: text('shipping_country'),
+		source: text('source').$type<CustomerSource>().default('other'),
 		architectId: text('architect_id').references(() => users.id, { onDelete: 'set null' }),
 		deletedAt: timestamp('deleted_at'),
 		createdAt: timestamp('created_at').notNull().defaultNow(),

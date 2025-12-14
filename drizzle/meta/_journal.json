@@ -64,6 +64,13 @@
       "when": 1765646519198,
       "tag": "0008_yielding_stranger",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1765709354857,
+      "tag": "0009_charming_namora",
+      "breakpoints": true
     }
   ]
 }

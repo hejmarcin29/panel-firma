@@ -321,7 +321,7 @@ export function TeamList({ members, currentUserId }: TeamListProps) {
   const renderMobileSection = (title: string, list: TeamMember[], colorClass: string) => {
     if (list.length === 0) return null;
     return (
-        <div className="min-w-[85vw] sm:min-w-[350px] snap-center flex flex-col h-full">
+        <div className="min-w-[85vw] sm:min-w-[350px] snap-center snap-always flex flex-col h-full">
             <div className={cn("sticky top-0 z-10 bg-background/95 backdrop-blur py-2 mb-2 border-b flex items-center justify-between", colorClass)}>
                 <h3 className="font-semibold text-lg">{title}</h3>
                 <Badge variant="secondary" className="ml-2">{list.length}</Badge>

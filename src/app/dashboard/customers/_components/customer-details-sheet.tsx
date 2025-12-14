@@ -184,6 +184,29 @@ export function CustomerDetailsSheet({ customer, isOpen, onClose }: CustomerDeta
 
 						<Separator />
 
+                        {/* Marketing Source */}
+                        <div className="space-y-3">
+                            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Źródło klienta</h3>
+                            <div className="flex items-center gap-2 text-sm">
+                                <Badge variant="outline" className="capitalize">
+                                    {customer.source === 'architect' ? 'Architekt' : 
+                                     customer.source === 'internet' ? 'Internet / SEO' :
+                                     customer.source === 'social_media' ? 'Social Media' :
+                                     customer.source === 'recommendation' ? 'Polecenie' :
+                                     customer.source === 'event' ? 'Targi / Event' :
+                                     customer.source === 'drive_by' ? 'Przejazd / Baner' :
+                                     'Inne'}
+                                </Badge>
+                                {customer.source === 'architect' && customer.architect && (
+                                    <span className="text-muted-foreground">
+                                        (od: <span className="font-medium text-foreground">{customer.architect.name}</span>)
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+
+						<Separator />
+
 						{/* Recent Orders */}
 						<div className="space-y-4">
 							<div className="flex items-center justify-between">

@@ -1422,6 +1422,26 @@ export async function createExtendedLead(formData: FormData) {
     // Auto-assign architect if the creator has the architect role
     const architectId = user.roles.includes('architect') ? user.id : null;
 
+    // Create Customer Record
+    const customerId = crypto.randomUUID();
+    await db.insert(customers).values({
+        id: customerId,
+        name: clientName.trim(),
+        email: email?.trim() || null,
+        phone: phone?.trim() || null,
+        taxId: nip?.trim() || null,
+        billingStreet: billingStreet?.trim() || null,
+        billingCity: billingCity?.trim() || null,
+        billingPostalCode: billingPostalCode?.trim() || null,
+        shippingStreet: shippingStreet?.trim() || null,
+        shippingCity: shippingCity?.trim() || null,
+        shippingPostalCode: shippingPostalCode?.trim() || null,
+        source: architectId ? 'architect' : 'other',
+        architectId: architectId,
+        createdAt: now,
+        updatedAt: now,
+    });
+
     // Format addresses
     const billingAddress = [billingStreet, billingPostalCode, billingCity].filter(Boolean).join(', ');
     const installationAddress = [shippingStreet, shippingPostalCode, shippingCity].filter(Boolean).join(', ');
@@ -1435,6 +1455,7 @@ export async function createExtendedLead(formData: FormData) {
     await db.insert(montages).values({
         id: montageId,
         displayId,
+        customerId, // Link to the new customer
         clientName: clientName.trim(),
         isCompany,
         companyName: companyName?.trim() || null,

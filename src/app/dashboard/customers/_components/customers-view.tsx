@@ -134,6 +134,11 @@ export function CustomersView({ initialCustomers }: CustomersViewProps) {
 											{customer.taxId && (
 												<span className="text-xs text-muted-foreground">NIP: {customer.taxId}</span>
 											)}
+                                            {customer.source === 'architect' && (
+                                                <Badge variant="outline" className="w-fit mt-1 text-[10px] px-1.5 py-0 h-5 border-purple-200 bg-purple-50 text-purple-700">
+                                                    Architekt {customer.architectName ? `(${customer.architectName})` : ''}
+                                                </Badge>
+                                            )}
                                             {(customer.billingCity || customer.billingStreet) && (
                                                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1 md:hidden">
                                                     <MapPin className="h-3 w-3 shrink-0" />

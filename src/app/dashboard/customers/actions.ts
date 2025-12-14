@@ -1,20 +1,73 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { customers, montages, manualOrders } from '@/lib/db/schema';
+import { customers, montages, manualOrders, users } from '@/lib/db/schema';
 import { desc, eq, ilike, or, inArray, isNull, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
+import { randomUUID } from 'crypto';
+import type { CustomerSource } from '@/lib/db/schema';
 
 export type CustomerWithStats = typeof customers.$inferSelect & {
 	ordersCount: number;
 	montagesCount: number;
 	lastActivity: Date | null;
+    architectName?: string | null;
 };
 
 export type CustomerDetails = typeof customers.$inferSelect & {
 	orders: (typeof manualOrders.$inferSelect)[];
 	montages: (typeof montages.$inferSelect)[];
+    architect?: {
+        id: string;
+        name: string | null;
+    } | null;
 };
+
+export async function createCustomerAction(data: {
+    name: string;
+    email?: string;
+    phone?: string;
+    taxId?: string;
+    billingStreet?: string;
+    billingCity?: string;
+    billingPostalCode?: string;
+    billingCountry?: string;
+    shippingStreet?: string;
+    shippingCity?: string;
+    shippingPostalCode?: string;
+    shippingCountry?: string;
+    source?: CustomerSource;
+    architectId?: string;
+}) {
+    await db.insert(customers).values({
+        id: randomUUID(),
+        ...data,
+        source: data.source || 'other',
+    });
+    revalidatePath('/dashboard/customers');
+}
+
+export async function updateCustomerAction(id: string, data: {
+    name: string;
+    email?: string;
+    phone?: string;
+    taxId?: string;
+    billingStreet?: string;
+    billingCity?: string;
+    billingPostalCode?: string;
+    billingCountry?: string;
+    shippingStreet?: string;
+    shippingCity?: string;
+    shippingPostalCode?: string;
+    shippingCountry?: string;
+    source?: CustomerSource;
+    architectId?: string;
+}) {
+    await db.update(customers)
+        .set(data)
+        .where(eq(customers.id, id));
+    revalidatePath('/dashboard/customers');
+}
 
 export async function getCustomers(query?: string): Promise<CustomerWithStats[]> {
 	const searchFilter = query
@@ -33,6 +86,13 @@ export async function getCustomers(query?: string): Promise<CustomerWithStats[]>
 		where: searchFilter,
 		orderBy: [desc(customers.createdAt)],
 		limit: 50,
+        with: {
+            architect: {
+                columns: {
+                    name: true
+                }
+            }
+        }
 	});
 
     const emails = rows.map(c => c.email).filter(Boolean) as string[];
@@ -76,11 +136,15 @@ export async function getCustomers(query?: string): Promise<CustomerWithStats[]>
             }
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const architectName = (c as any).architect?.name;
+
 		return {
 			...c,
 			ordersCount: myOrders.length,
 			montagesCount: myMontages.length, 
 			lastActivity,
+            architectName
 		};
 	});
 }
@@ -88,6 +152,14 @@ export async function getCustomers(query?: string): Promise<CustomerWithStats[]>
 export async function getCustomerDetails(customerId: string): Promise<CustomerDetails> {
 	const customer = await db.query.customers.findFirst({
 		where: eq(customers.id, customerId),
+        with: {
+            architect: {
+                columns: {
+                    id: true,
+                    name: true
+                }
+            }
+        }
 	});
 
 	if (!customer) {
@@ -111,10 +183,14 @@ export async function getCustomerDetails(customerId: string): Promise<CustomerDe
         });
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const architect = (customer as any).architect;
+
 	return {
 		...customer,
         orders: customerOrders,
 		montages: customerMontages,
+        architect
 	};
 }
 
