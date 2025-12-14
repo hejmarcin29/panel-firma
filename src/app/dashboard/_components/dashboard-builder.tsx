@@ -35,8 +35,6 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useDebouncedCallback } from 'use-debounce';
 
-import { cn } from '@/lib/utils';
-
 import { AgendaWidget, type AgendaItem } from './agenda-widget';
 import { RecentActivity } from './recent-activity';
 import { QuickActions } from './quick-actions';

@@ -33,8 +33,8 @@ export function OrdersStats({ orders }: OrdersStatsProps) {
   };
 
   return (
-    <div className="flex overflow-x-auto pb-2 gap-4 md:grid md:grid-cols-2 lg:grid-cols-4 md:overflow-visible px-4 md:px-0 no-scrollbar">
-      <Card className="min-w-60 md:min-w-0">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 px-4 md:px-0">
+      <Card className="min-w-0">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Całkowity Przychód</CardTitle>
           <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -46,7 +46,7 @@ export function OrdersStats({ orders }: OrdersStatsProps) {
           </p>
         </CardContent>
       </Card>
-      <Card className="min-w-60 md:min-w-0">
+      <Card className="min-w-0">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Aktywne Zamówienia</CardTitle>
           <ShoppingCart className="h-4 w-4 text-muted-foreground" />
@@ -58,7 +58,7 @@ export function OrdersStats({ orders }: OrdersStatsProps) {
           </p>
         </CardContent>
       </Card>
-      <Card className="min-w-60 md:min-w-0">
+      <Card className="min-w-0">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Średnia Wartość</CardTitle>
           <CreditCard className="h-4 w-4 text-muted-foreground" />
@@ -70,7 +70,7 @@ export function OrdersStats({ orders }: OrdersStatsProps) {
           </p>
         </CardContent>
       </Card>
-      <Card className="min-w-60 md:min-w-0">
+      <Card className="min-w-0">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Wszystkie Zamówienia</CardTitle>
           <Package className="h-4 w-4 text-muted-foreground" />

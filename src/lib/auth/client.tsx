@@ -1,7 +1,6 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { getCurrentSession } from './session';
 
 type User = {
     id: string;
@@ -17,6 +16,7 @@ const UserContext = createContext<{ user: User | null; isLoading: boolean }>({
 
 export function UserProvider({ children, initialUser }: { children: React.ReactNode; initialUser: User | null }) {
     const [user, setUser] = useState<User | null>(initialUser);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {

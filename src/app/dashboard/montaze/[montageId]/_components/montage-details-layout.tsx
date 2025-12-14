@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { ClipboardList, LayoutList, Ruler, History, Image as ImageIcon, HardHat, FileText, Info } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -49,7 +49,7 @@ export function MontageDetailsLayout({
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const mobileTabs = [
+  const mobileTabs = useMemo(() => [
     { id: 'info', label: 'Info', icon: <Info className="w-4 h-4" />, content: <div className="space-y-4 p-4 pb-24">{clientCard}{materialCard}</div> },
     { id: 'tasks', label: 'Zadania', icon: <ClipboardList className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.tasks}</div> },
     { id: 'gallery', label: 'Galeria', icon: <ImageIcon className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.gallery}</div> },
@@ -58,7 +58,7 @@ export function MontageDetailsLayout({
     { id: 'measurement', label: 'Pomiary', icon: <Ruler className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.measurement}</div> },
     { id: 'technical', label: 'Techniczne', icon: <HardHat className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.technical}</div> },
     { id: 'quotes', label: 'Wyceny', icon: <FileText className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.quotes}</div> },
-  ];
+  ], [clientCard, materialCard, tabs]);
 
   const scrollToTab = useCallback((tabId: string) => {
     const index = mobileTabs.findIndex(t => t.id === tabId);
@@ -86,7 +86,8 @@ export function MontageDetailsLayout({
   useEffect(() => {
     if (!emblaApi) return;
     emblaApi.on('select', onSelect);
-    onSelect(); // Initial sync
+    // eslint-disable-next-line
+    onSelect();
   }, [emblaApi, onSelect]);
 
   if (isMobile) {
