@@ -214,6 +214,13 @@ function SortableWidget({ widget, data, isEditing, onConfigure }: { id: string; 
     isDragging,
   } = useSortable({ id: widget.id, disabled: !isEditing });
 
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    touchAction: isEditing ? 'none' : 'auto', // Explicitly allow touch actions when not editing
+  };
+
   const Component = WIDGET_COMPONENTS[widget.type];
 
   if (!Component) return null;
@@ -228,21 +235,6 @@ function SortableWidget({ widget, data, isEditing, onConfigure }: { id: string; 
                 widget.type === 'upcoming-montages' ? { ...data.upcomingMontagesStats } :
                 {};
 
-  if (!isEditing) {
-      return (
-          <div className="h-full">
-              <Component {...props} />
-          </div>
-      );
-  }
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-    touchAction: 'none',
-  };
-
   return (
     <motion.div 
         ref={setNodeRef} 
@@ -252,31 +244,33 @@ function SortableWidget({ widget, data, isEditing, onConfigure }: { id: string; 
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
     >
-        <div 
-            {...attributes} 
-            {...listeners} 
-            className='absolute inset-0 z-50 bg-background/50 flex items-center justify-center border-2 border-dashed border-primary/50 rounded-lg cursor-grab active:cursor-grabbing hover:bg-background/70 transition-colors'
-        >
-            <div className='flex items-center gap-2'>
-                <span className='font-medium text-sm bg-background px-3 py-1 rounded-full shadow-sm border'>
-                    {WIDGET_LABELS[widget.type] || widget.type}
-                </span>
-                {widget.type === 'kpi' && (
-                    <Button 
-                        variant='secondary' 
-                        size='icon' 
-                        className='h-7 w-7 rounded-full shadow-sm border'
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onConfigure(widget);
-                        }}
-                        onPointerDown={(e) => e.stopPropagation()}
-                    >
-                        <Settings className='h-3 w-3' />
-                    </Button>
-                )}
+        {isEditing && (
+            <div 
+                {...attributes} 
+                {...listeners} 
+                className='absolute inset-0 z-50 bg-background/50 flex items-center justify-center border-2 border-dashed border-primary/50 rounded-lg cursor-grab active:cursor-grabbing hover:bg-background/70 transition-colors'
+            >
+                <div className='flex items-center gap-2'>
+                    <span className='font-medium text-sm bg-background px-3 py-1 rounded-full shadow-sm border'>
+                        {WIDGET_LABELS[widget.type] || widget.type}
+                    </span>
+                    {widget.type === 'kpi' && (
+                        <Button 
+                            variant='secondary' 
+                            size='icon' 
+                            className='h-7 w-7 rounded-full shadow-sm border'
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onConfigure(widget);
+                            }}
+                            onPointerDown={(e) => e.stopPropagation()}
+                        >
+                            <Settings className='h-3 w-3' />
+                        </Button>
+                    )}
+                </div>
             </div>
-        </div>
+        )}
         <Component {...props} />
     </motion.div>
   );
@@ -297,11 +291,9 @@ export function DashboardBuilder({ initialLayout, data }: DashboardBuilderProps)
         activationConstraint: {
             distance: 8,
         },
-        disabled: !isEditing,
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-      disabled: !isEditing,
     })
   );
 
@@ -479,7 +471,7 @@ export function DashboardBuilder({ initialLayout, data }: DashboardBuilderProps)
                         <div className='space-y-6'>
                             {/* Filter and render ONLY alerts first */}
                             {layout.columns.left
-                                .filter(w => w.type.includes('alert'))
+                                .filter(w => w.type.includes('alert') || w.type === 'kpi')
                                 .map((widget) => (
                                 <SortableWidget 
                                     key={widget.id} 
@@ -505,11 +497,11 @@ export function DashboardBuilder({ initialLayout, data }: DashboardBuilderProps)
                                 "md:grid md:grid-cols-1 md:overflow-visible md:pb-0 md:snap-none"
                             )} style={{ scrollbarWidth: 'none' }}>
                                 {layout.columns.left
-                                    .filter(w => !w.type.includes('alert'))
+                                    .filter(w => !w.type.includes('alert') && w.type !== 'kpi')
                                     .map((widget) => (
                                     <div key={widget.id} className={cn(
                                         // Mobile: Card sizing for swipe
-                                        "min-w-[85vw] sm:min-w-[350px] snap-center flex-shrink-0",
+                                        "min-w-[85vw] sm:min-w-[350px] snap-center snap-always flex-shrink-0",
                                         // Desktop: Full width
                                         "md:min-w-0 md:w-full"
                                     )}>

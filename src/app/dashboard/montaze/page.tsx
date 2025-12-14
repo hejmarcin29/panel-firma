@@ -276,6 +276,7 @@ export default async function MontazePage(props: any) {
                     </div>
                     <div className="flex items-center gap-2">
                         <MontageSortSelect />
+                        <MontageViewTabs />
                     </div>
                 </div>
             </div>
@@ -285,7 +286,6 @@ export default async function MontazePage(props: any) {
                     statusOptions={filteredStatusOptions}
                     threatDays={threatDays}
                     alertSettings={alertSettings}
-                    viewSwitcher={<MontageViewTabs />}
                     headerAction={
                         <div className="flex gap-2">
                             {!isOnlyArchitect && (
