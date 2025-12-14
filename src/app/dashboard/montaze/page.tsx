@@ -7,7 +7,6 @@ export const dynamic = 'force-dynamic';
 
 import { MontageDashboardView } from './_components/montage-dashboard-view';
 import { InstallerDashboardView } from './_components/installer-dashboard-view';
-import { MontageViewTabs } from './_components/montage-view-switcher';
 import { MontageSortSelect } from './_components/montage-sort-select';
 import { AddLeadModal } from './_components/add-lead-modal';
 import { mapMontageRow, type MontageRow } from './utils';

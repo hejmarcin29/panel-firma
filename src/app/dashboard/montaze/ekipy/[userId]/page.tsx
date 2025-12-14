@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
 import { users, montages } from '@/lib/db/schema';
-import { eq, desc, and, or } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import { InstallerDetailsView } from './_components/installer-details-view';
 import { requireUser } from '@/lib/auth/session';
@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function InstallerDetailsPage({ params }: { params: Promise<{ userId: string }> }) {
     const { userId } = await params;
-    const currentUser = await requireUser();
+    await requireUser();
 
     const user = await db.query.users.findFirst({
         where: eq(users.id, userId),

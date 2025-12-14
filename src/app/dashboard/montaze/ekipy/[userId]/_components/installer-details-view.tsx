@@ -1,52 +1,39 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { 
     ArrowLeft, 
     Mail, 
-    Phone, 
     MapPin, 
     Calendar, 
     Briefcase, 
     Star, 
-    MoreVertical,
     Edit,
     CheckCircle2,
     Clock,
-    AlertCircle,
-    ChevronRight
+    type LucideIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 // Types
-import type { User, Montage } from "@/lib/db/schema";
+import type { User, Montage, InstallerProfile } from "@/lib/db/schema";
 
 interface InstallerDetailsViewProps {
-    installer: User & { installerProfile: any };
+    installer: User & { installerProfile: InstallerProfile | null };
     montages: Montage[];
 }
 
 export function InstallerDetailsView({ installer, montages }: InstallerDetailsViewProps) {
     const router = useRouter();
-    const [activeTab, setActiveTab] = useState("overview");
 
     const initials = installer.name
         ? installer.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
@@ -209,7 +196,7 @@ export function InstallerDetailsView({ installer, montages }: InstallerDetailsVi
                                         <h4 className="text-sm font-medium text-muted-foreground mb-2">Cennik usług</h4>
                                         {installer.installerProfile?.pricing && installer.installerProfile.pricing.length > 0 ? (
                                             <div className="border rounded-md divide-y">
-                                                {installer.installerProfile.pricing.map((item: any, idx: number) => (
+                                                {installer.installerProfile.pricing.map((item, idx) => (
                                                     <div key={idx} className="flex justify-between p-3 text-sm">
                                                         <span>{item.serviceName}</span>
                                                         <span className="font-medium">{item.price} zł / {item.unit}</span>
@@ -230,7 +217,7 @@ export function InstallerDetailsView({ installer, montages }: InstallerDetailsVi
     );
 }
 
-function StatCard({ label, value, icon: Icon, color, bg }: { label: string, value: string | number, icon: any, color: string, bg: string }) {
+function StatCard({ label, value, icon: Icon, color, bg }: { label: string, value: string | number, icon: LucideIcon, color: string, bg: string }) {
     return (
         <Card className="border-none shadow-sm bg-card">
             <CardContent className="p-4 flex flex-col items-center justify-center text-center gap-2">
@@ -271,7 +258,7 @@ function MontageCard({ montage, isHistory = false }: { montage: Montage, isHisto
                         {montage.tasks && (
                             <div className="flex items-center gap-1">
                                 <CheckCircle2 className="h-3.5 w-3.5" />
-                                {montage.tasks.filter((t: any) => t.completed).length}/{montage.tasks.length} zadań
+                                {montage.tasks.filter((t) => t.completed).length}/{montage.tasks.length} zadań
                             </div>
                         )}
                     </div>

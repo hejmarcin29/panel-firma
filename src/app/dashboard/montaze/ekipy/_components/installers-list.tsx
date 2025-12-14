@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Phone, Mail, MapPin, ChevronRight, Star, Briefcase, Calendar } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { MapPin, ChevronRight, Briefcase, Calendar } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import type { UserRole, InstallerProfile } from "@/lib/db/schema";
