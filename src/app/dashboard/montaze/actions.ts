@@ -1368,6 +1368,22 @@ export async function createLead(data: {
     return { status: 'success', montageId };
 }
 
+async function addAttachment(montageId: string, file: File, title: string) {
+    const user = await requireUser();
+    const montage = await db.query.montages.findFirst({
+        where: eq(montages.id, montageId),
+    });
+    
+    if (!montage) throw new Error('Montage not found');
+
+    await createMontageAttachment({
+        montage,
+        file,
+        uploadedBy: user.id,
+        title,
+    });
+}
+
 export async function createExtendedLead(formData: FormData) {
     const user = await requireUser();
     
