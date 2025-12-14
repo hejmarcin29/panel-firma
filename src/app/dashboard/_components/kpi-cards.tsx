@@ -53,6 +53,7 @@ export function KPICards({
     const storedLeads = localStorage.getItem('kpi_last_seen_leads');
     const storedOrders = localStorage.getItem('kpi_last_seen_orders');
     
+    // eslint-disable-next-line 
     if (storedLeads) setLastSeenLeads(parseInt(storedLeads));
     if (storedOrders) setLastSeenOrders(parseInt(storedOrders));
     setIsLoaded(true);

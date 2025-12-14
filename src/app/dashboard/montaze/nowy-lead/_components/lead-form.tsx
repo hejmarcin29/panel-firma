@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/popover';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
-import { CalendarIcon, Upload, Loader2 } from 'lucide-react';
+import { CalendarIcon, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { createExtendedLead } from '../../actions';
@@ -34,11 +34,11 @@ interface Product {
 
 interface LeadFormProps {
     assignedProducts: Product[];
-    userId: string;
-    isArchitect: boolean;
+    userId?: string;
+    isArchitect?: boolean;
 }
 
-export function LeadForm({ assignedProducts, userId, isArchitect }: LeadFormProps) {
+export function LeadForm({ assignedProducts }: LeadFormProps) {
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
     

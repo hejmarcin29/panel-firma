@@ -8,7 +8,7 @@ export default async function NewLeadPage() {
     const user = await requireUser();
     
     // Fetch assigned products if user is an architect
-    let assignedProducts: any[] = [];
+    let assignedProducts: { id: number; name: string }[] = [];
     if (user.roles.includes('architect')) {
         assignedProducts = await getAssignedProducts(user.id);
     }
