@@ -1,12 +1,8 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import {
   DndContext,
-  DragEndEvent,
-  DragOverlay,
-  DragStartEvent,
   PointerSensor,
   useDraggable,
   useDroppable,
@@ -60,7 +56,7 @@ function OrderCard({ order }: { order: Order }) {
                 <div className="flex justify-between items-start">
                     <div className="space-y-1">
                         <Link href={`/dashboard/orders/${order.id}`} className="font-semibold hover:underline block truncate max-w-[180px]">
-                            {order.billingName}
+                            {order.billing.name}
                         </Link>
                         <div className="text-xs text-muted-foreground">
                             #{order.reference}
@@ -74,7 +70,7 @@ function OrderCard({ order }: { order: Order }) {
             <CardContent className="p-4 pt-2">
                 <div className="flex justify-between items-center text-sm">
                     <span className="text-muted-foreground">Wartość:</span>
-                    <span className="font-medium">{formatCurrency(order.totalGross / 100)}</span>
+                    <span className="font-medium">{formatCurrency(order.totals.totalGross / 100)}</span>
                 </div>
                 <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
                     <span>{order.items.length} pozycji</span>
