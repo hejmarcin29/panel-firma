@@ -16,18 +16,19 @@ interface MontageDashboardViewProps {
   montages: Montage[];
   statusOptions: StatusOption[];
   headerAction?: React.ReactNode;
+  viewSwitcher?: React.ReactNode;
   threatDays: number;
   alertSettings: AlertSettings;
 }
 
-export function MontageDashboardView({ montages, statusOptions, headerAction, threatDays, alertSettings }: MontageDashboardViewProps) {
+export function MontageDashboardView({ montages, statusOptions, headerAction, viewSwitcher, threatDays, alertSettings }: MontageDashboardViewProps) {
   const [view, setView] = useState<"board" | "list" | "calendar">("board");
 
   return (
     <div className="flex flex-col gap-4 h-full pt-4 md:pt-0">
       <div className="flex flex-col gap-4 px-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-            <Tabs value={view} onValueChange={(v) => setView(v as "board" | "list" | "calendar")} className="w-auto">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
+            <Tabs value={view} onValueChange={(v) => setView(v as "board" | "list" | "calendar")} className="w-auto shrink-0">
                 <TabsList>
                     <TabsTrigger value="board">
                         <LayoutGrid className="mr-2 h-4 w-4" />
@@ -43,6 +44,7 @@ export function MontageDashboardView({ montages, statusOptions, headerAction, th
                     </TabsTrigger>
                 </TabsList>
             </Tabs>
+            {viewSwitcher && <div className="shrink-0">{viewSwitcher}</div>}
         </div>
         {headerAction && <div className="hidden md:block shrink-0">{headerAction}</div>}
       </div>

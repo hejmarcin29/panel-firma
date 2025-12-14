@@ -218,7 +218,8 @@ function SortableWidget({ widget, data, isEditing, onConfigure }: { id: string; 
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-    touchAction: isEditing ? 'none' : 'manipulation', // Explicitly allow touch actions when not editing
+    // When not editing, we want default browser behavior (auto) to allow scrolling
+    touchAction: isEditing ? 'none' : undefined,
   };
 
   const Component = WIDGET_COMPONENTS[widget.type];
@@ -492,7 +493,7 @@ export function DashboardBuilder({ initialLayout, data }: DashboardBuilderProps)
                             <div className={cn(
                                 "flex flex-nowrap gap-4",
                                 // Mobile: Horizontal Scroll with Snap
-                                "overflow-x-auto snap-x snap-mandatory pb-6 scrollbar-hide touch-pan-x",
+                                "overflow-x-auto snap-x snap-mandatory pb-6 scrollbar-hide",
                                 // Desktop: Normal Grid/Stack behavior (resetting flex/scroll)
                                 "md:grid md:grid-cols-1 md:overflow-visible md:pb-0 md:snap-none"
                             )} style={{ scrollbarWidth: 'none' }}>
