@@ -376,7 +376,7 @@ export function CalendarView({
                       <div
                         key={day.toString()}
                         className={cn(
-                          'min-h-[60px] p-1 border-b border-r last:border-r-0 flex flex-col items-center gap-1 cursor-pointer transition-colors',
+                          'min-h-15 p-1 border-b border-r last:border-r-0 flex flex-col items-center gap-1 cursor-pointer transition-colors',
                           !isCurrentMonth && 'bg-muted/20 text-muted-foreground',
                           isSelected && 'bg-accent/20 ring-2 ring-inset ring-primary',
                           isToday(day) && !isSelected && 'bg-accent/10'
@@ -456,7 +456,7 @@ export function CalendarView({
                       id={day.toISOString()}
                       date={day}
                       className={cn(
-                        'min-h-[120px] p-2 border-b border-r transition-colors hover:bg-muted/10 flex flex-col gap-1',
+                        'min-h-30 p-2 border-b border-r transition-colors hover:bg-muted/10 flex flex-col gap-1',
                         !isCurrentMonth && 'bg-muted/20 text-muted-foreground',
                         isToday(day) && 'bg-accent/10'
                       )}

@@ -493,10 +493,10 @@ export function DashboardBuilder({ initialLayout, data }: DashboardBuilderProps)
                         items={layout.columns.right.map((w) => w.id)}
                         strategy={verticalListSortingStrategy}
                     >
-                        <div className='space-y-6 min-h-[100px]'>
+                        <div className='space-y-6 min-h-25'>
                             {layout.columns.right.map((widget) => (
                                 <SortableWidget 
-                                    key={widget.id} 
+                                    key={widget.id}  
                                     id={widget.id} 
                                     widget={widget} 
                                     data={data} 

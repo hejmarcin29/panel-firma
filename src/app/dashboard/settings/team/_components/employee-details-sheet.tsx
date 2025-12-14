@@ -243,7 +243,7 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
                                             <FormControl>
                                                 <Textarea 
                                                     placeholder="Opisz zakres wykonywanych prac..." 
-                                                    className="min-h-[100px]"
+                                                    className="min-h-25"
                                                     {...field} 
                                                     onBlur={form.handleSubmit(onSubmit)}
                                                 />

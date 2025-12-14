@@ -395,7 +395,7 @@ export function LeadForm({ assignedProducts }: LeadFormProps) {
                         value={formData.notes}
                         onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                         disabled={isPending}
-                        className="min-h-[100px]"
+                        className="min-h-25"
                     />
                 </div>
             </div>
