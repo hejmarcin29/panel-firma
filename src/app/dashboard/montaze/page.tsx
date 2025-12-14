@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 import { MontageDashboardView } from './_components/montage-dashboard-view';
 import { InstallerDashboardView } from './_components/installer-dashboard-view';
-import { MontageViewTabs, MontageStageFilters } from './_components/montage-view-switcher';
+import { MontageViewTabs } from './_components/montage-view-switcher';
 import { MontageSortSelect } from './_components/montage-sort-select';
 import { AddLeadModal } from './_components/add-lead-modal';
 import { mapMontageRow, type MontageRow } from './utils';
@@ -279,7 +279,6 @@ export default async function MontazePage(props: any) {
                         <MontageViewTabs />
                     </div>
                 </div>
-                <MontageStageFilters />
             </div>
             <div className="flex-1 overflow-hidden md:py-6">
                 <MontageDashboardView 
