@@ -163,20 +163,29 @@ export async function getCurrentSession(): Promise<SessionRecord | null> {
 		return null;
 	}
 
-	const session = await findSession(token);
+	try {
+		const session = await findSession(token);
 
-	if (!session) {
-		cookieStore.delete(SESSION_COOKIE);
+		if (!session) {
+			cookieStore.delete(SESSION_COOKIE);
+			return null;
+		}
+
+		if (session.expiresAt.getTime() < Date.now()) {
+			try {
+				await removeSessionByToken(token);
+			} catch (e) {
+				console.error('Failed to remove expired session:', e);
+			}
+			cookieStore.delete(SESSION_COOKIE);
+			return null;
+		}
+
+		return session;
+	} catch (error) {
+		console.error('Failed to get session:', error);
 		return null;
 	}
-
-	if (session.expiresAt.getTime() < Date.now()) {
-		await removeSessionByToken(token);
-		cookieStore.delete(SESSION_COOKIE);
-		return null;
-	}
-
-	return session;
 }
 
 export async function getCurrentUser() {
