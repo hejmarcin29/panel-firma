@@ -20,7 +20,8 @@ import {
   Users,
   ShoppingBag,
   Monitor,
-  FileText
+  FileText,
+  Store
 } from "lucide-react";
 
 import { cn } from '@/lib/utils';
@@ -51,7 +52,8 @@ const iconMap: Record<string, LucideIcon> = {
   Users,
   ShoppingBag,
   Monitor,
-  FileText
+  FileText,
+  Store
 };
 
 const mainLinks = [
@@ -66,6 +68,7 @@ const menuLinks = [
   { href: "/dashboard/orders", label: "Zamówienia", icon: Package },
   { href: "/dashboard/products", label: "Produkty", icon: ShoppingBag },
   { href: "/dashboard/montaze", label: "Montaże", icon: Hammer },
+  { href: "/dashboard/showroom", label: "Showroom", icon: Store },
   { href: "/dashboard/mail", label: "Poczta", icon: Mail },
   { href: "/dashboard/montaze/galeria", label: "Galeria", icon: ImageIcon },
   { href: "/dashboard/settings", label: "Ustawienia", icon: Settings },
@@ -107,6 +110,9 @@ export function MobileNav({ user, urgentOrdersCount = 0, userRoles = ['admin'] }
   const restrictedLinks = ['/dashboard/customers', '/dashboard/orders', '/dashboard/products', '/dashboard/mail', '/dashboard/settings'];
   
   const isAllowed = (href: string) => {
+      if (href === '/dashboard/showroom') {
+          return userRoles.includes('architect');
+      }
       if (userRoles.includes('admin')) return true;
       return !restrictedLinks.includes(href);
   };

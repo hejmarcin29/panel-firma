@@ -296,7 +296,14 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
             </h4>
             <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                    <Label htmlFor="floorArea" className="text-xs text-muted-foreground">Wymiar netto (m²)</Label>
+                    <Label htmlFor="floorArea" className="text-xs text-muted-foreground flex items-center gap-2">
+                        Wymiar netto (m²)
+                        {montage.status === 'lead' && montage.floorArea && (
+                            <span className="text-[10px] font-bold text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded-full">
+                                (Szacowany)
+                            </span>
+                        )}
+                    </Label>
                     <Input
                     id="floorArea"
                     type="number"

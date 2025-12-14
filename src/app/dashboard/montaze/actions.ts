@@ -1347,6 +1347,9 @@ export async function createLead(data: {
     const montageId = crypto.randomUUID();
     const now = new Date();
 
+    // Auto-assign architect if the creator has the architect role
+    const architectId = user.roles.includes('architect') ? user.id : null;
+
     await db.insert(montages).values({
         id: montageId,
         displayId,
@@ -1355,11 +1358,105 @@ export async function createLead(data: {
         address: data.address?.trim() || null,
         materialDetails: data.description?.trim() || null,
         status: 'lead',
+        architectId,
         createdAt: now,
         updatedAt: now,
     });
 
     await logSystemEvent('create_lead', `Utworzono lead ${displayId} dla ${trimmedName}`, user.id);
+    revalidatePath(MONTAGE_DASHBOARD_PATH);
+    return { status: 'success', montageId };
+}
+
+export async function createExtendedLead(formData: FormData) {
+    const user = await requireUser();
+    
+    const clientName = formData.get('clientName') as string;
+    const isCompany = formData.get('isCompany') === 'true';
+    const companyName = formData.get('companyName') as string;
+    const nip = formData.get('nip') as string;
+    const phone = formData.get('phone') as string;
+    const email = formData.get('email') as string;
+    
+    const billingStreet = formData.get('billingStreet') as string;
+    const billingPostalCode = formData.get('billingPostalCode') as string;
+    const billingCity = formData.get('billingCity') as string;
+    
+    const shippingStreet = formData.get('shippingStreet') as string;
+    const shippingPostalCode = formData.get('shippingPostalCode') as string;
+    const shippingCity = formData.get('shippingCity') as string;
+    
+    const productId = formData.get('productId') as string;
+    const floorArea = formData.get('floorArea') as string;
+    const estimatedDate = formData.get('estimatedDate') as string;
+    const notes = formData.get('notes') as string;
+    const file = formData.get('file') as File;
+
+    if (!clientName?.trim()) {
+        throw new Error('Podaj nazwę klienta.');
+    }
+
+    // Create or update customer logic could be here, but for now we just store in montage
+    // Similar to createMontage logic but simplified for lead
+
+    const displayId = await generateNextMontageId();
+    const montageId = crypto.randomUUID();
+    const now = new Date();
+
+    // Auto-assign architect if the creator has the architect role
+    const architectId = user.roles.includes('architect') ? user.id : null;
+
+    // Format addresses
+    const billingAddress = [billingStreet, billingPostalCode, billingCity].filter(Boolean).join(', ');
+    const installationAddress = [shippingStreet, shippingPostalCode, shippingCity].filter(Boolean).join(', ');
+
+    // Format notes
+    let additionalInfo = notes?.trim() || null;
+    if (additionalInfo && architectId) {
+        additionalInfo = `**Notatka od Architekta:**\n${additionalInfo}`;
+    }
+
+    await db.insert(montages).values({
+        id: montageId,
+        displayId,
+        clientName: clientName.trim(),
+        isCompany,
+        companyName: companyName?.trim() || null,
+        nip: nip?.trim() || null,
+        contactPhone: phone?.trim() || null,
+        contactEmail: email?.trim() || null,
+        
+        billingAddress: billingAddress || null,
+        billingCity: billingCity?.trim() || null,
+        billingPostalCode: billingPostalCode?.trim() || null,
+        
+        installationAddress: installationAddress || null,
+        installationCity: shippingCity?.trim() || null,
+        installationPostalCode: shippingPostalCode?.trim() || null,
+        
+        panelProductId: productId && productId !== 'none' ? parseInt(productId) : null,
+        floorArea: floorArea ? parseFloat(floorArea) : null,
+        forecastedInstallationDate: estimatedDate ? new Date(estimatedDate) : null,
+        
+        additionalInfo,
+        
+        status: 'lead',
+        architectId,
+        createdAt: now,
+        updatedAt: now,
+    });
+
+    // Handle file upload
+    if (file && file.size > 0) {
+        try {
+            await addAttachment(montageId, file, 'Rzut / Projekt (od Architekta)');
+        } catch (e) {
+            console.error('Failed to upload attachment for lead', e);
+            // Don't fail the whole request if attachment fails, but maybe log it
+        }
+    }
+
+    await logSystemEvent('create_lead', `Utworzono rozszerzony lead ${displayId} dla ${clientName}`, user.id);
     revalidatePath(MONTAGE_DASHBOARD_PATH);
     return { status: 'success', montageId };
 }

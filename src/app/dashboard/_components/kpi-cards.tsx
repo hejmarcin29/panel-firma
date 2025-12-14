@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { 
     AlertCircle, 
     Briefcase, 
@@ -42,6 +44,32 @@ export function KPICards({
   settings
 }: KPICardsProps) {
   const visibleCards = settings?.visibleCards || ['leads', 'payments', 'urgent', 'orders', 'urgentOrders', 'stalledOrders'];
+
+  const [lastSeenLeads, setLastSeenLeads] = useState<number>(0);
+  const [lastSeenOrders, setLastSeenOrders] = useState<number>(0);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    const storedLeads = localStorage.getItem('kpi_last_seen_leads');
+    const storedOrders = localStorage.getItem('kpi_last_seen_orders');
+    
+    if (storedLeads) setLastSeenLeads(parseInt(storedLeads));
+    if (storedOrders) setLastSeenOrders(parseInt(storedOrders));
+    setIsLoaded(true);
+  }, []);
+
+  const handleLeadsClick = () => {
+    localStorage.setItem('kpi_last_seen_leads', newLeadsCount.toString());
+    setLastSeenLeads(newLeadsCount);
+  };
+
+  const handleOrdersClick = () => {
+    localStorage.setItem('kpi_last_seen_orders', newOrdersCount.toString());
+    setLastSeenOrders(newOrdersCount);
+  };
+
+  const hasNewLeads = isLoaded && newLeadsCount > lastSeenLeads;
+  const hasNewOrders = isLoaded && newOrdersCount > lastSeenOrders;
 
   const container = {
     hidden: { opacity: 0 },
@@ -99,12 +127,24 @@ export function KPICards({
 
       {visibleCards.includes('leads') && (
         <motion.div variants={item} className="h-full">
-        <Card className="bg-card border-border shadow-none relative overflow-hidden group h-full">
-            <Link href="/dashboard/montaze" className="absolute inset-0 z-10" />
+        <Card className={cn(
+            "bg-card border-border shadow-none relative overflow-hidden group h-full transition-all duration-300",
+            hasNewLeads && "border-blue-500 ring-1 ring-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.15)]"
+        )}>
+            <Link 
+                href="/dashboard/montaze?view=lead" 
+                className="absolute inset-0 z-10" 
+                onClick={handleLeadsClick}
+            />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
                 <div className="flex items-center gap-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                    <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
                         Nowy Lead Montaż
+                        {hasNewLeads && (
+                            <span className="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 animate-pulse">
+                                NOWE
+                            </span>
+                        )}
                     </CardTitle>
                     <Tooltip>
                         <TooltipTrigger asChild>
@@ -131,12 +171,24 @@ export function KPICards({
 
       {visibleCards.includes('orders') && (
         <motion.div variants={item} className="h-full">
-        <Card className="bg-card border-border shadow-none relative overflow-hidden group h-full">
-            <Link href="/dashboard/orders" className="absolute inset-0 z-10" />
+        <Card className={cn(
+            "bg-card border-border shadow-none relative overflow-hidden group h-full transition-all duration-300",
+            hasNewOrders && "border-emerald-500 ring-1 ring-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
+        )}>
+            <Link 
+                href="/dashboard/orders" 
+                className="absolute inset-0 z-10" 
+                onClick={handleOrdersClick}
+            />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
                 <div className="flex items-center gap-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                    <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
                         Zamówienia do Weryfikacji
+                        {hasNewOrders && (
+                            <span className="ml-2 inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800 animate-pulse">
+                                NOWE
+                            </span>
+                        )}
                     </CardTitle>
                     <Tooltip>
                         <TooltipTrigger asChild>
