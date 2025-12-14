@@ -495,7 +495,7 @@ export function DashboardBuilder({ initialLayout, data }: DashboardBuilderProps)
                             <div className={cn(
                                 "flex flex-nowrap gap-4",
                                 // Mobile: Horizontal Scroll with Snap
-                                "overflow-x-auto snap-x snap-mandatory pb-6 scrollbar-hide touch-pan-x",
+                                "overflow-x-auto snap-x snap-mandatory pb-6 scrollbar-hide",
                                 // Desktop: Normal Grid/Stack behavior (resetting flex/scroll)
                                 "md:grid md:grid-cols-1 md:overflow-visible md:pb-0 md:snap-none"
                             )} style={{ scrollbarWidth: 'none' }}>
@@ -504,7 +504,7 @@ export function DashboardBuilder({ initialLayout, data }: DashboardBuilderProps)
                                     .map((widget) => (
                                     <div key={widget.id} className={cn(
                                         // Mobile: Card sizing for swipe
-                                        "min-w-[85vw] sm:min-w-[350px] snap-center snap-always flex-shrink-0",
+                                        "min-w-[85vw] sm:min-w-[350px] snap-center flex-shrink-0",
                                         // Desktop: Full width
                                         "md:min-w-0 md:w-full"
                                     )}>
