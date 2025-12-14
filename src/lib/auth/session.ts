@@ -153,7 +153,7 @@ export async function stopImpersonating() {
 
 	// Create new session for original user
 	await createSession(originalUserId);
-	redirect('/dashboard/users');
+	redirect('/dashboard/settings/team');
 }
 
 export async function getCurrentSession(): Promise<SessionRecord | null> {

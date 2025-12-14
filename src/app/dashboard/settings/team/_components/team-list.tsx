@@ -30,10 +30,23 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Avatar,
+  AvatarFallback,
+} from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { toggleEmployeeStatus, updateEmployeeRoles, impersonateUserAction } from '../actions';
 import type { UserRole, InstallerProfile, ArchitectProfile } from '@/lib/db/schema';
 import { EmployeeDetailsSheet } from './employee-details-sheet';
+import { cn } from '@/lib/utils';
 
 interface TeamMember {
     id: string;
@@ -65,13 +78,32 @@ const roleIcons: Record<UserRole, React.ReactNode> = {
     architect: <UserCog className="h-4 w-4 text-purple-600" />,
 };
 
+function getInitials(name: string | null) {
+    if (!name) return '??';
+    return name
+        .split(' ')
+        .map((n) => n[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase();
+}
+
 export function TeamList({ members, currentUserId }: TeamListProps) {
   const [isPending, startTransition] = useTransition();
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
+  // Desktop Grouping
   const employees = members.filter(m => !m.roles.includes('architect'));
   const architects = members.filter(m => m.roles.includes('architect'));
+
+  // Mobile Grouping
+  const mobileGroups = {
+    architects: members.filter(m => m.roles.includes('architect')),
+    measurers: members.filter(m => m.roles.includes('measurer')),
+    installers: members.filter(m => m.roles.includes('installer')),
+    admins: members.filter(m => m.roles.includes('admin')),
+  };
 
   const handleStatusToggle = (userId: string, currentStatus: boolean) => {
     startTransition(async () => {
@@ -114,6 +146,10 @@ export function TeamList({ members, currentUserId }: TeamListProps) {
         try {
             await impersonateUserAction(userId);
         } catch (e) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            if ((e as any)?.digest?.includes('NEXT_REDIRECT')) {
+                return;
+            }
             console.error(e);
             alert('Wystąpił błąd podczas logowania.');
         }
@@ -228,20 +264,108 @@ export function TeamList({ members, currentUserId }: TeamListProps) {
     </div>
   );
 
+  const MobileCard = ({ member }: { member: TeamMember }) => (
+    <Card className="mb-3 overflow-hidden border-l-4 border-l-primary/20">
+        <CardHeader className="flex flex-row items-start gap-4 p-4 pb-2 space-y-0">
+            <Avatar className="h-10 w-10 border">
+                <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                    <CardTitle className="text-base truncate">{member.name || 'Bez nazwy'}</CardTitle>
+                    <Badge variant={member.isActive ? 'outline' : 'destructive'} className="text-[10px] h-5">
+                        {member.isActive ? 'Aktywny' : 'Blokada'}
+                    </Badge>
+                </div>
+                <CardDescription className="text-xs truncate">{member.email}</CardDescription>
+            </div>
+        </CardHeader>
+        <CardContent className="p-4 pt-2 pb-3">
+            <div className="flex flex-wrap gap-1.5 mb-3">
+                {member.roles.map(role => (
+                    <Badge key={role} variant="secondary" className="text-[10px] px-1.5 py-0 h-5 gap-1 font-normal">
+                        {roleIcons[role]}
+                        {roleLabels[role]}
+                    </Badge>
+                ))}
+                {member.roles.length === 0 && <span className="text-xs text-muted-foreground italic">Brak ról</span>}
+            </div>
+        </CardContent>
+        <CardFooter className="bg-muted/30 p-2 grid grid-cols-2 gap-2">
+            <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-8 text-xs"
+                onClick={() => {
+                    setSelectedMember(member);
+                    setIsSheetOpen(true);
+                }}
+            >
+                <Settings2 className="mr-2 h-3 w-3" />
+                Edytuj
+            </Button>
+            <Button 
+                variant="default" 
+                size="sm" 
+                className="h-8 text-xs"
+                disabled={member.id === currentUserId || isPending}
+                onClick={() => handleImpersonate(member.id)}
+            >
+                <LogIn className="mr-2 h-3 w-3" />
+                Zaloguj
+            </Button>
+        </CardFooter>
+    </Card>
+  );
+
+  const renderMobileSection = (title: string, list: TeamMember[], colorClass: string) => {
+    if (list.length === 0) return null;
+    return (
+        <div className="min-w-[85vw] sm:min-w-[350px] snap-center flex flex-col h-full">
+            <div className={cn("sticky top-0 z-10 bg-background/95 backdrop-blur py-2 mb-2 border-b flex items-center justify-between", colorClass)}>
+                <h3 className="font-semibold text-lg">{title}</h3>
+                <Badge variant="secondary" className="ml-2">{list.length}</Badge>
+            </div>
+            <div className="flex-1 overflow-y-auto pb-4 pr-1">
+                {list.map(m => <MobileCard key={m.id} member={m} />)}
+            </div>
+        </div>
+    );
+  };
+
   return (
     <>
-        <Tabs defaultValue="employees" className="w-full">
-            <TabsList>
-                <TabsTrigger value="employees">Pracownicy ({employees.length})</TabsTrigger>
-                <TabsTrigger value="architects">Architekci ({architects.length})</TabsTrigger>
-            </TabsList>
-            <TabsContent value="employees" className="mt-4">
-                {renderMembersTable(employees)}
-            </TabsContent>
-            <TabsContent value="architects" className="mt-4">
-                {renderMembersTable(architects)}
-            </TabsContent>
-        </Tabs>
+        {/* Desktop View */}
+        <div className="hidden md:block">
+            <Tabs defaultValue="employees" className="w-full">
+                <TabsList>
+                    <TabsTrigger value="employees">Pracownicy ({employees.length})</TabsTrigger>
+                    <TabsTrigger value="architects">Architekci ({architects.length})</TabsTrigger>
+                </TabsList>
+                <TabsContent value="employees" className="mt-4">
+                    {renderMembersTable(employees)}
+                </TabsContent>
+                <TabsContent value="architects" className="mt-4">
+                    {renderMembersTable(architects)}
+                </TabsContent>
+            </Tabs>
+        </div>
+
+        {/* Mobile View - Horizontal Slider */}
+        <div className="md:hidden -mx-4">
+            <div className="px-4 mb-2">
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <MoreHorizontal className="h-3 w-3" />
+                    Przesuwaj w bok, aby zobaczyć inne grupy
+                </p>
+            </div>
+            <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 px-4 pb-6 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
+                {renderMobileSection('Architekci', mobileGroups.architects, 'text-purple-600')}
+                {renderMobileSection('Pomiarowcy', mobileGroups.measurers, 'text-blue-600')}
+                {renderMobileSection('Montażyści', mobileGroups.installers, 'text-green-600')}
+                {renderMobileSection('Administratorzy', mobileGroups.admins, 'text-red-600')}
+            </div>
+        </div>
 
         <EmployeeDetailsSheet 
             member={selectedMember} 
