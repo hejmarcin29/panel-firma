@@ -1,11 +1,12 @@
 "use client";
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { ClipboardList, LayoutList, Ruler, History, Image as ImageIcon, HardHat, FileText, Info } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import useEmblaCarousel from 'embla-carousel-react';
 
 interface MontageDetailsLayoutProps {
   header: React.ReactNode;
@@ -38,27 +39,14 @@ export function MontageDetailsLayout({
   const currentTab = searchParams.get("tab") || (isMobile ? "overview" : defaultTab);
   
   const [activeMobileTab, setActiveMobileTab] = useState("info");
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
+  
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false });
 
   const handleTabChange = (value: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", value);
     router.push(`${pathname}?${params.toString()}`);
-  };
-
-  const scrollToTab = (tabId: string) => {
-    setActiveMobileTab(tabId);
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    const index = mobileTabs.findIndex(t => t.id === tabId);
-    if (index !== -1) {
-        container.scrollTo({
-            left: container.clientWidth * index,
-            behavior: 'smooth'
-        });
-    }
   };
 
   const mobileTabs = [
@@ -72,33 +60,41 @@ export function MontageDetailsLayout({
     { id: 'quotes', label: 'Wyceny', icon: <FileText className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.quotes}</div> },
   ];
 
-  const handleScroll = () => {
-      const container = scrollContainerRef.current;
-      if (!container) return;
+  const scrollToTab = useCallback((tabId: string) => {
+    const index = mobileTabs.findIndex(t => t.id === tabId);
+    if (index !== -1 && emblaApi) {
+        emblaApi.scrollTo(index);
+    }
+  }, [emblaApi, mobileTabs]);
 
-      const scrollLeft = container.scrollLeft;
-      const width = container.clientWidth;
-      const index = Math.round(scrollLeft / width);
-      
-      const newActiveTab = mobileTabs[index]?.id;
-      if (newActiveTab && newActiveTab !== activeMobileTab) {
-          setActiveMobileTab(newActiveTab);
-          
-          // Scroll tab into view
-          const tabsContainer = tabsRef.current;
-          const activeTabElement = tabsContainer?.querySelector(`[data-tab="${newActiveTab}"]`);
-          if (activeTabElement) {
-              activeTabElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-          }
-      }
-  };
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    const index = emblaApi.selectedScrollSnap();
+    const newActiveTab = mobileTabs[index]?.id;
+    
+    if (newActiveTab) {
+        setActiveMobileTab(newActiveTab);
+        // Scroll tab into view
+        const tabsContainer = tabsRef.current;
+        const activeTabElement = tabsContainer?.querySelector(`[data-tab="${newActiveTab}"]`);
+        if (activeTabElement) {
+            activeTabElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+    }
+  }, [emblaApi, mobileTabs]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    emblaApi.on('select', onSelect);
+    onSelect(); // Initial sync
+  }, [emblaApi, onSelect]);
 
   if (isMobile) {
     return (
       <div className="flex flex-col h-[100dvh] bg-background overflow-hidden">
         <div className="shrink-0 z-10 bg-background border-b shadow-sm">
             {header}
-            <div ref={tabsRef} className="flex overflow-x-auto scrollbar-hide px-2 pb-0">
+            <div ref={tabsRef} className="flex overflow-x-auto scrollbar-hide px-2 pb-0 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
                 {mobileTabs.map(tab => (
                     <button
                         key={tab.id}
@@ -118,16 +114,14 @@ export function MontageDetailsLayout({
             </div>
         </div>
         
-        <div 
-            ref={scrollContainerRef}
-            onScroll={handleScroll}
-            className="flex-1 flex overflow-x-auto snap-x snap-mandatory scrollbar-hide"
-        >
-            {mobileTabs.map(tab => (
-                <div key={tab.id} className="min-w-full h-full overflow-y-auto snap-center bg-muted/5">
-                    {tab.content}
-                </div>
-            ))}
+        <div className="flex-1 overflow-hidden" ref={emblaRef}>
+            <div className="flex h-full touch-pan-y">
+                {mobileTabs.map(tab => (
+                    <div key={tab.id} className="flex-[0_0_100%] min-w-0 h-full overflow-y-auto bg-muted/5">
+                        {tab.content}
+                    </div>
+                ))}
+            </div>
         </div>
       </div>
     );
