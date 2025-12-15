@@ -201,7 +201,7 @@ export function CustomerDetailsSheet({ customer, isOpen, onClose }: CustomerDeta
                                     <div className="flex items-center gap-2">
                                         <Input 
                                             readOnly 
-                                            value={`https://primepodloga.pl/s/${customer.referralToken}`}
+                                            value={`https://b2b.primepodloga.pl/s/${customer.referralToken}`}
                                             className="h-9 bg-white border-amber-200 font-mono text-xs text-amber-900 focus-visible:ring-amber-500"
                                             onClick={(e) => e.currentTarget.select()}
                                         />
@@ -210,7 +210,7 @@ export function CustomerDetailsSheet({ customer, isOpen, onClose }: CustomerDeta
                                             variant="outline" 
                                             className="h-9 w-9 shrink-0 border-amber-200 hover:bg-amber-100 hover:text-amber-900"
                                             onClick={() => {
-                                                navigator.clipboard.writeText(`https://primepodloga.pl/s/${customer.referralToken}`);
+                                                navigator.clipboard.writeText(`https://b2b.primepodloga.pl/s/${customer.referralToken}`);
                                                 toast.success('Link skopiowany do schowka');
                                             }}
                                             title="Kopiuj link"
