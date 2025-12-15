@@ -172,18 +172,6 @@ export default async function MontageDetailsPage({ params, searchParams }: Monta
                         )}
 
                         <MontageMaterialCard montage={montage} userRoles={user.roles} />
-
-                        {/* Measurement Notes */}
-                        {montage.additionalInfo && (
-                            <div className="rounded-xl border bg-card text-card-foreground shadow-sm">
-                                <div className="p-6 pt-6">
-                                    <h3 className="font-semibold leading-none tracking-tight mb-4">Uwagi z Pomiaru</h3>
-                                    <div className="text-sm text-muted-foreground whitespace-pre-wrap">
-                                        {montage.additionalInfo}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 }
                 defaultTab={activeTab}
