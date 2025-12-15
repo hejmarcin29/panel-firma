@@ -41,7 +41,7 @@ export function FluentFormsSettings({ initialSecret, baseUrl }: FluentFormsSetti
                 const newSecret = await regenerateFluentFormsSecret();
                 setSecret(newSecret);
                 toast.success("Nowy klucz został wygenerowany");
-            } catch (error) {
+            } catch {
                 toast.error("Wystąpił błąd podczas generowania klucza");
             }
         });
@@ -139,7 +139,7 @@ export function FluentFormsSettings({ initialSecret, baseUrl }: FluentFormsSetti
                                     </Table>
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-2">
-                                    W ustawieniach Webhooka wybierz <strong>"Wybrane pola"</strong> (Selected Fields) i przypisz powyższe klucze do pól formularza.
+                                    W ustawieniach Webhooka wybierz <strong>&quot;Wybrane pola&quot;</strong> (Selected Fields) i przypisz powyższe klucze do pól formularza.
                                 </p>
                             </div>
                         </div>
