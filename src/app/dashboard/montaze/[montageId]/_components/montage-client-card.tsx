@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import { updateMontageContactDetails, updateMontageRealizationStatus } from "../../actions";
 import type { Montage } from "../../types";
+import { formatScheduleRange } from "../../utils";
 import { customerSources } from "@/lib/db/schema";
 import {
     Select,
