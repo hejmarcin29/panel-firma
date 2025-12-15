@@ -37,15 +37,6 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { type UserRole } from '@/lib/db/schema';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
-import { customerSources } from '@/lib/db/schema';
 
 export function MontageClientCard({ 
     montage, 
@@ -115,13 +106,13 @@ export function MontageClientCard({
           : "",
         scheduledSkirtingInstallationAt: montage.scheduledSkirtingInstallationAt 
           ? new Date(montage.scheduledSkirtingInstallationAt as string | number | Date).toISOString().split("T")[0] 
-        source: montage.customer?.source || "other",
-        forecastedInstallationDate: montage.forecastedInstallationDate
-          ? new Date(montage.forecastedInstallationDate as string | number | Date).toISOString().split("T")[0]
-          : "",
           : "",
         scheduledSkirtingInstallationEndAt: montage.scheduledSkirtingInstallationEndAt 
           ? new Date(montage.scheduledSkirtingInstallationEndAt as string | number | Date).toISOString().split("T")[0] 
+          : "",
+        source: montage.customer?.source || "other",
+        forecastedInstallationDate: montage.forecastedInstallationDate
+          ? new Date(montage.forecastedInstallationDate as string | number | Date).toISOString().split("T")[0]
           : "",
     });
     setDateRange({

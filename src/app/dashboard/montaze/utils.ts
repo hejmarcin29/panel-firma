@@ -185,7 +185,13 @@ export function mapMontageRow(row: MontageRow, publicBaseUrl: string | null): Mo
         architectId: row.architectId,
         installer: row.installer ? { id: row.installer.id, name: row.installer.name, email: row.installer.email } : null,
         measurer: row.measurer ? { id: row.measurer.id, name: row.measurer.name, email: row.measurer.email } : null,
-        customer: row.customer ? { id: row.customer.id, source: row.customer.source } : null,
+        customer: row.customer ? { 
+            id: row.customer.id, 
+            source: row.customer.source,
+            name: row.customer.name,
+            email: row.customer.email,
+            phone: row.customer.phone
+        } : null,
         architect: row.architect ? { id: row.architect.id, name: row.architect.name, email: row.architect.email } : null,
         technicalAudit: row.technicalAudit,
         materialLog: row.materialLog,

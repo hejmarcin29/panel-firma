@@ -105,7 +105,13 @@ export type Montage = {
 	installer?: { id: string; name: string | null; email: string } | null;
 	measurer?: { id: string; name: string | null; email: string } | null;
 	architect?: { id: string; name: string | null; email: string } | null;
-    customer?: { id: string; source: string | null } | null;
+    customer?: { 
+        id: string; 
+        source: string | null;
+        name: string;
+        email: string | null;
+        phone: string | null;
+    } | null;
     technicalAudit?: unknown;
     materialLog?: unknown;
     quotes: {

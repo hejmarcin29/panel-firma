@@ -657,17 +657,6 @@ export async function updateMontageContactDetails({
 	const fallbackCity = normalizedInstallationCity ?? normalizedBillingCity;
 	const combinedAddress = [fallbackAddress, fallbackCity].filter(Boolean).join(', ') || null;
 
-	await db
-		.update(montages)
-		.set({
-			clientName: trimmedName,
-			contactPhone: normalizedPhone,
-			contactEmail: normalizedEmail,
-            forecastedInstallationDate: forecastedInstallationAt,
-			updatedAt: new Date(),
-		})
-		.where(eq(montages.id, montageId));
-
     // Update Customer Source if provided
     if (source) {
         const montage = await db.query.montages.findFirst({
@@ -680,11 +669,23 @@ export async function updateMontageContactDetails({
                 .set({ source: source as any, updatedAt: new Date() })
                 .where(eq(customers.id, montage.customerId));
         }
-    },
+    }
+
+	await db
+		.update(montages)
+		.set({
+			clientName: trimmedName,
+			contactPhone: normalizedPhone,
+			contactEmail: normalizedEmail,
+            forecastedInstallationDate: forecastedInstallationAt,
 			scheduledInstallationAt,
 			scheduledInstallationEndAt,
             scheduledSkirtingInstallationAt,
             scheduledSkirtingInstallationEndAt,
+			billingAddress: normalizedBillingAddress,
+			billingCity: normalizedBillingCity,
+			installationAddress: normalizedInstallationAddress,
+			installationCity: normalizedInstallationCity,
 			updatedAt: new Date(),
 		})
 		.where(eq(montages.id, montageId));
