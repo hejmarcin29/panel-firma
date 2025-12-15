@@ -1,0 +1,1 @@
+ALTER TABLE "montage_notes" ADD COLUMN "is_internal" boolean DEFAULT false NOT NULL;

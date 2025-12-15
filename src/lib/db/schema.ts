@@ -461,6 +461,7 @@ export const montageNotes = pgTable(
 			.notNull()
 			.references(() => montages.id, { onDelete: 'cascade' }),
 		content: text('content').notNull(),
+        isInternal: boolean('is_internal').notNull().default(false),
 		createdBy: text('created_by').references(() => users.id, { onDelete: 'set null' }),
 		createdAt: timestamp('created_at').notNull().defaultNow(),
 	},
