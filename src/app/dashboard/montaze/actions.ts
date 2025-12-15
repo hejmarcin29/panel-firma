@@ -16,6 +16,7 @@ import {
 	customers,
 	users,
     commissions,
+    type CustomerSource,
 } from '@/lib/db/schema';
 import { uploadMontageObject } from '@/lib/r2/storage';
 import { getMontageChecklistTemplates } from '@/lib/montaze/checklist';
@@ -666,7 +667,7 @@ export async function updateMontageContactDetails({
 
         if (montage?.customerId) {
             await db.update(customers)
-                .set({ source: source as any, updatedAt: new Date() })
+                .set({ source: source as CustomerSource, updatedAt: new Date() })
                 .where(eq(customers.id, montage.customerId));
         }
     }
