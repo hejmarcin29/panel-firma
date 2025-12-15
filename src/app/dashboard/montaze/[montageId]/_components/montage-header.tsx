@@ -82,12 +82,10 @@ export function MontageHeader({ montage, statusOptions, userRoles = ['admin'] }:
             variant="ghost"
             size="icon"
             className="shrink-0"
-            asChild
+            onClick={() => router.back()}
           >
-            <Link href="/dashboard/montaze">
-              <ArrowLeft className="h-5 w-5" />
-              <span className="sr-only">Wróć</span>
-            </Link>
+            <ArrowLeft className="h-5 w-5" />
+            <span className="sr-only">Wróć</span>
           </Button>
           <div className="flex flex-col overflow-hidden">
             <h1 className="truncate text-lg font-semibold leading-none tracking-tight flex items-center gap-2">

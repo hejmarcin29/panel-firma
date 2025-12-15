@@ -57,7 +57,7 @@ export function InstallerDetailsView({ installer, montages }: InstallerDetailsVi
     const completionRate = totalJobs > 0 ? Math.round((completedJobs / totalJobs) * 100) : 0;
 
     return (
-        <div className="flex flex-col h-[calc(100vh-4rem)] bg-background">
+        <div className="flex flex-col h-[calc(100dvh-4rem)] bg-background">
             {/* Header / Navbar */}
             <div className="border-b bg-background/95 backdrop-blur z-10 sticky top-0">
                 <div className="flex h-16 items-center px-4 justify-between">
@@ -80,7 +80,7 @@ export function InstallerDetailsView({ installer, montages }: InstallerDetailsVi
             </div>
 
             <ScrollArea className="flex-1">
-                <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6">
+                <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6 pb-24">
                     
                     {/* Profile Header Card */}
                     <div className="flex flex-col md:flex-row gap-6 items-start md:items-center bg-card border rounded-xl p-6 shadow-sm">
