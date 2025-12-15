@@ -1480,7 +1480,7 @@ export async function createExtendedLead(formData: FormData) {
         shippingStreet: shippingStreet?.trim() || null,
         shippingCity: shippingCity?.trim() || null,
         shippingPostalCode: shippingPostalCode?.trim() || null,
-        source: source || (architectId ? 'architect' : 'other'),
+        source: (source as CustomerSource) || (architectId ? 'architect' : 'other'),
         architectId: architectId,
         createdAt: now,
         updatedAt: now,
