@@ -92,6 +92,56 @@ export function FluentFormsSettings({ initialSecret, baseUrl }: FluentFormsSetti
                                     Dodaj nagłówek: <code>x-api-secret</code> z tą wartością.
                                 </p>
                             </div>
+
+                            <div className="space-y-2">
+                                <Label>Mapowanie Pól (JSON)</Label>
+                                <div className="rounded-md border">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Klucz JSON (Twoja nazwa)</TableHead>
+                                                <TableHead>Opis</TableHead>
+                                                <TableHead className="w-[100px]">Wymagane</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            <TableRow>
+                                                <TableCell className="font-mono font-medium">client_name</TableCell>
+                                                <TableCell>Imię i nazwisko klienta</TableCell>
+                                                <TableCell><Badge>Tak</Badge></TableCell>
+                                            </TableRow>
+                                            <TableRow>
+                                                <TableCell className="font-mono font-medium">contact_email</TableCell>
+                                                <TableCell>Adres email</TableCell>
+                                                <TableCell><Badge>Tak</Badge></TableCell>
+                                            </TableRow>
+                                            <TableRow>
+                                                <TableCell className="font-mono font-medium">contact_phone</TableCell>
+                                                <TableCell>Numer telefonu</TableCell>
+                                                <TableCell><Badge variant="secondary">Opcjonalne</Badge></TableCell>
+                                            </TableRow>
+                                            <TableRow>
+                                                <TableCell className="font-mono font-medium">message</TableCell>
+                                                <TableCell>Treść wiadomości / opis</TableCell>
+                                                <TableCell><Badge variant="secondary">Opcjonalne</Badge></TableCell>
+                                            </TableRow>
+                                            <TableRow>
+                                                <TableCell className="font-mono font-medium">city</TableCell>
+                                                <TableCell>Miasto</TableCell>
+                                                <TableCell><Badge variant="secondary">Opcjonalne</Badge></TableCell>
+                                            </TableRow>
+                                            <TableRow>
+                                                <TableCell className="font-mono font-medium">postal_code</TableCell>
+                                                <TableCell>Kod pocztowy</TableCell>
+                                                <TableCell><Badge variant="secondary">Opcjonalne</Badge></TableCell>
+                                            </TableRow>
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-2">
+                                    W ustawieniach Webhooka wybierz <strong>"Wybrane pola"</strong> (Selected Fields) i przypisz powyższe klucze do pól formularza.
+                                </p>
+                            </div>
                         </div>
                     )}
 
