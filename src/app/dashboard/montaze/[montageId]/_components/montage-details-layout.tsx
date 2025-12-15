@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useRef, useState, useEffect, useCallback, useMemo } from "react";
-import { ClipboardList, LayoutList, Ruler, History, Image as ImageIcon, HardHat, FileText, Info } from "lucide-react";
+import { ClipboardList, LayoutList, Ruler, History, Image as ImageIcon, HardHat, FileText, Info, MessageSquare } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
@@ -13,7 +13,8 @@ interface MontageDetailsLayoutProps {
   clientCard: React.ReactNode;
   materialCard: React.ReactNode;
   tabs: {
-    log: React.ReactNode;
+    notes: React.ReactNode;
+    history: React.ReactNode;
     workflow: React.ReactNode;
     measurement: React.ReactNode;
     tasks: React.ReactNode;
@@ -29,7 +30,7 @@ export function MontageDetailsLayout({
   clientCard,
   materialCard,
   tabs,
-  defaultTab = "log",
+  defaultTab = "notes",
 }: MontageDetailsLayoutProps) {
   const isMobile = useIsMobile();
   const router = useRouter();
@@ -51,13 +52,14 @@ export function MontageDetailsLayout({
 
   const mobileTabs = useMemo(() => [
     { id: 'info', label: 'Info', icon: <Info className="w-4 h-4" />, content: <div className="space-y-4 p-4 pb-24">{clientCard}{materialCard}</div> },
+    { id: 'notes', label: 'Notatki', icon: <MessageSquare className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.notes}</div> },
     { id: 'tasks', label: 'Zadania', icon: <ClipboardList className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.tasks}</div> },
     { id: 'gallery', label: 'Galeria', icon: <ImageIcon className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.gallery}</div> },
-    { id: 'log', label: 'Dziennik', icon: <History className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.log}</div> },
     { id: 'workflow', label: 'Przebieg', icon: <LayoutList className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.workflow}</div> },
     { id: 'measurement', label: 'Pomiary', icon: <Ruler className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.measurement}</div> },
     { id: 'technical', label: 'Techniczne', icon: <HardHat className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.technical}</div> },
     { id: 'quotes', label: 'Wyceny', icon: <FileText className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.quotes}</div> },
+    { id: 'history', label: 'Historia', icon: <History className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.history}</div> },
   ], [clientCard, materialCard, tabs]);
 
   const scrollToTab = useCallback((tabId: string) => {
@@ -140,17 +142,18 @@ export function MontageDetailsLayout({
 
           <div className="space-y-6">
               <Tabs value={currentTab === 'overview' ? defaultTab : currentTab} onValueChange={handleTabChange} className="w-full">
-                  <TabsList className="flex w-full overflow-x-auto md:grid md:grid-cols-7">
-                      <TabsTrigger value="log" className="flex-1">Dziennik</TabsTrigger>
+                  <TabsList className="flex w-full overflow-x-auto md:grid md:grid-cols-8">
+                      <TabsTrigger value="notes" className="flex-1">Notatki</TabsTrigger>
                       <TabsTrigger value="workflow" className="flex-1">Przebieg</TabsTrigger>
                       <TabsTrigger value="measurement" className="flex-1">Pomiar</TabsTrigger>
                       <TabsTrigger value="technical" className="flex-1">Techniczne</TabsTrigger>
                       <TabsTrigger value="quotes" className="flex-1">Wyceny</TabsTrigger>
                       <TabsTrigger value="tasks" className="flex-1">Zadania</TabsTrigger>
                       <TabsTrigger value="gallery" className="flex-1">Załączniki</TabsTrigger>
+                      <TabsTrigger value="history" className="flex-1">Historia</TabsTrigger>
                   </TabsList>
-                  <TabsContent value="log" className="mt-6">
-                      {tabs.log}
+                  <TabsContent value="notes" className="mt-6">
+                      {tabs.notes}
                   </TabsContent>
                   <TabsContent value="workflow" className="mt-6">
                       {tabs.workflow}
@@ -169,6 +172,9 @@ export function MontageDetailsLayout({
                   </TabsContent>
                   <TabsContent value="gallery" className="mt-6">
                       {tabs.gallery}
+                  </TabsContent>
+                  <TabsContent value="history" className="mt-6">
+                      {tabs.history}
                   </TabsContent>
               </Tabs>
           </div>

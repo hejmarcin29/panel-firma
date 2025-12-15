@@ -22,7 +22,8 @@ import { MontageMaterialCard } from './_components/montage-material-card';
 import { MontageWorkflowTab } from './_components/montage-workflow-tab';
 import { MontageTasksTab } from './_components/montage-tasks-tab';
 import { MontageGalleryTab } from './_components/montage-gallery-tab';
-import { MontageLogTab } from './_components/montage-log-tab';
+import { MontageNotesTab } from './_components/montage-notes-tab';
+import { MontageHistoryTab } from './_components/montage-history-tab';
 import { MontageMeasurementTab } from '../_components/montage-measurement-tab';
 import { MontageTechnicalTab } from './_components/montage-technical-tab';
 import { MontageQuotes } from './_components/montage-quotes';
@@ -40,7 +41,7 @@ type MontageDetailsPageParams = {
 export default async function MontageDetailsPage({ params, searchParams }: MontageDetailsPageParams) {
     const { montageId } = await params;
     const { tab } = await searchParams;
-    const activeTab = typeof tab === 'string' ? tab : 'log';
+    const activeTab = typeof tab === 'string' ? tab : 'notes';
 
     const user = await requireUser();
 
@@ -141,8 +142,8 @@ export default async function MontageDetailsPage({ params, searchParams }: Monta
                         <MontageClientCard montage={montage} userRoles={user.roles} installers={installers} measurers={measurers} architects={architects} />
                         <div className="space-y-6">
                              <div className="bg-card rounded-xl border shadow-sm p-6">
-                                <h3 className="font-semibold mb-4">Notatki i Historia</h3>
-                                <MontageLogTab montage={montage} logs={logs} />
+                                <h3 className="font-semibold mb-4">Notatki</h3>
+                                <MontageNotesTab montage={montage} />
                              </div>
                         </div>
                     </div>
@@ -156,10 +157,39 @@ export default async function MontageDetailsPage({ params, searchParams }: Monta
             <MontageDetailsLayout 
                 header={<MontageHeader montage={montage} statusOptions={statusOptions} userRoles={user.roles} />}
                 clientCard={<MontageClientCard montage={montage} userRoles={user.roles} installers={installers} measurers={measurers} architects={architects} />}
-                materialCard={<MontageMaterialCard montage={montage} userRoles={user.roles} />}
+                materialCard={
+                    <div className="space-y-6">
+                        <MontageMaterialCard montage={montage} userRoles={user.roles} />
+                        
+                        {/* Client Requirements (Lead) */}
+                        {montage.materialDetails && (
+                            <div className="rounded-xl border bg-card text-card-foreground shadow-sm">
+                                <div className="p-6 pt-6">
+                                    <h3 className="font-semibold leading-none tracking-tight mb-4">Wymagania Klienta</h3>
+                                    <div className="text-sm text-muted-foreground whitespace-pre-wrap">
+                                        {montage.materialDetails}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Measurement Notes */}
+                        {montage.additionalInfo && (
+                            <div className="rounded-xl border bg-card text-card-foreground shadow-sm">
+                                <div className="p-6 pt-6">
+                                    <h3 className="font-semibold leading-none tracking-tight mb-4">Uwagi z Pomiaru</h3>
+                                    <div className="text-sm text-muted-foreground whitespace-pre-wrap">
+                                        {montage.additionalInfo}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                }
                 defaultTab={activeTab}
                 tabs={{
-                    log: <MontageLogTab montage={montage} logs={logs} />,
+                    notes: <MontageNotesTab montage={montage} />,
+                    history: <MontageHistoryTab montage={montage} logs={logs} />,
                     workflow: <MontageWorkflowTab montage={montage} statusOptions={statusOptions} installers={installers} measurers={measurers} />,
                     measurement: <MontageMeasurementTab montage={montage} />,
                     technical: <MontageTechnicalTab montage={montage} userRoles={user.roles} />,
