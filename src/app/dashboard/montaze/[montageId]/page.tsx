@@ -142,6 +142,7 @@ export default async function MontageDetailsPage({ params, searchParams }: Monta
                     <div className="grid gap-6 md:grid-cols-2">
                         <MontageClientCard montage={montage} userRoles={user.roles} installers={installers} measurers={measurers} architects={architects} />
                         <div className="space-y-6">
+                             <MontageClientInfo montageId={montage.id} initialContent={montage.materialDetails} />
                              <div className="bg-card rounded-xl border shadow-sm p-6">
                                 <h3 className="font-semibold mb-4">Notatki</h3>
                                 <MontageNotesTab montage={montage} />
