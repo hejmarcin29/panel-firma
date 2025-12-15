@@ -5,15 +5,55 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Copy, Gift, History, Users, FileText, Calendar, CheckCircle2, Circle, Clock, MapPin } from 'lucide-react';
+import { Copy, Gift, Users, FileText, Calendar, CheckCircle2, Circle } from 'lucide-react';
 import { toast } from 'sonner';
 import { requestPayout } from '../actions';
 import { cn } from '@/lib/utils';
 import confetti from 'canvas-confetti';
 import { motion } from 'framer-motion';
 
+interface MontageAttachment {
+    id: string;
+    url: string;
+    title: string | null;
+}
+
+interface Montage {
+    id: string;
+    displayId: string | null;
+    clientName: string;
+    status: string;
+    createdAt: Date;
+    forecastedInstallationDate: Date | null;
+    scheduledInstallationAt: number | null;
+    attachments: MontageAttachment[];
+}
+
+interface PayoutRequest {
+    id: string;
+    rewardType: string;
+    createdAt: Date;
+    amount: number;
+    status: string;
+}
+
+interface ReferralCommission {
+    id: string;
+    createdAt: Date;
+    amount: number;
+}
+
+interface Customer {
+    name: string | null;
+    referralCode: string | null;
+    referralBalance: number;
+    referralCommissions: ReferralCommission[];
+    payoutRequests: PayoutRequest[];
+    montages: Montage[];
+}
+
 interface CustomerPortalProps {
-    customer: any; // Type this properly
+    customer: Customer;
     token: string;
 }
 
@@ -62,8 +102,12 @@ export function CustomerPortal({ customer, token }: CustomerPortalProps) {
                 origin: { y: 0.6 },
                 colors: ['#FFD700', '#FFA500', '#FF4500']
             });
-        } catch (error: any) {
-            toast.error(error.message);
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error('Wystąpił nieznany błąd');
+            }
         } finally {
             setIsRequesting(false);
         }
@@ -210,7 +254,7 @@ export function CustomerPortal({ customer, token }: CustomerPortalProps) {
                                         <CardContent>
                                             {activeMontage.attachments && activeMontage.attachments.length > 0 ? (
                                                 <div className="space-y-2">
-                                                    {activeMontage.attachments.map((att: any) => (
+                                                    {activeMontage.attachments.map((att) => (
                                                         <a 
                                                             key={att.id} 
                                                             href={att.url} 
@@ -351,7 +395,7 @@ export function CustomerPortal({ customer, token }: CustomerPortalProps) {
                                 </CardHeader>
                                 <CardContent>
                                     <div className="space-y-4">
-                                        {customer.payoutRequests.map((request: any, index: number) => (
+                                        {customer.payoutRequests.map((request, index: number) => (
                                             <motion.div 
                                                 key={request.id} 
                                                 className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0"
@@ -373,7 +417,7 @@ export function CustomerPortal({ customer, token }: CustomerPortalProps) {
                                                 </div>
                                             </motion.div>
                                         ))}
-                                        {customer.referralCommissions.map((commission: any, index: number) => (
+                                        {customer.referralCommissions.map((commission, index: number) => (
                                             <motion.div 
                                                 key={commission.id} 
                                                 className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0"

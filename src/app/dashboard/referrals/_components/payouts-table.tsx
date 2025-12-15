@@ -19,8 +19,23 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
+interface Customer {
+    name: string | null;
+    email: string;
+}
+
+interface PayoutRequest {
+    id: string;
+    createdAt: Date;
+    amount: number;
+    rewardType: string;
+    status: string;
+    note: string | null;
+    customer: Customer;
+}
+
 interface PayoutsTableProps {
-    requests: any[];
+    requests: PayoutRequest[];
 }
 
 export function PayoutsTable({ requests }: PayoutsTableProps) {
@@ -31,8 +46,12 @@ export function PayoutsTable({ requests }: PayoutsTableProps) {
             setIsProcessing(id);
             await completePayoutRequest(id, note);
             toast.success('Wypłata zrealizowana');
-        } catch (error: any) {
-            toast.error(error.message);
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error('Wystąpił nieznany błąd');
+            }
         } finally {
             setIsProcessing(null);
         }
@@ -44,8 +63,12 @@ export function PayoutsTable({ requests }: PayoutsTableProps) {
             setIsProcessing(id);
             await rejectPayoutRequest(id);
             toast.success('Wypłata odrzucona');
-        } catch (error: any) {
-            toast.error(error.message);
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error('Wystąpił nieznany błąd');
+            }
         } finally {
             setIsProcessing(null);
         }

@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { customers, payoutRequests, referralCommissions, montages, montageAttachments } from '@/lib/db/schema';
+import { customers, payoutRequests, referralCommissions, montages } from '@/lib/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { revalidatePath } from 'next/cache';
