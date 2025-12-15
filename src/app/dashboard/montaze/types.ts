@@ -18,6 +18,7 @@ export type MontageAttachment = {
 export type MontageNote = {
 	id: string;
 	content: string;
+	isInternal: boolean;
 	createdAt: TimestampValue;
 	author: {
 		id: string;
