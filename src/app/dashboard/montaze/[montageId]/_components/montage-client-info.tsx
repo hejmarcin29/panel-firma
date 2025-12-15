@@ -21,6 +21,13 @@ export function MontageClientInfo({ montageId, initialContent }: MontageClientIn
     const isMounted = useRef(false);
     const lastSavedContent = useRef(initialContent || "");
 
+    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setContent(e.target.value);
+        if (e.target.value !== lastSavedContent.current) {
+            setStatus('saving');
+        }
+    };
+
     useEffect(() => {
         if (!isMounted.current) {
             isMounted.current = true;
@@ -31,7 +38,6 @@ export function MontageClientInfo({ montageId, initialContent }: MontageClientIn
             return;
         }
 
-        setStatus('saving');
         const timer = setTimeout(async () => {
             try {
                 await updateMontageClientInfo(montageId, content);
@@ -73,7 +79,7 @@ export function MontageClientInfo({ montageId, initialContent }: MontageClientIn
                 </div>
                 <Textarea 
                     value={content} 
-                    onChange={(e) => setContent(e.target.value)} 
+                    onChange={handleChange} 
                     className="min-h-[100px] resize-y"
                     placeholder="Wpisz informacje od klienta..."
                 />

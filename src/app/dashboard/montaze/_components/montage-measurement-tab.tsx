@@ -53,7 +53,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
   const [isSketchOpen, setIsSketchOpen] = useState(false);
   const [sketchDataUrl, setSketchDataUrl] = useState<string | null>(montage.sketchUrl || null);
   
-  const [measurementDetails, setMeasurementDetails] = useState(montage.measurementDetails || '');
+  const [measurementDetails] = useState(montage.measurementDetails || '');
   const [floorArea, setFloorArea] = useState<string>(montage.floorArea?.toString() || '');
   // floorDetails repurposed as Panel Additional Materials
   const [panelAdditionalMaterials, setPanelAdditionalMaterials] = useState(montage.floorDetails || '');
