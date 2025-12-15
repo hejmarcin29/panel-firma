@@ -14,10 +14,12 @@ function isImage(url: string) {
   return /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
 }
 
-export function MontageGalleryTab({ montage }: { montage: Montage }) {
+export function MontageGalleryTab({ montage, userRoles = [] }: { montage: Montage, userRoles?: string[] }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isInstaller = userRoles.includes('installer') && !userRoles.includes('admin');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -67,6 +69,7 @@ export function MontageGalleryTab({ montage }: { montage: Montage }) {
                     className="hidden"
                     onChange={handleFileChange}
                     multiple
+                    accept={isInstaller ? "image/*" : undefined}
                 />
                 <Button 
                     onClick={() => fileInputRef.current?.click()} 
@@ -78,36 +81,38 @@ export function MontageGalleryTab({ montage }: { montage: Montage }) {
             </div>
         </div>
 
-        <div className="space-y-4">
-            <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Dokumenty</h4>
-            {documents.length === 0 ? (
-                <div className="text-sm text-muted-foreground italic">Brak dokumentów</div>
-            ) : (
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                    {documents.map((attachment) => {
-                        if (!attachment) return null;
-                        return (
-                            <Card key={attachment.id} className="overflow-hidden group relative aspect-[0.75]">
-                                <div className="flex h-full w-full flex-col items-center justify-center bg-muted p-4 text-center hover:bg-muted/80 transition-colors">
-                                    <FileIcon className="mb-3 h-10 w-10 text-muted-foreground" />
-                                    <p className="line-clamp-2 text-xs font-medium">
-                                        {attachment.title || "Dokument"}
-                                    </p>
-                                    <a 
-                                        href={attachment.url} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="absolute inset-0"
-                                    >
-                                        <span className="sr-only">Otwórz</span>
-                                    </a>
-                                </div>
-                            </Card>
-                        );
-                    })}
-                </div>
-            )}
-        </div>
+        {!isInstaller && (
+            <div className="space-y-4">
+                <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Dokumenty</h4>
+                {documents.length === 0 ? (
+                    <div className="text-sm text-muted-foreground italic">Brak dokumentów</div>
+                ) : (
+                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                        {documents.map((attachment) => {
+                            if (!attachment) return null;
+                            return (
+                                <Card key={attachment.id} className="overflow-hidden group relative aspect-[0.75]">
+                                    <div className="flex h-full w-full flex-col items-center justify-center bg-muted p-4 text-center hover:bg-muted/80 transition-colors">
+                                        <FileIcon className="mb-3 h-10 w-10 text-muted-foreground" />
+                                        <p className="line-clamp-2 text-xs font-medium">
+                                            {attachment.title || "Dokument"}
+                                        </p>
+                                        <a 
+                                            href={attachment.url} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="absolute inset-0"
+                                        >
+                                            <span className="sr-only">Otwórz</span>
+                                        </a>
+                                    </div>
+                                </Card>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+        )}
 
         <div className="space-y-4">
             <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Zdjęcia</h4>

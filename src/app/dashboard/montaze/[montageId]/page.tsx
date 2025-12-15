@@ -153,6 +153,8 @@ export default async function MontageDetailsPage({ params, searchParams }: Monta
         );
     }
 
+    const isInstaller = user.roles.includes('installer') && !user.roles.includes('admin');
+
     return (
         <div className="flex min-h-screen flex-col bg-muted/10">
             <MontageDetailsLayout 
@@ -181,13 +183,13 @@ export default async function MontageDetailsPage({ params, searchParams }: Monta
                 defaultTab={activeTab}
                 tabs={{
                     notes: <MontageNotesTab montage={montage} />,
-                    history: <MontageHistoryTab montage={montage} logs={logs} />,
+                    history: !isInstaller ? <MontageHistoryTab montage={montage} logs={logs} /> : undefined,
                     workflow: <MontageWorkflowTab montage={montage} statusOptions={statusOptions} installers={installers} measurers={measurers} />,
-                    measurement: <MontageMeasurementTab montage={montage} />,
+                    measurement: <MontageMeasurementTab montage={montage} userRoles={user.roles} />,
                     technical: <MontageTechnicalTab montage={montage} userRoles={user.roles} />,
-                    quotes: <MontageQuotes montageId={montage.id} quotes={montage.quotes} />,
+                    quotes: !isInstaller ? <MontageQuotes montageId={montage.id} quotes={montage.quotes} /> : undefined,
                     tasks: <MontageTasksTab montage={montage} />,
-                    gallery: <MontageGalleryTab montage={montage} />,
+                    gallery: <MontageGalleryTab montage={montage} userRoles={user.roles} />,
                 }}
             />
         </div>

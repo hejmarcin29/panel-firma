@@ -37,6 +37,7 @@ export function MontageTechnicalTab({ montage, userRoles }: MontageTechnicalTabP
         montageId={montage.id} 
         initialData={materialLog}
         role={role}
+        readOnly={role === 'installer'}
       />
     </div>
   );

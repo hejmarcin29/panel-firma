@@ -1,37 +1,57 @@
 "use client";
 
-import { Send, Paperclip, User } from "lucide-react";
-import { useTransition, useRef } from "react";
+import { Send, Paperclip, User, Lock } from "lucide-react";
+import { useTransition, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { addMontageNote } from "../../actions";
 import type { Montage } from "../../types";
+import { type UserRole } from '@/lib/db/schema';
+import { cn } from "@/lib/utils";
 
-export function MontageNotesTab({ montage }: { montage: Montage }) {
+export function MontageNotesTab({ montage, userRoles = ['admin'] }: { montage: Montage; userRoles?: UserRole[] }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
+  const [isInternal, setIsInternal] = useState(false);
+
+  const isAdmin = userRoles.includes('admin');
+  const isInstaller = userRoles.includes('installer') && !isAdmin;
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     if (!formData.get("content")) return;
+    
+    if (isInternal) {
+        formData.append('isInternal', 'true');
+    }
 
     startTransition(async () => {
       await addMontageNote(formData);
       formRef.current?.reset();
+      setIsInternal(false);
       router.refresh();
     });
   };
 
-  const notes = [...montage.notes].sort((a, b) => {
-    const dateA = new Date(a.createdAt || 0).getTime();
-    const dateB = new Date(b.createdAt || 0).getTime();
-    return dateB - dateA;
-  });
+  const notes = [...montage.notes]
+    .filter(note => {
+        if (isInstaller) {
+            return !note.isInternal;
+        }
+        return true;
+    })
+    .sort((a, b) => {
+        const dateA = new Date(a.createdAt || 0).getTime();
+        const dateB = new Date(b.createdAt || 0).getTime();
+        return dateB - dateA;
+    });
 
   return (
     <div className="flex flex-col h-[600px] py-4">
@@ -54,8 +74,17 @@ export function MontageNotesTab({ montage }: { montage: Montage }) {
                     <span className="text-xs text-muted-foreground">
                     {note.createdAt ? new Date(note.createdAt).toLocaleString() : ""}
                     </span>
+                    {note.isInternal && (
+                        <span className="flex items-center gap-1 text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full border border-amber-200">
+                            <Lock className="h-3 w-3" />
+                            Ukryta
+                        </span>
+                    )}
                 </div>
-                <div className="rounded-lg bg-muted p-3 text-sm whitespace-pre-wrap">
+                <div className={cn(
+                    "rounded-lg p-3 text-sm whitespace-pre-wrap",
+                    note.isInternal ? "bg-amber-50 border border-amber-100" : "bg-muted"
+                )}>
                     {note.content}
                 </div>
                 {note.attachments.length > 0 && (
@@ -79,42 +108,59 @@ export function MontageNotesTab({ montage }: { montage: Montage }) {
         ))}
       </div>
 
-      <form ref={formRef} onSubmit={handleSubmit} className="flex gap-2 items-end border-t pt-4">
+      <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-2 border-t pt-4">
         <input type="hidden" name="montageId" value={montage.id} />
-        <div className="flex-1 relative">
-            <Textarea
-            name="content"
-            placeholder="Napisz notatkę..."
-            className="min-h-20 resize-none pr-12"
-            disabled={pending}
-            onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    formRef.current?.requestSubmit();
-                }
-            }}
-            />
-            <div className="absolute bottom-2 right-2">
-                 <Button 
-                    type="button" 
-                    size="icon" 
-                    variant="ghost" 
-                    className="h-8 w-8"
-                    onClick={() => document.getElementById('note-attachment')?.click()}
-                >
-                    <Paperclip className="h-4 w-4" />
-                 </Button>
-                 <input 
-                    type="file" 
-                    id="note-attachment" 
-                    name="attachment" 
-                    className="hidden" 
-                 />
+        
+        <div className="flex gap-2 items-end">
+            <div className="flex-1 relative">
+                <Textarea
+                name="content"
+                placeholder="Napisz notatkę..."
+                className="min-h-20 resize-none pr-12"
+                disabled={pending}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        formRef.current?.requestSubmit();
+                    }
+                }}
+                />
+                <div className="absolute bottom-2 right-2">
+                    <Button 
+                        type="button" 
+                        size="icon" 
+                        variant="ghost" 
+                        className="h-8 w-8"
+                        onClick={() => document.getElementById('note-attachment')?.click()}
+                    >
+                        <Paperclip className="h-4 w-4" />
+                    </Button>
+                    <input 
+                        type="file" 
+                        id="note-attachment" 
+                        name="attachment" 
+                        className="hidden" 
+                    />
+                </div>
             </div>
+            <Button type="submit" disabled={pending}>
+            <Send className="h-4 w-4" />
+            </Button>
         </div>
-        <Button type="submit" disabled={pending}>
-          <Send className="h-4 w-4" />
-        </Button>
+        
+        {isAdmin && (
+            <div className="flex items-center space-x-2">
+                <Checkbox 
+                    id="internal-note" 
+                    checked={isInternal} 
+                    onCheckedChange={(checked) => setIsInternal(checked as boolean)} 
+                />
+                <Label htmlFor="internal-note" className="text-sm text-muted-foreground flex items-center gap-1 cursor-pointer">
+                    <Lock className="h-3 w-3" />
+                    Notatka ukryta (tylko dla biura)
+                </Label>
+            </div>
+        )}
       </form>
     </div>
   );

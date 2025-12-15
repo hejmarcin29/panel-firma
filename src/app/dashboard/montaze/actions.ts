@@ -726,11 +726,13 @@ export async function addMontageNote(formData: FormData) {
 const montageIdRaw = formData.get('montageId');
 const contentRaw = formData.get('content');
 const attachmentTitleRaw = formData.get('attachmentTitle');
+const isInternalRaw = formData.get('isInternal');
 const fileField = formData.get('attachment');
 
 const montageId = typeof montageIdRaw === 'string' ? montageIdRaw.trim() : '';
 const content = typeof contentRaw === 'string' ? contentRaw.trim() : '';
 const attachmentTitle = typeof attachmentTitleRaw === 'string' ? attachmentTitleRaw.trim() : '';
+const isInternal = isInternalRaw === 'true';
 
 if (!montageId) {
 	throw new Error('Brakuje identyfikatora montaży.');
@@ -749,6 +751,7 @@ await db.insert(montageNotes).values({
 	id: noteId,
 	montageId: montageRecord.id,
 	content,
+    isInternal,
 	createdBy: user.id,
 	createdAt: now,
 });

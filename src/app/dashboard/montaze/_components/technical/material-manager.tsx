@@ -33,9 +33,10 @@ interface MaterialManagerProps {
   montageId: string;
   initialData: MaterialLogData | null;
   role: 'admin' | 'installer' | 'measurer';
+  readOnly?: boolean;
 }
 
-export function MaterialManager({ montageId, initialData, role }: MaterialManagerProps) {
+export function MaterialManager({ montageId, initialData, role, readOnly = false }: MaterialManagerProps) {
   const [isPending, startTransition] = useTransition();
   
   const defaultValues: MaterialLogData = initialData || {
@@ -112,7 +113,7 @@ export function MaterialManager({ montageId, initialData, role }: MaterialManage
                         <Switch 
                             checked={data.subfloorAccepted} 
                             onCheckedChange={handleAcceptSubfloor}
-                            disabled={!isInstaller && !isAdmin}
+                            disabled={(!isInstaller && !isAdmin) || readOnly}
                         />
                     </div>
                     <p className="text-sm text-muted-foreground">
@@ -187,7 +188,7 @@ export function MaterialManager({ montageId, initialData, role }: MaterialManage
                                     type="number" 
                                     value={item.consumed} 
                                     onChange={(e) => updateItem(item.id, 'consumed', parseFloat(e.target.value))}
-                                    disabled={!isInstaller && !isAdmin}
+                                    disabled={(!isInstaller && !isAdmin) || readOnly}
                                     className={item.consumed > item.issued ? 'border-red-500' : ''}
                                 />
                             </TableCell>
@@ -228,15 +229,18 @@ export function MaterialManager({ montageId, initialData, role }: MaterialManage
                 value={data.notes} 
                 onChange={(e) => setData(prev => ({ ...prev, notes: e.target.value }))}
                 placeholder="Uwagi o zużyciu, dodatkowych pracach itp."
+                disabled={readOnly}
             />
         </div>
 
-        <div className="flex justify-end">
-            <Button onClick={handleSave} disabled={isPending}>
-                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Zapisz Zmiany
-            </Button>
-        </div>
+        {!readOnly && (
+            <div className="flex justify-end">
+                <Button onClick={handleSave} disabled={isPending}>
+                    {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Zapisz Zmiany
+                </Button>
+            </div>
+        )}
       </CardContent>
     </Card>
   );

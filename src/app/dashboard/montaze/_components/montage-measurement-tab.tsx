@@ -40,12 +40,16 @@ import { ProductSelectorModal } from './product-selector-modal';
 
 interface MontageMeasurementTabProps {
   montage: Montage;
+  userRoles?: string[];
 }
 
-export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
+export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasurementTabProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   
+  const isInstaller = userRoles.includes('installer') && !userRoles.includes('admin') && !userRoles.includes('measurer');
+  const isReadOnly = isInstaller;
+
   const [isSketchOpen, setIsSketchOpen] = useState(false);
   const [sketchDataUrl, setSketchDataUrl] = useState<string | null>(montage.sketchUrl || null);
   
@@ -150,17 +154,19 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
         return;
     }
 
+    if (isReadOnly) return;
+
     const timer = setTimeout(() => {
       saveData();
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [saveData]);
+  }, [saveData, isReadOnly]);
 
   const [newTaskTitle, setNewTaskTitle] = useState('');
 
   const handleAddTask = async () => {
-      if (!newTaskTitle.trim()) return;
+      if (!newTaskTitle.trim() || isReadOnly) return;
       startTransition(async () => {
           try {
               await addMontageTask({
@@ -311,11 +317,12 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
                     placeholder="0.00"
                     value={floorArea}
                     onChange={(e) => setFloorArea(e.target.value)}
+                    disabled={isReadOnly}
                     />
                 </div>
                 <div className="space-y-1">
                     <Label htmlFor="panelWaste" className="text-xs text-muted-foreground">Zapas (%)</Label>
-                    <Select value={panelWaste} onValueChange={setPanelWaste}>
+                    <Select value={panelWaste} onValueChange={setPanelWaste} disabled={isReadOnly}>
                         <SelectTrigger id="panelWaste">
                             <SelectValue placeholder="Zapas" />
                         </SelectTrigger>
@@ -339,8 +346,9 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
                             placeholder="Kliknij aby wybrać z listy..."
                             value={panelModel}
                             readOnly
-                            onClick={() => setIsPanelSelectorOpen(true)}
+                            onClick={() => !isReadOnly && setIsPanelSelectorOpen(true)}
                             className="h-8 text-sm flex-1 cursor-pointer bg-muted/50"
+                            disabled={isReadOnly}
                         />
                         <Button 
                             type="button" 
@@ -348,6 +356,7 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
                             size="sm" 
                             className="h-8 px-2"
                             onClick={() => setIsPanelSelectorOpen(true)}
+                            disabled={isReadOnly}
                         >
                             Wybierz
                         </Button>
@@ -359,6 +368,7 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
                     id="panelAdditionalMaterials"
                     placeholder="np. podkład 5mm, folia paroizolacyjna"
                     value={panelAdditionalMaterials}
+                    disabled={isReadOnly}
                     onChange={(e) => setPanelAdditionalMaterials(e.target.value)}
                     className="h-8 text-sm"
                     />
@@ -388,11 +398,12 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
                     step="0.01"
                     placeholder="0.00"
                     value={skirtingLength}
+                    disabled={isReadOnly}
                     onChange={(e) => setSkirtingLength(e.target.value)}
                     />
                 </div>
                 <div className="space-y-1">
-                    <Label htmlFor="skirtingWaste" className="text-xs text-muted-foreground">Zapas (%)</Label>
+                    <Label htmlFor="skirtingWaste" className="text-xs text-muted-f disabled={isReadOnly}oreground">Zapas (%)</Label>
                     <Select value={skirtingWaste} onValueChange={setSkirtingWaste}>
                         <SelectTrigger id="skirtingWaste">
                             <SelectValue placeholder="Zapas" />
@@ -416,15 +427,17 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
                             id="skirtingModel"
                             placeholder="Kliknij aby wybrać z listy..."
                             value={skirtingModel}
-                            readOnly
-                            onClick={() => setIsSkirtingSelectorOpen(true)}
+                            readOnly!isReadOnly && setIsSkirtingSelectorOpen(true)}
                             className="h-8 text-sm flex-1 cursor-pointer bg-muted/50"
+                            disabled={isReadOnly}
                         />
                         <Button 
                             type="button" 
                             variant="outline" 
                             size="sm" 
                             className="h-8 px-2"
+                            onClick={() => setIsSkirtingSelectorOpen(true)}
+                            disabled={isReadOnly
                             onClick={() => setIsSkirtingSelectorOpen(true)}
                         >
                             Wybierz
@@ -437,6 +450,7 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
                     id="skirtingAdditionalMaterials"
                     placeholder="np. klej montażowy, narożniki wew."
                     value={skirtingAdditionalMaterials}
+                    disabled={isReadOnly}
                     onChange={(e) => setSkirtingAdditionalMaterials(e.target.value)}
                     className="h-8 text-sm"
                     />
@@ -452,6 +466,7 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
             
             <div className="pt-2 border-t flex items-center space-x-2">
                 <Checkbox 
+                    disabled={isReadOnly}
                     id="separateSkirting" 
                     checked={separateSkirting} 
                     onCheckedChange={(checked) => setSeparateSkirting(checked as boolean)} 
@@ -462,7 +477,7 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
         </div>
 
         {/* Technical Details */}
-        <div className="grid gap-6 md:grid-cols-2 p-4 border rounded-lg bg-muted/5">
+        <div className="grid gap-6 md:grid-cols-2 p-4 border rounded-lg bg-muted/5"> disabled={isReadOnly}
             <div className="space-y-4">
                 <div className="space-y-2">
                     <Label>Sposób montażu</Label>
@@ -476,7 +491,7 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
                             <Label htmlFor="method-glue">Klejona</Label>
                         </div>
                     </RadioGroup>
-                </div>
+                </div> disabled={isReadOnly}
 
                 <div className="space-y-2">
                     <Label>Stan podłoża</Label>
@@ -502,6 +517,7 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
                     </Label>
                     <Switch
                         id="additionalWork"
+                        disabled={isReadOnly}
                         checked={additionalWorkNeeded}
                         onCheckedChange={setAdditionalWorkNeeded}
                     />
@@ -513,6 +529,7 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
                         <Textarea
                             id="additionalWorkDesc"
                             placeholder="Opisz co trzeba zrobić (np. szlifowanie, gruntowanie, wylewka...)"
+                            disabled={isReadOnly}
                             value={additionalWorkDescription}
                             onChange={(e) => setAdditionalWorkDescription(e.target.value)}
                             className="h-20"
@@ -525,6 +542,7 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
         <div className="border rounded-lg p-4 space-y-4 bg-muted/10">
             <div className="flex items-center space-x-2 pt-2">
               <Checkbox 
+                disabled={isReadOnly}
                 id="modelsApproved" 
                 checked={modelsApproved} 
                 onCheckedChange={(checked) => setModelsApproved(checked as boolean)} 
@@ -540,6 +558,7 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
                 <PopoverTrigger asChild>
                   <Button
                     variant={"outline"}
+                    disabled={isReadOnly}
                     className={cn(
                       "w-full justify-start text-left font-normal",
                       !dateRange?.from && "text-muted-foreground"
@@ -583,6 +602,7 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
         <div className="space-y-2">
           <Label htmlFor="additionalInfo">Uwagi z pomiaru</Label>
           <Textarea
+            disabled={isReadOnly}
             id="additionalInfo"
             placeholder="Inne uwagi, ustalenia z klientem..."
             value={additionalInfo}
@@ -604,6 +624,7 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
                                     await toggleMontageTask({
                                         taskId: task.id,
                                         montageId: montage.id,
+                            disabled={isReadOnly}
                                         completed: !!checked
                                     });
                                     router.refresh();
@@ -615,29 +636,35 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
                         </span>
                     </div>
                 ))}
-                {measurementTasks.length === 0 && (
-                    <p className="text-sm text-muted-foreground italic">Brak zadań z pomiaru.</p>
-                )}
-            </div>
-
-            <div className="flex gap-2">
-                <Input 
-                    placeholder="Dodaj nowe zadanie..." 
-                    value={newTaskTitle}
-                    onChange={(e) => setNewTaskTitle(e.target.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleAddTask();
+                {!isReadOnly && (
+                    <>
+                        <Input 
+                            placeholder="Dodaj nowe zadanie..." 
+                            value={newTaskTitle}
+                            onChange={(e) => setNewTaskTitle(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    handleAddTask();
+                                }
+                            }}
+                        />
+                        <Button type="button" onClick={handleAddTask} disabled={!newTaskTitle.trim() || isPending} size="icon">
+                            <Plus className="h-4 w-4" />
+                        </Button>
+                    </>
+                )}   handleAddTask();
                         }
                     }}
                 />
-                <Button type="button" onClick={handleAddTask} disabled={!newTaskTitle.trim() || isPending} size="icon">
-                    <Plus className="h-4 w-4" />
-                </Button>
-            </div>
-        </div>
-
+              {!isReadOnly && (
+                <DialogTrigger asChild>
+                    <Button variant="outline" size="sm">
+                    <Pencil className="mr-2 h-4 w-4" />
+                    {sketchDataUrl ? 'Edytuj szkic' : 'Rysuj'}
+                    </Button>
+                </DialogTrigger>
+              )}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label>Szkic sytuacyjny</Label>

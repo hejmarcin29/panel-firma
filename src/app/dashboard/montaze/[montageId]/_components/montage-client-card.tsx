@@ -561,6 +561,7 @@ export function MontageClientCard({
             </div>
         </div>
 
+        {(!userRoles.includes('installer') || userRoles.includes('admin')) && (
         <div className="flex items-center gap-3">
             <User className="h-4 w-4 text-muted-foreground" />
             <div className="grid gap-1 w-full">
@@ -589,6 +590,7 @@ export function MontageClientCard({
                 )}
             </div>
         </div>
+        )}
 
         {montage.floorArea && (
             <div className="flex items-center gap-3">
