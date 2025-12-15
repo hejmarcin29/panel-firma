@@ -27,6 +27,7 @@ import { MontageHistoryTab } from './_components/montage-history-tab';
 import { MontageMeasurementTab } from '../_components/montage-measurement-tab';
 import { MontageTechnicalTab } from './_components/montage-technical-tab';
 import { MontageQuotes } from './_components/montage-quotes';
+import { MontageClientInfo } from './_components/montage-client-info';
 
 import { MontageDetailsLayout } from './_components/montage-details-layout';
 import { ConvertLeadButton } from './_components/convert-lead-button';
@@ -174,16 +175,7 @@ export default async function MontageDetailsPage({ params, searchParams }: Monta
                         )}
 
                         {/* Client Requirements (Lead) */}
-                        {montage.materialDetails && (
-                            <div className="rounded-xl border bg-card text-card-foreground shadow-sm">
-                                <div className="p-6 pt-6">
-                                    <h3 className="font-semibold leading-none tracking-tight mb-4">Info od klienta</h3>
-                                    <div className="text-sm text-muted-foreground whitespace-pre-wrap">
-                                        {montage.materialDetails}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                        <MontageClientInfo montageId={montage.id} initialContent={montage.materialDetails} />
                     </div>
                 }
                 defaultTab={activeTab}

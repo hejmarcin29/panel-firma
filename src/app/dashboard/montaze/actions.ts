@@ -946,6 +946,17 @@ export async function updateMontageMaterialDetails({
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
 
+export async function updateMontageClientInfo(montageId: string, clientInfo: string) {
+    await requireUser();
+    await db.update(montages)
+        .set({ 
+            materialDetails: clientInfo,
+            updatedAt: new Date() 
+        })
+        .where(eq(montages.id, montageId));
+    revalidatePath(MONTAGE_DASHBOARD_PATH);
+}
+
 export async function uploadChecklistAttachment(formData: FormData) {
 	const user = await requireUser();
 
