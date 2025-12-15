@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, Phone, Mail, Calendar as CalendarIcon, Edit2, Ruler, Loader2, Check, Hammer, User } from "lucide-react";
+import { MapPin, Phone, Mail, Calendar as CalendarIcon, Edit2, Ruler, Loader2, Check, Hammer, User, Megaphone } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
@@ -28,6 +28,14 @@ import {
 } from "@/components/ui/dialog";
 import { updateMontageContactDetails, updateMontageRealizationStatus } from "../../actions";
 import type { Montage } from "../../types";
+import { customerSources } from "@/lib/db/schema";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { type UserRole } from '@/lib/db/schema';
 import {
   Select,
@@ -37,7 +45,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { formatScheduleRange } from "../../utils";
+import { customerSources } from '@/lib/db/schema';
 
 export function MontageClientCard({ 
     montage, 
@@ -74,6 +82,10 @@ export function MontageClientCard({
     scheduledSkirtingInstallationEndAt: montage.scheduledSkirtingInstallationEndAt 
       ? new Date(montage.scheduledSkirtingInstallationEndAt as string | number | Date).toISOString().split("T")[0] 
       : "",
+    source: montage.customer?.source || "other",
+    forecastedInstallationDate: montage.forecastedInstallationDate
+      ? new Date(montage.forecastedInstallationDate as string | number | Date).toISOString().split("T")[0]
+      : "",
   });
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -103,6 +115,10 @@ export function MontageClientCard({
           : "",
         scheduledSkirtingInstallationAt: montage.scheduledSkirtingInstallationAt 
           ? new Date(montage.scheduledSkirtingInstallationAt as string | number | Date).toISOString().split("T")[0] 
+        source: montage.customer?.source || "other",
+        forecastedInstallationDate: montage.forecastedInstallationDate
+          ? new Date(montage.forecastedInstallationDate as string | number | Date).toISOString().split("T")[0]
+          : "",
           : "",
         scheduledSkirtingInstallationEndAt: montage.scheduledSkirtingInstallationEndAt 
           ? new Date(montage.scheduledSkirtingInstallationEndAt as string | number | Date).toISOString().split("T")[0] 
@@ -131,6 +147,8 @@ export function MontageClientCard({
         installationAddress: data.installationAddress,
         billingCity: montage.billingCity || "", // Preserve existing
         installationCity: data.installationCity,
+        source: data.source,
+        forecastedInstallationDate: data.forecastedInstallationDate,
         scheduledInstallationDate: data.scheduledInstallationAt,
         scheduledInstallationEndDate: data.scheduledInstallationEndAt,
         scheduledSkirtingInstallationDate: data.scheduledSkirtingInstallationAt,
@@ -271,6 +289,40 @@ export function MontageClientCard({
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="source">Źródło leada</Label>
+                <Select 
+                    value={formData.source} 
+                    onValueChange={(value) => handleChange("source", value)}
+                >
+                    <SelectTrigger id="source">
+                        <SelectValue placeholder="Wybierz źródło" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {customerSources.map((source) => (
+                            <SelectItem key={source} value={source}>
+                                {source === 'internet' ? 'Internet' :
+                                 source === 'social_media' ? 'Social Media' :
+                                 source === 'recommendation' ? 'Polecenie' :
+                                 source === 'architect' ? 'Architekt' :
+                                 source === 'event' ? 'Wydarzenie' :
+                                 source === 'drive_by' ? 'Ruch uliczny' :
+                                 'Inne'}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="forecastedInstallationDate">Szacowany termin montażu</Label>
+                <Input
+                  id="forecastedInstallationDate"
+                  type="date"
+                  value={formData.forecastedInstallationDate}
+                  onChange={(e) => handleChange("forecastedInstallationDate", e.target.value)}
+                />
+              </div>
+              <Separator />
               <div className="space-y-2">
                 <Label htmlFor="contactPhone">Telefon</Label>
                 <Input
@@ -468,6 +520,22 @@ export function MontageClientCard({
              )}
           </div>
         </div>
+
+        {montage.customer?.source && (
+            <div className="flex items-center gap-3">
+                <Megaphone className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm">
+                    {montage.customer.source === 'internet' ? 'Internet' :
+                     montage.customer.source === 'social_media' ? 'Social Media' :
+                     montage.customer.source === 'recommendation' ? 'Polecenie' :
+                     montage.customer.source === 'architect' ? 'Architekt' :
+                     montage.customer.source === 'event' ? 'Wydarzenie' :
+                     montage.customer.source === 'drive_by' ? 'Ruch uliczny' :
+                     montage.customer.source === 'other' ? 'Inne' :
+                     montage.customer.source}
+                </span>
+            </div>
+        )}
 
         <div className="flex items-center gap-3">
             <CalendarIcon className="h-4 w-4 text-muted-foreground" />

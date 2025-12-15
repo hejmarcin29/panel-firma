@@ -109,6 +109,7 @@ export default async function MontageDetailsPage({ params, searchParams }: Monta
             installer: true,
             measurer: true,
             architect: true,
+            customer: true,
             quotes: {
                 orderBy: desc(quotes.createdAt),
             },

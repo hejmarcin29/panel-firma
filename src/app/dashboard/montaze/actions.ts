@@ -565,6 +565,8 @@ type UpdateMontageContactDetailsInput = {
 	billingCity?: string;
 	installationAddress?: string;
 	installationCity?: string;
+    source?: string;
+    forecastedInstallationDate?: string;
 };
 
 export async function updateMontageContactDetails({
@@ -580,6 +582,8 @@ export async function updateMontageContactDetails({
 	billingCity,
 	installationAddress,
 	installationCity,
+    source,
+    forecastedInstallationDate,
 }: UpdateMontageContactDetailsInput) {
 	await requireUser();
 
@@ -640,6 +644,15 @@ export async function updateMontageContactDetails({
         scheduledSkirtingInstallationEndAt = parsed;
     }
 
+    let forecastedInstallationAt: Date | null = null;
+    if (forecastedInstallationDate && forecastedInstallationDate.trim()) {
+        const parsed = new Date(`${forecastedInstallationDate}T00:00:00`);
+        if (Number.isNaN(parsed.getTime())) {
+            throw new Error('Podaj prawidłową szacowaną datę montażu.');
+        }
+        forecastedInstallationAt = parsed;
+    }
+
 	const fallbackAddress = normalizedInstallationAddress ?? normalizedBillingAddress;
 	const fallbackCity = normalizedInstallationCity ?? normalizedBillingCity;
 	const combinedAddress = [fallbackAddress, fallbackCity].filter(Boolean).join(', ') || null;
@@ -650,11 +663,24 @@ export async function updateMontageContactDetails({
 			clientName: trimmedName,
 			contactPhone: normalizedPhone,
 			contactEmail: normalizedEmail,
-			billingAddress: normalizedBillingAddress,
-			installationAddress: normalizedInstallationAddress,
-			billingCity: normalizedBillingCity,
-			installationCity: normalizedInstallationCity,
-			address: combinedAddress,
+            forecastedInstallationDate: forecastedInstallationAt,
+			updatedAt: new Date(),
+		})
+		.where(eq(montages.id, montageId));
+
+    // Update Customer Source if provided
+    if (source) {
+        const montage = await db.query.montages.findFirst({
+            where: (table, { eq }) => eq(table.id, montageId),
+            columns: { customerId: true }
+        });
+
+        if (montage?.customerId) {
+            await db.update(customers)
+                .set({ source: source as any, updatedAt: new Date() })
+                .where(eq(customers.id, montage.customerId));
+        }
+    },
 			scheduledInstallationAt,
 			scheduledInstallationEndAt,
             scheduledSkirtingInstallationAt,
@@ -1421,6 +1447,7 @@ export async function createExtendedLead(formData: FormData) {
     const floorArea = formData.get('floorArea') as string;
     const estimatedDate = formData.get('estimatedDate') as string;
     const notes = formData.get('notes') as string;
+    const source = formData.get('source') as string;
     const file = formData.get('file') as File;
 
     if (!clientName?.trim()) {
@@ -1451,7 +1478,7 @@ export async function createExtendedLead(formData: FormData) {
         shippingStreet: shippingStreet?.trim() || null,
         shippingCity: shippingCity?.trim() || null,
         shippingPostalCode: shippingPostalCode?.trim() || null,
-        source: architectId ? 'architect' : 'other',
+        source: source || (architectId ? 'architect' : 'other'),
         architectId: architectId,
         createdAt: now,
         updatedAt: now,

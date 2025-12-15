@@ -565,6 +565,10 @@ export const montagesRelations = relations(montages, ({ one, many }) => ({
 		references: [users.id],
 		relationName: 'montage_architect',
 	}),
+    customer: one(customers, {
+        fields: [montages.customerId],
+        references: [customers.id],
+    }),
     quotes: many(quotes),
 }));
 

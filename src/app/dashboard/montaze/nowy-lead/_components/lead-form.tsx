@@ -60,6 +60,7 @@ export function LeadForm({ assignedProducts }: LeadFormProps) {
         productId: '',
         floorArea: '',
         estimatedDate: undefined as Date | undefined,
+        source: '',
         notes: '',
     });
 
@@ -105,6 +106,9 @@ export function LeadForm({ assignedProducts }: LeadFormProps) {
         }
         if (formData.estimatedDate) {
             submitData.append('estimatedDate', formData.estimatedDate.toISOString());
+        }
+        if (formData.source) {
+            submitData.append('source', formData.source);
         }
         if (formData.notes) {
             submitData.append('notes', formData.notes);
@@ -305,6 +309,28 @@ export function LeadForm({ assignedProducts }: LeadFormProps) {
             <div className="space-y-4">
                 <h3 className="text-lg font-medium">Szczegóły Realizacji</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid gap-2">
+                        <Label htmlFor="source">Źródło leada</Label>
+                        <Select
+                            value={formData.source}
+                            onValueChange={(value) => setFormData({ ...formData, source: value })}
+                            disabled={isPending}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Wybierz źródło..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="internet">Internet</SelectItem>
+                                <SelectItem value="social_media">Social Media</SelectItem>
+                                <SelectItem value="recommendation">Polecenie</SelectItem>
+                                <SelectItem value="architect">Architekt</SelectItem>
+                                <SelectItem value="event">Wydarzenie</SelectItem>
+                                <SelectItem value="drive_by">Ruch uliczny</SelectItem>
+                                <SelectItem value="other">Inne</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
                     <div className="grid gap-2">
                         <Label htmlFor="product">Wybierz podłogę / materiał</Label>
                         <Select 

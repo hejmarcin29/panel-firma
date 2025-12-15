@@ -15,6 +15,7 @@ import {
     quotes,
 	type MontageStatus,
 	users,
+    customers,
 } from '@/lib/db/schema';
 
 function normalizeAttachmentUrl(rawUrl: string, publicBaseUrl: string | null): string {
@@ -71,6 +72,7 @@ export type MontageRow = typeof montages.$inferSelect & {
     installer?: typeof users.$inferSelect | null;
     measurer?: typeof users.$inferSelect | null;
     architect?: typeof users.$inferSelect | null;
+    customer?: typeof customers.$inferSelect | null;
 };
 
 function mapAttachment(
@@ -183,6 +185,7 @@ export function mapMontageRow(row: MontageRow, publicBaseUrl: string | null): Mo
         architectId: row.architectId,
         installer: row.installer ? { id: row.installer.id, name: row.installer.name, email: row.installer.email } : null,
         measurer: row.measurer ? { id: row.measurer.id, name: row.measurer.name, email: row.measurer.email } : null,
+        customer: row.customer ? { id: row.customer.id, source: row.customer.source } : null,
         architect: row.architect ? { id: row.architect.id, name: row.architect.name, email: row.architect.email } : null,
         technicalAudit: row.technicalAudit,
         materialLog: row.materialLog,
