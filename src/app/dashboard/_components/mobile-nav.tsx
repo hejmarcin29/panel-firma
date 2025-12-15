@@ -145,7 +145,7 @@ export function MobileNav({ user, urgentOrdersCount = 0, userRoles = ['admin'] }
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-100 w-full border-t bg-background/80 backdrop-blur-md supports-backdrop-filter:bg-background/60 md:hidden pb-[env(safe-area-inset-bottom)]">
+    <div className="fixed bottom-0 left-0 right-0 z-50 w-full border-t bg-background/95 backdrop-blur-xl md:hidden pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
       <nav className="flex h-16 items-center justify-around px-2">
         {displayedLinks.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || (href !== "/dashboard" && pathname?.startsWith(href));
