@@ -27,18 +27,18 @@ export function MontageDashboardView({ montages, statusOptions, headerAction, th
   return (
     <div className="flex flex-col gap-4 h-full pt-4 md:pt-0">
       <div className="flex flex-col gap-4 px-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
             <MontageViewTabs />
             <div className="w-px h-6 bg-border mx-2 shrink-0" />
             <Tabs value={view} onValueChange={(v) => setView(v as "board" | "list" | "calendar")} className="w-auto">
                 <TabsList>
                     <TabsTrigger value="board">
-                        <LayoutGrid className="mr-2 h-4 w-4" />
-                        Tablica
+                        <LayoutGrid className="h-4 w-4 md:mr-2" />
+                        <span className="hidden md:inline">Tablica</span>
                     </TabsTrigger>
                     <TabsTrigger value="list">
-                        <List className="mr-2 h-4 w-4" />
-                        Lista
+                        <List className="h-4 w-4 md:mr-2" />
+                        <span className="hidden md:inline">Lista</span>
                     </TabsTrigger>
                     <TabsTrigger value="calendar" disabled className="hidden sm:inline-flex">
                         <CalendarIcon className="mr-2 h-4 w-4" />

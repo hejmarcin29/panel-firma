@@ -198,7 +198,18 @@ export function MontagePipelineBoard({ montages, statusOptions, threatDays, aler
   );
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const statusNavRef = useRef<HTMLDivElement>(null);
   const [activeStatus, setActiveStatus] = useState<string>(statusOptions[0]?.value);
+
+  // Auto-scroll status nav when active status changes
+  useEffect(() => {
+    if (statusNavRef.current && activeStatus) {
+        const activeBtn = statusNavRef.current.querySelector(`[data-status-btn="${activeStatus}"]`);
+        if (activeBtn) {
+            activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+    }
+  }, [activeStatus]);
 
   const handleScroll = () => {
     const container = scrollContainerRef.current;
@@ -313,10 +324,15 @@ export function MontagePipelineBoard({ montages, statusOptions, threatDays, aler
       {error ? <p className="text-xs text-destructive">{error}</p> : null}
 
       {/* Mobile Status Nav */}
-      <div className="flex md:hidden overflow-x-auto gap-2 pb-2 px-4 scrollbar-hide snap-x">
+      <div 
+        ref={statusNavRef}
+        className="flex md:hidden overflow-x-auto gap-2 pb-2 px-4 scrollbar-hide snap-x"
+        style={{ scrollbarWidth: 'none' }}
+      >
         {statusOptions.map((status) => (
           <button
             key={status.value}
+            data-status-btn={status.value}
             onClick={() => scrollToColumn(status.value)}
             className={cn(
               "px-3 py-1.5 text-xs font-medium rounded-full whitespace-nowrap transition-all snap-start border",
