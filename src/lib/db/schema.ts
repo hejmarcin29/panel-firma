@@ -143,6 +143,11 @@ export const customers = pgTable(
 		shippingCountry: text('shipping_country'),
 		source: text('source').$type<CustomerSource>().default('other'),
 		architectId: text('architect_id').references(() => users.id, { onDelete: 'set null' }),
+        // Referral Program Fields
+        referralToken: text('referral_token').unique(),
+        referralCode: text('referral_code').unique(),
+        referralBalance: integer('referral_balance').default(0), // in grosz (100 = 1.00 PLN)
+        referredById: text('referred_by_id'), // Self-relation defined in relations
 		deletedAt: timestamp('deleted_at'),
 		createdAt: timestamp('created_at').notNull().defaultNow(),
 		updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -150,8 +155,89 @@ export const customers = pgTable(
 	(table) => ({
 		emailIdx: uniqueIndex('customers_email_idx').on(table.email),
 		taxIdx: uniqueIndex('customers_tax_id_idx').on(table.taxId),
+        referralTokenIdx: uniqueIndex('customers_referral_token_idx').on(table.referralToken),
+        referralCodeIdx: uniqueIndex('customers_referral_code_idx').on(table.referralCode),
 	})
 );
+
+export const customersRelations = relations(customers, ({ one, many }) => ({
+    referredBy: one(customers, {
+        fields: [customers.referredById],
+        references: [customers.id],
+        relationName: 'customer_referrals',
+    }),
+    referrals: many(customers, { relationName: 'customer_referrals' }),
+    payoutRequests: many(payoutRequests),
+    referralCommissions: many(referralCommissions),
+    orders: many(orders),
+    montages: many(montages),
+    architect: one(users, {
+        fields: [customers.architectId],
+        references: [users.id],
+    }),
+}));
+
+export const payoutRequests = pgTable(
+    'payout_requests',
+    {
+        id: text('id').primaryKey(),
+        customerId: text('customer_id')
+            .notNull()
+            .references(() => customers.id, { onDelete: 'cascade' }),
+        amount: integer('amount').notNull(), // in grosz
+        status: text('status').$type<'pending' | 'completed' | 'rejected'>().notNull().default('pending'),
+        rewardType: text('reward_type').notNull(), // 'allegro', 'ikea', etc.
+        note: text('note'), // Admin note (e.g. voucher code)
+        createdAt: timestamp('created_at').notNull().defaultNow(),
+        updatedAt: timestamp('updated_at').notNull().defaultNow(),
+        completedAt: timestamp('completed_at'),
+    },
+    (table) => ({
+        customerIdx: index('payout_requests_customer_id_idx').on(table.customerId),
+        statusIdx: index('payout_requests_status_idx').on(table.status),
+    })
+);
+
+export const payoutRequestsRelations = relations(payoutRequests, ({ one }) => ({
+    customer: one(customers, {
+        fields: [payoutRequests.customerId],
+        references: [customers.id],
+    }),
+}));
+
+export const referralCommissions = pgTable(
+    'referral_commissions',
+    {
+        id: text('id').primaryKey(),
+        montageId: text('montage_id')
+            .notNull()
+            .references(() => montages.id, { onDelete: 'cascade' }),
+        beneficiaryCustomerId: text('beneficiary_customer_id')
+            .notNull()
+            .references(() => customers.id, { onDelete: 'cascade' }),
+        amount: integer('amount').notNull(), // in grosz
+        floorArea: real('floor_area').notNull(),
+        ratePerSqm: integer('rate_per_sqm').notNull().default(1000), // 10.00 PLN
+        status: text('status').$type<'pending' | 'approved' | 'cancelled'>().notNull().default('pending'),
+        createdAt: timestamp('created_at').notNull().defaultNow(),
+        updatedAt: timestamp('updated_at').notNull().defaultNow(),
+    },
+    (table) => ({
+        montageIdx: index('referral_commissions_montage_id_idx').on(table.montageId),
+        beneficiaryIdx: index('referral_commissions_beneficiary_id_idx').on(table.beneficiaryCustomerId),
+    })
+);
+
+export const referralCommissionsRelations = relations(referralCommissions, ({ one }) => ({
+    montage: one(montages, {
+        fields: [referralCommissions.montageId],
+        references: [montages.id],
+    }),
+    beneficiary: one(customers, {
+        fields: [referralCommissions.beneficiaryCustomerId],
+        references: [customers.id],
+    }),
+}));
 
 export const orders = pgTable(
 	'orders',
@@ -992,14 +1078,6 @@ export const products = pgTable('products', {
 	updatedAt: timestamp('updated_at').notNull().defaultNow(),
 	syncedAt: timestamp('synced_at').notNull().defaultNow(),
 });
-
-export const customersRelations = relations(customers, ({ many, one }) => ({
-	orders: many(orders),
-	architect: one(users, {
-		fields: [customers.architectId],
-		references: [users.id],
-	}),
-}));
 
 export const ordersRelations = relations(orders, ({ one, many }) => ({
 	customer: one(customers, {

@@ -16,6 +16,7 @@ import {
 	customers,
 	users,
     commissions,
+    referralCommissions,
     type CustomerSource,
 } from '@/lib/db/schema';
 import { uploadMontageObject } from '@/lib/r2/storage';
@@ -25,6 +26,7 @@ import { logSystemEvent } from '@/lib/logging';
 import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
 import type { MaterialsEditHistoryEntry } from './types';
 import { createGoogleCalendarEvent, updateGoogleCalendarEvent, deleteGoogleCalendarEvent } from '@/lib/google/calendar';
+import { generateReferralCode, generateReferralToken } from '@/lib/referrals';
 
 const MONTAGE_DASHBOARD_PATH = '/dashboard/montaze';
 const MAX_ATTACHMENT_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
@@ -332,6 +334,8 @@ export async function createMontage({
 				id: crypto.randomUUID(),
 				...customerData,
 				createdAt: now,
+                referralCode: generateReferralCode(),
+                referralToken: generateReferralToken(),
 			});
 		}
 	}
@@ -508,37 +512,83 @@ export async function updateMontageStatus({ montageId, status }: UpdateMontageSt
 		.where(eq(montages.id, montageId));
 
     if (resolved === 'completed') {
-        const montageWithArchitect = await db.query.montages.findFirst({
+        const montageWithRelations = await db.query.montages.findFirst({
             where: eq(montages.id, montageId),
             with: {
                 architect: true,
+                customer: true,
             }
         });
 
-        if (montageWithArchitect && montageWithArchitect.architectId && montageWithArchitect.architect && montageWithArchitect.architect.architectProfile?.commissionRate) {
-            const existingCommission = await db.query.commissions.findFirst({
-                where: eq(commissions.montageId, montageId),
-            });
+        if (montageWithRelations) {
+            // Priority 1: Architect Commission
+            if (montageWithRelations.architectId && montageWithRelations.architect && montageWithRelations.architect.architectProfile?.commissionRate) {
+                const existingCommission = await db.query.commissions.findFirst({
+                    where: eq(commissions.montageId, montageId),
+                });
 
-            if (!existingCommission) {
-                const rate = montageWithArchitect.architect.architectProfile.commissionRate;
-                const area = montageWithArchitect.floorArea || 0;
-                const amount = Math.round(area * rate * 100); // in grosze
+                if (!existingCommission) {
+                    const rate = montageWithRelations.architect.architectProfile.commissionRate;
+                    const area = montageWithRelations.floorArea || 0;
+                    const amount = Math.round(area * rate * 100); // in grosze
 
-                if (amount > 0) {
-                    await db.insert(commissions).values({
-                        id: crypto.randomUUID(),
-                        architectId: montageWithArchitect.architectId,
-                        montageId: montageId,
-                        amount,
-                        rate,
-                        area,
-                        status: 'pending',
-                        createdAt: new Date(),
-                        updatedAt: new Date(),
-                    });
-                    
-                    await logSystemEvent('create_commission', `Utworzono prowizję dla architekta ${montageWithArchitect.architect.name} za montaż ${montageWithArchitect.clientName}`, user.id);
+                    if (amount > 0) {
+                        await db.insert(commissions).values({
+                            id: crypto.randomUUID(),
+                            architectId: montageWithRelations.architectId,
+                            montageId: montageId,
+                            amount,
+                            rate,
+                            area,
+                            status: 'pending',
+                            createdAt: new Date(),
+                            updatedAt: new Date(),
+                        });
+                        
+                        await logSystemEvent('create_commission', `Utworzono prowizję dla architekta ${montageWithRelations.architect.name} za montaż ${montageWithRelations.clientName}`, user.id);
+                    }
+                }
+            } 
+            // Priority 2: Referral Commission (only if no architect)
+            else if (montageWithRelations.customer?.referredById) {
+                const referrerId = montageWithRelations.customer.referredById;
+                const existingReferralCommission = await db.query.referralCommissions.findFirst({
+                    where: eq(referralCommissions.montageId, montageId)
+                });
+
+                if (!existingReferralCommission) {
+                    const area = montageWithRelations.floorArea || 0;
+                    const rate = 10; // 10 PLN
+                    const amount = Math.round(area * rate * 100); // in grosze
+
+                    if (amount > 0) {
+                        await db.transaction(async (tx) => {
+                            await tx.insert(referralCommissions).values({
+                                id: crypto.randomUUID(),
+                                montageId: montageId,
+                                beneficiaryCustomerId: referrerId,
+                                amount,
+                                floorArea: area,
+                                ratePerSqm: 1000, // 10.00 PLN
+                                status: 'approved',
+                                createdAt: new Date(),
+                                updatedAt: new Date(),
+                            });
+
+                            const referrer = await tx.query.customers.findFirst({
+                                where: eq(customers.id, referrerId),
+                                columns: { referralBalance: true }
+                            });
+
+                            if (referrer) {
+                                await tx.update(customers)
+                                    .set({ referralBalance: (referrer.referralBalance || 0) + amount })
+                                    .where(eq(customers.id, referrerId));
+                            }
+                        });
+
+                        await logSystemEvent('create_referral_commission', `Utworzono prowizję z polecenia dla klienta ${referrerId} za montaż ${montageWithRelations.clientName}`, user.id);
+                    }
                 }
             }
         }
@@ -1484,6 +1534,8 @@ export async function createExtendedLead(formData: FormData) {
         architectId: architectId,
         createdAt: now,
         updatedAt: now,
+        referralCode: generateReferralCode(),
+        referralToken: generateReferralToken(),
     });
 
     // Format addresses

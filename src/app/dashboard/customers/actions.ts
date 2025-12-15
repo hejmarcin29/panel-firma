@@ -6,6 +6,7 @@ import { desc, eq, ilike, or, inArray, isNull, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { randomUUID } from 'crypto';
 import type { CustomerSource } from '@/lib/db/schema';
+import { generateReferralCode, generateReferralToken } from '@/lib/referrals';
 
 export type CustomerWithStats = typeof customers.$inferSelect & {
 	ordersCount: number;
@@ -38,11 +39,23 @@ export async function createCustomerAction(data: {
     shippingCountry?: string;
     source?: CustomerSource;
     architectId?: string;
+    referralCode?: string;
 }) {
+    let referredById = null;
+    if (data.referralCode) {
+        const referrer = await db.query.customers.findFirst({
+            where: eq(customers.referralCode, data.referralCode)
+        });
+        if (referrer) referredById = referrer.id;
+    }
+
     await db.insert(customers).values({
         id: randomUUID(),
         ...data,
         source: data.source || 'other',
+        referralCode: generateReferralCode(),
+        referralToken: generateReferralToken(),
+        referredById,
     });
     revalidatePath('/dashboard/customers');
 }
