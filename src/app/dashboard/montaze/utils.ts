@@ -97,6 +97,7 @@ function mapNote(note: MontageRow['notes'][number], publicBaseUrl: string | null
 	return {
 		id: String(note.id),
 		content: note.content,
+		isInternal: note.isInternal ?? false,
 		createdAt: note.createdAt,
 		author: note.author
 			? {
