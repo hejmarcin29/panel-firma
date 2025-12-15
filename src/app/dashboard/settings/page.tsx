@@ -31,6 +31,8 @@ import { DensitySelector } from './_components/density-selector';
 import { MobileMenuItem } from './actions';
 import { WooSettingsForm } from './integrations/_components/woo-settings-form';
 import { GoogleCalendarSettingsForm } from './integrations/_components/google-calendar-settings-form';
+import { FluentFormsSettings } from './integrations/_components/fluent-forms-settings';
+import { getFluentFormsSecret } from './integrations/fluent-actions';
 import { IntegrationLogs } from './integrations/_components/integration-logs';
 import { WpChangesSettings } from './_components/wp-changes-settings';
 import TeamPage from './team/page';
@@ -161,6 +163,7 @@ export default async function SettingsPage() {
         companyNip,
         companyBankName,
         companyBankAccount,
+        fluentFormsSecret,
 	] = await Promise.all([
 		getAppSetting(appSettingKeys.wooWebhookSecret),
 		getAppSetting(appSettingKeys.wooConsumerKey),
@@ -200,6 +203,7 @@ export default async function SettingsPage() {
         getAppSetting(appSettingKeys.companyNip),
         getAppSetting(appSettingKeys.companyBankName),
         getAppSetting(appSettingKeys.companyBankAccount),
+        getFluentFormsSecret(),
 	]);
 
     const statusOptions = montageStatusDefinitions.map(def => ({
@@ -461,16 +465,18 @@ export default async function SettingsPage() {
 								<TabsTrigger value="google" className="w-full justify-start border bg-background data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Kalendarz Google</TabsTrigger>
 								<TabsTrigger value="mail" className="w-full justify-start border bg-background data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Poczta</TabsTrigger>
 								<TabsTrigger value="storage" className="w-full justify-start border bg-background data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Magazyn plików</TabsTrigger>
+                                <TabsTrigger value="fluent" className="w-full justify-start border bg-background data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Fluent Forms (WP)</TabsTrigger>
 							</TabsList>
 						</div>
 
 						{/* Desktop: Grid */}
 						<div className="hidden md:block">
-							<TabsList className="grid w-full grid-cols-4">
+							<TabsList className="grid w-full grid-cols-5">
 								<TabsTrigger value="woocommerce">WooCommerce</TabsTrigger>
 								<TabsTrigger value="google">Kalendarz Google</TabsTrigger>
 								<TabsTrigger value="mail">Poczta</TabsTrigger>
 								<TabsTrigger value="storage">Magazyn plików</TabsTrigger>
+                                <TabsTrigger value="fluent">Fluent Forms</TabsTrigger>
 							</TabsList>
 						</div>
 					</div>
@@ -542,6 +548,12 @@ export default async function SettingsPage() {
 							</CardContent>
 						</Card>
 					</TabsContent>
+                    <TabsContent value="fluent">
+                        <FluentFormsSettings 
+                            initialSecret={fluentFormsSecret} 
+                            baseUrl={process.env.NEXT_PUBLIC_APP_URL ?? 'https://twoja-domena.pl'} 
+                        />
+                    </TabsContent>
 				</Tabs>
 			}
 			mobileMenuSettings={
