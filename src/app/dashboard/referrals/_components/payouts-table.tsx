@@ -21,7 +21,7 @@ import { Label } from "@/components/ui/label"
 
 interface Customer {
     name: string | null;
-    email: string;
+    email: string | null;
 }
 
 interface PayoutRequest {

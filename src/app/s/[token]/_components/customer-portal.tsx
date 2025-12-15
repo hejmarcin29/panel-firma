@@ -25,7 +25,7 @@ interface Montage {
     status: string;
     createdAt: Date;
     forecastedInstallationDate: Date | null;
-    scheduledInstallationAt: number | null;
+    scheduledInstallationAt: Date | null;
     attachments: MontageAttachment[];
 }
 
@@ -46,7 +46,7 @@ interface ReferralCommission {
 interface Customer {
     name: string | null;
     referralCode: string | null;
-    referralBalance: number;
+    referralBalance: number | null;
     referralCommissions: ReferralCommission[];
     payoutRequests: PayoutRequest[];
     montages: Montage[];
@@ -236,7 +236,7 @@ export function CustomerPortal({ customer, token }: CustomerPortalProps) {
                                                 <div className="flex justify-between border-b pb-2">
                                                     <span className="text-muted-foreground">Potwierdzony termin:</span>
                                                     <span className="font-medium text-green-600">
-                                                        {new Date(activeMontage.scheduledInstallationAt * 1000).toLocaleDateString('pl-PL')}
+                                                        {new Date(activeMontage.scheduledInstallationAt).toLocaleDateString('pl-PL')}
                                                     </span>
                                                 </div>
                                             )}
