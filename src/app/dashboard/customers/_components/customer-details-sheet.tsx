@@ -11,7 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Phone, Mail, MapPin, Package, Hammer, ExternalLink, Building2, Trash2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Phone, Mail, MapPin, Package, Hammer, ExternalLink, Building2, Trash2, Copy, Sparkles } from 'lucide-react';
 import { CustomerDetails, deleteCustomer } from '../actions';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
@@ -183,6 +184,59 @@ export function CustomerDetailsSheet({ customer, isOpen, onClose }: CustomerDeta
 						</div>
 
 						<Separator />
+
+                        {/* Client Portal Link */}
+                        {customer.referralToken && (
+                            <>
+                                <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-4 space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-sm font-medium text-amber-900 flex items-center gap-2">
+                                            <Sparkles className="h-4 w-4 text-amber-500" /> Portal Klienta (Magic Link)
+                                        </h3>
+                                        <Badge variant="outline" className="bg-white text-amber-700 border-amber-200">
+                                            Aktywny
+                                        </Badge>
+                                    </div>
+                                    
+                                    <div className="flex items-center gap-2">
+                                        <Input 
+                                            readOnly 
+                                            value={`https://primepodloga.pl/s/${customer.referralToken}`}
+                                            className="h-9 bg-white border-amber-200 font-mono text-xs text-amber-900 focus-visible:ring-amber-500"
+                                            onClick={(e) => e.currentTarget.select()}
+                                        />
+                                        <Button 
+                                            size="icon" 
+                                            variant="outline" 
+                                            className="h-9 w-9 shrink-0 border-amber-200 hover:bg-amber-100 hover:text-amber-900"
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(`https://primepodloga.pl/s/${customer.referralToken}`);
+                                                toast.success('Link skopiowany do schowka');
+                                            }}
+                                            title="Kopiuj link"
+                                        >
+                                            <Copy className="h-4 w-4" />
+                                        </Button>
+                                        <Button 
+                                            size="icon" 
+                                            variant="ghost" 
+                                            className="h-9 w-9 shrink-0 text-amber-700 hover:bg-amber-100 hover:text-amber-900"
+                                            asChild
+                                            title="Otwórz portal"
+                                        >
+                                            <a href={`/s/${customer.referralToken}`} target="_blank" rel="noopener noreferrer">
+                                                <ExternalLink className="h-4 w-4" />
+                                            </a>
+                                        </Button>
+                                    </div>
+                                    <p className="text-[11px] text-amber-700/80">
+                                        Udostępnij ten link klientowi, aby mógł śledzić postęp prac i zarządzać poleceniami.
+                                    </p>
+                                </div>
+
+                                <Separator />
+                            </>
+                        )}
 
                         {/* Marketing Source */}
                         <div className="space-y-3">
