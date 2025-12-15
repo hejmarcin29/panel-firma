@@ -434,15 +434,6 @@ export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montag
             </div>
         )}
 
-        {(montage.measurementDetails || montage.materialDetails) && (
-          <div className='pt-4 border-t border-border/50'>
-            <span className='text-xs text-muted-foreground block mb-2'>Uwagi dotyczące listew i podłogi / Materiały:</span>
-            <div className='whitespace-pre-wrap text-sm bg-muted/30 p-3 rounded-md'>
-                {montage.measurementDetails || montage.materialDetails}
-            </div>
-          </div>
-        )}
-
         {!montage.finalPanelAmount && !montage.finalSkirtingLength && !montage.measurementDetails && !montage.materialDetails && !calculatedPanelAmount && (
           <div className='flex flex-col items-center justify-center py-4 text-center text-sm text-muted-foreground'>
             <Package className='mb-2 h-8 w-8 opacity-50' />
