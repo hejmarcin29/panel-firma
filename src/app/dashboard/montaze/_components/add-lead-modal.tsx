@@ -103,12 +103,12 @@ export function AddLeadModal({
                         />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="address">Adres (opcjonalnie)</Label>
+                        <Label htmlFor="address">Miasto / Lokalizacja</Label>
                         <Input
                             id="address"
                             value={formData.address}
                             onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                            placeholder="ul. Przykładowa 1, Warszawa"
+                            placeholder="Warszawa"
                             disabled={isPending}
                         />
                     </div>

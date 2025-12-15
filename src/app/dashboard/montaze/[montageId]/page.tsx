@@ -28,6 +28,7 @@ import { MontageTechnicalTab } from './_components/montage-technical-tab';
 import { MontageQuotes } from './_components/montage-quotes';
 
 import { MontageDetailsLayout } from './_components/montage-details-layout';
+import { ConvertLeadButton } from './_components/convert-lead-button';
 
 type MontageDetailsPageParams = {
     params: Promise<{
@@ -123,6 +124,32 @@ export default async function MontageDetailsPage({ params, searchParams }: Monta
         .orderBy(desc(systemLogs.createdAt));
 
     const montage = mapMontageRow(montageRow as MontageRow, publicBaseUrl);
+
+    if (montage.status === 'lead') {
+        return (
+             <div className="flex min-h-screen flex-col bg-muted/10">
+                <div className="p-4 md:p-6 space-y-6 max-w-5xl mx-auto w-full">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <h1 className="text-2xl font-bold">{montage.clientName}</h1>
+                            <p className="text-muted-foreground">Nowy Lead - Weryfikacja</p>
+                        </div>
+                        <ConvertLeadButton montageId={montage.id} />
+                    </div>
+
+                    <div className="grid gap-6 md:grid-cols-2">
+                        <MontageClientCard montage={montage} userRoles={user.roles} installers={installers} measurers={measurers} architects={architects} />
+                        <div className="space-y-6">
+                             <div className="bg-card rounded-xl border shadow-sm p-6">
+                                <h3 className="font-semibold mb-4">Notatki i Historia</h3>
+                                <MontageLogTab montage={montage} logs={logs} />
+                             </div>
+                        </div>
+                    </div>
+                </div>
+             </div>
+        );
+    }
 
     return (
         <div className="flex min-h-screen flex-col bg-muted/10">
