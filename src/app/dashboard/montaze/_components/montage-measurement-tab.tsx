@@ -522,17 +522,6 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
             </div>
         </div>
 
-        <div className="space-y-2">
-            <Label htmlFor="measurementDetails">Uwagi dotyczące listew i podłogi</Label>
-            <Textarea
-              id="measurementDetails"
-              placeholder="Wymiary, uwagi techniczne..."
-              value={measurementDetails}
-              onChange={(e) => setMeasurementDetails(e.target.value)}
-              className="min-h-[100px]"
-            />
-        </div>
-
         <div className="border rounded-lg p-4 space-y-4 bg-muted/10">
             <div className="flex items-center space-x-2 pt-2">
               <Checkbox 
@@ -592,7 +581,7 @@ export function MontageMeasurementTab({ montage }: MontageMeasurementTabProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="additionalInfo">Dodatkowe informacje</Label>
+          <Label htmlFor="additionalInfo">Uwagi z pomiaru</Label>
           <Textarea
             id="additionalInfo"
             placeholder="Inne uwagi, ustalenia z klientem..."

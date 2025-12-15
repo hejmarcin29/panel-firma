@@ -159,19 +159,19 @@ export default async function MontageDetailsPage({ params, searchParams }: Monta
                 clientCard={<MontageClientCard montage={montage} userRoles={user.roles} installers={installers} measurers={measurers} architects={architects} />}
                 materialCard={
                     <div className="space-y-6">
-                        <MontageMaterialCard montage={montage} userRoles={user.roles} />
-                        
                         {/* Client Requirements (Lead) */}
                         {montage.materialDetails && (
                             <div className="rounded-xl border bg-card text-card-foreground shadow-sm">
                                 <div className="p-6 pt-6">
-                                    <h3 className="font-semibold leading-none tracking-tight mb-4">Wymagania Klienta</h3>
+                                    <h3 className="font-semibold leading-none tracking-tight mb-4">Info od klienta</h3>
                                     <div className="text-sm text-muted-foreground whitespace-pre-wrap">
                                         {montage.materialDetails}
                                     </div>
                                 </div>
                             </div>
                         )}
+
+                        <MontageMaterialCard montage={montage} userRoles={user.roles} />
 
                         {/* Measurement Notes */}
                         {montage.additionalInfo && (
