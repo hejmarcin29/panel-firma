@@ -274,7 +274,7 @@ export function CustomerDetailsSheet({ customer, isOpen, onClose }: CustomerDeta
                                             </Button>
                                         </div>
                                         <p className="text-[11px] text-blue-700/80">
-                                            Ten link klient może wysyłać znajomym. Przekierowuje do formularza "Zostaw kontakt".
+                                            Ten link klient może wysyłać znajomym. Przekierowuje do formularza &quot;Zostaw kontakt&quot;.
                                         </p>
                                     </div>
                                 )}

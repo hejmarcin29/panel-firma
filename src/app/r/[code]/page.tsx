@@ -1,7 +1,5 @@
-import { notFound } from 'next/navigation';
 import { getReferrerByCode } from './actions';
 import { LeadForm } from './_components/lead-form';
-import Image from 'next/image';
 
 interface PageProps {
     params: Promise<{ code: string }>;

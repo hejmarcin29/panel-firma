@@ -4,7 +4,6 @@ import { db } from '@/lib/db';
 import { customers } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
-import { revalidatePath } from 'next/cache';
 
 export async function getReferrerByCode(code: string) {
     const referrer = await db.query.customers.findFirst({
@@ -22,7 +21,6 @@ export async function submitLead(formData: FormData) {
     const referralCode = formData.get('referralCode') as string;
     const name = formData.get('name') as string;
     const phone = formData.get('phone') as string;
-    const message = formData.get('message') as string;
     const city = formData.get('city') as string;
 
     if (!name || !phone || !referralCode) {
