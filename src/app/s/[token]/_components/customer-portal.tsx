@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Copy, Gift, Users, FileText, Calendar, CheckCircle2, Circle } from 'lucide-react';
+import { Copy, Gift, Users, FileText, Calendar, CheckCircle2, Circle, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { requestPayout } from '../actions';
 import { cn } from '@/lib/utils';
@@ -121,6 +121,13 @@ export function CustomerPortal({ customer, token }: CustomerPortalProps) {
     };
 
     const activeMontage = customer.montages[0]; // For now, just take the latest one
+
+    const isImage = (url: string) => {
+        return /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(url);
+    };
+
+    const images = activeMontage?.attachments.filter(att => isImage(att.url)) || [];
+    const documents = activeMontage?.attachments.filter(att => !isImage(att.url)) || [];
 
     const containerVariants = {
         hidden: { opacity: 0, y: 20 },
@@ -252,9 +259,9 @@ export function CustomerPortal({ customer, token }: CustomerPortalProps) {
                                             </CardTitle>
                                         </CardHeader>
                                         <CardContent>
-                                            {activeMontage.attachments && activeMontage.attachments.length > 0 ? (
+                                            {documents.length > 0 ? (
                                                 <div className="space-y-2">
-                                                    {activeMontage.attachments.map((att) => (
+                                                    {documents.map((att) => (
                                                         <a 
                                                             key={att.id} 
                                                             href={att.url} 
@@ -276,6 +283,44 @@ export function CustomerPortal({ customer, token }: CustomerPortalProps) {
                                     </Card>
                                 </motion.div>
                             </div>
+
+                            {images.length > 0 && (
+                                <motion.div variants={itemVariants}>
+                                    <Card className="hover:shadow-md transition-shadow duration-300">
+                                        <CardHeader>
+                                            <CardTitle className="flex items-center gap-2">
+                                                <ImageIcon className="h-5 w-5 text-primary" /> Galeria Zdjęć
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                {images.map((img) => (
+                                                    <a 
+                                                        key={img.id} 
+                                                        href={img.url} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        className="block aspect-square relative rounded-md overflow-hidden border hover:opacity-90 transition-opacity group bg-muted"
+                                                    >
+                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                        <img 
+                                                            src={img.url} 
+                                                            alt={img.title || 'Zdjęcie z montażu'} 
+                                                            className="object-cover w-full h-full"
+                                                            loading="lazy"
+                                                        />
+                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                            <span className="text-white text-xs font-medium px-2 text-center truncate w-full">
+                                                                {img.title || 'Zobacz'}
+                                                            </span>
+                                                        </div>
+                                                    </a>
+                                                ))}
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </motion.div>
+                            )}
                         </motion.div>
                     ) : (
                         <motion.div variants={itemVariants}>
