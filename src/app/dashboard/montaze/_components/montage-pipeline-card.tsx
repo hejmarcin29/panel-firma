@@ -79,17 +79,23 @@ export function MontagePipelineCard({ montage, threatDays, alertSettings }: Prop
         const diffTime = scheduled.getTime() - now.getTime();
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         
-        // Check general threat days
-        if (diffDays >= 0 && diffDays <= threatDays) return true;
-
         // Check specific alerts if settings are provided
-        if (alertSettings && diffDays >= 0) {
+        if (alertSettings) {
              if (diffDays <= alertSettings.missingMaterialStatusDays && montage.materialStatus === 'none') return true;
              if (diffDays <= alertSettings.missingInstallerStatusDays && montage.installerStatus === 'none') return true;
              if (diffDays <= alertSettings.missingMeasurerDays && !montage.measurerId) return true;
              if (diffDays <= alertSettings.missingInstallerDays && !montage.installerId) return true;
-             if (diffDays <= alertSettings.materialOrderedDays && montage.materialStatus === 'ordered') return true;
-             if (diffDays <= alertSettings.materialInstockDays && montage.materialStatus === 'in_stock') return true;
+             
+             if (diffDays >= 0) {
+                if (diffDays <= alertSettings.materialOrderedDays && montage.materialStatus === 'ordered') return true;
+                if (diffDays <= alertSettings.materialInstockDays && montage.materialStatus === 'in_stock') {
+                    const isPickup = montage.materialClaimType === 'installer_pickup' || montage.materialClaimType === 'client_pickup';
+                    if (!isPickup) return true;
+                }
+             }
+        } else {
+            // Fallback if no settings provided
+            if (diffDays >= 0 && diffDays <= threatDays) return true;
         }
 
         return false;

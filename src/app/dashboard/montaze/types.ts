@@ -111,6 +111,8 @@ export type Montage = {
         name: string;
         email: string | null;
         phone: string | null;
+        referralToken?: string | null;
+        referralCode?: string | null;
     } | null;
     technicalAudit?: unknown;
     materialLog?: unknown;

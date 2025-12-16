@@ -13,7 +13,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Phone, Mail, MapPin, Package, Hammer, ExternalLink, Building2, Trash2, Copy, Sparkles } from 'lucide-react';
-import { CustomerDetails, deleteCustomer } from '../actions';
+import { CustomerDetails, deleteCustomer, generateCustomerPortalAccess } from '../actions';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import Link from 'next/link';
@@ -186,7 +186,35 @@ export function CustomerDetailsSheet({ customer, isOpen, onClose }: CustomerDeta
 						<Separator />
 
                         {/* Client Portal Link */}
-                        {customer.referralToken && (
+                        {!customer.referralToken ? (
+                            <>
+                                <div className="rounded-lg border border-dashed border-amber-200 bg-amber-50/30 p-6 flex flex-col items-center justify-center gap-3 text-center">
+                                    <div className="p-2 bg-amber-100 rounded-full">
+                                        <Sparkles className="h-5 w-5 text-amber-600" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <h3 className="font-medium text-sm text-amber-900">Portal Klienta nieaktywny</h3>
+                                        <p className="text-xs text-muted-foreground max-w-[250px] mx-auto">
+                                            Wygeneruj dostęp, aby klient mógł śledzić postępy prac i polecać usługi znajomym.
+                                        </p>
+                                    </div>
+                                    <Button 
+                                        size="sm" 
+                                        className="bg-amber-600 hover:bg-amber-700 text-white border-0"
+                                        onClick={async () => {
+                                            toast.promise(generateCustomerPortalAccess(customer.id), {
+                                                loading: 'Generowanie dostępu...',
+                                                success: 'Dostęp do portalu został aktywowany',
+                                                error: 'Błąd podczas generowania dostępu'
+                                            });
+                                        }}
+                                    >
+                                        Aktywuj Portal Klienta
+                                    </Button>
+                                </div>
+                                <Separator />
+                            </>
+                        ) : (
                             <>
                                 <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-4 space-y-3">
                                     <div className="flex items-center justify-between">

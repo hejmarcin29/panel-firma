@@ -82,6 +82,16 @@ export async function updateCustomerAction(id: string, data: {
     revalidatePath('/dashboard/customers');
 }
 
+export async function generateCustomerPortalAccess(customerId: string) {
+    await db.update(customers)
+        .set({
+            referralToken: generateReferralToken(),
+            referralCode: generateReferralCode(),
+        })
+        .where(eq(customers.id, customerId));
+    revalidatePath('/dashboard/customers');
+}
+
 export async function getCustomers(query?: string): Promise<CustomerWithStats[]> {
 	const searchFilter = query
 		? and(

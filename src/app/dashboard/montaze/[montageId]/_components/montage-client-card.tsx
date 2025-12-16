@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, Phone, Mail, Calendar as CalendarIcon, Edit2, Ruler, Loader2, Check, Hammer, User, Megaphone } from "lucide-react";
+import { MapPin, Phone, Mail, Calendar as CalendarIcon, Edit2, Ruler, Loader2, Check, Hammer, User, Megaphone, ExternalLink, Copy, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
@@ -512,6 +512,50 @@ export function MontageClientCard({
              )}
           </div>
         </div>
+
+        {montage.customer?.referralToken && (
+            <div className="pt-1">
+                <div className="rounded-md border border-amber-200 bg-amber-50/50 p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-amber-900 flex items-center gap-1.5">
+                            <Sparkles className="h-3 w-3 text-amber-500" /> Portal Klienta
+                        </span>
+                    </div>
+                    
+                    <div className="flex items-center gap-1.5">
+                        <Input 
+                            readOnly 
+                            value={`https://b2b.primepodloga.pl/s/${montage.customer.referralToken}`}
+                            className="h-7 bg-white border-amber-200 font-mono text-[10px] text-amber-900 focus-visible:ring-amber-500 px-2"
+                            onClick={(e) => e.currentTarget.select()}
+                        />
+                        <Button 
+                            size="icon" 
+                            variant="outline" 
+                            className="h-7 w-7 shrink-0 border-amber-200 hover:bg-amber-100 hover:text-amber-900"
+                            onClick={() => {
+                                navigator.clipboard.writeText(`https://b2b.primepodloga.pl/s/${montage.customer!.referralToken}`);
+                                toast.success('Link skopiowany');
+                            }}
+                            title="Kopiuj link"
+                        >
+                            <Copy className="h-3 w-3" />
+                        </Button>
+                        <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            className="h-7 w-7 shrink-0 text-amber-700 hover:bg-amber-100 hover:text-amber-900"
+                            asChild
+                            title="Otwórz portal"
+                        >
+                            <a href={`/s/${montage.customer.referralToken}`} target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="h-3 w-3" />
+                            </a>
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        )}
 
         {montage.customer?.source && (
             <div className="flex items-center gap-3">

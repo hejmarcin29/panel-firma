@@ -190,7 +190,9 @@ export function mapMontageRow(row: MontageRow, publicBaseUrl: string | null): Mo
             source: row.customer.source,
             name: row.customer.name,
             email: row.customer.email,
-            phone: row.customer.phone
+            phone: row.customer.phone,
+            referralToken: row.customer.referralToken,
+            referralCode: row.customer.referralCode
         } : null,
         architect: row.architect ? { id: row.architect.id, name: row.architect.name, email: row.architect.email } : null,
         technicalAudit: row.technicalAudit,
