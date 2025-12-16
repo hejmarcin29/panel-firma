@@ -42,6 +42,7 @@ import { getDeletedQuotes, getDeletedCustomers, getDeletedMontages, getDeletedPr
 
 import { LogoSettings } from './_components/logo-settings';
 import { CompanySettingsForm } from './_components/company-settings-form';
+import { ReferralSettingsForm } from './_components/referral-settings-form';
 
 type LogLevel = 'info' | 'warning' | 'error';
 
@@ -164,6 +165,7 @@ export default async function SettingsPage() {
         companyBankName,
         companyBankAccount,
         fluentFormsSecret,
+        referralProgramEnabled,
 	] = await Promise.all([
 		getAppSetting(appSettingKeys.wooWebhookSecret),
 		getAppSetting(appSettingKeys.wooConsumerKey),
@@ -204,6 +206,7 @@ export default async function SettingsPage() {
         getAppSetting(appSettingKeys.companyBankName),
         getAppSetting(appSettingKeys.companyBankAccount),
         getFluentFormsSecret(),
+        getAppSetting(appSettingKeys.referralProgramEnabled),
 	]);
 
     const statusOptions = montageStatusDefinitions.map(def => ({
@@ -631,6 +634,9 @@ export default async function SettingsPage() {
                     </CardContent>
                 </Card>
             </div>
+            referralSettings={
+                <ReferralSettingsForm initialEnabled={referralProgramEnabled === 'true'} />
+            }
 		</SettingsView>
 	);
 }

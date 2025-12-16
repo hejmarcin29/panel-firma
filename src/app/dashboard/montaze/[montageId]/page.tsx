@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
+import { getAppSetting, appSettingKeys } from '@/lib/settings';
 import {
     montageAttachments,
     montageChecklistItems,
@@ -45,6 +46,7 @@ export default async function MontageDetailsPage({ params, searchParams }: Monta
     const activeTab = typeof tab === 'string' ? tab : 'notes';
 
     const user = await requireUser();
+    const referralEnabled = await getAppSetting(appSettingKeys.referralProgramEnabled);
 
     const allUsers = await db.query.users.findMany({
         columns: {
@@ -161,7 +163,7 @@ export default async function MontageDetailsPage({ params, searchParams }: Monta
         <div className="flex min-h-screen flex-col bg-muted/10">
             <MontageDetailsLayout 
                 header={<MontageHeader montage={montage} statusOptions={statusOptions} userRoles={user.roles} />}
-                clientCard={<MontageClientCard montage={montage} userRoles={user.roles} installers={installers} measurers={measurers} architects={architects} />}
+                clientCard={<MontageClientCard montage={montage} userRoles={user.roles} installers={installers} measurers={measurers} architects={architects} referralEnabled={referralEnabled === 'true'} />}
                 materialCard={
                     <div className="space-y-6">
                         <MontageMaterialCard montage={montage} userRoles={user.roles} />

@@ -41,6 +41,7 @@ export const appSettingKeys = {
     companyNip: 'company.nip',
     companyBankName: 'company.bank_name',
     companyBankAccount: 'company.bank_account',
+    referralProgramEnabled: 'referral.enabled',
 } as const;
 
 export type AppSettingKey = (typeof appSettingKeys)[keyof typeof appSettingKeys];

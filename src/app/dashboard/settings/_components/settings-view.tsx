@@ -13,6 +13,7 @@ import {
   BookOpen,
   ArrowLeft,
   Trash2,
+  Sparkles,
 } from "lucide-react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -29,6 +30,7 @@ interface SettingsViewProps {
   teamSettings: React.ReactNode;
   documentation: React.ReactNode;
   trash: React.ReactNode;
+  referralSettings: React.ReactNode;
 }
 
 export function SettingsView({
@@ -43,6 +45,7 @@ export function SettingsView({
   teamSettings,
   documentation,
   trash,
+  referralSettings,
 }: SettingsViewProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -124,6 +127,20 @@ export function SettingsView({
           <span className="flex flex-col text-left">
             <span className="text-sm font-medium">Zespół</span>
             <span className="text-xs text-muted-foreground">Konta użytkowników i role.</span>
+          </span>
+        </Button>
+
+        <Button
+          variant="ghost"
+          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3 bg-card border shadow-sm"
+          onClick={() => handleTabChange("referral")}
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
+            <Sparkles className="h-4 w-4" />
+          </span>
+          <span className="flex flex-col text-left">
+            <span className="text-sm font-medium">Program Poleceń</span>
+            <span className="text-xs text-muted-foreground">Konfiguracja portalu klienta.</span>
           </span>
         </Button>
 
@@ -269,6 +286,13 @@ export function SettingsView({
               Zespół
             </TabsTrigger>
             <TabsTrigger 
+              value="referral" 
+              className="w-full justify-start gap-2 px-3 py-2 h-9 data-[state=active]:bg-muted data-[state=active]:shadow-none ring-offset-background transition-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <Sparkles className="h-4 w-4" />
+              Program Poleceń
+            </TabsTrigger>
+            <TabsTrigger 
               value="documentation" 
               className="w-full justify-start gap-2 px-3 py-2 h-9 data-[state=active]:bg-muted data-[state=active]:shadow-none ring-offset-background transition-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
@@ -338,6 +362,10 @@ export function SettingsView({
 
           <TabsContent value="team" className="m-0 space-y-4">
             {teamSettings}
+          </TabsContent>
+
+          <TabsContent value="referral" className="m-0 space-y-4">
+            {referralSettings}
           </TabsContent>
 
           <TabsContent value="documentation" className="m-0 space-y-4">
