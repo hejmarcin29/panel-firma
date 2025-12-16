@@ -315,6 +315,9 @@ export default async function SettingsPage() {
 
 	return (
 		<SettingsView
+            referralSettings={
+                <ReferralSettingsForm initialEnabled={referralProgramEnabled === 'true'} />
+            }
             documentation={
                 <DocumentationView content={businessLogicContent} />
             }
