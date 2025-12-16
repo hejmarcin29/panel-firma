@@ -79,7 +79,7 @@ function getStepStatus(currentStatus: string, stepId: string) {
 export function CustomerPortal({ customer, token }: CustomerPortalProps) {
     const [isRequesting, setIsRequesting] = useState(false);
 
-    const referralLink = `https://primepodloga.pl?ref=${customer.referralCode}`;
+    const referralLink = `https://b2b.primepodloga.pl/r/${customer.referralCode}`;
 
     const copyLink = () => {
         navigator.clipboard.writeText(referralLink);

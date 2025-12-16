@@ -234,6 +234,51 @@ export function CustomerDetailsSheet({ customer, isOpen, onClose }: CustomerDeta
                                     </p>
                                 </div>
 
+                                {customer.referralCode && (
+                                    <div className="rounded-lg border border-blue-200 bg-blue-50/50 p-4 space-y-3 mt-4">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="text-sm font-medium text-blue-900 flex items-center gap-2">
+                                                <Sparkles className="h-4 w-4 text-blue-500" /> Link Polecający (Dla znajomych)
+                                            </h3>
+                                        </div>
+                                        
+                                        <div className="flex items-center gap-2">
+                                            <Input 
+                                                readOnly 
+                                                value={`https://b2b.primepodloga.pl/r/${customer.referralCode}`}
+                                                className="h-9 bg-white border-blue-200 font-mono text-xs text-blue-900 focus-visible:ring-blue-500"
+                                                onClick={(e) => e.currentTarget.select()}
+                                            />
+                                            <Button 
+                                                size="icon" 
+                                                variant="outline" 
+                                                className="h-9 w-9 shrink-0 border-blue-200 hover:bg-blue-100 hover:text-blue-900"
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(`https://b2b.primepodloga.pl/r/${customer.referralCode}`);
+                                                    toast.success('Link polecający skopiowany');
+                                                }}
+                                                title="Kopiuj link"
+                                            >
+                                                <Copy className="h-4 w-4" />
+                                            </Button>
+                                            <Button 
+                                                size="icon" 
+                                                variant="ghost" 
+                                                className="h-9 w-9 shrink-0 text-blue-700 hover:bg-blue-100 hover:text-blue-900"
+                                                asChild
+                                                title="Otwórz stronę"
+                                            >
+                                                <a href={`/r/${customer.referralCode}`} target="_blank" rel="noopener noreferrer">
+                                                    <ExternalLink className="h-4 w-4" />
+                                                </a>
+                                            </Button>
+                                        </div>
+                                        <p className="text-[11px] text-blue-700/80">
+                                            Ten link klient może wysyłać znajomym. Przekierowuje do formularza "Zostaw kontakt".
+                                        </p>
+                                    </div>
+                                )}
+
                                 <Separator />
                             </>
                         )}
