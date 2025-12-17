@@ -36,10 +36,11 @@ export function MontageQuotes({ montageId, quotes }: { montageId: string, quotes
 
             <div className="grid gap-4">
                 {quotes.map((quote) => (
-                    <Card key={quote.id} className="hover:bg-muted/50 transition-colors">
+                    <Link key={quote.id} href={`/dashboard/wyceny/${quote.id}`} className="block group">
+                    <Card className="hover:bg-muted/50 transition-colors group-hover:border-primary/50">
                         <CardContent className="p-6 flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="p-2 bg-primary/10 rounded-full">
+                                <div className="p-2 bg-primary/10 rounded-full group-hover:bg-primary/20 transition-colors">
                                     <FileText className="w-6 h-6 text-primary" />
                                 </div>
                                 <div>
@@ -67,14 +68,13 @@ export function MontageQuotes({ montageId, quotes }: { montageId: string, quotes
                                     {quote.status === 'rejected' && 'Odrzucona'}
                                 </Badge>
 
-                                <Button variant="outline" size="sm" asChild>
-                                    <Link href={`/dashboard/wyceny/${quote.id}`}>
-                                        Edytuj
-                                    </Link>
+                                <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                    Edytuj
                                 </Button>
                             </div>
                         </CardContent>
                     </Card>
+                    </Link>
                 ))}
                 
                 {quotes.length === 0 && (

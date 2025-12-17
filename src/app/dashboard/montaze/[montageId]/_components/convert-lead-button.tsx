@@ -1,10 +1,10 @@
 "use client";
 
-import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateMontageStatus } from "../../actions";
 
 interface ConvertLeadButtonProps {
@@ -12,28 +12,31 @@ interface ConvertLeadButtonProps {
 }
 
 export function ConvertLeadButton({ montageId }: ConvertLeadButtonProps) {
-  const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
-  const handleConvert = () => {
-    startTransition(async () => {
-      try {
-        await updateMontageStatus({ 
+  const { mutate, isPending } = useMutation({
+    mutationFn: async () => {
+        return await updateMontageStatus({ 
             montageId, 
             status: "before_measurement" 
         });
+    },
+    onSuccess: () => {
         toast.success("Lead zaakceptowany! Przeniesiono do pomiarów.");
+        // Invalidate the query to force a refetch of the fresh data (with new status)
+        queryClient.invalidateQueries({ queryKey: ['montage', montageId] });
         router.refresh();
-      } catch (error) {
+    },
+    onError: (error) => {
         toast.error("Wystąpił błąd podczas akceptacji leada");
         console.error(error);
-      }
-    });
-  };
+    }
+  });
 
   return (
     <Button 
-        onClick={handleConvert} 
+        onClick={() => mutate()} 
         disabled={isPending}
         className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white"
         size="lg"
