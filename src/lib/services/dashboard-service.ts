@@ -175,7 +175,7 @@ export async function getDashboardStats(publicBaseUrl: string | null): Promise<D
             scheduledInstallationAt: m.scheduledInstallationAt,
             status: m.status,
             address: m.address,
-            city: m.city
+            city: m.installationCity ?? m.billingCity
         }));
 
     const newLeadsCount = allMontages.filter(m => m.status === 'lead').length;

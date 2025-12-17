@@ -21,7 +21,7 @@ export default async function ReferralLandingPage({ params }: PageProps) {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex flex-col">
+        <div className="min-h-screen bg-linear-to-b from-gray-50 to-gray-100 flex flex-col">
             {/* Header / Logo Area */}
             <header className="w-full py-8 flex justify-center">
                 <div className="text-2xl font-bold tracking-tight text-gray-900">

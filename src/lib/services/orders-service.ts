@@ -83,7 +83,7 @@ function mapAttachmentRow(row: OrderAttachmentRowWithUploader): OrderAttachment 
 		title: row.title ?? null,
 		url: row.url,
 		createdAt,
-		uploadedBy: row.uploader
+		uploader: row.uploader
 			? {
 					id: row.uploader.id,
 					name: row.uploader.name,

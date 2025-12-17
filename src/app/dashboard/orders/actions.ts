@@ -24,7 +24,7 @@ import {
 
 const MAX_ORDER_ATTACHMENT_SIZE_BYTES = 25 * 1024 * 1024;
 
-type OrderAttachmentInsert = typeof orderAttachments.;
+type OrderAttachmentInsert = typeof orderAttachments.$inferInsert;
 
 function ensureValidOrderAttachmentFile(file: File) {
 if (!(file instanceof File)) {
@@ -51,7 +51,7 @@ export async function getManualOrders(filter?: string): Promise<Order[]> {
 export async function createOrder(payload: ManualOrderPayload, userId?: string | null): Promise<Order> {
     const created = await createOrderService(payload);
 
-await logSystemEvent('create_order', Utworzono zamówienie , userId);
+await logSystemEvent('create_order', `Utworzono zamówienie ${payload.reference}`, userId);
 
 revalidatePath('/dashboard/orders');
 
@@ -93,10 +93,10 @@ if (!updated) {
 throw new Error('Nie udało się odczytać zatwierdzonego zamówienia.');
 }
 
-await logSystemEvent('confirm_order', Zatwierdzono zamówienie , user.id);
+await logSystemEvent('confirm_order', `Zatwierdzono zamówienie ${orderId}`, user.id);
 
 revalidatePath('/dashboard/orders');
-revalidatePath(/dashboard/orders/);
+revalidatePath(`/dashboard/orders/${orderId}`);
 
 return updated;
 }
@@ -159,7 +159,7 @@ await db
 .set({ updatedAt: now })
 .where(eq(manualOrders.id, orderRecord.id));
 
-revalidatePath(/dashboard/orders/);
+revalidatePath(`/dashboard/orders/${orderRecord.id}`);
 revalidatePath('/dashboard/orders');
 }
 
@@ -203,7 +203,7 @@ updatedAt: new Date(),
 })
 .where(eq(manualOrders.id, orderId));
 
-revalidatePath(/dashboard/orders/);
+revalidatePath(`/dashboard/orders/${orderId}`);
 }
 
 export async function updateManualOrderStatus(orderId: string, nextStatus: string, note?: string): Promise<Order> {
@@ -229,8 +229,8 @@ const timestamp = new Intl.DateTimeFormat('pl-PL', {
 dateStyle: 'short',
 timeStyle: 'short',
 }).format(new Date());
-const noteLine = Status:  ()| — ;
-combinedNotes = combinedNotes ? ${combinedNotes}\n : noteLine;
+const noteLine = `Status: ${typedStatus} (${timestamp})|${trimmedNote} — ${actor}`;
+combinedNotes = combinedNotes ? `${combinedNotes}\n${noteLine}` : noteLine;
 }
 
 const noChange =
@@ -246,7 +246,7 @@ throw new Error('Nie udało się odczytać zamówienia po próbie aktualizacji.'
 return existing;
 }
 
-const updateData: Partial<typeof manualOrders.> = {
+const updateData: Partial<typeof manualOrders.$inferInsert> = {
 status: typedStatus,
 updatedAt: new Date(),
 };
@@ -264,7 +264,7 @@ await db
 .set(updateData)
 .where(eq(manualOrders.id, orderId));
 
-await logSystemEvent('update_order_status', Zmiana statusu zamówienia  na , user.id);
+await logSystemEvent('update_order_status', `Zmiana statusu zamówienia ${orderId} na ${typedStatus}`, user.id);
 
 const updated = await getOrderByIdService(orderId);
 
@@ -273,7 +273,7 @@ throw new Error('Nie udało się odczytać zaktualizowanego zamówienia.');
 }
 
 revalidatePath('/dashboard/orders');
-revalidatePath(/dashboard/orders/);
+revalidatePath(`/dashboard/orders/${orderId}`);
 
 return updated;
 }
@@ -289,8 +289,8 @@ updatedAt: new Date(),
 })
 .where(eq(manualOrders.id, orderId));
 
-await logSystemEvent('update_order_note', Zaktualizowano notatkę zamówienia , user.id);
+await logSystemEvent('update_order_note', `Zaktualizowano notatkę zamówienia ${orderId}`, user.id);
 
 revalidatePath('/dashboard/orders');
-revalidatePath(/dashboard/orders/);
+revalidatePath(`/dashboard/orders/${orderId}`);
 }
