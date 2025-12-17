@@ -12,11 +12,54 @@ import {
 } from '@/lib/db/schema';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
 import { mapMontageRow, type MontageRow } from '@/app/dashboard/montaze/utils';
+import type { Montage } from '@/app/dashboard/montaze/types';
+
+export interface AgendaItem {
+    id: string;
+    clientName: string;
+    installationCity: string | null;
+    scheduledInstallationAt: Date | number | string | null;
+    displayId: string | null;
+    floorArea: number | null;
+}
+
+export interface MontageSimple {
+    id: string;
+    clientName: string;
+    scheduledInstallationAt: Date | string | number | null;
+    status: string;
+}
+
+export interface MontageAlert {
+    id: string;
+    clientName: string;
+    scheduledInstallationAt: Date | null;
+    materialStatus: 'none' | 'ordered' | 'in_stock' | 'delivered';
+    installerStatus: 'none' | 'informed' | 'confirmed';
+}
+
+export interface MontageAlertItem {
+    montage: MontageAlert;
+    issues: string[];
+}
+
+export interface MeasurementAlert {
+    id: string;
+    clientName: string;
+    status: string;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+export interface MeasurementAlertItem {
+    montage: MeasurementAlert;
+    issues: string[];
+}
 
 // Types matching DashboardBuilderProps['data']
 export interface DashboardStats {
-    upcomingMontages: any[]; // AgendaItem[]
-    recentMontages: any[]; // Montage[]
+    upcomingMontages: AgendaItem[];
+    recentMontages: Montage[];
     tasksStats: {
         tasksCount: number;
         urgentCount: number;
@@ -34,12 +77,12 @@ export interface DashboardStats {
         orderUrgentDays?: number;
     };
     upcomingMontagesStats: {
-        montages7Days: any[]; // MontageSimple[]
-        montages3Days: any[]; // MontageSimple[]
-        montagesInProgress: any[]; // MontageSimple[]
+        montages7Days: MontageSimple[];
+        montages3Days: MontageSimple[];
+        montagesInProgress: MontageSimple[];
     };
-    montageAlerts: any[]; // MontageAlertItem[]
-    measurementAlerts: any[]; // MeasurementAlertItem[]
+    montageAlerts: MontageAlertItem[];
+    measurementAlerts: MeasurementAlertItem[];
     threatDays?: number;
 }
 
@@ -143,7 +186,9 @@ export async function getDashboardStats(publicBaseUrl: string | null): Promise<D
             id: m.id,
             clientName: m.clientName || 'Klient',
             scheduledInstallationAt: m.scheduledInstallationAt,
-            status: m.status
+            status: m.status,
+            forecastedInstallationDate: m.forecastedInstallationDate,
+            city: m.installationCity ?? m.billingCity
         };
 
         if (m.scheduledInstallationAt) {
@@ -172,10 +217,10 @@ export async function getDashboardStats(publicBaseUrl: string | null): Promise<D
         .map(m => ({
             id: m.id,
             clientName: m.clientName || 'Klient',
+            installationCity: m.installationCity ?? m.billingCity,
             scheduledInstallationAt: m.scheduledInstallationAt,
-            status: m.status,
-            address: m.address,
-            city: m.installationCity ?? m.billingCity
+            displayId: m.displayId,
+            floorArea: m.floorArea
         }));
 
     const newLeadsCount = allMontages.filter(m => m.status === 'lead').length;
@@ -263,10 +308,19 @@ export async function getDashboardStats(publicBaseUrl: string | null): Promise<D
         }
         
         if (issues.length > 0) {
-             return { montage: m, issues };
+             return { 
+                 montage: {
+                     id: m.id,
+                     clientName: m.clientName || 'Klient',
+                     scheduledInstallationAt: m.scheduledInstallationAt,
+                     materialStatus: m.materialStatus,
+                     installerStatus: m.installerStatus
+                 },
+                 issues
+             };
         }
         return null;
-    }).filter((item): item is { montage: typeof allMontages[0], issues: string[] } => item !== null)
+    }).filter((item): item is MontageAlertItem => item !== null)
     .sort((a, b) => {
         const dateA = a.montage.scheduledInstallationAt ? new Date(a.montage.scheduledInstallationAt).getTime() : 0;
         const dateB = b.montage.scheduledInstallationAt ? new Date(b.montage.scheduledInstallationAt).getTime() : 0;
@@ -311,12 +365,23 @@ export async function getDashboardStats(publicBaseUrl: string | null): Promise<D
         }
 
         if (issues.length > 0) {
-            return { montage: m, issues };
+            return { 
+                montage: {
+                    id: m.id,
+                    clientName: m.clientName || 'Klient',
+                    status: m.status,
+                    createdAt: m.createdAt,
+                    updatedAt: m.updatedAt
+                },
+                issues 
+            };
         }
         return null;
-    }).filter((item): item is { montage: typeof allMontages[0], issues: string[] } => item !== null)
+    }).filter((item): item is MeasurementAlertItem => item !== null)
     .sort((a, b) => {
-        return new Date(a.montage.createdAt).getTime() - new Date(b.montage.createdAt).getTime();
+        const dateA = a.montage.createdAt ? new Date(a.montage.createdAt).getTime() : 0;
+        const dateB = b.montage.createdAt ? new Date(b.montage.createdAt).getTime() : 0;
+        return dateA - dateB;
     });
 
     // Stalled Orders Logic
