@@ -1,6 +1,6 @@
 'use client';
 
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient, MutationCache } from '@tanstack/react-query';
 import { PersistQueryClientProvider, PersistedClient } from '@tanstack/react-query-persist-client';
 import { ReactNode, useState } from 'react';
 import { get, set, del } from 'idb-keyval';
@@ -33,6 +33,11 @@ export function QueryProvider({ children }: QueryProviderProps) {
             gcTime: 1000 * 60 * 60 * 24, // 24 hours
           },
         },
+        mutationCache: new MutationCache({
+          onSuccess: () => {
+            // Invalidate relevant queries on success if needed globally
+          },
+        }),
       })
   );
 
@@ -41,7 +46,26 @@ export function QueryProvider({ children }: QueryProviderProps) {
   return (
     <PersistQueryClientProvider
       client={queryClient}
-      persistOptions={{ persister, maxAge: 1000 * 60 * 60 * 24 }}
+      persistOptions={{
+        persister,
+        maxAge: 1000 * 60 * 60 * 24,
+        dehydrateOptions: {
+          shouldDehydrateMutation: (mutation) => {
+            // Persist all paused mutations (offline changes)
+            return mutation.state.isPaused;
+          },
+          shouldDehydrateQuery: (query) => {
+            const defaultShouldDehydrate = query.state.status === 'success';
+            return defaultShouldDehydrate;
+          },
+        },
+      }}
+      onSuccess={() => {
+        // Resume mutations after hydration
+        queryClient.resumePausedMutations().then(() => {
+          console.log('Mutations resumed');
+        });
+      }}
     >
       {children}
     </PersistQueryClientProvider>
