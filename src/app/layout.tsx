@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { DensityProvider } from "@/components/density-provider";
 import { VersionChecker } from "@/components/system/version-checker";
+import { OfflineIndicator } from "@/components/system/offline-indicator";
 import { UserProvider } from "@/lib/auth/client";
 import { getCurrentSession } from "@/lib/auth/session";
 import { cookies } from "next/headers";
@@ -64,6 +65,7 @@ export default async function RootLayout({
                   {children}
                   <Toaster position="top-center" />
                   <VersionChecker />
+                  <OfflineIndicator />
               </ThemeProvider>
             </DensityProvider>
           </UserProvider>
