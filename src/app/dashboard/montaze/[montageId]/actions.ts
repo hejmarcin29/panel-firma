@@ -1,7 +1,6 @@
 'use server';
 
 import { asc, desc, sql } from 'drizzle-orm';
-import { notFound } from 'next/navigation';
 
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
@@ -116,3 +115,5 @@ export async function getMontageDetails(montageId: string) {
         userId: user.id,
     };
 }
+
+export type MontageDetailsData = Awaited<ReturnType<typeof getMontageDetails>>;

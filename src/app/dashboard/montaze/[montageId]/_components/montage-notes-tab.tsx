@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { addMontageNote } from "../../actions";
+import { type MontageDetailsData } from "../actions";
 import type { Montage } from "../../types";
 import { type UserRole } from '@/lib/db/schema';
 import { cn } from "@/lib/utils";
@@ -37,7 +38,7 @@ export function MontageNotesTab({ montage, userRoles = ['admin'] }: { montage: M
         const content = formData.get('content') as string;
         const isInternalNote = formData.get('isInternal') === 'true';
 
-        queryClient.setQueryData(['montage', montage.id], (old: any) => {
+        queryClient.setQueryData(['montage', montage.id], (old: MontageDetailsData | undefined) => {
             if (!old) return old;
             
             const newNote = {

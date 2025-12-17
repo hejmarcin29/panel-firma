@@ -34,6 +34,7 @@ import {
     updateMontageStatus,
     updateMontageRealizationStatus
 } from "../../actions";
+import { type MontageDetailsData } from "../actions";
 import type { Montage, StatusOption } from "../../types";
 
 type UserOption = { id: string; name: string | null; email: string };
@@ -66,7 +67,7 @@ export function MontageWorkflowTab({
     onMutate: async (newStatus) => {
         await queryClient.cancelQueries({ queryKey: ['montage', montage.id] });
         const previousData = queryClient.getQueryData(['montage', montage.id]);
-        queryClient.setQueryData(['montage', montage.id], (old: any) => {
+        queryClient.setQueryData(['montage', montage.id], (old: MontageDetailsData | undefined) => {
             if (!old) return old;
             return {
                 ...old,
@@ -93,7 +94,7 @@ export function MontageWorkflowTab({
     onMutate: async ({ itemId, completed }) => {
         await queryClient.cancelQueries({ queryKey: ['montage', montage.id] });
         const previousData = queryClient.getQueryData(['montage', montage.id]);
-        queryClient.setQueryData(['montage', montage.id], (old: any) => {
+        queryClient.setQueryData(['montage', montage.id], (old: MontageDetailsData | undefined) => {
             if (!old) return old;
             return {
                 ...old,
