@@ -100,7 +100,7 @@ export function MontageWorkflowTab({
                 ...old,
                 montage: {
                     ...old.montage,
-                    checklistItems: old.montage.checklistItems.map((item: any) => 
+                    checklistItems: old.montage.checklistItems.map((item) => 
                         item.id === itemId ? { ...item, completed } : item
                     )
                 }
