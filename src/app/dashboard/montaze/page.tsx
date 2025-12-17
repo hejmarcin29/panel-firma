@@ -1,4 +1,4 @@
-import { asc, desc, eq, and, inArray, or, sql, isNull } from 'drizzle-orm';
+import { asc, desc, eq, and, inArray, or, sql, isNull, type SQL } from 'drizzle-orm';
 import Link from 'next/link';
 import { Plus, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -100,7 +100,7 @@ export default async function MontazePage(props: any) {
 
     const sort = (searchParams?.sort as SortOption) || SORT_OPTIONS.LAST_ACTIVITY;
 
-    const conditions: (ReturnType<typeof eq> | ReturnType<typeof inArray> | ReturnType<typeof isNull>)[] = [
+    const conditions: (SQL | undefined)[] = [
         isNull(montages.deletedAt)
     ];
 

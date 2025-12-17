@@ -1,0 +1,479 @@
+import { desc, eq, and, or, lt } from 'drizzle-orm';
+import { differenceInCalendarDays } from 'date-fns';
+import { db } from '@/lib/db';
+import { manualOrders, manualOrderItems, orderAttachments, documents, customers } from '@/lib/db/schema';
+import { 
+    type Order, 
+    type OrderItem, 
+    type OrderAttachment, 
+    type OrderDocument,
+    type ManualOrderSource,
+    type ManualOrderPayload,
+    type OrderItemPayload
+} from '@/app/dashboard/orders/data';
+import { buildTimelineEntries, normalizeStatus, parseTaskOverrides } from '@/app/dashboard/orders/utils';
+
+const MONEY_SCALE = 100;
+const QUANTITY_SCALE = 1000;
+const VAT_SCALE = 100;
+
+function toMinorUnits(value: number) {
+	return Math.round(value * MONEY_SCALE);
+}
+
+function fromMinorUnits(value: number) {
+	return value / MONEY_SCALE;
+}
+
+function toQuantityUnits(value: number) {
+	return Math.round(value * QUANTITY_SCALE);
+}
+
+function fromQuantityUnits(value: number) {
+	return value / QUANTITY_SCALE;
+}
+
+function toVatUnits(value: number) {
+	return Math.round(value * VAT_SCALE);
+}
+
+function fromVatUnits(value: number) {
+	return value / VAT_SCALE;
+}
+
+function normalizePhone(value: string) {
+	return value.replace(/\D+/g, '');
+}
+
+type ManualOrderRow = typeof manualOrders.$inferSelect;
+type ManualOrderItemRow = typeof manualOrderItems.$inferSelect;
+type ManualOrderInsert = typeof manualOrders.$inferInsert;
+type ManualOrderItemInsert = typeof manualOrderItems.$inferInsert;
+type OrderAttachmentRow = typeof orderAttachments.$inferSelect;
+type OrderAttachmentRowWithUploader = OrderAttachmentRow & {
+	uploader: {
+		id: string;
+		name: string | null;
+		email: string;
+	} | null;
+};
+
+function mapItemRow(row: ManualOrderItemRow): OrderItem {
+	return {
+		id: row.id,
+		product: row.product,
+		quantity: fromQuantityUnits(row.quantity),
+		unitPrice: fromMinorUnits(row.unitPrice),
+		vatRate: fromVatUnits(row.vatRate),
+		unitPricePerSquareMeter: row.unitPricePerSquareMeter
+			? fromMinorUnits(row.unitPricePerSquareMeter)
+			: 0,
+		totalNet: fromMinorUnits(row.totalNet),
+		totalGross: fromMinorUnits(row.totalGross),
+	};
+}
+
+function mapAttachmentRow(row: OrderAttachmentRowWithUploader): OrderAttachment {
+	const createdAt = row.createdAt
+		? new Date(row.createdAt instanceof Date ? row.createdAt : Number(row.createdAt)).toISOString()
+		: new Date().toISOString();
+
+	return {
+		id: row.id,
+		title: row.title ?? null,
+		url: row.url,
+		createdAt,
+		uploadedBy: row.uploader
+			? {
+					id: row.uploader.id,
+					name: row.uploader.name,
+					email: row.uploader.email,
+			  }
+			: null,
+	};
+}
+
+export function mapOrderRow(
+	row: ManualOrderRow & {
+		items: ManualOrderItemRow[];
+		attachments: OrderAttachmentRowWithUploader[];
+	},
+): Order {
+	const createdAt = new Date(row.createdAt ?? Date.now()).toISOString();
+	const updatedAt = new Date(row.updatedAt ?? row.createdAt ?? Date.now()).toISOString();
+	const taskOverrides = parseTaskOverrides(row.timelineTaskOverrides);
+
+	const billing = {
+		name: row.billingName,
+		street: row.billingStreet,
+		postalCode: row.billingPostalCode,
+		city: row.billingCity,
+		phone: row.billingPhone,
+		email: row.billingEmail,
+	};
+
+	const rawShipping = row.shippingSameAsBilling
+		? { ...billing, sameAsBilling: true }
+		: {
+			name: row.shippingName ?? '',
+			street: row.shippingStreet ?? '',
+			postalCode: row.shippingPostalCode ?? '',
+			city: row.shippingCity ?? '',
+			phone: row.shippingPhone ?? '',
+			email: row.shippingEmail ?? '',
+			sameAsBilling: false,
+		};
+
+	const items = row.items.map(mapItemRow);
+
+	return {
+		id: row.id,
+		reference: row.reference,
+		customer: billing.name,
+		channel: row.channel,
+		status: normalizeStatus(row.status),
+		currency: row.currency,
+		source: row.source as ManualOrderSource,
+		type: (row.type ?? 'production') as 'production' | 'sample',
+		sourceOrderId: row.sourceOrderId ?? null,
+		requiresReview: Boolean(row.requiresReview),
+		customerNote: row.notes?.trim() ? row.notes.trim() : null,
+		createdAt,
+		updatedAt,
+		statuses: buildTimelineEntries(row.status, row.notes ?? '', createdAt, (row.type ?? 'production') as 'production' | 'sample'),
+		items,
+		billing,
+		shipping: rawShipping,
+		totals: {
+			totalNet: fromMinorUnits(row.totalNet),
+			totalGross: fromMinorUnits(row.totalGross),
+		},
+		taskOverrides,
+		attachments: row.attachments.map(mapAttachmentRow),
+		paymentMethod: row.paymentMethod,
+		shippingMethod: row.shippingMethod,
+	};
+}
+
+function validateItems(items: OrderItemPayload[], isWooCommerce: boolean = false) {
+	if (items.length === 0) {
+		throw new Error('Dodaj przynajmniej jedną pozycję zamówienia.');
+	}
+
+	for (const item of items) {
+		if (!item.product.trim()) {
+			throw new Error('Każda pozycja musi mieć nazwę.');
+		}
+
+		if (!Number.isFinite(item.quantity) || item.quantity <= 0) {
+			throw new Error('Ilość pozycji musi być dodatnia.');
+		}
+
+		if (!Number.isFinite(item.unitPrice) || item.unitPrice < 0) {
+			if (!isWooCommerce) throw new Error('Cena jednostkowa musi być liczbą nieujemną.');
+		}
+
+		if (!Number.isFinite(item.vatRate) || item.vatRate < 0) {
+			if (!isWooCommerce) throw new Error('Stawka VAT musi być liczbą nieujemną.');
+		}
+
+		if (!Number.isFinite(item.totalNet) || item.totalNet < 0) {
+			if (!isWooCommerce) throw new Error('Kwota netto pozycji musi być liczbą nieujemną.');
+		}
+
+		if (!Number.isFinite(item.totalGross) || item.totalGross < 0) {
+			if (!isWooCommerce) throw new Error('Kwota brutto pozycji musi być liczbą nieujemną.');
+		}
+	}
+}
+
+function validatePayload(payload: ManualOrderPayload) {
+	const isWooCommerce = payload.source === 'woocommerce';
+
+	if (!payload.reference.trim()) {
+		throw new Error('Numer zamówienia jest wymagany.');
+	}
+
+	if (!payload.billing.name.trim()) {
+		throw new Error('Imię i nazwisko na fakturę jest wymagane.');
+	}
+
+	if (!isWooCommerce && (!payload.billing.street.trim() || !payload.billing.postalCode.trim() || !payload.billing.city.trim())) {
+		throw new Error('Adres rozliczeniowy musi być kompletny.');
+	}
+
+	const normalizedBillingPhone = normalizePhone(payload.billing.phone);
+	if (!isWooCommerce && (normalizedBillingPhone.length < 9 || normalizedBillingPhone.length > 11)) {
+		throw new Error('Telefon rozliczeniowy powinien miec od 9 do 11 cyfr.');
+	}
+	// For WooCommerce, we accept whatever phone number comes in, or empty
+	payload.billing.phone = normalizedBillingPhone || payload.billing.phone;
+
+	if (!payload.billing.email.trim()) {
+		throw new Error('E-mail rozliczeniowy jest wymagany.');
+	}
+
+	if (!payload.shipping.sameAsBilling) {
+		if (
+			!isWooCommerce && (
+				!payload.shipping.name.trim() ||
+				!payload.shipping.street.trim() ||
+				!payload.shipping.postalCode.trim() ||
+				!payload.shipping.city.trim() ||
+				!payload.shipping.email.trim()
+			)
+		) {
+			throw new Error('Dane wysyłkowe muszą być kompletne.');
+		}
+
+		const normalizedShippingPhone = normalizePhone(payload.shipping.phone);
+		if (!isWooCommerce && (normalizedShippingPhone.length < 9 || normalizedShippingPhone.length > 11)) {
+			throw new Error('Telefon wysylkowy powinien miec od 9 do 11 cyfr.');
+		}
+		payload.shipping.phone = normalizedShippingPhone || payload.shipping.phone;
+	}
+
+	validateItems(payload.items, isWooCommerce);
+}
+
+export async function getManualOrderById(id: string): Promise<Order | null> {
+	const row = await db.query.manualOrders.findFirst({
+		where: eq(manualOrders.id, id),
+		with: {
+			items: true,
+			attachments: {
+				orderBy: desc(orderAttachments.createdAt),
+				with: {
+					uploader: {
+						columns: {
+							id: true,
+							name: true,
+							email: true,
+						},
+					},
+				},
+			},
+		},
+	});
+
+	if (!row) {
+		return null;
+	}
+
+	return mapOrderRow(row);
+}
+
+export async function createOrder(payload: ManualOrderPayload): Promise<Order> {
+	validatePayload(payload);
+
+    // Check for existing order reference
+    const existingOrder = await db.query.manualOrders.findFirst({
+        where: eq(manualOrders.reference, payload.reference),
+    });
+
+    if (existingOrder) {
+        throw new Error(`Zamówienie o numerze ${payload.reference} już istnieje.`);
+    }
+
+	const id = crypto.randomUUID();
+
+	const billing = payload.billing;
+	const shipping = payload.shipping.sameAsBilling ? payload.billing : payload.shipping;
+
+	// Upsert customer
+	if (billing.email) {
+		const existingCustomer = await db.query.customers.findFirst({
+			where: eq(customers.email, billing.email),
+		});
+
+		if (!existingCustomer) {
+			await db.insert(customers).values({
+				id: crypto.randomUUID(),
+				name: billing.name,
+				email: billing.email,
+				phone: billing.phone,
+				billingStreet: billing.street,
+				billingCity: billing.city,
+				billingPostalCode: billing.postalCode,
+				shippingStreet: shipping.street,
+				shippingCity: shipping.city,
+				shippingPostalCode: shipping.postalCode,
+			});
+		} else {
+			// Update customer details only if missing in existing record
+			await db.update(customers)
+				.set({
+					// name: existingCustomer.name ?? billing.name, // Name might change, but let's be safe
+					phone: existingCustomer.phone ?? billing.phone,
+					billingStreet: existingCustomer.billingStreet ?? billing.street,
+					billingCity: existingCustomer.billingCity ?? billing.city,
+					billingPostalCode: existingCustomer.billingPostalCode ?? billing.postalCode,
+                    shippingStreet: existingCustomer.shippingStreet ?? shipping.street,
+                    shippingCity: existingCustomer.shippingCity ?? shipping.city,
+                    shippingPostalCode: existingCustomer.shippingPostalCode ?? shipping.postalCode,
+					updatedAt: new Date(),
+				})
+				.where(eq(customers.email, billing.email));
+		}
+	}
+
+    // Calculate totals using integer arithmetic (minor units) to avoid rounding errors
+	const orderTotalsMinor = payload.items.reduce(
+		(acc, item) => ({
+			net: acc.net + toMinorUnits(item.totalNet),
+			gross: acc.gross + toMinorUnits(item.totalGross),
+		}),
+		{ net: 0, gross: 0 },
+	);
+
+	const orderRecord: ManualOrderInsert = {
+		id,
+		reference: payload.reference,
+		status: normalizeStatus(payload.status),
+		channel: payload.channel,
+		notes: payload.notes,
+		currency: payload.currency,
+		source: payload.source ?? 'manual',
+		type: payload.type ?? 'production',
+		sourceOrderId: payload.sourceOrderId ?? null,
+		requiresReview: payload.requiresReview ?? false,
+		totalNet: orderTotalsMinor.net,
+		totalGross: orderTotalsMinor.gross,
+		billingName: billing.name,
+		billingStreet: billing.street,
+		billingPostalCode: billing.postalCode,
+		billingCity: billing.city,
+		billingPhone: billing.phone,
+		billingEmail: billing.email,
+		shippingSameAsBilling: payload.shipping.sameAsBilling,
+		shippingName: shipping.name,
+		shippingStreet: shipping.street,
+		shippingPostalCode: shipping.postalCode,
+		shippingCity: shipping.city,
+		shippingPhone: shipping.phone,
+		shippingEmail: shipping.email,
+		paymentMethod: payload.paymentMethod,
+		shippingMethod: payload.shippingMethod,
+	};
+
+	await db.insert(manualOrders).values(orderRecord);
+
+	for (const item of payload.items) {
+		const itemRecord: ManualOrderItemInsert = {
+			id: crypto.randomUUID(),
+			orderId: id,
+			product: item.product,
+			quantity: toQuantityUnits(item.quantity),
+			unitPrice: toMinorUnits(item.unitPrice),
+			vatRate: toVatUnits(item.vatRate),
+			unitPricePerSquareMeter: item.unitPricePerSquareMeter
+				? toMinorUnits(item.unitPricePerSquareMeter)
+				: null,
+			totalNet: toMinorUnits(item.totalNet),
+			totalGross: toMinorUnits(item.totalGross),
+		};
+
+		await db.insert(manualOrderItems).values(itemRecord);
+	}
+
+	const created = await getManualOrderById(id);
+
+	if (!created) {
+		throw new Error('Nie udało się pobrać świeżo utworzonego zamówienia.');
+	}
+
+	return created;
+}
+
+export async function getFilteredOrders(filter?: string): Promise<Order[]> {
+    const conditions = [];
+
+    if (filter === 'verification') {
+        conditions.push(or(
+            eq(manualOrders.status, 'Zamówienie utworzone'),
+            eq(manualOrders.requiresReview, true)
+        ));
+    } else if (filter === 'urgent') {
+        const urgentDate = new Date();
+        urgentDate.setDate(urgentDate.getDate() - 3);
+        conditions.push(and(
+            eq(manualOrders.status, 'Zamówienie utworzone'),
+            lt(manualOrders.createdAt, urgentDate)
+        ));
+    }
+
+	const rows = await db.query.manualOrders.findMany({
+        where: conditions.length ? and(...conditions) : undefined,
+		orderBy: desc(manualOrders.createdAt),
+		with: {
+			items: true,
+			attachments: {
+				orderBy: desc(orderAttachments.createdAt),
+				with: {
+					uploader: {
+						columns: {
+							id: true,
+							name: true,
+							email: true,
+						},
+					},
+				},
+			},
+		},
+	});
+
+    let results = rows.map(mapOrderRow);
+
+    if (filter === 'invoice') {
+        const today = new Date();
+        const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+        const daysLeft = daysInMonth - today.getDate();
+        const isMonthEnd = daysLeft <= 5;
+
+        results = results.filter(order => {
+            const overrides = order.taskOverrides;
+            const acceptedByWarehouse = overrides['Zamówienie przyjęte przez magazyn'];
+            const finalInvoiceIssued = overrides['Wystawiono fakturę końcową'];
+            
+            if (!acceptedByWarehouse) return false;
+            if (finalInvoiceIssued) return false;
+            
+            const updatedAt = new Date(order.updatedAt);
+            const daysSinceUpdate = differenceInCalendarDays(today, updatedAt);
+            
+            if (daysSinceUpdate > 7) return true;
+            if (isMonthEnd) return true;
+            
+            return false;
+        });
+    }
+
+	return results;
+}
+
+type DocumentRow = typeof documents.$inferSelect;
+
+function mapDocumentRow(row: DocumentRow): OrderDocument {
+	const issueDate = row.issueDate
+		? new Date(row.issueDate instanceof Date ? row.issueDate : Number(row.issueDate)).toISOString()
+		: null;
+
+	return {
+		id: row.id,
+		type: row.type,
+		status: row.status,
+		number: row.number ?? null,
+		issueDate,
+		pdfUrl: row.pdfUrl ?? null,
+	};
+}
+
+export async function getDocumentsForOrder(orderId: string): Promise<OrderDocument[]> {
+	const rows = await db.query.documents.findMany({
+		where: eq(documents.orderId, orderId),
+		orderBy: desc(documents.createdAt),
+	});
+
+	return rows.map(mapDocumentRow);
+}
+
