@@ -1,7 +1,8 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, and, or, lt, sql } from 'drizzle-orm';
+import { differenceInCalendarDays } from 'date-fns';
 
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
@@ -327,8 +328,31 @@ export async function getManualOrderById(id: string): Promise<Order | null> {
 	return mapOrderRow(row);
 }
 
-export async function getManualOrders(): Promise<Order[]> {
+export async function getManualOrders(filter?: string): Promise<Order[]> {
+    const conditions = [];
+
+    if (filter === 'verification') {
+        conditions.push(or(
+            eq(manualOrders.status, 'Zamówienie utworzone'),
+            eq(manualOrders.requiresReview, true)
+        ));
+    } else if (filter === 'urgent') {
+        const urgentDate = new Date();
+        urgentDate.setDate(urgentDate.getDate() - 3);
+        conditions.push(and(
+            eq(manualOrders.status, 'Zamówienie utworzone'),
+            lt(manualOrders.createdAt, urgentDate)
+        ));
+    } else if (filter === 'invoice') {
+        // Logic for stalled orders (accepted by warehouse but no final invoice)
+        // This is complex to do in SQL directly because of JSON parsing for taskOverrides.
+        // We will filter in memory for this specific case, or try to approximate in SQL.
+        // For now, let's fetch all and filter in memory if 'invoice' is requested, 
+        // or just fetch all if no filter matches SQL-able conditions.
+    }
+
 	const rows = await db.query.manualOrders.findMany({
+        where: conditions.length ? and(...conditions) : undefined,
 		orderBy: desc(manualOrders.createdAt),
 		with: {
 			items: true,
@@ -347,7 +371,33 @@ export async function getManualOrders(): Promise<Order[]> {
 		},
 	});
 
-	return rows.map(mapOrderRow);
+    let results = rows.map(mapOrderRow);
+
+    if (filter === 'invoice') {
+        const today = new Date();
+        const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+        const daysLeft = daysInMonth - today.getDate();
+        const isMonthEnd = daysLeft <= 5;
+
+        results = results.filter(order => {
+            const overrides = order.taskOverrides;
+            const acceptedByWarehouse = overrides['Zamówienie przyjęte przez magazyn'];
+            const finalInvoiceIssued = overrides['Wystawiono fakturę końcową'];
+            
+            if (!acceptedByWarehouse) return false;
+            if (finalInvoiceIssued) return false;
+            
+            const updatedAt = new Date(order.updatedAt);
+            const daysSinceUpdate = differenceInCalendarDays(today, updatedAt);
+            
+            if (daysSinceUpdate > 7) return true;
+            if (isMonthEnd) return true;
+            
+            return false;
+        });
+    }
+
+	return results;
 }
 
 export async function createOrder(payload: ManualOrderPayload, userId?: string | null): Promise<Order> {

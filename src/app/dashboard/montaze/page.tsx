@@ -39,7 +39,7 @@ type InProgressStage =
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default async function MontazePage(props: any) {
     const searchParams = (await props.searchParams) as
-        | { view?: string; stage?: string; sort?: string }
+        | { view?: string; stage?: string; sort?: string; filter?: string }
         | undefined;
     const user = await requireUser();
     const r2Config = await tryGetR2Config();
@@ -126,7 +126,19 @@ export default async function MontazePage(props: any) {
     }
 
     if (!isOnlyInstaller) {
-        if (view === 'lead') {
+        if (searchParams?.filter === 'urgent') {
+            // KPI: Wiszące montaże (bez daty, nie lead, nie zakończone)
+            conditions.push(
+                and(
+                    sql`${montages.status} != 'lead'`,
+                    sql`${montages.status} != 'completed'`,
+                    isNull(montages.scheduledInstallationAt)
+                )
+            );
+        } else if (searchParams?.filter === 'payments') {
+            // KPI: Nierozliczone montaże
+            conditions.push(inArray(montages.status, ['before_first_payment', 'before_final_invoice']));
+        } else if (view === 'lead') {
             conditions.push(eq(montages.status, 'lead'));
         } else if (view === 'done') {
             conditions.push(eq(montages.status, 'completed'));
@@ -252,6 +264,17 @@ export default async function MontazePage(props: any) {
 
     return (
         <div className="flex flex-col h-[calc(100vh-4rem)]">
+            {searchParams?.filter && (
+                <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 text-sm text-amber-800 flex justify-between items-center">
+                    <span>
+                        {searchParams.filter === 'urgent' && "Filtrowanie: Wiszące montaże (bez daty)"}
+                        {searchParams.filter === 'payments' && "Filtrowanie: Nierozliczone montaże (brak wpłaty)"}
+                    </span>
+                    <Link href="/dashboard/montaze" className="text-amber-900 underline font-medium">
+                        Wyczyść filtr
+                    </Link>
+                </div>
+            )}
             <div className="border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 z-10">
                 <div className="flex flex-col md:flex-row md:h-16 md:items-center px-4 py-3 md:py-0 sm:px-6 justify-between gap-3 md:gap-4">
                     <div className="flex items-center justify-between">
