@@ -97,3 +97,12 @@ Przy każdej implementacji, modyfikacji lub naprawie błędu, **ZAWSZE** analizu
   - W tabelach (np. `montages`, `quote_items`) przechowuj `product_id` (integer).
   - Nazwę produktu (`product_name`) można przechowywać dodatkowo jako "snapshot" w momencie zapisu (dla celów historycznych/czytelności), ale logika biznesowa (np. import do wyceny, stany magazynowe) musi korzystać z ID.
   - Przy pobieraniu danych (np. do edycji), zawsze odświeżaj informacje o produkcie (cena, atrybuty) na podstawie ID.
+
+## Offline-First & Field Operations (Priorytet dla Mobile)
+Aplikacja jest używana przez pracowników terenowych w miejscach o słabym zasięgu (piwnice, nowe budowy).
+1.  **Krytyczne Widoki:** Widoki Montażu (`/dashboard/montaze/[id]`) oraz Zadań muszą być projektowane tak, aby działały przy przerywanym połączeniu.
+2.  **Data Fetching:** Dla danych, które muszą być dostępne offline (szczegóły zlecenia, checklisty), preferuj pobieranie danych po stronie klienta (Client Components + React Query) z włączonym cache'owaniem, zamiast renderowania wszystkiego na serwerze (RSC).
+3.  **Optimistic UI:** Każda akcja użytkownika (np. odhaczenie checklisty) musi dawać natychmiastowy feedback wizualny ("Zrobione"), nawet jeśli serwer jeszcze nie potwierdził zapisu.
+4.  **Graceful Degradation:** Jeśli funkcja wymaga 100% dostępu do sieci (np. generowanie PDF, wysyłka e-maila), przycisk musi być nieaktywny w trybie offline, z jasnym komunikatem dla użytkownika.
+5.  **Unikaj Blokowania:** Nigdy nie blokuj interfejsu spinnerem "Ładowanie..." na dłużej niż to konieczne. Jeśli dane są w cache, pokaż je natychmiast, a w tle sprawdzaj aktualizacje (SWR - Stale While Revalidate).
+6.  **Konflikty Danych:** Stosuj zasadę "Last Write Wins" (Ostatni Zapis Wygrywa). Jeśli pracownik zmieni status offline, a po odzyskaniu sieci wyśle go na serwer, system powinien przyjąć tę zmianę jako najnowszą, chyba że narusza to krytyczne reguły biznesowe.

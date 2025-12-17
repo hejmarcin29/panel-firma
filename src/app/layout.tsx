@@ -7,6 +7,7 @@ import { VersionChecker } from "@/components/system/version-checker";
 import { UserProvider } from "@/lib/auth/client";
 import { getCurrentSession } from "@/lib/auth/session";
 import { cookies } from "next/headers";
+import { QueryProvider } from "@/components/providers/query-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -51,20 +52,22 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} antialiased overflow-x-hidden`}
       >
-        <UserProvider initialUser={session?.user ?? null}>
-        <DensityProvider initialDensity={density}>
-          <ThemeProvider
-              attribute="class"
-              defaultTheme="light"
-              enableSystem
-              disableTransitionOnChange
-            >
-              {children}
-              <Toaster position="top-center" />
-              <VersionChecker />
-          </ThemeProvider>
-        </DensityProvider>
-        </UserProvider>
+        <QueryProvider>
+          <UserProvider initialUser={session?.user ?? null}>
+            <DensityProvider initialDensity={density}>
+              <ThemeProvider
+                  attribute="class"
+                  defaultTheme="light"
+                  enableSystem
+                  disableTransitionOnChange
+                >
+                  {children}
+                  <Toaster position="top-center" />
+                  <VersionChecker />
+              </ThemeProvider>
+            </DensityProvider>
+          </UserProvider>
+        </QueryProvider>
       </body>
     </html>
   );
