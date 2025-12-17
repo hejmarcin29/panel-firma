@@ -4,6 +4,8 @@ import { CheckCircle2, Circle, Upload, FileText, RefreshCw, Pencil, Trash2, Plus
 import { useTransition, useState } from "react";
 import { useRouter } from "next/navigation";
 import { differenceInCalendarDays } from "date-fns";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -48,6 +50,7 @@ export function MontageWorkflowTab({
     measurers?: UserOption[];
 }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [pending, startTransition] = useTransition();
   const [isEditing, setIsEditing] = useState(false);
   const [newItemLabel, setNewItemLabel] = useState("");
@@ -55,12 +58,68 @@ export function MontageWorkflowTab({
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
 
+  const { mutate: mutateStatus } = useMutation({
+    mutationKey: ['updateMontageStatus', montage.id],
+    mutationFn: async (status: string) => {
+        return await updateMontageStatus({ montageId: montage.id, status });
+    },
+    onMutate: async (newStatus) => {
+        await queryClient.cancelQueries({ queryKey: ['montage', montage.id] });
+        const previousData = queryClient.getQueryData(['montage', montage.id]);
+        queryClient.setQueryData(['montage', montage.id], (old: any) => {
+            if (!old) return old;
+            return {
+                ...old,
+                montage: { ...old.montage, status: newStatus }
+            };
+        });
+        return { previousData };
+    },
+    onError: (err, newStatus, context) => {
+        queryClient.setQueryData(['montage', montage.id], context?.previousData);
+        toast.error("Błąd aktualizacji statusu");
+    },
+    onSettled: () => {
+        queryClient.invalidateQueries({ queryKey: ['montage', montage.id] });
+        router.refresh();
+    }
+  });
+
+  const { mutate: mutateChecklist } = useMutation({
+    mutationKey: ['toggleChecklist', montage.id],
+    mutationFn: async ({ itemId, completed }: { itemId: string, completed: boolean }) => {
+        return await toggleMontageChecklistItem({ montageId: montage.id, itemId, completed });
+    },
+    onMutate: async ({ itemId, completed }) => {
+        await queryClient.cancelQueries({ queryKey: ['montage', montage.id] });
+        const previousData = queryClient.getQueryData(['montage', montage.id]);
+        queryClient.setQueryData(['montage', montage.id], (old: any) => {
+            if (!old) return old;
+            return {
+                ...old,
+                montage: {
+                    ...old.montage,
+                    checklistItems: old.montage.checklistItems.map((item: any) => 
+                        item.id === itemId ? { ...item, completed } : item
+                    )
+                }
+            };
+        });
+        return { previousData };
+    },
+    onError: (err, vars, context) => {
+        queryClient.setQueryData(['montage', montage.id], context?.previousData);
+        toast.error("Błąd aktualizacji checklisty");
+    },
+    onSettled: () => {
+        queryClient.invalidateQueries({ queryKey: ['montage', montage.id] });
+        router.refresh();
+    }
+  });
+
   const handleToggle = (itemId: string, completed: boolean) => {
     if (isEditing) return;
-    startTransition(async () => {
-      await toggleMontageChecklistItem({ montageId: montage.id, itemId, completed });
-      router.refresh();
-    });
+    mutateChecklist({ itemId, completed });
   };
 
   const handleFileUpload = async (itemId: string, file: File) => {
@@ -127,10 +186,7 @@ export function MontageWorkflowTab({
         }
     }
 
-    startTransition(async () => {
-        await updateMontageStatus({ montageId: montage.id, status });
-        router.refresh();
-    });
+    mutateStatus(status);
   };
 
   const handleRealizationStatusChange = (field: 'materialStatus' | 'installerStatus' | 'installerId' | 'measurerId', value: string) => {

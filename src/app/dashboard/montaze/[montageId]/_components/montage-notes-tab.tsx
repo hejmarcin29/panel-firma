@@ -1,8 +1,10 @@
 "use client";
 
 import { Send, Paperclip, User, Lock } from "lucide-react";
-import { useTransition, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -16,12 +18,57 @@ import { cn } from "@/lib/utils";
 
 export function MontageNotesTab({ montage, userRoles = ['admin'] }: { montage: Montage; userRoles?: UserRole[] }) {
   const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const queryClient = useQueryClient();
   const formRef = useRef<HTMLFormElement>(null);
   const [isInternal, setIsInternal] = useState(false);
 
   const isAdmin = userRoles.includes('admin');
   const isInstaller = userRoles.includes('installer') && !isAdmin;
+
+  const { mutate, isPending } = useMutation({
+    mutationKey: ['addMontageNote', montage.id],
+    mutationFn: async (formData: FormData) => {
+        return await addMontageNote(formData);
+    },
+    onMutate: async (formData) => {
+        await queryClient.cancelQueries({ queryKey: ['montage', montage.id] });
+        const previousData = queryClient.getQueryData(['montage', montage.id]);
+
+        const content = formData.get('content') as string;
+        const isInternalNote = formData.get('isInternal') === 'true';
+
+        queryClient.setQueryData(['montage', montage.id], (old: any) => {
+            if (!old) return old;
+            
+            const newNote = {
+                id: 'temp-' + Date.now(),
+                content: content,
+                createdAt: new Date().toISOString(), // Use ISO string for consistency
+                author: { name: 'Ty' },
+                isInternal: isInternalNote,
+                attachments: []
+            };
+
+            return {
+                ...old,
+                montage: {
+                    ...old.montage,
+                    notes: [newNote, ...old.montage.notes]
+                }
+            };
+        });
+
+        return { previousData };
+    },
+    onError: (err, newTodo, context) => {
+        queryClient.setQueryData(['montage', montage.id], context?.previousData);
+        toast.error("Nie udało się dodać notatki");
+    },
+    onSettled: () => {
+        queryClient.invalidateQueries({ queryKey: ['montage', montage.id] });
+        router.refresh(); // Keep server components in sync if any
+    },
+  });
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -32,12 +79,9 @@ export function MontageNotesTab({ montage, userRoles = ['admin'] }: { montage: M
         formData.append('isInternal', 'true');
     }
 
-    startTransition(async () => {
-      await addMontageNote(formData);
-      formRef.current?.reset();
-      setIsInternal(false);
-      router.refresh();
-    });
+    mutate(formData);
+    formRef.current?.reset();
+    setIsInternal(false);
   };
 
   const notes = [...montage.notes]
@@ -117,7 +161,7 @@ export function MontageNotesTab({ montage, userRoles = ['admin'] }: { montage: M
                 name="content"
                 placeholder="Napisz notatkę..."
                 className="min-h-20 resize-none pr-12"
-                disabled={pending}
+                disabled={isPending}
                 onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
@@ -143,7 +187,7 @@ export function MontageNotesTab({ montage, userRoles = ['admin'] }: { montage: M
                     />
                 </div>
             </div>
-            <Button type="submit" disabled={pending}>
+            <Button type="submit" disabled={isPending}>
             <Send className="h-4 w-4" />
             </Button>
         </div>
