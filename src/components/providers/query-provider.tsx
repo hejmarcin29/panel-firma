@@ -1,7 +1,7 @@
 'use client';
 
 import { QueryClient } from '@tanstack/react-query';
-import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { PersistQueryClientProvider, PersistedClient } from '@tanstack/react-query-persist-client';
 import { ReactNode, useState } from 'react';
 import { get, set, del } from 'idb-keyval';
 
@@ -11,7 +11,7 @@ interface QueryProviderProps {
 
 const createIDBPersister = (idbKey: string = 'reactQuery') => {
   return {
-    persistClient: async (client: any) => {
+    persistClient: async (client: PersistedClient) => {
       await set(idbKey, client);
     },
     restoreClient: async () => {
