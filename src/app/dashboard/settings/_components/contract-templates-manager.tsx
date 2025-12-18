@@ -44,7 +44,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 
-import { createContractTemplate, updateContractTemplate, deleteContractTemplate } from '../contracts/actions';
+import { createContractTemplate, updateContractTemplate, deleteContractTemplate, resetToDefaultTemplate } from '../contracts/actions';
 
 const formSchema = z.object({
     name: z.string().min(1, 'Nazwa jest wymagana'),
@@ -93,6 +93,19 @@ export function ContractTemplatesManager({ templates }: { templates: Template[] 
         setIsDialogOpen(true);
     };
 
+    const handleReset = async () => {
+        if (!confirm('Czy na pewno chcesz przywrócić domyślny szablon profesjonalny?')) return;
+        setIsSaving(true);
+        try {
+            await resetToDefaultTemplate();
+            toast.success('Przywrócono domyślny szablon');
+        } catch (error) {
+            toast.error('Błąd przywracania szablonu');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         setIsSaving(true);
         try {
@@ -129,9 +142,14 @@ export function ContractTemplatesManager({ templates }: { templates: Template[] 
                     <CardTitle>Szablony Umów</CardTitle>
                     <CardDescription>Zarządzaj wzorami umów generowanych dla klientów.</CardDescription>
                 </div>
-                <Button onClick={handleCreate}>
-                    <Plus className="mr-2 h-4 w-4" /> Nowy Szablon
-                </Button>
+                <div className="flex gap-2">
+                    <Button variant="outline" onClick={handleReset} disabled={isSaving}>
+                        <FileText className="mr-2 h-4 w-4" /> Przywróć Domyślny
+                    </Button>
+                    <Button onClick={handleCreate}>
+                        <Plus className="mr-2 h-4 w-4" /> Nowy Szablon
+                    </Button>
+                </div>
             </CardHeader>
             <CardContent>
                 <Table>

@@ -890,16 +890,146 @@ export function QuoteEditor({ quote, templates }: QuoteEditorProps) {
                                             <head>
                                                 <title>Umowa - ${quote.montage.clientName}</title>
                                                 <style>
-                                                    body { font-family: Arial, sans-serif; }
+                                                    @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Open+Sans:wght@400;600&display=swap');
+                                                    
+                                                    body { 
+                                                        font-family: 'Merriweather', serif;
+                                                        line-height: 1.6;
+                                                        color: #1a1a1a;
+                                                        font-size: 11pt;
+                                                        margin: 0;
+                                                        padding: 0;
+                                                    }
+                                                    
+                                                    .contract-container {
+                                                        max-width: 100%;
+                                                        margin: 0 auto;
+                                                    }
+
+                                                    /* Typography */
+                                                    h1 {
+                                                        font-family: 'Open Sans', sans-serif;
+                                                        font-size: 24pt;
+                                                        font-weight: 700;
+                                                        text-transform: uppercase;
+                                                        text-align: center;
+                                                        margin-bottom: 10px;
+                                                        color: #000;
+                                                        letter-spacing: 1px;
+                                                    }
+                                                    
+                                                    h2 {
+                                                        font-family: 'Open Sans', sans-serif;
+                                                        font-size: 14pt;
+                                                        font-weight: 600;
+                                                        margin-top: 30px;
+                                                        margin-bottom: 15px;
+                                                        border-bottom: 1px solid #ddd;
+                                                        padding-bottom: 5px;
+                                                        color: #333;
+                                                    }
+                                                    
+                                                    p {
+                                                        margin-bottom: 10px;
+                                                        text-align: justify;
+                                                    }
+
+                                                    /* Layout Elements */
+                                                    .contract-header {
+                                                        text-align: center;
+                                                        margin-bottom: 40px;
+                                                        padding-bottom: 20px;
+                                                        border-bottom: 2px solid #000;
+                                                    }
+                                                    
+                                                    .contract-meta {
+                                                        font-family: 'Open Sans', sans-serif;
+                                                        font-size: 10pt;
+                                                        color: #666;
+                                                        margin-top: 5px;
+                                                    }
+
+                                                    .parties-container {
+                                                        display: flex;
+                                                        justify-content: space-between;
+                                                        margin: 30px 0;
+                                                        gap: 40px;
+                                                    }
+                                                    
+                                                    .party-box {
+                                                        flex: 1;
+                                                        background: #f9fafb;
+                                                        padding: 20px;
+                                                        border: 1px solid #e5e7eb;
+                                                        border-radius: 4px;
+                                                    }
+                                                    
+                                                    .party-title {
+                                                        font-family: 'Open Sans', sans-serif;
+                                                        font-weight: 600;
+                                                        text-transform: uppercase;
+                                                        font-size: 0.9em;
+                                                        margin-bottom: 10px;
+                                                        color: #4b5563;
+                                                        border-bottom: 1px solid #e5e7eb;
+                                                        padding-bottom: 5px;
+                                                    }
+
+                                                    .signatures-section {
+                                                        margin-top: 80px;
+                                                        display: flex;
+                                                        justify-content: space-between;
+                                                        page-break-inside: avoid;
+                                                    }
+                                                    
+                                                    .signature-box {
+                                                        width: 40%;
+                                                        text-align: center;
+                                                    }
+                                                    
+                                                    .signature-line {
+                                                        border-top: 1px solid #000;
+                                                        margin-top: 10px;
+                                                        padding-top: 5px;
+                                                        font-size: 0.9em;
+                                                        font-weight: bold;
+                                                    }
+                                                    
+                                                    .signature-image {
+                                                        max-height: 80px;
+                                                        margin-bottom: -10px;
+                                                    }
+
+                                                    /* Print Specifics */
                                                     @media print {
-                                                        @page { margin: 2cm; }
+                                                        @page { 
+                                                            margin: 2.5cm;
+                                                            size: A4;
+                                                        }
+                                                        body {
+                                                            -webkit-print-color-adjust: exact;
+                                                            print-color-adjust: exact;
+                                                        }
+                                                        .party-box {
+                                                            background-color: #fff !important;
+                                                            border: 1px solid #ccc !important;
+                                                        }
+                                                        .no-print {
+                                                            display: none !important;
+                                                        }
                                                     }
                                                 </style>
                                             </head>
                                             <body>
-                                                ${quote.contract?.content}
+                                                <div class="contract-container">
+                                                    ${quote.contract?.content}
+                                                </div>
                                                 <script>
-                                                    window.onload = function() { window.print(); }
+                                                    window.onload = function() { 
+                                                        setTimeout(function() {
+                                                            window.print();
+                                                        }, 500);
+                                                    }
                                                 </script>
                                             </body>
                                         </html>
