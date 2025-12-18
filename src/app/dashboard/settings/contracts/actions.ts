@@ -8,6 +8,8 @@ import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
 import { contractTemplates, contracts, quotes } from '@/lib/db/schema';
 
+import { getAppSetting, appSettingKeys } from '@/lib/settings';
+
 // --- TEMPLATES ---
 
 export async function getContractTemplates() {
@@ -70,6 +72,9 @@ export async function resetToDefaultTemplate() {
 
     const professionalTemplate = `
 <div class="contract-header">
+    <div style="text-align: center; margin-bottom: 20px;">
+        {{logo_firmy}}
+    </div>
     <h1>UMOWA O ROBOTY BUDOWLANE</h1>
     <div class="contract-meta">
         <p>Nr: <strong>{{numer_wyceny}}</strong></p>
@@ -185,6 +190,10 @@ export async function generateContract(quoteId: string, templateId: string, vari
 
     if (!quote) throw new Error('Wycena nie istnieje');
 
+    // Fetch logo
+    const logoUrl = await getAppSetting(appSettingKeys.companyLogoUrl);
+    const logoHtml = logoUrl ? `<img src="${logoUrl}" alt="Logo" style="max-height: 80px; max-width: 200px;" />` : '';
+
     // Replace placeholders
     let content = template.content;
     
@@ -199,6 +208,7 @@ export async function generateContract(quoteId: string, templateId: string, vari
         '{{kwota_netto}}': (quote.totalNet / 100).toFixed(2),
         '{{kwota_brutto}}': (quote.totalGross / 100).toFixed(2),
         '{{adres_montazu}}': quote.montage.installationAddress || quote.montage.address || '',
+        '{{logo_firmy}}': logoHtml,
     };
 
     // Merge system and user variables

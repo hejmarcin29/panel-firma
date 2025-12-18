@@ -26,7 +26,7 @@ import {
   DialogTrigger,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { updateMontageContactDetails, updateMontageRealizationStatus } from "../../actions";
+import { updateMontageContactDetails, updateMontageRealizationStatus, generateCustomerToken } from "../../actions";
 import type { Montage } from "../../types";
 import { formatScheduleRange } from "../../utils";
 import { customerSources } from "@/lib/db/schema";
@@ -489,13 +489,63 @@ export function MontageClientCard({
         <div className="space-y-3">
             <div className="flex items-start gap-3">
             <MapPin className="mt-0.5 h-4 w-4 text-muted-foreground" />
-            <div className="grid gap-0.5">
-                <p className="text-sm font-medium leading-none">
-                {montage.installationAddress || "Brak adresu"}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                {montage.installationCity}
-                </p>
+            <div className="grid gap-0.5 w-full">
+                <div className="flex justify-between items-start">
+                    <div>
+                        <p className="text-sm font-medium leading-none">
+                        {montage.installationAddress || "Brak adresu"}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                        {montage.installationCity}
+                        </p>
+                    </div>
+                    <div className="flex gap-1">
+                        {montage.customer?.referralToken ? (
+                            <>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 text-muted-foreground hover:text-primary"
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(`https://b2b.primepodloga.pl/s/${montage.customer!.referralToken}`);
+                                        toast.success('Link do portalu skopiowany');
+                                    }}
+                                    title="Kopiuj link do portalu klienta"
+                                >
+                                    <Copy className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 text-muted-foreground hover:text-primary"
+                                    asChild
+                                    title="Otwórz portal klienta"
+                                >
+                                    <a href={`/s/${montage.customer.referralToken}`} target="_blank" rel="noopener noreferrer">
+                                        <ExternalLink className="h-3.5 w-3.5" />
+                                    </a>
+                                </Button>
+                            </>
+                        ) : (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-muted-foreground hover:text-primary"
+                                onClick={async () => {
+                                    try {
+                                        await generateCustomerToken(montage.id);
+                                        toast.success('Portal klienta aktywowany');
+                                    } catch {
+                                        toast.error('Błąd aktywacji portalu');
+                                    }
+                                }}
+                                title="Aktywuj portal klienta"
+                            >
+                                <Sparkles className="h-3.5 w-3.5" />
+                            </Button>
+                        )}
+                    </div>
+                </div>
                 {montage.installationAddress && (
                     <a
                         href={googleMapsUrl}

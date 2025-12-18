@@ -1,6 +1,8 @@
 'use server';
 
-import { asc, desc, sql } from 'drizzle-orm';
+import { asc, desc, sql, eq } from 'drizzle-orm';
+import { randomUUID } from 'crypto';
+import { revalidatePath } from 'next/cache';
 
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
@@ -11,6 +13,8 @@ import {
     montageTasks,
     systemLogs,
     quotes,
+    customers,
+    montages,
 } from '@/lib/db/schema';
 import { tryGetR2Config } from '@/lib/r2/config';
 import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
@@ -117,3 +121,27 @@ export async function getMontageDetails(montageId: string) {
 }
 
 export type MontageDetailsData = Awaited<ReturnType<typeof getMontageDetails>>;
+
+export async function generateCustomerToken(montageId: string) {
+    await requireUser();
+
+    const montage = await db.query.montages.findFirst({
+        where: eq(montages.id, montageId),
+        with: {
+            customer: true,
+        }
+    });
+
+    if (!montage || !montage.customer) {
+        throw new Error('Nie znaleziono montażu lub klienta');
+    }
+
+    const token = randomUUID();
+
+    await db.update(customers)
+        .set({ referralToken: token })
+        .where(eq(customers.id, montage.customer.id));
+
+    revalidatePath(`/dashboard/montaze/${montageId}`);
+    return token;
+}

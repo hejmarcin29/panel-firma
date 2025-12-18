@@ -191,71 +191,95 @@ export function ContractTemplatesManager({ templates }: { templates: Template[] 
                 </Table>
 
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-                        <DialogHeader>
+                    <DialogContent className="max-w-[95vw] w-full h-[95vh] flex flex-col p-0 gap-0">
+                        <DialogHeader className="p-6 pb-2 shrink-0">
                             <DialogTitle>{editingTemplate ? 'Edytuj Szablon' : 'Nowy Szablon'}</DialogTitle>
                             <DialogDescription>
-                                Dostępne zmienne: {'{{klient_nazwa}}'}, {'{{klient_adres}}'}, {'{{numer_wyceny}}'}, {'{{kwota_brutto}}'}, {'{{data_rozpoczecia}}'}, {'{{termin_zakonczenia}}'}, {'{{kwota_zaliczki}}'}, {'{{podpis_wykonawcy}}'}
+                                Dostępne zmienne: {'{{klient_nazwa}}'}, {'{{klient_adres}}'}, {'{{numer_wyceny}}'}, {'{{kwota_brutto}}'}, {'{{data_rozpoczecia}}'}, {'{{termin_zakonczenia}}'}, {'{{kwota_zaliczki}}'}, {'{{podpis_wykonawcy}}'}, {'{{logo_firmy}}'}
                             </DialogDescription>
                         </DialogHeader>
                         <Form {...form}>
-                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                                <FormField
-                                    control={form.control}
-                                    name="name"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Nazwa szablonu</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="np. Umowa Standardowa" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="isDefault"
-                                    render={({ field }) => (
-                                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                                            <FormControl>
-                                                <Checkbox
-                                                    checked={field.value}
-                                                    onCheckedChange={field.onChange}
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
+                                <div className="flex-1 flex flex-col gap-4 p-6 pt-2 overflow-hidden">
+                                    <div className="flex gap-4 shrink-0">
+                                        <FormField
+                                            control={form.control}
+                                            name="name"
+                                            render={({ field }) => (
+                                                <FormItem className="flex-1">
+                                                    <FormLabel>Nazwa szablonu</FormLabel>
+                                                    <FormControl>
+                                                        <Input placeholder="np. Umowa Standardowa" {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="isDefault"
+                                            render={({ field }) => (
+                                                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 mt-8">
+                                                    <FormControl>
+                                                        <Checkbox
+                                                            checked={field.value}
+                                                            onCheckedChange={field.onChange}
+                                                        />
+                                                    </FormControl>
+                                                    <div className="space-y-1 leading-none">
+                                                        <FormLabel>
+                                                            Ustaw jako domyślny
+                                                        </FormLabel>
+                                                    </div>
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center justify-between shrink-0">
+                                        <FormLabel>Treść umowy (HTML)</FormLabel>
+                                        <Button 
+                                            type="button" 
+                                            variant="outline" 
+                                            size="sm"
+                                            onClick={() => setShowPreview(!showPreview)}
+                                        >
+                                            {showPreview ? 'Edytuj kod' : 'Podgląd'}
+                                        </Button>
+                                    </div>
+
+                                    <div className="flex-1 border rounded-md overflow-hidden relative">
+                                        {showPreview ? (
+                                            <div className="absolute inset-0 overflow-auto bg-white p-8">
+                                                <div 
+                                                    className="prose max-w-none"
+                                                    dangerouslySetInnerHTML={{ __html: form.watch('content') }} 
                                                 />
-                                            </FormControl>
-                                            <div className="space-y-1 leading-none">
-                                                <FormLabel>
-                                                    Ustaw jako domyślny
-                                                </FormLabel>
-                                                <FormDescription>
-                                                    Ten szablon będzie wybierany automatycznie przy tworzeniu nowej umowy.
-                                                </FormDescription>
                                             </div>
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="content"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Treść umowy</FormLabel>
-                                            <FormControl>
-                                                <Textarea 
-                                                    placeholder="Treść umowy..." 
-                                                    className="min-h-[400px] font-mono text-sm" 
-                                                    {...field} 
-                                                />
-                                            </FormControl>
-                                            <FormDescription>
-                                                Możesz używać Markdown do formatowania tekstu.
-                                            </FormDescription>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <DialogFooter>
+                                        ) : (
+                                            <FormField
+                                                control={form.control}
+                                                name="content"
+                                                render={({ field }) => (
+                                                    <FormItem className="h-full space-y-0">
+                                                        <FormControl>
+                                                            <Textarea 
+                                                                placeholder="Treść umowy..." 
+                                                                className="h-full resize-none font-mono text-sm p-4 border-0 focus-visible:ring-0 rounded-none" 
+                                                                {...field} 
+                                                            />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+                                <DialogFooter className="p-6 pt-2 shrink-0 bg-background border-t">
+                                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                                        Anuluj
+                                    </Button>
                                     <Button type="submit" disabled={isSaving}>
                                         {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                         Zapisz
