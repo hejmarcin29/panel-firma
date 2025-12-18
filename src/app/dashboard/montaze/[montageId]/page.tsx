@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
-import { getMontageDetails } from './actions';
-import { MontageView } from './montage-view';
+import { getMontageDetails } from '../../crm/montaze/[montageId]/actions';
+import { MontageView } from '../../crm/montaze/[montageId]/montage-view';
 
 type MontageDetailsPageParams = {
     params: Promise<{
