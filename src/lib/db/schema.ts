@@ -1215,4 +1215,95 @@ export const quotesRelations = relations(quotes, ({ one }) => ({
     contract: one(contracts),
 }));
 
+// --- ERP MODULE ---
+
+export const suppliers = pgTable('suppliers', {
+    id: text('id').primaryKey(),
+    name: text('name').notNull(),
+    email: text('email'),
+    phone: text('phone'),
+    address: text('address'),
+    nip: text('nip'),
+    contactPerson: text('contact_person'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const purchaseOrderStatuses = ['draft', 'ordered', 'received', 'cancelled'] as const;
+export type PurchaseOrderStatus = (typeof purchaseOrderStatuses)[number];
+
+export const purchaseOrders = pgTable('purchase_orders', {
+    id: text('id').primaryKey(),
+    supplierId: text('supplier_id').references(() => suppliers.id),
+    status: text('status').$type<PurchaseOrderStatus>().notNull().default('draft'),
+    orderDate: timestamp('order_date'),
+    expectedDeliveryDate: timestamp('expected_delivery_date'),
+    totalNet: integer('total_net').notNull().default(0),
+    totalGross: integer('total_gross').notNull().default(0),
+    currency: text('currency').notNull().default('PLN'),
+    notes: text('notes'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const purchaseOrderItems = pgTable('purchase_order_items', {
+    id: text('id').primaryKey(),
+    purchaseOrderId: text('purchase_order_id').notNull().references(() => purchaseOrders.id, { onDelete: 'cascade' }),
+    productId: integer('product_id').references(() => products.id), // Link to existing products
+    productName: text('product_name').notNull(), // Snapshot or manual item
+    quantity: integer('quantity').notNull(),
+    unitPrice: integer('unit_price').notNull(), // Net price
+    vatRate: integer('vat_rate').notNull(),
+    totalNet: integer('total_net').notNull(),
+    totalGross: integer('total_gross').notNull(),
+});
+
+export const warehouseMovementTypes = ['in_purchase', 'out_sale', 'out_montage', 'adjustment', 'return'] as const;
+export type WarehouseMovementType = (typeof warehouseMovementTypes)[number];
+
+export const warehouseMovements = pgTable('warehouse_movements', {
+    id: text('id').primaryKey(),
+    productId: integer('product_id').notNull().references(() => products.id),
+    type: text('type').$type<WarehouseMovementType>().notNull(),
+    quantity: integer('quantity').notNull(), // Positive for IN, Negative for OUT
+    referenceId: text('reference_id'), // ID of PO, Order, or Montage
+    notes: text('notes'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    createdBy: text('created_by').references(() => users.id),
+});
+
+export const suppliersRelations = relations(suppliers, ({ many }) => ({
+    purchaseOrders: many(purchaseOrders),
+}));
+
+export const purchaseOrdersRelations = relations(purchaseOrders, ({ one, many }) => ({
+    supplier: one(suppliers, {
+        fields: [purchaseOrders.supplierId],
+        references: [suppliers.id],
+    }),
+    items: many(purchaseOrderItems),
+}));
+
+export const purchaseOrderItemsRelations = relations(purchaseOrderItems, ({ one }) => ({
+    purchaseOrder: one(purchaseOrders, {
+        fields: [purchaseOrderItems.purchaseOrderId],
+        references: [purchaseOrders.id],
+    }),
+    product: one(products, {
+        fields: [purchaseOrderItems.productId],
+        references: [products.id],
+    }),
+}));
+
+export const warehouseMovementsRelations = relations(warehouseMovements, ({ one }) => ({
+    product: one(products, {
+        fields: [warehouseMovements.productId],
+        references: [products.id],
+    }),
+    user: one(users, {
+        fields: [warehouseMovements.createdBy],
+        references: [users.id],
+    }),
+}));
+
 
