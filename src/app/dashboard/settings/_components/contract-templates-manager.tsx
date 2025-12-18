@@ -177,7 +177,7 @@ export function ContractTemplatesManager({ templates }: { templates: Template[] 
                         <DialogHeader>
                             <DialogTitle>{editingTemplate ? 'Edytuj Szablon' : 'Nowy Szablon'}</DialogTitle>
                             <DialogDescription>
-                                Dostępne zmienne: {'{{klient_nazwa}}'}, {'{{klient_adres}}'}, {'{{numer_wyceny}}'}, {'{{kwota_brutto}}'}, {'{{data_rozpoczecia}}'}, {'{{termin_zakonczenia}}'}, {'{{kwota_zaliczki}}'}
+                                Dostępne zmienne: {'{{klient_nazwa}}'}, {'{{klient_adres}}'}, {'{{numer_wyceny}}'}, {'{{kwota_brutto}}'}, {'{{data_rozpoczecia}}'}, {'{{termin_zakonczenia}}'}, {'{{kwota_zaliczki}}'}, {'{{podpis_wykonawcy}}'}
                             </DialogDescription>
                         </DialogHeader>
                         <Form {...form}>

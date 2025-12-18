@@ -43,6 +43,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { updateQuote, sendQuoteEmail, getProductsForQuote, deleteQuote } from '../actions';
 import { generateContract } from '../../settings/contracts/actions';
 import { FileText as FileTextIcon } from 'lucide-react';
+import { SignaturePad } from '@/components/ui/signature-pad';
 
 type ProductAttribute = {
     id: number;
@@ -109,6 +110,7 @@ export function QuoteEditor({ quote, templates }: QuoteEditorProps) {
     const [availableProducts, setAvailableProducts] = useState<Product[]>([]);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [contractorSignature, setContractorSignature] = useState<string | null>(null);
 
     // Filter products based on montage models
     const filteredProducts = availableProducts.filter(product => {
@@ -384,7 +386,13 @@ export function QuoteEditor({ quote, templates }: QuoteEditorProps) {
 
         try {
             setIsGeneratingContract(true);
-            await generateContract(quote.id, selectedTemplateId);
+            
+            const variables: Record<string, string> = {};
+            if (contractorSignature) {
+                variables['{{podpis_wykonawcy}}'] = `<img src="${contractorSignature}" alt="Podpis Wykonawcy" style="max-width: 200px; max-height: 100px;" />`;
+            }
+
+            await generateContract(quote.id, selectedTemplateId, variables);
             toast.success('Umowa została wygenerowana');
             setContractDialogOpen(false);
             router.refresh();
@@ -694,7 +702,8 @@ export function QuoteEditor({ quote, templates }: QuoteEditorProps) {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 quote-print-area">
-                <Card className="lg:col-span-2 print-full-width print-border-none">
+                <div className="lg:col-span-2 space-y-6">
+                    <Card className="print-full-width print-border-none">
                     <CardHeader className="print:hidden flex flex-row items-center justify-between">
                         <CardTitle>Pozycje</CardTitle>
                         <div className="flex gap-2">
@@ -868,6 +877,49 @@ export function QuoteEditor({ quote, templates }: QuoteEditorProps) {
                     </CardContent>
                 </Card>
 
+                {quote.contract && (
+                    <Card className="print-full-width print-border-none no-print">
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <CardTitle>Podgląd Umowy</CardTitle>
+                            <Button variant="outline" size="sm" onClick={() => {
+                                const printWindow = window.open('', '_blank');
+                                if (printWindow) {
+                                    printWindow.document.write(\`
+                                        <html>
+                                            <head>
+                                                <title>Umowa - \${quote.montage.clientName}</title>
+                                                <style>
+                                                    body { font-family: Arial, sans-serif; }
+                                                    @media print {
+                                                        @page { margin: 2cm; }
+                                                    }
+                                                </style>
+                                            </head>
+                                            <body>
+                                                \${quote.contract.content}
+                                                <script>
+                                                    window.onload = function() { window.print(); }
+                                                </script>
+                                            </body>
+                                        </html>
+                                    \`);
+                                    printWindow.document.close();
+                                }
+                            }}>
+                                <Printer className="w-4 h-4 mr-2" />
+                                Drukuj Umowę
+                            </Button>
+                        </CardHeader>
+                        <CardContent>
+                            <div 
+                                className="prose max-w-none border p-8 rounded-md bg-white min-h-[500px]"
+                                dangerouslySetInnerHTML={{ __html: quote.contract.content }}
+                            />
+                        </CardContent>
+                    </Card>
+                )}
+                </div>
+
                 <div className="space-y-6 print:hidden">
                     <Card>
                         <CardHeader>
@@ -967,6 +1019,11 @@ export function QuoteEditor({ quote, templates }: QuoteEditorProps) {
                                 </SelectContent>
                             </Select>
                         </div>
+                        <div className="space-y-2">
+                            <Label>Podpis Wykonawcy (opcjonalnie)</Label>
+                            <SignaturePad onSave={setContractorSignature} />
+                        </div>
+
                         <Button 
                             className="w-full" 
                             onClick={handleGenerateContract}
