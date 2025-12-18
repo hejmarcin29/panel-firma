@@ -237,7 +237,8 @@ export async function createMontage({
 	// Customer sync logic
     let finalCustomerId: string | null = null;
 
-	if (normalizedEmail || normalizedPhone) {
+    // Always try to find or create a customer
+    {
 		let existingCustomer = null;
 
 		// 1. Try by email
