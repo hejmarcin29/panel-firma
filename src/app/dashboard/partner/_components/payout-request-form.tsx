@@ -65,7 +65,7 @@ export function PayoutRequestForm({ maxAmount }: PayoutRequestFormProps) {
             } else {
                 toast.error(result.error || 'Wystąpił błąd');
             }
-        } catch (error) {
+        } catch {
             toast.error('Wystąpił błąd połączenia');
         } finally {
             setLoading(false);

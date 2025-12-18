@@ -45,7 +45,6 @@ export function MontageClientCard({
     userRoles = ['admin'],
     installers = [],
     measurers = [],
-    architects = [],
 }: { 
     montage: Montage; 
     userRoles?: UserRole[];
@@ -253,14 +252,6 @@ export function MontageClientCard({
       await updateMontageRealizationStatus({
           montageId: montage.id,
           measurerId: value === 'none' ? null : value
-      });
-      router.refresh();
-  };
-
-  const handleArchitectChange = async (value: string) => {
-      await updateMontageRealizationStatus({
-          montageId: montage.id,
-          architectId: value === 'none' ? null : value
       });
       router.refresh();
   };

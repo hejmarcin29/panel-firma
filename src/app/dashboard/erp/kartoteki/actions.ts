@@ -55,7 +55,7 @@ export async function createProduct(data: {
     purchasePrice?: number;
     description?: string;
     stockQuantity?: number;
-    attributes?: any[];
+    attributes?: { id: number; name: string; options: string[]; visible: boolean; variation: boolean }[];
 }) {
     // Generate a random ID for local product (avoiding WP range)
     // WP IDs are usually sequential integers. Let's use a range starting from 100,000,000

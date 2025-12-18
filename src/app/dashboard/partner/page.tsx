@@ -11,9 +11,8 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { format } from 'date-fns';
-import { pl } from 'date-fns/locale';
 import { formatCurrency } from '@/lib/utils';
 import { PayoutRequestForm } from './_components/payout-request-form';
 import { TermsAcceptance } from './_components/terms-acceptance';
@@ -167,7 +166,7 @@ export default async function PartnerDashboard() {
                                                 <div className="text-xs text-muted-foreground">{lead.installationCity}</div>
                                             </TableCell>
                                             <TableCell>
-                                                <Badge variant={getStatusColor(lead.status) as any}>
+                                                <Badge variant={getStatusColor(lead.status) as "default" | "secondary" | "destructive" | "outline"}>
                                                     {getStatusLabel(lead.status)}
                                                 </Badge>
                                             </TableCell>

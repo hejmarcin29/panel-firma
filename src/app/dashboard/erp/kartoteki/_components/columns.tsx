@@ -97,7 +97,7 @@ export const columns: ColumnDef<Product>[] = [
                     try {
                         await convertToLocalProduct(product.id);
                         toast.success("Produkt odłączony od sklepu (stał się lokalny)");
-                    } catch (e) {
+                    } catch {
                         toast.error("Błąd podczas konwersji");
                     }
                 }}>

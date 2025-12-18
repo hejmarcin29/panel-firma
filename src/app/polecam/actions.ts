@@ -1,10 +1,9 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { users, customers, montages, type CustomerSource } from '@/lib/db/schema';
+import { users, customers, montages } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { generatePortalToken } from '@/lib/utils';
-import { logSystemEvent } from '@/lib/logging';
 
 export async function submitReferralLead(formData: FormData) {
     const token = formData.get('token') as string;

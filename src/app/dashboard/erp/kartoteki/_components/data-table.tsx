@@ -6,7 +6,6 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
-  getPaginationRowModel,
 } from "@tanstack/react-table"
 
 import {
@@ -38,6 +37,7 @@ export function DataTable<TData, TValue>({
   const router = useRouter()
   const searchParams = useSearchParams()
   const [search, setSearch] = React.useState(searchParams.get("q") || "")
+  const debouncedSearch = useDebounce(search, 500)
 
   const table = useReactTable({
     data,
@@ -49,19 +49,15 @@ export function DataTable<TData, TValue>({
 
   // Simple debounce effect
   React.useEffect(() => {
-    const timeout = setTimeout(() => {
-        const params = new URLSearchParams(searchParams.toString())
-        if (search) {
-            params.set("q", search)
-        } else {
-            params.delete("q")
-        }
-        params.set("page", "1") // Reset to page 1 on search
-        router.push(`?${params.toString()}`)
-    }, 500)
-
-    return () => clearTimeout(timeout)
-  }, [search, router, searchParams])
+    const params = new URLSearchParams(searchParams.toString())
+    if (debouncedSearch) {
+      params.set("q", debouncedSearch)
+    } else {
+      params.delete("q")
+    }
+    params.set("page", "1") // Reset to first page on search
+    router.push(`?${params.toString()}`)
+  }, [debouncedSearch, router, searchParams])
 
   const handlePageChange = (newPage: number) => {
       const params = new URLSearchParams(searchParams.toString())

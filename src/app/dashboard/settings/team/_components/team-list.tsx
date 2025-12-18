@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { MoreHorizontal, Shield, ShieldAlert, ShieldCheck, UserCog, LogIn, Settings2, Ruler, Hammer, PenTool, Users } from 'lucide-react';
+import { MoreHorizontal, ShieldAlert, UserCog, LogIn, Settings2, Ruler, Hammer, PenTool, Users } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {

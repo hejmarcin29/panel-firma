@@ -17,7 +17,7 @@ export default async function KartotekiPage({ searchParams }: PageProps) {
     const search = typeof resolvedSearchParams.q === 'string' ? resolvedSearchParams.q : undefined;
     const perPage = 20;
 
-    const { data, total, totalPages } = await getProducts(page, perPage, search);
+    const { data, totalPages } = await getProducts(page, perPage, search);
 
     return (
         <div className="p-6 space-y-6">

@@ -33,7 +33,7 @@ export function TermsAcceptance() {
             } else {
                 toast.error('Wystąpił błąd podczas akceptacji warunków');
             }
-        } catch (error) {
+        } catch {
             toast.error('Wystąpił błąd połączenia');
         } finally {
             setLoading(false);
