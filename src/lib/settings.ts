@@ -46,6 +46,7 @@ export const appSettingKeys = {
     smsProvider: 'sms.provider',
     smsToken: 'sms.token',
     smsSenderName: 'sms.sender_name',
+    companyLogoUrl: 'company.logo_url',
 } as const;
 
 export type AppSettingKey = (typeof appSettingKeys)[keyof typeof appSettingKeys];
