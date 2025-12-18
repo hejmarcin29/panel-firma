@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { eq, isNotNull, desc, isNull, ne } from 'drizzle-orm';
+import { eq, isNotNull, desc } from 'drizzle-orm';
 
 import { HeadBucketCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 
@@ -535,7 +535,7 @@ export async function updatePortalSettings(data: {
 
 export async function fixMontageCustomerLinks() {
     const user = await requireUser();
-    if (user.role !== 'admin') {
+    if (!user.roles.includes('admin')) {
         throw new Error('Brak uprawnień.');
     }
 
