@@ -100,7 +100,7 @@ export function KPICards({
       {visibleCards.includes('urgent') && (
         <motion.div variants={item} className="h-full">
         <Card className="bg-card border-border shadow-none relative overflow-hidden group h-full">
-            <Link href="/dashboard/montaze?filter=urgent" className="absolute inset-0 z-10" />
+            <Link href="/dashboard/crm/montaze?filter=urgent" className="absolute inset-0 z-10" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
                 <div className="flex items-center gap-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -136,7 +136,7 @@ export function KPICards({
             hasNewLeads && "border-blue-500 ring-1 ring-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.15)]"
         )}>
             <Link 
-                href="/dashboard/montaze?view=lead" 
+                href="/dashboard/crm/montaze?view=lead" 
                 className="absolute inset-0 z-10" 
                 onClick={handleLeadsClick}
             />
@@ -220,7 +220,7 @@ export function KPICards({
       {visibleCards.includes('contracts') && (
         <motion.div variants={item} className="h-full">
         <Card className="bg-card border-border shadow-none relative overflow-hidden group h-full">
-            <Link href="/dashboard/montaze?filter=contracts" className="absolute inset-0 z-10" />
+            <Link href="/dashboard/crm/montaze?filter=contracts" className="absolute inset-0 z-10" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
                 <div className="flex items-center gap-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -252,7 +252,7 @@ export function KPICards({
       {visibleCards.includes('payments') && (
         <motion.div variants={item} className="h-full">
         <Card className="bg-card border-border shadow-none relative overflow-hidden group h-full">
-            <Link href="/dashboard/montaze?filter=payments" className="absolute inset-0 z-10" />
+            <Link href="/dashboard/crm/montaze?filter=payments" className="absolute inset-0 z-10" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
                 <div className="flex items-center gap-2">
                     <CardTitle className="text-sm font-medium text-muted-foreground">

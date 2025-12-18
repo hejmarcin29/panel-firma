@@ -37,7 +37,7 @@ export function QuickActions() {
         >
           <motion.div variants={item}>
             <Button asChild className="w-full justify-start" variant="outline">
-                <Link href="/dashboard/montaze?new=true">
+                <Link href="/dashboard/crm/montaze?new=true">
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Dodaj Montaż
                 </Link>

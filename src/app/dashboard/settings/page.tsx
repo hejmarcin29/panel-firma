@@ -595,9 +595,7 @@ export default async function SettingsPage() {
 			wpChanges={
 				<WpChangesSettings />
 			}
-            teamSettings={
-                <TeamPage />
-            }
+            teamSettings={null}
             trash={
                 <TrashView 
                     deletedQuotes={deletedQuotes} 

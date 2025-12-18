@@ -98,7 +98,7 @@ export function MontageAlertsKPI({ alerts }: { alerts: MontageAlertItem[] }) {
                                     <div className="flex justify-between items-start mb-2">
                                         <div>
                                             <Link 
-                                                href={`/dashboard/montaze/${montage.id}`}
+                                                href={`/dashboard/crm/montaze/${montage.id}`}
                                                 className="font-semibold hover:underline text-lg"
                                             >
                                                 {montage.clientName}
@@ -110,7 +110,7 @@ export function MontageAlertsKPI({ alerts }: { alerts: MontageAlertItem[] }) {
                                             </div>
                                         </div>
                                         <Link 
-                                            href={`/dashboard/montaze/${montage.id}`}
+                                            href={`/dashboard/crm/montaze/${montage.id}`}
                                             className="text-sm bg-primary/10 text-primary px-3 py-1 rounded-md hover:bg-primary/20"
                                         >
                                             Otwórz

@@ -56,7 +56,7 @@ export async function submitReferralLead(formData: FormData) {
     // 3. Create Montage (Lead)
     // We use architectId to store partnerId as discussed.
     
-    const { generateNextMontageId } = await import('@/app/dashboard/montaze/actions');
+    const { generateNextMontageId } = await import('@/app/dashboard/crm/montaze/actions');
     const displayId = await generateNextMontageId();
 
     await db.insert(montages).values({

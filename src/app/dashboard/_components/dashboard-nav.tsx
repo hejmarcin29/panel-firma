@@ -8,15 +8,12 @@ import { type UserRole } from '@/lib/db/schema';
 
 const links = [
 	{ href: '/dashboard', label: 'Przegląd' },
-    { href: '/dashboard/zadania', label: 'Zadania Montaże' },
+    { href: '/dashboard/zadania', label: 'Zadania' },
 	{ href: '/dashboard/calendar', label: 'Kalendarz' },
-	{ href: '/dashboard/customers', label: 'Klienci' },
+    { href: '/dashboard/crm', label: 'CRM' },
 	{ href: '/dashboard/orders', label: 'Zamówienia' },
 	{ href: '/dashboard/products', label: 'Produkty' },
     { href: '/dashboard/erp', label: 'ERP' },
-	{ href: '/dashboard/montaze', label: 'Montaże' },
-    { href: '/dashboard/oferty', label: 'Oferty' },
-	{ href: '/dashboard/montaze/galeria', label: 'R2' },
 	{ href: '/dashboard/mail', label: 'Poczta' },
 	{ href: '/dashboard/settings', label: 'Ustawienia' },
     { href: '/dashboard/wallet', label: 'Portfel' },
@@ -46,16 +43,16 @@ export function DashboardNav({ urgentOrdersCount = 0, userRoles = ['admin'] }: {
         if (userRoles.includes('admin')) return true;
         
         if (userRoles.includes('architect')) {
-             const allowedLinks = ['/dashboard', '/dashboard/montaze', '/dashboard/wallet', '/dashboard/showroom'];
+             const allowedLinks = ['/dashboard', '/dashboard/crm', '/dashboard/wallet', '/dashboard/showroom'];
              return allowedLinks.includes(link.href);
         }
 
-        const restrictedLinks = ['/dashboard/customers', '/dashboard/orders', '/dashboard/products', '/dashboard/mail', '/dashboard/settings', '/dashboard/wallet', '/dashboard/erp'];
+        const restrictedLinks = ['/dashboard/orders', '/dashboard/products', '/dashboard/mail', '/dashboard/settings', '/dashboard/wallet', '/dashboard/erp'];
         return !restrictedLinks.includes(link.href);
     });
 
     const getLabel = (link: typeof links[0]) => {
-        if (userRoles.includes('architect') && link.href === '/dashboard/montaze') {
+        if (userRoles.includes('architect') && link.href === '/dashboard/crm') {
             return 'Moje Projekty';
         }
         return link.label;

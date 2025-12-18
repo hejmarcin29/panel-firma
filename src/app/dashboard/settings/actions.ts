@@ -189,7 +189,7 @@ export async function updateMontageStatusDefinitionsAction(statuses: MontageStat
 	await logSystemEvent('update_montage_statuses', 'Zaktualizowano definicje statusów montażu', user.id);
 
 	revalidatePath('/dashboard/settings');
-    revalidatePath('/dashboard/montaze');
+    revalidatePath('/dashboard/crm/montaze');
 }
 
 export type MobileMenuItem = {
@@ -298,7 +298,7 @@ export async function updateKpiSettings(
     await logSystemEvent('update_kpi_settings', `Zaktualizowano ustawienia KPI`, user.id);
 
     revalidatePath('/dashboard/settings');
-    revalidatePath('/dashboard/montaze');
+    revalidatePath('/dashboard/crm/montaze');
     revalidatePath('/dashboard/orders');
     revalidatePath('/dashboard');
 }
@@ -394,7 +394,7 @@ export async function restoreQuote(id: string) {
     
     await logSystemEvent('restore_quote', `Przywrócono wycenę ${id}`, user.id);
     revalidatePath('/dashboard/settings');
-    revalidatePath('/dashboard/oferty');
+    revalidatePath('/dashboard/crm/oferty');
 }
 
 export async function permanentDeleteQuote(id: string) {
@@ -431,7 +431,7 @@ export async function restoreCustomer(id: string) {
     
     await logSystemEvent('restore_customer', `Przywrócono klienta ${id}`, user.id);
     revalidatePath('/dashboard/settings');
-    revalidatePath('/dashboard/customers');
+    revalidatePath('/dashboard/crm/customers');
 }
 
 export async function permanentDeleteCustomer(id: string) {
@@ -468,7 +468,7 @@ export async function restoreMontage(id: string) {
     
     await logSystemEvent('restore_montage', `Przywrócono montaż ${id}`, user.id);
     revalidatePath('/dashboard/settings');
-    revalidatePath('/dashboard/montaze');
+    revalidatePath('/dashboard/crm/montaze');
     revalidatePath('/dashboard/calendar');
 }
 
@@ -583,7 +583,7 @@ export async function bulkRestoreCustomers(ids: string[]) {
     
     await logSystemEvent('bulk_restore_customers', `Przywrócono masowo klientów: ${ids.length}`, user.id);
     revalidatePath('/dashboard/settings');
-    revalidatePath('/dashboard/customers');
+    revalidatePath('/dashboard/crm/customers');
 }
 
 export async function bulkDeleteCustomers(ids: string[]) {

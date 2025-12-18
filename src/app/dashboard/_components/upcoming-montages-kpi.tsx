@@ -79,7 +79,7 @@ const MontageList = ({ items }: { items: MontageSimple[] }) => (
                 {items.map((m) => (
                     <motion.div variants={item} key={m.id}>
                     <Link 
-                        href={`/dashboard/montaze/${m.id}`}
+                        href={`/dashboard/crm/montaze/${m.id}`}
                         className="block p-3 rounded-md border hover:bg-accent/50 transition-colors"
                     >
                         <div className="flex justify-between items-center">

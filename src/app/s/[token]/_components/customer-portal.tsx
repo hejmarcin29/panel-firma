@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, Calendar, CheckCircle2, Circle, Image as ImageIcon, Ruler, Calculator, Check, Loader2 } from 'lucide-react';
+import { FileText, Calendar, Image as ImageIcon, Ruler, Calculator, Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { signContract } from '../actions';
 import { useState } from 'react';
 import { SignaturePad } from '@/components/ui/signature-pad';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { MontageTimeline } from './montage-timeline';
 
 interface MontageAttachment {
     id: string;
@@ -50,6 +51,7 @@ interface Montage {
     skirtingLength: number | null;
     skirtingDetails: string | null;
     measurementDetails: string | null;
+    installationCity: string | null;
 }
 
 interface Customer {
@@ -60,25 +62,6 @@ interface Customer {
 interface CustomerPortalProps {
     customer: Customer;
     token: string;
-}
-
-const STATUS_STEPS = [
-    { id: 'lead', label: 'Zgłoszenie', description: 'Otrzymaliśmy Twoje zgłoszenie' },
-    { id: 'measurement', label: 'Pomiar', description: 'Umawiamy termin pomiaru' },
-    { id: 'valuation', label: 'Wycena', description: 'Przygotowujemy ofertę' },
-    { id: 'acceptance', label: 'Akceptacja', description: 'Czekamy na Twoją decyzję' },
-    { id: 'deposit', label: 'Zaliczka', description: 'Oczekujemy na wpłatę' },
-    { id: 'in_progress', label: 'Realizacja', description: 'Montaż w toku' },
-    { id: 'completed', label: 'Zakończone', description: 'Prace zakończone' },
-];
-
-function getStepStatus(currentStatus: string, stepId: string) {
-    const currentIndex = STATUS_STEPS.findIndex(s => s.id === currentStatus);
-    const stepIndex = STATUS_STEPS.findIndex(s => s.id === stepId);
-
-    if (stepIndex < currentIndex) return 'completed';
-    if (stepIndex === currentIndex) return 'current';
-    return 'upcoming';
 }
 
 export function CustomerPortal({ customer, token }: CustomerPortalProps) {
@@ -139,52 +122,7 @@ export function CustomerPortal({ customer, token }: CustomerPortalProps) {
                 {activeMontage ? (
                     <motion.div variants={containerVariants} className="space-y-6">
                         <motion.div variants={itemVariants}>
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Status Realizacji</CardTitle>
-                                    <CardDescription>
-                                        Śledź postęp swojego zamówienia: {activeMontage.displayId || activeMontage.clientName}
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="relative flex flex-col gap-6 md:flex-row md:justify-between md:gap-2">
-                                        {/* Progress Bar Background (Desktop) */}
-                                        <div className="absolute top-4 left-0 hidden h-0.5 w-full bg-muted md:block" />
-                                        
-                                        {STATUS_STEPS.map((step, index) => {
-                                            const status = getStepStatus(activeMontage.status, step.id);
-                                            return (
-                                                <motion.div 
-                                                    key={step.id} 
-                                                    className="relative flex flex-row items-start gap-4 md:flex-col md:items-center md:gap-2 md:text-center z-10"
-                                                    initial={{ opacity: 0, scale: 0.8 }}
-                                                    animate={{ opacity: 1, scale: 1 }}
-                                                    transition={{ delay: index * 0.1 }}
-                                                >
-                                                    <div className={cn(
-                                                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-500",
-                                                        status === 'completed' ? "border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/20" :
-                                                        status === 'current' ? "border-primary bg-background text-primary ring-4 ring-primary/10" :
-                                                        "border-muted bg-background text-muted-foreground"
-                                                    )}>
-                                                        {status === 'completed' ? <CheckCircle2 className="h-4 w-4" /> :
-                                                            status === 'current' ? <Circle className="h-4 w-4 fill-current animate-pulse" /> :
-                                                            <Circle className="h-4 w-4" />}
-                                                    </div>
-                                                    <div className="flex flex-col gap-0.5 pt-1 md:pt-0">
-                                                        <span className={cn("text-sm font-medium transition-colors duration-300", status === 'current' && "text-primary")}>
-                                                            {step.label}
-                                                        </span>
-                                                        <span className="text-xs text-muted-foreground md:max-w-[100px]">
-                                                            {step.description}
-                                                        </span>
-                                                    </div>
-                                                </motion.div>
-                                            );
-                                        })}
-                                    </div>
-                                </CardContent>
-                            </Card>
+                            <MontageTimeline montage={activeMontage} />
                         </motion.div>
 
                         <div className="grid gap-6 md:grid-cols-2">

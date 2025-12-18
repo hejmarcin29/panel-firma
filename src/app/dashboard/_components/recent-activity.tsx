@@ -64,7 +64,7 @@ export function RecentActivity({ recentMontages }: RecentActivityProps) {
             recentMontages.map((montage) => (
                 <motion.div key={montage.id} variants={item}>
                   <Link 
-                    href={`/dashboard/montaze/${montage.id}`}
+                    href={`/dashboard/crm/montaze/${montage.id}`}
                     className="flex items-center p-2 -mx-2 rounded-md hover:bg-muted/50 transition-colors cursor-pointer"
                   >
                     <Avatar className="h-9 w-9">

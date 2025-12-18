@@ -24,7 +24,7 @@ export function CalendarEventCard({ event, className }: CalendarEventProps) {
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isMontage) {
-      router.push(`/dashboard/montaze/${event.id}`);
+      router.push(`/dashboard/crm/montaze/${event.id}`);
     } else {
       router.push(`/dashboard/orders/${event.id}`);
     }

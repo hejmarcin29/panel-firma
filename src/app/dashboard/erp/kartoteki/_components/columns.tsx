@@ -4,6 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Product, convertToLocalProduct } from "../actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { MoreHorizontal, Pencil, Trash, Unplug } from "lucide-react";
 import {
   DropdownMenu,
@@ -16,7 +17,31 @@ import {
 import { formatCurrency } from "@/lib/utils";
 import { toast } from "sonner";
 
+import Link from "next/link";
+
 export const columns: ColumnDef<Product>[] = [
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
   {
     accessorKey: "id",
     header: "ID",
@@ -29,7 +54,9 @@ export const columns: ColumnDef<Product>[] = [
         const source = row.original.source;
         return (
             <div className="flex flex-col">
-                <span className="font-medium">{row.getValue("name")}</span>
+                <Link href={`/dashboard/erp/kartoteki/${row.original.id}`} className="font-medium hover:underline">
+                    {row.getValue("name")}
+                </Link>
                 {source === 'woocommerce' && (
                     <span className="text-xs text-muted-foreground">WooCommerce</span>
                 )}
@@ -88,6 +115,11 @@ export const columns: ColumnDef<Product>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Akcje</DropdownMenuLabel>
+            <DropdownMenuItem asChild>
+                <Link href={`/dashboard/erp/kartoteki/${product.id}`}>
+                    Szczegóły
+                </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigator.clipboard.writeText(product.id.toString())}>
               Kopiuj ID
             </DropdownMenuItem>

@@ -38,6 +38,7 @@ export function DataTable<TData, TValue>({
   const searchParams = useSearchParams()
   const [search, setSearch] = React.useState(searchParams.get("q") || "")
   const debouncedSearch = useDebounce(search, 500)
+  const [rowSelection, setRowSelection] = React.useState({})
 
   const table = useReactTable({
     data,
@@ -45,6 +46,10 @@ export function DataTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
     manualPagination: true,
     pageCount: pageCount,
+    onRowSelectionChange: setRowSelection,
+    state: {
+      rowSelection,
+    },
   })
 
   // Simple debounce effect
@@ -120,6 +125,10 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
       <div className="flex items-center justify-end space-x-2 py-4">
+        <div className="flex-1 text-sm text-muted-foreground">
+          {table.getFilteredSelectedRowModel().rows.length} z{" "}
+          {table.getFilteredRowModel().rows.length} wierszy zaznaczonych.
+        </div>
         <Button
           variant="outline"
           size="sm"

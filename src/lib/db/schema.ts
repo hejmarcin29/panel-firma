@@ -468,7 +468,7 @@ export const appSettings = pgTable(
 	})
 );
 
-import type { TechnicalAuditData, MaterialLogData } from '@/app/dashboard/montaze/technical-data';
+import type { TechnicalAuditData, MaterialLogData } from '@/app/dashboard/crm/montaze/technical-data';
 
 export const montages = pgTable(
 	'montages',

@@ -148,7 +148,7 @@ export function TasksList({ tasksMontages }: TasksListProps) {
                     <motion.div key={item.id} variants={itemVariant}>
                         <SwipeableTaskItem 
                             onComplete={() => handleToggleTask(item.id, item.montage.id, item.completed)}
-                            onEdit={() => router.push(`/dashboard/montaze/${item.montage.id}?tab=tasks`)}
+                            onEdit={() => router.push(`/dashboard/crm/montaze/${item.montage.id}?tab=tasks`)}
                         >
                             <div className="flex items-center justify-between p-4">
                                 <div className="flex items-start gap-3 flex-1">
@@ -179,7 +179,7 @@ export function TasksList({ tasksMontages }: TasksListProps) {
                                     </div>
                                 </div>
                                 <Button variant="ghost" size="icon" asChild className="text-muted-foreground">
-                                    <Link href={`/dashboard/montaze/${item.montage.id}?tab=tasks`}>
+                                    <Link href={`/dashboard/crm/montaze/${item.montage.id}?tab=tasks`}>
                                         <LayoutList className="h-4 w-4" />
                                     </Link>
                                 </Button>
@@ -247,7 +247,7 @@ export function TasksList({ tasksMontages }: TasksListProps) {
                                     <motion.div key={task.id} variants={itemVariant}>
                                         <SwipeableTaskItem
                                             onComplete={() => handleToggleTask(task.id, montage.id, task.completed)}
-                                            onEdit={() => router.push(`/dashboard/montaze/${montage.id}?tab=tasks`)}
+                                            onEdit={() => router.push(`/dashboard/crm/montaze/${montage.id}?tab=tasks`)}
                                         >
                                             <div className="flex items-start gap-3 p-3">
                                                 <Checkbox 
@@ -272,7 +272,7 @@ export function TasksList({ tasksMontages }: TasksListProps) {
                                 ))}
                                 <div className="pt-4 flex justify-end">
                                     <Button variant="ghost" size="sm" asChild>
-                                        <Link href={`/dashboard/montaze/${montage.id}?tab=tasks`}>
+                                        <Link href={`/dashboard/crm/montaze/${montage.id}?tab=tasks`}>
                                             Przejdź do szczegółów montażu &rarr;
                                         </Link>
                                     </Button>

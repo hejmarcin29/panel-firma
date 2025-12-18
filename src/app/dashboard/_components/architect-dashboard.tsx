@@ -155,7 +155,7 @@ export function ArchitectDashboard({ user, projects, stats }: ArchitectDashboard
             <div className="space-y-6">
                 <div className="flex items-center justify-between border-b pb-4">
                     <h2 className="text-2xl font-serif">Projekty w toku</h2>
-                    <Link href="/dashboard/montaze" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                    <Link href="/dashboard/crm/montaze" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                         Zobacz wszystkie
                     </Link>
                 </div>
@@ -178,7 +178,7 @@ export function ArchitectDashboard({ user, projects, stats }: ArchitectDashboard
                             const statusInfo = getStatusInfo(project.status);
                             return (
                                 <motion.div key={project.id} variants={item}>
-                                    <Link href={`/dashboard/montaze/${project.id}`}>
+                                    <Link href={`/dashboard/crm/montaze/${project.id}`}>
                                         <Card className="group hover:shadow-md transition-all duration-300 border-zinc-200 dark:border-zinc-800 overflow-hidden">
                                             <CardContent className="p-0">
                                                 <div className="flex flex-col md:flex-row">

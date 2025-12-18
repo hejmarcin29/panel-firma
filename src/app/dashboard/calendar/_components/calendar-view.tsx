@@ -348,7 +348,7 @@ export function CalendarView({
                 })}
                 onEventClick={(event) => {
                   if (event.type === 'montage') {
-                    router.push(`/dashboard/montaze/${event.id}`);
+                    router.push(`/dashboard/crm/montaze/${event.id}`);
                   } else {
                     router.push(`/dashboard/orders/${event.id}`);
                   }

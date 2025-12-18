@@ -125,3 +125,10 @@ export async function convertToLocalProduct(id: number) {
     revalidatePath('/dashboard/erp/kartoteki');
     return { success: true };
 }
+
+export async function getProduct(id: number) {
+    const product = await db.query.products.findFirst({
+        where: eq(products.id, id)
+    });
+    return product;
+}

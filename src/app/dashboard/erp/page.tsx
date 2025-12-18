@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { Package, ShoppingCart, Truck, FileText } from "lucide-react";
+import { Package, ShoppingCart, Truck, FileText, Users } from "lucide-react";
 import { motion } from "framer-motion";
 
 const container = {
@@ -112,6 +112,23 @@ export default function ERPDashboardPage() {
                 <div className="text-2xl font-bold">Dokumenty</div>
                 <p className="text-xs text-muted-foreground">
                   Wystawiaj i przeglądaj faktury sprzedażowe
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+        </motion.div>
+
+        <motion.div variants={item} className="h-full">
+          <Link href="/dashboard/erp/zespol">
+            <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Zespół</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">Pracownicy</div>
+                <p className="text-xs text-muted-foreground">
+                  Zarządzaj zespołem, rolami i dostępami
                 </p>
               </CardContent>
             </Card>

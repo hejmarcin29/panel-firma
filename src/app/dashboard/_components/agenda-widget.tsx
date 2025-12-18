@@ -56,7 +56,7 @@ export function AgendaWidget({ upcomingMontages }: AgendaWidgetProps) {
               {upcomingMontages.map((montage) => (
                 <motion.div variants={item} key={montage.id}>
                 <Link 
-                    href={`/dashboard/montaze/${montage.id}`}
+                    href={`/dashboard/crm/montaze/${montage.id}`}
                     className="relative flex items-start gap-4 p-4 rounded-xl border bg-card hover:bg-accent/50 transition-all group"
                 >
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/5 text-primary group-hover:bg-primary/10 transition-colors">

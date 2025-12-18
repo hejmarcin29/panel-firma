@@ -17,12 +17,14 @@ export function BackButton() {
 
   const getBackPath = () => {
     // If we are in a tab view (e.g. montage details tabs), go back to the main details view
-    if (searchParams.get('tab') && pathname?.startsWith('/dashboard/montaze/')) {
+    if (searchParams.get('tab') && pathname?.startsWith('/dashboard/crm/montaze/')) {
         return pathname;
     }
 
     if (pathname?.startsWith('/dashboard/orders/')) return '/dashboard/orders';
-    if (pathname?.startsWith('/dashboard/montaze/')) return '/dashboard/montaze';
+    if (pathname?.startsWith('/dashboard/crm/montaze/')) return '/dashboard/crm/montaze';
+    if (pathname?.startsWith('/dashboard/crm/customers/')) return '/dashboard/crm/customers';
+    if (pathname?.startsWith('/dashboard/crm/oferty/')) return '/dashboard/crm/oferty';
     if (pathname?.startsWith('/dashboard/mail/')) return '/dashboard/mail';
     if (pathname?.startsWith('/dashboard/settings/')) return '/dashboard/settings';
     return null;

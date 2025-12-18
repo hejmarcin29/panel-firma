@@ -63,14 +63,11 @@ const mainLinks = [
 ];
 
 const menuLinks = [
-  { href: "/dashboard/oferty", label: "Oferty", icon: FileText },
-  { href: "/dashboard/customers", label: "Klienci", icon: Users },
+  { href: "/dashboard/crm", label: "CRM", icon: Users },
   { href: "/dashboard/orders", label: "Zamówienia", icon: Package },
   { href: "/dashboard/products", label: "Produkty", icon: ShoppingBag },
-  { href: "/dashboard/montaze", label: "Montaże", icon: Hammer },
   { href: "/dashboard/showroom", label: "Showroom", icon: Store },
   { href: "/dashboard/mail", label: "Poczta", icon: Mail },
-  { href: "/dashboard/montaze/galeria", label: "R2", icon: ImageIcon },
   { href: "/dashboard/settings", label: "Ustawienia", icon: Settings },
 ];
 
@@ -107,7 +104,7 @@ export function MobileNav({ user, urgentOrdersCount = 0, userRoles = ['admin'] }
     setOpen(newOpen);
   };
 
-  const restrictedLinks = ['/dashboard/customers', '/dashboard/orders', '/dashboard/products', '/dashboard/mail', '/dashboard/settings'];
+  const restrictedLinks = ['/dashboard/crm', '/dashboard/orders', '/dashboard/products', '/dashboard/mail', '/dashboard/settings'];
   
   const isAllowed = (href: string) => {
       if (href === '/dashboard/showroom') {

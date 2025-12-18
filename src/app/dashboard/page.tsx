@@ -35,7 +35,7 @@ export default async function DashboardPage() {
     try {
 	    user = await requireUser();
         if (user.roles.includes('installer') && !user.roles.includes('measurer') && !user.roles.includes('admin')) {
-            redirect('/dashboard/montaze');
+            redirect('/dashboard/crm/montaze');
         }
     } catch (error) {
          // eslint-disable-next-line @typescript-eslint/no-explicit-any

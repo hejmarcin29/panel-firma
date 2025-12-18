@@ -79,7 +79,7 @@ export default async function WalletPage() {
                                     <TableCell>{new Date(commission.createdAt).toLocaleDateString('pl-PL')}</TableCell>
                                     <TableCell>
                                         {commission.montage ? (
-                                            <a href={`/dashboard/montaze/${commission.montage.id}`} className="hover:underline">
+                                            <a href={`/dashboard/crm/montaze/${commission.montage.id}`} className="hover:underline">
                                                 {commission.montage.clientName} ({commission.montage.installationCity || commission.montage.billingCity || '-'})
                                             </a>
                                         ) : 'Usunięty montaż'}

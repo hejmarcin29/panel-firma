@@ -11,8 +11,8 @@ import {
     manualOrders,
 } from '@/lib/db/schema';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
-import { mapMontageRow, type MontageRow } from '@/app/dashboard/montaze/utils';
-import type { Montage } from '@/app/dashboard/montaze/types';
+import { mapMontageRow, type MontageRow } from '@/app/dashboard/crm/montaze/utils';
+import type { Montage } from '@/app/dashboard/crm/montaze/types';
 
 export interface AgendaItem {
     id: string;
