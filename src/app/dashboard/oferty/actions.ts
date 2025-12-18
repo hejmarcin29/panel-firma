@@ -151,8 +151,8 @@ export async function sendQuoteEmail(quoteId: string) {
         .set({ status: 'sent' })
         .where(eq(quotes.id, quoteId));
 
-    revalidatePath(`/dashboard/wyceny/${quoteId}`);
-    revalidatePath('/dashboard/wyceny');
+    revalidatePath(`/dashboard/oferty/${quoteId}`);
+    revalidatePath('/dashboard/oferty');
 }
 
 export async function getQuotes() {
@@ -160,6 +160,7 @@ export async function getQuotes() {
         where: isNull(quotes.deletedAt),
         with: {
             montage: true,
+            contract: true,
         },
         orderBy: [desc(quotes.createdAt)],
     });
@@ -202,7 +203,7 @@ export async function createQuote(montageId: string) {
         status: 'draft',
         items: [],
     });
-    revalidatePath('/dashboard/wyceny');
+    revalidatePath('/dashboard/oferty');
     revalidatePath(`/dashboard/montaze/${montageId}`);
     return id;
 }
@@ -228,15 +229,15 @@ export async function updateQuote(id: string, data: {
         updatedAt: new Date(),
     }).where(eq(quotes.id, id));
 
-    revalidatePath('/dashboard/wyceny');
-    revalidatePath(`/dashboard/wyceny/${id}`);
+    revalidatePath('/dashboard/oferty');
+    revalidatePath(`/dashboard/oferty/${id}`);
 }
 
 export async function deleteQuote(id: string) {
     await db.update(quotes)
         .set({ deletedAt: new Date() })
         .where(eq(quotes.id, id));
-    revalidatePath('/dashboard/wyceny');
+    revalidatePath('/dashboard/oferty');
 }
 
 export async function getMontagesForQuoteSelection() {

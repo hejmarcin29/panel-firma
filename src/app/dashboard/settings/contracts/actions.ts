@@ -232,7 +232,7 @@ export async function generateContract(quoteId: string, templateId: string, vari
         });
     }
 
-    revalidatePath(`/dashboard/wyceny/${quoteId}`);
+    revalidatePath(`/dashboard/oferty/${quoteId}`);
 }
 
 export async function updateContractContent(contractId: string, content: string) {
@@ -242,7 +242,7 @@ export async function updateContractContent(contractId: string, content: string)
         .set({ content, updatedAt: new Date() })
         .where(eq(contracts.id, contractId));
         
-    revalidatePath('/dashboard/wyceny');
+    revalidatePath('/dashboard/oferty');
 }
 
 export async function sendContract(contractId: string) {
@@ -254,5 +254,5 @@ export async function sendContract(contractId: string) {
 
     // Here we would trigger email sending logic
     
-    revalidatePath('/dashboard/wyceny');
+    revalidatePath('/dashboard/oferty');
 }

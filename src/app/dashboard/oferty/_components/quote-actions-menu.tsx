@@ -58,7 +58,7 @@ export function QuoteActionsMenu({ quoteId, quoteNumber }: QuoteActionsMenuProps
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => router.push(`/dashboard/wyceny/${quoteId}`)}>
+                    <DropdownMenuItem onClick={() => router.push(`/dashboard/oferty/${quoteId}`)}>
                         <Pencil className="mr-2 h-4 w-4" />
                         Edytuj
                     </DropdownMenuItem>

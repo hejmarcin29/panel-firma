@@ -6,7 +6,7 @@ import { Plus, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { createQuote } from '@/app/dashboard/wyceny/actions';
+import { createQuote } from '@/app/dashboard/oferty/actions';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import type { Montage } from '../../types';
@@ -18,7 +18,7 @@ export function MontageQuotes({ montageId, quotes }: { montageId: string, quotes
         try {
             const id = await createQuote(montageId);
             toast.success('Utworzono nową ofertę');
-            router.push(`/dashboard/wyceny/${id}`);
+            router.push(`/dashboard/oferty/${id}`);
         } catch {
             toast.error('Błąd tworzenia oferty');
         }
@@ -36,7 +36,7 @@ export function MontageQuotes({ montageId, quotes }: { montageId: string, quotes
 
             <div className="grid gap-4">
                 {quotes.map((quote) => (
-                    <Link key={quote.id} href={`/dashboard/wyceny/${quote.id}`} className="block group">
+                    <Link key={quote.id} href={`/dashboard/oferty/${quote.id}`} className="block group">
                     <Card className="hover:bg-muted/50 transition-colors group-hover:border-primary/50">
                         <CardContent className="p-6 flex items-center justify-between">
                             <div className="flex items-center gap-4">

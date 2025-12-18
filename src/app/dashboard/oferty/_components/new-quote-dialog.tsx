@@ -76,7 +76,7 @@ export function NewQuoteDialog() {
             const quoteId = await createQuote(montageId);
             toast.success('Utworzono ofertę');
             setOpen(false);
-            router.push(`/dashboard/wyceny/${quoteId}`);
+            router.push(`/dashboard/oferty/${quoteId}`);
         } catch (error) {
             toast.error('Nie udało się utworzyć oferty');
             console.error(error);

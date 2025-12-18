@@ -63,7 +63,7 @@ const mainLinks = [
 ];
 
 const menuLinks = [
-  { href: "/dashboard/wyceny", label: "Oferty", icon: FileText },
+  { href: "/dashboard/oferty", label: "Oferty", icon: FileText },
   { href: "/dashboard/customers", label: "Klienci", icon: Users },
   { href: "/dashboard/orders", label: "Zamówienia", icon: Package },
   { href: "/dashboard/products", label: "Produkty", icon: ShoppingBag },

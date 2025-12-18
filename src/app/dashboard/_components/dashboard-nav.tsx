@@ -15,7 +15,7 @@ const links = [
 	{ href: '/dashboard/products', label: 'Produkty' },
     { href: '/dashboard/erp', label: 'ERP' },
 	{ href: '/dashboard/montaze', label: 'Montaże' },
-    { href: '/dashboard/wyceny', label: 'Oferty' },
+    { href: '/dashboard/oferty', label: 'Oferty' },
 	{ href: '/dashboard/montaze/galeria', label: 'R2' },
 	{ href: '/dashboard/mail', label: 'Poczta' },
 	{ href: '/dashboard/settings', label: 'Ustawienia' },

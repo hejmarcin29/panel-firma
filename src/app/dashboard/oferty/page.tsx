@@ -8,10 +8,30 @@ import { LayoutGrid, List } from 'lucide-react';
 export default async function QuotesPage() {
     const quotes = await getQuotes();
 
+    const pendingQuotes = quotes.filter(q => q.status === 'sent').length;
+    const pendingContracts = quotes.filter(q => q.contract?.status === 'sent').length;
+
     return (
         <div className="p-4 md:p-6 space-y-6 h-full flex flex-col">
             <div className="flex items-center justify-between shrink-0">
-                <h1 className="text-2xl font-bold">Oferty</h1>
+                <div className="space-y-1">
+                    <h1 className="text-2xl font-bold">Oferty</h1>
+                    <div className="flex gap-2 text-xs">
+                        {pendingQuotes > 0 && (
+                            <span className="text-orange-700 font-medium bg-orange-50 px-2 py-0.5 rounded-full border border-orange-200">
+                                {pendingQuotes} wysłanych ofert
+                            </span>
+                        )}
+                        {pendingContracts > 0 && (
+                            <span className="text-blue-700 font-medium bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                                {pendingContracts} umów do podpisu
+                            </span>
+                        )}
+                        {pendingQuotes === 0 && pendingContracts === 0 && (
+                            <span className="text-muted-foreground">Wszystko na bieżąco</span>
+                        )}
+                    </div>
+                </div>
                 <NewQuoteDialog />
             </div>
 

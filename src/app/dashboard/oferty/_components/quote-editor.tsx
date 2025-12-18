@@ -371,7 +371,7 @@ export function QuoteEditor({ quote, templates }: QuoteEditorProps) {
         try {
             await deleteQuote(quote.id);
             toast.success('Wycena została usunięta');
-            router.push('/dashboard/wyceny');
+            router.push('/dashboard/oferty');
         } catch {
             toast.error('Nie udało się usunąć wyceny');
         } finally {
@@ -415,7 +415,7 @@ export function QuoteEditor({ quote, templates }: QuoteEditorProps) {
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <Button variant="ghost" size="icon" asChild className="-ml-2">
-                            <Link href="/dashboard/wyceny">
+                            <Link href="/dashboard/oferty">
                                 <ArrowLeft className="w-5 h-5" />
                             </Link>
                         </Button>

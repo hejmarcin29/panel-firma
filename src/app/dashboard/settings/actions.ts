@@ -394,7 +394,7 @@ export async function restoreQuote(id: string) {
     
     await logSystemEvent('restore_quote', `Przywrócono wycenę ${id}`, user.id);
     revalidatePath('/dashboard/settings');
-    revalidatePath('/dashboard/wyceny');
+    revalidatePath('/dashboard/oferty');
 }
 
 export async function permanentDeleteQuote(id: string) {

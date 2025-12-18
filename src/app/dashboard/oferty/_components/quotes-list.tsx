@@ -41,7 +41,7 @@ export function QuotesList({ quotes }: QuotesListProps) {
     const router = useRouter();
 
     const handleRowClick = (quoteId: string) => {
-        router.push(`/dashboard/wyceny/${quoteId}`);
+        router.push(`/dashboard/oferty/${quoteId}`);
     };
 
     if (quotes.length === 0) {

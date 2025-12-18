@@ -68,7 +68,7 @@ function QuoteCard({ quote }: { quote: QuoteWithMontage }) {
             <CardHeader className="p-4 pb-2">
                 <div className="flex justify-between items-start">
                     <div className="space-y-1">
-                        <Link href={`/dashboard/wyceny/${quote.id}`} className="font-semibold hover:underline block">
+                        <Link href={`/dashboard/oferty/${quote.id}`} className="font-semibold hover:underline block">
                             {quote.montage.clientName}
                         </Link>
                         <div className="text-xs text-muted-foreground">
