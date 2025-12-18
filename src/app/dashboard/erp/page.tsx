@@ -2,8 +2,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Package, ShoppingCart, Truck, Wallet, BarChart3, FileText, Users, Settings2 } from "lucide-react";
 import Link from "next/link";
+import { requireUser } from "@/lib/auth/session";
+import { redirect } from "next/navigation";
 
-export default function ERPPage() {
+export default async function ERPPage() {
+  const user = await requireUser();
+  if (!user.roles.includes('admin')) {
+      redirect('/dashboard');
+  }
+
   const modules = [
     {
       title: "Magazyn",

@@ -896,7 +896,7 @@ export function QuoteEditor({ quote, templates }: QuoteEditorProps) {
                                                 </style>
                                             </head>
                                             <body>
-                                                ${quote.contract.content}
+                                                ${quote.contract?.content}
                                                 <script>
                                                     window.onload = function() { window.print(); }
                                                 </script>
