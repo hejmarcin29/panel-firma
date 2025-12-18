@@ -19,37 +19,63 @@ export async function GET() {
         for (const montage of orphanedMontages) {
             console.log(`Fixing montage: ${montage.clientName} (${montage.id})`);
 
-            // Create new customer
-            const newCustomerId = randomUUID();
-            const now = new Date();
+            let finalCustomerId: string | null = null;
+            let action = 'created';
 
-            // Try to extract name parts if possible, or just use clientName
-            const name = montage.clientName || 'Nieznany Klient';
+            // 1. Check if customer already exists by email
+            if (montage.contactEmail) {
+                const existingByEmail = await db.query.customers.findFirst({
+                    where: (table, { eq }) => eq(table.email, montage.contactEmail!),
+                });
+                if (existingByEmail) {
+                    finalCustomerId = existingByEmail.id;
+                    action = 'linked_by_email';
+                }
+            }
 
-            await db.insert(customers).values({
-                id: newCustomerId,
-                name: name,
-                email: montage.contactEmail,
-                phone: montage.contactPhone,
-                billingStreet: montage.billingAddress,
-                billingCity: montage.billingCity,
-                billingPostalCode: montage.billingPostalCode,
-                shippingStreet: montage.installationAddress,
-                shippingCity: montage.installationCity,
-                shippingPostalCode: montage.installationPostalCode,
-                taxId: montage.nip,
-                createdAt: now,
-                updatedAt: now,
-                referralToken: generatePortalToken(),
-                source: 'other'
-            });
+            // 2. Check if customer already exists by phone (if not found by email)
+            if (!finalCustomerId && montage.contactPhone) {
+                const existingByPhone = await db.query.customers.findFirst({
+                    where: (table, { eq }) => eq(table.phone, montage.contactPhone!),
+                });
+                if (existingByPhone) {
+                    finalCustomerId = existingByPhone.id;
+                    action = 'linked_by_phone';
+                }
+            }
+
+            // 3. If still not found, create new customer
+            if (!finalCustomerId) {
+                const newCustomerId = randomUUID();
+                const now = new Date();
+                const name = montage.clientName || 'Nieznany Klient';
+
+                await db.insert(customers).values({
+                    id: newCustomerId,
+                    name: name,
+                    email: montage.contactEmail,
+                    phone: montage.contactPhone,
+                    billingStreet: montage.billingAddress,
+                    billingCity: montage.billingCity,
+                    billingPostalCode: montage.billingPostalCode,
+                    shippingStreet: montage.installationAddress,
+                    shippingCity: montage.installationCity,
+                    shippingPostalCode: montage.installationPostalCode,
+                    taxId: montage.nip,
+                    createdAt: now,
+                    updatedAt: now,
+                    referralToken: generatePortalToken(),
+                    source: 'other'
+                });
+                finalCustomerId = newCustomerId;
+            }
 
             // Update montage
             await db.update(montages)
-                .set({ customerId: newCustomerId })
+                .set({ customerId: finalCustomerId })
                 .where(eq(montages.id, montage.id));
             
-            results.push(`Created customer ${newCustomerId} for montage ${montage.id}`);
+            results.push(`${action} customer ${finalCustomerId} for montage ${montage.id}`);
         }
 
         return NextResponse.json({ success: true, fixed: results.length, details: results });
