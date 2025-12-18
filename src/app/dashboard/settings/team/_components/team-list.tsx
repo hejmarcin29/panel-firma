@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { MoreHorizontal, Shield, ShieldAlert, ShieldCheck, UserCog, LogIn, Settings2 } from 'lucide-react';
+import { MoreHorizontal, Shield, ShieldAlert, ShieldCheck, UserCog, LogIn, Settings2, Ruler, Hammer, PenTool, Users } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -69,13 +69,15 @@ const roleLabels: Record<UserRole, string> = {
     measurer: 'Pomiarowiec',
     installer: 'Montażysta',
     architect: 'Architekt',
+    partner: 'Partner B2B',
 };
 
 const roleIcons: Record<UserRole, React.ReactNode> = {
     admin: <ShieldAlert className="h-4 w-4 text-red-600" />,
-    measurer: <ShieldCheck className="h-4 w-4 text-blue-600" />,
-    installer: <Shield className="h-4 w-4 text-green-600" />,
-    architect: <UserCog className="h-4 w-4 text-purple-600" />,
+    measurer: <Ruler className="h-4 w-4 text-blue-600" />,
+    installer: <Hammer className="h-4 w-4 text-orange-600" />,
+    architect: <PenTool className="h-4 w-4 text-purple-600" />,
+    partner: <Users className="h-4 w-4 text-green-600" />,
 };
 
 function getInitials(name: string | null) {

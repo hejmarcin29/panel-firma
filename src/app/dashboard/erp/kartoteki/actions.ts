@@ -55,6 +55,7 @@ export async function createProduct(data: {
     purchasePrice?: number;
     description?: string;
     stockQuantity?: number;
+    attributes?: any[];
 }) {
     // Generate a random ID for local product (avoiding WP range)
     // WP IDs are usually sequential integers. Let's use a range starting from 100,000,000
@@ -73,6 +74,7 @@ export async function createProduct(data: {
         description: data.description,
         stockQuantity: data.stockQuantity || 0,
         stockStatus: (data.stockQuantity || 0) > 0 ? 'instock' : 'outofstock',
+        attributes: data.attributes ? JSON.stringify(data.attributes) : null,
         syncedAt: new Date(),
     });
 
@@ -106,6 +108,18 @@ export async function updateProduct(id: number, data: {
 export async function deleteProduct(id: number) {
     await db.update(products)
         .set({ deletedAt: new Date() })
+        .where(eq(products.id, id));
+
+    revalidatePath('/dashboard/erp/kartoteki');
+    return { success: true };
+}
+
+export async function convertToLocalProduct(id: number) {
+    await db.update(products)
+        .set({ 
+            source: 'local',
+            updatedAt: new Date()
+        })
         .where(eq(products.id, id));
 
     revalidatePath('/dashboard/erp/kartoteki');

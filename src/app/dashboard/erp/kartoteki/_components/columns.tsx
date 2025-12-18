@@ -1,10 +1,10 @@
 'use client';
 
 import { ColumnDef } from "@tanstack/react-table";
-import { Product } from "./actions";
+import { Product, convertToLocalProduct } from "../actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Pencil, Trash } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash, Unplug } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +13,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { formatPrice } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
+import { toast } from "sonner";
 
 export const columns: ColumnDef<Product>[] = [
   {
@@ -57,7 +58,7 @@ export const columns: ColumnDef<Product>[] = [
     header: "Cena Zakupu (Netto)",
     cell: ({ row }) => {
         const price = row.getValue("purchasePrice") as number;
-        return price ? formatPrice(price / 100) : '-';
+        return price ? formatCurrency(price / 100) : '-';
     }
   },
   {
@@ -91,6 +92,18 @@ export const columns: ColumnDef<Product>[] = [
               Kopiuj ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
+            {product.source === 'woocommerce' && (
+                <DropdownMenuItem onClick={async () => {
+                    try {
+                        await convertToLocalProduct(product.id);
+                        toast.success("Produkt odłączony od sklepu (stał się lokalny)");
+                    } catch (e) {
+                        toast.error("Błąd podczas konwersji");
+                    }
+                }}>
+                    <Unplug className="mr-2 h-4 w-4" /> Przejmij (Zrób lokalny)
+                </DropdownMenuItem>
+            )}
             <DropdownMenuItem>
                 <Pencil className="mr-2 h-4 w-4" /> Edytuj
             </DropdownMenuItem>

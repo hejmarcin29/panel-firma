@@ -511,8 +511,6 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
                                 </form>
                             </Form>
                         )}
-                            </Form>
-                        )}
                     </TabsContent>
 
                     <TabsContent value="history" className="mt-4">

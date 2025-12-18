@@ -37,11 +37,23 @@ function getStatusColor(status: string) {
     }
 }
 
+import { users } from '@/lib/db/schema';
+
+// ... existing imports ...
+
 export default async function PartnerDashboard() {
-    const user = await requireUser();
+    const sessionUser = await requireUser();
     
-    if (!user.roles.includes('partner')) {
+    if (!sessionUser.roles.includes('partner')) {
         return <div>Brak dostępu.</div>;
+    }
+
+    const user = await db.query.users.findFirst({
+        where: eq(users.id, sessionUser.id),
+    });
+
+    if (!user) {
+        return <div>Błąd: Nie znaleziono użytkownika.</div>;
     }
 
     const leads = await db.query.montages.findMany({

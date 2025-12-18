@@ -439,7 +439,6 @@ export function LeadForm({ assignedProducts, isArchitect }: LeadFormProps) {
                             />
                         </div>
                     </div>
-                    </div>
                 </div>
 
                 <div className="grid gap-2">

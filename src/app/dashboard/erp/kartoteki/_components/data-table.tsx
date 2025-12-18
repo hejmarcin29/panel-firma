@@ -20,7 +20,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useDebounce } from "@/hooks/use-mobile" // Assuming this hook exists or I'll implement simple debounce
+import { useDebounce } from "@/hooks/use-debounce"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
