@@ -41,7 +41,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { updateQuote, sendQuoteEmail, getProductsForQuote, deleteQuote } from '../actions';
-import { generateContract } from '../../settings/contracts/actions';
+import { generateContract } from '../../../settings/contracts/actions';
 import { FileText as FileTextIcon } from 'lucide-react';
 import { SignaturePad } from '@/components/ui/signature-pad';
 

@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { Users, Hammer, FileText, Briefcase } from "lucide-react";
+import { Users, Hammer, FileText } from "lucide-react";
 import { motion } from "framer-motion";
 
 const container = {

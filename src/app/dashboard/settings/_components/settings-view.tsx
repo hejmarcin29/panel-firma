@@ -9,7 +9,6 @@ import {
   Smartphone,
   Palette,
   RefreshCw,
-  Users,
   BookOpen,
   ArrowLeft,
   Trash2,

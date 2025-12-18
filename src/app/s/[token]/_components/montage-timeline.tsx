@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { Check, Circle, Clock, MapPin, Truck, Ruler, FileText, Hammer, CheckCircle2 } from 'lucide-react';
+import { Check, Clock, Truck, Ruler, FileText, Hammer, CheckCircle2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 
@@ -114,7 +114,7 @@ export function MontageTimeline({ montage }: MontageTimelineProps) {
                 {/* Vertical Line */}
                 <div className="absolute left-[27px] md:left-[43px] top-2 bottom-2 w-0.5 bg-gray-100 dark:bg-zinc-800" />
 
-                {steps.map((step, index) => (
+                {steps.map((step) => (
                     <div key={step.id} className="relative flex gap-6 group">
                         {/* Icon / Dot */}
                         <div className={cn(

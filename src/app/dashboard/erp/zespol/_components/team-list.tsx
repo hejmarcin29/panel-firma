@@ -10,14 +10,13 @@ import {
     PenTool, 
     Users, 
     Mail, 
-    Phone, 
     Calendar,
     Search
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -37,7 +36,7 @@ type TeamMember = {
     partnerProfile?: unknown;
 };
 
-const roleConfig: Record<string, { label: string; icon: any; color: string }> = {
+const roleConfig: Record<string, { label: string; icon: React.ElementType; color: string }> = {
     admin: { label: 'Administrator', icon: Shield, color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
     measurer: { label: 'Pomiarowiec', icon: Ruler, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
     installer: { label: 'Montażysta', icon: Hammer, color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' },

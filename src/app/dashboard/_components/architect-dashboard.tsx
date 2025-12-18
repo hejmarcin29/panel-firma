@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { AddLeadModal } from '../montaze/_components/add-lead-modal';
+import { AddLeadModal } from '../crm/montaze/_components/add-lead-modal';
 import { useState } from 'react';
 
 interface ArchitectDashboardProps {

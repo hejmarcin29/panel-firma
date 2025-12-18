@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import type { Montage } from "../montaze/types";
+import type { Montage } from "../crm/montaze/types";
 import { motion } from "framer-motion";
 import Link from "next/link";
 

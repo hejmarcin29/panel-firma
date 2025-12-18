@@ -1,7 +1,7 @@
 import { getQuote } from '../actions';
 import { QuoteEditor } from '../_components/quote-editor';
 import { notFound } from 'next/navigation';
-import { getContractTemplates } from '../../settings/contracts/actions';
+import { getContractTemplates } from '../../../settings/contracts/actions';
 
 export default async function QuotePage({ params }: { params: Promise<{ quoteId: string }> }) {
     const { quoteId } = await params;

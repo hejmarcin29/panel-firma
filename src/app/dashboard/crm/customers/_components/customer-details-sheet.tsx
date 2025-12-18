@@ -35,6 +35,7 @@ interface CustomerDetailsSheetProps {
 	customer: CustomerDetails | null;
 	isOpen: boolean;
 	onClose: () => void;
+    portalEnabled?: boolean;
 }
 
 function getInitials(name: string) {
@@ -76,7 +77,7 @@ const ORDER_STATUS_LABELS: Record<string, string> = {
   'order.closed': 'Zamknięte',
 };
 
-export function CustomerDetailsSheet({ customer, isOpen, onClose }: CustomerDetailsSheetProps) {
+export function CustomerDetailsSheet({ customer, isOpen, onClose, portalEnabled = false }: CustomerDetailsSheetProps) {
     const [isDeleting, setIsDeleting] = useState(false);
 
     // Handle back button
@@ -186,7 +187,7 @@ export function CustomerDetailsSheet({ customer, isOpen, onClose }: CustomerDeta
 						<Separator />
 
                         {/* Client Portal Link */}
-                        {!customer.referralToken ? (
+                        {portalEnabled && (!customer.referralToken ? (
                             <>
                                 <div className="rounded-lg border border-dashed border-amber-200 bg-amber-50/30 p-6 flex flex-col items-center justify-center gap-3 text-center">
                                     <div className="p-2 bg-amber-100 rounded-full">
@@ -283,7 +284,7 @@ export function CustomerDetailsSheet({ customer, isOpen, onClose }: CustomerDeta
 
                                 <Separator />
                             </>
-                        )}
+                        ))}
 
                         {/* Marketing Source */}
                         <div className="space-y-3">

@@ -13,7 +13,7 @@ import { updateMontageAutomationRulesAction } from '../actions';
 import type { MontageChecklistTemplate } from '@/lib/montaze/checklist';
 import type { MontageAutomationRule } from '@/lib/montaze/automation';
 import type { MontageStatus } from '@/lib/db/schema';
-import type { StatusOption } from '../../montaze/types';
+import type { StatusOption } from '../../crm/montaze/types';
 
 interface MontageAutomationSettingsProps {
   templates: MontageChecklistTemplate[];

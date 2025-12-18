@@ -26,12 +26,17 @@ export default async function ProductDetailsPage({ params }: PageProps) {
         notFound();
     }
 
-    let attributes: any[] = [];
+    interface ProductAttribute {
+        name: string;
+        options: string | string[];
+    }
+
+    let attributes: ProductAttribute[] = [];
     try {
         if (typeof product.attributes === 'string') {
             attributes = JSON.parse(product.attributes);
         } else if (Array.isArray(product.attributes)) {
-            attributes = product.attributes;
+            attributes = product.attributes as unknown as ProductAttribute[];
         }
     } catch (e) {
         console.error('Error parsing attributes:', e);
@@ -116,7 +121,7 @@ export default async function ProductDetailsPage({ params }: PageProps) {
                         <CardContent>
                             {attributes.length > 0 ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {attributes.map((attr: any, index: number) => (
+                                    {attributes.map((attr, index) => (
                                         <div key={index} className="p-3 border rounded-md bg-muted/20">
                                             <div className="text-xs text-muted-foreground uppercase font-semibold tracking-wider mb-1">
                                                 {attr.name}

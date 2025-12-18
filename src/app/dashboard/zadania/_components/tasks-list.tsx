@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { toggleMontageTask } from "../../montaze/actions";
+import { toggleMontageTask } from "../../crm/montaze/actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

@@ -104,7 +104,7 @@ Przy każdej implementacji, modyfikacji lub naprawie błędu, **ZAWSZE** analizu
 
 ## Offline-First & Field Operations (Priorytet dla Mobile)
 Aplikacja jest używana przez pracowników terenowych w miejscach o słabym zasięgu (piwnice, nowe budowy).
-1.  **Krytyczne Widoki:** Widoki Montażu (`/dashboard/montaze/[id]`) oraz Zadań muszą być projektowane tak, aby działały przy przerywanym połączeniu.
+1.  **Krytyczne Widoki:** Widoki Montażu (`/dashboard/crm/montaze/[id]`) oraz Zadań muszą być projektowane tak, aby działały przy przerywanym połączeniu.
 2.  **Data Fetching:** Dla danych, które muszą być dostępne offline (szczegóły zlecenia, checklisty), preferuj pobieranie danych po stronie klienta (Client Components + React Query) z włączonym cache'owaniem, zamiast renderowania wszystkiego na serwerze (RSC).
 3.  **Optimistic UI:** Każda akcja użytkownika (np. odhaczenie checklisty) musi dawać natychmiastowy feedback wizualny ("Zrobione"), nawet jeśli serwer jeszcze nie potwierdził zapisu.
 4.  **Graceful Degradation:** Jeśli funkcja wymaga 100% dostępu do sieci (np. generowanie PDF, wysyłka e-maila), przycisk musi być nieaktywny w trybie offline, z jasnym komunikatem dla użytkownika.

@@ -276,7 +276,7 @@ export default async function DashboardPage() {
                                     <p className="text-sm text-muted-foreground">Brak alertów montażowych.</p>
                                 ) : (
                                     urgentMontages.map(montage => (
-                                        <Link key={montage.id} href={`/dashboard/montaze/${montage.id}`} className="block group">
+                                        <Link key={montage.id} href={`/dashboard/crm/montaze/${montage.id}`} className="block group">
                                             <div className="p-3 rounded-lg bg-accent/50 border border-border/50 group-hover:border-red-500/30 transition-all">
                                                 <div className="flex justify-between items-start mb-2">
                                                     <span className="font-medium text-sm text-foreground group-hover:text-primary transition-colors">{montage.clientName}</span>
@@ -298,7 +298,7 @@ export default async function DashboardPage() {
                             </div>
                             <div className="mt-6 pt-4 border-t border-border/50">
                                 <Button variant="outline" className="w-full bg-card border-border text-muted-foreground hover:bg-accent hover:text-foreground" asChild>
-                                    <Link href="/dashboard/montaze">Przejdź do montaży</Link>
+                                    <Link href="/dashboard/crm/montaze">Przejdź do montaży</Link>
                                 </Button>
                             </div>
                         </CardContent>

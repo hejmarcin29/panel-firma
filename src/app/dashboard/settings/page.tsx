@@ -35,7 +35,6 @@ import { FluentFormsSettings } from './integrations/_components/fluent-forms-set
 import { getFluentFormsSecret } from './integrations/fluent-actions';
 import { IntegrationLogs } from './integrations/_components/integration-logs';
 import { WpChangesSettings } from './_components/wp-changes-settings';
-import TeamPage from './team/page';
 import { DocumentationView } from './_components/documentation-view';
 import { TrashView } from './_components/trash-view';
 import { getDeletedQuotes, getDeletedCustomers, getDeletedMontages, getDeletedProducts } from './actions';

@@ -37,9 +37,10 @@ import { ConvertLeadDialog } from './_components/convert-lead-dialog';
 interface MontageViewProps {
     montageId: string;
     initialData: NonNullable<Awaited<ReturnType<typeof getMontageDetails>>>;
+    portalEnabled: boolean;
 }
 
-export function MontageView({ montageId, initialData }: MontageViewProps) {
+export function MontageView({ montageId, initialData, portalEnabled }: MontageViewProps) {
     const searchParams = useSearchParams();
     const router = useRouter();
     const tab = searchParams.get('tab');
@@ -104,7 +105,7 @@ export function MontageView({ montageId, initialData }: MontageViewProps) {
 
                     <div className="grid gap-6 md:grid-cols-2">
                         <div className="space-y-6">
-                            <MontageClientCard montage={montage} userRoles={userRoles} installers={installers} measurers={measurers} architects={architects} />
+                            <MontageClientCard montage={montage} userRoles={userRoles} installers={installers} measurers={measurers} architects={architects} portalEnabled={portalEnabled} />
                             <MontageMaterialCard montage={montage} userRoles={userRoles} />
                         </div>
                         <div className="space-y-6">
@@ -126,7 +127,7 @@ export function MontageView({ montageId, initialData }: MontageViewProps) {
         <div className="flex min-h-screen flex-col bg-muted/10">
             <MontageDetailsLayout 
                 header={<MontageHeader montage={montage} statusOptions={statusOptions} userRoles={userRoles} />}
-                clientCard={<MontageClientCard montage={montage} userRoles={userRoles} installers={installers} measurers={measurers} architects={architects} />}
+                clientCard={<MontageClientCard montage={montage} userRoles={userRoles} installers={installers} measurers={measurers} architects={architects} portalEnabled={portalEnabled} />}
                 materialCard={
                     <div className="space-y-6">
                         <MontageMaterialCard montage={montage} userRoles={userRoles} />

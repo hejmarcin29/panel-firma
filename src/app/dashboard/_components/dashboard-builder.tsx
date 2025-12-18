@@ -44,7 +44,7 @@ import { MeasurementAlertsKPI, type MeasurementAlertItem } from './measurement-a
 import { UpcomingMontagesKPI, type MontageSimple } from './upcoming-montages-kpi';
 import { updateDashboardLayout, type DashboardLayoutConfig, type DashboardWidgetConfig } from '../actions';
 import { toast } from 'sonner';
-import type { Montage } from '../montaze/types';
+import type { Montage } from '../crm/montaze/types';
 
 // Widget Registry
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
