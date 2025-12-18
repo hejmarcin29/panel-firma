@@ -90,7 +90,7 @@ function WidgetSettingsDialog({
 
     // KPI Specific Settings
     if (widget.type === 'kpi') {
-        const visibleCards = (localSettings.visibleCards as string[] | undefined) || ['leads', 'payments', 'urgent', 'orders', 'urgentOrders', 'stalledOrders'];
+        const visibleCards = (localSettings.visibleCards as string[] | undefined) || ['leads', 'payments', 'contracts', 'urgent', 'orders', 'urgentOrders', 'stalledOrders'];
         
         const toggleCard = (card: string) => {
             if (visibleCards.includes(card)) {
@@ -131,6 +131,14 @@ function WidgetSettingsDialog({
                                 onCheckedChange={() => toggleCard('payments')}
                             />
                             <Label htmlFor='card-payments'>Oczekujące płatności</Label>
+                        </div>
+                        <div className='flex items-center space-x-2'>
+                            <Checkbox 
+                                id='card-contracts' 
+                                checked={visibleCards.includes('contracts')}
+                                onCheckedChange={() => toggleCard('contracts')}
+                            />
+                            <Label htmlFor='card-contracts'>Do Podpisania (Umowy)</Label>
                         </div>
                         <div className='flex items-center space-x-2'>
                             <Checkbox 

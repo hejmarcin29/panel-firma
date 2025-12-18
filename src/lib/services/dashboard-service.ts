@@ -69,6 +69,7 @@ export interface DashboardStats {
     kpiData: {
         newLeadsCount: number;
         pendingPaymentsCount: number;
+        pendingContractsCount: number;
         urgentTasksCount: number;
         newOrdersCount: number;
         todoCount: number;
@@ -163,7 +164,11 @@ export async function getDashboardStats(publicBaseUrl: string | null): Promise<D
     const allMontages = await db.query.montages.findMany({
         with: {
             tasks: true,
-            quotes: true,
+            quotes: {
+                with: {
+                    contract: true
+                }
+            },
         }
     });
 
@@ -226,6 +231,14 @@ export async function getDashboardStats(publicBaseUrl: string | null): Promise<D
     const newLeadsCount = allMontages.filter(m => m.status === 'lead').length;
     const pendingPaymentsCount = allMontages.filter(m => m.status === 'before_first_payment' || m.status === 'before_final_invoice').length;
     
+    const pendingContractsCount = allMontages.filter(m => {
+        if (m.status === 'lead' || m.status === 'completed') return false;
+        const activeQuote = m.quotes.find(q => q.status === 'sent' || q.status === 'accepted');
+        if (!activeQuote) return false;
+        // @ts-ignore - contract is fetched but type might not reflect it yet due to partial type usage
+        return activeQuote.contract?.status !== 'signed';
+    }).length;
+
     // Urgent tasks: Montages that are not completed/lead but have no date, or maybe just a placeholder logic for now.
     const urgentTasksCount = allMontages.filter(m => m.status !== 'lead' && m.status !== 'completed' && !m.scheduledInstallationAt).length;
 
@@ -424,6 +437,7 @@ export async function getDashboardStats(publicBaseUrl: string | null): Promise<D
         kpiData: {
             newLeadsCount,
             pendingPaymentsCount,
+            pendingContractsCount,
             urgentTasksCount,
             newOrdersCount,
             todoCount: 0,

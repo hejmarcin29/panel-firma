@@ -9,7 +9,8 @@ import {
     ShoppingCart, 
     ArrowUpRight,
     CreditCard,
-    Info
+    Info,
+    FileText
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -22,6 +23,7 @@ import { motion } from "framer-motion";
 interface KPICardsProps {
   newLeadsCount: number;
   pendingPaymentsCount: number;
+  pendingContractsCount?: number;
   urgentTasksCount: number;
   newOrdersCount: number;
   urgentOrdersCount?: number;
@@ -36,6 +38,7 @@ interface KPICardsProps {
 export function KPICards({
   newLeadsCount,
   pendingPaymentsCount,
+  pendingContractsCount = 0,
   urgentTasksCount,
   newOrdersCount,
   urgentOrdersCount = 0,
@@ -43,7 +46,7 @@ export function KPICards({
   montageThreatDays = 7,
   settings
 }: KPICardsProps) {
-  const visibleCards = settings?.visibleCards || ['leads', 'payments', 'urgent', 'orders', 'urgentOrders', 'stalledOrders'];
+  const visibleCards = settings?.visibleCards || ['leads', 'payments', 'contracts', 'urgent', 'orders', 'urgentOrders', 'stalledOrders'];
 
   const [lastSeenLeads, setLastSeenLeads] = useState<number>(0);
   const [lastSeenOrders, setLastSeenOrders] = useState<number>(0);
@@ -208,6 +211,38 @@ export function KPICards({
                 <div className="text-2xl font-bold text-foreground">{newOrdersCount}</div>
                 <p className="text-xs text-emerald-500/80 flex items-center mt-1">
                     Do weryfikacji <ArrowUpRight className="h-3 w-3 ml-1" />
+                </p>
+            </CardContent>
+        </Card>
+        </motion.div>
+      )}
+
+      {visibleCards.includes('contracts') && (
+        <motion.div variants={item} className="h-full">
+        <Card className="bg-card border-border shadow-none relative overflow-hidden group h-full">
+            <Link href="/dashboard/montaze?filter=contracts" className="absolute inset-0 z-10" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
+                <div className="flex items-center gap-2">
+                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                        Do Podpisania (Umowy)
+                    </CardTitle>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <button type="button" className="cursor-help z-20 relative" onClick={(e) => e.preventDefault()}>
+                                <Info className="h-4 w-4 text-muted-foreground/50" />
+                            </button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Montaże, dla których wysłano ofertę, ale umowa nie została jeszcze podpisana przez klienta.</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </div>
+                <FileText className="h-4 w-4 text-purple-500" />
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+                <div className="text-2xl font-bold text-foreground">{pendingContractsCount}</div>
+                <p className="text-xs text-purple-500/80 flex items-center mt-1">
+                    Oczekujące <ArrowUpRight className="h-3 w-3 ml-1" />
                 </p>
             </CardContent>
         </Card>
