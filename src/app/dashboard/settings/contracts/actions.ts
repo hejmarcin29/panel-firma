@@ -9,6 +9,7 @@ import { db } from '@/lib/db';
 import { contractTemplates, contracts, quotes } from '@/lib/db/schema';
 
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
+import { formatCurrency } from '@/lib/utils';
 
 // --- TEMPLATES ---
 
@@ -180,6 +181,7 @@ export async function generateContract(quoteId: string, templateId: string, vari
     const quote = await db.query.quotes.findFirst({
         where: eq(quotes.id, quoteId),
         with: {
+            items: true,
             montage: {
                 with: {
                     customer: true
@@ -193,6 +195,41 @@ export async function generateContract(quoteId: string, templateId: string, vari
     // Fetch logo
     const logoUrl = await getAppSetting(appSettingKeys.companyLogoUrl);
     const logoHtml = logoUrl ? `<img src="${logoUrl}" alt="Logo" style="max-height: 80px; max-width: 200px;" />` : '';
+
+    // Generate Items Table
+    const itemsHtml = `
+    <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px;">
+        <thead>
+            <tr style="background-color: #f8f9fa; border-bottom: 2px solid #ddd;">
+                <th style="padding: 10px; text-align: left;">Nazwa</th>
+                <th style="padding: 10px; text-align: right;">Ilość</th>
+                <th style="padding: 10px; text-align: right;">Cena netto</th>
+                <th style="padding: 10px; text-align: right;">VAT</th>
+                <th style="padding: 10px; text-align: right;">Wartość brutto</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${quote.items.map(item => `
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 8px;">${item.name}</td>
+                    <td style="padding: 8px; text-align: right;">${item.quantity} ${item.unit}</td>
+                    <td style="padding: 8px; text-align: right;">${formatCurrency(item.priceNet)}</td>
+                    <td style="padding: 8px; text-align: right;">${item.vatRate * 100}%</td>
+                    <td style="padding: 8px; text-align: right;">${formatCurrency(item.totalGross)}</td>
+                </tr>
+            `).join('')}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="4" style="padding: 10px; text-align: right; font-weight: bold;">Suma Netto:</td>
+                <td style="padding: 10px; text-align: right;">${formatCurrency(quote.totalNet)}</td>
+            </tr>
+            <tr>
+                <td colspan="4" style="padding: 10px; text-align: right; font-weight: bold;">Suma Brutto:</td>
+                <td style="padding: 10px; text-align: right; font-weight: bold;">${formatCurrency(quote.totalGross)}</td>
+            </tr>
+        </tfoot>
+    </table>`;
 
     // Replace placeholders
     let content = template.content;
@@ -209,6 +246,8 @@ export async function generateContract(quoteId: string, templateId: string, vari
         '{{kwota_brutto}}': (quote.totalGross / 100).toFixed(2),
         '{{adres_montazu}}': quote.montage.installationAddress || quote.montage.address || '',
         '{{logo_firmy}}': logoHtml,
+        '{{tabela_produktow}}': itemsHtml,
+        '{{uwagi_wyceny}}': quote.notes || '',
     };
 
     // Merge system and user variables

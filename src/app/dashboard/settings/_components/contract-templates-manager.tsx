@@ -196,7 +196,7 @@ export function ContractTemplatesManager({ templates }: { templates: Template[] 
                         <DialogHeader className="p-6 pb-2 shrink-0">
                             <DialogTitle>{editingTemplate ? 'Edytuj Szablon' : 'Nowy Szablon'}</DialogTitle>
                             <DialogDescription>
-                                Dostępne zmienne: {'{{klient_nazwa}}'}, {'{{klient_adres}}'}, {'{{numer_wyceny}}'}, {'{{kwota_brutto}}'}, {'{{data_rozpoczecia}}'}, {'{{termin_zakonczenia}}'}, {'{{kwota_zaliczki}}'}, {'{{podpis_wykonawcy}}'}, {'{{logo_firmy}}'}
+                                Dostępne zmienne: {'{{klient_nazwa}}'}, {'{{klient_adres}}'}, {'{{numer_wyceny}}'}, {'{{kwota_brutto}}'}, {'{{data_rozpoczecia}}'}, {'{{termin_zakonczenia}}'}, {'{{kwota_zaliczki}}'}, {'{{podpis_wykonawcy}}'}, {'{{logo_firmy}}'}, {'{{tabela_produktow}}'}, {'{{uwagi_wyceny}}'}
                             </DialogDescription>
                         </DialogHeader>
                         <Form {...form}>
