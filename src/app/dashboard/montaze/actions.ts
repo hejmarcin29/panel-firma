@@ -622,6 +622,7 @@ type UpdateMontageContactDetailsInput = {
 	contactEmail?: string;
 	scheduledInstallationDate?: string;
 	scheduledInstallationEndDate?: string;
+    measurementDate?: string;
     scheduledSkirtingInstallationDate?: string;
     scheduledSkirtingInstallationEndDate?: string;
 	billingAddress?: string;
@@ -639,6 +640,7 @@ export async function updateMontageContactDetails({
 	contactEmail,
 	scheduledInstallationDate,
 	scheduledInstallationEndDate,
+    measurementDate,
     scheduledSkirtingInstallationDate,
     scheduledSkirtingInstallationEndDate,
 	billingAddress,
@@ -688,6 +690,15 @@ export async function updateMontageContactDetails({
 		}
 		scheduledInstallationEndAt = parsed;
 	}
+
+    let measurementAt: Date | null = null;
+    if (measurementDate && measurementDate.trim()) {
+        const parsed = new Date(`${measurementDate}T00:00:00`);
+        if (Number.isNaN(parsed.getTime())) {
+            throw new Error('Podaj prawidłową datę pomiaru.');
+        }
+        measurementAt = parsed;
+    }
 
     let scheduledSkirtingInstallationAt: Date | null = null;
     if (scheduledSkirtingInstallationDate && scheduledSkirtingInstallationDate.trim()) {
@@ -743,6 +754,7 @@ export async function updateMontageContactDetails({
             forecastedInstallationDate: forecastedInstallationAt,
 			scheduledInstallationAt,
 			scheduledInstallationEndAt,
+            measurementDate: measurementAt,
             scheduledSkirtingInstallationAt,
             scheduledSkirtingInstallationEndAt,
 			billingAddress: normalizedBillingAddress,

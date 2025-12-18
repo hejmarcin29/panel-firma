@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { eq, isNotNull, desc } from 'drizzle-orm';
+import { eq, isNotNull, desc, isNull, ne } from 'drizzle-orm';
 
 import { HeadBucketCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 
@@ -532,5 +532,41 @@ export async function updatePortalSettings(data: {
 
     revalidatePath('/dashboard/settings');
 }
+
+export async function fixMontageCustomerLinks() {
+    const user = await requireUser();
+    if (user.role !== 'admin') {
+        throw new Error('Brak uprawnień.');
+    }
+
+    const unlinkedMontages = await db.query.montages.findMany({
+        where: (table, { and, isNull, isNotNull, ne }) => and(
+            isNull(table.customerId),
+            isNotNull(table.contactEmail),
+            ne(table.contactEmail, '')
+        )
+    });
+
+    let fixedCount = 0;
+
+    for (const montage of unlinkedMontages) {
+        const email = montage.contactEmail?.trim().toLowerCase();
+        if (!email) continue;
+
+        const customer = await db.query.customers.findFirst({
+            where: (table, { eq }) => eq(table.email, email)
+        });
+
+        if (customer) {
+            await db.update(montages)
+                .set({ customerId: customer.id })
+                .where(eq(montages.id, montage.id));
+            fixedCount++;
+        }
+    }
+    
+    return { success: true, fixedCount, totalFound: unlinkedMontages.length };
+}
+
 
 

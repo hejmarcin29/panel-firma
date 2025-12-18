@@ -487,6 +487,7 @@ export const montages = pgTable(
 		nip: text('nip'),
 		scheduledInstallationAt: timestamp('scheduled_installation_at'),
 		scheduledInstallationEndAt: timestamp('scheduled_installation_end_at'),
+        measurementDate: timestamp('measurement_date'),
         scheduledSkirtingInstallationAt: timestamp('scheduled_skirting_installation_at'),
         scheduledSkirtingInstallationEndAt: timestamp('scheduled_skirting_installation_end_at'),
 		materialDetails: text('material_details'),

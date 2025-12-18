@@ -17,6 +17,36 @@ export async function getCustomerByToken(token: string) {
         }
     });
 
+    if (!customer) return undefined;
+
+    // Fallback: Find unlinked montages by email
+    if (customer.email) {
+        const montagesByEmail = await db.query.montages.findMany({
+            where: eq(montages.contactEmail, customer.email),
+            orderBy: [desc(montages.createdAt)],
+            with: {
+                attachments: true,
+            }
+        });
+
+        const existingIds = new Set(customer.montages.map(m => m.id));
+        const allMontages = [...customer.montages];
+
+        for (const m of montagesByEmail) {
+            if (!existingIds.has(m.id)) {
+                allMontages.push(m);
+            }
+        }
+
+        // Sort by date desc
+        allMontages.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+        return {
+            ...customer,
+            montages: allMontages
+        };
+    }
+
     return customer;
 }
 

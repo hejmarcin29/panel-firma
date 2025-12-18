@@ -78,6 +78,9 @@ export function MontageClientCard({
     forecastedInstallationDate: montage.forecastedInstallationDate
       ? new Date(montage.forecastedInstallationDate as string | number | Date).toISOString().split("T")[0]
       : "",
+    measurementDate: montage.measurementDate
+      ? new Date(montage.measurementDate as string | number | Date).toISOString().split("T")[0]
+      : "",
   });
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -115,6 +118,9 @@ export function MontageClientCard({
         forecastedInstallationDate: montage.forecastedInstallationDate
           ? new Date(montage.forecastedInstallationDate as string | number | Date).toISOString().split("T")[0]
           : "",
+        measurementDate: montage.measurementDate
+          ? new Date(montage.measurementDate as string | number | Date).toISOString().split("T")[0]
+          : "",
     });
     setDateRange({
         from: montage.scheduledInstallationAt ? new Date(montage.scheduledInstallationAt) : undefined,
@@ -141,6 +147,7 @@ export function MontageClientCard({
         installationCity: data.installationCity,
         source: data.source,
         forecastedInstallationDate: data.forecastedInstallationDate,
+        measurementDate: data.measurementDate,
         scheduledInstallationDate: data.scheduledInstallationAt,
         scheduledInstallationEndDate: data.scheduledInstallationEndAt,
         scheduledSkirtingInstallationDate: data.scheduledSkirtingInstallationAt,
@@ -214,6 +221,10 @@ export function MontageClientCard({
   
   const forecastedDate = montage.forecastedInstallationDate 
     ? new Date(montage.forecastedInstallationDate as string | number | Date).toLocaleDateString('pl-PL')
+    : null;
+
+  const measurementDate = montage.measurementDate
+    ? new Date(montage.measurementDate as string | number | Date).toLocaleDateString('pl-PL')
     : null;
 
   const handleInstallerStatusChange = async (value: string) => {
@@ -304,6 +315,15 @@ export function MontageClientCard({
                         ))}
                     </SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="measurementDate">Data pomiaru</Label>
+                <Input
+                  id="measurementDate"
+                  type="date"
+                  value={formData.measurementDate}
+                  onChange={(e) => handleChange("measurementDate", e.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="forecastedInstallationDate">Szacowany termin montażu</Label>
@@ -464,240 +484,285 @@ export function MontageClientCard({
         </Dialog>
         )}
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-start gap-3">
-          <MapPin className="mt-0.5 h-4 w-4 text-muted-foreground" />
-          <div className="grid gap-0.5">
-            <p className="text-sm font-medium leading-none">
-              {montage.installationAddress || "Brak adresu"}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {montage.installationCity}
-            </p>
-            {montage.installationAddress && (
-                <a
-                    href={googleMapsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-primary hover:underline mt-1 block"
-                >
-                    Pokaż na mapie
-                </a>
-            )}
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <Phone className="h-4 w-4 text-muted-foreground" />
-          <div className="grid gap-0.5">
-             {montage.contactPhone ? (
-                <a href={`tel:${montage.contactPhone}`} className="text-sm hover:underline">
-                    {montage.contactPhone}
-                </a>
-             ) : (
-                <span className="text-sm text-muted-foreground">Brak telefonu</span>
-             )}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Mail className="h-4 w-4 text-muted-foreground" />
-          <div className="grid gap-0.5">
-             {montage.contactEmail ? (
-                <a href={`mailto:${montage.contactEmail}`} className="text-sm hover:underline">
-                    {montage.contactEmail}
-                </a>
-             ) : (
-                <span className="text-sm text-muted-foreground">Brak emaila</span>
-             )}
-          </div>
-        </div>
-
-        {montage.customer?.referralToken && (
-            <div className="pt-1">
-                <div className="rounded-md border border-amber-200 bg-amber-50/50 p-3 space-y-2">
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-amber-900 flex items-center gap-1.5">
-                            <Sparkles className="h-3 w-3 text-amber-500" /> Portal Klienta
-                        </span>
-                    </div>
-                    
-                    <div className="flex items-center gap-1.5">
-                        <Input 
-                            readOnly 
-                            value={`https://b2b.primepodloga.pl/s/${montage.customer.referralToken}`}
-                            className="h-7 bg-white border-amber-200 font-mono text-[10px] text-amber-900 focus-visible:ring-amber-500 px-2"
-                            onClick={(e) => e.currentTarget.select()}
-                        />
-                        <Button 
-                            size="icon" 
-                            variant="outline" 
-                            className="h-7 w-7 shrink-0 border-amber-200 hover:bg-amber-100 hover:text-amber-900"
-                            onClick={() => {
-                                navigator.clipboard.writeText(`https://b2b.primepodloga.pl/s/${montage.customer!.referralToken}`);
-                                toast.success('Link skopiowany');
-                            }}
-                            title="Kopiuj link"
-                        >
-                            <Copy className="h-3 w-3" />
-                        </Button>
-                        <Button 
-                            size="icon" 
-                            variant="ghost" 
-                            className="h-7 w-7 shrink-0 text-amber-700 hover:bg-amber-100 hover:text-amber-900"
-                            asChild
-                            title="Otwórz portal"
-                        >
-                            <a href={`/s/${montage.customer.referralToken}`} target="_blank" rel="noopener noreferrer">
-                                <ExternalLink className="h-3 w-3" />
-                            </a>
-                        </Button>
-                    </div>
-                </div>
-            </div>
-        )}
-
-        {montage.customer?.source && (
-            <div className="flex items-center gap-3">
-                <Megaphone className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">
-                    {montage.customer.source === 'internet' ? 'Internet' :
-                     montage.customer.source === 'social_media' ? 'Social Media' :
-                     montage.customer.source === 'recommendation' ? 'Polecenie' :
-                     montage.customer.source === 'architect' ? 'Architekt' :
-                     montage.customer.source === 'event' ? 'Wydarzenie' :
-                     montage.customer.source === 'drive_by' ? 'Ruch uliczny' :
-                     montage.customer.source === 'other' ? 'Inne' :
-                     montage.customer.source}
-                </span>
-            </div>
-        )}
-
-        <div className="flex items-center gap-3">
-            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+      <CardContent className="space-y-6">
+        {/* Section 1: Header (Address, Contact) */}
+        <div className="space-y-3">
+            <div className="flex items-start gap-3">
+            <MapPin className="mt-0.5 h-4 w-4 text-muted-foreground" />
             <div className="grid gap-0.5">
-                <span className="text-sm">
-                    {formattedDate || (forecastedDate ? `Szac: ${forecastedDate}` : "Nie zaplanowano")}
-                </span>
-                {formattedSkirtingDate && (
-                    <span className="text-xs text-amber-600 font-medium">
-                        Listwy: {formattedSkirtingDate}
-                    </span>
-                )}
-                {formattedDate && forecastedDate && (
-                    <span className="text-xs text-muted-foreground">
-                        (Szacowany: {forecastedDate})
-                    </span>
+                <p className="text-sm font-medium leading-none">
+                {montage.installationAddress || "Brak adresu"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                {montage.installationCity}
+                </p>
+                {montage.installationAddress && (
+                    <a
+                        href={googleMapsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-primary hover:underline mt-1 block"
+                    >
+                        Pokaż na mapie
+                    </a>
                 )}
             </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-            <Hammer className="h-4 w-4 text-muted-foreground" />
-            <div className="grid gap-1 w-full">
-                <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">Montażysta potwierdził</span>
-                    <Select
-                        value={montage.installerStatus}
-                        onValueChange={handleInstallerStatusChange}
-                        disabled={!userRoles.includes('admin')}
-                    >
-                        <SelectTrigger className={cn("h-6 w-[130px] text-[10px] font-medium border", getInstallerStatusColor(montage.installerStatus))}>
-                            <SelectValue placeholder="Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="none">Nie</SelectItem>
-                            <SelectItem value="confirmed">Tak</SelectItem>
-                        </SelectContent>
-                    </Select>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex items-center gap-3">
+                <Phone className="h-4 w-4 text-muted-foreground" />
+                <div className="grid gap-0.5">
+                    {montage.contactPhone ? (
+                        <a href={`tel:${montage.contactPhone}`} className="text-sm hover:underline">
+                            {montage.contactPhone}
+                        </a>
+                    ) : (
+                        <span className="text-sm text-muted-foreground">Brak telefonu</span>
+                    )}
                 </div>
-                {userRoles.includes('admin') ? (
-                    <Select
-                        value={montage.installerId || "none"}
-                        onValueChange={handleInstallerChange}
-                    >
-                        <SelectTrigger className={cn("h-8 w-full text-sm", !montage.installerId ? "text-red-600 border-red-200 bg-red-50" : "text-green-600 border-green-200 bg-green-50")}>
-                            <SelectValue placeholder="Wybierz montażystę" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="none">Brak przypisania</SelectItem>
-                            {installers.map((installer) => (
-                                <SelectItem key={installer.id} value={installer.id}>
-                                    {installer.name || installer.email}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                ) : (
-                    <span className={cn("text-sm font-medium", !montage.installerId ? "text-red-600" : "text-green-600")}>
-                        {montage.installer?.name || "Brak montażysty"}
+                </div>
+
+                <div className="flex items-center gap-3">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <div className="grid gap-0.5">
+                    {montage.contactEmail ? (
+                        <a href={`mailto:${montage.contactEmail}`} className="text-sm hover:underline">
+                            {montage.contactEmail}
+                        </a>
+                    ) : (
+                        <span className="text-sm text-muted-foreground">Brak emaila</span>
+                    )}
+                </div>
+                </div>
+            </div>
+
+            {montage.customer?.referralToken && (
+                <div className="pt-1">
+                    <div className="rounded-md border border-amber-200 bg-amber-50/50 p-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-amber-900 flex items-center gap-1.5">
+                                <Sparkles className="h-3 w-3 text-amber-500" /> Portal Klienta
+                            </span>
+                        </div>
+                        
+                        <div className="flex items-center gap-1.5">
+                            <Input 
+                                readOnly 
+                                value={`https://b2b.primepodloga.pl/s/${montage.customer.referralToken}`}
+                                className="h-7 bg-white border-amber-200 font-mono text-[10px] text-amber-900 focus-visible:ring-amber-500 px-2"
+                                onClick={(e) => e.currentTarget.select()}
+                            />
+                            <Button 
+                                size="icon" 
+                                variant="outline" 
+                                className="h-7 w-7 shrink-0 border-amber-200 hover:bg-amber-100 hover:text-amber-900"
+                                onClick={() => {
+                                    navigator.clipboard.writeText(`https://b2b.primepodloga.pl/s/${montage.customer!.referralToken}`);
+                                    toast.success('Link skopiowany');
+                                }}
+                                title="Kopiuj link"
+                            >
+                                <Copy className="h-3 w-3" />
+                            </Button>
+                            <Button 
+                                size="icon" 
+                                variant="ghost" 
+                                className="h-7 w-7 shrink-0 text-amber-700 hover:bg-amber-100 hover:text-amber-900"
+                                asChild
+                                title="Otwórz portal"
+                            >
+                                <a href={`/s/${montage.customer.referralToken}`} target="_blank" rel="noopener noreferrer">
+                                    <ExternalLink className="h-3 w-3" />
+                                </a>
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {montage.customer?.source && (
+                <div className="flex items-center gap-3">
+                    <Megaphone className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">
+                        {montage.customer.source === 'internet' ? 'Internet' :
+                        montage.customer.source === 'social_media' ? 'Social Media' :
+                        montage.customer.source === 'recommendation' ? 'Polecenie' :
+                        montage.customer.source === 'architect' ? 'Architekt' :
+                        montage.customer.source === 'event' ? 'Wydarzenie' :
+                        montage.customer.source === 'drive_by' ? 'Ruch uliczny' :
+                        montage.customer.source === 'other' ? 'Inne' :
+                        montage.customer.source}
                     </span>
-                )}
+                </div>
+            )}
+        </div>
+
+        <Separator />
+
+        {/* Section 2: Dates (Grid) */}
+        <div>
+            <h4 className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Terminy</h4>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {/* Measurement Date */}
+                <div className="flex flex-col gap-1 p-2 rounded-md border bg-muted/20">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                        <Ruler className="h-3 w-3" />
+                        <span className="text-[10px] uppercase font-medium">Pomiar</span>
+                    </div>
+                    <span className="text-sm font-medium">
+                        {measurementDate || "--.--.----"}
+                    </span>
+                </div>
+
+                {/* Estimated Date */}
+                <div className="flex flex-col gap-1 p-2 rounded-md border bg-muted/20">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                        <CalendarIcon className="h-3 w-3" />
+                        <span className="text-[10px] uppercase font-medium">Szacowany</span>
+                    </div>
+                    <span className="text-sm font-medium">
+                        {forecastedDate || "--.--.----"}
+                    </span>
+                </div>
+
+                {/* Installation Date */}
+                <div className="flex flex-col gap-1 p-2 rounded-md border bg-muted/20">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                        <Hammer className="h-3 w-3" />
+                        <span className="text-[10px] uppercase font-medium">Montaż</span>
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="text-sm font-medium">
+                            {formattedDate || "Nie zaplanowano"}
+                        </span>
+                        {formattedSkirtingDate && (
+                            <span className="text-[10px] text-amber-600 font-medium mt-0.5">
+                                Listwy: {formattedSkirtingDate}
+                            </span>
+                        )}
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div className="flex items-center gap-3">
-            <User className="h-4 w-4 text-muted-foreground" />
-            <div className="grid gap-1 w-full">
-                <span className="text-xs text-muted-foreground">Pomiarowiec</span>
-                {userRoles.includes('admin') ? (
-                    <Select
-                        value={montage.measurerId || "none"}
-                        onValueChange={handleMeasurerChange}
-                    >
-                        <SelectTrigger className={cn("h-8 w-full text-sm", !montage.measurerId ? "text-red-600 border-red-200 bg-red-50" : "text-green-600 border-green-200 bg-green-50")}>
-                            <SelectValue placeholder="Wybierz pomiarowca" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="none">Brak przypisania</SelectItem>
-                            {measurers.map((measurer) => (
-                                <SelectItem key={measurer.id} value={measurer.id}>
-                                    {measurer.name || measurer.email}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                ) : (
-                    <span className={cn("text-sm font-medium", !montage.measurerId ? "text-red-600" : "text-green-600")}>
-                        {montage.measurer?.name || "Brak pomiarowca"}
-                    </span>
-                )}
-            </div>
-        </div>
+        <Separator />
 
-        {(!userRoles.includes('installer') || userRoles.includes('admin')) && (
-        <div className="flex items-center gap-3">
-            <User className="h-4 w-4 text-muted-foreground" />
-            <div className="grid gap-1 w-full">
-                <span className="text-xs text-muted-foreground">Architekt</span>
-                {userRoles.includes('admin') ? (
-                    <Select
-                        value={montage.architectId || "none"}
-                        onValueChange={handleArchitectChange}
-                    >
-                        <SelectTrigger className={cn("h-8 w-full text-sm", !montage.architectId ? "text-red-600 border-red-200 bg-red-50" : "text-purple-600 border-purple-200 bg-purple-50")}>
-                            <SelectValue placeholder="Wybierz architekta" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="none">Brak przypisania</SelectItem>
-                            {architects.map((architect) => (
-                                <SelectItem key={architect.id} value={architect.id}>
-                                    {architect.name || architect.email}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                ) : (
-                    <span className={cn("text-sm font-medium", !montage.architectId ? "text-red-600" : "text-purple-600")}>
-                        {montage.architect?.name || "Brak architekta"}
-                    </span>
+        {/* Section 3: Team (Grid/List) */}
+        <div>
+            <h4 className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Zespół</h4>
+            <div className="space-y-4">
+                {/* Installer */}
+                <div className="flex items-center gap-3">
+                    <Hammer className="h-4 w-4 text-muted-foreground" />
+                    <div className="grid gap-1 w-full">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground">Montażysta</span>
+                            <Select
+                                value={montage.installerStatus}
+                                onValueChange={handleInstallerStatusChange}
+                                disabled={!userRoles.includes('admin')}
+                            >
+                                <SelectTrigger className={cn("h-5 w-[100px] text-[10px] font-medium border", getInstallerStatusColor(montage.installerStatus))}>
+                                    <SelectValue placeholder="Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">Nie potwierdził</SelectItem>
+                                    <SelectItem value="confirmed">Potwierdził</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        {userRoles.includes('admin') ? (
+                            <Select
+                                value={montage.installerId || "none"}
+                                onValueChange={handleInstallerChange}
+                            >
+                                <SelectTrigger className={cn("h-8 w-full text-sm", !montage.installerId ? "text-red-600 border-red-200 bg-red-50" : "text-green-600 border-green-200 bg-green-50")}>
+                                    <SelectValue placeholder="Wybierz montażystę" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">Brak przypisania</SelectItem>
+                                    {installers.map((installer) => (
+                                        <SelectItem key={installer.id} value={installer.id}>
+                                            {installer.name || installer.email}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        ) : (
+                            <span className={cn("text-sm font-medium", !montage.installerId ? "text-red-600" : "text-green-600")}>
+                                {montage.installer?.name || "Brak montażysty"}
+                            </span>
+                        )}
+                    </div>
+                </div>
+
+                {/* Measurer */}
+                <div className="flex items-center gap-3">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <div className="grid gap-1 w-full">
+                        <span className="text-xs text-muted-foreground">Pomiarowiec</span>
+                        {userRoles.includes('admin') ? (
+                            <Select
+                                value={montage.measurerId || "none"}
+                                onValueChange={handleMeasurerChange}
+                            >
+                                <SelectTrigger className={cn("h-8 w-full text-sm", !montage.measurerId ? "text-red-600 border-red-200 bg-red-50" : "text-green-600 border-green-200 bg-green-50")}>
+                                    <SelectValue placeholder="Wybierz pomiarowca" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">Brak przypisania</SelectItem>
+                                    {measurers.map((measurer) => (
+                                        <SelectItem key={measurer.id} value={measurer.id}>
+                                            {measurer.name || measurer.email}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        ) : (
+                            <span className={cn("text-sm font-medium", !montage.measurerId ? "text-red-600" : "text-green-600")}>
+                                {montage.measurer?.name || "Brak pomiarowca"}
+                            </span>
+                        )}
+                    </div>
+                </div>
+
+                {/* Architect */}
+                {(!userRoles.includes('installer') || userRoles.includes('admin')) && (
+                <div className="flex items-center gap-3">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <div className="grid gap-1 w-full">
+                        <span className="text-xs text-muted-foreground">Architekt</span>
+                        {userRoles.includes('admin') ? (
+                            <Select
+                                value={montage.architectId || "none"}
+                                onValueChange={handleArchitectChange}
+                            >
+                                <SelectTrigger className={cn("h-8 w-full text-sm", !montage.architectId ? "text-red-600 border-red-200 bg-red-50" : "text-purple-600 border-purple-200 bg-purple-50")}>
+                                    <SelectValue placeholder="Wybierz architekta" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">Brak przypisania</SelectItem>
+                                    {architects.map((architect) => (
+                                        <SelectItem key={architect.id} value={architect.id}>
+                                            {architect.name || architect.email}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        ) : (
+                            <span className={cn("text-sm font-medium", !montage.architectId ? "text-red-600" : "text-purple-600")}>
+                                {montage.architect?.name || "Brak architekta"}
+                            </span>
+                        )}
+                    </div>
+                </div>
                 )}
             </div>
         </div>
-        )}
 
         {montage.floorArea && (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 pt-2 border-t">
                 <Ruler className="h-4 w-4 text-muted-foreground" />
                 <div className="grid gap-0.5">
                     <span className="text-sm">

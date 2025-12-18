@@ -1,0 +1,1 @@
+ALTER TABLE "montages" ADD COLUMN "measurement_date" timestamp;

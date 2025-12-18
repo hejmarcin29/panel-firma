@@ -33,7 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { updatePortalSettings } from "../actions";
+import { updatePortalSettings, fixMontageCustomerLinks } from "../actions";
 
 const formSchema = z.object({
   portalEnabled: z.boolean(),
@@ -56,6 +56,7 @@ export function PortalSettingsForm({
   initialSmsSenderName,
 }: PortalSettingsFormProps) {
   const [isSaving, setIsSaving] = useState(false);
+  const [isFixing, setIsFixing] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -85,7 +86,21 @@ export function PortalSettingsForm({
     }
   }
 
+  async function onFixLinks() {
+      setIsFixing(true);
+      try {
+          const result = await fixMontageCustomerLinks();
+          toast.success(`Naprawiono ${result.fixedCount} z ${result.totalFound} montaży.`);
+      } catch (error) {
+          toast.error("Błąd podczas naprawy danych.");
+          console.error(error);
+      } finally {
+          setIsFixing(false);
+      }
+  }
+
   return (
+    <div className="space-y-6">
     <Card>
       <CardHeader>
         <CardTitle>Portal Klienta i Powiadomienia SMS</CardTitle>
@@ -194,5 +209,29 @@ export function PortalSettingsForm({
         </Form>
       </CardContent>
     </Card>
+
+    <Card>
+        <CardHeader>
+            <CardTitle>Naprawa Danych</CardTitle>
+            <CardDescription>
+                Narzędzia do naprawy spójności danych w systemie.
+            </CardDescription>
+        </CardHeader>
+        <CardContent>
+            <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                    <p className="font-medium">Powiązania Montaży z Klientami</p>
+                    <p className="text-sm text-muted-foreground">
+                        Uruchom ten proces, jeśli montaże nie wyświetlają się w portalu klienta mimo zgodności adresu e-mail.
+                    </p>
+                </div>
+                <Button variant="outline" onClick={onFixLinks} disabled={isFixing}>
+                    {isFixing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Napraw Powiązania
+                </Button>
+            </div>
+        </CardContent>
+    </Card>
+    </div>
   );
 }
