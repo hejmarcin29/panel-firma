@@ -9,8 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Trash2, Plus, Wand2, Save, Printer, Mail, MoreHorizontal, ArrowLeft } from 'lucide-react';
-import { formatCurrency } from '@/lib/utils';
+import { Trash2, Plus, Wand2, Save, Printer, Mail, MoreHorizontal, ArrowLeft, CheckCircle2, Clock } from 'lucide-react';
+import { formatCurrency, cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
@@ -90,6 +90,7 @@ type QuoteEditorProps = {
             status: string;
             content: string;
             createdAt: string;
+            signedAt?: string | null;
         } | null;
     };
     templates: Array<{ id: string; name: string; content: string }>;
@@ -1066,19 +1067,58 @@ export function QuoteEditor({ quote, templates }: QuoteEditorProps) {
                                 <span>{formatCurrency(totalGross)}</span>
                             </div>
                             
-                            <div className="pt-4 border-t">
-                                <Label>Status</Label>
-                                <Select value={status} onValueChange={(v: QuoteStatus) => setStatus(v)}>
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="draft">Szkic</SelectItem>
-                                        <SelectItem value="sent">Wysłana</SelectItem>
-                                        <SelectItem value="accepted">Zaakceptowana</SelectItem>
-                                        <SelectItem value="rejected">Odrzucona</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                            <div className="pt-4 border-t space-y-4">
+                                <div>
+                                    <Label>Status Oferty</Label>
+                                    <Select value={status} onValueChange={(v: QuoteStatus) => setStatus(v)}>
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="draft">Szkic</SelectItem>
+                                            <SelectItem value="sent">Wysłana</SelectItem>
+                                            <SelectItem value="accepted">Zaakceptowana</SelectItem>
+                                            <SelectItem value="rejected">Odrzucona</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div>
+                                    <Label>Status Umowy</Label>
+                                    <div className="mt-1.5">
+                                        {quote.contract ? (
+                                            <div className={cn(
+                                                "flex items-center gap-2 text-sm font-medium p-2 rounded-md border",
+                                                quote.contract.status === 'signed' 
+                                                    ? "bg-green-50 text-green-700 border-green-200" 
+                                                    : "bg-orange-50 text-orange-700 border-orange-200"
+                                            )}>
+                                                {quote.contract.status === 'signed' ? (
+                                                    <>
+                                                        <CheckCircle2 className="w-4 h-4" />
+                                                        <div>
+                                                            <div>Podpisana przez klienta</div>
+                                                            {quote.contract.signedAt && (
+                                                                <div className="text-xs font-normal opacity-90">
+                                                                    {new Date(quote.contract.signedAt).toLocaleDateString('pl-PL')}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Clock className="w-4 h-4" />
+                                                        <span>Oczekuje na podpis</span>
+                                                    </>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <div className="text-sm text-muted-foreground italic">
+                                                Umowa nie została jeszcze wygenerowana
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>
