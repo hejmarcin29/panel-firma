@@ -39,7 +39,7 @@ type QuoteWithMontage = {
 };
 
 const statusOptions: { value: QuoteStatus; label: string; description: string }[] = [
-    { value: 'draft', label: 'Szkic', description: 'Wyceny w przygotowaniu' },
+    { value: 'draft', label: 'Szkic', description: 'Oferty w przygotowaniu' },
     { value: 'sent', label: 'Wysłane', description: 'Oczekujące na decyzję' },
     { value: 'accepted', label: 'Zaakceptowane', description: 'Gotowe do realizacji' },
     { value: 'rejected', label: 'Odrzucone', description: 'Archiwum' },

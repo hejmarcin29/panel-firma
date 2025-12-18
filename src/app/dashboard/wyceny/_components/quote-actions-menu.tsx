@@ -38,10 +38,10 @@ export function QuoteActionsMenu({ quoteId, quoteNumber }: QuoteActionsMenuProps
         setIsDeleting(true);
         try {
             await deleteQuote(quoteId);
-            toast.success('Wycena została usunięta');
+            toast.success('Oferta została usunięta');
             router.refresh();
         } catch {
-            toast.error('Nie udało się usunąć wyceny');
+            toast.error('Nie udało się usunąć oferty');
         } finally {
             setIsDeleting(false);
             setShowDeleteDialog(false);
@@ -75,9 +75,9 @@ export function QuoteActionsMenu({ quoteId, quoteNumber }: QuoteActionsMenuProps
             <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Czy na pewno chcesz usunąć wycenę?</AlertDialogTitle>
+                        <AlertDialogTitle>Czy na pewno chcesz usunąć ofertę?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Tej operacji nie można cofnąć. Wycena <strong>{quoteNumber}</strong> zostanie trwale usunięta z systemu.
+                            Tej operacji nie można cofnąć. Oferta <strong>{quoteNumber}</strong> zostanie trwale usunięta z systemu.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
