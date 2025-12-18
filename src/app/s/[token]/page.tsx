@@ -14,5 +14,5 @@ export default async function ReferralPage({ params }: PageProps) {
         notFound();
     }
 
-    return <CustomerPortal customer={customer} />;
+    return <CustomerPortal customer={customer} token={token} />;
 }

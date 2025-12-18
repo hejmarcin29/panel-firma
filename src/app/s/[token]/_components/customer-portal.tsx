@@ -1,14 +1,39 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, Calendar, CheckCircle2, Circle, Image as ImageIcon } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { FileText, Calendar, CheckCircle2, Circle, Image as ImageIcon, Ruler, Calculator, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import { acceptQuote, signContract } from '../actions';
+import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import { SignaturePad } from '@/components/ui/signature-pad';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 interface MontageAttachment {
     id: string;
     url: string;
     title: string | null;
+}
+
+interface Contract {
+    id: string;
+    status: 'draft' | 'sent' | 'signed' | 'rejected';
+    content: string;
+    signedAt: Date | null;
+    signatureData: string | null;
+}
+
+interface Quote {
+    id: string;
+    number: string | null;
+    status: 'draft' | 'sent' | 'accepted' | 'rejected';
+    totalGross: number;
+    createdAt: Date;
+    validUntil: Date | null;
+    contract: Contract | null;
 }
 
 interface Montage {
@@ -20,6 +45,12 @@ interface Montage {
     forecastedInstallationDate: Date | null;
     scheduledInstallationAt: Date | null;
     attachments: MontageAttachment[];
+    quotes: Quote[];
+    floorArea: number | null;
+    floorDetails: string | null;
+    skirtingLength: number | null;
+    skirtingDetails: string | null;
+    measurementDetails: string | null;
 }
 
 interface Customer {
@@ -29,6 +60,7 @@ interface Customer {
 
 interface CustomerPortalProps {
     customer: Customer;
+    token: string;
 }
 
 const STATUS_STEPS = [
@@ -50,8 +82,11 @@ function getStepStatus(currentStatus: string, stepId: string) {
     return 'upcoming';
 }
 
-export function CustomerPortal({ customer }: Omit<CustomerPortalProps, 'token'>) {
+export function CustomerPortal({ customer, token }: CustomerPortalProps) {
     const activeMontage = customer.montages[0]; // For now, just take the latest one
+    const [isAccepting, setIsAccepting] = useState<string | null>(null);
+    const [isSigning, setIsSigning] = useState(false);
+    const [contractDialogOpen, setContractDialogOpen] = useState(false);
 
     const isImage = (url: string) => {
         return /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(url);
@@ -59,6 +94,36 @@ export function CustomerPortal({ customer }: Omit<CustomerPortalProps, 'token'>)
 
     const images = activeMontage?.attachments.filter(att => isImage(att.url)) || [];
     const documents = activeMontage?.attachments.filter(att => !isImage(att.url)) || [];
+    const activeQuote = activeMontage?.quotes.find(q => q.status === 'sent' || q.status === 'accepted');
+
+    const handleAcceptQuote = async (quoteId: string) => {
+        setIsAccepting(quoteId);
+        try {
+            await acceptQuote(quoteId, token);
+            toast.success('Wycena została zaakceptowana! Dziękujemy.');
+        } catch (error) {
+            toast.error('Wystąpił błąd podczas akceptacji wyceny.');
+            console.error(error);
+        } finally {
+            setIsAccepting(null);
+        }
+    };
+
+    const handleSignContract = async (signatureData: string) => {
+        if (!activeQuote?.contract) return;
+        
+        setIsSigning(true);
+        try {
+            await signContract(activeQuote.contract.id, signatureData, token);
+            toast.success('Umowa została podpisana! Dziękujemy.');
+            setContractDialogOpen(false);
+        } catch (error) {
+            toast.error('Wystąpił błąd podczas podpisywania umowy.');
+            console.error(error);
+        } finally {
+            setIsSigning(false);
+        }
+    };
 
     const containerVariants = {
         hidden: { opacity: 0, y: 20 },
@@ -208,6 +273,134 @@ export function CustomerPortal({ customer }: Omit<CustomerPortalProps, 'token'>)
                                 </Card>
                             </motion.div>
                         </div>
+
+                        {/* Measurement Results */}
+                        {(activeMontage.floorArea || activeMontage.skirtingLength || activeMontage.measurementDetails) && (
+                            <motion.div variants={itemVariants}>
+                                <Card className="hover:shadow-md transition-shadow duration-300">
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <Ruler className="h-5 w-5 text-primary" /> Wyniki Pomiaru
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="grid gap-4 md:grid-cols-2">
+                                        {activeMontage.floorArea && (
+                                            <div className="space-y-1">
+                                                <span className="text-sm text-muted-foreground">Powierzchnia podłogi</span>
+                                                <p className="font-medium text-lg">{activeMontage.floorArea} m²</p>
+                                                {activeMontage.floorDetails && <p className="text-sm text-muted-foreground">{activeMontage.floorDetails}</p>}
+                                            </div>
+                                        )}
+                                        {activeMontage.skirtingLength && (
+                                            <div className="space-y-1">
+                                                <span className="text-sm text-muted-foreground">Długość listew</span>
+                                                <p className="font-medium text-lg">{activeMontage.skirtingLength} mb</p>
+                                                {activeMontage.skirtingDetails && <p className="text-sm text-muted-foreground">{activeMontage.skirtingDetails}</p>}
+                                            </div>
+                                        )}
+                                        {activeMontage.measurementDetails && (
+                                            <div className="col-span-full space-y-1 pt-2 border-t">
+                                                <span className="text-sm text-muted-foreground">Uwagi z pomiaru</span>
+                                                <p className="text-sm whitespace-pre-wrap">{activeMontage.measurementDetails}</p>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
+                        )}
+
+                        {/* Quote Acceptance */}
+                        {activeQuote && (
+                            <motion.div variants={itemVariants}>
+                                <Card className={cn(
+                                    "hover:shadow-md transition-shadow duration-300 border-l-4",
+                                    activeQuote.status === 'accepted' ? "border-l-green-500" : "border-l-primary"
+                                )}>
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <Calculator className="h-5 w-5 text-primary" /> Wycena {activeQuote.number}
+                                        </CardTitle>
+                                        <CardDescription>
+                                            Data wystawienia: {new Date(activeQuote.createdAt).toLocaleDateString('pl-PL')}
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="flex items-baseline justify-between">
+                                            <span className="text-muted-foreground">Wartość zamówienia (brutto):</span>
+                                            <span className="text-2xl font-bold">
+                                                {(activeQuote.totalGross / 100).toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' })}
+                                            </span>
+                                        </div>
+                                        {activeQuote.status === 'sent' && (
+                                            <div className="rounded-md bg-blue-50 p-4 text-sm text-blue-700 dark:bg-blue-900/20 dark:text-blue-300">
+                                                <p>Prosimy o zapoznanie się z wyceną. Aby rozpocząć realizację, wymagana jest akceptacja.</p>
+                                            </div>
+                                        )}
+                                        {activeQuote.status === 'accepted' && (
+                                            <div className="rounded-md bg-green-50 p-4 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-300 flex items-center gap-2">
+                                                <Check className="h-4 w-4" />
+                                                <p>Wycena została zaakceptowana. Dziękujemy!</p>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                    {activeQuote.status === 'sent' && (
+                                        <CardFooter>
+                                            <Button 
+                                                className="w-full sm:w-auto" 
+                                                onClick={() => handleAcceptQuote(activeQuote.id)}
+                                                disabled={!!isAccepting}
+                                            >
+                                                {isAccepting === activeQuote.id ? 'Przetwarzanie...' : 'Akceptuję wycenę i zamawiam'}
+                                            </Button>
+                                        </CardFooter>
+                                    )}
+                                    
+                                    {/* Contract Signing */}
+                                    {activeQuote.contract && activeQuote.contract.status !== 'rejected' && (
+                                        <div className="border-t p-6 bg-muted/20">
+                                            <h4 className="font-semibold mb-4 flex items-center gap-2">
+                                                <FileText className="h-4 w-4" /> Umowa
+                                            </h4>
+                                            
+                                            {activeQuote.contract.status === 'signed' ? (
+                                                <div className="rounded-md bg-green-50 p-4 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-300 flex items-center gap-2">
+                                                    <Check className="h-4 w-4" />
+                                                    <p>Umowa została podpisana {activeQuote.contract.signedAt ? new Date(activeQuote.contract.signedAt).toLocaleDateString('pl-PL') : ''}.</p>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-4">
+                                                    <p className="text-sm text-muted-foreground">
+                                                        Do realizacji zamówienia wymagane jest podpisanie umowy.
+                                                    </p>
+                                                    <Dialog open={contractDialogOpen} onOpenChange={setContractDialogOpen}>
+                                                        <DialogTrigger asChild>
+                                                            <Button variant="outline" className="w-full sm:w-auto">
+                                                                <FileText className="h-4 w-4 mr-2" />
+                                                                Podgląd i podpisanie umowy
+                                                            </Button>
+                                                        </DialogTrigger>
+                                                        <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+                                                            <DialogHeader>
+                                                                <DialogTitle>Umowa</DialogTitle>
+                                                            </DialogHeader>
+                                                            <div className="flex-1 overflow-y-auto border rounded-md p-4 bg-white text-black">
+                                                                <div className="prose max-w-none [&>h1]:text-2xl [&>h1]:font-bold [&>h1]:mb-4 [&>h2]:text-xl [&>h2]:font-bold [&>h2]:mb-3 [&>p]:mb-4 [&>ul]:list-disc [&>ul]:pl-5 [&>ol]:list-decimal [&>ol]:pl-5">
+                                                                    <ReactMarkdown>{activeQuote.contract.content}</ReactMarkdown>
+                                                                </div>
+                                                            </div>
+                                                            <div className="pt-4 border-t">
+                                                                <h4 className="font-semibold mb-2">Podpis</h4>
+                                                                <SignaturePad onSave={handleSignContract} />
+                                                            </div>
+                                                        </DialogContent>
+                                                    </Dialog>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </Card>
+                            </motion.div>
+                        )}
 
                         {images.length > 0 && (
                             <motion.div variants={itemVariants}>

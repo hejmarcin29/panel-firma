@@ -143,11 +143,8 @@ export const customers = pgTable(
 		shippingCountry: text('shipping_country'),
 		source: text('source').$type<CustomerSource>().default('other'),
 		architectId: text('architect_id').references(() => users.id, { onDelete: 'set null' }),
-        // Referral Program Fields
+        // Referral Program Fields (Magic Link Token)
         referralToken: text('referral_token').unique(),
-        referralCode: text('referral_code').unique(),
-        referralBalance: integer('referral_balance').default(0), // in grosz (100 = 1.00 PLN)
-        referredById: text('referred_by_id'), // Self-relation defined in relations
 		deletedAt: timestamp('deleted_at'),
 		createdAt: timestamp('created_at').notNull().defaultNow(),
 		updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -156,19 +153,8 @@ export const customers = pgTable(
 		emailIdx: uniqueIndex('customers_email_idx').on(table.email),
 		taxIdx: uniqueIndex('customers_tax_id_idx').on(table.taxId),
         referralTokenIdx: uniqueIndex('customers_referral_token_idx').on(table.referralToken),
-        referralCodeIdx: uniqueIndex('customers_referral_code_idx').on(table.referralCode),
-	})
-);
 
 export const customersRelations = relations(customers, ({ one, many }) => ({
-    referredBy: one(customers, {
-        fields: [customers.referredById],
-        references: [customers.id],
-        relationName: 'customer_referrals',
-    }),
-    referrals: many(customers, { relationName: 'customer_referrals' }),
-    payoutRequests: many(payoutRequests),
-    referralCommissions: many(referralCommissions),
     orders: many(orders),
     montages: many(montages),
     architect: one(users, {
@@ -177,6 +163,7 @@ export const customersRelations = relations(customers, ({ one, many }) => ({
     }),
 }));
 
+/*
 export const payoutRequests = pgTable(
     'payout_requests',
     {
@@ -238,6 +225,7 @@ export const referralCommissionsRelations = relations(referralCommissions, ({ on
         references: [customers.id],
     }),
 }));
+*/
 
 export const orders = pgTable(
 	'orders',
@@ -1052,12 +1040,7 @@ export const quotes = pgTable(
     })
 );
 
-export const quotesRelations = relations(quotes, ({ one }) => ({
-    montage: one(montages, {
-        fields: [quotes.montageId],
-        references: [montages.id],
-    }),
-}));
+
 
 export const products = pgTable('products', {
 	id: integer('id').primaryKey(), // WooCommerce ID
@@ -1181,4 +1164,53 @@ export const architectProductsRelations = relations(architectProducts, ({ one })
         references: [products.id],
     }),
 }));
+
+export const contractTemplates = pgTable('contract_templates', {
+    id: text('id').primaryKey(),
+    name: text('name').notNull(),
+    content: text('content').notNull(), // Markdown content with placeholders
+    isDefault: boolean('is_default').default(false),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const contractStatuses = ['draft', 'sent', 'signed', 'rejected'] as const;
+export type ContractStatus = (typeof contractStatuses)[number];
+
+export const contracts = pgTable('contracts', {
+    id: text('id').primaryKey(),
+    quoteId: text('quote_id')
+        .notNull()
+        .references(() => quotes.id, { onDelete: 'cascade' }),
+    templateId: text('template_id').references(() => contractTemplates.id, { onDelete: 'set null' }),
+    status: text('status').$type<ContractStatus>().notNull().default('draft'),
+    content: text('content').notNull(), // Final content snapshot
+    variables: json('variables'), // Stored variables used for generation
+    signedAt: timestamp('signed_at'),
+    signatureData: text('signature_data'), // Base64 signature or metadata
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => ({
+    quoteIdx: uniqueIndex('contracts_quote_id_idx').on(table.quoteId), // One contract per quote for now
+}));
+
+export const contractsRelations = relations(contracts, ({ one }) => ({
+    quote: one(quotes, {
+        fields: [contracts.quoteId],
+        references: [quotes.id],
+    }),
+    template: one(contractTemplates, {
+        fields: [contracts.templateId],
+        references: [contractTemplates.id],
+    }),
+}));
+
+export const quotesRelations = relations(quotes, ({ one }) => ({
+    montage: one(montages, {
+        fields: [quotes.montageId],
+        references: [montages.id],
+    }),
+    contract: one(contracts),
+}));
+
 

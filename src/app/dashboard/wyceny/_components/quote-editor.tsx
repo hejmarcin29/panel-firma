@@ -41,6 +41,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { updateQuote, sendQuoteEmail, getProductsForQuote, deleteQuote } from '../actions';
+import { generateContract } from '../../settings/contracts/actions';
+import { FileText as FileTextIcon } from 'lucide-react';
 
 type ProductAttribute = {
     id: number;
@@ -82,10 +84,16 @@ type QuoteEditorProps = {
             skirtingWaste: number | null;
             technicalAudit: unknown;
         };
+        contract?: {
+            id: string;
+            status: string;
+            createdAt: string;
+        } | null;
     };
+    templates: Array<{ id: string; name: string; content: string }>;
 };
 
-export function QuoteEditor({ quote }: QuoteEditorProps) {
+export function QuoteEditor({ quote, templates }: QuoteEditorProps) {
     const router = useRouter();
     const isMobile = useIsMobile();
     const [items, setItems] = useState<QuoteItem[]>(quote.items || []);
@@ -93,6 +101,9 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
     const [notes, setNotes] = useState(quote.notes || '');
     const [isSaving, setIsSaving] = useState(false);
     const [isSending, setIsSending] = useState(false);
+    const [isGeneratingContract, setIsGeneratingContract] = useState(false);
+    const [contractDialogOpen, setContractDialogOpen] = useState(false);
+    const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
     const [isImporting, setIsImporting] = useState(false);
     const [importDialogOpen, setImportDialogOpen] = useState(false);
     const [availableProducts, setAvailableProducts] = useState<Product[]>([]);
@@ -362,6 +373,26 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
         } finally {
             setIsDeleting(false);
             setShowDeleteDialog(false);
+        }
+    };
+
+    const handleGenerateContract = async () => {
+        if (!selectedTemplateId) {
+            toast.error('Wybierz szablon umowy');
+            return;
+        }
+
+        try {
+            setIsGeneratingContract(true);
+            await generateContract(quote.id, selectedTemplateId);
+            toast.success('Umowa została wygenerowana');
+            setContractDialogOpen(false);
+            router.refresh();
+        } catch (error) {
+            console.error('Error generating contract:', error);
+            toast.error('Wystąpił błąd podczas generowania umowy');
+        } finally {
+            setIsGeneratingContract(false);
         }
     };
 
@@ -639,6 +670,10 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
                         <Trash2 className="w-4 h-4 mr-2" />
                         Usuń
                     </Button>
+                    <Button variant="outline" onClick={() => setContractDialogOpen(true)}>
+                        <FileTextIcon className="w-4 h-4 mr-2" />
+                        {quote.contract ? 'Regeneruj Umowę' : 'Generuj Umowę'}
+                    </Button>
                     <Button variant="outline" onClick={handlePrint}>
                         <Printer className="w-4 h-4 mr-2" />
                         Drukuj / PDF
@@ -910,6 +945,38 @@ export function QuoteEditor({ quote }: QuoteEditorProps) {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            <Dialog open={contractDialogOpen} onOpenChange={setContractDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Generuj Umowę</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label>Wybierz szablon umowy</Label>
+                            <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Wybierz szablon..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {templates?.map((template) => (
+                                        <SelectItem key={template.id} value={template.id}>
+                                            {template.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <Button 
+                            className="w-full" 
+                            onClick={handleGenerateContract}
+                            disabled={isGeneratingContract || !selectedTemplateId}
+                        >
+                            {isGeneratingContract ? 'Generowanie...' : 'Generuj Umowę'}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

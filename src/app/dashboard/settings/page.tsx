@@ -43,6 +43,8 @@ import { getDeletedQuotes, getDeletedCustomers, getDeletedMontages, getDeletedPr
 import { LogoSettings } from './_components/logo-settings';
 import { CompanySettingsForm } from './_components/company-settings-form';
 import { PortalSettingsForm } from './_components/portal-settings-form';
+import { ContractTemplatesManager } from './_components/contract-templates-manager';
+import { getContractTemplates } from './contracts/actions';
 
 type LogLevel = 'info' | 'warning' | 'error';
 
@@ -318,6 +320,13 @@ export default async function SettingsPage() {
         console.error('Failed to read documentation:', error);
         businessLogicContent = '# Błąd\n\nWystąpił błąd podczas odczytu dokumentacji.';
     }
+
+    const contractTemplates = await getContractTemplates();
+    const serializedTemplates = contractTemplates.map(t => ({
+        ...t,
+        createdAt: t.createdAt.toISOString(),
+        updatedAt: t.updatedAt.toISOString(),
+    }));
 
 	return (
 		<SettingsView
@@ -604,6 +613,9 @@ export default async function SettingsPage() {
                     initialSmsToken={smsToken ?? ''}
                     initialSmsSenderName={smsSenderName ?? 'Info'}
                 />
+            }
+            contractTemplatesManager={
+                <ContractTemplatesManager templates={serializedTemplates} />
             }
 		>
             <div className="space-y-6">

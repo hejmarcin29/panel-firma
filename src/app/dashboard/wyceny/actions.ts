@@ -170,6 +170,7 @@ export async function getQuote(id: string) {
         where: eq(quotes.id, id),
         with: {
             montage: true,
+            contract: true,
         },
     });
 }

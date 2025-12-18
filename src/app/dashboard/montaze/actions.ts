@@ -16,7 +16,7 @@ import {
 	customers,
 	users,
     commissions,
-    referralCommissions,
+    // referralCommissions,
     type CustomerSource,
 } from '@/lib/db/schema';
 import { uploadMontageObject } from '@/lib/r2/storage';
@@ -561,6 +561,7 @@ export async function updateMontageStatus({ montageId, status }: UpdateMontageSt
                     }
                 }
             } 
+            /*
             // Priority 2: Referral Commission (only if no architect)
             else if (montageWithRelations.customer?.referredById) {
                 const referrerId = montageWithRelations.customer.referredById;
@@ -603,6 +604,7 @@ export async function updateMontageStatus({ montageId, status }: UpdateMontageSt
                     }
                 }
             }
+            */
         }
     }
 
