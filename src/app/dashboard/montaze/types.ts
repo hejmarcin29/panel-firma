@@ -123,6 +123,11 @@ export type Montage = {
         totalNet: number;
         totalGross: number;
         createdAt: TimestampValue;
+        contract?: {
+            id: string;
+            status: string;
+            signedAt: TimestampValue;
+        } | null;
     }[];
 	createdAt: TimestampValue;
 	updatedAt: TimestampValue;

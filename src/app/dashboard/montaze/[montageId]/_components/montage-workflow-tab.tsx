@@ -175,6 +175,24 @@ export function MontageWorkflowTab({
     const newStatusIndex = statusOptions.findIndex(o => o.value === status);
     const beforeFirstPaymentIndex = statusOptions.findIndex(o => o.value === 'before_first_payment');
     
+    // Check for contract and quote acceptance if moving to or past 'before_first_payment'
+    if (newStatusIndex >= beforeFirstPaymentIndex) {
+        const acceptedQuote = montage.quotes?.find(q => q.status === 'accepted');
+        const signedContract = acceptedQuote?.contract?.status === 'signed';
+
+        if (!acceptedQuote) {
+            setAlertMessage("Nie można przejść do tego etapu. Wymagana jest zaakceptowana wycena.");
+            setAlertOpen(true);
+            return;
+        }
+
+        if (!signedContract) {
+            setAlertMessage("Nie można przejść do tego etapu. Wymagana jest podpisana umowa przez klienta.");
+            setAlertOpen(true);
+            return;
+        }
+    }
+    
     // If trying to move past 'before_first_payment'
     if (newStatusIndex > beforeFirstPaymentIndex) {
         const fvIssued = montage.checklistItems?.find(i => i.label === "Wystawiono FV zaliczkową")?.completed;
