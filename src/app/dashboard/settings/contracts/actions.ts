@@ -181,7 +181,6 @@ export async function generateContract(quoteId: string, templateId: string, vari
     const quote = await db.query.quotes.findFirst({
         where: eq(quotes.id, quoteId),
         with: {
-            items: true,
             montage: {
                 with: {
                     customer: true
