@@ -63,6 +63,7 @@ export function ContractTemplatesManager({ templates }: { templates: Template[] 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [showPreview, setShowPreview] = useState(false);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
