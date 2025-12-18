@@ -88,6 +88,7 @@ type QuoteEditorProps = {
         contract?: {
             id: string;
             status: string;
+            content: string;
             createdAt: string;
         } | null;
     };
