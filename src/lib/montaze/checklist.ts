@@ -10,6 +10,11 @@ export type MontageChecklistTemplate = {
 
 export const DEFAULT_MONTAGE_CHECKLIST: readonly MontageChecklistTemplate[] = [
 	{
+		id: 'contract_signed_check',
+		label: 'Podpisano umowę/cenę',
+		allowAttachment: false,
+	},
+	{
 		id: 'advance_invoice_issued',
 		label: 'Wystawiono FV zaliczkową',
 		allowAttachment: false,

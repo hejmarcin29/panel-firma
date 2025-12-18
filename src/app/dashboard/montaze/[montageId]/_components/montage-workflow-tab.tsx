@@ -173,8 +173,20 @@ export function MontageWorkflowTab({
 
   const handleStatusChange = (status: string) => {
     const newStatusIndex = statusOptions.findIndex(o => o.value === status);
+    const beforeMeasurementIndex = statusOptions.findIndex(o => o.value === 'before_measurement');
     const beforeFirstPaymentIndex = statusOptions.findIndex(o => o.value === 'before_first_payment');
     
+    // Check for "Podpisano umowę/cenę" checkbox if moving past 'before_measurement'
+    if (newStatusIndex > beforeMeasurementIndex) {
+        const contractSignedCheck = montage.checklistItems?.find(i => i.label === "Podpisano umowę/cenę")?.completed;
+        
+        if (!contractSignedCheck) {
+             setAlertMessage("Nie można przejść do tego etapu. Wymagane jest zaznaczenie 'Podpisano umowę/cenę' w liście kontrolnej.");
+             setAlertOpen(true);
+             return;
+        }
+    }
+
     // Check for contract and quote acceptance if moving to or past 'before_first_payment'
     if (newStatusIndex >= beforeFirstPaymentIndex) {
         const acceptedQuote = montage.quotes?.find(q => q.status === 'accepted');
