@@ -339,7 +339,7 @@ export function CustomerPortal({ customer, token }: CustomerPortalProps) {
                                             </div>
                                         )}
                                     </CardContent>
-                                    {activeQuote.status === 'sent' && (
+                                    {activeQuote.status === 'sent' && !activeQuote.contract && (
                                         <CardFooter>
                                             <Button 
                                                 className="w-full sm:w-auto" 

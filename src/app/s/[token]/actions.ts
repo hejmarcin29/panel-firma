@@ -68,6 +68,16 @@ export async function signContract(contractId: string, signatureData: string, to
         })
         .where(eq(contracts.id, contractId));
 
+    // Automatically accept the quote if it's not already accepted
+    if (contract.quote && contract.quote.status === 'sent') {
+        await db.update(quotes)
+            .set({ 
+                status: 'accepted',
+                updatedAt: new Date()
+            })
+            .where(eq(quotes.id, contract.quoteId));
+    }
+
     revalidatePath(`/s/${token}`);
     return { success: true };
 }
