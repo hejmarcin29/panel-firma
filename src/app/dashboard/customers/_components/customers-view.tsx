@@ -268,3 +268,6 @@ export function CustomersView({ initialCustomers }: CustomersViewProps) {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+        </div>
+    );
+}

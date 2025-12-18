@@ -26,7 +26,6 @@ import {
 import {
     Form,
     FormControl,
-    FormDescription,
     FormField,
     FormItem,
     FormLabel,
@@ -100,7 +99,7 @@ export function ContractTemplatesManager({ templates }: { templates: Template[] 
         try {
             await resetToDefaultTemplate();
             toast.success('Przywrócono domyślny szablon');
-        } catch (error) {
+        } catch {
             toast.error('Błąd przywracania szablonu');
         } finally {
             setIsSaving(false);

@@ -11,7 +11,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
-import { Package, Barcode, Layers } from 'lucide-react';
+import { Barcode, Layers } from 'lucide-react';
 
 interface Product {
   id: number;

@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileText, Calendar, CheckCircle2, Circle, Image as ImageIcon, Ruler, Calculator, Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { signContract } from '../actions';
 import { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
 import { SignaturePad } from '@/components/ui/signature-pad';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 

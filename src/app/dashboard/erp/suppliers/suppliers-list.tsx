@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion } from 'framer-motion';
-import { User, Phone, Mail, MapPin, Building2 } from 'lucide-react';
+import { User, Phone, Mail, MapPin } from 'lucide-react';
 
 interface Supplier {
   id: string;
