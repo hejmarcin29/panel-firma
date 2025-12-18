@@ -4,7 +4,6 @@ import { asc, desc, sql } from 'drizzle-orm';
 
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
-import { getAppSetting, appSettingKeys } from '@/lib/settings';
 import {
     montageAttachments,
     montageChecklistItems,

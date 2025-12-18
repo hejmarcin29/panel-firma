@@ -40,7 +40,7 @@ import { ProductSelectorModal } from './product-selector-modal';
 import { AuditForm } from './technical/audit-form';
 import type { TechnicalAuditData } from '../technical-data';
 import { addMontageAttachment } from '../actions';
-import { MontageCategories, MontageSubCategories } from '@/lib/r2/constants';
+import { MontageSubCategories } from '@/lib/r2/constants';
 
 interface MontageMeasurementTabProps {
   montage: Montage;

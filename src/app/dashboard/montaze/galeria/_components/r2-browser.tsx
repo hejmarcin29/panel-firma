@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
-import { Folder, File as FileIcon, ChevronRight, Home, Loader2, Image as ImageIcon, FileText, Download, RefreshCw, Search, Filter } from 'lucide-react';
+import { Folder, Home, FileText, Download, RefreshCw, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator, BreadcrumbPage } from '@/components/ui/breadcrumb';
@@ -39,11 +39,11 @@ export function R2Browser({ initialPrefix = '' }: R2BrowserProps) {
 
     useEffect(() => {
         loadItems(currentPrefix);
-        setSearchQuery(''); // Reset search on folder change
     }, [currentPrefix]);
 
     const handleFolderClick = (folderPrefix: string) => {
         setHistory([...history, currentPrefix]);
+        setSearchQuery('');
         setCurrentPrefix(folderPrefix);
     };
 
@@ -51,6 +51,7 @@ export function R2Browser({ initialPrefix = '' }: R2BrowserProps) {
         const segments = currentPrefix.split('/').filter(Boolean);
         const newPath = segments.slice(0, index + 1).join('/') + '/';
         
+        setSearchQuery('');
         if (index === -1) {
              setCurrentPrefix('');
         } else {
@@ -133,7 +134,7 @@ export function R2Browser({ initialPrefix = '' }: R2BrowserProps) {
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div>
-                    <Tabs value={filterType} onValueChange={(v) => setFilterType(v as any)} className="w-full sm:w-auto">
+                    <Tabs value={filterType} onValueChange={(v) => setFilterType(v as 'all' | 'images' | 'documents')} className="w-full sm:w-auto">
                         <TabsList>
                             <TabsTrigger value="all">Wszystkie</TabsTrigger>
                             <TabsTrigger value="images">Zdjęcia</TabsTrigger>

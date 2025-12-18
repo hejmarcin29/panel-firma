@@ -13,7 +13,6 @@ import {
   BookOpen,
   ArrowLeft,
   Trash2,
-  Sparkles,
   MessageSquare,
 } from "lucide-react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";

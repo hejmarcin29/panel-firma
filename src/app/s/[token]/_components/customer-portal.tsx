@@ -1,9 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileText, Calendar, CheckCircle2, Circle, Image as ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
@@ -32,7 +29,6 @@ interface Customer {
 
 interface CustomerPortalProps {
     customer: Customer;
-    token: string;
 }
 
 const STATUS_STEPS = [
@@ -54,7 +50,7 @@ function getStepStatus(currentStatus: string, stepId: string) {
     return 'upcoming';
 }
 
-export function CustomerPortal({ customer, token }: CustomerPortalProps) {
+export function CustomerPortal({ customer }: Omit<CustomerPortalProps, 'token'>) {
     const activeMontage = customer.montages[0]; // For now, just take the latest one
 
     const isImage = (url: string) => {

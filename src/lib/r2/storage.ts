@@ -17,8 +17,6 @@ import {
     ORDER_ROOT_PREFIX, 
     CLIENT_ROOT_PREFIX, 
     TASK_ROOT_PREFIX,
-    MontageCategories, 
-    MontageSubCategories 
 } from './constants';
 
 export { 
@@ -26,8 +24,6 @@ export {
     ORDER_ROOT_PREFIX, 
     TASK_ROOT_PREFIX, 
     CLIENT_ROOT_PREFIX, 
-    MontageCategories, 
-    MontageSubCategories 
 } from './constants';
 
 function buildMontageFolder(clientName: string): string {

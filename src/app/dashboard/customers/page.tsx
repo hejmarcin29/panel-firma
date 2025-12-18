@@ -2,7 +2,6 @@ import { Suspense } from 'react';
 import { CustomersView } from './_components/customers-view';
 import { getCustomers } from './actions';
 import { Loader2 } from 'lucide-react';
-import { getAppSetting, appSettingKeys } from '@/lib/settings';
 
 export const dynamic = 'force-dynamic';
 

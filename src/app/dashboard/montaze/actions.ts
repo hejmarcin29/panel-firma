@@ -20,7 +20,7 @@ import {
     type CustomerSource,
 } from '@/lib/db/schema';
 import { uploadMontageObject } from '@/lib/r2/storage';
-import { MontageCategories, MontageSubCategories } from '@/lib/r2/constants';
+import { MontageCategories } from '@/lib/r2/constants';
 import { getMontageChecklistTemplates } from '@/lib/montaze/checklist';
 import { getMontageAutomationRules } from '@/lib/montaze/automation';
 import { logSystemEvent } from '@/lib/logging';
