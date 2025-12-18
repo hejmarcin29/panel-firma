@@ -15,7 +15,7 @@ const links = [
 	{ href: '/dashboard/products', label: 'Produkty' },
 	{ href: '/dashboard/montaze', label: 'Montaże' },
     { href: '/dashboard/wyceny', label: 'Wyceny' },
-	{ href: '/dashboard/montaze/galeria', label: 'Galeria' },
+	{ href: '/dashboard/montaze/galeria', label: 'R2' },
 	{ href: '/dashboard/mail', label: 'Poczta' },
 	{ href: '/dashboard/settings', label: 'Ustawienia' },
     { href: '/dashboard/wallet', label: 'Portfel' },

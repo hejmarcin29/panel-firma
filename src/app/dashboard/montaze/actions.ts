@@ -20,13 +20,14 @@ import {
     type CustomerSource,
 } from '@/lib/db/schema';
 import { uploadMontageObject } from '@/lib/r2/storage';
+import { MontageCategories, MontageSubCategories } from '@/lib/r2/constants';
 import { getMontageChecklistTemplates } from '@/lib/montaze/checklist';
 import { getMontageAutomationRules } from '@/lib/montaze/automation';
 import { logSystemEvent } from '@/lib/logging';
 import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
 import type { MaterialsEditHistoryEntry } from './types';
 import { createGoogleCalendarEvent, updateGoogleCalendarEvent, deleteGoogleCalendarEvent } from '@/lib/google/calendar';
-import { generateReferralCode, generateReferralToken } from '@/lib/referrals';
+import { generatePortalToken } from '@/lib/utils';
 
 const MONTAGE_DASHBOARD_PATH = '/dashboard/montaze';
 const MAX_ATTACHMENT_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
@@ -92,6 +93,7 @@ async function createMontageAttachment({
 	title,
 	noteId,
 	taskId,
+    category,
 }: {
 	montage: typeof montages.$inferSelect;
 	file: File;
@@ -99,12 +101,16 @@ async function createMontageAttachment({
 	title: string | null;
 	noteId?: string | null;
 	taskId?: string | null;
+    category?: string;
 }): Promise<string> {
 	ensureValidAttachmentFile(file);
 
 	const uploaded = await uploadMontageObject({
 		clientName: montage.clientName,
 		file,
+        montageId: montage.id,
+        customerId: montage.customerId,
+        category: category || MontageCategories.GALLERY,
 	});
 
 	const now = new Date();
@@ -229,6 +235,8 @@ export async function createMontage({
     }
 
 	// Customer sync logic
+    let finalCustomerId: string | null = null;
+
 	if (normalizedEmail || normalizedPhone) {
 		let existingCustomer = null;
 
@@ -277,6 +285,7 @@ export async function createMontage({
 		};
 
 		if (existingCustomer) {
+            finalCustomerId = existingCustomer.id;
             // Check for conflicts if strategy is not provided
             if (!customerUpdateStrategy) {
                 const hasConflict = 
@@ -330,12 +339,13 @@ export async function createMontage({
 				})
 				.where(eq(customers.id, existingCustomer.id));
 		} else {
+            const newCustomerId = crypto.randomUUID();
+            finalCustomerId = newCustomerId;
 			await db.insert(customers).values({
-				id: crypto.randomUUID(),
+				id: newCustomerId,
 				...customerData,
 				createdAt: now,
-                referralCode: generateReferralCode(),
-                referralToken: generateReferralToken(),
+                referralToken: generatePortalToken(),
 			});
 		}
 	}
@@ -385,6 +395,7 @@ export async function createMontage({
             materialDetails: normalizedMaterialDetails,
             measurementDetails: normalizedMaterialDetails,
             status: 'before_measurement',
+            customerId: finalCustomerId,
             updatedAt: now,
         }).where(eq(montages.id, leadId));
     } else {
@@ -417,6 +428,7 @@ export async function createMontage({
                     materialDetails: normalizedMaterialDetails,
                     measurementDetails: normalizedMaterialDetails,
                     status: 'before_measurement',
+                    customerId: finalCustomerId,
                     createdAt: now,
                     updatedAt: now,
                 });
@@ -904,12 +916,14 @@ export async function addMontageAttachment(formData: FormData) {
 	const titleRaw = formData.get('title');
 	const noteIdRaw = formData.get('noteId');
 	const taskIdRaw = formData.get('taskId');
+    const categoryRaw = formData.get('category');
 	const fileField = formData.get('file');
 
 	const montageId = typeof montageIdRaw === 'string' ? montageIdRaw.trim() : '';
 	const title = typeof titleRaw === 'string' ? titleRaw.trim() : '';
 	const noteId = typeof noteIdRaw === 'string' ? noteIdRaw.trim() : '';
 	const taskId = typeof taskIdRaw === 'string' ? taskIdRaw.trim() : '';
+    const category = typeof categoryRaw === 'string' ? categoryRaw.trim() : undefined;
 
 	if (!montageId) {
 		throw new Error('Brakuje identyfikatora montaży.');
@@ -928,6 +942,7 @@ export async function addMontageAttachment(formData: FormData) {
 		title: title ? title : null,
 		noteId: noteId || null,
 		taskId: taskId || null,
+        category,
 	});
 
 	await touchMontage(montageRecord.id);
@@ -1479,7 +1494,14 @@ async function addAttachment(montageId: string, file: File, title: string) {
 
 export async function createExtendedLead(formData: FormData) {
     const user = await requireUser();
+    const now = new Date();
     
+    // Auto-assign architect if the creator has the architect role
+    const architectId = user.roles.includes('architect') ? user.id : null;
+
+    const displayId = await generateNextMontageId();
+    const montageId = crypto.randomUUID();
+
     const clientName = formData.get('clientName') as string;
     const isCompany = formData.get('isCompany') === 'true';
     const companyName = formData.get('companyName') as string;
@@ -1506,37 +1528,76 @@ export async function createExtendedLead(formData: FormData) {
         throw new Error('Podaj nazwę klienta.');
     }
 
-    // Create or update customer logic could be here, but for now we just store in montage
-    // Similar to createMontage logic but simplified for lead
+    // Create or update customer logic
+    const normalizedEmail = email?.trim()?.toLowerCase() || null;
+    const normalizedPhone = phone ? normalizePhone(phone) : null;
+    const normalizedNip = nip?.trim() || null;
+    
+    let finalCustomerId: string;
+    let existingCustomer = null;
 
-    const displayId = await generateNextMontageId();
-    const montageId = crypto.randomUUID();
-    const now = new Date();
+    // 1. Try by email
+    if (normalizedEmail) {
+        existingCustomer = await db.query.customers.findFirst({
+            where: (table, { eq }) => eq(table.email, normalizedEmail),
+        });
+    }
 
-    // Auto-assign architect if the creator has the architect role
-    const architectId = user.roles.includes('architect') ? user.id : null;
+    // 2. Try by phone if not found
+    if (!existingCustomer && normalizedPhone) {
+        existingCustomer = await db.query.customers.findFirst({
+            where: (table, { eq }) => eq(table.phone, normalizedPhone),
+        });
+    }
 
-    // Create Customer Record
-    const customerId = crypto.randomUUID();
-    await db.insert(customers).values({
-        id: customerId,
-        name: clientName.trim(),
-        email: email?.trim() || null,
-        phone: phone?.trim() || null,
-        taxId: nip?.trim() || null,
-        billingStreet: billingStreet?.trim() || null,
-        billingCity: billingCity?.trim() || null,
-        billingPostalCode: billingPostalCode?.trim() || null,
-        shippingStreet: shippingStreet?.trim() || null,
-        shippingCity: shippingCity?.trim() || null,
-        shippingPostalCode: shippingPostalCode?.trim() || null,
-        source: (source as CustomerSource) || (architectId ? 'architect' : 'other'),
-        architectId: architectId,
-        createdAt: now,
-        updatedAt: now,
-        referralCode: generateReferralCode(),
-        referralToken: generateReferralToken(),
-    });
+    // 3. Try by NIP if provided
+    if (normalizedNip) {
+        const customerWithNip = await db.query.customers.findFirst({
+            where: (table, { eq }) => eq(table.taxId, normalizedNip),
+        });
+
+        if (customerWithNip) {
+            if (existingCustomer && existingCustomer.id !== customerWithNip.id) {
+                throw new Error('Podany NIP jest już przypisany do innego klienta.');
+            }
+            if (!existingCustomer) {
+                existingCustomer = customerWithNip;
+            }
+        }
+    }
+
+    if (existingCustomer) {
+        finalCustomerId = existingCustomer.id;
+        // Update existing customer with new data if needed (optional, here we just link)
+        // For leads, we might want to update contact info if it's newer
+        await db.update(customers)
+            .set({
+                phone: normalizedPhone || existingCustomer.phone,
+                taxId: normalizedNip || existingCustomer.taxId,
+                updatedAt: now,
+            })
+            .where(eq(customers.id, existingCustomer.id));
+    } else {
+        finalCustomerId = crypto.randomUUID();
+        await db.insert(customers).values({
+            id: finalCustomerId,
+            name: clientName.trim(),
+            email: normalizedEmail,
+            phone: normalizedPhone,
+            taxId: normalizedNip,
+            billingStreet: billingStreet?.trim() || null,
+            billingCity: billingCity?.trim() || null,
+            billingPostalCode: billingPostalCode?.trim() || null,
+            shippingStreet: shippingStreet?.trim() || null,
+            shippingCity: shippingCity?.trim() || null,
+            shippingPostalCode: shippingPostalCode?.trim() || null,
+            source: (source as CustomerSource) || (architectId ? 'architect' : 'other'),
+            architectId: architectId,
+            createdAt: now,
+            updatedAt: now,
+            referralToken: generatePortalToken(),
+        });
+    }
 
     // Format addresses
     const billingAddress = [billingStreet, billingPostalCode, billingCity].filter(Boolean).join(', ');
@@ -1551,13 +1612,13 @@ export async function createExtendedLead(formData: FormData) {
     await db.insert(montages).values({
         id: montageId,
         displayId,
-        customerId, // Link to the new customer
+        customerId: finalCustomerId, // Link to the found or new customer
         clientName: clientName.trim(),
         isCompany,
         companyName: companyName?.trim() || null,
-        nip: nip?.trim() || null,
-        contactPhone: phone?.trim() || null,
-        contactEmail: email?.trim() || null,
+        nip: normalizedNip,
+        contactPhone: normalizedPhone,
+        contactEmail: normalizedEmail,
         
         billingAddress: billingAddress || null,
         billingCity: billingCity?.trim() || null,

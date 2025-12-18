@@ -514,4 +514,23 @@ export async function updateCompanySettings(data: {
     revalidatePath('/dashboard/settings');
 }
 
+export async function updatePortalSettings(data: {
+    portalEnabled: boolean;
+    smsProvider: string;
+    smsToken: string;
+    smsSenderName: string;
+}) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) {
+        throw new Error('Unauthorized');
+    }
+
+    await setAppSetting({ key: appSettingKeys.portalEnabled, value: String(data.portalEnabled), userId: user.id });
+    await setAppSetting({ key: appSettingKeys.smsProvider, value: data.smsProvider, userId: user.id });
+    await setAppSetting({ key: appSettingKeys.smsToken, value: data.smsToken, userId: user.id });
+    await setAppSetting({ key: appSettingKeys.smsSenderName, value: data.smsSenderName, userId: user.id });
+
+    revalidatePath('/dashboard/settings');
+}
+
 

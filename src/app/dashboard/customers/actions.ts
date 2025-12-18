@@ -6,7 +6,9 @@ import { desc, eq, ilike, or, inArray, isNull, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { randomUUID } from 'crypto';
 import type { CustomerSource } from '@/lib/db/schema';
-import { generateReferralCode, generateReferralToken } from '@/lib/referrals';
+import { generatePortalToken } from '@/lib/utils';
+import { sendSms } from '@/lib/sms';
+import { appSettingKeys, getAppSetting } from '@/lib/settings';
 
 export type CustomerWithStats = typeof customers.$inferSelect & {
 	ordersCount: number;
@@ -39,23 +41,12 @@ export async function createCustomerAction(data: {
     shippingCountry?: string;
     source?: CustomerSource;
     architectId?: string;
-    referralCode?: string;
 }) {
-    let referredById = null;
-    if (data.referralCode) {
-        const referrer = await db.query.customers.findFirst({
-            where: eq(customers.referralCode, data.referralCode)
-        });
-        if (referrer) referredById = referrer.id;
-    }
-
     await db.insert(customers).values({
         id: randomUUID(),
         ...data,
         source: data.source || 'other',
-        referralCode: generateReferralCode(),
-        referralToken: generateReferralToken(),
-        referredById,
+        referralToken: generatePortalToken(),
     });
     revalidatePath('/dashboard/customers');
 }
@@ -85,8 +76,7 @@ export async function updateCustomerAction(id: string, data: {
 export async function generateCustomerPortalAccess(customerId: string) {
     await db.update(customers)
         .set({
-            referralToken: generateReferralToken(),
-            referralCode: generateReferralCode(),
+            referralToken: generatePortalToken(),
         })
         .where(eq(customers.id, customerId));
     revalidatePath('/dashboard/customers');
@@ -222,4 +212,40 @@ export async function deleteCustomer(id: string) {
         .set({ deletedAt: new Date() })
         .where(eq(customers.id, id));
     revalidatePath('/dashboard/customers');
+}
+
+export async function sendPortalLinkSms(customerId: string) {
+    const customer = await db.query.customers.findFirst({
+        where: eq(customers.id, customerId),
+    });
+
+    if (!customer) {
+        throw new Error('Klient nie został znaleziony.');
+    }
+
+    if (!customer.phone) {
+        throw new Error('Klient nie posiada numeru telefonu.');
+    }
+
+    let token = customer.referralToken;
+    if (!token) {
+        token = generatePortalToken();
+        await db.update(customers)
+            .set({ referralToken: token })
+            .where(eq(customers.id, customerId));
+    }
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://b2b.primepodloga.pl';
+    const link = `${appUrl}/s/${token}`;
+    const companyName = await getAppSetting(appSettingKeys.companyName) || 'Prime Podłogi';
+    
+    const message = `Dzień dobry, przesyłamy link do śledzenia statusu zamówienia: ${link} Pozdrawiamy, ${companyName}`;
+
+    const result = await sendSms(customer.phone, message);
+
+    if (!result.success) {
+        throw new Error(result.error || 'Błąd wysyłki SMS');
+    }
+
+    return { success: true };
 }

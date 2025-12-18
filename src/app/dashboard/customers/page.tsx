@@ -7,10 +7,7 @@ import { getAppSetting, appSettingKeys } from '@/lib/settings';
 export const dynamic = 'force-dynamic';
 
 export default async function CustomersPage() {
-	const [initialCustomers, referralEnabled] = await Promise.all([
-        getCustomers(),
-        getAppSetting(appSettingKeys.referralProgramEnabled)
-    ]);
+	const initialCustomers = await getCustomers();
 
 	return (
 		<div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -22,7 +19,7 @@ export default async function CustomersPage() {
 			</div>
 			
 			<Suspense fallback={<div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>}>
-				<CustomersView initialCustomers={initialCustomers} referralEnabled={referralEnabled === 'true'} />
+				<CustomersView initialCustomers={initialCustomers} />
 			</Suspense>
 		</div>
 	);

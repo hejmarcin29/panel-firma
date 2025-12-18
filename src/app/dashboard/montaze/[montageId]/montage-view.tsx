@@ -38,7 +38,7 @@ export function MontageView({ montageId, initialData }: MontageViewProps) {
 
     if (!data) return null;
 
-    const { montage, logs, installers, measurers, architects, statusOptions, referralEnabled, userRoles } = data;
+    const { montage, logs, installers, measurers, architects, statusOptions, userRoles } = data;
 
     if (montage.status === 'lead') {
         return (
@@ -73,7 +73,7 @@ export function MontageView({ montageId, initialData }: MontageViewProps) {
         <div className="flex min-h-screen flex-col bg-muted/10">
             <MontageDetailsLayout 
                 header={<MontageHeader montage={montage} statusOptions={statusOptions} userRoles={userRoles} />}
-                clientCard={<MontageClientCard montage={montage} userRoles={userRoles} installers={installers} measurers={measurers} architects={architects} referralEnabled={referralEnabled} />}
+                clientCard={<MontageClientCard montage={montage} userRoles={userRoles} installers={installers} measurers={measurers} architects={architects} />}
                 materialCard={
                     <div className="space-y-6">
                         <MontageMaterialCard montage={montage} userRoles={userRoles} />

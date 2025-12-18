@@ -34,11 +34,13 @@ import { cn } from '@/lib/utils';
 import type { Montage } from '../types';
 import { updateMontageMeasurement, addMontageTask, toggleMontageTask } from '../actions';
 
-import { Loader2, Check } from 'lucide-react';
+import { Loader2, Check, Upload, FileIcon, ExternalLink } from 'lucide-react';
 
 import { ProductSelectorModal } from './product-selector-modal';
 import { AuditForm } from './technical/audit-form';
 import type { TechnicalAuditData } from '../technical-data';
+import { addMontageAttachment } from '../actions';
+import { MontageCategories, MontageSubCategories } from '@/lib/r2/constants';
 
 interface MontageMeasurementTabProps {
   montage: Montage;
@@ -731,6 +733,90 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                 readOnly={isReadOnly}
             />
         </div>
+
+        {/* Measurement Attachments */}
+        <div className="mt-8 border rounded-lg p-4 space-y-4 bg-muted/5">
+            <div className="flex items-center justify-between">
+                <h4 className="font-medium text-sm flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-purple-500"></span>
+                    Zdjęcia z pomiaru
+                </h4>
+                {!isReadOnly && (
+                    <div className="relative">
+                        <input
+                            type="file"
+                            multiple
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            onChange={(e) => {
+                                const files = e.target.files;
+                                if (!files || files.length === 0) return;
+
+                                startTransition(async () => {
+                                    try {
+                                        for (let i = 0; i < files.length; i++) {
+                                            const file = files[i];
+                                            const formData = new FormData();
+                                            formData.append("montageId", montage.id);
+                                            formData.append("file", file);
+                                            formData.append("title", file.name);
+                                            formData.append("category", MontageSubCategories.MEASUREMENT_BEFORE);
+                                            
+                                            await addMontageAttachment(formData);
+                                        }
+                                        router.refresh();
+                                    } catch (error) {
+                                        console.error(error);
+                                        alert("Wystąpił błąd podczas przesyłania plików.");
+                                    }
+                                    // Reset input
+                                    e.target.value = "";
+                                });
+                            }}
+                        />
+                        <Button variant="outline" size="sm" disabled={isPending}>
+                            {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
+                            Dodaj zdjęcia
+                        </Button>
+                    </div>
+                )}
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {montage.attachments
+                    ?.filter(att => att.url.includes(MontageSubCategories.MEASUREMENT_BEFORE))
+                    .map((att) => (
+                    <div key={att.id} className="group relative aspect-square rounded-lg border bg-background overflow-hidden">
+                        {/\.(jpg|jpeg|png|gif|webp)$/i.test(att.url) ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img 
+                                src={att.url} 
+                                alt={att.title || 'Załącznik'} 
+                                className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                            />
+                        ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground p-2">
+                                <FileIcon className="h-8 w-8 mb-2" />
+                                <span className="text-xs text-center truncate w-full">{att.title}</span>
+                            </div>
+                        )}
+                        <a 
+                            href={att.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100"
+                        >
+                            <ExternalLink className="text-white h-6 w-6 drop-shadow-md" />
+                        </a>
+                    </div>
+                ))}
+                {(!montage.attachments || !montage.attachments.some(att => att.url.includes(MontageSubCategories.MEASUREMENT_BEFORE))) && (
+                    <div className="col-span-full py-8 text-center text-muted-foreground text-sm">
+                        Brak zdjęć z pomiaru.
+                    </div>
+                )}
+            </div>
+        </div>
+
             </div>
             
             <ProductSelectorModal

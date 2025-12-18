@@ -2,13 +2,21 @@
 
 import { FileIcon, ExternalLink, Upload, Plus } from "lucide-react";
 import Image from "next/image";
-import { useTransition, useRef } from "react";
+import { useTransition, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { addMontageAttachment } from "../../actions";
 import type { Montage } from "../../types";
+import { MontageCategories, MontageSubCategories } from "@/lib/r2/constants";
 
 function isImage(url: string) {
   return /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
@@ -18,6 +26,7 @@ export function MontageGalleryTab({ montage, userRoles = [] }: { montage: Montag
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>(MontageCategories.GALLERY);
 
   const isInstaller = userRoles.includes('installer') && !userRoles.includes('admin');
 
@@ -33,6 +42,7 @@ export function MontageGalleryTab({ montage, userRoles = [] }: { montage: Montag
                 formData.append("montageId", montage.id);
                 formData.append("file", file);
                 formData.append("title", file.name);
+                formData.append("category", selectedCategory);
                 
                 await addMontageAttachment(formData);
             }
@@ -60,9 +70,23 @@ export function MontageGalleryTab({ montage, userRoles = [] }: { montage: Montag
 
   return (
     <div className="space-y-8">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
             <h3 className="text-lg font-semibold">Załączniki</h3>
-            <div>
+            <div className="flex items-center gap-2">
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Kategoria" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value={MontageCategories.GALLERY}>Ogólne</SelectItem>
+                        <SelectItem value={MontageSubCategories.MEASUREMENT_BEFORE}>Pomiar / Przed</SelectItem>
+                        <SelectItem value={MontageSubCategories.IN_PROGRESS}>W trakcie</SelectItem>
+                        <SelectItem value={MontageSubCategories.REALIZATION}>Realizacja</SelectItem>
+                        <SelectItem value={MontageSubCategories.COMPLAINTS}>Reklamacje</SelectItem>
+                        {!isInstaller && <SelectItem value={MontageCategories.DOCUMENTS}>Dokumenty</SelectItem>}
+                    </SelectContent>
+                </Select>
+
                 <input
                     type="file"
                     ref={fileInputRef}

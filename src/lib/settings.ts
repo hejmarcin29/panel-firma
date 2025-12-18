@@ -41,7 +41,11 @@ export const appSettingKeys = {
     companyNip: 'company.nip',
     companyBankName: 'company.bank_name',
     companyBankAccount: 'company.bank_account',
-    referralProgramEnabled: 'referral.enabled',
+    // Portal & SMS
+    portalEnabled: 'portal.enabled',
+    smsProvider: 'sms.provider',
+    smsToken: 'sms.token',
+    smsSenderName: 'sms.sender_name',
 } as const;
 
 export type AppSettingKey = (typeof appSettingKeys)[keyof typeof appSettingKeys];

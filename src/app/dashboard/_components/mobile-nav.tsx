@@ -70,7 +70,7 @@ const menuLinks = [
   { href: "/dashboard/montaze", label: "Montaże", icon: Hammer },
   { href: "/dashboard/showroom", label: "Showroom", icon: Store },
   { href: "/dashboard/mail", label: "Poczta", icon: Mail },
-  { href: "/dashboard/montaze/galeria", label: "Galeria", icon: ImageIcon },
+  { href: "/dashboard/montaze/galeria", label: "R2", icon: ImageIcon },
   { href: "/dashboard/settings", label: "Ustawienia", icon: Settings },
 ];
 

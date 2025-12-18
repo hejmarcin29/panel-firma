@@ -42,7 +42,7 @@ import { getDeletedQuotes, getDeletedCustomers, getDeletedMontages, getDeletedPr
 
 import { LogoSettings } from './_components/logo-settings';
 import { CompanySettingsForm } from './_components/company-settings-form';
-import { ReferralSettingsForm } from './_components/referral-settings-form';
+import { PortalSettingsForm } from './_components/portal-settings-form';
 
 type LogLevel = 'info' | 'warning' | 'error';
 
@@ -165,7 +165,10 @@ export default async function SettingsPage() {
         companyBankName,
         companyBankAccount,
         fluentFormsSecret,
-        referralProgramEnabled,
+        portalEnabled,
+        smsProvider,
+        smsToken,
+        smsSenderName,
 	] = await Promise.all([
 		getAppSetting(appSettingKeys.wooWebhookSecret),
 		getAppSetting(appSettingKeys.wooConsumerKey),
@@ -206,7 +209,10 @@ export default async function SettingsPage() {
         getAppSetting(appSettingKeys.companyBankName),
         getAppSetting(appSettingKeys.companyBankAccount),
         getFluentFormsSecret(),
-        getAppSetting(appSettingKeys.referralProgramEnabled),
+        getAppSetting(appSettingKeys.portalEnabled),
+        getAppSetting(appSettingKeys.smsProvider),
+        getAppSetting(appSettingKeys.smsToken),
+        getAppSetting(appSettingKeys.smsSenderName),
 	]);
 
     const statusOptions = montageStatusDefinitions.map(def => ({
@@ -315,9 +321,6 @@ export default async function SettingsPage() {
 
 	return (
 		<SettingsView
-            referralSettings={
-                <ReferralSettingsForm initialEnabled={referralProgramEnabled === 'true'} />
-            }
             documentation={
                 <DocumentationView content={businessLogicContent} />
             }
@@ -594,6 +597,14 @@ export default async function SettingsPage() {
                     deletedProducts={deletedProducts}
                 />
             }
+            portalSettings={
+                <PortalSettingsForm 
+                    initialEnabled={portalEnabled === 'true'}
+                    initialSmsProvider={smsProvider ?? 'smsapi'}
+                    initialSmsToken={smsToken ?? ''}
+                    initialSmsSenderName={smsSenderName ?? 'Info'}
+                />
+            }
 		>
             <div className="space-y-6">
                 <CompanySettingsForm
@@ -637,9 +648,6 @@ export default async function SettingsPage() {
                     </CardContent>
                 </Card>
             </div>
-            referralSettings={
-                <ReferralSettingsForm initialEnabled={referralProgramEnabled === 'true'} />
-            }
 		</SettingsView>
 	);
 }

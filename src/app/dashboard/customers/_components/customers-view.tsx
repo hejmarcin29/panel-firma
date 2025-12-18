@@ -13,7 +13,6 @@ import { useDebouncedCallback } from 'use-debounce';
 
 interface CustomersViewProps {
 	initialCustomers: CustomerWithStats[];
-    referralEnabled: boolean;
 }
 
 function getInitials(name: string) {
@@ -53,7 +52,7 @@ function getAvatarColor(name: string) {
     return colors[Math.abs(hash) % colors.length];
 }
 
-export function CustomersView({ initialCustomers, referralEnabled }: CustomersViewProps) {
+export function CustomersView({ initialCustomers }: CustomersViewProps) {
 	const [customers, setCustomers] = useState<CustomerWithStats[]>(initialCustomers);
 	const [isPending, startTransition] = useTransition();
 	const [selectedCustomer, setSelectedCustomer] = useState<CustomerDetails | null>(null);
@@ -211,7 +210,6 @@ export function CustomersView({ initialCustomers, referralEnabled }: CustomersVi
 				customer={selectedCustomer} 
 				isOpen={isSheetOpen} 
 				onClose={() => setIsSheetOpen(false)}
-                referralEnabled={referralEnabled}
 			/>
 		</div>
 	);

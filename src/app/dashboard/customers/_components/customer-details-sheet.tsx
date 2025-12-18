@@ -12,8 +12,8 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
-import { Phone, Mail, MapPin, Package, Hammer, ExternalLink, Building2, Trash2, Copy, Sparkles } from 'lucide-react';
-import { CustomerDetails, deleteCustomer, generateCustomerPortalAccess } from '../actions';
+import { Phone, Mail, MapPin, Package, Hammer, ExternalLink, Building2, Trash2, Copy, Sparkles, MessageSquare } from 'lucide-react';
+import { CustomerDetails, deleteCustomer, generateCustomerPortalAccess, sendPortalLinkSms } from '../actions';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import Link from 'next/link';
@@ -35,7 +35,6 @@ interface CustomerDetailsSheetProps {
 	customer: CustomerDetails | null;
 	isOpen: boolean;
 	onClose: () => void;
-    referralEnabled: boolean;
 }
 
 function getInitials(name: string) {
@@ -77,7 +76,7 @@ const ORDER_STATUS_LABELS: Record<string, string> = {
   'order.closed': 'Zamknięte',
 };
 
-export function CustomerDetailsSheet({ customer, isOpen, onClose, referralEnabled }: CustomerDetailsSheetProps) {
+export function CustomerDetailsSheet({ customer, isOpen, onClose }: CustomerDetailsSheetProps) {
     const [isDeleting, setIsDeleting] = useState(false);
 
     // Handle back button
@@ -187,8 +186,7 @@ export function CustomerDetailsSheet({ customer, isOpen, onClose, referralEnable
 						<Separator />
 
                         {/* Client Portal Link */}
-                        {referralEnabled && (
-                            !customer.referralToken ? (
+                        {!customer.referralToken ? (
                             <>
                                 <div className="rounded-lg border border-dashed border-amber-200 bg-amber-50/30 p-6 flex flex-col items-center justify-center gap-3 text-center">
                                     <div className="p-2 bg-amber-100 rounded-full">
@@ -197,7 +195,7 @@ export function CustomerDetailsSheet({ customer, isOpen, onClose, referralEnable
                                     <div className="space-y-1">
                                         <h3 className="font-medium text-sm text-amber-900">Portal Klienta nieaktywny</h3>
                                         <p className="text-xs text-muted-foreground max-w-[250px] mx-auto">
-                                            Wygeneruj dostęp, aby klient mógł śledzić postępy prac i polecać usługi znajomym.
+                                            Wygeneruj dostęp, aby klient mógł śledzić postępy prac.
                                         </p>
                                     </div>
                                     <Button 
@@ -249,6 +247,25 @@ export function CustomerDetailsSheet({ customer, isOpen, onClose, referralEnable
                                         </Button>
                                         <Button 
                                             size="icon" 
+                                            variant="outline" 
+                                            className="h-9 w-9 shrink-0 border-amber-200 hover:bg-amber-100 hover:text-amber-900"
+                                            onClick={async () => {
+                                                if (!customer.phone) {
+                                                    toast.error('Klient nie ma numeru telefonu');
+                                                    return;
+                                                }
+                                                toast.promise(sendPortalLinkSms(customer.id), {
+                                                    loading: 'Wysyłanie SMS...',
+                                                    success: 'SMS został wysłany',
+                                                    error: (err) => err.message || 'Błąd wysyłki SMS'
+                                                });
+                                            }}
+                                            title="Wyślij SMS z linkiem"
+                                        >
+                                            <MessageSquare className="h-4 w-4" />
+                                        </Button>
+                                        <Button 
+                                            size="icon" 
                                             variant="ghost" 
                                             className="h-9 w-9 shrink-0 text-amber-700 hover:bg-amber-100 hover:text-amber-900"
                                             asChild
@@ -260,58 +277,12 @@ export function CustomerDetailsSheet({ customer, isOpen, onClose, referralEnable
                                         </Button>
                                     </div>
                                     <p className="text-[11px] text-amber-700/80">
-                                        Udostępnij ten link klientowi, aby mógł śledzić postęp prac i zarządzać poleceniami.
+                                        Udostępnij ten link klientowi, aby mógł śledzić postęp prac.
                                     </p>
                                 </div>
 
-                                {customer.referralCode && (
-                                    <div className="rounded-lg border border-blue-200 bg-blue-50/50 p-4 space-y-3 mt-4">
-                                        <div className="flex items-center justify-between">
-                                            <h3 className="text-sm font-medium text-blue-900 flex items-center gap-2">
-                                                <Sparkles className="h-4 w-4 text-blue-500" /> Link Polecający (Dla znajomych)
-                                            </h3>
-                                        </div>
-                                        
-                                        <div className="flex items-center gap-2">
-                                            <Input 
-                                                readOnly 
-                                                value={`https://b2b.primepodloga.pl/r/${customer.referralCode}`}
-                                                className="h-9 bg-white border-blue-200 font-mono text-xs text-blue-900 focus-visible:ring-blue-500"
-                                                onClick={(e) => e.currentTarget.select()}
-                                            />
-                                            <Button 
-                                                size="icon" 
-                                                variant="outline" 
-                                                className="h-9 w-9 shrink-0 border-blue-200 hover:bg-blue-100 hover:text-blue-900"
-                                                onClick={() => {
-                                                    navigator.clipboard.writeText(`https://b2b.primepodloga.pl/r/${customer.referralCode}`);
-                                                    toast.success('Link polecający skopiowany');
-                                                }}
-                                                title="Kopiuj link"
-                                            >
-                                                <Copy className="h-4 w-4" />
-                                            </Button>
-                                            <Button 
-                                                size="icon" 
-                                                variant="ghost" 
-                                                className="h-9 w-9 shrink-0 text-blue-700 hover:bg-blue-100 hover:text-blue-900"
-                                                asChild
-                                                title="Otwórz stronę"
-                                            >
-                                                <a href={`/r/${customer.referralCode}`} target="_blank" rel="noopener noreferrer">
-                                                    <ExternalLink className="h-4 w-4" />
-                                                </a>
-                                            </Button>
-                                        </div>
-                                        <p className="text-[11px] text-blue-700/80">
-                                            Ten link klient może wysyłać znajomym. Przekierowuje do formularza &quot;Zostaw kontakt&quot;.
-                                        </p>
-                                    </div>
-                                )}
-
                                 <Separator />
                             </>
-                        )
                         )}
 
                         {/* Marketing Source */}

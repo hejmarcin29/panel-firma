@@ -14,6 +14,7 @@ import {
   ArrowLeft,
   Trash2,
   Sparkles,
+  MessageSquare,
 } from "lucide-react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -30,7 +31,7 @@ interface SettingsViewProps {
   teamSettings: React.ReactNode;
   documentation: React.ReactNode;
   trash: React.ReactNode;
-  referralSettings: React.ReactNode;
+  portalSettings: React.ReactNode;
 }
 
 export function SettingsView({
@@ -45,7 +46,7 @@ export function SettingsView({
   teamSettings,
   documentation,
   trash,
-  referralSettings,
+  portalSettings,
 }: SettingsViewProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -133,14 +134,14 @@ export function SettingsView({
         <Button
           variant="ghost"
           className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3 bg-card border shadow-sm"
-          onClick={() => handleTabChange("referral")}
+          onClick={() => handleTabChange("portal")}
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
-            <Sparkles className="h-4 w-4" />
+            <MessageSquare className="h-4 w-4" />
           </span>
           <span className="flex flex-col text-left">
-            <span className="text-sm font-medium">Program Poleceń</span>
-            <span className="text-xs text-muted-foreground">Konfiguracja portalu klienta.</span>
+            <span className="text-sm font-medium">Portal & SMS</span>
+            <span className="text-xs text-muted-foreground">Konfiguracja portalu klienta i powiadomień.</span>
           </span>
         </Button>
 
@@ -286,13 +287,6 @@ export function SettingsView({
               Zespół
             </TabsTrigger>
             <TabsTrigger 
-              value="referral" 
-              className="w-full justify-start gap-2 px-3 py-2 h-9 data-[state=active]:bg-muted data-[state=active]:shadow-none ring-offset-background transition-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
-              <Sparkles className="h-4 w-4" />
-              Program Poleceń
-            </TabsTrigger>
-            <TabsTrigger 
               value="documentation" 
               className="w-full justify-start gap-2 px-3 py-2 h-9 data-[state=active]:bg-muted data-[state=active]:shadow-none ring-offset-background transition-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
@@ -312,6 +306,13 @@ export function SettingsView({
             >
               <Activity className="h-4 w-4" />
               KPI / Alerty
+            </TabsTrigger>
+            <TabsTrigger 
+              value="portal" 
+              className="w-full justify-start gap-2 px-3 py-2 h-9 data-[state=active]:bg-muted data-[state=active]:shadow-none ring-offset-background transition-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <MessageSquare className="h-4 w-4" />
+              Portal & SMS
             </TabsTrigger>
             <TabsTrigger 
               value="integrations" 
@@ -364,10 +365,6 @@ export function SettingsView({
             {teamSettings}
           </TabsContent>
 
-          <TabsContent value="referral" className="m-0 space-y-4">
-            {referralSettings}
-          </TabsContent>
-
           <TabsContent value="documentation" className="m-0 space-y-4">
             {documentation}
           </TabsContent>
@@ -378,6 +375,10 @@ export function SettingsView({
 
           <TabsContent value="kpi" className="m-0 space-y-4">
             {kpiSettings}
+          </TabsContent>
+
+          <TabsContent value="portal" className="m-0 space-y-4">
+            {portalSettings}
           </TabsContent>
 
           <TabsContent value="trash" className="m-0 space-y-4">

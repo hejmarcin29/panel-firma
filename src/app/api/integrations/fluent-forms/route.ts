@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { appSettings, customers, montages, systemLogs } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
-import { generateReferralCode, generateReferralToken } from '@/lib/referrals';
 
 export async function POST(req: NextRequest) {
     try {
@@ -23,24 +22,13 @@ export async function POST(req: NextRequest) {
 
         // 2. Parse Body
         const body = await req.json();
-        const { client_name, contact_email, contact_phone, message, city, postal_code, referral_code } = body;
+        const { client_name, contact_email, contact_phone, message, city, postal_code } = body;
 
         if (!contact_email || !client_name) {
             return NextResponse.json({ error: 'Missing required fields: client_name, contact_email' }, { status: 400 });
         }
 
-        // 3. Resolve Referral
-        let referredById = null;
-        if (referral_code) {
-            const referrer = await db.query.customers.findFirst({
-                where: eq(customers.referralCode, referral_code)
-            });
-            if (referrer) {
-                referredById = referrer.id;
-            }
-        }
-
-        // 4. Create or Update Customer
+        // 3. Create or Update Customer
         let customerId: string;
         const existingCustomer = await db.query.customers.findFirst({
             where: eq(customers.email, contact_email),
@@ -64,9 +52,6 @@ export async function POST(req: NextRequest) {
                 source: 'internet',
                 createdAt: new Date(),
                 updatedAt: new Date(),
-                referralCode: generateReferralCode(),
-                referralToken: generateReferralToken(),
-                referredById: referredById,
             });
         }
 

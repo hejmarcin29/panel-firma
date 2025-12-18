@@ -19,7 +19,6 @@ import { mapMontageRow, type MontageRow } from '../utils';
 
 export async function getMontageDetails(montageId: string) {
     const user = await requireUser();
-    const referralEnabled = await getAppSetting(appSettingKeys.referralProgramEnabled);
 
     const allUsers = await db.query.users.findMany({
         columns: {
@@ -110,7 +109,6 @@ export async function getMontageDetails(montageId: string) {
         measurers,
         architects,
         statusOptions,
-        referralEnabled: referralEnabled === 'true',
         userRoles: user.roles,
         userId: user.id,
     };

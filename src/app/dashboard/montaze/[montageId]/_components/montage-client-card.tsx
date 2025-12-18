@@ -45,14 +45,12 @@ export function MontageClientCard({
     installers = [],
     measurers = [],
     architects = [],
-    referralEnabled = false
 }: { 
     montage: Montage; 
     userRoles?: UserRole[];
     installers?: { id: string; name: string | null; email: string }[];
     measurers?: { id: string; name: string | null; email: string }[];
     architects?: { id: string; name: string | null; email: string }[];
-    referralEnabled?: boolean;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -515,7 +513,7 @@ export function MontageClientCard({
           </div>
         </div>
 
-        {referralEnabled && montage.customer?.referralToken && (
+        {montage.customer?.referralToken && (
             <div className="pt-1">
                 <div className="rounded-md border border-amber-200 bg-amber-50/50 p-3 space-y-2">
                     <div className="flex items-center justify-between">
