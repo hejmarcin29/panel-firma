@@ -34,10 +34,20 @@ import {
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatCurrency } from '@/lib/utils';
 
-import { restoreQuote, permanentDeleteQuote, restoreCustomer, permanentDeleteCustomer, restoreMontage, permanentDeleteMontage } from '../actions';
+import { 
+    restoreQuote, 
+    permanentDeleteQuote, 
+    restoreCustomer, 
+    permanentDeleteCustomer, 
+    restoreMontage, 
+    permanentDeleteMontage,
+    bulkRestoreCustomers,
+    bulkDeleteCustomers
+} from '../actions';
 import { restoreProduct, permanentDeleteProduct } from '../../products/actions';
 
 interface DeletedQuote {
@@ -85,6 +95,7 @@ interface TrashViewProps {
 
 export function TrashView({ deletedQuotes, deletedCustomers, deletedMontages, deletedProducts }: TrashViewProps) {
     const [isProcessing, setIsProcessing] = useState<string | null>(null);
+    const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
 
     const handleRestoreQuote = async (id: string) => {
         setIsProcessing(id);
@@ -177,6 +188,50 @@ export function TrashView({ deletedQuotes, deletedCustomers, deletedMontages, de
             toast.success('Produkt został trwale usunięty');
         } catch {
             toast.error('Błąd podczas usuwania produktu');
+        } finally {
+            setIsProcessing(null);
+        }
+    };
+
+    const toggleSelectAllCustomers = () => {
+        if (selectedCustomers.length === deletedCustomers.length) {
+            setSelectedCustomers([]);
+        } else {
+            setSelectedCustomers(deletedCustomers.map(c => c.id));
+        }
+    };
+
+    const toggleSelectCustomer = (id: string) => {
+        if (selectedCustomers.includes(id)) {
+            setSelectedCustomers(selectedCustomers.filter(cId => cId !== id));
+        } else {
+            setSelectedCustomers([...selectedCustomers, id]);
+        }
+    };
+
+    const handleBulkRestoreCustomers = async () => {
+        if (selectedCustomers.length === 0) return;
+        setIsProcessing('bulk-restore');
+        try {
+            await bulkRestoreCustomers(selectedCustomers);
+            toast.success(`Przywrócono ${selectedCustomers.length} klientów`);
+            setSelectedCustomers([]);
+        } catch {
+            toast.error('Błąd podczas przywracania klientów');
+        } finally {
+            setIsProcessing(null);
+        }
+    };
+
+    const handleBulkDeleteCustomers = async () => {
+        if (selectedCustomers.length === 0) return;
+        setIsProcessing('bulk-delete');
+        try {
+            await bulkDeleteCustomers(selectedCustomers);
+            toast.success(`Trwale usunięto ${selectedCustomers.length} klientów`);
+            setSelectedCustomers([]);
+        } catch {
+            toast.error('Błąd podczas usuwania klientów');
         } finally {
             setIsProcessing(null);
         }
@@ -287,82 +342,146 @@ export function TrashView({ deletedQuotes, deletedCustomers, deletedMontages, de
                     </TabsContent>
 
                     <TabsContent value="customers">
-                        <div className="rounded-md border">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Nazwa</TableHead>
-                                        <TableHead>Kontakt</TableHead>
-                                        <TableHead>Data usunięcia</TableHead>
-                                        <TableHead className="text-right">Akcje</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {deletedCustomers.length === 0 ? (
-                                        <TableRow>
-                                            <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
-                                                Kosz jest pusty
-                                            </TableCell>
-                                        </TableRow>
-                                    ) : (
-                                        deletedCustomers.map((customer) => (
-                                            <TableRow key={customer.id}>
-                                                <TableCell className="font-medium">
-                                                    {customer.name}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="text-sm">{customer.email}</div>
-                                                    <div className="text-xs text-muted-foreground">{customer.phone}</div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    {customer.deletedAt && format(new Date(customer.deletedAt), 'dd MMM yyyy HH:mm', { locale: pl })}
-                                                </TableCell>
-                                                <TableCell className="text-right space-x-2">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => handleRestoreCustomer(customer.id)}
-                                                        disabled={isProcessing === customer.id}
+                        <div className="space-y-4">
+                            {selectedCustomers.length > 0 && (
+                                <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/50">
+                                    <div className="flex items-center gap-2">
+                                        <Badge variant="secondary">{selectedCustomers.length} zaznaczonych</Badge>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={handleBulkRestoreCustomers}
+                                            disabled={isProcessing === 'bulk-restore'}
+                                        >
+                                            <RefreshCw className="mr-2 h-4 w-4" />
+                                            Przywróć zaznaczone
+                                        </Button>
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    disabled={isProcessing === 'bulk-delete'}
+                                                >
+                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                    Usuń zaznaczone
+                                                </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Czy na pewno?</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        Tej operacji nie można cofnąć. {selectedCustomers.length} klientów zostanie trwale usuniętych z bazy danych.
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Anuluj</AlertDialogCancel>
+                                                    <AlertDialogAction
+                                                        onClick={handleBulkDeleteCustomers}
+                                                        className="bg-red-600 hover:bg-red-700"
                                                     >
-                                                        <RefreshCw className="mr-2 h-4 w-4" />
-                                                        Przywróć
-                                                    </Button>
+                                                        Usuń trwale
+                                                    </AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                    </div>
+                                </div>
+                            )}
 
-                                                    <AlertDialog>
-                                                        <AlertDialogTrigger asChild>
-                                                            <Button
-                                                                variant="destructive"
-                                                                size="sm"
-                                                                disabled={isProcessing === customer.id}
-                                                            >
-                                                                <Trash2 className="mr-2 h-4 w-4" />
-                                                                Usuń trwale
-                                                            </Button>
-                                                        </AlertDialogTrigger>
-                                                        <AlertDialogContent>
-                                                            <AlertDialogHeader>
-                                                                <AlertDialogTitle>Czy na pewno?</AlertDialogTitle>
-                                                                <AlertDialogDescription>
-                                                                    Tej operacji nie można cofnąć. Klient zostanie trwale usunięty z bazy danych.
-                                                                </AlertDialogDescription>
-                                                            </AlertDialogHeader>
-                                                            <AlertDialogFooter>
-                                                                <AlertDialogCancel>Anuluj</AlertDialogCancel>
-                                                                <AlertDialogAction
-                                                                    onClick={() => handleDeleteCustomer(customer.id)}
-                                                                    className="bg-red-600 hover:bg-red-700"
-                                                                >
-                                                                    Usuń trwale
-                                                                </AlertDialogAction>
-                                                            </AlertDialogFooter>
-                                                        </AlertDialogContent>
-                                                    </AlertDialog>
+                            <div className="rounded-md border">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-[50px]">
+                                                <Checkbox 
+                                                    checked={deletedCustomers.length > 0 && selectedCustomers.length === deletedCustomers.length}
+                                                    onCheckedChange={toggleSelectAllCustomers}
+                                                    aria-label="Zaznacz wszystkich"
+                                                />
+                                            </TableHead>
+                                            <TableHead>Nazwa</TableHead>
+                                            <TableHead>Kontakt</TableHead>
+                                            <TableHead>Data usunięcia</TableHead>
+                                            <TableHead className="text-right">Akcje</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {deletedCustomers.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                                                    Kosz jest pusty
                                                 </TableCell>
                                             </TableRow>
-                                        ))
-                                    )}
-                                </TableBody>
-                            </Table>
+                                        ) : (
+                                            deletedCustomers.map((customer) => (
+                                                <TableRow key={customer.id}>
+                                                    <TableCell>
+                                                        <Checkbox 
+                                                            checked={selectedCustomers.includes(customer.id)}
+                                                            onCheckedChange={() => toggleSelectCustomer(customer.id)}
+                                                            aria-label={`Zaznacz klienta ${customer.name}`}
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell className="font-medium">
+                                                        {customer.name}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="text-sm">{customer.email}</div>
+                                                        <div className="text-xs text-muted-foreground">{customer.phone}</div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {customer.deletedAt && format(new Date(customer.deletedAt), 'dd MMM yyyy HH:mm', { locale: pl })}
+                                                    </TableCell>
+                                                    <TableCell className="text-right space-x-2">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => handleRestoreCustomer(customer.id)}
+                                                            disabled={isProcessing === customer.id}
+                                                        >
+                                                            <RefreshCw className="mr-2 h-4 w-4" />
+                                                            Przywróć
+                                                        </Button>
+
+                                                        <AlertDialog>
+                                                            <AlertDialogTrigger asChild>
+                                                                <Button
+                                                                    variant="destructive"
+                                                                    size="sm"
+                                                                    disabled={isProcessing === customer.id}
+                                                                >
+                                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                                    Usuń trwale
+                                                                </Button>
+                                                            </AlertDialogTrigger>
+                                                            <AlertDialogContent>
+                                                                <AlertDialogHeader>
+                                                                    <AlertDialogTitle>Czy na pewno?</AlertDialogTitle>
+                                                                    <AlertDialogDescription>
+                                                                        Tej operacji nie można cofnąć. Klient zostanie trwale usunięty z bazy danych.
+                                                                    </AlertDialogDescription>
+                                                                </AlertDialogHeader>
+                                                                <AlertDialogFooter>
+                                                                    <AlertDialogCancel>Anuluj</AlertDialogCancel>
+                                                                    <AlertDialogAction
+                                                                        onClick={() => handleDeleteCustomer(customer.id)}
+                                                                        className="bg-red-600 hover:bg-red-700"
+                                                                    >
+                                                                        Usuń trwale
+                                                                    </AlertDialogAction>
+                                                                </AlertDialogFooter>
+                                                            </AlertDialogContent>
+                                                        </AlertDialog>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
                         </div>
                     </TabsContent>
                     <TabsContent value="montages">

@@ -6,10 +6,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Search, Loader2, User, Phone, Mail, MapPin } from 'lucide-react';
-import { CustomerWithStats, CustomerDetails, getCustomers, getCustomerDetails } from '../actions';
+import { Search, Loader2, User, Phone, Mail, MapPin, Trash } from 'lucide-react';
+import { CustomerWithStats, CustomerDetails, getCustomers, getCustomerDetails, deleteCustomer } from '../actions';
 import { CustomerDetailsSheet } from './customer-details-sheet';
 import { useDebouncedCallback } from 'use-debounce';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 interface CustomersViewProps {
 	initialCustomers: CustomerWithStats[];
@@ -58,6 +69,7 @@ export function CustomersView({ initialCustomers }: CustomersViewProps) {
 	const [selectedCustomer, setSelectedCustomer] = useState<CustomerDetails | null>(null);
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [isFetchingDetails, setIsFetchingDetails] = useState(false);
+    const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
 
 	const handleSearch = useDebouncedCallback((term: string) => {
 		startTransition(async () => {
@@ -65,6 +77,21 @@ export function CustomersView({ initialCustomers }: CustomersViewProps) {
 			setCustomers(results);
 		});
 	}, 300);
+
+    const handleDeleteConfirm = async () => {
+        if (!customerToDelete) return;
+        
+        try {
+            await deleteCustomer(customerToDelete);
+            setCustomers(prev => prev.filter(c => c.id !== customerToDelete));
+            toast.success("Klient został usunięty");
+        } catch (error) {
+            toast.error("Wystąpił błąd podczas usuwania klienta");
+            console.error(error);
+        } finally {
+            setCustomerToDelete(null);
+        }
+    };
 
 	const handleCustomerClick = async (customerId: string) => {
         setIsFetchingDetails(true);
@@ -191,13 +218,26 @@ export function CustomersView({ initialCustomers }: CustomersViewProps) {
 										</div>
 									</TableCell>
 									<TableCell>
-                                        {isFetchingDetails && selectedCustomer?.id === customer.id ? (
-                                            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                                        ) : (
-										    <Button variant="ghost" size="icon" className="h-8 w-8">
-											    <User className="h-4 w-4 text-muted-foreground" />
-										    </Button>
-                                        )}
+                                        <div className="flex items-center justify-end gap-1">
+                                            {isFetchingDetails && selectedCustomer?.id === customer.id ? (
+                                                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                                            ) : (
+                                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                    <User className="h-4 w-4 text-muted-foreground" />
+                                                </Button>
+                                            )}
+                                            <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setCustomerToDelete(customer.id);
+                                                }}
+                                            >
+                                                <Trash className="h-4 w-4" />
+                                            </Button>
+                                        </div>
 									</TableCell>
 								</TableRow>
 							))
@@ -211,6 +251,20 @@ export function CustomersView({ initialCustomers }: CustomersViewProps) {
 				isOpen={isSheetOpen} 
 				onClose={() => setIsSheetOpen(false)}
 			/>
-		</div>
-	);
-}
+
+            <AlertDialog open={!!customerToDelete} onOpenChange={(open) => !open && setCustomerToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Czy na pewno chcesz usunąć tego klienta?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Ta operacja przeniesie klienta do kosza. Będziesz mógł go przywrócić w ustawieniach.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Anuluj</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-600 hover:bg-red-700">
+                            Usuń
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>

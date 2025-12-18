@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { eq, isNotNull, desc } from 'drizzle-orm';
+import { eq, isNotNull, desc, inArray } from 'drizzle-orm';
 
 import { HeadBucketCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 
@@ -566,6 +566,37 @@ export async function fixMontageCustomerLinks() {
     }
     
     return { success: true, fixedCount, totalFound: unlinkedMontages.length };
+}
+
+export async function bulkRestoreCustomers(ids: string[]) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) {
+        throw new Error('Brak uprawnień');
+    }
+
+    if (ids.length === 0) return;
+
+    await db.update(customers)
+        .set({ deletedAt: null })
+        .where(inArray(customers.id, ids));
+    
+    await logSystemEvent('bulk_restore_customers', `Przywrócono masowo klientów: ${ids.length}`, user.id);
+    revalidatePath('/dashboard/settings');
+    revalidatePath('/dashboard/customers');
+}
+
+export async function bulkDeleteCustomers(ids: string[]) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) {
+        throw new Error('Brak uprawnień');
+    }
+
+    if (ids.length === 0) return;
+
+    await db.delete(customers).where(inArray(customers.id, ids));
+    
+    await logSystemEvent('bulk_permanent_delete_customers', `Trwale usunięto masowo klientów: ${ids.length}`, user.id);
+    revalidatePath('/dashboard/settings');
 }
 
 
