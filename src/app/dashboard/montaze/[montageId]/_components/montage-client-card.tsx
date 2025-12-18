@@ -26,7 +26,8 @@ import {
   DialogTrigger,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { updateMontageContactDetails, updateMontageRealizationStatus, generateCustomerToken } from "../../actions";
+import { updateMontageContactDetails, updateMontageRealizationStatus } from "../../actions";
+import { generateCustomerToken } from "../actions";
 import type { Montage } from "../../types";
 import { formatScheduleRange } from "../../utils";
 import { customerSources } from "@/lib/db/schema";
