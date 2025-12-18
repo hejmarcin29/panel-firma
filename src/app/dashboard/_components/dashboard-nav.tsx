@@ -13,6 +13,7 @@ const links = [
 	{ href: '/dashboard/customers', label: 'Klienci' },
 	{ href: '/dashboard/orders', label: 'Zamówienia' },
 	{ href: '/dashboard/products', label: 'Produkty' },
+    { href: '/dashboard/erp', label: 'ERP' },
 	{ href: '/dashboard/montaze', label: 'Montaże' },
     { href: '/dashboard/wyceny', label: 'Oferty' },
 	{ href: '/dashboard/montaze/galeria', label: 'R2' },
@@ -38,7 +39,7 @@ export function DashboardNav({ urgentOrdersCount = 0, userRoles = ['admin'] }: {
              return allowedLinks.includes(link.href);
         }
 
-        const restrictedLinks = ['/dashboard/customers', '/dashboard/orders', '/dashboard/products', '/dashboard/mail', '/dashboard/settings', '/dashboard/wallet'];
+        const restrictedLinks = ['/dashboard/customers', '/dashboard/orders', '/dashboard/products', '/dashboard/mail', '/dashboard/settings', '/dashboard/wallet', '/dashboard/erp'];
         return !restrictedLinks.includes(link.href);
     });
 

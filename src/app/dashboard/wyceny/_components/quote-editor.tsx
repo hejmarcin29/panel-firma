@@ -884,10 +884,10 @@ export function QuoteEditor({ quote, templates }: QuoteEditorProps) {
                             <Button variant="outline" size="sm" onClick={() => {
                                 const printWindow = window.open('', '_blank');
                                 if (printWindow) {
-                                    printWindow.document.write(\`
+                                    printWindow.document.write(`
                                         <html>
                                             <head>
-                                                <title>Umowa - \${quote.montage.clientName}</title>
+                                                <title>Umowa - ${quote.montage.clientName}</title>
                                                 <style>
                                                     body { font-family: Arial, sans-serif; }
                                                     @media print {
@@ -896,13 +896,13 @@ export function QuoteEditor({ quote, templates }: QuoteEditorProps) {
                                                 </style>
                                             </head>
                                             <body>
-                                                \${quote.contract.content}
+                                                ${quote.contract.content}
                                                 <script>
                                                     window.onload = function() { window.print(); }
                                                 </script>
                                             </body>
                                         </html>
-                                    \`);
+                                    `);
                                     printWindow.document.close();
                                 }
                             }}>
