@@ -56,7 +56,7 @@ export function MontageDetailsLayout({
     { id: 'gallery', label: 'Galeria', icon: <ImageIcon className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.gallery}</div> },
     { id: 'workflow', label: 'Przebieg', icon: <LayoutList className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.workflow}</div> },
     { id: 'measurement', label: 'Pomiary', icon: <Ruler className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.measurement}</div> },
-    { id: 'quotes', label: 'Wyceny', icon: <FileText className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.quotes}</div> },
+    { id: 'quotes', label: 'Oferty', icon: <FileText className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.quotes}</div> },
     { id: 'history', label: 'Historia', icon: <History className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.history}</div> },
   ], [clientCard, materialCard, tabs]);
 
@@ -144,7 +144,7 @@ export function MontageDetailsLayout({
                       <TabsTrigger value="notes" className="flex-1">Notatki</TabsTrigger>
                       <TabsTrigger value="workflow" className="flex-1">Przebieg</TabsTrigger>
                       <TabsTrigger value="measurement" className="flex-1">Pomiar</TabsTrigger>
-                      <TabsTrigger value="quotes" className="flex-1">Wyceny</TabsTrigger>
+                      <TabsTrigger value="quotes" className="flex-1">Oferty</TabsTrigger>
                       <TabsTrigger value="tasks" className="flex-1">Zadania</TabsTrigger>
                       <TabsTrigger value="gallery" className="flex-1">Załączniki</TabsTrigger>
                       <TabsTrigger value="history" className="flex-1">Historia</TabsTrigger>

@@ -17,20 +17,20 @@ export function MontageQuotes({ montageId, quotes }: { montageId: string, quotes
     const handleCreate = async () => {
         try {
             const id = await createQuote(montageId);
-            toast.success('Utworzono nową wycenę');
+            toast.success('Utworzono nową ofertę');
             router.push(`/dashboard/wyceny/${id}`);
         } catch {
-            toast.error('Błąd tworzenia wyceny');
+            toast.error('Błąd tworzenia oferty');
         }
     };
 
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Wyceny do zlecenia</h3>
+                <h3 className="text-lg font-medium">Oferty do zlecenia</h3>
                 <Button onClick={handleCreate}>
                     <Plus className="w-4 h-4 mr-2" />
-                    Nowa Wycena
+                    Nowa Oferta
                 </Button>
             </div>
 
@@ -44,7 +44,7 @@ export function MontageQuotes({ montageId, quotes }: { montageId: string, quotes
                                     <FileText className="w-6 h-6 text-primary" />
                                 </div>
                                 <div>
-                                    <div className="font-medium">Wycena #{quote.id.slice(0, 8)}</div>
+                                    <div className="font-medium">Oferta #{quote.id.slice(0, 8)}</div>
                                     <div className="text-sm text-muted-foreground">
                                         {quote.createdAt ? new Date(quote.createdAt).toLocaleDateString('pl-PL') : '-'}
                                     </div>

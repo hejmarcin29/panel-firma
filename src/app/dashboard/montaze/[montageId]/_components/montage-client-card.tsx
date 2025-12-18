@@ -277,7 +277,7 @@ export function MontageClientCard({
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">Dane Klienta</CardTitle>
-        {userRoles.includes('admin') && (
+        {(userRoles.includes('admin') || userRoles.includes('measurer')) && (
         <Dialog open={isEditing} onOpenChange={setIsEditing}>
           <DialogTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">

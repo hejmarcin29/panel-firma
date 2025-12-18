@@ -153,6 +153,8 @@ export const customers = pgTable(
 		emailIdx: uniqueIndex('customers_email_idx').on(table.email),
 		taxIdx: uniqueIndex('customers_tax_id_idx').on(table.taxId),
         referralTokenIdx: uniqueIndex('customers_referral_token_idx').on(table.referralToken),
+    })
+);
 
 export const customersRelations = relations(customers, ({ one, many }) => ({
     orders: many(orders),

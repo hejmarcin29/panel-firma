@@ -22,7 +22,6 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from '@/components/ui/dialog';
 import {
     Form,
@@ -45,12 +44,12 @@ import {
     TableRow,
 } from '@/components/ui/table';
 
-import { createContractTemplate, updateContractTemplate, deleteContractTemplate } from './actions';
+import { createContractTemplate, updateContractTemplate, deleteContractTemplate } from '../contracts/actions';
 
 const formSchema = z.object({
     name: z.string().min(1, 'Nazwa jest wymagana'),
     content: z.string().min(1, 'Treść jest wymagana'),
-    isDefault: z.boolean().default(false),
+    isDefault: z.boolean(),
 });
 
 interface Template {
@@ -118,7 +117,7 @@ export function ContractTemplatesManager({ templates }: { templates: Template[] 
         try {
             await deleteContractTemplate(id);
             toast.success('Usunięto szablon');
-        } catch (error) {
+        } catch {
             toast.error('Wystąpił błąd');
         }
     };

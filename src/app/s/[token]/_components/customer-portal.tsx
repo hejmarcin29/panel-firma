@@ -85,7 +85,6 @@ function getStepStatus(currentStatus: string, stepId: string) {
 export function CustomerPortal({ customer, token }: CustomerPortalProps) {
     const activeMontage = customer.montages[0]; // For now, just take the latest one
     const [isAccepting, setIsAccepting] = useState<string | null>(null);
-    const [isSigning, setIsSigning] = useState(false);
     const [contractDialogOpen, setContractDialogOpen] = useState(false);
 
     const isImage = (url: string) => {
@@ -112,7 +111,6 @@ export function CustomerPortal({ customer, token }: CustomerPortalProps) {
     const handleSignContract = async (signatureData: string) => {
         if (!activeQuote?.contract) return;
         
-        setIsSigning(true);
         try {
             await signContract(activeQuote.contract.id, signatureData, token);
             toast.success('Umowa została podpisana! Dziękujemy.');
@@ -120,8 +118,6 @@ export function CustomerPortal({ customer, token }: CustomerPortalProps) {
         } catch (error) {
             toast.error('Wystąpił błąd podczas podpisywania umowy.');
             console.error(error);
-        } finally {
-            setIsSigning(false);
         }
     };
 

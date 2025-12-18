@@ -6,8 +6,7 @@ import { nanoid } from 'nanoid';
 
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
-import { contractTemplates, contracts, quotes, montages, customers } from '@/lib/db/schema';
-import { logSystemEvent } from '@/lib/logging';
+import { contractTemplates, contracts, quotes } from '@/lib/db/schema';
 
 // --- TEMPLATES ---
 
@@ -74,8 +73,8 @@ export async function getContractForQuote(quoteId: string) {
     });
 }
 
-export async function generateContract(quoteId: string, templateId: string, variables: Record<string, string>) {
-    const user = await requireUser();
+export async function generateContract(quoteId: string, templateId: string, variables: Record<string, string> = {}) {
+    await requireUser();
     
     const template = await db.query.contractTemplates.findFirst({
         where: eq(contractTemplates.id, templateId),
@@ -148,7 +147,7 @@ export async function generateContract(quoteId: string, templateId: string, vari
 }
 
 export async function updateContractContent(contractId: string, content: string) {
-    const user = await requireUser();
+    await requireUser();
     
     await db.update(contracts)
         .set({ content, updatedAt: new Date() })
@@ -158,7 +157,7 @@ export async function updateContractContent(contractId: string, content: string)
 }
 
 export async function sendContract(contractId: string) {
-    const user = await requireUser();
+    await requireUser();
     
     await db.update(contracts)
         .set({ status: 'sent', updatedAt: new Date() })

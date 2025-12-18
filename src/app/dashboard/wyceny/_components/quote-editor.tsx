@@ -436,7 +436,7 @@ export function QuoteEditor({ quote, templates }: QuoteEditorProps) {
                                 className="text-destructive focus:text-destructive" 
                                 onClick={() => setShowDeleteDialog(true)}
                             >
-                                <Trash2 className="w-4 h-4 mr-2" /> Usuń wycenę
+                                <Trash2 className="w-4 h-4 mr-2" /> Usuń ofertę
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -660,7 +660,7 @@ export function QuoteEditor({ quote, templates }: QuoteEditorProps) {
 
             <div className="flex items-center justify-between no-print">
                 <div>
-                    <h2 className="text-lg font-semibold">Edytor Wyceny</h2>
+                    <h2 className="text-lg font-semibold">Edytor Oferty</h2>
                     <p className="text-sm text-muted-foreground">
                         Dla: {quote.montage.clientName} ({quote.montage.installationAddress})
                     </p>
@@ -908,7 +908,7 @@ export function QuoteEditor({ quote, templates }: QuoteEditorProps) {
                             <Textarea 
                                 value={notes} 
                                 onChange={(e) => setNotes(e.target.value)} 
-                                placeholder="Notatki do wyceny..."
+                                placeholder="Notatki do oferty..."
                                 className="min-h-[150px]"
                             />
                         </CardContent>
@@ -925,9 +925,9 @@ export function QuoteEditor({ quote, templates }: QuoteEditorProps) {
             <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Czy na pewno chcesz usunąć tę wycenę?</AlertDialogTitle>
+                        <AlertDialogTitle>Czy na pewno chcesz usunąć tę ofertę?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Tej operacji nie można cofnąć. Wycena zostanie trwale usunięta z systemu.
+                            Tej operacji nie można cofnąć. Oferta zostanie trwale usunięta z systemu.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

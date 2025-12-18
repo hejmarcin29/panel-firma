@@ -74,11 +74,11 @@ export function NewQuoteDialog() {
         try {
             setCreating(true);
             const quoteId = await createQuote(montageId);
-            toast.success('Utworzono wycenę');
+            toast.success('Utworzono ofertę');
             setOpen(false);
             router.push(`/dashboard/wyceny/${quoteId}`);
         } catch (error) {
-            toast.error('Nie udało się utworzyć wyceny');
+            toast.error('Nie udało się utworzyć oferty');
             console.error(error);
             setCreating(false);
         }
@@ -102,7 +102,7 @@ export function NewQuoteDialog() {
                         checked={showAll}
                         onCheckedChange={setShowAll}
                     />
-                    <Label htmlFor="show-all" className="hidden sm:inline">Pokaż z wycenami</Label>
+                    <Label htmlFor="show-all" className="hidden sm:inline">Pokaż z ofertami</Label>
                     <Label htmlFor="show-all" className="sm:hidden">Wszystkie</Label>
                 </div>
             </div>
@@ -137,7 +137,7 @@ export function NewQuoteDialog() {
                                 </div>
                                 {montage.hasQuote && (
                                     <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
-                                        Ma wycenę
+                                        Ma ofertę
                                     </span>
                                 )}
                             </Button>
@@ -154,12 +154,12 @@ export function NewQuoteDialog() {
                 <DrawerTrigger asChild>
                     <Button>
                         <Plus className="w-4 h-4 mr-2" />
-                        Nowa Wycena
+                        Nowa Oferta
                     </Button>
                 </DrawerTrigger>
                 <DrawerContent className="h-[85vh]">
                     <DrawerHeader>
-                        <DrawerTitle>Wybierz montaż do wyceny</DrawerTitle>
+                        <DrawerTitle>Wybierz montaż do oferty</DrawerTitle>
                     </DrawerHeader>
                     <div className="px-4 pb-4 h-full overflow-hidden">
                         {Content}
@@ -174,12 +174,12 @@ export function NewQuoteDialog() {
             <DialogTrigger asChild>
                 <Button>
                     <Plus className="w-4 h-4 mr-2" />
-                    Nowa Wycena
+                    Nowa Oferta
                 </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl h-[80vh] flex flex-col">
                 <DialogHeader>
-                    <DialogTitle>Wybierz montaż do wyceny</DialogTitle>
+                    <DialogTitle>Wybierz montaż do oferty</DialogTitle>
                 </DialogHeader>
                 {Content}
             </DialogContent>
