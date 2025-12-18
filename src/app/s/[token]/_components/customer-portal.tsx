@@ -1,12 +1,12 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { FileText, Calendar, CheckCircle2, Circle, Image as ImageIcon, Ruler, Calculator, Check } from 'lucide-react';
+import { FileText, Calendar, CheckCircle2, Circle, Image as ImageIcon, Ruler, Calculator, Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { acceptQuote, signContract } from '../actions';
+import { signContract } from '../actions';
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { SignaturePad } from '@/components/ui/signature-pad';
@@ -84,7 +84,6 @@ function getStepStatus(currentStatus: string, stepId: string) {
 
 export function CustomerPortal({ customer, token }: CustomerPortalProps) {
     const activeMontage = customer.montages[0]; // For now, just take the latest one
-    const [isAccepting, setIsAccepting] = useState<string | null>(null);
     const [contractDialogOpen, setContractDialogOpen] = useState(false);
 
     const isImage = (url: string) => {
@@ -94,19 +93,6 @@ export function CustomerPortal({ customer, token }: CustomerPortalProps) {
     const images = activeMontage?.attachments.filter(att => isImage(att.url)) || [];
     const documents = activeMontage?.attachments.filter(att => !isImage(att.url)) || [];
     const activeQuote = activeMontage?.quotes.find(q => q.status === 'sent' || q.status === 'accepted');
-
-    const handleAcceptQuote = async (quoteId: string) => {
-        setIsAccepting(quoteId);
-        try {
-            await acceptQuote(quoteId, token);
-            toast.success('Wycena została zaakceptowana! Dziękujemy.');
-        } catch (error) {
-            toast.error('Wystąpił błąd podczas akceptacji wyceny.');
-            console.error(error);
-        } finally {
-            setIsAccepting(null);
-        }
-    };
 
     const handleSignContract = async (signatureData: string) => {
         if (!activeQuote?.contract) return;
@@ -339,16 +325,13 @@ export function CustomerPortal({ customer, token }: CustomerPortalProps) {
                                             </div>
                                         )}
                                     </CardContent>
-                                    {activeQuote.status === 'sent' && !activeQuote.contract && (
-                                        <CardFooter>
-                                            <Button 
-                                                className="w-full sm:w-auto" 
-                                                onClick={() => handleAcceptQuote(activeQuote.id)}
-                                                disabled={!!isAccepting}
-                                            >
-                                                {isAccepting === activeQuote.id ? 'Przetwarzanie...' : 'Akceptuję wycenę i zamawiam'}
-                                            </Button>
-                                        </CardFooter>
+                                    {activeQuote.status === 'sent' && (!activeQuote.contract || activeQuote.contract.status === 'rejected') && (
+                                        <div className="border-t p-6 bg-muted/20">
+                                            <div className="flex items-center gap-2 text-muted-foreground">
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                <p className="text-sm">Umowa jest przygotowywana. Prosimy o cierpliwość.</p>
+                                            </div>
+                                        </div>
                                     )}
                                     
                                     {/* Contract Signing */}
