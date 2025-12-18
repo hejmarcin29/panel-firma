@@ -37,6 +37,7 @@ export function AddEmployeeDialog() {
     if (formData.get('role_measurer') === 'on') roles.push('measurer');
     if (formData.get('role_installer') === 'on') roles.push('installer');
     if (formData.get('role_architect') === 'on') roles.push('architect');
+    if (formData.get('role_partner') === 'on') roles.push('partner');
 
     if (!name || !email || !password || roles.length === 0) {
         setError('Wypełnij wszystkie pola i wybierz przynajmniej jedną rolę.');
@@ -71,19 +72,19 @@ export function AddEmployeeDialog() {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Imię i Nazwisko</Label>
+            <Label htmlFor="name">Imię i Nazwisko *</Label>
             <Input id="name" name="name" placeholder="Jan Kowalski" required />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">Adres E-mail</Label>
+            <Label htmlFor="email">Adres E-mail *</Label>
             <Input id="email" name="email" type="email" placeholder="jan@firma.pl" required />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Hasło tymczasowe</Label>
+            <Label htmlFor="password">Hasło tymczasowe *</Label>
             <Input id="password" name="password" type="password" required minLength={6} />
           </div>
           <div className="space-y-3">
-            <Label>Role</Label>
+            <Label>Role *</Label>
             <div className="flex flex-col gap-2 p-1">
                 <div className="flex items-center space-x-2">
                     <Checkbox id="role_measurer" name="role_measurer" />
@@ -96,6 +97,10 @@ export function AddEmployeeDialog() {
                 <div className="flex items-center space-x-2">
                     <Checkbox id="role_architect" name="role_architect" />
                     <Label htmlFor="role_architect" className="font-normal cursor-pointer">Architekt</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                    <Checkbox id="role_partner" name="role_partner" />
+                    <Label htmlFor="role_partner" className="font-normal cursor-pointer">Partner B2B</Label>
                 </div>
             </div>
             <div className="text-xs text-muted-foreground space-y-2 mt-2 p-3 bg-muted/50 rounded-md border">

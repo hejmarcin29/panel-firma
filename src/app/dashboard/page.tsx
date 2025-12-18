@@ -49,6 +49,11 @@ export default async function DashboardPage() {
     const r2Config = await tryGetR2Config();
     const publicBaseUrl = r2Config?.publicBaseUrl ?? null;
 
+    // --- PARTNER DASHBOARD LOGIC ---
+    if (user.roles.includes('partner') && !user.roles.includes('admin')) {
+        redirect('/dashboard/partner');
+    }
+
     // --- ARCHITECT DASHBOARD LOGIC ---
     if (user.roles.includes('architect') && !user.roles.includes('admin')) {
         const { projects, stats } = await getArchitectDashboardStats(user.id);

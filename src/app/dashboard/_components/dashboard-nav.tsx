@@ -21,6 +21,7 @@ const links = [
 	{ href: '/dashboard/settings', label: 'Ustawienia' },
     { href: '/dashboard/wallet', label: 'Portfel' },
     { href: '/dashboard/showroom', label: 'Showroom' },
+    { href: '/dashboard/partner', label: 'Moje Polecenia' },
 ];
 
 export function DashboardNav({ urgentOrdersCount = 0, userRoles = ['admin'] }: { urgentOrdersCount?: number; userRoles?: UserRole[] }) {
@@ -30,6 +31,16 @@ export function DashboardNav({ urgentOrdersCount = 0, userRoles = ['admin'] }: {
         // Special case for Wallet & Showroom: Only show if user is explicitly an architect
         if (link.href === '/dashboard/wallet' || link.href === '/dashboard/showroom') {
             return userRoles.includes('architect');
+        }
+
+        // Special case for Partner
+        if (link.href === '/dashboard/partner') {
+            return userRoles.includes('partner');
+        }
+
+        if (userRoles.includes('partner')) {
+            // Partners only see their dashboard
+            return false;
         }
 
         if (userRoles.includes('admin')) return true;

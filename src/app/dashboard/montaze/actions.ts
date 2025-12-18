@@ -20,7 +20,7 @@ import {
     type CustomerSource,
 } from '@/lib/db/schema';
 import { uploadMontageObject } from '@/lib/r2/storage';
-import { MontageCategories } from '@/lib/r2/constants';
+import { MontageCategories, MontageSubCategories } from '@/lib/r2/constants';
 import { getMontageChecklistTemplates } from '@/lib/montaze/checklist';
 import { getMontageAutomationRules } from '@/lib/montaze/automation';
 import { logSystemEvent } from '@/lib/logging';
@@ -36,7 +36,7 @@ function normalizePhone(phone: string): string {
 	return phone.replace(/\D/g, '');
 }
 
-async function generateNextMontageId(): Promise<string> {
+export async function generateNextMontageId(): Promise<string> {
     const now = new Date();
     const year = now.getFullYear();
     const prefix = `M/${year}/`;
@@ -1491,7 +1491,7 @@ export async function createLead(data: {
     return { status: 'success', montageId };
 }
 
-async function addAttachment(montageId: string, file: File, title: string) {
+async function addAttachment(montageId: string, file: File, title: string, category?: string) {
     const user = await requireUser();
     const montage = await db.query.montages.findFirst({
         where: eq(montages.id, montageId),
@@ -1504,6 +1504,7 @@ async function addAttachment(montageId: string, file: File, title: string) {
         file,
         uploadedBy: user.id,
         title,
+        category,
     });
 }
 
@@ -1658,7 +1659,7 @@ export async function createExtendedLead(formData: FormData) {
     // Handle file upload
     if (file && file.size > 0) {
         try {
-            await addAttachment(montageId, file, 'Rzut / Projekt (od Architekta)');
+            await addAttachment(montageId, file, 'Rzut / Projekt (od Architekta)', MontageSubCategories.MEASUREMENT_BEFORE);
         } catch (e) {
             console.error('Failed to upload attachment for lead', e);
             // Don't fail the whole request if attachment fails, but maybe log it
@@ -1682,4 +1683,101 @@ export async function deleteMontage(id: string) {
     
     await logSystemEvent('delete_montage', `Usunięto montaż ${id}`, user.id);
     revalidatePath(MONTAGE_DASHBOARD_PATH);
+    revalidatePath('/dashboard/calendar');
+}
+
+export async function convertLeadToMontage(data: {
+    montageId: string;
+    clientName: string;
+    isCompany: boolean;
+    companyName?: string;
+    nip?: string;
+    contactPhone: string;
+    contactEmail: string;
+    billingAddress: string;
+    billingCity: string;
+    billingPostalCode: string;
+    installationAddress: string;
+    installationCity: string;
+    installationPostalCode: string;
+    forecastedInstallationDate?: string;
+    floorArea?: string;
+    productId?: string;
+}) {
+    const user = await requireUser();
+    const montage = await getMontageOrThrow(data.montageId);
+
+    if (montage.status !== 'lead') {
+        throw new Error('Tylko leady mogą być konwertowane.');
+    }
+
+    const normalizedPhone = normalizePhone(data.contactPhone);
+    const normalizedNip = data.nip ? data.nip.replace(/\D/g, '') : null;
+
+    // Update Customer
+    if (montage.customerId) {
+        await db.update(customers)
+            .set({
+                name: data.clientName,
+                email: data.contactEmail,
+                phone: normalizedPhone,
+                taxId: normalizedNip,
+                billingStreet: data.billingAddress,
+                billingCity: data.billingCity,
+                billingPostalCode: data.billingPostalCode,
+                shippingStreet: data.installationAddress,
+                shippingCity: data.installationCity,
+                shippingPostalCode: data.installationPostalCode,
+                updatedAt: new Date(),
+            })
+            .where(eq(customers.id, montage.customerId));
+    }
+
+    // Update Montage
+    await db.update(montages)
+        .set({
+            clientName: data.clientName,
+            isCompany: data.isCompany,
+            companyName: data.companyName || null,
+            nip: normalizedNip,
+            contactPhone: normalizedPhone,
+            contactEmail: data.contactEmail,
+            billingAddress: data.billingAddress,
+            billingCity: data.billingCity,
+            billingPostalCode: data.billingPostalCode,
+            installationAddress: data.installationAddress,
+            installationCity: data.installationCity,
+            installationPostalCode: data.installationPostalCode,
+            forecastedInstallationDate: data.forecastedInstallationDate ? new Date(data.forecastedInstallationDate) : null,
+            floorArea: data.floorArea ? parseFloat(data.floorArea) : null,
+            ...(data.productId !== undefined ? {
+                panelProductId: data.productId && data.productId !== 'none' ? parseInt(data.productId) : null,
+            } : {}),
+            status: 'before_measurement',
+            updatedAt: new Date(),
+        })
+        .where(eq(montages.id, data.montageId));
+
+    // Add default checklist
+    const templates = await getMontageChecklistTemplates();
+    if (templates.length > 0) {
+        const now = new Date();
+        await db.insert(montageChecklistItems).values(
+            templates.map((template, index) => ({
+                id: crypto.randomUUID(),
+                montageId: data.montageId,
+                templateId: template.id,
+                label: template.label,
+                allowAttachment: template.allowAttachment,
+                completed: false,
+                orderIndex: index,
+                createdAt: now,
+                updatedAt: now,
+            }))
+        );
+    }
+
+    await logSystemEvent('convert_lead', `Przekonwertowano lead ${montage.displayId} na montaż`, user.id);
+    revalidatePath(MONTAGE_DASHBOARD_PATH);
+    return { success: true };
 }

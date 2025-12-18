@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db';
 import { orders, montages, customers } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, isNull, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { requireUser } from '@/lib/auth/session';
 
@@ -50,7 +50,12 @@ export async function getCalendarEvents(): Promise<{ scheduled: CalendarEvent[];
         status: montages.status,
       })
       .from(montages)
-      .where(!canSeeAllMontages ? eq(montages.installerId, user.id) : undefined),
+      .where(
+        and(
+          isNull(montages.deletedAt),
+          !canSeeAllMontages ? eq(montages.installerId, user.id) : undefined
+        )
+      ),
   ]);
 
   const allOrders: CalendarEvent[] = ordersData.map((order) => ({

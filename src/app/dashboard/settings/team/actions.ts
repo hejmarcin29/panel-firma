@@ -5,8 +5,9 @@ import { eq, desc } from 'drizzle-orm';
 import { hash } from 'bcryptjs';
 
 import { db } from '@/lib/db';
-import { users, montages, commissions, type UserRole, type InstallerProfile, type ArchitectProfile } from '@/lib/db/schema';
+import { users, montages, commissions, type UserRole, type InstallerProfile, type ArchitectProfile, type PartnerProfile } from '@/lib/db/schema';
 import { requireUser, impersonateUser } from '@/lib/auth/session';
+import { generatePortalToken } from '@/lib/utils';
 
 const TEAM_SETTINGS_PATH = '/dashboard/settings/team';
 
@@ -47,6 +48,20 @@ export async function updateArchitectProfile(userId: string, profile: ArchitectP
 
     await db.update(users)
         .set({ architectProfile: profile, updatedAt: new Date() })
+        .where(eq(users.id, userId));
+
+    revalidatePath(TEAM_SETTINGS_PATH);
+}
+
+export async function updatePartnerProfile(userId: string, profile: PartnerProfile) {
+    const currentUser = await requireUser();
+    
+    if (!currentUser.roles.includes('admin')) {
+        throw new Error('Brak uprawnień.');
+    }
+
+    await db.update(users)
+        .set({ partnerProfile: profile, updatedAt: new Date() })
         .where(eq(users.id, userId));
 
     revalidatePath(TEAM_SETTINGS_PATH);
@@ -115,6 +130,7 @@ export async function createEmployee({
         passwordHash,
         roles,
         isActive: true,
+        referralToken: generatePortalToken(),
         createdAt: new Date(),
         updatedAt: new Date(),
     });

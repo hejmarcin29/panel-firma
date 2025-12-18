@@ -60,12 +60,18 @@ export type MaterialsEditHistoryEntry = {
 export type Montage = {
 	id: string;
 	clientName: string;
+    isCompany?: boolean;
+    companyName?: string | null;
+    nip?: string | null;
 	contactEmail: string | null;
 	contactPhone: string | null;
 	billingAddress: string | null;
+    billingPostalCode?: string | null;
 	installationAddress: string | null;
+    installationPostalCode?: string | null;
 	billingCity: string | null;
 	installationCity: string | null;
+    customerId?: string | null;
 	scheduledInstallationAt: TimestampValue;
 	scheduledInstallationEndAt: TimestampValue;
     measurementDate?: TimestampValue;

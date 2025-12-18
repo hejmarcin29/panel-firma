@@ -469,6 +469,7 @@ export async function restoreMontage(id: string) {
     await logSystemEvent('restore_montage', `Przywrócono montaż ${id}`, user.id);
     revalidatePath('/dashboard/settings');
     revalidatePath('/dashboard/montaze');
+    revalidatePath('/dashboard/calendar');
 }
 
 export async function permanentDeleteMontage(id: string) {

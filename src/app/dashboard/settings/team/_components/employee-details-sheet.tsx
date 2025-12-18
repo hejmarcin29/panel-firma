@@ -40,8 +40,8 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 
-import { updateInstallerProfile, getInstallerMontages, updateArchitectProfile, getArchitectCommissions } from '../actions';
-import type { UserRole, InstallerProfile, ArchitectProfile } from '@/lib/db/schema';
+import { updateInstallerProfile, getInstallerMontages, updateArchitectProfile, getArchitectCommissions, updatePartnerProfile } from '../actions';
+import type { UserRole, InstallerProfile, ArchitectProfile, PartnerProfile } from '@/lib/db/schema';
 
 interface TeamMember {
     id: string;
@@ -52,6 +52,7 @@ interface TeamMember {
     createdAt: Date;
     installerProfile?: InstallerProfile | null;
     architectProfile?: ArchitectProfile | null;
+    partnerProfile?: PartnerProfile | null;
 }
 
 interface EmployeeDetailsSheetProps {
@@ -77,6 +78,13 @@ const architectProfileSchema = z.object({
     commissionRate: z.coerce.number().min(0, "Stawka musi być dodatnia").optional(),
 });
 
+const partnerProfileSchema = z.object({
+    companyName: z.string().optional(),
+    nip: z.string().optional(),
+    bankAccount: z.string().optional(),
+    commissionRate: z.coerce.number().min(0, "Prowizja musi być dodatnia").max(100, "Prowizja max 100%").optional(),
+});
+
 export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDetailsSheetProps) {
     const [activeTab, setActiveTab] = useState('general');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -98,6 +106,16 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
 
     const architectForm = useForm<z.infer<typeof architectProfileSchema>>({
         resolver: zodResolver(architectProfileSchema) as Resolver<z.infer<typeof architectProfileSchema>>,
+        defaultValues: {
+            companyName: '',
+            nip: '',
+            bankAccount: '',
+            commissionRate: 0,
+        },
+    });
+
+    const partnerForm = useForm<z.infer<typeof partnerProfileSchema>>({
+        resolver: zodResolver(partnerProfileSchema) as Resolver<z.infer<typeof partnerProfileSchema>>,
         defaultValues: {
             companyName: '',
             nip: '',
@@ -138,7 +156,23 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
                 commissionRate: 0,
             });
         }
-    }, [member, form, architectForm]);
+
+        if (member?.partnerProfile) {
+            partnerForm.reset({
+                companyName: member.partnerProfile.companyName || '',
+                nip: member.partnerProfile.nip || '',
+                bankAccount: member.partnerProfile.bankAccount || '',
+                commissionRate: member.partnerProfile.commissionRate || 0,
+            });
+        } else {
+            partnerForm.reset({
+                companyName: '',
+                nip: '',
+                bankAccount: '',
+                commissionRate: 0,
+            });
+        }
+    }, [member, form, architectForm, partnerForm]);
 
     useEffect(() => {
         if (open && member && member.roles.includes('installer') && activeTab === 'history') {
@@ -181,10 +215,23 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
         });
     };
 
+    const onPartnerSubmit = (values: z.infer<typeof partnerProfileSchema>) => {
+        if (!member) return;
+        
+        startTransition(async () => {
+            try {
+                await updatePartnerProfile(member.id, values);
+            } catch (error) {
+                console.error(error);
+            }
+        });
+    };
+
     if (!member) return null;
 
     const isInstaller = member.roles.includes('installer');
     const isArchitect = member.roles.includes('architect');
+    const isPartner = member.roles.includes('partner');
 
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
@@ -199,11 +246,11 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
                     <TabsList className="grid w-full grid-cols-3">
                         <TabsTrigger value="general">Ogólne</TabsTrigger>
-                        <TabsTrigger value="profile" disabled={!isInstaller && !isArchitect}>
-                            {isArchitect ? 'Profil Architekta' : 'Profil Montażysty'}
+                        <TabsTrigger value="profile" disabled={!isInstaller && !isArchitect && !isPartner}>
+                            Profil
                         </TabsTrigger>
-                        <TabsTrigger value="history" disabled={!isInstaller && !isArchitect}>
-                            {isArchitect ? 'Realizacje' : 'Historia'}
+                        <TabsTrigger value="history" disabled={!isInstaller && !isArchitect && !isPartner}>
+                            Historia
                         </TabsTrigger>
                     </TabsList>
 
@@ -401,6 +448,69 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
                                     />
                                     {isPending && <div className="text-xs text-muted-foreground">Zapisywanie...</div>}
                                 </form>
+                            </Form>
+                        )}
+
+                        {isPartner && (
+                            <Form {...partnerForm}>
+                                <form className="space-y-4">
+                                    <h3 className="font-medium">Profil Partnera B2B</h3>
+                                    <FormField
+                                        control={partnerForm.control}
+                                        name="companyName"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Nazwa firmy</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="Nazwa firmy" {...field} onBlur={partnerForm.handleSubmit(onPartnerSubmit)} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={partnerForm.control}
+                                        name="nip"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>NIP</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="NIP" {...field} onBlur={partnerForm.handleSubmit(onPartnerSubmit)} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={partnerForm.control}
+                                        name="bankAccount"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Numer konta</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="Numer konta" {...field} onBlur={partnerForm.handleSubmit(onPartnerSubmit)} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={partnerForm.control}
+                                        name="commissionRate"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Prowizja (%)</FormLabel>
+                                                <FormControl>
+                                                    <Input type="number" placeholder="10" {...field} onBlur={partnerForm.handleSubmit(onPartnerSubmit)} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    {isPending && <div className="text-xs text-muted-foreground">Zapisywanie...</div>}
+                                </form>
+                            </Form>
+                        )}
                             </Form>
                         )}
                     </TabsContent>

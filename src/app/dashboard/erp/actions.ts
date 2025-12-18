@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db';
 import { suppliers, purchaseOrders, products, documents } from '@/lib/db/schema';
-import { desc } from 'drizzle-orm';
+import { desc, isNull } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { requireUser } from '@/lib/auth/session';
 import { nanoid } from 'nanoid';
@@ -45,6 +45,7 @@ export async function getPurchaseOrders() {
 export async function getWarehouseStock() {
     await requireUser();
     return await db.query.products.findMany({
+        where: isNull(products.deletedAt),
         orderBy: [desc(products.updatedAt)],
         limit: 50,
     });

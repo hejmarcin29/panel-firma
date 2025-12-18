@@ -34,6 +34,23 @@ export default function ERPDashboardPage() {
         className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
       >
         <motion.div variants={item} className="h-full">
+          <Link href="/dashboard/erp/kartoteki">
+            <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Kartoteki</CardTitle>
+                <Package className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">Indeksy</div>
+                <p className="text-xs text-muted-foreground">
+                  Baza towarów, usług i materiałów (Lokalna)
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
+        </motion.div>
+
+        <motion.div variants={item} className="h-full">
           <Link href="/dashboard/erp/purchases">
             <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

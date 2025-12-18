@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db';
 import { quotes, type QuoteItem, type QuoteStatus, mailAccounts, montages, products } from '@/lib/db/schema';
-import { eq, desc, isNull } from 'drizzle-orm';
+import { eq, desc, isNull, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { randomUUID } from 'crypto';
 import { createTransport } from 'nodemailer';
@@ -242,6 +242,7 @@ export async function deleteQuote(id: string) {
 
 export async function getMontagesForQuoteSelection() {
     const allMontages = await db.query.montages.findMany({
+        where: isNull(montages.deletedAt),
         orderBy: [desc(montages.createdAt)],
         columns: {
             id: true,
@@ -268,7 +269,10 @@ export async function getMontagesForQuoteSelection() {
 
 export async function getProductsForQuote() {
     return await db.query.products.findMany({
-        where: eq(products.status, 'publish'),
+        where: and(
+            eq(products.status, 'publish'),
+            isNull(products.deletedAt)
+        ),
         columns: {
             id: true,
             name: true,

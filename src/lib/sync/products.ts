@@ -1,6 +1,7 @@
 import { db } from '@/lib/db';
 import { products } from '@/lib/db/schema';
 import { getAppSettings, appSettingKeys } from '@/lib/settings';
+import { sql } from 'drizzle-orm';
 
 interface WooCommerceProduct {
     id: number;
@@ -104,7 +105,9 @@ export async function syncProducts() {
                 attributes: JSON.stringify(product.attributes),
                 syncedAt: new Date(),
                 updatedAt: new Date(),
-            }
+            },
+            // Prevent overwriting if the product is marked as local (detached from WP)
+            where: sql`${products.source} != 'local'`
         });
     }
 

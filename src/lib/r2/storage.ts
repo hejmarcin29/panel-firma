@@ -26,6 +26,32 @@ export {
     CLIENT_ROOT_PREFIX, 
 } from './constants';
 
+export async function uploadPartnerInvoice({
+    partnerId,
+    file,
+}: {
+    partnerId: string;
+    file: File;
+}): Promise<string> {
+    const config = await getR2Config();
+    const client = createR2Client(config);
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const filename = sanitizeFilename(file.name);
+    const key = `partnerzy/${partnerId}/faktury/${Date.now()}_${filename}`;
+
+    const command = new PutObjectCommand({
+        Bucket: config.bucketName,
+        Key: key,
+        Body: buffer,
+        ContentType: file.type,
+    });
+
+    await client.send(command);
+
+    return `${config.publicBaseUrl}/${key}`;
+}
+
 function buildMontageFolder(clientName: string): string {
 	const base = slugify(clientName || 'klient');
 	const safeBase = base || 'klient';

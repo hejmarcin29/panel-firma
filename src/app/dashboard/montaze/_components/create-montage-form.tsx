@@ -159,6 +159,29 @@ export function CreateMontageForm({ onSuccess, installers = [], measurers = [], 
 		setFeedback(null);
         setConflictData(null);
 
+        if (!form.clientName.trim()) {
+             setError('Podaj nazwę klienta.');
+             return;
+        }
+        if (!form.contactPhone.trim()) {
+             setError('Podaj numer telefonu.');
+             return;
+        }
+        if (!form.contactEmail.trim()) {
+             setError('Podaj adres e-mail.');
+             return;
+        }
+        if (!form.billingAddress.trim() || !form.billingCity.trim() || !form.billingPostalCode.trim()) {
+             setError('Uzupełnij adres rozliczeniowy.');
+             return;
+        }
+        if (!sameAsBilling) {
+            if (!form.installationAddress.trim() || !form.installationCity.trim() || !form.installationPostalCode.trim()) {
+                setError('Uzupełnij adres montażu.');
+                return;
+            }
+        }
+
 		startTransition(async () => {
 			try {
 				const result = await createMontage({
@@ -275,7 +298,7 @@ export function CreateMontageForm({ onSuccess, installers = [], measurers = [], 
                 </div>
             )}
 			<div>
-				<Label htmlFor="montage-client">Klient (Osoba kontaktowa)</Label>
+				<Label htmlFor="montage-client">Klient (Osoba kontaktowa) *</Label>
 				<Input
 					id="montage-client"
 					value={form.clientName}
@@ -319,22 +342,24 @@ export function CreateMontageForm({ onSuccess, installers = [], measurers = [], 
 
 			<div className="grid gap-4 md:grid-cols-2">
 				<div>
-					<Label htmlFor="montage-phone">Telefon kontaktowy</Label>
+					<Label htmlFor="montage-phone">Telefon kontaktowy *</Label>
 					<Input
 						id="montage-phone"
 						value={form.contactPhone}
 						onChange={handleInputChange('contactPhone')}
 						placeholder="np. 600123123"
+                        required
 					/>
 				</div>
 				<div>
-					<Label htmlFor="montage-email">E-mail</Label>
+					<Label htmlFor="montage-email">E-mail *</Label>
 					<Input
 						id="montage-email"
 						type="email"
 						value={form.contactEmail}
 						onChange={handleInputChange('contactEmail')}
 						placeholder="np. biuro@example.pl"
+                        required
 					/>
 				</div>
 			</div>
@@ -345,31 +370,34 @@ export function CreateMontageForm({ onSuccess, installers = [], measurers = [], 
                     <h4 className="font-medium text-sm">Adres do faktury / Główny</h4>
                     
                     <div>
-                        <Label htmlFor="billing-street">Ulica i numer</Label>
+                        <Label htmlFor="billing-street">Ulica i numer *</Label>
                         <Input
                             id="billing-street"
                             value={form.billingAddress}
                             onChange={handleInputChange('billingAddress')}
                             placeholder="np. ul. Wiosenna 12"
+                            required
                         />
                     </div>
                     <div className="grid grid-cols-3 gap-2">
                         <div className="col-span-1">
-                            <Label htmlFor="billing-zip">Kod</Label>
+                            <Label htmlFor="billing-zip">Kod *</Label>
                             <Input
                                 id="billing-zip"
                                 value={form.billingPostalCode}
                                 onChange={handleInputChange('billingPostalCode')}
                                 placeholder="00-000"
+                                required
                             />
                         </div>
                         <div className="col-span-2">
-                            <Label htmlFor="billing-city">Miasto</Label>
+                            <Label htmlFor="billing-city">Miasto *</Label>
                             <Input
                                 id="billing-city"
                                 value={form.billingCity}
                                 onChange={handleInputChange('billingCity')}
                                 placeholder="Warszawa"
+                                required
                             />
                         </div>
                     </div>
@@ -392,34 +420,37 @@ export function CreateMontageForm({ onSuccess, installers = [], measurers = [], 
                     </div>
 
                     <div>
-                        <Label htmlFor="installation-street">Ulica i numer</Label>
+                        <Label htmlFor="installation-street">Ulica i numer *</Label>
                         <Input
                             id="installation-street"
                             value={form.installationAddress}
                             onChange={handleInputChange('installationAddress')}
                             placeholder="np. ul. Letnia 8/2"
                             disabled={sameAsBilling}
+                            required={!sameAsBilling}
                         />
                     </div>
                     <div className="grid grid-cols-3 gap-2">
                         <div className="col-span-1">
-                            <Label htmlFor="installation-zip">Kod</Label>
+                            <Label htmlFor="installation-zip">Kod *</Label>
                             <Input
                                 id="installation-zip"
                                 value={form.installationPostalCode}
                                 onChange={handleInputChange('installationPostalCode')}
                                 placeholder="00-000"
                                 disabled={sameAsBilling}
+                                required={!sameAsBilling}
                             />
                         </div>
                         <div className="col-span-2">
-                            <Label htmlFor="installation-city">Miasto</Label>
+                            <Label htmlFor="installation-city">Miasto *</Label>
                             <Input
                                 id="installation-city"
                                 value={form.installationCity}
                                 onChange={handleInputChange('installationCity')}
                                 placeholder="Warszawa"
                                 disabled={sameAsBilling}
+                                required={!sameAsBilling}
                             />
                         </div>
                     </div>

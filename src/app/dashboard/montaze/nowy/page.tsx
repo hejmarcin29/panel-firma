@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 import { db } from '@/lib/db';
 import { montages } from '@/lib/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, isNull, and } from 'drizzle-orm';
 
 export default async function NewMontagePage() {
     const allUsers = await db.query.users.findMany({
@@ -20,7 +20,10 @@ export default async function NewMontagePage() {
     const measurers = allUsers.filter(u => u.roles?.includes('measurer') || u.roles?.includes('admin'));
     
     const leads = await db.query.montages.findMany({
-        where: eq(montages.status, 'lead'),
+        where: and(
+            eq(montages.status, 'lead'),
+            isNull(montages.deletedAt)
+        ),
         orderBy: desc(montages.createdAt),
         columns: {
             id: true,

@@ -86,6 +86,10 @@ Przy każdej implementacji, modyfikacji lub naprawie błędu, **ZAWSZE** analizu
 - **Baza Danych:** PostgreSQL. Connection string w `.env` musi używać użytkownika `panel_user` (nie `deploy`).
 
 ## Praca z Bazą Danych (PostgreSQL + Drizzle)
+- **Soft Deletes (WAŻNE):** Wiele tabel (np. `montages`, `products`, `customers`, `quotes`) używa mechanizmu "Soft Delete" (kolumna `deletedAt`).
+  - **Przy każdym zapytaniu `SELECT` (findMany, findFirst, select) MUSISZ jawnie filtrować usunięte rekordy:** `where: isNull(table.deletedAt)` (lub `and(..., isNull(table.deletedAt))`).
+  - Wyjątkiem są tylko widoki administracyjne typu "Kosz" lub historia.
+  - Zapomnienie o tym filtrze powoduje błędy w logice biznesowej (np. wyświetlanie usuniętych montaży w kalendarzu).
 - **Unikaj `LIKE` na kolumnach JSON:** W PostgreSQL kolumny typu JSON (np. `roles`, `categories`) są strukturami danych, a nie tekstem. Używanie operatora `LIKE` (np. `WHERE roles LIKE '%admin%'`) prowadzi do błędów.
 - **Preferuj `db.query`:** Korzystaj z API `db.query.table.findMany()` zamiast surowych zapytań SQL (`db.select().where(sql...)`). Drizzle automatycznie obsługuje mapowanie typów JSON na obiekty JS.
 - **Filtrowanie w JS:** Dla małych zbiorów danych (np. lista użytkowników, statusy), bezpieczniej i czytelniej jest pobrać wszystkie rekordy i przefiltrować je w JavaScript (`.filter()`), zamiast tworzyć skomplikowane rzutowania typów w SQL.
@@ -106,3 +110,7 @@ Aplikacja jest używana przez pracowników terenowych w miejscach o słabym zasi
 4.  **Graceful Degradation:** Jeśli funkcja wymaga 100% dostępu do sieci (np. generowanie PDF, wysyłka e-maila), przycisk musi być nieaktywny w trybie offline, z jasnym komunikatem dla użytkownika.
 5.  **Unikaj Blokowania:** Nigdy nie blokuj interfejsu spinnerem "Ładowanie..." na dłużej niż to konieczne. Jeśli dane są w cache, pokaż je natychmiast, a w tle sprawdzaj aktualizacje (SWR - Stale While Revalidate).
 6.  **Konflikty Danych:** Stosuj zasadę "Last Write Wins" (Ostatni Zapis Wygrywa). Jeśli pracownik zmieni status offline, a po odzyskaniu sieci wyśle go na serwer, system powinien przyjąć tę zmianę jako najnowszą, chyba że narusza to krytyczne reguły biznesowe.
+
+## Komunikacja z Użytkownikiem (AI)
+- **Zadawaj Pytania:** Jeśli nie jesteś pewien intencji użytkownika, brakuje Ci kontekstu lub zadanie jest niejednoznaczne - **ZADAJ PYTANIE**. Lepiej dopytać o szczegóły niż wprowadzić błędne zmiany.
+- **Proaktywność:** Jeśli widzisz potencjalny problem w prośbie użytkownika (np. naruszenie spójności danych), poinformuj o tym i zaproponuj bezpieczniejsze rozwiązanie.

@@ -1,8 +1,23 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { getMontageDetails } from './actions';
+import { deleteMontage } from '../actions';
+import { Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 import { MontageHeader } from './_components/montage-header';
 import { MontageClientCard } from './_components/montage-client-card';
@@ -17,7 +32,7 @@ import { MontageQuotes } from './_components/montage-quotes';
 import { MontageClientInfo } from './_components/montage-client-info';
 
 import { MontageDetailsLayout } from './_components/montage-details-layout';
-import { ConvertLeadButton } from './_components/convert-lead-button';
+import { ConvertLeadDialog } from './_components/convert-lead-dialog';
 
 interface MontageViewProps {
     montageId: string;
@@ -26,8 +41,19 @@ interface MontageViewProps {
 
 export function MontageView({ montageId, initialData }: MontageViewProps) {
     const searchParams = useSearchParams();
+    const router = useRouter();
     const tab = searchParams.get('tab');
-    const activeTab = tab || 'notes';
+    const activeTab = tab || 'workflow';
+
+    const handleDelete = async () => {
+        try {
+            await deleteMontage(montageId);
+            toast.success('Lead został usunięty');
+            router.push('/dashboard/montaze');
+        } catch {
+            toast.error('Wystąpił błąd podczas usuwania leada');
+        }
+    };
 
     const { data } = useQuery({
         queryKey: ['montage', montageId],
@@ -49,11 +75,38 @@ export function MontageView({ montageId, initialData }: MontageViewProps) {
                             <h1 className="text-2xl font-bold">{montage.clientName}</h1>
                             <p className="text-muted-foreground">Nowy Lead - Weryfikacja</p>
                         </div>
-                        <ConvertLeadButton montageId={montage.id} />
+                        <div className="flex items-center gap-2">
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="destructive" size="sm">
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Usuń
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Czy na pewno chcesz usunąć ten lead?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            Lead zostanie przeniesiony do kosza.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Anuluj</AlertDialogCancel>
+                                        <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+                                            Usuń
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                            <ConvertLeadDialog montage={montage} />
+                        </div>
                     </div>
 
                     <div className="grid gap-6 md:grid-cols-2">
-                        <MontageClientCard montage={montage} userRoles={userRoles} installers={installers} measurers={measurers} architects={architects} />
+                        <div className="space-y-6">
+                            <MontageClientCard montage={montage} userRoles={userRoles} installers={installers} measurers={measurers} architects={architects} />
+                            <MontageMaterialCard montage={montage} userRoles={userRoles} />
+                        </div>
                         <div className="space-y-6">
                              <MontageClientInfo montageId={montage.id} initialContent={montage.materialDetails} />
                              <div className="bg-card rounded-xl border shadow-sm p-6">

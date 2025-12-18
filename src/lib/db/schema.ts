@@ -12,7 +12,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
-export const userRoles = ['admin', 'measurer', 'installer', 'architect'] as const;
+export const userRoles = ['admin', 'measurer', 'installer', 'architect', 'partner'] as const;
 export const orderSources = ['woocommerce', 'manual'] as const;
 export const orderTypes = ['production', 'sample'] as const;
 export const orderStatuses = [
@@ -48,7 +48,7 @@ export const supplierMessageMediums = ['email', 'phone', 'note'] as const;
 export const mailFolderKinds = ['inbox', 'sent', 'drafts', 'spam', 'trash', 'archive', 'custom'] as const;
 export const mailAccountStatuses = ['disabled', 'connected', 'disconnected', 'error'] as const;
 export const montageStatuses = ['lead', 'before_measurement', 'before_first_payment', 'before_installation', 'before_final_invoice', 'completed'] as const;
-export const customerSources = ['internet', 'social_media', 'recommendation', 'architect', 'event', 'drive_by', 'other'] as const;
+export const customerSources = ['internet', 'social_media', 'recommendation', 'architect', 'event', 'drive_by', 'phone', 'other'] as const;
 
 export type UserRole = (typeof userRoles)[number];
 export type OrderStatus = (typeof orderStatuses)[number];
@@ -86,6 +86,15 @@ export type ArchitectProfile = {
 	commissionRate?: number; // PLN per m2
 };
 
+export type PartnerProfile = {
+    companyName?: string;
+    nip?: string;
+    bankAccount?: string;
+    commissionRate?: number; // Percentage (0-100)
+    termsAcceptedAt?: string; // ISO date string
+    termsVersion?: string;
+};
+
 export const users = pgTable(
 	'users',
 	{
@@ -99,11 +108,14 @@ export const users = pgTable(
 		mobileMenuConfig: json('mobile_menu_config'),
 		installerProfile: json('installer_profile').$type<InstallerProfile>(),
 		architectProfile: json('architect_profile').$type<ArchitectProfile>(),
+        partnerProfile: json('partner_profile').$type<PartnerProfile>(),
+        referralToken: text('referral_token').unique(),
 		createdAt: timestamp('created_at').notNull().defaultNow(),
 		updatedAt: timestamp('updated_at').notNull().defaultNow(),
 	},
 	(table) => ({
 		emailIdx: uniqueIndex('users_email_idx').on(table.email),
+        referralTokenIdx: uniqueIndex('users_referral_token_idx').on(table.referralToken),
 	})
 );
 
@@ -1060,6 +1072,12 @@ export const products = pgTable('products', {
 	attributes: json('attributes'), // JSON array of attributes
 	isForMontage: boolean('is_for_montage').default(false),
 	montageType: text('montage_type').$type<'panel' | 'skirting' | 'other'>(),
+    // ERP Fields
+    source: text('source').$type<'woocommerce' | 'local'>().notNull().default('woocommerce'),
+    unit: text('unit').default('szt'),
+    vatRate: integer('vat_rate').default(23),
+    purchasePrice: integer('purchase_price'), // Netto in grosz
+    description: text('description'),
 	deletedAt: timestamp('deleted_at'),
 	updatedAt: timestamp('updated_at').notNull().defaultNow(),
 	syncedAt: timestamp('synced_at').notNull().defaultNow(),
@@ -1130,10 +1148,74 @@ export const commissionsRelations = relations(commissions, ({ one }) => ({
 	}),
 }));
 
+export const partnerPayoutStatuses = ['pending', 'paid', 'rejected'] as const;
+export type PartnerPayoutStatus = (typeof partnerPayoutStatuses)[number];
+
+export const partnerPayouts = pgTable(
+    'partner_payouts',
+    {
+        id: text('id').primaryKey(),
+        partnerId: text('partner_id')
+            .notNull()
+            .references(() => users.id, { onDelete: 'cascade' }),
+        amount: integer('amount').notNull(), // in minor units (grosze)
+        status: text('status').$type<PartnerPayoutStatus>().notNull().default('pending'),
+        invoiceUrl: text('invoice_url'),
+        createdAt: timestamp('created_at').notNull().defaultNow(),
+        paidAt: timestamp('paid_at'),
+        rejectionReason: text('rejection_reason'),
+    },
+    (table) => ({
+        partnerIdx: index('partner_payouts_partner_id_idx').on(table.partnerId),
+        statusIdx: index('partner_payouts_status_idx').on(table.status),
+    })
+);
+
+export const partnerPayoutsRelations = relations(partnerPayouts, ({ one }) => ({
+    partner: one(users, {
+        fields: [partnerPayouts.partnerId],
+        references: [users.id],
+    }),
+}));
+
+export const partnerCommissions = pgTable(
+    'partner_commissions',
+    {
+        id: text('id').primaryKey(),
+        partnerId: text('partner_id')
+            .notNull()
+            .references(() => users.id, { onDelete: 'cascade' }),
+        montageId: text('montage_id')
+            .notNull()
+            .references(() => montages.id, { onDelete: 'cascade' }),
+        amount: integer('amount').notNull(), // in minor units (grosze)
+        status: text('status').$type<CommissionStatus>().notNull().default('pending'),
+        createdAt: timestamp('created_at').notNull().defaultNow(),
+        approvedAt: timestamp('approved_at'),
+    },
+    (table) => ({
+        partnerIdx: index('partner_commissions_partner_id_idx').on(table.partnerId),
+        montageIdx: index('partner_commissions_montage_id_idx').on(table.montageId),
+    })
+);
+
+export const partnerCommissionsRelations = relations(partnerCommissions, ({ one }) => ({
+    partner: one(users, {
+        fields: [partnerCommissions.partnerId],
+        references: [users.id],
+    }),
+    montage: one(montages, {
+        fields: [partnerCommissions.montageId],
+        references: [montages.id],
+    }),
+}));
+
 export const usersRelations = relations(users, ({ many }) => ({
 	commissions: many(commissions, { relationName: 'commission_architect' }),
 	architectMontages: many(montages, { relationName: 'montage_architect' }),
     assignedProducts: many(architectProducts),
+    partnerPayouts: many(partnerPayouts),
+    partnerCommissions: many(partnerCommissions),
 }));
 
 export const architectProducts = pgTable(

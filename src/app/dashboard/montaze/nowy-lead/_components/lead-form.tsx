@@ -38,7 +38,7 @@ interface LeadFormProps {
     isArchitect?: boolean;
 }
 
-export function LeadForm({ assignedProducts }: LeadFormProps) {
+export function LeadForm({ assignedProducts, isArchitect }: LeadFormProps) {
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
     
@@ -72,6 +72,24 @@ export function LeadForm({ assignedProducts }: LeadFormProps) {
         if (!formData.clientName.trim()) {
             toast.error('Podaj nazwę klienta');
             return;
+        }
+        if (!formData.phone.trim()) {
+            toast.error('Podaj numer telefonu');
+            return;
+        }
+        if (!formData.email.trim()) {
+            toast.error('Podaj adres e-mail');
+            return;
+        }
+        if (!formData.billingStreet.trim() || !formData.billingCity.trim() || !formData.billingPostalCode.trim()) {
+            toast.error('Uzupełnij adres rozliczeniowy');
+            return;
+        }
+        if (!formData.sameAsBilling) {
+            if (!formData.shippingStreet.trim() || !formData.shippingCity.trim() || !formData.shippingPostalCode.trim()) {
+                toast.error('Uzupełnij adres montażu');
+                return;
+            }
         }
 
         const submitData = new FormData();
@@ -181,17 +199,18 @@ export function LeadForm({ assignedProducts }: LeadFormProps) {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="phone">Telefon kontaktowy</Label>
+                            <Label htmlFor="phone">Telefon kontaktowy *</Label>
                             <Input
                                 id="phone"
                                 placeholder="np. 600 123 123"
                                 value={formData.phone}
                                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                                 disabled={isPending}
+                                required
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="email">E-mail</Label>
+                            <Label htmlFor="email">E-mail *</Label>
                             <Input
                                 id="email"
                                 type="email"
@@ -199,6 +218,7 @@ export function LeadForm({ assignedProducts }: LeadFormProps) {
                                 value={formData.email}
                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                 disabled={isPending}
+                                required
                             />
                         </div>
                     </div>
@@ -212,34 +232,37 @@ export function LeadForm({ assignedProducts }: LeadFormProps) {
                     <h3 className="font-medium">Adres do faktury / Główny</h3>
                     <div className="grid gap-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="billingStreet">Ulica i numer</Label>
+                            <Label htmlFor="billingStreet">Ulica i numer *</Label>
                             <Input
                                 id="billingStreet"
                                 placeholder="np. ul. Wiosenna 12"
                                 value={formData.billingStreet}
                                 onChange={(e) => setFormData({ ...formData, billingStreet: e.target.value })}
                                 disabled={isPending}
+                                required
                             />
                         </div>
                         <div className="grid grid-cols-3 gap-2">
                             <div className="grid gap-2 col-span-1">
-                                <Label htmlFor="billingPostalCode">Kod</Label>
+                                <Label htmlFor="billingPostalCode">Kod *</Label>
                                 <Input
                                     id="billingPostalCode"
                                     placeholder="00-000"
                                     value={formData.billingPostalCode}
                                     onChange={(e) => setFormData({ ...formData, billingPostalCode: e.target.value })}
                                     disabled={isPending}
+                                    required
                                 />
                             </div>
                             <div className="grid gap-2 col-span-2">
-                                <Label htmlFor="billingCity">Miasto</Label>
+                                <Label htmlFor="billingCity">Miasto *</Label>
                                 <Input
                                     id="billingCity"
                                     placeholder="Warszawa"
                                     value={formData.billingCity}
                                     onChange={(e) => setFormData({ ...formData, billingCity: e.target.value })}
                                     disabled={isPending}
+                                    required
                                 />
                             </div>
                         </div>
@@ -264,34 +287,37 @@ export function LeadForm({ assignedProducts }: LeadFormProps) {
                     {!formData.sameAsBilling && (
                         <div className="grid gap-4 animate-in fade-in slide-in-from-top-2">
                             <div className="grid gap-2">
-                                <Label htmlFor="shippingStreet">Ulica i numer</Label>
+                                <Label htmlFor="shippingStreet">Ulica i numer *</Label>
                                 <Input
                                     id="shippingStreet"
                                     placeholder="np. ul. Letnia 8/2"
                                     value={formData.shippingStreet}
                                     onChange={(e) => setFormData({ ...formData, shippingStreet: e.target.value })}
                                     disabled={isPending}
+                                    required={!formData.sameAsBilling}
                                 />
                             </div>
                             <div className="grid grid-cols-3 gap-2">
                                 <div className="grid gap-2 col-span-1">
-                                    <Label htmlFor="shippingPostalCode">Kod</Label>
+                                    <Label htmlFor="shippingPostalCode">Kod *</Label>
                                     <Input
                                         id="shippingPostalCode"
                                         placeholder="00-000"
                                         value={formData.shippingPostalCode}
                                         onChange={(e) => setFormData({ ...formData, shippingPostalCode: e.target.value })}
                                         disabled={isPending}
+                                        required={!formData.sameAsBilling}
                                     />
                                 </div>
                                 <div className="grid gap-2 col-span-2">
-                                    <Label htmlFor="shippingCity">Miasto</Label>
+                                    <Label htmlFor="shippingCity">Miasto *</Label>
                                     <Input
                                         id="shippingCity"
                                         placeholder="Warszawa"
                                         value={formData.shippingCity}
                                         onChange={(e) => setFormData({ ...formData, shippingCity: e.target.value })}
                                         disabled={isPending}
+                                        required={!formData.sameAsBilling}
                                     />
                                 </div>
                             </div>
@@ -309,27 +335,29 @@ export function LeadForm({ assignedProducts }: LeadFormProps) {
             <div className="space-y-4">
                 <h3 className="text-lg font-medium">Szczegóły Realizacji</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="grid gap-2">
-                        <Label htmlFor="source">Źródło leada</Label>
-                        <Select
-                            value={formData.source}
-                            onValueChange={(value) => setFormData({ ...formData, source: value })}
-                            disabled={isPending}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Wybierz źródło..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="internet">Internet</SelectItem>
-                                <SelectItem value="social_media">Social Media</SelectItem>
-                                <SelectItem value="recommendation">Polecenie</SelectItem>
-                                <SelectItem value="architect">Architekt</SelectItem>
-                                <SelectItem value="event">Wydarzenie</SelectItem>
-                                <SelectItem value="drive_by">Ruch uliczny</SelectItem>
-                                <SelectItem value="other">Inne</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
+                    {!isArchitect && (
+                        <div className="grid gap-2">
+                            <Label htmlFor="source">Źródło leada</Label>
+                            <Select
+                                value={formData.source}
+                                onValueChange={(value) => setFormData({ ...formData, source: value })}
+                                disabled={isPending}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Wybierz źródło..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="internet">Internet</SelectItem>
+                                    <SelectItem value="social_media">Social Media</SelectItem>
+                                    <SelectItem value="recommendation">Polecenie</SelectItem>
+                                    <SelectItem value="architect">Architekt</SelectItem>
+                                    <SelectItem value="event">Wydarzenie</SelectItem>
+                                    <SelectItem value="drive_by">Ruch uliczny</SelectItem>
+                                    <SelectItem value="other">Inne</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
 
                     <div className="grid gap-2">
                         <Label htmlFor="product">Wybierz podłogę / materiał</Label>
@@ -410,6 +438,7 @@ export function LeadForm({ assignedProducts }: LeadFormProps) {
                                 className="cursor-pointer"
                             />
                         </div>
+                    </div>
                     </div>
                 </div>
 
