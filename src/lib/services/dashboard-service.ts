@@ -235,7 +235,7 @@ export async function getDashboardStats(publicBaseUrl: string | null): Promise<D
         if (m.status === 'lead' || m.status === 'completed') return false;
         const activeQuote = m.quotes.find(q => q.status === 'sent' || q.status === 'accepted');
         if (!activeQuote) return false;
-        // @ts-ignore - contract is fetched but type might not reflect it yet due to partial type usage
+        // @ts-expect-error - contract is fetched but type might not reflect it yet due to partial type usage
         return activeQuote.contract?.status !== 'signed';
     }).length;
 
