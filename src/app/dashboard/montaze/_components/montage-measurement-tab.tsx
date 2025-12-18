@@ -37,6 +37,8 @@ import { updateMontageMeasurement, addMontageTask, toggleMontageTask } from '../
 import { Loader2, Check } from 'lucide-react';
 
 import { ProductSelectorModal } from './product-selector-modal';
+import { AuditForm } from './technical/audit-form';
+import type { TechnicalAuditData } from '../technical-data';
 
 interface MontageMeasurementTabProps {
   montage: Montage;
@@ -90,6 +92,8 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
 
   const [isPanelSelectorOpen, setIsPanelSelectorOpen] = useState(false);
   const [isSkirtingSelectorOpen, setIsSkirtingSelectorOpen] = useState(false);
+
+  const technicalAudit = montage.technicalAudit as unknown as TechnicalAuditData | null;
 
   const saveData = useCallback(async () => {
       setIsSaving(true);
@@ -719,6 +723,14 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
         </div>
 
         {/* Removed Save Button */}
+        
+        <div className="mt-8">
+            <AuditForm 
+                montageId={montage.id} 
+                initialData={technicalAudit} 
+                readOnly={isReadOnly}
+            />
+        </div>
             </div>
             
             <ProductSelectorModal

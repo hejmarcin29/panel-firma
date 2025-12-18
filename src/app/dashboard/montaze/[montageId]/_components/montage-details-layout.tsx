@@ -19,7 +19,6 @@ interface MontageDetailsLayoutProps {
     measurement: React.ReactNode;
     tasks: React.ReactNode;
     gallery: React.ReactNode;
-    technical: React.ReactNode;
     quotes: React.ReactNode;
   };
   defaultTab?: string;
@@ -57,7 +56,6 @@ export function MontageDetailsLayout({
     { id: 'gallery', label: 'Galeria', icon: <ImageIcon className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.gallery}</div> },
     { id: 'workflow', label: 'Przebieg', icon: <LayoutList className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.workflow}</div> },
     { id: 'measurement', label: 'Pomiary', icon: <Ruler className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.measurement}</div> },
-    { id: 'technical', label: 'Techniczne', icon: <HardHat className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.technical}</div> },
     { id: 'quotes', label: 'Wyceny', icon: <FileText className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.quotes}</div> },
     { id: 'history', label: 'Historia', icon: <History className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.history}</div> },
   ], [clientCard, materialCard, tabs]);
@@ -142,11 +140,10 @@ export function MontageDetailsLayout({
 
           <div className="space-y-6">
               <Tabs value={currentTab === 'overview' ? defaultTab : currentTab} onValueChange={handleTabChange} className="w-full">
-                  <TabsList className="flex w-full overflow-x-auto md:grid md:grid-cols-8">
+                  <TabsList className="flex w-full overflow-x-auto md:grid md:grid-cols-7">
                       <TabsTrigger value="notes" className="flex-1">Notatki</TabsTrigger>
                       <TabsTrigger value="workflow" className="flex-1">Przebieg</TabsTrigger>
                       <TabsTrigger value="measurement" className="flex-1">Pomiar</TabsTrigger>
-                      <TabsTrigger value="technical" className="flex-1">Techniczne</TabsTrigger>
                       <TabsTrigger value="quotes" className="flex-1">Wyceny</TabsTrigger>
                       <TabsTrigger value="tasks" className="flex-1">Zadania</TabsTrigger>
                       <TabsTrigger value="gallery" className="flex-1">Załączniki</TabsTrigger>
@@ -160,9 +157,6 @@ export function MontageDetailsLayout({
                   </TabsContent>
                   <TabsContent value="measurement" className="mt-6">
                       {tabs.measurement}
-                  </TabsContent>
-                  <TabsContent value="technical" className="mt-6">
-                      {tabs.technical}
                   </TabsContent>
                   <TabsContent value="quotes" className="mt-6">
                       {tabs.quotes}

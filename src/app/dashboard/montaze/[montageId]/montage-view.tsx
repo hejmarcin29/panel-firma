@@ -13,7 +13,6 @@ import { MontageGalleryTab } from './_components/montage-gallery-tab';
 import { MontageNotesTab } from './_components/montage-notes-tab';
 import { MontageHistoryTab } from './_components/montage-history-tab';
 import { MontageMeasurementTab } from '../_components/montage-measurement-tab';
-import { MontageTechnicalTab } from './_components/montage-technical-tab';
 import { MontageQuotes } from './_components/montage-quotes';
 import { MontageClientInfo } from './_components/montage-client-info';
 
@@ -101,7 +100,6 @@ export function MontageView({ montageId, initialData }: MontageViewProps) {
                     history: !isInstaller ? <MontageHistoryTab montage={montage} logs={logs} /> : undefined,
                     workflow: <MontageWorkflowTab montage={montage} statusOptions={statusOptions} installers={installers} measurers={measurers} />,
                     measurement: <MontageMeasurementTab montage={montage} userRoles={userRoles} />,
-                    technical: <MontageTechnicalTab montage={montage} userRoles={userRoles} />,
                     quotes: !isInstaller ? <MontageQuotes montageId={montage.id} quotes={montage.quotes} /> : undefined,
                     tasks: <MontageTasksTab montage={montage} />,
                     gallery: <MontageGalleryTab montage={montage} userRoles={userRoles} />,
