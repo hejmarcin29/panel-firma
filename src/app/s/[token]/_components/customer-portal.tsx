@@ -135,7 +135,7 @@ export function CustomerPortal({ customer, token, bankAccount }: CustomerPortalP
                             <motion.div variants={itemVariants}>
                                 <InstallationDateCard 
                                     montageId={activeMontage.id}
-                                    date={activeMontage.scheduledInstallationAt}
+                                    scheduledDate={activeMontage.scheduledInstallationAt}
                                     token={token}
                                 />
                             </motion.div>

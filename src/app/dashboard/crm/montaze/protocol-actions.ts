@@ -39,7 +39,7 @@ export async function uploadSignature(montageId: string, base64Data: string, typ
         // If you use a custom domain, adjust accordingly.
         // Here I'll assume a standard pattern or return the key if you handle URLs differently.
         // Based on typical setup:
-        const publicUrl = `${config.publicUrl}/${key}`;
+        const publicUrl = `${config.publicBaseUrl}/${key}`;
         return publicUrl;
     } catch (error) {
         console.error('Error uploading signature:', error);
@@ -98,7 +98,7 @@ export async function submitMontageProtocol(data: {
         // Convert stream to buffer
         const chunks: Uint8Array[] = [];
         for await (const chunk of pdfStream) {
-            chunks.push(chunk);
+            chunks.push(Buffer.from(chunk));
         }
         const pdfBuffer = Buffer.concat(chunks);
 
@@ -111,7 +111,7 @@ export async function submitMontageProtocol(data: {
             ContentType: 'application/pdf',
         }));
 
-        const pdfUrl = `${config.publicUrl}/${pdfKey}`;
+        const pdfUrl = `${config.publicBaseUrl}/${pdfKey}`;
 
         // 3. Update Checklist (Auto-check "protocol_signed")
         // Find the checklist item with templateId 'protocol_signed'
@@ -125,9 +125,8 @@ export async function submitMontageProtocol(data: {
         if (checklistItem) {
             await db.update(montageChecklistItems)
                 .set({ 
-                    isChecked: true,
-                    checkedAt: new Date(),
-                    // Optionally attach the PDF to the checklist item if you have an attachment column
+                    completed: true,
+                    updatedAt: new Date(),
                 })
                 .where(eq(montageChecklistItems.id, checklistItem.id));
         }

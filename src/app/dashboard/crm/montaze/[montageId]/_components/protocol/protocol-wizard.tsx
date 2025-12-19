@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 const SignatureCanvas = dynamic(() => import('react-signature-canvas'), {
   ssr: false,
   loading: () => <div className="w-full h-[150px] bg-gray-100 animate-pulse rounded-md" />
-});
+}) as any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 
-import { uploadSignature, submitMontageProtocol } from '../../protocol-actions';
+import { uploadSignature, submitMontageProtocol } from '../../../protocol-actions';
 
 interface SignaturePadRef {
   isEmpty: () => boolean;
