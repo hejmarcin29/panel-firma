@@ -1800,7 +1800,7 @@ export async function sendMeasurementRequestSms(montageId: string) {
     }
 
     // 1. Generate Token if missing
-    let token = await db.query.appSettings.findFirst({
+    const token = await db.query.appSettings.findFirst({
         where: eq(appSettings.key, `portal_token_${montageId}`),
     });
 

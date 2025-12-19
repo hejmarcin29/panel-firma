@@ -8,10 +8,19 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { updateMontageData } from '../actions';
-import { Loader2, Save, Edit2 } from 'lucide-react';
+import { Loader2, Edit2 } from 'lucide-react';
+
+interface MontageData {
+    id: string;
+    address?: string | null;
+    installationCity?: string | null;
+    installationPostalCode?: string | null;
+    floorArea?: number | null;
+    additionalInfo?: string | null;
+}
 
 interface DataRequestCardProps {
-    montage: any;
+    montage: MontageData;
     token: string;
 }
 
@@ -34,7 +43,7 @@ export function DataRequestCard({ montage, token }: DataRequestCardProps) {
             await updateMontageData(montage.id, formData, token);
             toast.success('Dane zostały zaktualizowane!');
             setIsEditing(false);
-        } catch (error) {
+        } catch {
             toast.error('Wystąpił błąd podczas zapisu.');
         } finally {
             setIsSaving(false);

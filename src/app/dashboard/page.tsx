@@ -33,6 +33,8 @@ const DEFAULT_LAYOUT: DashboardLayoutConfig = {
 
 export default async function DashboardPage() {
     let user;
+    let measurerData = null;
+
     try {
 	    user = await requireUser();
         if (user.roles.includes('installer') && !user.roles.includes('measurer') && !user.roles.includes('admin')) {
@@ -40,8 +42,7 @@ export default async function DashboardPage() {
         }
 
         if (user.roles.includes('measurer') && !user.roles.includes('admin')) {
-            const { leads, schedule } = await getMeasurerDashboardData(user.id);
-            return <MeasurerDashboard leads={leads} schedule={schedule} />;
+            measurerData = await getMeasurerDashboardData(user.id);
         }
     } catch (error) {
          // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -50,6 +51,10 @@ export default async function DashboardPage() {
         }
         console.error('Auth error in dashboard page:', error);
         redirect('/login');
+    }
+
+    if (measurerData) {
+        return <MeasurerDashboard leads={measurerData.leads} schedule={measurerData.schedule} />;
     }
 
     const r2Config = await tryGetR2Config();

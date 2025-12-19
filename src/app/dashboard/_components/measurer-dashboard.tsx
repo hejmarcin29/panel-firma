@@ -1,21 +1,30 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { MapPin, Phone, Calendar, ArrowRight, Send, Navigation, Plus, Inbox, Loader2, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
-import { pl } from "date-fns/locale";
 import { toast } from "sonner";
 import { sendMeasurementRequestSms } from "../crm/montaze/actions";
-import { cn } from "@/lib/utils";
+
+interface DashboardItem {
+    id: string;
+    clientName: string;
+    installationAddress?: string | null;
+    address?: string | null;
+    installationCity?: string | null;
+    billingCity?: string | null;
+    measurementDate?: Date | string | null;
+    contactPhone?: string | null;
+    createdAt: Date | string;
+}
 
 interface MeasurerDashboardProps {
-    leads: any[];
-    schedule: any[];
+    leads: DashboardItem[];
+    schedule: DashboardItem[];
 }
 
 export function MeasurerDashboard({ leads, schedule }: MeasurerDashboardProps) {
@@ -49,7 +58,7 @@ export function MeasurerDashboard({ leads, schedule }: MeasurerDashboardProps) {
                     </Card>
                 ) : (
                     <div className="space-y-3">
-                        {schedule.map((item: any) => (
+                        {schedule.map((item) => (
                             <ScheduleCard key={item.id} item={item} />
                         ))}
                     </div>
@@ -67,7 +76,7 @@ export function MeasurerDashboard({ leads, schedule }: MeasurerDashboardProps) {
                     <p className="text-sm text-muted-foreground pl-1">Brak nowych zgłoszeń.</p>
                 ) : (
                     <div className="space-y-3">
-                        {leads.map((item: any) => (
+                        {leads.map((item) => (
                             <LeadCard key={item.id} item={item} />
                         ))}
                     </div>
@@ -77,7 +86,7 @@ export function MeasurerDashboard({ leads, schedule }: MeasurerDashboardProps) {
     );
 }
 
-function ScheduleCard({ item }: { item: any }) {
+function ScheduleCard({ item }: { item: DashboardItem }) {
     const address = item.installationAddress || item.address || 'Brak adresu';
     const city = item.installationCity || item.billingCity || '';
     const fullAddress = `${address}, ${city}`;
@@ -121,7 +130,7 @@ function ScheduleCard({ item }: { item: any }) {
     );
 }
 
-function LeadCard({ item }: { item: any }) {
+function LeadCard({ item }: { item: DashboardItem }) {
     const [isLoading, setIsLoading] = useState(false);
     const [isSent, setIsSent] = useState(false);
 
@@ -140,7 +149,7 @@ function LeadCard({ item }: { item: any }) {
             } else {
                 toast.error(result.error || "Błąd wysyłki");
             }
-        } catch (error) {
+        } catch {
             toast.error("Wystąpił błąd");
         } finally {
             setIsLoading(false);

@@ -82,7 +82,15 @@ export async function signContract(contractId: string, signatureData: string, to
     return { success: true };
 }
 
-export async function updateMontageData(montageId: string, data: any, token: string) {
+interface MontageUpdateData {
+    address?: string;
+    city?: string;
+    postalCode?: string;
+    floorArea?: string | number;
+    notes?: string;
+}
+
+export async function updateMontageData(montageId: string, data: MontageUpdateData, token: string) {
     const customer = await getCustomerByToken(token);
     if (!customer) throw new Error('Nieprawidłowy token');
 
@@ -94,7 +102,7 @@ export async function updateMontageData(montageId: string, data: any, token: str
             address: data.address,
             installationCity: data.city,
             installationPostalCode: data.postalCode,
-            floorArea: data.floorArea ? parseFloat(data.floorArea) : null,
+            floorArea: data.floorArea ? parseFloat(data.floorArea.toString()) : null,
             additionalInfo: data.notes,
             updatedAt: new Date()
         })
