@@ -29,6 +29,27 @@ export async function getTeamMembers() {
     return team;
 }
 
+export async function getUserDetails(userId: string) {
+    const user = await db.query.users.findFirst({
+        where: (table, { eq }) => eq(table.id, userId),
+        columns: {
+            id: true,
+            name: true,
+            email: true,
+            roles: true,
+            isActive: true,
+            installerProfile: true,
+            architectProfile: true,
+            partnerProfile: true,
+            createdAt: true,
+            updatedAt: true,
+        }
+    });
+
+    if (!user) throw new Error('Nie znaleziono użytkownika');
+    return user;
+}
+
 export async function createEmployee({
     name,
     email,

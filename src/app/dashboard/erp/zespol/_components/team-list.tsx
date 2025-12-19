@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 type TeamMember = {
     id: string;
@@ -167,9 +168,11 @@ export function TeamList({ members }: { members: TeamMember[] }) {
                                     </div>
                                     
                                     <div className="pt-2">
-                                        <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                                            Zobacz profil
-                                        </Button>
+                                        <Link href={`/dashboard/erp/zespol/${member.id}`} className="w-full">
+                                            <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                                                Zobacz profil
+                                            </Button>
+                                        </Link>
                                     </div>
                                 </CardContent>
                             </Card>
