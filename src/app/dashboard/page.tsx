@@ -37,11 +37,7 @@ export default async function DashboardPage() {
 
     try {
 	    user = await requireUser();
-        if (user.roles.includes('installer') && !user.roles.includes('measurer') && !user.roles.includes('admin')) {
-            redirect('/dashboard/crm/montaze');
-        }
-
-        if (user.roles.includes('measurer') && !user.roles.includes('admin')) {
+        if (user.roles.includes('installer') && !user.roles.includes('admin')) {
             measurerData = await getMeasurerDashboardData(user.id);
         }
     } catch (error) {

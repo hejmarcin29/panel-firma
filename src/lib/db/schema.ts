@@ -12,7 +12,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
-export const userRoles = ['admin', 'measurer', 'installer', 'architect', 'partner'] as const;
+export const userRoles = ['admin', 'installer', 'architect', 'partner'] as const;
 export const orderSources = ['woocommerce', 'manual'] as const;
 export const orderTypes = ['production', 'sample'] as const;
 export const orderStatuses = [
@@ -498,6 +498,7 @@ export const montages = pgTable(
 		measurementSubfloorCondition: text('measurement_subfloor_condition'),
 		measurementAdditionalWorkNeeded: boolean('measurement_additional_work_needed').default(false),
 		measurementAdditionalWorkDescription: text('measurement_additional_work_description'),
+        measurementAdditionalMaterials: text('measurement_additional_materials'),
         measurementSeparateSkirting: boolean('measurement_separate_skirting').default(false),
 		floorArea: doublePrecision('floor_area'),
 		floorDetails: text('floor_details'),

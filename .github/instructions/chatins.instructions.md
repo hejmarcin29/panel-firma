@@ -30,17 +30,12 @@ System posiada 3 główne role użytkowników:
    - Może zarządzać użytkownikami, ustawieniami, zamówieniami, produktami i pocztą.
    - Widzi wszystkie montaże i kalendarze.
 
-2. **Pomiarowiec (`measurer`)**:
+2. **Montażysta (`installer`)**:
    - **Dostęp:** Pulpit, To Do, Zadania, Kalendarz, Montaże, Galeria.
    - **Brak dostępu:** Klienci, Zamówienia, Produkty, Poczta, Ustawienia.
-   - **Zadania:** Przeprowadza pomiary u klientów, uzupełnia karty pomiarowe, dodaje zdjęcia z pomiarów.
+   - **Zadania:** Realizuje montaże **oraz pomiary**, widzi szczegóły techniczne zlecenia, zmienia statusy montażu, **obsługuje ekspozytor mobilny**.
 
-3. **Montażysta (`installer`)**:
-   - **Dostęp:** Pulpit, To Do, Zadania, Kalendarz, Montaże, Galeria.
-   - **Brak dostępu:** Klienci, Zamówienia, Produkty, Poczta, Ustawienia.
-   - **Zadania:** Realizuje montaże, widzi szczegóły techniczne zlecenia, zmienia statusy montażu.
-
-Przy tworzeniu nowych funkcjonalności dla Pomiarowca lub Montażysty, pamiętaj o tych ograniczeniach.
+Przy tworzeniu nowych funkcjonalności dla Montażysty, pamiętaj o tych ograniczeniach.
 
 ## Dokumentacja Logiki Biznesowej
 **WAŻNE:** Wszelkie zmiany w logice biznesowej, automatyzacjach, rolach czy przepływach pracy (workflows) muszą być odzwierciedlone w pliku:

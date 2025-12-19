@@ -13,8 +13,7 @@ Ten plik służy jako "Single Source of Truth" dla zasad działania systemu. Ka�
 | Rola | Kod | Uprawnienia | Ograniczenia |
 |------|-----|-------------|--------------|
 | **Administrator** | `admin` | Pełny dostęp do wszystkich modułów: Zamówienia, Klienci, Produkty, Poczta, Ustawienia, Montaże, Finanse. | Brak. |
-| **Pomiarowiec** | `measurer` | Dostęp operacyjny: Pulpit, To Do, Zadania, Kalendarz, Montaże, Galeria. | **BRAK DOSTĘPU** do danych wrażliwych: Baza Klientów, Zamówienia (ceny), Produkty, Poczta, Ustawienia globalne. |
-| **Montażysta** | `installer` | Tożsame z Pomiarowcem. Skupia się na realizacji zleceń. | Jak wyżej. |
+| **Montażysta** | `installer` | Dostęp operacyjny: Pulpit, To Do, Zadania, Kalendarz, Montaże, Galeria. Realizuje montaże oraz pomiary (model hybrydowy). Obsługuje mobilny ekspozytor. | **BRAK DOSTĘPU** do danych wrażliwych: Baza Klientów, Zamówienia (ceny), Produkty, Poczta, Ustawienia globalne. |
 
 ## 2. Procesy Montażowe (Workflow)
 

@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db';
 import { orders, montages, customers } from '@/lib/db/schema';
-import { eq, isNull, and } from 'drizzle-orm';
+import { eq, isNull, and, or } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { requireUser } from '@/lib/auth/session';
 
@@ -22,8 +22,8 @@ export interface CalendarEvent {
 
 export async function getCalendarEvents(): Promise<{ scheduled: CalendarEvent[]; unscheduled: CalendarEvent[] }> {
   const user = await requireUser();
-  const canSeeOrders = user.roles.includes('admin') || user.roles.includes('measurer');
-  const canSeeAllMontages = user.roles.includes('admin') || user.roles.includes('measurer');
+  const canSeeOrders = user.roles.includes('admin');
+  const canSeeAllMontages = user.roles.includes('admin');
 
   const [ordersData, montagesData] = await Promise.all([
     // Installers don't see orders
@@ -53,7 +53,7 @@ export async function getCalendarEvents(): Promise<{ scheduled: CalendarEvent[];
       .where(
         and(
           isNull(montages.deletedAt),
-          !canSeeAllMontages ? eq(montages.installerId, user.id) : undefined
+          !canSeeAllMontages ? or(eq(montages.installerId, user.id), eq(montages.measurerId, user.id)) : undefined
         )
       ),
   ]);

@@ -17,7 +17,7 @@ export default async function NewMontagePage() {
     });
 
     const installers = allUsers.filter(u => u.roles?.includes('installer') || u.roles?.includes('admin'));
-    const measurers = allUsers.filter(u => u.roles?.includes('measurer') || u.roles?.includes('admin'));
+    const measurers = installers;
     
     const leads = await db.query.montages.findMany({
         where: and(

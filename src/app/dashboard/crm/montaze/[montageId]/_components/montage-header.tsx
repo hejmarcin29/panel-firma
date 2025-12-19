@@ -70,7 +70,7 @@ export function MontageHeader({ montage, statusOptions, userRoles = ['admin'] }:
       }
   };
 
-  const canEditStatus = userRoles.includes('admin') || userRoles.includes('measurer');
+  const canEditStatus = userRoles.includes('admin') || userRoles.includes('installer');
   const canDelete = userRoles.includes('admin');
 
   return (

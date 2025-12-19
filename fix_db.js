@@ -44,9 +44,9 @@ try {
     const adminResult = db.prepare("UPDATE users SET role = 'admin' WHERE email = 'kontakt@primepodloga.pl'").run();
     console.log(`Set admin role for kontakt@primepodloga.pl: ${adminResult.changes} changes`);
 
-    // 2. Demote others to measurer if they are admin/user/null (enforcing "only one admin")
-    const othersResult = db.prepare("UPDATE users SET role = 'measurer' WHERE email != 'kontakt@primepodloga.pl' AND (role = 'admin' OR role = 'user' OR role IS NULL)").run();
-    console.log(`Set measurer role for others: ${othersResult.changes} changes`);
+    // 2. Demote others to installer if they are admin/user/null (enforcing "only one admin")
+    const othersResult = db.prepare("UPDATE users SET role = 'installer' WHERE email != 'kontakt@primepodloga.pl' AND (role = 'admin' OR role = 'user' OR role IS NULL)").run();
+    console.log(`Set installer role for others: ${othersResult.changes} changes`);
 } catch (e) {
     console.error('Failed to update user roles:', e.message);
 }
@@ -54,5 +54,8 @@ try {
 // Montages table updates
 addColumn('montages', 'installer_id', "text REFERENCES users(id)");
 addColumn('montages', 'measurer_id', "text REFERENCES users(id)");
+addColumn('montages', 'measurement_additional_work_description', "text");
+addColumn('montages', 'measurement_additional_materials', "text");
+addColumn('montages', 'measurement_separate_skirting', "integer DEFAULT 0");
 
 console.log('Database schema patched manually.');

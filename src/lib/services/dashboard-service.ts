@@ -491,7 +491,8 @@ export async function getMeasurerDashboardData(userId: string) {
             eq(table.status, 'lead'),
             or(
                 isNull(table.measurerId),
-                eq(table.measurerId, userId)
+                eq(table.measurerId, userId),
+                eq(table.installerId, userId)
             ),
             isNull(table.deletedAt)
         ),
@@ -501,7 +502,10 @@ export async function getMeasurerDashboardData(userId: string) {
 
     const schedule = await db.query.montages.findMany({
         where: (table, { and, eq, gte, lt, isNull, or }) => and(
-            eq(table.measurerId, userId),
+            or(
+                eq(table.measurerId, userId),
+                eq(table.installerId, userId)
+            ),
             or(
                 and(gte(table.measurementDate, today), lt(table.measurementDate, tomorrow)),
                 and(gte(table.scheduledInstallationAt, today), lt(table.scheduledInstallationAt, tomorrow))

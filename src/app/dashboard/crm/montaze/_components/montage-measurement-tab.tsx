@@ -30,6 +30,12 @@ import {
 } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { Montage } from '../types';
 import { updateMontageMeasurement, addMontageTask, toggleMontageTask } from '../actions';
@@ -51,8 +57,8 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   
-  const isInstaller = userRoles.includes('installer') && !userRoles.includes('admin') && !userRoles.includes('measurer');
-  const isReadOnly = isInstaller;
+  const isInstaller = userRoles.includes('installer') && !userRoles.includes('admin');
+  const isReadOnly = !userRoles.includes('admin') && !userRoles.includes('installer');
 
   const [isSketchOpen, setIsSketchOpen] = useState(false);
   const [sketchDataUrl, setSketchDataUrl] = useState<string | null>(montage.sketchUrl || null);
@@ -79,6 +85,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
   const [subfloorCondition, setSubfloorCondition] = useState(montage.measurementSubfloorCondition || 'good');
   const [additionalWorkNeeded, setAdditionalWorkNeeded] = useState(montage.measurementAdditionalWorkNeeded || false);
   const [additionalWorkDescription, setAdditionalWorkDescription] = useState(montage.measurementAdditionalWorkDescription || '');
+  const [additionalMaterials, setAdditionalMaterials] = useState(montage.measurementAdditionalMaterials || '');
   const [separateSkirting, setSeparateSkirting] = useState(montage.measurementSeparateSkirting || false);
 
   const [additionalInfo, setAdditionalInfo] = useState(montage.additionalInfo || '');
@@ -118,6 +125,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
           measurementSubfloorCondition: subfloorCondition,
           measurementAdditionalWorkNeeded: additionalWorkNeeded,
           measurementAdditionalWorkDescription: additionalWorkDescription,
+          measurementAdditionalMaterials: additionalMaterials,
           measurementSeparateSkirting: separateSkirting,
           additionalInfo,
           sketchUrl: sketchDataUrl,
@@ -148,6 +156,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
     subfloorCondition,
     additionalWorkNeeded,
     additionalWorkDescription,
+    additionalMaterials,
     separateSkirting,
     additionalInfo,
     sketchDataUrl,
@@ -298,449 +307,492 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
         </div>
       </div>
 
-      <div className="space-y-6">
-        <div className="grid gap-6 grid-cols-1">
+      <div className="grid gap-6 md:grid-cols-2">
           {/* Floor Calculator */}
-          <div className="space-y-3 p-4 border rounded-lg bg-muted/5">
-            <h4 className="font-medium text-sm flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-blue-500"></span>
-                Podłoga
-            </h4>
-            <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                    <Label htmlFor="floorArea" className="text-xs text-muted-foreground flex items-center gap-2">
-                        Wymiar netto (m²)
-                        {montage.status === 'lead' && montage.floorArea && (
-                            <span className="text-[10px] font-bold text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded-full">
-                                (Szacowany)
-                            </span>
-                        )}
-                    </Label>
-                    <Input
-                    id="floorArea"
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={floorArea}
-                    onChange={(e) => setFloorArea(e.target.value)}
-                    disabled={isReadOnly}
-                    />
-                </div>
-                <div className="space-y-1">
-                    <Label htmlFor="panelWaste" className="text-xs text-muted-foreground">Zapas (%)</Label>
-                    <Select value={panelWaste} onValueChange={setPanelWaste} disabled={isReadOnly}>
-                        <SelectTrigger id="panelWaste">
-                            <SelectValue placeholder="Zapas" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="0">0%</SelectItem>
-                            <SelectItem value="5">5%</SelectItem>
-                            <SelectItem value="7">7%</SelectItem>
-                            <SelectItem value="10">10%</SelectItem>
-                            <SelectItem value="15">15%</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-            </div>
-            
-            <div className="space-y-2 pt-2 border-t border-dashed">
-                <div className="space-y-1">
-                    <Label htmlFor="panelModel" className="text-xs text-muted-foreground">Model paneli</Label>
-                    <div className="flex gap-2">
+          <Card>
+            <CardHeader className="pb-3">
+                <CardTitle className="text-base font-medium flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-blue-500"></span>
+                    Podłoga
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                        <Label htmlFor="floorArea" className="text-xs text-muted-foreground flex items-center gap-2">
+                            Wymiar netto (m²)
+                            {montage.status === 'lead' && montage.floorArea && (
+                                <span className="text-[10px] font-bold text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded-full">
+                                    (Szacowany)
+                                </span>
+                            )}
+                        </Label>
                         <Input
-                            id="panelModel"
-                            placeholder="Kliknij aby wybrać z listy..."
-                            value={panelModel}
-                            readOnly
-                            onClick={() => !isReadOnly && setIsPanelSelectorOpen(true)}
-                            className="h-8 text-sm flex-1 cursor-pointer bg-muted/50"
-                            disabled={isReadOnly}
-                        />
-                        <Button 
-                            type="button" 
-                            variant="outline" 
-                            size="sm" 
-                            className="h-8 px-2"
-                            onClick={() => setIsPanelSelectorOpen(true)}
-                            disabled={isReadOnly}
-                        >
-                            Wybierz
-                        </Button>
-                    </div>
-                </div>
-                <div className="space-y-1">
-                    <Label htmlFor="panelAdditionalMaterials" className="text-xs text-muted-foreground">Dodatkowe (podkład, folia...)</Label>
-                    <Input
-                    id="panelAdditionalMaterials"
-                    placeholder="np. podkład 5mm, folia paroizolacyjna"
-                    value={panelAdditionalMaterials}
-                    disabled={isReadOnly}
-                    onChange={(e) => setPanelAdditionalMaterials(e.target.value)}
-                    className="h-8 text-sm"
-                    />
-                </div>
-            </div>
-
-            <div className="pt-2 border-t flex justify-between items-center">
-                <span className="text-sm font-medium text-muted-foreground">Do zamówienia:</span>
-                <span className="text-lg font-bold">
-                    {floorArea ? (parseFloat(floorArea) * (1 + parseInt(panelWaste)/100)).toFixed(2) : '0.00'} m²
-                </span>
-            </div>
-          </div>
-
-          {/* Skirting Calculator */}
-          <div className="space-y-3 p-4 border rounded-lg bg-muted/5">
-            <h4 className="font-medium text-sm flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-                Listwy
-            </h4>
-            <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                    <Label htmlFor="skirtingLength" className="text-xs text-muted-foreground">Wymiar netto (mb)</Label>
-                    <Input
-                    id="skirtingLength"
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={skirtingLength}
-                    disabled={isReadOnly}
-                    onChange={(e) => setSkirtingLength(e.target.value)}
-                    />
-                </div>
-                <div className="space-y-1">
-                    <Label htmlFor="skirtingWaste" className="text-xs text-muted-foreground">Zapas (%)</Label>
-                    <Select value={skirtingWaste} onValueChange={setSkirtingWaste} disabled={isReadOnly}>
-                        <SelectTrigger id="skirtingWaste">
-                            <SelectValue placeholder="Zapas" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="0">0%</SelectItem>
-                            <SelectItem value="5">5%</SelectItem>
-                            <SelectItem value="7">7%</SelectItem>
-                            <SelectItem value="10">10%</SelectItem>
-                            <SelectItem value="15">15%</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-            </div>
-
-            <div className="space-y-2 pt-2 border-t border-dashed">
-                <div className="space-y-1">
-                    <Label htmlFor="skirtingModel" className="text-xs text-muted-foreground">Model listew</Label>
-                    <div className="flex gap-2">
-                        <Input
-                            id="skirtingModel"
-                            placeholder="Kliknij aby wybrać z listy..."
-                            value={skirtingModel}
-                            readOnly
-                            onClick={() => !isReadOnly && setIsSkirtingSelectorOpen(true)}
-                            className="h-8 text-sm flex-1 cursor-pointer bg-muted/50"
-                            disabled={isReadOnly}
-                        />
-                        <Button 
-                            type="button" 
-                            variant="outline" 
-                            size="sm" 
-                            className="h-8 px-2"
-                            onClick={() => setIsSkirtingSelectorOpen(true)}
-                            disabled={isReadOnly}
-                        >
-                            Wybierz
-                        </Button>
-                    </div>
-                </div>
-                <div className="space-y-1">
-                    <Label htmlFor="skirtingAdditionalMaterials" className="text-xs text-muted-foreground">Dodatkowe (klej, narożniki...)</Label>
-                    <Input
-                    id="skirtingAdditionalMaterials"
-                    placeholder="np. klej montażowy, narożniki wew."
-                    value={skirtingAdditionalMaterials}
-                    disabled={isReadOnly}
-                    onChange={(e) => setSkirtingAdditionalMaterials(e.target.value)}
-                    className="h-8 text-sm"
-                    />
-                </div>
-            </div>
-
-            <div className="pt-2 border-t flex justify-between items-center">
-                <span className="text-sm font-medium text-muted-foreground">Do zamówienia:</span>
-                <span className="text-lg font-bold">
-                    {skirtingLength ? (parseFloat(skirtingLength) * (1 + parseInt(skirtingWaste)/100)).toFixed(2) : '0.00'} mb
-                </span>
-            </div>
-            
-            <div className="pt-2 border-t flex items-center space-x-2">
-                <Checkbox 
-                    disabled={isReadOnly}
-                    id="separateSkirting" 
-                    checked={separateSkirting} 
-                    onCheckedChange={(checked) => setSeparateSkirting(checked as boolean)} 
-                />
-                <Label htmlFor="separateSkirting" className="text-sm font-medium">Zalecany montaż listew w osobnym terminie</Label>
-            </div>
-          </div>
-        </div>
-
-        {/* Technical Details */}
-        <div className="grid gap-6 md:grid-cols-2 p-4 border rounded-lg bg-muted/5">
-            <div className="space-y-4">
-                <div className="space-y-2">
-                    <Label>Sposób montażu</Label>
-                    <RadioGroup value={installationMethod} onValueChange={(v) => setInstallationMethod(v as 'click' | 'glue')} className="flex gap-4" disabled={isReadOnly}>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="click" id="method-click" />
-                            <Label htmlFor="method-click">Pływająca (Click)</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="glue" id="method-glue" />
-                            <Label htmlFor="method-glue">Klejona</Label>
-                        </div>
-                    </RadioGroup>
-                </div>
-
-                <div className="space-y-2">
-                    <Label>Stan podłoża</Label>
-                    <Select value={subfloorCondition} onValueChange={setSubfloorCondition}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Wybierz stan podłoża" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="ideal">Idealne (bez uwag)</SelectItem>
-                            <SelectItem value="good">Dobre (drobne nierówności)</SelectItem>
-                            <SelectItem value="bad">Złe (wymaga szlifowania/naprawy)</SelectItem>
-                            <SelectItem value="critical">Krytyczne (wymaga wylewki)</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-            </div>
-
-            <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                    <Label htmlFor="additionalWork" className="flex flex-col gap-1">
-                        <span>Dodatkowe prace</span>
-                        <span className="font-normal text-xs text-muted-foreground">Czy wymagane są dodatkowe prace przygotowawcze?</span>
-                    </Label>
-                    <Switch
-                        id="additionalWork"
+                        id="floorArea"
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={floorArea}
+                        onChange={(e) => setFloorArea(e.target.value)}
                         disabled={isReadOnly}
-                        checked={additionalWorkNeeded}
-                        onCheckedChange={setAdditionalWorkNeeded}
-                    />
+                        />
+                    </div>
+                    <div className="space-y-1">
+                        <Label htmlFor="panelWaste" className="text-xs text-muted-foreground">Zapas (%)</Label>
+                        <Select value={panelWaste} onValueChange={setPanelWaste} disabled={isReadOnly}>
+                            <SelectTrigger id="panelWaste">
+                                <SelectValue placeholder="Zapas" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="0">0%</SelectItem>
+                                <SelectItem value="5">5%</SelectItem>
+                                <SelectItem value="7">7%</SelectItem>
+                                <SelectItem value="10">10%</SelectItem>
+                                <SelectItem value="15">15%</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
                 
-                {additionalWorkNeeded && (
-                    <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                        <Label htmlFor="additionalWorkDesc">Opis prac dodatkowych</Label>
+                <div className="space-y-2 pt-2 border-t border-dashed">
+                    <div className="space-y-1">
+                        <Label htmlFor="panelModel" className="text-xs text-muted-foreground">Model paneli</Label>
+                        <div className="flex gap-2">
+                            <Input
+                                id="panelModel"
+                                placeholder="Kliknij aby wybrać z listy..."
+                                value={panelModel}
+                                readOnly
+                                onClick={() => !isReadOnly && setIsPanelSelectorOpen(true)}
+                                className="h-8 text-sm flex-1 cursor-pointer bg-muted/50"
+                                disabled={isReadOnly}
+                            />
+                            <Button 
+                                type="button" 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-8 px-2"
+                                onClick={() => setIsPanelSelectorOpen(true)}
+                                disabled={isReadOnly}
+                            >
+                                Wybierz
+                            </Button>
+                        </div>
+                    </div>
+                    <div className="space-y-1">
+                        <Label htmlFor="panelAdditionalMaterials" className="text-xs text-muted-foreground">Dodatkowe (podkład, folia...)</Label>
+                        <Input
+                        id="panelAdditionalMaterials"
+                        placeholder="np. podkład 5mm, folia paroizolacyjna"
+                        value={panelAdditionalMaterials}
+                        disabled={isReadOnly}
+                        onChange={(e) => setPanelAdditionalMaterials(e.target.value)}
+                        className="h-8 text-sm"
+                        />
+                    </div>
+                </div>
+
+                <div className="pt-2 border-t flex justify-between items-center">
+                    <span className="text-sm font-medium text-muted-foreground">Do zamówienia:</span>
+                    <span className="text-lg font-bold">
+                        {floorArea ? (parseFloat(floorArea) * (1 + parseInt(panelWaste)/100)).toFixed(2) : '0.00'} m²
+                    </span>
+                </div>
+            </CardContent>
+          </Card>
+
+          {/* Skirting Calculator */}
+          <Card>
+            <CardHeader className="pb-3">
+                <CardTitle className="text-base font-medium flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-amber-500"></span>
+                    Listwy
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                        <Label htmlFor="skirtingLength" className="text-xs text-muted-foreground">Wymiar netto (mb)</Label>
+                        <Input
+                        id="skirtingLength"
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={skirtingLength}
+                        disabled={isReadOnly}
+                        onChange={(e) => setSkirtingLength(e.target.value)}
+                        />
+                    </div>
+                    <div className="space-y-1">
+                        <Label htmlFor="skirtingWaste" className="text-xs text-muted-foreground">Zapas (%)</Label>
+                        <Select value={skirtingWaste} onValueChange={setSkirtingWaste} disabled={isReadOnly}>
+                            <SelectTrigger id="skirtingWaste">
+                                <SelectValue placeholder="Zapas" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="0">0%</SelectItem>
+                                <SelectItem value="5">5%</SelectItem>
+                                <SelectItem value="7">7%</SelectItem>
+                                <SelectItem value="10">10%</SelectItem>
+                                <SelectItem value="15">15%</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+
+                <div className="space-y-2 pt-2 border-t border-dashed">
+                    <div className="space-y-1">
+                        <Label htmlFor="skirtingModel" className="text-xs text-muted-foreground">Model listew</Label>
+                        <div className="flex gap-2">
+                            <Input
+                                id="skirtingModel"
+                                placeholder="Kliknij aby wybrać z listy..."
+                                value={skirtingModel}
+                                readOnly
+                                onClick={() => !isReadOnly && setIsSkirtingSelectorOpen(true)}
+                                className="h-8 text-sm flex-1 cursor-pointer bg-muted/50"
+                                disabled={isReadOnly}
+                            />
+                            <Button 
+                                type="button" 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-8 px-2"
+                                onClick={() => setIsSkirtingSelectorOpen(true)}
+                                disabled={isReadOnly}
+                            >
+                                Wybierz
+                            </Button>
+                        </div>
+                    </div>
+                    <div className="space-y-1">
+                        <Label htmlFor="skirtingAdditionalMaterials" className="text-xs text-muted-foreground">Dodatkowe (klej, narożniki...)</Label>
+                        <Input
+                        id="skirtingAdditionalMaterials"
+                        placeholder="np. klej montażowy, narożniki wew."
+                        value={skirtingAdditionalMaterials}
+                        disabled={isReadOnly}
+                        onChange={(e) => setSkirtingAdditionalMaterials(e.target.value)}
+                        className="h-8 text-sm"
+                        />
+                    </div>
+                </div>
+
+                <div className="pt-2 border-t flex justify-between items-center">
+                    <span className="text-sm font-medium text-muted-foreground">Do zamówienia:</span>
+                    <span className="text-lg font-bold">
+                        {skirtingLength ? (parseFloat(skirtingLength) * (1 + parseInt(skirtingWaste)/100)).toFixed(2) : '0.00'} mb
+                    </span>
+                </div>
+                
+                <div className="pt-2 border-t flex items-center space-x-2">
+                    <Checkbox 
+                        disabled={isReadOnly}
+                        id="separateSkirting" 
+                        checked={separateSkirting} 
+                        onCheckedChange={(checked) => setSeparateSkirting(checked as boolean)} 
+                    />
+                    <Label htmlFor="separateSkirting" className="text-sm font-medium">Zalecany montaż listew w osobnym terminie</Label>
+                </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Technical Details & Additional Work */}
+        <div className="grid gap-6 md:grid-cols-2">
+            <Card>
+                <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-medium">Szczegóły techniczne</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                        <Label>Sposób montażu</Label>
+                        <RadioGroup value={installationMethod} onValueChange={(v) => setInstallationMethod(v as 'click' | 'glue')} className="flex gap-4" disabled={isReadOnly}>
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="click" id="method-click" />
+                                <Label htmlFor="method-click">Pływająca (Click)</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="glue" id="method-glue" />
+                                <Label htmlFor="method-glue">Klejona</Label>
+                            </div>
+                        </RadioGroup>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Stan podłoża</Label>
+                        <Select value={subfloorCondition} onValueChange={setSubfloorCondition}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Wybierz stan podłoża" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="ideal">Idealne (bez uwag)</SelectItem>
+                                <SelectItem value="good">Dobre (drobne nierówności)</SelectItem>
+                                <SelectItem value="bad">Złe (wymaga szlifowania/naprawy)</SelectItem>
+                                <SelectItem value="critical">Krytyczne (wymaga wylewki)</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="space-y-2 pt-4 border-t">
+                        <Label>Termin montażu</Label>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                            <Button
+                                variant={"outline"}
+                                disabled={isReadOnly}
+                                className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !dateRange?.from && "text-muted-foreground"
+                                )}
+                            >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {dateRange?.from ? (
+                                dateRange.to ? (
+                                    <>
+                                    {format(dateRange.from, "PPP", { locale: pl })} -{" "}
+                                    {format(dateRange.to, "PPP", { locale: pl })}
+                                    </>
+                                ) : (
+                                    format(dateRange.from, "PPP", { locale: pl })
+                                )
+                                ) : (
+                                <span>Wybierz termin montażu</span>
+                                )}
+                            </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                                initialFocus
+                                mode="range"
+                                defaultMonth={dateRange?.from}
+                                selected={dateRange}
+                                onSelect={setDateRange}
+                                numberOfMonths={2}
+                                locale={pl}
+                                classNames={{
+                                    day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
+                                    day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+                                    day_today: "bg-accent text-accent-foreground",
+                                }}
+                            />
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-medium">Prace dodatkowe i materiały</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="additionalWork" className="flex flex-col gap-1">
+                                <span>Dodatkowe prace</span>
+                                <span className="font-normal text-xs text-muted-foreground">Czy wymagane są dodatkowe prace przygotowawcze?</span>
+                            </Label>
+                            <Switch
+                                id="additionalWork"
+                                disabled={isReadOnly}
+                                checked={additionalWorkNeeded}
+                                onCheckedChange={setAdditionalWorkNeeded}
+                            />
+                        </div>
+                        
+                        {additionalWorkNeeded && (
+                            <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                                <Label htmlFor="additionalWorkDesc">Opis prac dodatkowych</Label>
+                                <Textarea
+                                    id="additionalWorkDesc"
+                                    placeholder="Opisz co trzeba zrobić (np. szlifowanie, gruntowanie, wylewka...)"
+                                    disabled={isReadOnly}
+                                    value={additionalWorkDescription}
+                                    onChange={(e) => setAdditionalWorkDescription(e.target.value)}
+                                    className="h-20"
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="space-y-2 pt-4 border-t">
+                        <Label htmlFor="additionalMaterials">Lista zakupów (dodatkowe materiały)</Label>
                         <Textarea
-                            id="additionalWorkDesc"
-                            placeholder="Opisz co trzeba zrobić (np. szlifowanie, gruntowanie, wylewka...)"
+                            id="additionalMaterials"
+                            placeholder="Wpisz listę dodatkowych materiałów do kupienia..."
                             disabled={isReadOnly}
-                            value={additionalWorkDescription}
-                            onChange={(e) => setAdditionalWorkDescription(e.target.value)}
-                            className="h-20"
+                            value={additionalMaterials}
+                            onChange={(e) => setAdditionalMaterials(e.target.value)}
+                            className="h-24"
                         />
                     </div>
-                )}
-            </div>
+                </CardContent>
+            </Card>
         </div>
 
-        <div className="border rounded-lg p-4 space-y-4 bg-muted/10">
-            <div className="flex items-center space-x-2 pt-2">
-              <Checkbox 
-                disabled={isReadOnly}
-                id="modelsApproved" 
-                checked={modelsApproved} 
-                onCheckedChange={(checked) => setModelsApproved(checked as boolean)} 
-              />
-              <Label htmlFor="modelsApproved">Wybrane modele zaakceptowane przez klienta</Label>
-            </div>
-        </div>
+        <div className="grid gap-6 md:grid-cols-2">
+            {/* Measurement Tasks */}
+            <Card>
+                <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-medium">Zadania z pomiaru</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                        {measurementTasks.map(task => (
+                            <div key={task.id} className="flex items-center gap-2 p-2 bg-muted/30 rounded border">
+                                <Checkbox 
+                                    checked={task.completed} 
+                                    disabled={isReadOnly}
+                                    onCheckedChange={(checked) => {
+                                        startTransition(async () => {
+                                            await toggleMontageTask({
+                                                taskId: task.id,
+                                                montageId: montage.id,
+                                                completed: !!checked
+                                            });
+                                            router.refresh();
+                                        });
+                                    }}
+                                />
+                                <span className={cn("text-sm", task.completed && "line-through text-muted-foreground")}>
+                                    {task.title}
+                                </span>
+                            </div>
+                        ))}
+                        {measurementTasks.length === 0 && (
+                            <p className="text-sm text-muted-foreground italic">Brak zadań z pomiaru.</p>
+                        )}
+                        {!isReadOnly && (
+                            <div className="flex gap-2 mt-2">
+                                <Input 
+                                    placeholder="Dodaj nowe zadanie..." 
+                                    value={newTaskTitle}
+                                    onChange={(e) => setNewTaskTitle(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            handleAddTask();
+                                        }
+                                    }}
+                                />
+                                <Button type="button" onClick={handleAddTask} disabled={!newTaskTitle.trim() || isPending} size="icon">
+                                    <Plus className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        )}
+                    </div>
 
-        <div className="grid gap-4">
-            <div className="space-y-2">
-              <Label>Termin montażu</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    disabled={isReadOnly}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !dateRange?.from && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateRange?.from ? (
-                      dateRange.to ? (
-                        <>
-                          {format(dateRange.from, "PPP", { locale: pl })} -{" "}
-                          {format(dateRange.to, "PPP", { locale: pl })}
-                        </>
-                      ) : (
-                        format(dateRange.from, "PPP", { locale: pl })
-                      )
-                    ) : (
-                      <span>Wybierz termin montażu</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    initialFocus
-                    mode="range"
-                    defaultMonth={dateRange?.from}
-                    selected={dateRange}
-                    onSelect={setDateRange}
-                    numberOfMonths={2}
-                    locale={pl}
-                    classNames={{
-                        day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
-                        day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-                        day_today: "bg-accent text-accent-foreground",
-                    }}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-        </div>
+                    <div className="space-y-2 pt-4 border-t">
+                        <div className="flex items-center space-x-2">
+                            <Checkbox 
+                                disabled={isReadOnly}
+                                id="modelsApproved" 
+                                checked={modelsApproved} 
+                                onCheckedChange={(checked) => setModelsApproved(checked as boolean)} 
+                            />
+                            <Label htmlFor="modelsApproved">Wybrane modele zaakceptowane przez klienta</Label>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
 
-        <div className="space-y-2">
-          <Label htmlFor="additionalInfo">Uwagi z pomiaru</Label>
-          <Textarea
-            disabled={isReadOnly}
-            id="additionalInfo"
-            placeholder="Inne uwagi, ustalenia z klientem..."
-            value={additionalInfo}
-            onChange={(e) => setAdditionalInfo(e.target.value)}
-          />
-        </div>
-
-        {/* Measurement Tasks */}
-        <div className="border rounded-lg p-4 space-y-4 bg-muted/10">
-            <h4 className="font-medium text-sm uppercase tracking-wider text-muted-foreground mb-2">Zadania z pomiaru</h4>
-            
-            <div className="space-y-2">
-                {measurementTasks.map(task => (
-                    <div key={task.id} className="flex items-center gap-2 p-2 bg-background rounded border">
-                        <Checkbox 
-                            checked={task.completed} 
+            {/* Sketch */}
+            <Card>
+                <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+                    <CardTitle className="text-base font-medium">Szkic sytuacyjny</CardTitle>
+                    <Dialog open={isSketchOpen} onOpenChange={setIsSketchOpen}>
+                        {!isReadOnly && (
+                            <DialogTrigger asChild>
+                                <Button variant="outline" size="sm">
+                                <Pencil className="mr-2 h-4 w-4" />
+                                {sketchDataUrl ? 'Edytuj szkic' : 'Rysuj'}
+                                </Button>
+                            </DialogTrigger>
+                        )}
+                        <DialogContent className="max-w-3xl w-full h-[80vh] flex flex-col" onPointerDownOutside={(e) => e.preventDefault()}>
+                            <DialogHeader>
+                            <DialogTitle>Szkic sytuacyjny</DialogTitle>
+                            </DialogHeader>
+                            <div className="flex-1 border rounded-md overflow-hidden bg-white touch-none relative">
+                            <canvas
+                                ref={canvasRef}
+                                className="w-full h-full cursor-crosshair absolute inset-0"
+                                width={800}
+                                height={600}
+                                onMouseDown={startDrawing}
+                                onMouseMove={draw}
+                                onMouseUp={stopDrawing}
+                                onMouseLeave={stopDrawing}
+                                onTouchStart={startDrawing}
+                                onTouchMove={draw}
+                                onTouchEnd={stopDrawing}
+                            />
+                            </div>
+                            <div className="flex justify-between items-center mt-4">
+                            <Button type="button" variant="ghost" size="sm" onClick={clearCanvas}>
+                                <Eraser className="mr-2 h-4 w-4" />
+                                Wyczyść
+                            </Button>
+                            <div className="flex gap-2">
+                                <Button type="button" variant="outline" onClick={() => setIsSketchOpen(false)}>Anuluj</Button>
+                                <Button type="button" onClick={saveSketch}>Zatwierdź</Button>
+                            </div>
+                            </div>
+                            <p className="text-xs text-muted-foreground text-center">
+                                Możesz rysować palcem na urządzeniach mobilnych lub myszką.
+                            </p>
+                        </DialogContent>
+                    </Dialog>
+                </CardHeader>
+                <CardContent>
+                    <div className="border rounded-md overflow-hidden min-h-[200px] flex items-center justify-center bg-muted/10">
+                        {sketchDataUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={sketchDataUrl} alt="Szkic" className="w-full h-auto max-h-[300px] object-contain" />
+                        ) : (
+                            <div className="flex flex-col items-center gap-2 p-8 text-muted-foreground">
+                                <Pencil className="h-8 w-8 opacity-20" />
+                                <p className="text-sm">Brak szkicu. Kliknij &quot;Rysuj&quot; aby dodać.</p>
+                            </div>
+                        )}
+                    </div>
+                    <div className="space-y-2 mt-4">
+                        <Label htmlFor="additionalInfo">Uwagi z pomiaru</Label>
+                        <Textarea
                             disabled={isReadOnly}
-                            onCheckedChange={(checked) => {
-                                startTransition(async () => {
-                                    await toggleMontageTask({
-                                        taskId: task.id,
-                                        montageId: montage.id,
-                                        completed: !!checked
-                                    });
-                                    router.refresh();
-                                });
-                            }}
+                            id="additionalInfo"
+                            placeholder="Inne uwagi, ustalenia z klientem..."
+                            value={additionalInfo}
+                            onChange={(e) => setAdditionalInfo(e.target.value)}
+                            className="min-h-20"
                         />
-                        <span className={cn("text-sm", task.completed && "line-through text-muted-foreground")}>
-                            {task.title}
-                        </span>
                     </div>
-                ))}
-                {!isReadOnly && (
-                    <div className="flex gap-2">
-                        <Input 
-                            placeholder="Dodaj nowe zadanie..." 
-                            value={newTaskTitle}
-                            onChange={(e) => setNewTaskTitle(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    handleAddTask();
-                                }
-                            }}
-                        />
-                        <Button type="button" onClick={handleAddTask} disabled={!newTaskTitle.trim() || isPending} size="icon">
-                            <Plus className="h-4 w-4" />
-                        </Button>
-                    </div>
-                )}
-            </div>
+                </CardContent>
+            </Card>
         </div>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label>Szkic sytuacyjny</Label>
-            <Dialog open={isSketchOpen} onOpenChange={setIsSketchOpen}>
-              {!isReadOnly && (
-                <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                    <Pencil className="mr-2 h-4 w-4" />
-                    {sketchDataUrl ? 'Edytuj szkic' : 'Rysuj'}
-                    </Button>
-                </DialogTrigger>
-              )}
-              <DialogContent className="max-w-3xl w-full h-[80vh] flex flex-col" onPointerDownOutside={(e) => e.preventDefault()}>
-                <DialogHeader>
-                  <DialogTitle>Szkic sytuacyjny</DialogTitle>
-                </DialogHeader>
-                <div className="flex-1 border rounded-md overflow-hidden bg-white touch-none relative">
-                  <canvas
-                    ref={canvasRef}
-                    className="w-full h-full cursor-crosshair absolute inset-0"
-                    width={800}
-                    height={600}
-                    onMouseDown={startDrawing}
-                    onMouseMove={draw}
-                    onMouseUp={stopDrawing}
-                    onMouseLeave={stopDrawing}
-                    onTouchStart={startDrawing}
-                    onTouchMove={draw}
-                    onTouchEnd={stopDrawing}
-                  />
-                </div>
-                <div className="flex justify-between items-center mt-4">
-                  <Button type="button" variant="ghost" size="sm" onClick={clearCanvas}>
-                    <Eraser className="mr-2 h-4 w-4" />
-                    Wyczyść
-                  </Button>
-                  <div className="flex gap-2">
-                    <Button type="button" variant="outline" onClick={() => setIsSketchOpen(false)}>Anuluj</Button>
-                    <Button type="button" onClick={saveSketch}>Zatwierdź</Button>
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground text-center">
-                    Możesz rysować palcem na urządzeniach mobilnych lub myszką.
-                </p>
-              </DialogContent>
-            </Dialog>
-          </div>
-          
-          <div className="border rounded-md overflow-hidden min-h-[150px] flex items-center justify-center bg-muted/10">
-            {sketchDataUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={sketchDataUrl} alt="Szkic" className="w-full h-auto max-h-[300px] object-contain" />
-            ) : (
-                <div className="flex flex-col items-center gap-2 p-8 text-muted-foreground">
-                    <Pencil className="h-8 w-8 opacity-20" />
-                    <p className="text-sm">Brak szkicu. Kliknij &quot;Rysuj&quot; aby dodać.</p>
-                </div>
-            )}
-          </div>
-        </div>
-
-        {/* Removed Save Button */}
-        
-        <div className="mt-8">
-            <AuditForm 
-                montageId={montage.id} 
-                initialData={technicalAudit} 
-                readOnly={isReadOnly}
-            />
-        </div>
+        {/* Audit Form */}
+        <Card>
+            <CardHeader>
+                <CardTitle className="text-base font-medium">Audyt techniczny</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <AuditForm 
+                    montageId={montage.id} 
+                    initialData={technicalAudit} 
+                    readOnly={isReadOnly}
+                />
+            </CardContent>
+        </Card>
 
         {/* Measurement Attachments */}
-        <div className="mt-8 border rounded-lg p-4 space-y-4 bg-muted/5">
-            <div className="flex items-center justify-between">
-                <h4 className="font-medium text-sm flex items-center gap-2">
+        <Card>
+            <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+                <CardTitle className="text-base font-medium flex items-center gap-2">
                     <span className="h-2 w-2 rounded-full bg-purple-500"></span>
                     Zdjęcia z pomiaru
-                </h4>
+                </CardTitle>
                 {!isReadOnly && (
                     <div className="relative">
                         <input
@@ -779,43 +831,46 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                         </Button>
                     </div>
                 )}
-            </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {montage.attachments
-                    ?.filter(att => att.url.includes(MontageSubCategories.MEASUREMENT_BEFORE))
-                    .map((att) => (
-                    <div key={att.id} className="group relative aspect-square rounded-lg border bg-background overflow-hidden">
-                        {/\.(jpg|jpeg|png|gif|webp)$/i.test(att.url) ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img 
-                                src={att.url} 
-                                alt={att.title || 'Załącznik'} 
-                                className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                            />
-                        ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground p-2">
-                                <FileIcon className="h-8 w-8 mb-2" />
-                                <span className="text-xs text-center truncate w-full">{att.title}</span>
-                            </div>
-                        )}
-                        <a 
-                            href={att.url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100"
-                        >
-                            <ExternalLink className="text-white h-6 w-6 drop-shadow-md" />
-                        </a>
-                    </div>
-                ))}
-                {(!montage.attachments || !montage.attachments.some(att => att.url.includes(MontageSubCategories.MEASUREMENT_BEFORE))) && (
-                    <div className="col-span-full py-8 text-center text-muted-foreground text-sm">
-                        Brak zdjęć z pomiaru.
-                    </div>
-                )}
-            </div>
-        </div>
+            </CardHeader>
+            <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {montage.attachments
+                        ?.filter(att => att.url.includes(MontageSubCategories.MEASUREMENT_BEFORE))
+                        .map((att) => (
+                        <div key={att.id} className="group relative aspect-square rounded-lg border bg-background overflow-hidden">
+                            {/\.(jpg|jpeg|png|gif|webp)$/i.test(att.url) ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img 
+                                    src={att.url} 
+                                    alt={att.title || 'Załącznik'} 
+                                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                />
+                            ) : (
+                                <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground p-2">
+                                    <FileIcon className="h-8 w-8 mb-2" />
+                                    <span className="text-xs text-center truncate w-full">{att.title}</span>
+                                </div>
+                            )}
+                            <a 
+                                href={att.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100"
+                            >
+                                <ExternalLink className="text-white h-6 w-6 drop-shadow-md" />
+                            </a>
+                        </div>
+                    ))}
+                    {(!montage.attachments || !montage.attachments.some(att => att.url.includes(MontageSubCategories.MEASUREMENT_BEFORE))) && (
+                        <div className="col-span-full py-8 text-center text-muted-foreground text-sm">
+                            Brak zdjęć z pomiaru.
+                        </div>
+                    )}
+                </div>
+            </CardContent>
+        </Card>
+
+
 
             </div>
             

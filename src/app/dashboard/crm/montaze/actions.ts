@@ -1259,6 +1259,7 @@ export async function updateMontageMeasurement({
     measurementSubfloorCondition,
     measurementAdditionalWorkNeeded,
     measurementAdditionalWorkDescription,
+    measurementAdditionalMaterials,
     measurementSeparateSkirting,
 }: {
 	montageId: string;
@@ -1282,6 +1283,7 @@ export async function updateMontageMeasurement({
     measurementSubfloorCondition?: string | null;
     measurementAdditionalWorkNeeded?: boolean;
     measurementAdditionalWorkDescription?: string | null;
+    measurementAdditionalMaterials?: string | null;
     measurementSeparateSkirting?: boolean;
 }) {
 	await requireUser();
@@ -1311,6 +1313,7 @@ export async function updateMontageMeasurement({
             measurementSubfloorCondition,
             measurementAdditionalWorkNeeded,
             measurementAdditionalWorkDescription,
+            measurementAdditionalMaterials,
 			finalPanelAmount: null, // Reset to auto-calculation on measurement update
 			finalSkirtingLength: null, // Reset to auto-calculation on measurement update
 			updatedAt: new Date(),

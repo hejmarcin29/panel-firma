@@ -34,7 +34,6 @@ export function AddEmployeeDialog() {
     const password = formData.get('password') as string;
     
     const roles: UserRole[] = [];
-    if (formData.get('role_measurer') === 'on') roles.push('measurer');
     if (formData.get('role_installer') === 'on') roles.push('installer');
     if (formData.get('role_architect') === 'on') roles.push('architect');
     if (formData.get('role_partner') === 'on') roles.push('partner');
@@ -86,10 +85,6 @@ export function AddEmployeeDialog() {
           <div className="space-y-3">
             <Label>Role *</Label>
             <div className="flex flex-col gap-2 p-1">
-                <div className="flex items-center space-x-2">
-                    <Checkbox id="role_measurer" name="role_measurer" />
-                    <Label htmlFor="role_measurer" className="font-normal cursor-pointer">Pomiarowiec</Label>
-                </div>
                 <div className="flex items-center space-x-2">
                     <Checkbox id="role_installer" name="role_installer" />
                     <Label htmlFor="role_installer" className="font-normal cursor-pointer">Montażysta</Label>

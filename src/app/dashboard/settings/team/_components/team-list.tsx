@@ -66,7 +66,6 @@ interface TeamListProps {
 
 const roleLabels: Record<UserRole, string> = {
     admin: 'Administrator',
-    measurer: 'Pomiarowiec',
     installer: 'Montażysta',
     architect: 'Architekt',
     partner: 'Partner B2B',
@@ -74,7 +73,6 @@ const roleLabels: Record<UserRole, string> = {
 
 const roleIcons: Record<UserRole, React.ReactNode> = {
     admin: <ShieldAlert className="h-4 w-4 text-red-600" />,
-    measurer: <Ruler className="h-4 w-4 text-blue-600" />,
     installer: <Hammer className="h-4 w-4 text-orange-600" />,
     architect: <PenTool className="h-4 w-4 text-purple-600" />,
     partner: <Users className="h-4 w-4 text-green-600" />,
@@ -102,7 +100,6 @@ export function TeamList({ members, currentUserId }: TeamListProps) {
   // Mobile Grouping
   const mobileGroups = {
     architects: members.filter(m => m.roles.includes('architect')),
-    measurers: members.filter(m => m.roles.includes('measurer')),
     installers: members.filter(m => m.roles.includes('installer')),
     admins: members.filter(m => m.roles.includes('admin')),
   };
@@ -233,12 +230,6 @@ export function TeamList({ members, currentUserId }: TeamListProps) {
                                 </DropdownMenuCheckboxItem>
                                 <DropdownMenuCheckboxItem 
                                     checked={member.roles.includes('measurer')}
-                                    onCheckedChange={() => handleRoleToggle(member.id, 'measurer', member.roles)}
-                                >
-                                    Pomiarowiec
-                                </DropdownMenuCheckboxItem>
-                                <DropdownMenuCheckboxItem 
-                                    checked={member.roles.includes('installer')}
                                     onCheckedChange={() => handleRoleToggle(member.id, 'installer', member.roles)}
                                 >
                                     Montażysta
@@ -370,7 +361,6 @@ export function TeamList({ members, currentUserId }: TeamListProps) {
         </div>
 
         <EmployeeDetailsSheet 
-            member={selectedMember} 
             open={isSheetOpen} 
             onOpenChange={setIsSheetOpen} 
         />

@@ -33,7 +33,7 @@ export async function getMontageDetails(montageId: string) {
     });
     
     const installers = allUsers.filter(u => u.roles?.includes('installer') || u.roles?.includes('admin'));
-    const measurers = allUsers.filter(u => u.roles?.includes('measurer') || u.roles?.includes('admin'));
+    const measurers = installers;
     const architects = allUsers.filter(u => u.roles?.includes('architect'));
 
     const r2Config = await tryGetR2Config();

@@ -181,12 +181,12 @@ export function FinancialsSection({ data, roles }: FinancialsSectionProps) {
                 </div>
             )}
 
-            {/* INSTALLER / MEASURER SECTION */}
-            {(roles.includes('installer') || roles.includes('measurer')) && (
+            {/* INSTALLER SECTION */}
+            {roles.includes('installer') && (
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            {roles.includes('installer') ? <Hammer className="h-5 w-5 text-orange-500" /> : <Ruler className="h-5 w-5 text-blue-500" />}
+                            <Hammer className="h-5 w-5 text-orange-500" />
                             Ostatnie Zlecenia
                         </CardTitle>
                         <CardDescription>Lista ostatnich montaży lub pomiarów przypisanych do pracownika.</CardDescription>
