@@ -28,6 +28,7 @@ import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
 import type { MaterialsEditHistoryEntry } from './types';
 import { createGoogleCalendarEvent, updateGoogleCalendarEvent, deleteGoogleCalendarEvent } from '@/lib/google/calendar';
 import { generatePortalToken } from '@/lib/utils';
+import { sendSms } from '@/lib/sms';
 
 const MONTAGE_DASHBOARD_PATH = '/dashboard/crm/montaze';
 const MAX_ATTACHMENT_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
