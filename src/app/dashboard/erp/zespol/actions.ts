@@ -1,8 +1,14 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { users } from '@/lib/db/schema';
+import { users, type UserRole } from '@/lib/db/schema';
 import { desc } from 'drizzle-orm';
+import { revalidatePath } from 'next/cache';
+import { hash } from 'bcryptjs';
+import { requireUser } from '@/lib/auth/session';
+import { generatePortalToken } from '@/lib/utils';
+
+const ERP_TEAM_PATH = '/dashboard/erp/zespol';
 
 export async function getTeamMembers() {
     const team = await db.query.users.findMany({
@@ -21,4 +27,46 @@ export async function getTeamMembers() {
     });
 
     return team;
+}
+
+export async function createEmployee({
+    name,
+    email,
+    password,
+    roles
+}: {
+    name: string;
+    email: string;
+    password: string;
+    roles: UserRole[];
+}) {
+    const currentUser = await requireUser();
+    
+    if (!currentUser.roles.includes('admin')) {
+        throw new Error('Brak uprawnień do dodawania pracowników.');
+    }
+
+    const existingUser = await db.query.users.findFirst({
+        where: (table, { eq }) => eq(table.email, email),
+    });
+
+    if (existingUser) {
+        throw new Error('Użytkownik z tym adresem e-mail już istnieje.');
+    }
+
+    const passwordHash = await hash(password, 12);
+
+    await db.insert(users).values({
+        id: crypto.randomUUID(),
+        email,
+        name,
+        passwordHash,
+        roles,
+        isActive: true,
+        referralToken: generatePortalToken(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+    });
+
+    revalidatePath(ERP_TEAM_PATH);
 }
