@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 
 import { getUserDetails } from '../actions';
+import { requireUser } from '@/lib/auth/session';
+import { ImpersonateButton } from '../_components/impersonate-button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -32,6 +34,8 @@ const roleConfig: Record<string, { label: string; icon: React.ElementType; color
 
 export default async function UserProfilePage({ params }: { params: Promise<{ userId: string }> }) {
     const { userId } = await params;
+    const currentUser = await requireUser();
+    const isAdmin = currentUser.roles.includes('admin');
     
     let user;
     try {
@@ -47,16 +51,21 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
 
     return (
         <div className="p-6 space-y-8 max-w-[1600px] mx-auto">
-            <div className="flex items-center gap-4">
-                <Link href="/dashboard/erp/zespol">
-                    <Button variant="ghost" size="icon">
-                        <ArrowLeft className="h-5 w-5" />
-                    </Button>
-                </Link>
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Profil pracownika</h1>
-                    <p className="text-muted-foreground">Szczegółowe informacje i historia aktywności.</p>
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    <Link href="/dashboard/erp/zespol">
+                        <Button variant="ghost" size="icon">
+                            <ArrowLeft className="h-5 w-5" />
+                        </Button>
+                    </Link>
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight">Profil pracownika</h1>
+                        <p className="text-muted-foreground">Szczegółowe informacje i historia aktywności.</p>
+                    </div>
                 </div>
+                {isAdmin && currentUser.id !== user.id && (
+                    <ImpersonateButton userId={user.id} userName={user.name || user.email} />
+                )}
             </div>
 
             <div className="grid gap-6 md:grid-cols-[350px_1fr]">

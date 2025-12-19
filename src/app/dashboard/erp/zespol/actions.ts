@@ -5,10 +5,14 @@ import { users, type UserRole } from '@/lib/db/schema';
 import { desc } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { hash } from 'bcryptjs';
-import { requireUser } from '@/lib/auth/session';
+import { requireUser, impersonateUser } from '@/lib/auth/session';
 import { generatePortalToken } from '@/lib/utils';
 
 const ERP_TEAM_PATH = '/dashboard/erp/zespol';
+
+export async function impersonateUserAction(userId: string) {
+    await impersonateUser(userId);
+}
 
 export async function getTeamMembers() {
     const team = await db.query.users.findMany({
