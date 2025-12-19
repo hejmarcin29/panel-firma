@@ -98,6 +98,15 @@ export type Montage = {
     measurementSeparateSkirting?: boolean | null;
 	finalPanelAmount: number | null;
 	finalSkirtingLength: number | null;
+    
+    // Protocol Fields
+    contractNumber?: string | null;
+    contractDate?: TimestampValue;
+    protocolStatus?: string | null;
+    protocolData?: any; // Using any for simplicity or define specific type
+    clientSignatureUrl?: string | null;
+    installerSignatureUrl?: string | null;
+
 	materialsEditHistory: MaterialsEditHistoryEntry[] | null;
 	additionalInfo: string | null;
 	sketchUrl?: string | null;

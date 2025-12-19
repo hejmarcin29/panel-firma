@@ -112,6 +112,35 @@ export async function updateMontageData(montageId: string, data: MontageUpdateDa
     return { success: true };
 }
 
+export async function acceptInstallationDate(montageId: string, token: string) {
+    const customer = await getCustomerByToken(token);
+    if (!customer) throw new Error('Nieprawidłowy token');
+
+    const isOwner = customer.montages.some(m => m.id === montageId);
+    if (!isOwner) throw new Error('Brak uprawnień');
+
+    await db.update(montages)
+        .set({ installationDateConfirmed: true })
+        .where(eq(montages.id, montageId));
+
+    revalidatePath(`/s/${token}`);
+    return { success: true };
+}
+
+export async function rejectInstallationDate(montageId: string, token: string, reason: string) {
+    const customer = await getCustomerByToken(token);
+    if (!customer) throw new Error('Nieprawidłowy token');
+
+    const isOwner = customer.montages.some(m => m.id === montageId);
+    if (!isOwner) throw new Error('Brak uprawnień');
+
+    // Log rejection (in a real app, send email/sms to admin)
+    console.log(`Customer rejected date for montage ${montageId}. Reason: ${reason}`);
+
+    revalidatePath(`/s/${token}`);
+    return { success: true };
+}
+
 export async function getCustomerByToken(token: string) {
     const customer = await db.query.customers.findFirst({
         where: eq(customers.referralToken, token),

@@ -489,6 +489,7 @@ export const montages = pgTable(
 		nip: text('nip'),
 		scheduledInstallationAt: timestamp('scheduled_installation_at'),
 		scheduledInstallationEndAt: timestamp('scheduled_installation_end_at'),
+        installationDateConfirmed: boolean('installation_date_confirmed').default(false),
         measurementDate: timestamp('measurement_date'),
         scheduledSkirtingInstallationAt: timestamp('scheduled_skirting_installation_at'),
         scheduledSkirtingInstallationEndAt: timestamp('scheduled_skirting_installation_end_at'),
@@ -528,6 +529,20 @@ export const montages = pgTable(
         partnerId: text('partner_id').references(() => users.id, { onDelete: 'set null' }),
 		customerId: text('customer_id').references(() => customers.id, { onDelete: 'set null' }),
         googleEventId: text('google_event_id'),
+        
+        // Protocol & Contract Fields
+        contractNumber: text('contract_number'),
+        contractDate: timestamp('contract_date'),
+        protocolStatus: text('protocol_status').default('pending'), // 'pending' | 'signed'
+        protocolData: json('protocol_data').$type<{
+            isHousingVat: boolean;
+            location: string;
+            signedAt: string;
+            notes: string;
+        }>(),
+        clientSignatureUrl: text('client_signature_url'),
+        installerSignatureUrl: text('installer_signature_url'),
+
         technicalAudit: json('technical_audit').$type<TechnicalAuditData>(),
         materialLog: json('material_log').$type<MaterialLogData>(),
 		deletedAt: timestamp('deleted_at'),

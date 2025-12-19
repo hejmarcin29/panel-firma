@@ -205,6 +205,15 @@ export function mapMontageRow(row: MontageRow, publicBaseUrl: string | null): Mo
         architect: row.architect ? { id: row.architect.id, name: row.architect.name, email: row.architect.email } : null,
         technicalAudit: row.technicalAudit,
         materialLog: row.materialLog,
+        
+        // Protocol Fields
+        contractNumber: row.contractNumber,
+        contractDate: row.contractDate,
+        protocolStatus: row.protocolStatus,
+        protocolData: row.protocolData,
+        clientSignatureUrl: row.clientSignatureUrl,
+        installerSignatureUrl: row.installerSignatureUrl,
+
         quotes: row.quotes.map(q => ({
             id: q.id,
             status: q.status,

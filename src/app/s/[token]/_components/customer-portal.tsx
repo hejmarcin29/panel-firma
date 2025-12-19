@@ -12,6 +12,8 @@ import { SignaturePad } from '@/components/ui/signature-pad';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { MontageTimeline } from './montage-timeline';
 import { DataRequestCard } from './data-request-card';
+import { InstallationDateCard } from './installation-date-card';
+import { PaymentCard } from './payment-card';
 
 interface MontageAttachment {
     id: string;
@@ -45,6 +47,7 @@ interface Montage {
     createdAt: Date;
     forecastedInstallationDate: Date | null;
     scheduledInstallationAt: Date | null;
+    installationDateConfirmed: boolean | null;
     attachments: MontageAttachment[];
     quotes: Quote[];
     floorArea: number | null;
@@ -63,9 +66,10 @@ interface Customer {
 interface CustomerPortalProps {
     customer: Customer;
     token: string;
+    bankAccount?: string;
 }
 
-export function CustomerPortal({ customer, token }: CustomerPortalProps) {
+export function CustomerPortal({ customer, token, bankAccount }: CustomerPortalProps) {
     const activeMontage = customer.montages[0]; // For now, just take the latest one
     const [contractDialogOpen, setContractDialogOpen] = useState(false);
 
@@ -125,6 +129,29 @@ export function CustomerPortal({ customer, token }: CustomerPortalProps) {
                         <motion.div variants={itemVariants}>
                             <MontageTimeline montage={activeMontage} />
                         </motion.div>
+
+                        {/* Installation Date Confirmation */}
+                        {activeMontage.scheduledInstallationAt && !activeMontage.installationDateConfirmed && (
+                            <motion.div variants={itemVariants}>
+                                <InstallationDateCard 
+                                    montageId={activeMontage.id}
+                                    date={activeMontage.scheduledInstallationAt}
+                                    token={token}
+                                />
+                            </motion.div>
+                        )}
+
+                        {/* Payment Info */}
+                        {activeQuote && activeQuote.status === 'accepted' && (
+                            <motion.div variants={itemVariants}>
+                                <PaymentCard 
+                                    quoteNumber={activeQuote.number || activeMontage.displayId || 'ZAMÓWIENIE'}
+                                    totalAmount={activeQuote.totalGross}
+                                    isPaid={false} 
+                                    bankAccount={bankAccount}
+                                />
+                            </motion.div>
+                        )}
 
                         {(activeMontage.status === 'lead' || activeMontage.status === 'before_measurement') && (
                             <motion.div variants={itemVariants}>

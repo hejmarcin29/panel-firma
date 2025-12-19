@@ -34,6 +34,7 @@ import type { Montage, StatusOption } from "../../types";
 import { updateMontageStatus, deleteMontage } from "../../actions";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { type UserRole } from '@/lib/db/schema';
+import { ProtocolWizard } from './protocol/protocol-wizard';
 
 interface MontageHeaderProps {
   montage: Montage;
@@ -72,6 +73,8 @@ export function MontageHeader({ montage, statusOptions, userRoles = ['admin'] }:
 
   const canEditStatus = userRoles.includes('admin') || userRoles.includes('installer');
   const canDelete = userRoles.includes('admin');
+  const showProtocolButton = (userRoles.includes('installer') || userRoles.includes('admin')) && 
+                             montage.status !== 'lead';
 
   return (
     <div className="sticky top-0 z-10 flex flex-col gap-4 border-b bg-background/95 px-4 py-4 backdrop-blur supports-backdrop-filter:bg-background/60 sm:px-6">
@@ -99,8 +102,17 @@ export function MontageHeader({ montage, statusOptions, userRoles = ['admin'] }:
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {isMobile ? (
+        <div className="flex items-center gap-2">            {showProtocolButton && (
+                <ProtocolWizard 
+                    montageId={montage.id}
+                    clientName={montage.clientName}
+                    installerName={userRoles.includes('installer') ? 'Ja' : 'Montażysta'}
+                    defaultLocation={montage.installationCity || ''}
+                    contractNumber={montage.contractNumber || ''}
+                    contractDate={montage.contractDate ? new Date(montage.contractDate as string) : null}
+                    onComplete={() => router.refresh()}
+                />
+            )}          {isMobile ? (
              <div className="flex gap-1">
                 {montage.contactPhone && (
                     <Button size="icon" variant="outline" asChild>
