@@ -53,12 +53,14 @@ export function MontageWorkflowTab({
     montage, 
     statusOptions,
     installers = [],
-    measurers = []
+    measurers = [],
+    userRoles = []
 }: { 
     montage: Montage; 
     statusOptions: StatusOption[];
     installers?: UserOption[];
     measurers?: UserOption[];
+    userRoles?: string[];
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -68,6 +70,8 @@ export function MontageWorkflowTab({
   const [newItemAttachment, setNewItemAttachment] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
+
+  const isInstaller = userRoles.includes('installer') && !userRoles.includes('admin');
 
   const { mutate: mutateStatus } = useMutation({
     mutationKey: ['updateMontageStatus', montage.id],
@@ -200,7 +204,10 @@ export function MontageWorkflowTab({
             const incompleteItems = stageItems.filter(item => !item.completed);
             
             if (incompleteItems.length > 0) {
-                setAlertMessage(`Nie można zmienić etapu. Dokończ zadania z etapu: ${statusOptions[i].label}`);
+                const message = isInstaller 
+                    ? `Nie można zmienić etapu. Biuro musi zatwierdzić etap: ${statusOptions[i].label}`
+                    : `Nie można zmienić etapu. Dokończ zadania z etapu: ${statusOptions[i].label}`;
+                setAlertMessage(message);
                 setAlertOpen(true);
                 return;
             }
@@ -528,6 +535,7 @@ export function MontageWorkflowTab({
             </div>
         </Card>
 
+        {!isInstaller && (
         <Card className="p-6">
             <div className="flex items-center justify-between mb-6">
                 <div>
@@ -632,6 +640,7 @@ export function MontageWorkflowTab({
                 </div>
             )}
         </Card>
+        )}
 
         <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
             <AlertDialogContent>

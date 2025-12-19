@@ -769,6 +769,19 @@ export async function updateMontageContactDetails({
 		})
 		.where(eq(montages.id, montageId));
 
+    // Log contact details update
+    const user = await requireUser();
+    const changes = [];
+    if (scheduledInstallationAt) changes.push(`Data montażu: ${scheduledInstallationAt.toLocaleDateString()}`);
+    if (measurementAt) changes.push(`Data pomiaru: ${measurementAt.toLocaleDateString()}`);
+    if (forecastedInstallationAt) changes.push(`Szacowana data: ${forecastedInstallationAt.toLocaleDateString()}`);
+    
+    await logSystemEvent(
+        'update_montage_details', 
+        `Zaktualizowano szczegóły montażu. ${changes.length > 0 ? 'Zmiany terminów: ' + changes.join(', ') : 'Zaktualizowano dane kontaktowe/adresowe'}`, 
+        user.id
+    );
+
     // Google Calendar Sync
     const montage = await db.query.montages.findFirst({
         where: (table, { eq }) => eq(table.id, montageId),
@@ -861,6 +874,8 @@ await db.insert(montageNotes).values({
 	createdBy: user.id,
 	createdAt: now,
 });
+
+    await logSystemEvent('add_note', `Dodano notatkę: ${content.substring(0, 50)}${content.length > 50 ? '...' : ''}`, user.id);
 
 	if (fileField instanceof File && fileField.size > 0) {
 		await createMontageAttachment({
@@ -992,6 +1007,12 @@ export async function toggleMontageChecklistItem({ itemId, montageId, completed 
 		.set({ completed, updatedAt: new Date() })
 		.where(eq(montageChecklistItems.id, itemId));
 
+    // Log the checklist action
+    const user = await requireUser();
+    const actionType = completed ? 'checklist_completed' : 'checklist_uncompleted';
+    const itemLabel = item.label || 'Element listy';
+    await logSystemEvent(actionType, `Zmieniono status elementu "${itemLabel}" na: ${completed ? 'Wykonane' : 'Do zrobienia'}`, user.id);
+
     // Stage Completion Logic
     if (completed && item.templateId) {
         const templates = await getMontageChecklistTemplates();
@@ -1103,6 +1124,9 @@ export async function updateMontageMaterialDetails({
 			updatedAt: new Date(),
 		})
 		.where(eq(montages.id, montageId));
+
+    const user = await requireUser();
+    await logSystemEvent('update_materials', 'Zaktualizowano specyfikację materiałową', user.id);
 
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
@@ -1368,6 +1392,9 @@ export async function updateMontageMeasurement({
 			updatedAt: new Date(),
 		})
 		.where(eq(montages.id, montageId));
+
+    const user = await requireUser();
+    await logSystemEvent('update_measurement', `Zaktualizowano protokół pomiaru (Powierzchnia: ${floorArea}m2)`, user.id);
 
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 	revalidatePath(`${MONTAGE_DASHBOARD_PATH}/${montageId}`);

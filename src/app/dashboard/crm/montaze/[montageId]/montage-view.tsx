@@ -152,7 +152,7 @@ export function MontageView({ montageId, initialData, portalEnabled }: MontageVi
                 tabs={{
                     notes: <MontageNotesTab montage={montage} />,
                     history: !isInstaller ? <MontageHistoryTab montage={montage} logs={logs} /> : undefined,
-                    workflow: <MontageWorkflowTab montage={montage} statusOptions={statusOptions} installers={installers} measurers={measurers} />,
+                    workflow: <MontageWorkflowTab montage={montage} statusOptions={statusOptions} installers={installers} measurers={measurers} userRoles={userRoles} />,
                     measurement: <MontageMeasurementTab montage={montage} userRoles={userRoles} />,
                     quotes: !isInstaller ? <MontageQuotes montageId={montage.id} quotes={montage.quotes} /> : undefined,
                     tasks: <MontageTasksTab montage={montage} />,

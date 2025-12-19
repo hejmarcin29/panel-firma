@@ -26,6 +26,7 @@ import { R2ConfigForm } from './_components/r2-config-form';
 import { MailSettingsForm } from './_components/mail-settings-form';
 import { MontageChecklistSettings } from './_components/montage-checklist-settings';
 import { MontageAutomationSettings } from './_components/montage-automation-settings';
+import { AutomationRegistry } from './_components/automation-registry';
 import { MontageStatusSettings } from './_components/montage-status-settings';
 import { SettingsView } from './_components/settings-view';
 import { MobileMenuSettings } from './_components/mobile-menu-settings';
@@ -367,7 +368,7 @@ export default async function SettingsPage() {
 				<div className="space-y-6">
 					<MontageStatusSettings initialStatuses={montageStatusDefinitions} />
 					<MontageChecklistSettings initialTemplates={montageChecklistTemplates} />
-					<MontageAutomationSettings 
+					<AutomationRegistry 
                         templates={montageChecklistTemplates} 
                         initialRules={montageAutomationRules} 
                         statusOptions={statusOptions}
