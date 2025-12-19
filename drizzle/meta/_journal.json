@@ -127,6 +127,13 @@
       "when": 1766134219623,
       "tag": "0017_cheerful_black_tom",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1766138258344,
+      "tag": "0018_wide_thunderbolt",
+      "breakpoints": true
     }
   ]
 }

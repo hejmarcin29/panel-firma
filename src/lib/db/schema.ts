@@ -524,7 +524,6 @@ export const montages = pgTable(
 		installerId: text('installer_id').references(() => users.id, { onDelete: 'set null' }),
 		measurerId: text('measurer_id').references(() => users.id, { onDelete: 'set null' }),
 		architectId: text('architect_id').references(() => users.id, { onDelete: 'set null' }),
-        partnerId: text('partner_id').references(() => users.id, { onDelete: 'set null' }),
 		customerId: text('customer_id').references(() => customers.id, { onDelete: 'set null' }),
         googleEventId: text('google_event_id'),
         technicalAudit: json('technical_audit').$type<TechnicalAuditData>(),
@@ -540,7 +539,6 @@ export const montages = pgTable(
 		installerIdx: index('montages_installer_id_idx').on(table.installerId),
 		measurerIdx: index('montages_measurer_id_idx').on(table.measurerId),
 		architectIdx: index('montages_architect_id_idx').on(table.architectId),
-        partnerIdx: index('montages_partner_id_idx').on(table.partnerId),
 	})
 );
 

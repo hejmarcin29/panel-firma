@@ -16,7 +16,6 @@ import {
 	customers,
 	users,
     commissions,
-    appSettings,
     // referralCommissions,
     type CustomerSource,
 } from '@/lib/db/schema';
@@ -29,7 +28,6 @@ import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
 import type { MaterialsEditHistoryEntry } from './types';
 import { createGoogleCalendarEvent, updateGoogleCalendarEvent, deleteGoogleCalendarEvent } from '@/lib/google/calendar';
 import { generatePortalToken } from '@/lib/utils';
-import { sendSms } from '@/lib/sms';
 
 const MONTAGE_DASHBOARD_PATH = '/dashboard/crm/montaze';
 const MAX_ATTACHMENT_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
@@ -1780,76 +1778,6 @@ export async function convertLeadToMontage(data: {
     }
 
     await logSystemEvent('convert_lead', `Przekonwertowano lead ${montage.displayId} na montaż`, user.id);
-    revalidatePath(MONTAGE_DASHBOARD_PATH);
-    return { success: true };
-}
-
-export async function sendMeasurementRequestSms(montageId: string) {
-    const user = await requireUser();
-    
-    const montage = await db.query.montages.findFirst({
-        where: eq(montages.id, montageId),
-    });
-
-    if (!montage) {
-        throw new Error('Montaż nie istnieje');
-    }
-
-    if (!montage.contactPhone) {
-        return { success: false, error: 'Brak numeru telefonu klienta' };
-    }
-
-    // 1. Generate Token if missing
-    const token = await db.query.appSettings.findFirst({
-        where: eq(appSettings.key, `portal_token_${montageId}`),
-    });
-
-    let tokenValue = token?.value;
-
-    if (!tokenValue) {
-        tokenValue = generatePortalToken();
-        await db.insert(appSettings).values({
-            key: `portal_token_${montageId}`,
-            value: tokenValue,
-            updatedBy: user.id,
-        });
-    }
-
-    // 2. Construct Link
-    // Assuming NEXT_PUBLIC_APP_URL is set, otherwise fallback to relative (which won't work in SMS)
-    // We need an absolute URL.
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://panel.firma.pl'; 
-    const link = `${baseUrl}/s/${tokenValue}`;
-
-    // 3. Send SMS
-    const message = `Dzień dobry! Prosimy o uzupełnienie danych do pomiaru podłogi. Link: ${link} Pozdrawiamy, Zespół Prime Podłogi`;
-    
-    const smsResult = await sendSms(montage.contactPhone, message);
-
-    if (!smsResult.success) {
-        return { success: false, error: smsResult.error || 'Błąd wysyłki SMS' };
-    }
-
-    // 4. Update Status & Assign Measurer
-    const updates: Partial<typeof montages.$inferInsert> = {};
-    
-    if (montage.status === 'lead') {
-        updates.status = 'before_measurement';
-    }
-
-    if (!montage.measurerId) {
-        updates.measurerId = user.id;
-    }
-
-    if (Object.keys(updates).length > 0) {
-        await db.update(montages)
-            .set({ ...updates, updatedAt: new Date() })
-            .where(eq(montages.id, montageId));
-    }
-
-    // 5. Log Event
-    await logSystemEvent('sms_sent', `Wysłano prośbę o dane (SMS) do klienta. ID: ${montageId}`, user.id);
-
     revalidatePath(MONTAGE_DASHBOARD_PATH);
     return { success: true };
 }
