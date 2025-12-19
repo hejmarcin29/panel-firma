@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { format } from 'date-fns';
 import { Loader2, Check, ChevronRight, ChevronLeft, Camera, PenTool } from 'lucide-react';
@@ -15,8 +15,6 @@ const SignatureCanvas = dynamic(() => import('react-signature-canvas'), {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Card, CardContent } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -28,6 +26,12 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 
 import { uploadSignature, submitMontageProtocol } from '../../protocol-actions';
+
+interface SignaturePadRef {
+  isEmpty: () => boolean;
+  toDataURL: (type: string) => string;
+  clear: () => void;
+}
 
 interface ProtocolWizardProps {
   montageId: string;
@@ -60,8 +64,8 @@ export function ProtocolWizard({
   const [notes, setNotes] = useState('');
 
   // Signatures
-  const clientSigRef = useRef<any>(null);
-  const installerSigRef = useRef<any>(null);
+  const clientSigRef = useRef<SignaturePadRef>(null);
+  const installerSigRef = useRef<SignaturePadRef>(null);
 
   const handleNext = () => setStep(s => s + 1);
   const handleBack = () => setStep(s => s - 1);
@@ -114,7 +118,7 @@ export function ProtocolWizard({
     }
   };
 
-  const clearSignature = (ref: React.MutableRefObject<any>) => {
+  const clearSignature = (ref: React.MutableRefObject<SignaturePadRef | null>) => {
     ref.current?.clear();
   };
 
@@ -202,7 +206,7 @@ export function ProtocolWizard({
                     <h3 className="font-semibold text-lg">3. Dokumentacja Zdjęciowa</h3>
                     <div className="p-8 border-2 border-dashed rounded-lg bg-muted/30 flex flex-col items-center justify-center gap-4">
                         <Camera className="h-12 w-12 text-muted-foreground" />
-                        <p>Upewnij się, że dodałeś zdjęcia z realizacji w zakładce "Galeria".</p>
+                        <p>Upewnij się, że dodałeś zdjęcia z realizacji w zakładce &quot;Galeria&quot;.</p>
                         <p className="text-sm text-muted-foreground">System automatycznie dołączy je do historii zlecenia.</p>
                     </div>
                     <p className="text-sm text-yellow-600 bg-yellow-50 p-2 rounded">

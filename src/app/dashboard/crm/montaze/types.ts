@@ -103,7 +103,7 @@ export type Montage = {
     contractNumber?: string | null;
     contractDate?: TimestampValue;
     protocolStatus?: string | null;
-    protocolData?: any; // Using any for simplicity or define specific type
+    protocolData?: Record<string, unknown> | null; // Using Record<string, unknown> instead of any
     clientSignatureUrl?: string | null;
     installerSignatureUrl?: string | null;
 

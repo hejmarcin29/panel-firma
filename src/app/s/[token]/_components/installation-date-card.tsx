@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
-import { Calendar, Check, X, Loader2 } from 'lucide-react';
+import { Calendar, Check, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -39,7 +39,7 @@ export function InstallationDateCard({ montageId, token, scheduledDate, schedule
     try {
       await acceptInstallationDate(montageId, token);
       toast.success('Termin został zaakceptowany! Dziękujemy.');
-    } catch (error) {
+    } catch {
       toast.error('Wystąpił błąd.');
     } finally {
       setIsAccepting(false);
@@ -56,7 +56,7 @@ export function InstallationDateCard({ montageId, token, scheduledDate, schedule
       await rejectInstallationDate(montageId, token, rejectReason);
       toast.success('Twoja prośba została wysłana do biura.');
       setRejectDialogOpen(false);
-    } catch (error) {
+    } catch {
       toast.error('Wystąpił błąd.');
     } finally {
       setIsRejecting(false);

@@ -11,7 +11,6 @@ import { MONTAGE_ROOT_PREFIX } from '@/lib/r2/constants';
 import { renderToStream } from '@react-pdf/renderer';
 import { ProtocolDocument } from '@/components/documents/protocol-pdf';
 import { format } from 'date-fns';
-import { sendSms } from '@/lib/sms'; // Assuming this exists based on context
 // import { sendEmail } from '@/lib/email'; // Placeholder if email exists
 
 export async function uploadSignature(montageId: string, base64Data: string, type: 'client' | 'installer') {

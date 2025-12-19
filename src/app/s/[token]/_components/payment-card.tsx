@@ -7,7 +7,6 @@ import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
 
 interface PaymentCardProps {
   quoteNumber: string;

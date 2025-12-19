@@ -1,6 +1,5 @@
 import React from 'react';
-import { Page, Text, View, Document, StyleSheet, Image, Font } from '@react-pdf/renderer';
-import { format } from 'date-fns';
+import { Page, Text, View, Document, StyleSheet, Image } from '@react-pdf/renderer';
 
 // Rejestracja czcionek (opcjonalne, tutaj używamy standardowych)
 // Font.register({ family: 'Roboto', src: '...' });
@@ -176,6 +175,7 @@ export const ProtocolDocument = ({
         <View style={styles.signatureBox}>
           <Text style={{ marginBottom: 10 }}>Przedstawiciel Zamawiającego:</Text>
           {clientSignatureUrl ? (
+            // eslint-disable-next-line jsx-a11y/alt-text
             <Image src={clientSignatureUrl} style={styles.signatureImage} />
           ) : (
             <View style={{ height: 60, borderBottomWidth: 1, width: 150 }} />
@@ -186,6 +186,7 @@ export const ProtocolDocument = ({
         <View style={styles.signatureBox}>
           <Text style={{ marginBottom: 10 }}>Przedstawiciel Wykonawcy:</Text>
           {installerSignatureUrl ? (
+            // eslint-disable-next-line jsx-a11y/alt-text
             <Image src={installerSignatureUrl} style={styles.signatureImage} />
           ) : (
             <View style={{ height: 60, borderBottomWidth: 1, width: 150 }} />
