@@ -134,6 +134,13 @@
       "when": 1766138258344,
       "tag": "0018_wide_thunderbolt",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1766139389732,
+      "tag": "0019_late_clint_barton",
+      "breakpoints": true
     }
   ]
 }

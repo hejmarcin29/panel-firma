@@ -1,0 +1,1 @@
+ALTER TABLE "montages" DROP COLUMN "samples_request";
