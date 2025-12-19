@@ -28,6 +28,7 @@ import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
 import type { MaterialsEditHistoryEntry } from './types';
 import { createGoogleCalendarEvent, updateGoogleCalendarEvent, deleteGoogleCalendarEvent } from '@/lib/google/calendar';
 import { generatePortalToken } from '@/lib/utils';
+import { sendSms } from '@/lib/sms';
 
 const MONTAGE_DASHBOARD_PATH = '/dashboard/crm/montaze';
 const MAX_ATTACHMENT_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
@@ -1781,3 +1782,31 @@ export async function convertLeadToMontage(data: {
     revalidatePath(MONTAGE_DASHBOARD_PATH);
     return { success: true };
 }
+
+export async function sendMeasurementRequestSms(montageId: string) {
+    const user = await requireUser();
+    
+    const montage = await db.query.montages.findFirst({
+        where: eq(montages.id, montageId),
+    });
+
+    if (!montage) {
+        return { error: 'Nie znaleziono montażu.' };
+    }
+
+    if (!montage.contactPhone) {
+        return { error: 'Brak numeru telefonu klienta.' };
+    }
+
+    const message = `Dzień dobry, prosimy o kontakt w celu umówienia pomiaru dla zlecenia ${montage.displayId}. Pozdrawiamy, Zespół`;
+    
+    const result = await sendSms(montage.contactPhone, message);
+
+    if (result.success) {
+        await logSystemEvent('sms_sent', `Wysłano SMS z prośbą o pomiar do klienta ${montage.clientName}`, user.id, { montageId });
+        return { success: true };
+    } else {
+        return { error: result.error || 'Błąd wysyłania SMS' };
+    }
+}
+
