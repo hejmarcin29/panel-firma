@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { SignaturePad } from '@/components/ui/signature-pad';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { MontageTimeline } from './montage-timeline';
+import { DataRequestCard } from './data-request-card';
 
 interface MontageAttachment {
     id: string;
@@ -124,6 +125,12 @@ export function CustomerPortal({ customer, token }: CustomerPortalProps) {
                         <motion.div variants={itemVariants}>
                             <MontageTimeline montage={activeMontage} />
                         </motion.div>
+
+                        {(activeMontage.status === 'lead' || activeMontage.status === 'before_measurement') && (
+                            <motion.div variants={itemVariants}>
+                                <DataRequestCard montage={activeMontage} token={token} />
+                            </motion.div>
+                        )}
 
                         <div className="grid gap-6 md:grid-cols-2">
                             <motion.div variants={itemVariants}>

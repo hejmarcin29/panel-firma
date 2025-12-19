@@ -82,6 +82,28 @@ export async function signContract(contractId: string, signatureData: string, to
     return { success: true };
 }
 
+export async function updateMontageData(montageId: string, data: any, token: string) {
+    const customer = await getCustomerByToken(token);
+    if (!customer) throw new Error('Nieprawidłowy token');
+
+    const isOwner = customer.montages.some(m => m.id === montageId);
+    if (!isOwner) throw new Error('Brak uprawnień');
+
+    await db.update(montages)
+        .set({
+            address: data.address,
+            installationCity: data.city,
+            installationPostalCode: data.postalCode,
+            floorArea: data.floorArea ? parseFloat(data.floorArea) : null,
+            additionalInfo: data.notes,
+            updatedAt: new Date()
+        })
+        .where(eq(montages.id, montageId));
+
+    revalidatePath(`/s/${token}`);
+    return { success: true };
+}
+
 export async function getCustomerByToken(token: string) {
     const customer = await db.query.customers.findFirst({
         where: eq(customers.referralToken, token),

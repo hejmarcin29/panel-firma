@@ -9,8 +9,9 @@ import { tryGetR2Config } from '@/lib/r2/config';
 
 import { DashboardBuilder } from './_components/dashboard-builder';
 import { ArchitectDashboard } from './_components/architect-dashboard';
+import { MeasurerDashboard } from './_components/measurer-dashboard';
 import type { DashboardLayoutConfig } from './actions';
-import { getDashboardStats, getArchitectDashboardStats } from '@/lib/services/dashboard-service';
+import { getDashboardStats, getArchitectDashboardStats, getMeasurerDashboardData } from '@/lib/services/dashboard-service';
 import { redirect } from 'next/navigation';
 
 const DEFAULT_LAYOUT: DashboardLayoutConfig = {
@@ -36,6 +37,11 @@ export default async function DashboardPage() {
 	    user = await requireUser();
         if (user.roles.includes('installer') && !user.roles.includes('measurer') && !user.roles.includes('admin')) {
             redirect('/dashboard/crm/montaze');
+        }
+
+        if (user.roles.includes('measurer') && !user.roles.includes('admin')) {
+            const { leads, schedule } = await getMeasurerDashboardData(user.id);
+            return <MeasurerDashboard leads={leads} schedule={schedule} />;
         }
     } catch (error) {
          // eslint-disable-next-line @typescript-eslint/no-explicit-any

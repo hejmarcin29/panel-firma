@@ -479,3 +479,37 @@ export async function getArchitectDashboardStats(userId: string) {
         }
     };
 }
+
+export async function getMeasurerDashboardData(userId: string) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const leads = await db.query.montages.findMany({
+        where: (table, { and, eq, or, isNull }) => and(
+            eq(table.status, 'lead'),
+            or(
+                isNull(table.measurerId),
+                eq(table.measurerId, userId)
+            ),
+            isNull(table.deletedAt)
+        ),
+        orderBy: (table, { desc }) => [desc(table.createdAt)],
+        limit: 20
+    });
+
+    const schedule = await db.query.montages.findMany({
+        where: (table, { and, eq, gte, lt, isNull, or }) => and(
+            eq(table.measurerId, userId),
+            or(
+                and(gte(table.measurementDate, today), lt(table.measurementDate, tomorrow)),
+                and(gte(table.scheduledInstallationAt, today), lt(table.scheduledInstallationAt, tomorrow))
+            ),
+            isNull(table.deletedAt)
+        ),
+        orderBy: (table, { asc }) => [asc(table.measurementDate)]
+    });
+
+    return { leads, schedule };
+}
