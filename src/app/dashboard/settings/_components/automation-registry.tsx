@@ -33,7 +33,7 @@ export function AutomationRegistry({ templates, initialRules, statusOptions, ini
             try {
                 await updateMontageNotificationsAction(next);
                 toast.success("Zaktualizowano ustawienia powiadomień.");
-            } catch (error) {
+            } catch {
                 toast.error("Błąd zapisu ustawień.");
                 // Revert on error
                 setNotifications(notifications);

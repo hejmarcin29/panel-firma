@@ -12,7 +12,7 @@ async function migrate() {
     try {
         // 1. Copy materialDetails to clientInfo where materialDetails is not null
         // and clientInfo is null (to avoid overwriting if already migrated)
-        const result = await db.update(montages)
+        await db.update(montages)
             .set({
                 clientInfo: sql`${montages.materialDetails}`,
                 materialDetails: null 
