@@ -6,6 +6,7 @@ export type MontageChecklistTemplate = {
 	id: string;
 	label: string;
 	allowAttachment: boolean;
+    associatedStage?: string;
 };
 
 export const DEFAULT_MONTAGE_CHECKLIST: readonly MontageChecklistTemplate[] = [
@@ -13,31 +14,37 @@ export const DEFAULT_MONTAGE_CHECKLIST: readonly MontageChecklistTemplate[] = [
 		id: 'contract_signed_check',
 		label: 'Podpisano umowę/cenę',
 		allowAttachment: false,
+        associatedStage: 'before_first_payment',
 	},
 	{
 		id: 'advance_invoice_issued',
 		label: 'Wystawiono FV zaliczkową',
 		allowAttachment: false,
+        associatedStage: 'before_first_payment',
 	},
 	{
 		id: 'advance_invoice_paid',
 		label: 'Zapłacono FV zaliczkową',
 		allowAttachment: false,
+        associatedStage: 'before_first_payment',
 	},
 	{
 		id: 'protocol_signed',
 		label: 'Podpisano protokół odbioru',
 		allowAttachment: true,
+        associatedStage: 'before_final_invoice',
 	},
 	{
 		id: 'final_invoice_issued',
 		label: 'Wystawiono FV końcową',
 		allowAttachment: false,
+        associatedStage: 'before_final_invoice',
 	},
 	{
 		id: 'final_invoice_paid',
 		label: 'Zapłacono FV końcową',
 		allowAttachment: false,
+        associatedStage: 'before_final_invoice',
 	},
 ] as const;
 
@@ -58,8 +65,17 @@ function sanitizeTemplate(item: unknown, fallbackId: string): MontageChecklistTe
 
 	const id = typeof candidate.id === 'string' && candidate.id.trim() ? candidate.id.trim() : fallbackId;
 	const allowAttachment = Boolean(candidate.allowAttachment);
+    
+    // Try to recover associatedStage from default if missing
+    let associatedStage = typeof candidate.associatedStage === 'string' ? candidate.associatedStage : undefined;
+    if (!associatedStage) {
+        const defaultTemplate = DEFAULT_MONTAGE_CHECKLIST.find(t => t.id === id);
+        if (defaultTemplate) {
+            associatedStage = defaultTemplate.associatedStage;
+        }
+    }
 
-	return { id, label, allowAttachment };
+	return { id, label, allowAttachment, associatedStage };
 }
 
 function parseChecklistSetting(rawValue: string | null): MontageChecklistTemplate[] {

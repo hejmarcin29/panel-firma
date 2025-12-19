@@ -36,6 +36,7 @@ import {
 } from "../../actions";
 import { type MontageDetailsData } from "../actions";
 import type { Montage, StatusOption } from "../../types";
+import { DEFAULT_MONTAGE_CHECKLIST } from "@/lib/montaze/checklist";
 
 type UserOption = { id: string; name: string | null; email: string };
 
@@ -181,48 +182,28 @@ export function MontageWorkflowTab({
   };
 
   const handleStatusChange = (status: string) => {
-    const newStatusIndex = statusOptions.findIndex(o => o.value === status);
-    const beforeMeasurementIndex = statusOptions.findIndex(o => o.value === 'before_measurement');
-    const beforeFirstPaymentIndex = statusOptions.findIndex(o => o.value === 'before_first_payment');
-    
-    // Check for "Podpisano umowę/cenę" checkbox if moving past 'before_measurement'
-    if (newStatusIndex > beforeMeasurementIndex) {
-        const contractSignedCheck = montage.checklistItems?.find(i => i.label === "Podpisano umowę/cenę")?.completed;
-        
-        if (!contractSignedCheck) {
-             setAlertMessage("Nie można przejść do tego etapu. Wymagane jest zaznaczenie 'Podpisano umowę/cenę' w liście kontrolnej.");
-             setAlertOpen(true);
-             return;
-        }
-    }
+    // Hard Validation Logic
+    const targetStatusIndex = statusOptions.findIndex(s => s.value === status);
+    const currentStatusIndex = statusOptions.findIndex(s => s.value === montage.status);
 
-    // Check for contract and quote acceptance if moving to or past 'before_first_payment'
-    if (newStatusIndex >= beforeFirstPaymentIndex) {
-        const acceptedQuote = montage.quotes?.find(q => q.status === 'accepted');
-        const signedContract = acceptedQuote?.contract?.status === 'signed';
-
-        if (!acceptedQuote) {
-            setAlertMessage("Nie można przejść do tego etapu. Wymagana jest zaakceptowana wycena.");
-            setAlertOpen(true);
-            return;
-        }
-
-        if (!signedContract) {
-            setAlertMessage("Nie można przejść do tego etapu. Wymagana jest podpisana umowa przez klienta.");
-            setAlertOpen(true);
-            return;
-        }
-    }
-    
-    // If trying to move past 'before_first_payment'
-    if (newStatusIndex > beforeFirstPaymentIndex) {
-        const fvIssued = montage.checklistItems?.find(i => i.label === "Wystawiono FV zaliczkową")?.completed;
-        const fvPaid = montage.checklistItems?.find(i => i.label === "Zapłacono FV zaliczkową")?.completed;
-
-        if (!fvIssued || !fvPaid) {
-            setAlertMessage("Nie można przejść do kolejnego etapu. Upewnij się, że wystawiono i opłacono fakturę zaliczkową.");
-            setAlertOpen(true);
-            return;
+    if (targetStatusIndex > currentStatusIndex) {
+        // Check if all checklist items for CURRENT and PREVIOUS stages are completed
+        for (let i = currentStatusIndex; i < targetStatusIndex; i++) {
+            const stageId = statusOptions[i].value;
+            
+            // Find items for this stage
+            const stageItems = montage.checklistItems.filter(item => {
+                const template = DEFAULT_MONTAGE_CHECKLIST.find(t => t.id === item.templateId);
+                return template?.associatedStage === stageId;
+            });
+            
+            const incompleteItems = stageItems.filter(item => !item.completed);
+            
+            if (incompleteItems.length > 0) {
+                setAlertMessage(`Nie można zmienić etapu. Dokończ zadania z etapu: ${statusOptions[i].label}`);
+                setAlertOpen(true);
+                return;
+            }
         }
     }
 
@@ -265,6 +246,100 @@ export function MontageWorkflowTab({
   const daysToInstallation = montage.scheduledInstallationAt 
     ? differenceInCalendarDays(new Date(montage.scheduledInstallationAt), new Date()) 
     : null;
+
+  const renderChecklistItem = (item: typeof montage.checklistItems[0]) => {
+      const isLocked = item.templateId && LOCKED_TEMPLATE_IDS.includes(item.templateId);
+      
+      return (
+        <div key={item.id} className="group flex items-start gap-3 rounded-lg border p-4 transition-colors hover:bg-muted/50">
+            {isEditing ? (
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn("h-6 w-6", isLocked ? "text-muted-foreground cursor-not-allowed" : "text-destructive hover:text-destructive/90")}
+                    onClick={() => !isLocked && handleDeleteItem(item.id)}
+                    disabled={!!isLocked}
+                    title={isLocked ? "Ten element jest wymagany przez system" : "Usuń element"}
+                >
+                    {isLocked ? <Lock className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
+                </Button>
+            ) : (
+                <Checkbox
+                    id={item.id}
+                    checked={item.completed}
+                    onCheckedChange={(checked) => handleToggle(item.id, checked as boolean)}
+                    className="mt-1"
+                />
+            )}
+            
+            <div className="flex-1 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                    {isEditing ? (
+                        <Input
+                            defaultValue={item.label}
+                            className="h-8"
+                            disabled={!!isLocked}
+                            title={isLocked ? "Nazwa tego elementu jest zablokowana" : undefined}
+                            onBlur={(e) => {
+                                if (!isLocked && e.target.value !== item.label) {
+                                    handleUpdateLabel(item.id, e.target.value);
+                                }
+                            }}
+                        />
+                    ) : (
+                        <Label
+                            htmlFor={item.id}
+                            className={cn(
+                                "text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer",
+                                item.completed && "text-muted-foreground line-through"
+                            )}
+                        >
+                            {item.label}
+                        </Label>
+                    )}
+                </div>
+
+                {item.allowAttachment && (
+                    <div className="flex items-center gap-2">
+                        {item.attachment ? (
+                            <a
+                                href={item.attachment.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 rounded-md bg-muted px-2 py-1 text-xs font-medium text-primary hover:underline"
+                            >
+                                <FileText className="h-3 w-3" />
+                                {item.attachment.title || "Załącznik"}
+                            </a>
+                        ) : (
+                            <div className="flex items-center gap-2">
+                                <Input
+                                    type="file"
+                                    id={`file-${item.id}`}
+                                    className="hidden"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) handleFileUpload(item.id, file);
+                                    }}
+                                />
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 text-xs"
+                                    onClick={() => document.getElementById(`file-${item.id}`)?.click()}
+                                    disabled={pending}
+                                >
+                                    <Upload className="mr-2 h-3 w-3" />
+                                    Dodaj załącznik
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        </div>
+      );
+  };
 
   const getMaterialAlert = () => {
     if (daysToInstallation === null) return null;
@@ -482,100 +557,54 @@ export function MontageWorkflowTab({
                     </Button>
                 </div>
             ) : (
-                <div className="space-y-4">
-                    {montage.checklistItems.map((item) => {
-                        const isLocked = item.templateId && LOCKED_TEMPLATE_IDS.includes(item.templateId);
-                        
-                        return (
-                        <div key={item.id} className="group flex items-start gap-3 rounded-lg border p-4 transition-colors hover:bg-muted/50">
-                            {isEditing ? (
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className={cn("h-6 w-6", isLocked ? "text-muted-foreground cursor-not-allowed" : "text-destructive hover:text-destructive/90")}
-                                    onClick={() => !isLocked && handleDeleteItem(item.id)}
-                                    disabled={!!isLocked}
-                                    title={isLocked ? "Ten element jest wymagany przez system" : "Usuń element"}
-                                >
-                                    {isLocked ? <Lock className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
-                                </Button>
-                            ) : (
-                                <Checkbox
-                                    id={item.id}
-                                    checked={item.completed}
-                                    onCheckedChange={(checked) => handleToggle(item.id, checked as boolean)}
-                                    className="mt-1"
-                                />
-                            )}
-                            
-                            <div className="flex-1 space-y-2">
-                                <div className="flex items-start justify-between gap-2">
-                                    {isEditing ? (
-                                        <Input
-                                            defaultValue={item.label}
-                                            className="h-8"
-                                            disabled={!!isLocked}
-                                            title={isLocked ? "Nazwa tego elementu jest zablokowana" : undefined}
-                                            onBlur={(e) => {
-                                                if (!isLocked && e.target.value !== item.label) {
-                                                    handleUpdateLabel(item.id, e.target.value);
-                                                }
-                                            }}
-                                        />
-                                    ) : (
-                                        <Label
-                                            htmlFor={item.id}
-                                            className={cn(
-                                                "text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer",
-                                                item.completed && "text-muted-foreground line-through"
-                                            )}
-                                        >
-                                            {item.label}
-                                        </Label>
-                                    )}
-                                </div>
+                <div className="space-y-6">
+                    {statusOptions.map(status => {
+                        const stageItems = montage.checklistItems.filter(item => {
+                            const template = DEFAULT_MONTAGE_CHECKLIST.find(t => t.id === item.templateId);
+                            return template?.associatedStage === status.value;
+                        });
 
-                                {item.allowAttachment && (
-                                    <div className="flex items-center gap-2">
-                                        {item.attachment ? (
-                                            <a
-                                                href={item.attachment.url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center gap-2 rounded-md bg-muted px-2 py-1 text-xs font-medium text-primary hover:underline"
-                                            >
-                                                <FileText className="h-3 w-3" />
-                                                {item.attachment.title || "Załącznik"}
-                                            </a>
-                                        ) : (
-                                            <div className="flex items-center gap-2">
-                                                <Input
-                                                    type="file"
-                                                    id={`file-${item.id}`}
-                                                    className="hidden"
-                                                    onChange={(e) => {
-                                                        const file = e.target.files?.[0];
-                                                        if (file) handleFileUpload(item.id, file);
-                                                    }}
-                                                />
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="h-7 text-xs"
-                                                    onClick={() => document.getElementById(`file-${item.id}`)?.click()}
-                                                    disabled={pending}
-                                                >
-                                                    <Upload className="mr-2 h-3 w-3" />
-                                                    Dodaj załącznik
-                                                </Button>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
+                        if (stageItems.length === 0) return null;
+
+                        return (
+                            <div key={status.value} className="space-y-3">
+                                <div className="flex items-center gap-2 pb-1 border-b">
+                                    <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                                        {status.label}
+                                    </h4>
+                                    <span className="text-xs bg-muted px-2 py-0.5 rounded-full font-medium">
+                                        {stageItems.filter(i => i.completed).length}/{stageItems.length}
+                                    </span>
+                                </div>
+                                <div className="space-y-2">
+                                    {stageItems.map(renderChecklistItem)}
+                                </div>
                             </div>
-                        </div>
                         );
                     })}
+
+                    {/* Other Items */}
+                    {(() => {
+                        const otherItems = montage.checklistItems.filter(item => {
+                            const template = DEFAULT_MONTAGE_CHECKLIST.find(t => t.id === item.templateId);
+                            return !template?.associatedStage;
+                        });
+
+                        if (otherItems.length === 0) return null;
+
+                        return (
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-2 pb-1 border-b">
+                                    <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                                        Inne / Niestandardowe
+                                    </h4>
+                                </div>
+                                <div className="space-y-2">
+                                    {otherItems.map(renderChecklistItem)}
+                                </div>
+                            </div>
+                        );
+                    })()}
 
                     {isEditing && (
                         <div className="flex items-center gap-2 pt-2">

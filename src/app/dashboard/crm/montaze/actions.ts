@@ -992,6 +992,55 @@ export async function toggleMontageChecklistItem({ itemId, montageId, completed 
 		.set({ completed, updatedAt: new Date() })
 		.where(eq(montageChecklistItems.id, itemId));
 
+    // Stage Completion Logic
+    if (completed && item.templateId) {
+        const templates = await getMontageChecklistTemplates();
+        const currentTemplate = templates.find(t => t.id === item.templateId);
+        
+        if (currentTemplate && currentTemplate.associatedStage) {
+            const stage = currentTemplate.associatedStage;
+            
+            // Get all items for this montage
+            const allItems = await db
+                .select({
+                    id: montageChecklistItems.id,
+                    templateId: montageChecklistItems.templateId,
+                    completed: montageChecklistItems.completed
+                })
+                .from(montageChecklistItems)
+                .where(eq(montageChecklistItems.montageId, montageId));
+
+            // Filter items belonging to the same stage
+            const stageItems = allItems.filter(i => {
+                const t = templates.find(temp => temp.id === i.templateId);
+                return t?.associatedStage === stage;
+            });
+
+            // Check if all are completed
+            const allCompleted = stageItems.every(i => i.completed);
+
+            if (allCompleted) {
+                // Find next stage
+                const statuses = await getMontageStatusDefinitions();
+                const currentStatusIndex = statuses.findIndex(s => s.id === stage);
+                
+                if (currentStatusIndex !== -1 && currentStatusIndex < statuses.length - 1) {
+                    const nextStatus = statuses[currentStatusIndex + 1];
+                    
+                    // Check if current montage status is the same as the stage
+                    const montage = await db.query.montages.findFirst({
+                        where: eq(montages.id, montageId),
+                        columns: { status: true }
+                    });
+
+                    if (montage && montage.status === stage) {
+                         await updateMontageStatus({ montageId, status: nextStatus.id });
+                    }
+                }
+            }
+        }
+    }
+
 	if (completed && item.templateId) {
 		const rules = await getMontageAutomationRules();
 		const rule = rules.find(r => r.checklistItemId === item.templateId);
