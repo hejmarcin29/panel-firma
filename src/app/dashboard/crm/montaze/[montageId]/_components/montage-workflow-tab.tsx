@@ -204,9 +204,10 @@ export function MontageWorkflowTab({
             const incompleteItems = stageItems.filter(item => !item.completed);
             
             if (incompleteItems.length > 0) {
+                const missingLabels = incompleteItems.map(i => i.label).join(", ");
                 const message = isInstaller 
                     ? `Nie można zmienić etapu. Biuro musi zatwierdzić etap: ${statusOptions[i].label}`
-                    : `Nie można zmienić etapu. Dokończ zadania z etapu: ${statusOptions[i].label}`;
+                    : `Nie można zmienić etapu. Dokończ zadania z etapu: ${statusOptions[i].label} (Brakuje: ${missingLabels})`;
                 setAlertMessage(message);
                 setAlertOpen(true);
                 return;

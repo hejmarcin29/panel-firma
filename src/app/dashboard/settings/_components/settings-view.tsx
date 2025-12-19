@@ -353,7 +353,7 @@ export function SettingsView({
           </TabsList>
         </aside>
 
-        <div className="flex-1 max-w-4xl space-y-4">
+        <div className="flex-1 max-w-full space-y-4">
           <TabsContent value="appearance" className="m-0 space-y-4">
             {appearance}
           </TabsContent>

@@ -24,9 +24,7 @@ import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
 
 import { R2ConfigForm } from './_components/r2-config-form';
 import { MailSettingsForm } from './_components/mail-settings-form';
-import { MontageChecklistSettings } from './_components/montage-checklist-settings';
 import { AutomationRegistry } from './_components/automation-registry';
-import { MontageStatusSettings } from './_components/montage-status-settings';
 import { SettingsView } from './_components/settings-view';
 import { MobileMenuSettings } from './_components/mobile-menu-settings';
 import { KpiSettingsForm } from './_components/kpi-settings-form';
@@ -145,6 +143,7 @@ export default async function SettingsPage() {
 		montageChecklistTemplates,
 		montageAutomationRules,
 		montageStatusDefinitions,
+        montageNotificationsJson,
 		kpiMontageThreatDays,
 		kpiOrderUrgentDays,
         kpiAlertMissingMaterialStatusDays,
@@ -189,6 +188,7 @@ export default async function SettingsPage() {
 		getMontageChecklistTemplates(),
 		getMontageAutomationRules(),
 		getMontageStatusDefinitions(),
+        getAppSetting(appSettingKeys.montageNotifications),
 		getAppSetting(appSettingKeys.kpiMontageThreatDays),
 		getAppSetting(appSettingKeys.kpiOrderUrgentDays),
         getAppSetting(appSettingKeys.kpiAlertMissingMaterialStatusDays),
@@ -225,6 +225,8 @@ export default async function SettingsPage() {
         label: def.label,
         description: def.description
     }));
+
+    const montageNotifications = montageNotificationsJson ? JSON.parse(montageNotificationsJson) : {};
 
 	const [pendingRow] = await db
 		.select({ count: sql<number>`count(*)` })
@@ -365,12 +367,11 @@ export default async function SettingsPage() {
             }
 			montageSettings={
 				<div className="space-y-6">
-					<MontageStatusSettings initialStatuses={montageStatusDefinitions} />
-					<MontageChecklistSettings initialTemplates={montageChecklistTemplates} />
 					<AutomationRegistry 
                         templates={montageChecklistTemplates} 
                         initialRules={montageAutomationRules} 
                         statusOptions={statusOptions}
+                        initialNotifications={montageNotifications}
                     />
 				</div>
 			}

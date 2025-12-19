@@ -121,7 +121,7 @@ export function MontageHeader({ montage, statusOptions, userRoles = ['admin'] }:
                     defaultIsHousingVat={defaultIsHousingVat}
                     onComplete={() => router.refresh()}
                 />
-            )}          {isMobile ? (
+            )}          {isMobile && (
              <div className="flex gap-1">
                 {montage.contactPhone && (
                     <Button size="icon" variant="outline" asChild>
@@ -144,13 +144,14 @@ export function MontageHeader({ montage, statusOptions, userRoles = ['admin'] }:
                     </Button>
                 )}
              </div>
-          ) : (
+          )}
+
             <Select
                 value={montage.status}
                 onValueChange={handleStatusChange}
                 disabled={pending || !canEditStatus}
             >
-                <SelectTrigger className={cn("w-[180px]", (pending || !canEditStatus) && "opacity-50")}>
+                <SelectTrigger className={cn("w-[180px] hidden sm:flex", isMobile && "w-[140px] flex", (pending || !canEditStatus) && "opacity-50")}>
                 <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -173,7 +174,6 @@ export function MontageHeader({ montage, statusOptions, userRoles = ['admin'] }:
                 ))}
                 </SelectContent>
             </Select>
-          )}
 
           {canDelete && (
             <>

@@ -1015,48 +1015,74 @@ export async function toggleMontageChecklistItem({ itemId, montageId, completed 
     await logSystemEvent(actionType, `Zmieniono status elementu "${itemLabel}" na: ${completed ? 'Wykonane' : 'Do zrobienia'}`, user.id);
 
     // Stage Completion Logic
-    if (completed && item.templateId) {
+    if (item.templateId) {
         const templates = await getMontageChecklistTemplates();
         const currentTemplate = templates.find(t => t.id === item.templateId);
         
         if (currentTemplate && currentTemplate.associatedStage) {
             const stage = currentTemplate.associatedStage;
-            
-            // Get all items for this montage
-            const allItems = await db
-                .select({
-                    id: montageChecklistItems.id,
-                    templateId: montageChecklistItems.templateId,
-                    completed: montageChecklistItems.completed
-                })
-                .from(montageChecklistItems)
-                .where(eq(montageChecklistItems.montageId, montageId));
+            const statuses = await getMontageStatusDefinitions();
+            const stageIndex = statuses.findIndex(s => s.id === stage);
 
-            // Filter items belonging to the same stage
-            const stageItems = allItems.filter(i => {
-                const t = templates.find(temp => temp.id === i.templateId);
-                return t?.associatedStage === stage;
-            });
+            if (completed) {
+                // Forward Logic (existing)
+                // Get all items for this montage
+                const allItems = await db
+                    .select({
+                        id: montageChecklistItems.id,
+                        templateId: montageChecklistItems.templateId,
+                        completed: montageChecklistItems.completed
+                    })
+                    .from(montageChecklistItems)
+                    .where(eq(montageChecklistItems.montageId, montageId));
 
-            // Check if all are completed
-            const allCompleted = stageItems.every(i => i.completed);
+                // Filter items belonging to the same stage
+                const stageItems = allItems.filter(i => {
+                    const t = templates.find(temp => temp.id === i.templateId);
+                    return t?.associatedStage === stage;
+                });
 
-            if (allCompleted) {
-                // Find next stage
-                const statuses = await getMontageStatusDefinitions();
-                const currentStatusIndex = statuses.findIndex(s => s.id === stage);
-                
-                if (currentStatusIndex !== -1 && currentStatusIndex < statuses.length - 1) {
-                    const nextStatus = statuses[currentStatusIndex + 1];
+                // Check if all are completed
+                const allCompleted = stageItems.every(i => i.completed);
+
+                if (allCompleted) {
+                    // Find next stage
+                    if (stageIndex !== -1 && stageIndex < statuses.length - 1) {
+                        const nextStatus = statuses[stageIndex + 1];
+                        
+                        // Check if current montage status is the same as the stage
+                        const montage = await db.query.montages.findFirst({
+                            where: eq(montages.id, montageId),
+                            columns: { status: true }
+                        });
+
+                        if (montage && montage.status === stage) {
+                            await updateMontageStatus({ montageId, status: nextStatus.id });
+                        }
+                    }
+                }
+            } else {
+                // Backward Logic (Rollback)
+                const montage = await db.query.montages.findFirst({
+                    where: eq(montages.id, montageId),
+                    columns: { status: true }
+                });
+
+                if (montage) {
+                    const currentStatusIndex = statuses.findIndex(s => s.id === montage.status);
                     
-                    // Check if current montage status is the same as the stage
-                    const montage = await db.query.montages.findFirst({
-                        where: eq(montages.id, montageId),
-                        columns: { status: true }
-                    });
-
-                    if (montage && montage.status === stage) {
-                         await updateMontageStatus({ montageId, status: nextStatus.id });
+                    // If current status is "ahead" of the item's stage (meaning we passed this stage),
+                    // OR if we are IN the next stage (which implies previous stage is done),
+                    // we should revert to the item's stage.
+                    
+                    // Example: Item is in 'before_measurement' (index 1).
+                    // Current status is 'before_first_payment' (index 2).
+                    // We unchecked an item from 'before_measurement'.
+                    // We should go back to 'before_measurement'.
+                    
+                    if (currentStatusIndex > stageIndex) {
+                         await updateMontageStatus({ montageId, status: stage });
+                         await logSystemEvent('update_montage_status', `Cofnięto status do "${statuses[stageIndex]?.label || stage}" z powodu odznaczenia elementu listy.`, user.id);
                     }
                 }
             }

@@ -601,5 +601,21 @@ export async function bulkDeleteCustomers(ids: string[]) {
     revalidatePath('/dashboard/settings');
 }
 
+export async function updateMontageNotificationsAction(notifications: Record<string, boolean>) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) {
+        throw new Error('Tylko administrator może zmieniać ustawienia powiadomień.');
+    }
+
+    await setAppSetting({
+        key: appSettingKeys.montageNotifications,
+        value: JSON.stringify(notifications),
+        userId: user.id,
+    });
+
+    await logSystemEvent('update_montage_notifications', 'Zaktualizowano ustawienia powiadomień montażu', user.id);
+    revalidatePath('/dashboard/settings');
+}
+
 
 

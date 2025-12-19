@@ -19,6 +19,7 @@ export const appSettingKeys = {
 	r2PublicBaseUrl: 'r2.public_base_url',
 	montageChecklist: 'montage.checklist',
 	montageAutomation: 'montage.automation',
+	montageNotifications: 'montage.notifications',
 	montageStatuses: 'montage.statuses',
 	kpiMontageThreatDays: 'kpi.montage_threat_days',
 	kpiOrderUrgentDays: 'kpi.order_urgent_days',
