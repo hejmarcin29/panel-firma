@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { MessageSquare, Mail, Calendar, Bell, CheckCircle2, ArrowRight } from 'lucide-react';
+import { MessageSquare, Mail, Calendar, Bot } from 'lucide-react';
 import { MontageAutomationSettings } from './montage-automation-settings';
 import type { MontageChecklistTemplate } from '@/lib/montaze/checklist';
 import type { MontageAutomationRule } from '@/lib/montaze/automation';

@@ -5,14 +5,13 @@ import {
     Bot, 
     Mail, 
     MessageSquare, 
-    Calendar, 
     FileText, 
     CheckCircle2, 
-    AlertCircle,
     Info,
     Pencil,
     Trash2,
-    PlusCircle
+    PlusCircle,
+    LucideIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Montage } from "../../types";
@@ -25,7 +24,7 @@ type SystemLog = {
     userId: string | null;
 };
 
-const ACTION_ICONS: Record<string, any> = {
+const ACTION_ICONS: Record<string, LucideIcon> = {
     'create_montage': PlusCircle,
     'create_lead': PlusCircle,
     'update_montage_status': CheckCircle2,
@@ -75,7 +74,7 @@ export function MontageHistoryTab({ montage, logs = [] }: { montage: Montage; lo
             </div>
         )}
         
-        <div className="relative space-y-8 before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
+        <div className="relative space-y-8 before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-linear-to-b before:from-transparent before:via-border before:to-transparent">
             {Object.entries(groupedLogs).map(([date, dayLogs]) => (
                 <div key={date} className="relative">
                     <div className="sticky top-0 z-10 mb-4 flex items-center justify-center">

@@ -118,7 +118,7 @@ export default function ShowroomPage() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.4 }}
                             >
-                                <div className="group relative aspect-[4/5] overflow-hidden rounded-xl bg-zinc-100 mb-4">
+                                <div className="group relative aspect-4/5 overflow-hidden rounded-xl bg-zinc-100 mb-4">
                                     {product.images[0] ? (
                                         <Image
                                             src={product.images[0].src}
