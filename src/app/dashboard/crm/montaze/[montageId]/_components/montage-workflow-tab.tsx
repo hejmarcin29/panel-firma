@@ -36,7 +36,7 @@ import {
 } from "../../actions";
 import { type MontageDetailsData } from "../actions";
 import type { Montage, StatusOption } from "../../types";
-import { DEFAULT_MONTAGE_CHECKLIST } from "@/lib/montaze/checklist";
+import { DEFAULT_MONTAGE_CHECKLIST } from "@/lib/montaze/checklist-shared";
 
 type UserOption = { id: string; name: string | null; email: string };
 

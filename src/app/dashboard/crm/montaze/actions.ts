@@ -992,7 +992,8 @@ export async function toggleMontageChecklistItem({ itemId, montageId, completed 
 	const [item] = await db
 		.select({ 
 			id: montageChecklistItems.id,
-			templateId: montageChecklistItems.templateId
+			templateId: montageChecklistItems.templateId,
+            label: montageChecklistItems.label
 		})
 		.from(montageChecklistItems)
 		.where(and(eq(montageChecklistItems.id, itemId), eq(montageChecklistItems.montageId, montageId)))

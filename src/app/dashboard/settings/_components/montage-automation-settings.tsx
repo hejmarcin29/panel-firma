@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 
 import { updateMontageAutomationRulesAction } from '../actions';
-import type { MontageChecklistTemplate } from '@/lib/montaze/checklist';
+import type { MontageChecklistTemplate } from '@/lib/montaze/checklist-shared';
 import type { MontageAutomationRule } from '@/lib/montaze/automation';
 import type { MontageStatus } from '@/lib/db/schema';
 import type { StatusOption } from '../../crm/montaze/types';

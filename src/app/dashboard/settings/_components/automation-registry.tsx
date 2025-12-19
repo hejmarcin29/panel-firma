@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { MessageSquare, Mail, Calendar, Bot } from 'lucide-react';
 import { MontageAutomationSettings } from './montage-automation-settings';
-import type { MontageChecklistTemplate } from '@/lib/montaze/checklist';
+import type { MontageChecklistTemplate } from '@/lib/montaze/checklist-shared';
 import type { MontageAutomationRule } from '@/lib/montaze/automation';
 import type { StatusOption } from '../../crm/montaze/types';
 
