@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 
 import type { Montage, StatusOption, AlertSettings } from '../types';
-import { summarizeMaterialDetails, formatScheduleRange } from '../utils';
+import { formatScheduleRange } from '../utils';
 
 function countCompleted(tasks: Montage['tasks']): number {
 	return tasks.filter((task) => task.completed).length;
@@ -122,11 +122,6 @@ export function MontagePipelineCard({ montage, threatDays, alertSettings }: Prop
                             {isThreatened && (
                                 <Badge variant="destructive" className="shrink-0 rounded-full px-1.5 py-0 text-[10px] font-normal animate-pulse">
                                     Zagrożony
-                                </Badge>
-                            )}
-                            {hasMaterials && (
-                                <Badge variant="secondary" className="shrink-0 rounded-full px-1.5 py-0 text-[10px] font-normal">
-                                    materiały
                                 </Badge>
                             )}
                             {pendingTasksCount > 0 && (

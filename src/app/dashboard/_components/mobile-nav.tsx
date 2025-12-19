@@ -21,7 +21,10 @@ import {
   ShoppingBag,
   Monitor,
   FileText,
-  Store
+  Store,
+  Factory,
+  Wallet,
+  Handshake
 } from "lucide-react";
 
 import { cn } from '@/lib/utils';
@@ -53,12 +56,15 @@ const iconMap: Record<string, LucideIcon> = {
   ShoppingBag,
   Monitor,
   FileText,
-  Store
+  Store,
+  Factory,
+  Wallet,
+  Handshake
 };
 
 const mainLinks = [
   { href: "/dashboard", label: "Start", icon: Home },
-  { href: "/dashboard/zadania", label: "Zad. Montaże", icon: ClipboardList },
+  { href: "/dashboard/zadania", label: "Zadania", icon: ClipboardList },
   { href: "/dashboard/calendar", label: "Kalendarz", icon: Calendar },
 ];
 
@@ -66,7 +72,10 @@ const menuLinks = [
   { href: "/dashboard/crm", label: "CRM", icon: Users },
   { href: "/dashboard/orders", label: "Zamówienia", icon: Package },
   { href: "/dashboard/products", label: "Produkty", icon: ShoppingBag },
+  { href: "/dashboard/erp", label: "ERP", icon: Factory },
   { href: "/dashboard/showroom", label: "Showroom", icon: Store },
+  { href: "/dashboard/wallet", label: "Portfel", icon: Wallet },
+  { href: "/dashboard/partner", label: "Moje Polecenia", icon: Handshake },
   { href: "/dashboard/mail", label: "Poczta", icon: Mail },
   { href: "/dashboard/settings", label: "Ustawienia", icon: Settings },
 ];
@@ -104,13 +113,30 @@ export function MobileNav({ user, urgentOrdersCount = 0, userRoles = ['admin'] }
     setOpen(newOpen);
   };
 
-  const restrictedLinks = ['/dashboard/crm', '/dashboard/orders', '/dashboard/products', '/dashboard/mail', '/dashboard/settings'];
-  
   const isAllowed = (href: string) => {
-      if (href === '/dashboard/showroom') {
+      // Special case for Wallet & Showroom: Only show if user is explicitly an architect
+      if (href === '/dashboard/wallet' || href === '/dashboard/showroom') {
           return userRoles.includes('architect');
       }
+
+      // Special case for Partner
+      if (href === '/dashboard/partner') {
+          return userRoles.includes('partner');
+      }
+
+      if (userRoles.includes('partner')) {
+          // Partners only see their dashboard
+          return false;
+      }
+
       if (userRoles.includes('admin')) return true;
+      
+      if (userRoles.includes('architect')) {
+           const allowedLinks = ['/dashboard', '/dashboard/crm', '/dashboard/wallet', '/dashboard/showroom'];
+           return allowedLinks.includes(href);
+      }
+
+      const restrictedLinks = ['/dashboard/orders', '/dashboard/products', '/dashboard/mail', '/dashboard/settings', '/dashboard/wallet', '/dashboard/erp'];
       return !restrictedLinks.includes(href);
   };
 
@@ -207,6 +233,7 @@ export function MobileNav({ user, urgentOrdersCount = 0, userRoles = ['admin'] }
                     <p className="text-sm font-medium text-muted-foreground px-2">Aplikacje</p>
                     {[...mainLinks, ...menuLinks].filter(link => isAllowed(link.href)).map(({ href, label, icon: Icon }) => {
                         const isActive = pathname === href || pathname?.startsWith(href);
+                        const displayLabel = (userRoles.includes('architect') && href === '/dashboard/crm') ? 'Moje Projekty' : label;
                         return (
                             <Link
                                 key={href}
@@ -218,7 +245,13 @@ export function MobileNav({ user, urgentOrdersCount = 0, userRoles = ['admin'] }
                                 )}
                             >
                                 <Icon className="h-4 w-4" />
-                                {label}
+                                {displayLabel}
+                                {href === '/dashboard/orders' && urgentOrdersCount > 0 && (
+                                    <span className="ml-auto flex h-2.5 w-2.5">
+                                        <span className="animate-ping absolute inline-flex h-2.5 w-2.5 rounded-full bg-red-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                                    </span>
+                                )}
                             </Link>
                         );
                     })}
