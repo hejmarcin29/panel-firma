@@ -81,7 +81,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
                 {/* Left Column - User Info */}
                 <div className="space-y-6">
                     <Card className="overflow-hidden">
-                        <div className="h-32 bg-gradient-to-br from-primary/10 to-primary/5 relative">
+                        <div className="h-32 bg-linear-to-br from-primary/10 to-primary/5 relative">
                             <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
                                 <Avatar className="h-24 w-24 border-4 border-background shadow-lg">
                                     <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${user.email}`} />

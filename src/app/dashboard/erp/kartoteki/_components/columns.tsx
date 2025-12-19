@@ -45,7 +45,7 @@ export const columns: ColumnDef<Product>[] = [
   {
     accessorKey: "id",
     header: "ID",
-    cell: ({ row }) => <div className="w-[80px] font-mono text-xs">{row.getValue("id")}</div>,
+    cell: ({ row }) => <div className="w-20 font-mono text-xs">{row.getValue("id")}</div>,
   },
   {
     accessorKey: "name",

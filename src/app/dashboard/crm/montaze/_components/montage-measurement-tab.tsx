@@ -57,7 +57,6 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   
-  const isInstaller = userRoles.includes('installer') && !userRoles.includes('admin');
   const isReadOnly = !userRoles.includes('admin') && !userRoles.includes('installer');
 
   const [isSketchOpen, setIsSketchOpen] = useState(false);
@@ -101,6 +100,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
 
   const [isPanelSelectorOpen, setIsPanelSelectorOpen] = useState(false);
   const [isSkirtingSelectorOpen, setIsSkirtingSelectorOpen] = useState(false);
+  const [includeSkirting, setIncludeSkirting] = useState(!!(montage.skirtingLength && parseFloat(montage.skirtingLength.toString()) > 0));
 
   const technicalAudit = montage.technicalAudit as unknown as TechnicalAuditData | null;
 
@@ -112,21 +112,21 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
           measurementDetails,
           floorArea: floorArea ? parseFloat(floorArea) : null,
           floorDetails: panelAdditionalMaterials,
-          skirtingLength: skirtingLength ? parseFloat(skirtingLength) : null,
-          skirtingDetails: skirtingAdditionalMaterials,
+          skirtingLength: includeSkirting && skirtingLength ? parseFloat(skirtingLength) : null,
+          skirtingDetails: includeSkirting ? skirtingAdditionalMaterials : '',
           panelModel,
           panelProductId,
           panelWaste: parseFloat(panelWaste),
-          skirtingModel,
-          skirtingProductId,
-          skirtingWaste: parseFloat(skirtingWaste),
+          skirtingModel: includeSkirting ? skirtingModel : '',
+          skirtingProductId: includeSkirting ? skirtingProductId : null,
+          skirtingWaste: includeSkirting ? parseFloat(skirtingWaste) : 0,
           modelsApproved,
           measurementInstallationMethod: installationMethod,
           measurementSubfloorCondition: subfloorCondition,
           measurementAdditionalWorkNeeded: additionalWorkNeeded,
           measurementAdditionalWorkDescription: additionalWorkDescription,
           measurementAdditionalMaterials: additionalMaterials,
-          measurementSeparateSkirting: separateSkirting,
+          measurementSeparateSkirting: includeSkirting ? separateSkirting : false,
           additionalInfo,
           sketchUrl: sketchDataUrl,
           scheduledInstallationAt: dateRange?.from ? dateRange.from.getTime() : null,
@@ -161,6 +161,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
     additionalInfo,
     sketchDataUrl,
     dateRange,
+    includeSkirting,
   ]);
 
   useEffect(() => {
@@ -401,105 +402,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
             </CardContent>
           </Card>
 
-          {/* Skirting Calculator */}
-          <Card>
-            <CardHeader className="pb-3">
-                <CardTitle className="text-base font-medium flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-                    Listwy
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                        <Label htmlFor="skirtingLength" className="text-xs text-muted-foreground">Wymiar netto (mb)</Label>
-                        <Input
-                        id="skirtingLength"
-                        type="number"
-                        step="0.01"
-                        placeholder="0.00"
-                        value={skirtingLength}
-                        disabled={isReadOnly}
-                        onChange={(e) => setSkirtingLength(e.target.value)}
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label htmlFor="skirtingWaste" className="text-xs text-muted-foreground">Zapas (%)</Label>
-                        <Select value={skirtingWaste} onValueChange={setSkirtingWaste} disabled={isReadOnly}>
-                            <SelectTrigger id="skirtingWaste">
-                                <SelectValue placeholder="Zapas" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="0">0%</SelectItem>
-                                <SelectItem value="5">5%</SelectItem>
-                                <SelectItem value="7">7%</SelectItem>
-                                <SelectItem value="10">10%</SelectItem>
-                                <SelectItem value="15">15%</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
-
-                <div className="space-y-2 pt-2 border-t border-dashed">
-                    <div className="space-y-1">
-                        <Label htmlFor="skirtingModel" className="text-xs text-muted-foreground">Model listew</Label>
-                        <div className="flex gap-2">
-                            <Input
-                                id="skirtingModel"
-                                placeholder="Kliknij aby wybrać z listy..."
-                                value={skirtingModel}
-                                readOnly
-                                onClick={() => !isReadOnly && setIsSkirtingSelectorOpen(true)}
-                                className="h-8 text-sm flex-1 cursor-pointer bg-muted/50"
-                                disabled={isReadOnly}
-                            />
-                            <Button 
-                                type="button" 
-                                variant="outline" 
-                                size="sm" 
-                                className="h-8 px-2"
-                                onClick={() => setIsSkirtingSelectorOpen(true)}
-                                disabled={isReadOnly}
-                            >
-                                Wybierz
-                            </Button>
-                        </div>
-                    </div>
-                    <div className="space-y-1">
-                        <Label htmlFor="skirtingAdditionalMaterials" className="text-xs text-muted-foreground">Dodatkowe (klej, narożniki...)</Label>
-                        <Input
-                        id="skirtingAdditionalMaterials"
-                        placeholder="np. klej montażowy, narożniki wew."
-                        value={skirtingAdditionalMaterials}
-                        disabled={isReadOnly}
-                        onChange={(e) => setSkirtingAdditionalMaterials(e.target.value)}
-                        className="h-8 text-sm"
-                        />
-                    </div>
-                </div>
-
-                <div className="pt-2 border-t flex justify-between items-center">
-                    <span className="text-sm font-medium text-muted-foreground">Do zamówienia:</span>
-                    <span className="text-lg font-bold">
-                        {skirtingLength ? (parseFloat(skirtingLength) * (1 + parseInt(skirtingWaste)/100)).toFixed(2) : '0.00'} mb
-                    </span>
-                </div>
-                
-                <div className="pt-2 border-t flex items-center space-x-2">
-                    <Checkbox 
-                        disabled={isReadOnly}
-                        id="separateSkirting" 
-                        checked={separateSkirting} 
-                        onCheckedChange={(checked) => setSeparateSkirting(checked as boolean)} 
-                    />
-                    <Label htmlFor="separateSkirting" className="text-sm font-medium">Zalecany montaż listew w osobnym terminie</Label>
-                </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Technical Details & Additional Work */}
-        <div className="grid gap-6 md:grid-cols-2">
+          {/* Technical Details */}
             <Card>
                 <CardHeader className="pb-3">
                     <CardTitle className="text-base font-medium">Szczegóły techniczne</CardTitle>
@@ -581,7 +484,10 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                     </div>
                 </CardContent>
             </Card>
+        </div>
 
+        {/* Additional Work & Skirting */}
+        <div className="grid gap-6 md:grid-cols-2">
             <Card>
                 <CardHeader className="pb-3">
                     <CardTitle className="text-base font-medium">Prace dodatkowe i materiały</CardTitle>
@@ -629,6 +535,115 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                     </div>
                 </CardContent>
             </Card>
+
+          {/* Skirting Calculator */}
+          <Card>
+            <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                    <CardTitle className="text-base font-medium flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-amber-500"></span>
+                        Listwy
+                    </CardTitle>
+                    <div className="flex items-center gap-2">
+                        <Label htmlFor="includeSkirting" className="text-sm font-normal text-muted-foreground">Montaż listew</Label>
+                        <Switch 
+                            id="includeSkirting"
+                            checked={includeSkirting} 
+                            onCheckedChange={setIncludeSkirting} 
+                            disabled={isReadOnly}
+                        />
+                    </div>
+                </div>
+            </CardHeader>
+            {includeSkirting && (
+                <CardContent className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                            <Label htmlFor="skirtingLength" className="text-xs text-muted-foreground">Wymiar netto (mb)</Label>
+                            <Input
+                            id="skirtingLength"
+                            type="number"
+                            step="0.01"
+                            placeholder="0.00"
+                            value={skirtingLength}
+                            disabled={isReadOnly}
+                            onChange={(e) => setSkirtingLength(e.target.value)}
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <Label htmlFor="skirtingWaste" className="text-xs text-muted-foreground">Zapas (%)</Label>
+                            <Select value={skirtingWaste} onValueChange={setSkirtingWaste} disabled={isReadOnly}>
+                                <SelectTrigger id="skirtingWaste">
+                                    <SelectValue placeholder="Zapas" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="0">0%</SelectItem>
+                                    <SelectItem value="5">5%</SelectItem>
+                                    <SelectItem value="7">7%</SelectItem>
+                                    <SelectItem value="10">10%</SelectItem>
+                                    <SelectItem value="15">15%</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    <div className="space-y-2 pt-2 border-t border-dashed">
+                        <div className="space-y-1">
+                            <Label htmlFor="skirtingModel" className="text-xs text-muted-foreground">Model listew</Label>
+                            <div className="flex gap-2">
+                                <Input
+                                    id="skirtingModel"
+                                    placeholder="Kliknij aby wybrać z listy..."
+                                    value={skirtingModel}
+                                    readOnly
+                                    onClick={() => !isReadOnly && setIsSkirtingSelectorOpen(true)}
+                                    className="h-8 text-sm flex-1 cursor-pointer bg-muted/50"
+                                    disabled={isReadOnly}
+                                />
+                                <Button 
+                                    type="button" 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="h-8 px-2"
+                                    onClick={() => setIsSkirtingSelectorOpen(true)}
+                                    disabled={isReadOnly}
+                                >
+                                    Wybierz
+                                </Button>
+                            </div>
+                        </div>
+                        <div className="space-y-1">
+                            <Label htmlFor="skirtingAdditionalMaterials" className="text-xs text-muted-foreground">Dodatkowe (klej, narożniki...)</Label>
+                            <Input
+                            id="skirtingAdditionalMaterials"
+                            placeholder="np. klej montażowy, narożniki wew."
+                            value={skirtingAdditionalMaterials}
+                            disabled={isReadOnly}
+                            onChange={(e) => setSkirtingAdditionalMaterials(e.target.value)}
+                            className="h-8 text-sm"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="pt-2 border-t flex justify-between items-center">
+                        <span className="text-sm font-medium text-muted-foreground">Do zamówienia:</span>
+                        <span className="text-lg font-bold">
+                            {skirtingLength ? (parseFloat(skirtingLength) * (1 + parseInt(skirtingWaste)/100)).toFixed(2) : '0.00'} mb
+                        </span>
+                    </div>
+                    
+                    <div className="pt-2 border-t flex items-center space-x-2">
+                        <Checkbox 
+                            disabled={isReadOnly}
+                            id="separateSkirting" 
+                            checked={separateSkirting} 
+                            onCheckedChange={(checked) => setSeparateSkirting(checked as boolean)} 
+                        />
+                        <Label htmlFor="separateSkirting" className="text-sm font-medium">Zalecany montaż listew w osobnym terminie</Label>
+                    </div>
+                </CardContent>
+            )}
+          </Card>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
@@ -872,8 +887,6 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
 
 
 
-            </div>
-            
             <ProductSelectorModal
                 isOpen={isPanelSelectorOpen}
                 onClose={() => setIsPanelSelectorOpen(false)}

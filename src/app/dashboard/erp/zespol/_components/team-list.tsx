@@ -117,7 +117,7 @@ export function TeamList({ members }: { members: TeamMember[] }) {
                             transition={{ duration: 0.2 }}
                         >
                             <Card className="h-full overflow-hidden hover:shadow-md transition-all duration-300 group border-zinc-200 dark:border-zinc-800">
-                                <div className="h-24 bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-zinc-900 dark:to-zinc-800 relative">
+                                <div className="h-24 bg-linear-to-br from-zinc-100 to-zinc-200 dark:from-zinc-900 dark:to-zinc-800 relative">
                                     <div className="absolute -bottom-10 left-6">
                                         <Avatar className="h-20 w-20 border-4 border-background shadow-lg">
                                             <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${member.email}`} />

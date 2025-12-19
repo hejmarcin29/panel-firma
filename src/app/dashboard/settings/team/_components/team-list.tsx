@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { MoreHorizontal, ShieldAlert, UserCog, LogIn, Settings2, Ruler, Hammer, PenTool, Users } from 'lucide-react';
+import { MoreHorizontal, ShieldAlert, UserCog, LogIn, Settings2, Hammer, PenTool, Users } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -361,6 +361,7 @@ export function TeamList({ members, currentUserId }: TeamListProps) {
         </div>
 
         <EmployeeDetailsSheet 
+            member={selectedMember}
             open={isSheetOpen} 
             onOpenChange={setIsSheetOpen} 
         />

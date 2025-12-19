@@ -13,7 +13,7 @@ import {
     TableHeader, 
     TableRow 
 } from "@/components/ui/table";
-import { Wallet, Hammer, Ruler, FileText } from "lucide-react";
+import { Wallet, Hammer, FileText } from "lucide-react";
 
 interface FinancialsSectionProps {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
