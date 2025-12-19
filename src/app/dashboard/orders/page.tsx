@@ -3,8 +3,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LayoutGrid, List, X } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+export const metadata: Metadata = {
+    title: 'Zamówienia',
+};
 
 import { getManualOrders } from './actions';
 import { OrdersListClient } from './orders-list-client';

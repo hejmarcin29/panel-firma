@@ -76,6 +76,14 @@ export function MontageHeader({ montage, statusOptions, userRoles = ['admin'] }:
   const showProtocolButton = (userRoles.includes('installer') || userRoles.includes('admin')) && 
                              montage.status !== 'lead';
 
+  const acceptedQuote = montage.quotes?.find(q => q.status === 'accepted') || montage.quotes?.[0];
+  // If there is a quote, check if any item has 8% VAT. If so, it's likely housing.
+  // If all items are 23%, it's likely commercial.
+  // If no quote, default to true (housing).
+  const defaultIsHousingVat = acceptedQuote 
+      ? acceptedQuote.items.some(i => i.vatRate === 8) 
+      : true;
+
   return (
     <div className="sticky top-0 z-10 flex flex-col gap-4 border-b bg-background/95 px-4 py-4 backdrop-blur supports-backdrop-filter:bg-background/60 sm:px-6">
       <div className="flex items-center justify-between gap-4">
@@ -110,6 +118,7 @@ export function MontageHeader({ montage, statusOptions, userRoles = ['admin'] }:
                     defaultLocation={montage.installationCity || ''}
                     contractNumber={montage.contractNumber || ''}
                     contractDate={montage.contractDate ? new Date(montage.contractDate as string) : null}
+                    defaultIsHousingVat={defaultIsHousingVat}
                     onComplete={() => router.refresh()}
                 />
             )}          {isMobile ? (

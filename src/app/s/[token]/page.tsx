@@ -2,10 +2,15 @@ import { notFound } from 'next/navigation';
 import { getCustomerByToken } from './actions';
 import { CustomerPortal } from './_components/customer-portal';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
+import { Metadata } from 'next';
 
 interface PageProps {
     params: Promise<{ token: string }>;
 }
+
+export const metadata: Metadata = {
+    title: 'Portal Klienta',
+};
 
 export default async function ReferralPage({ params }: PageProps) {
     const { token } = await params;

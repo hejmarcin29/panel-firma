@@ -2,8 +2,12 @@ import { getProductsFromDb, getCategories, getAttributes, getAttributeTerms, Woo
 import { ProductsListClient } from './products-list-client';
 import { requireUser } from '@/lib/auth/session';
 import { FILTERS_CONFIG } from '@/lib/filter-config';
+import { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+export const metadata: Metadata = {
+    title: 'Produkty',
+};
 
 interface ProductsPageProps {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;

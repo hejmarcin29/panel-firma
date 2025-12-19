@@ -5,6 +5,7 @@ import type {
 	MontageNote,
 	MontageTask,
 	MaterialsEditHistoryEntry,
+    QuoteItem,
 } from './types';
 import {
 	montageAttachments,
@@ -13,6 +14,7 @@ import {
 	montageTasks,
 	montages,
     quotes,
+    contracts,
 	type MontageStatus,
 	users,
     customers,
@@ -68,7 +70,9 @@ export type MontageRow = typeof montages.$inferSelect & {
 			uploader: typeof users.$inferSelect | null;
 		}
 	>;
-    quotes: Array<typeof quotes.$inferSelect>;
+    quotes: Array<typeof quotes.$inferSelect & {
+        contract: typeof contracts.$inferSelect | null;
+    }>;
     installer?: typeof users.$inferSelect | null;
     measurer?: typeof users.$inferSelect | null;
     architect?: typeof users.$inferSelect | null;
@@ -220,6 +224,12 @@ export function mapMontageRow(row: MontageRow, publicBaseUrl: string | null): Mo
             totalNet: q.totalNet,
             totalGross: q.totalGross,
             createdAt: q.createdAt,
+            items: (q.items as unknown as QuoteItem[]) || [],
+            contract: q.contract ? {
+                id: q.contract.id,
+                status: q.contract.status,
+                signedAt: q.contract.signedAt,
+            } : null,
         })),
 		notes: row.notes.map((note) => mapNote(note, publicBaseUrl)),
 		attachments: row.attachments.map((attachment) => mapAttachment(attachment, publicBaseUrl)),

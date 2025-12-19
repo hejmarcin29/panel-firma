@@ -27,7 +27,10 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Panel Firmy",
+  title: {
+    template: "%s | Prime Podłoga",
+    default: "Prime Podłoga",
+  },
   description: "System zarządzania firmą",
 };
 

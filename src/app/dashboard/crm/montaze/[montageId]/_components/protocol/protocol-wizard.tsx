@@ -40,6 +40,7 @@ interface ProtocolWizardProps {
   defaultLocation: string;
   contractNumber?: string;
   contractDate?: Date | null;
+  defaultIsHousingVat?: boolean;
   onComplete: () => void;
 }
 
@@ -50,6 +51,7 @@ export function ProtocolWizard({
   defaultLocation,
   contractNumber = '',
   contractDate = null,
+  defaultIsHousingVat = true,
   onComplete
 }: ProtocolWizardProps) {
   const [step, setStep] = useState(1);
@@ -60,7 +62,7 @@ export function ProtocolWizard({
   const [location, setLocation] = useState(defaultLocation);
   const [cNumber, setCNumber] = useState(contractNumber);
   const [cDate, setCDate] = useState<string>(contractDate ? format(contractDate, 'yyyy-MM-dd') : '');
-  const [isHousingVat, setIsHousingVat] = useState(true);
+  const [isHousingVat, setIsHousingVat] = useState(defaultIsHousingVat);
   const [notes, setNotes] = useState('');
 
   // Signatures

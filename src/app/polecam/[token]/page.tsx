@@ -3,6 +3,20 @@ import { db } from '@/lib/db';
 import { users } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { ReferralForm } from './_components/referral-form';
+import { Metadata } from 'next';
+
+export async function generateMetadata(
+    { params }: { params: Promise<{ token: string }> }
+): Promise<Metadata> {
+    const { token } = await params;
+    const partner = await db.query.users.findFirst({
+        where: eq(users.referralToken, token),
+    });
+
+    return {
+        title: partner ? `Polecam - ${partner.name}` : 'Polecam',
+    };
+}
 
 export default async function ReferralPage({
     params,

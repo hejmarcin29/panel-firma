@@ -8,7 +8,7 @@ import { getAppSetting, appSettingKeys } from '@/lib/settings';
 import { LoginForm } from './_components/login-form';
 
 export const metadata: Metadata = {
-	title: 'Logowanie | Panel firmy',
+	title: 'Logowanie',
 	description: 'Zaloguj się aby zarządzać panelem dropshippingowym.',
 };
 

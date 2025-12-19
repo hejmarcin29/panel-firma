@@ -3,6 +3,12 @@ import { getArchitectCommissions } from '@/app/dashboard/settings/team/actions';
 import { redirect } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'Portfel',
+};
+
 import {
   Table,
   TableBody,

@@ -33,8 +33,16 @@ export async function acceptQuote(quoteId: string, token: string) {
         })
         .where(eq(quotes.id, quoteId));
 
-    // 3. Update montage status if needed (optional logic)
-    // await db.update(montages).set({ status: 'before_first_payment' }).where(eq(montages.id, quote.montageId));
+    // 3. Update montage with contract info
+    if (quote.number) {
+        await db.update(montages)
+            .set({ 
+                contractNumber: quote.number,
+                contractDate: new Date(),
+                // status: 'before_first_payment' // Optional: automate status change
+            })
+            .where(eq(montages.id, quote.montageId));
+    }
 
     revalidatePath(`/s/${token}`);
     return { success: true };
@@ -76,6 +84,16 @@ export async function signContract(contractId: string, signatureData: string, to
                 updatedAt: new Date()
             })
             .where(eq(quotes.id, contract.quoteId));
+    }
+
+    // Update montage with contract info
+    if (contract.quote && contract.quote.number) {
+        await db.update(montages)
+            .set({
+                contractNumber: contract.quote.number,
+                contractDate: new Date(),
+            })
+            .where(eq(montages.id, contract.quote.montageId));
     }
 
     revalidatePath(`/s/${token}`);

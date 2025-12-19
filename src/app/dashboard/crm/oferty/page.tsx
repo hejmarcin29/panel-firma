@@ -4,6 +4,11 @@ import { QuotesBoard } from './_components/quotes-board';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { QuotesList } from './_components/quotes-list';
 import { LayoutGrid, List } from 'lucide-react';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'Oferty',
+};
 
 export default async function QuotesPage() {
     const quotes = await getQuotes();

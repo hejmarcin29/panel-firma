@@ -3,8 +3,12 @@ import { db } from '@/lib/db';
 import { montages } from '@/lib/db/schema';
 import { eq, or } from 'drizzle-orm';
 import { TasksList } from './_components/tasks-list';
+import { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+export const metadata: Metadata = {
+    title: 'Zadania',
+};
 
 export default async function TasksPage() {
     const user = await requireUser();

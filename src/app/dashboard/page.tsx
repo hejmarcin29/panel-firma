@@ -1,6 +1,10 @@
 import { eq } from 'drizzle-orm';
+import { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+export const metadata: Metadata = {
+    title: 'Pulpit',
+};
 
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';

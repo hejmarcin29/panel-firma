@@ -133,24 +133,37 @@ export type Montage = {
     } | null;
     technicalAudit?: unknown;
     materialLog?: unknown;
-    quotes: {
-        id: string;
-        status: string;
-        totalNet: number;
-        totalGross: number;
-        createdAt: TimestampValue;
-        contract?: {
-            id: string;
-            status: string;
-            signedAt: TimestampValue;
-        } | null;
-    }[];
 	createdAt: TimestampValue;
 	updatedAt: TimestampValue;
 	notes: MontageNote[];
 	attachments: MontageAttachment[];
 	tasks: MontageTask[];
 	checklistItems: MontageChecklistItem[];
+    quotes: MontageQuote[];
+};
+
+export type QuoteItem = {
+    name: string;
+    quantity: number;
+    unit: string;
+    priceNet: number;
+    vatRate: number;
+    amountNet: number;
+    amountGross: number;
+};
+
+export type MontageQuote = {
+    id: string;
+    status: string;
+    totalNet: number;
+    totalGross: number;
+    createdAt: TimestampValue;
+    items: QuoteItem[];
+    contract?: {
+        id: string;
+        status: string;
+        signedAt: TimestampValue;
+    } | null;
 };
 
 export type StatusOption = {

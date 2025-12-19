@@ -3,8 +3,12 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import fs from 'fs';
 import path from 'path';
+import { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+export const metadata: Metadata = {
+    title: 'Ustawienia',
+};
 
 import { requireUser } from '@/lib/auth/session';
 import { Badge } from '@/components/ui/badge';

@@ -2,7 +2,7 @@ import { TvBoard } from './_components/tv-board';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-    title: 'TV Dashboard | Panel Realizacji',
+    title: 'TV Dashboard',
     description: 'Widok telewizyjny dla hali produkcyjnej/biura',
 };
 

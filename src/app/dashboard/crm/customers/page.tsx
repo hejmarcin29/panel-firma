@@ -3,8 +3,12 @@ import { CustomersView } from './_components/customers-view';
 import { getCustomers } from './actions';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
 import { Loader2 } from 'lucide-react';
+import { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+export const metadata: Metadata = {
+    title: 'Baza Klientów',
+};
 
 export default async function CustomersPage() {
 	const [initialCustomers, portalEnabled] = await Promise.all([

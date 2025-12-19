@@ -5,6 +5,7 @@ import { getManualOrderById, getOrderDocuments } from '../actions';
 import type { Order, OrderTimelineEntry, OrderDocument, OrderTaskOverrides } from '../data';
 import { statusOptions } from '../utils';
 import { OrderDetailsView } from '../_components/details/order-details-view';
+import { Metadata } from 'next';
 
 type OrderDetailsPageParams = {
 	params: Promise<{
@@ -12,7 +13,16 @@ type OrderDetailsPageParams = {
 	}>;
 };
 
-
+export async function generateMetadata(
+    { params }: OrderDetailsPageParams
+): Promise<Metadata> {
+    const { orderId } = await params;
+    const order = await getManualOrderById(orderId);
+    
+    return {
+        title: order ? `Zamówienie ${order.reference}` : 'Szczegóły zamówienia',
+    };
+}
 
 const statusIndexMap = statusOptions.reduce<Record<string, number>>((acc, status, index) => {
 	acc[status] = index;

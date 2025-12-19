@@ -1,7 +1,11 @@
 import { getCalendarEvents } from './actions';
 import { CalendarView } from './_components/calendar-view';
+import { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+export const metadata: Metadata = {
+    title: 'Kalendarz',
+};
 
 export default async function CalendarPage() {
   const { scheduled, unscheduled } = await getCalendarEvents();

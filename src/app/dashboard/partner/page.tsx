@@ -2,6 +2,12 @@ import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
 import { montages, partnerPayouts, partnerCommissions, users } from '@/lib/db/schema';
 import { eq, desc, or } from 'drizzle-orm';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'Strefa Partnera',
+};
+
 import {
     Table,
     TableBody,
