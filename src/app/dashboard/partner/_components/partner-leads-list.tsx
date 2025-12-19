@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
-import { CheckCircle2, Circle, Clock, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Circle, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type Lead = {

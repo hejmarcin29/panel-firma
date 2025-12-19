@@ -28,7 +28,6 @@ import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
 import type { MaterialsEditHistoryEntry } from './types';
 import { createGoogleCalendarEvent, updateGoogleCalendarEvent, deleteGoogleCalendarEvent } from '@/lib/google/calendar';
 import { generatePortalToken } from '@/lib/utils';
-import { sendSms } from '@/lib/sms';
 
 const MONTAGE_DASHBOARD_PATH = '/dashboard/crm/montaze';
 const MAX_ATTACHMENT_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
@@ -1803,10 +1802,9 @@ export async function sendMeasurementRequestSms(montageId: string) {
     const result = await sendSms(montage.contactPhone, message);
 
     if (result.success) {
-        await logSystemEvent('sms_sent', `Wysłano SMS z prośbą o pomiar do klienta ${montage.clientName}`, user.id, { montageId });
+        await logSystemEvent('sms_sent', `Wysłano SMS z prośbą o pomiar do klienta ${montage.clientName} (Montage ID: ${montageId})`, user.id);
         return { success: true };
     } else {
         return { error: result.error || 'Błąd wysyłania SMS' };
     }
 }
-
