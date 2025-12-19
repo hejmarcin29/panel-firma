@@ -175,6 +175,8 @@ export function mapMontageRow(row: MontageRow, publicBaseUrl: string | null): Mo
 		measurementSubfloorCondition: row.measurementSubfloorCondition ?? null,
 		measurementAdditionalWorkNeeded: row.measurementAdditionalWorkNeeded ?? false,
 		measurementAdditionalWorkDescription: row.measurementAdditionalWorkDescription ?? null,
+		measurementAdditionalMaterials: row.measurementAdditionalMaterials ?? null,
+        measurementSeparateSkirting: row.measurementSeparateSkirting ?? null,
 		finalPanelAmount: row.finalPanelAmount ?? null,
 		finalSkirtingLength: row.finalSkirtingLength ?? null,
 		materialsEditHistory: (row.materialsEditHistory as unknown as MaterialsEditHistoryEntry[]) ?? null,

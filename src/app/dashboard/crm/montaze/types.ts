@@ -94,6 +94,7 @@ export type Montage = {
 	measurementSubfloorCondition: string | null;
 	measurementAdditionalWorkNeeded: boolean;
 	measurementAdditionalWorkDescription: string | null;
+	measurementAdditionalMaterials: string | null;
     measurementSeparateSkirting?: boolean | null;
 	finalPanelAmount: number | null;
 	finalSkirtingLength: number | null;

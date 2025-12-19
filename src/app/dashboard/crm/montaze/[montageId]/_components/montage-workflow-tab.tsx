@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Circle, Upload, FileText, RefreshCw, Pencil, Trash2, Plus, X, AlertTriangle } from "lucide-react";
+import { CheckCircle2, Circle, Upload, FileText, RefreshCw, Pencil, Trash2, Plus, X, AlertTriangle, Lock } from "lucide-react";
 import { useTransition, useState } from "react";
 import { useRouter } from "next/navigation";
 import { differenceInCalendarDays } from "date-fns";
@@ -38,6 +38,15 @@ import { type MontageDetailsData } from "../actions";
 import type { Montage, StatusOption } from "../../types";
 
 type UserOption = { id: string; name: string | null; email: string };
+
+const LOCKED_TEMPLATE_IDS = [
+    'contract_signed_check',
+    'advance_invoice_issued',
+    'advance_invoice_paid',
+    'protocol_signed',
+    'final_invoice_issued',
+    'final_invoice_paid'
+];
 
 export function MontageWorkflowTab({ 
     montage, 
@@ -474,16 +483,21 @@ export function MontageWorkflowTab({
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {montage.checklistItems.map((item) => (
+                    {montage.checklistItems.map((item) => {
+                        const isLocked = item.templateId && LOCKED_TEMPLATE_IDS.includes(item.templateId);
+                        
+                        return (
                         <div key={item.id} className="group flex items-start gap-3 rounded-lg border p-4 transition-colors hover:bg-muted/50">
                             {isEditing ? (
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-6 w-6 text-destructive hover:text-destructive/90"
-                                    onClick={() => handleDeleteItem(item.id)}
+                                    className={cn("h-6 w-6", isLocked ? "text-muted-foreground cursor-not-allowed" : "text-destructive hover:text-destructive/90")}
+                                    onClick={() => !isLocked && handleDeleteItem(item.id)}
+                                    disabled={!!isLocked}
+                                    title={isLocked ? "Ten element jest wymagany przez system" : "Usuń element"}
                                 >
-                                    <Trash2 className="h-4 w-4" />
+                                    {isLocked ? <Lock className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
                                 </Button>
                             ) : (
                                 <Checkbox
@@ -500,8 +514,10 @@ export function MontageWorkflowTab({
                                         <Input
                                             defaultValue={item.label}
                                             className="h-8"
+                                            disabled={!!isLocked}
+                                            title={isLocked ? "Nazwa tego elementu jest zablokowana" : undefined}
                                             onBlur={(e) => {
-                                                if (e.target.value !== item.label) {
+                                                if (!isLocked && e.target.value !== item.label) {
                                                     handleUpdateLabel(item.id, e.target.value);
                                                 }
                                             }}
@@ -558,7 +574,8 @@ export function MontageWorkflowTab({
                                 )}
                             </div>
                         </div>
-                    ))}
+                        );
+                    })}
 
                     {isEditing && (
                         <div className="flex items-center gap-2 pt-2">

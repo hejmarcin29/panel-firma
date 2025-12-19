@@ -229,7 +229,7 @@ export function TeamList({ members, currentUserId }: TeamListProps) {
                                     Administrator
                                 </DropdownMenuCheckboxItem>
                                 <DropdownMenuCheckboxItem 
-                                    checked={member.roles.includes('measurer')}
+                                    checked={member.roles.includes('installer')}
                                     onCheckedChange={() => handleRoleToggle(member.id, 'installer', member.roles)}
                                 >
                                     Montażysta
@@ -354,7 +354,6 @@ export function TeamList({ members, currentUserId }: TeamListProps) {
             </div>
             <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 px-4 pb-6 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
                 {renderMobileSection('Architekci', mobileGroups.architects, 'text-purple-600')}
-                {renderMobileSection('Pomiarowcy', mobileGroups.measurers, 'text-blue-600')}
                 {renderMobileSection('Montażyści', mobileGroups.installers, 'text-green-600')}
                 {renderMobileSection('Administratorzy', mobileGroups.admins, 'text-red-600')}
             </div>
