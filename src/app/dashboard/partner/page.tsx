@@ -1,7 +1,7 @@
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
-import { montages, partnerPayouts, partnerCommissions } from '@/lib/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { montages, partnerPayouts, partnerCommissions, users } from '@/lib/db/schema';
+import { eq, desc, or } from 'drizzle-orm';
 import {
     Table,
     TableBody,
@@ -16,29 +16,7 @@ import { format } from 'date-fns';
 import { formatCurrency } from '@/lib/utils';
 import { PayoutRequestForm } from './_components/payout-request-form';
 import { TermsAcceptance } from './_components/terms-acceptance';
-
-function getStatusLabel(status: string) {
-    switch (status) {
-        case 'lead': return 'Nowy';
-        case 'before_measurement': return 'Umówiono pomiar';
-        case 'before_first_payment': return 'Oczekiwanie na zaliczkę';
-        case 'before_installation': return 'W realizacji';
-        case 'completed': return 'Zrealizowano';
-        default: return status;
-    }
-}
-
-function getStatusColor(status: string) {
-    switch (status) {
-        case 'lead': return 'secondary';
-        case 'completed': return 'default'; // Green usually, but default badge is black/primary. Maybe outline?
-        default: return 'outline';
-    }
-}
-
-import { users } from '@/lib/db/schema';
-
-// ... existing imports ...
+import { PartnerLeadsList } from './_components/partner-leads-list';
 
 export default async function PartnerDashboard() {
     const sessionUser = await requireUser();
@@ -56,7 +34,10 @@ export default async function PartnerDashboard() {
     }
 
     const leads = await db.query.montages.findMany({
-        where: eq(montages.architectId, user.id),
+        where: or(
+            eq(montages.architectId, user.id),
+            eq(montages.partnerId, user.id)
+        ),
         orderBy: [desc(montages.createdAt)],
     });
 
@@ -74,7 +55,7 @@ export default async function PartnerDashboard() {
     const totalPendingPayout = payouts.filter(p => p.status === 'pending').reduce((sum, p) => sum + p.amount, 0);
     const availableFunds = totalEarned - totalPaid - totalPendingPayout;
 
-    const referralLink = `${process.env.NEXT_PUBLIC_APP_URL || 'https://twojafirma.pl'}/polecam/${user.referralToken || 'brak-tokenu'}`;
+    const referralLink = `${process.env.NEXT_PUBLIC_APP_URL || 'https://b2b.primepodloga.pl'}/polecam/${user.referralToken || 'brak-tokenu'}`;
     const termsAccepted = !!user.partnerProfile?.termsAcceptedAt;
 
     if (!termsAccepted) {
@@ -134,91 +115,54 @@ export default async function PartnerDashboard() {
                 </Card>
             </div>
 
-            <div className="grid gap-8 md:grid-cols-2">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Lista Klientów</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Data</TableHead>
-                                    <TableHead>Klient</TableHead>
-                                    <TableHead>Status</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {leads.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
-                                            Brak poleceń.
-                                        </TableCell>
-                                    </TableRow>
-                                ) : (
-                                    leads.map((lead) => (
-                                        <TableRow key={lead.id}>
-                                            <TableCell>
-                                                {format(lead.createdAt, 'dd.MM.yyyy')}
-                                            </TableCell>
-                                            <TableCell className="font-medium">
-                                                {lead.clientName}
-                                                <div className="text-xs text-muted-foreground">{lead.installationCity}</div>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge variant={getStatusColor(lead.status) as "default" | "secondary" | "destructive" | "outline"}>
-                                                    {getStatusLabel(lead.status)}
-                                                </Badge>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
+            <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-3">
+                <div className="lg:col-span-2">
+                    <PartnerLeadsList leads={leads} />
+                </div>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Historia Wypłat</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Data</TableHead>
-                                    <TableHead>Kwota</TableHead>
-                                    <TableHead>Status</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {payouts.length === 0 ? (
+                <div className="lg:col-span-1">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Historia Wypłat</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader>
                                     <TableRow>
-                                        <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
-                                            Brak wypłat.
-                                        </TableCell>
+                                        <TableHead>Data</TableHead>
+                                        <TableHead>Kwota</TableHead>
+                                        <TableHead>Status</TableHead>
                                     </TableRow>
-                                ) : (
-                                    payouts.map((payout) => (
-                                        <TableRow key={payout.id}>
-                                            <TableCell>
-                                                {format(payout.createdAt, 'dd.MM.yyyy')}
-                                            </TableCell>
-                                            <TableCell>
-                                                {formatCurrency(payout.amount / 100)}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge variant={payout.status === 'paid' ? 'default' : payout.status === 'rejected' ? 'destructive' : 'secondary'}>
-                                                    {payout.status === 'paid' ? 'Wypłacono' : payout.status === 'rejected' ? 'Odrzucono' : 'Oczekuje'}
-                                                </Badge>
+                                </TableHeader>
+                                <TableBody>
+                                    {payouts.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                                                Brak wypłat.
                                             </TableCell>
                                         </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
+                                    ) : (
+                                        payouts.map((payout) => (
+                                            <TableRow key={payout.id}>
+                                                <TableCell>
+                                                    {format(payout.createdAt, 'dd.MM.yyyy')}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {formatCurrency(payout.amount / 100)}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge variant={payout.status === 'paid' ? 'default' : payout.status === 'rejected' ? 'destructive' : 'secondary'}>
+                                                        {payout.status === 'paid' ? 'Wypłacono' : payout.status === 'rejected' ? 'Odrzucono' : 'Oczekuje'}
+                                                    </Badge>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </div>
     );

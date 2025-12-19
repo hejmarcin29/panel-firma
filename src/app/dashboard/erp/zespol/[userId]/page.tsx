@@ -13,9 +13,11 @@ import {
     Activity
 } from 'lucide-react';
 
-import { getUserDetails } from '../actions';
+import { getUserDetails, getUserFinancials } from '../actions';
 import { requireUser } from '@/lib/auth/session';
 import { ImpersonateButton } from '../_components/impersonate-button';
+import { ChangePasswordDialog } from '../_components/change-password-dialog';
+import { FinancialsSection } from '../_components/financials-section';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -38,8 +40,10 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
     const isAdmin = currentUser.roles.includes('admin');
     
     let user;
+    let financials = null;
     try {
         user = await getUserDetails(userId);
+        financials = await getUserFinancials(userId, user.roles);
     } catch {
         notFound();
     }
@@ -63,8 +67,13 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
                         <p className="text-muted-foreground">Szczegółowe informacje i historia aktywności.</p>
                     </div>
                 </div>
-                {isAdmin && currentUser.id !== user.id && (
-                    <ImpersonateButton userId={user.id} userName={user.name || user.email} />
+                {isAdmin && (
+                    <div className="flex items-center gap-2">
+                        <ChangePasswordDialog userId={user.id} userName={user.name || user.email} />
+                        {currentUser.id !== user.id && (
+                            <ImpersonateButton userId={user.id} userName={user.name || user.email} />
+                        )}
+                    </div>
                 )}
             </div>
 
@@ -141,6 +150,9 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
 
                 {/* Right Column - Activity & Details */}
                 <div className="space-y-6">
+                    
+                    <FinancialsSection data={financials} roles={user.roles} />
+
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
