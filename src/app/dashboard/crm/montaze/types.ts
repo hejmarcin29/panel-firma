@@ -78,6 +78,7 @@ export type Montage = {
     scheduledSkirtingInstallationAt?: TimestampValue;
     scheduledSkirtingInstallationEndAt?: TimestampValue;
 	materialDetails: string | null;
+    clientInfo: string | null;
 	measurementDetails: string | null;
 	floorArea: number | null;
 	floorDetails: string | null;

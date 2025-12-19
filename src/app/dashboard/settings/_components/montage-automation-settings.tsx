@@ -1,106 +1,86 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { toast } from 'sonner';
-import { ArrowRight } from 'lucide-react';
-
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Bot } from 'lucide-react';
 
-import { updateMontageAutomationRulesAction } from '../actions';
 import type { MontageChecklistTemplate } from '@/lib/montaze/checklist-shared';
 import type { MontageAutomationRule } from '@/lib/montaze/automation';
-import type { MontageStatus } from '@/lib/db/schema';
 import type { StatusOption } from '../../crm/montaze/types';
 
 interface MontageAutomationSettingsProps {
   templates: MontageChecklistTemplate[];
-  initialRules: MontageAutomationRule[];
+  initialRules: MontageAutomationRule[]; // Kept for compatibility but unused
   statusOptions: StatusOption[];
 }
 
-export function MontageAutomationSettings({ templates, initialRules, statusOptions }: MontageAutomationSettingsProps) {
-  const [rules, setRules] = useState<MontageAutomationRule[]>(initialRules);
-  const [isPending, startTransition] = useTransition();
+export function MontageAutomationSettings({ templates, statusOptions }: MontageAutomationSettingsProps) {
+  
+  const automationRows = statusOptions.map((status, index) => {
+    const nextStatus = statusOptions[index + 1];
+    if (!nextStatus) return null;
 
-  const getRuleForTemplate = (templateId: string) => {
-    return rules.find(r => r.checklistItemId === templateId)?.targetStatus || 'none';
-  };
+    // Check if this stage has any checklist items associated
+    const hasChecklistItems = templates.some(t => t.associatedStage === status.value);
+    
+    if (!hasChecklistItems) return null;
 
-  const handleRuleChange = (templateId: string, value: string) => {
-    const newRules = rules.filter(r => r.checklistItemId !== templateId);
-    if (value !== 'none') {
-      newRules.push({
-        checklistItemId: templateId,
-        targetStatus: value as MontageStatus,
-      });
-    }
-    setRules(newRules);
-  };
-
-  const handleSave = () => {
-    startTransition(async () => {
-      try {
-        await updateMontageAutomationRulesAction(rules);
-        toast.success("Zapisano reguły automatyzacji.");
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Wystąpił błąd podczas zapisywania.");
-      }
-    });
-  };
+    return {
+      id: status.value,
+      trigger: `Ukończenie etapu: ${status.label}`,
+      action: `Zmiana statusu na: ${nextStatus.label}`,
+      recipient: 'System',
+      status: 'Wbudowane'
+    };
+  }).filter((row): row is NonNullable<typeof row> => row !== null);
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Automatyzacja statusów</CardTitle>
         <CardDescription>
-          Automatycznie zmieniaj status montażu po wykonaniu określonego etapu (zaznaczeniu checkboxa).
+          System automatycznie zmienia status montażu po wykonaniu wszystkich zadań z danego etapu.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-4">
-          {templates.map((template) => (
-            <div key={template.id} className="flex items-center justify-between p-4 border rounded-lg bg-card">
-              <div className="flex-1">
-                <Label className="text-base">{template.label}</Label>
-              </div>
-              
-              <div className="flex items-center gap-4">
-                <ArrowRight className="text-muted-foreground h-4 w-4" />
-                <Select
-                  value={getRuleForTemplate(template.id)}
-                  onValueChange={(value) => handleRuleChange(template.id, value)}
-                >
-                  <SelectTrigger className="w-[250px]">
-                    <SelectValue placeholder="Nie zmieniaj statusu" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Nie zmieniaj statusu</SelectItem>
-                    {statusOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          ))}
-          
-          {templates.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              Najpierw zdefiniuj etapy w sekcji &quot;Szablony etapów montażu&quot;.
-            </p>
-          )}
-        </div>
-
-        <div className="flex justify-end">
-          <Button onClick={handleSave} disabled={isPending}>
-            {isPending ? "Zapisywanie..." : "Zapisz reguły"}
-          </Button>
-        </div>
+      <CardContent className="p-0">
+        <Table>
+            <TableHeader>
+                <TableRow>
+                    <TableHead className="w-[50px]"></TableHead>
+                    <TableHead>Wyzwalacz</TableHead>
+                    <TableHead>Akcja</TableHead>
+                    <TableHead>Odbiorca</TableHead>
+                    <TableHead className="text-right">Status</TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {automationRows.map((row) => (
+                    <TableRow key={row.id}>
+                        <TableCell>
+                            <Bot className="h-4 w-4 text-purple-500" />
+                        </TableCell>
+                        <TableCell className="font-medium">{row.trigger}</TableCell>
+                        <TableCell>{row.action}</TableCell>
+                        <TableCell>
+                            <Badge variant="outline">{row.recipient}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                            <span className="text-xs text-green-600 font-medium">
+                                {row.status}
+                            </span>
+                        </TableCell>
+                    </TableRow>
+                ))}
+                {automationRows.length === 0 && (
+                    <TableRow>
+                        <TableCell colSpan={5} className="text-center text-muted-foreground py-4">
+                            Brak zdefiniowanych etapów z automatyzacją.
+                        </TableCell>
+                    </TableRow>
+                )}
+            </TableBody>
+        </Table>
       </CardContent>
     </Card>
   );

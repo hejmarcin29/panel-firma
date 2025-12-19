@@ -165,6 +165,7 @@ export function mapMontageRow(row: MontageRow, publicBaseUrl: string | null): Mo
 		scheduledInstallationAt: row.scheduledInstallationAt ?? null,
 		scheduledInstallationEndAt: row.scheduledInstallationEndAt ?? null,
 		materialDetails: row.materialDetails ?? null,
+        clientInfo: row.clientInfo ?? null,
 		measurementDetails: row.measurementDetails ?? null,
 		floorArea: row.floorArea ?? null,
 		floorDetails: row.floorDetails ?? null,

@@ -14,6 +14,7 @@ import {
   Trash2,
   MessageSquare,
   FileText,
+  Bot,
 } from "lucide-react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -191,14 +192,14 @@ export function SettingsView({
         <Button
           variant="ghost"
           className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3 bg-card border shadow-sm"
-          onClick={() => handleTabChange("montage")}
+          onClick={() => handleTabChange("automations")}
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
-            <Activity className="h-4 w-4" />
+            <Bot className="h-4 w-4" />
           </span>
           <span className="flex flex-col text-left">
-            <span className="text-sm font-medium">Montaże</span>
-            <span className="text-xs text-muted-foreground">Etapy, automatyzacje i statusy montaży.</span>
+            <span className="text-sm font-medium">Automatyzacje</span>
+            <span className="text-xs text-muted-foreground">Etapy, workflow i powiadomienia.</span>
           </span>
         </Button>
 
@@ -330,11 +331,11 @@ export function SettingsView({
               Zmiany WP
             </TabsTrigger>
             <TabsTrigger 
-              value="montage" 
+              value="automations" 
               className="w-full justify-start gap-2 px-3 py-2 h-9 data-[state=active]:bg-muted data-[state=active]:shadow-none ring-offset-background transition-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
-              <Activity className="h-4 w-4" />
-              Montaże
+              <Bot className="h-4 w-4" />
+              Automatyzacje
             </TabsTrigger>
             <TabsTrigger 
               value="logs" 
@@ -398,7 +399,7 @@ export function SettingsView({
             {wpChanges}
           </TabsContent>
 
-          <TabsContent value="montage" className="m-0 space-y-4">
+          <TabsContent value="automations" className="m-0 space-y-4">
             {montageSettings}
           </TabsContent>
 

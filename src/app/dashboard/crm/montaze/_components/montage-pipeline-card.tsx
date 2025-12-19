@@ -51,11 +51,7 @@ type Props = {
 export function MontagePipelineCard({ montage, threatDays, alertSettings }: Props) {
 	const completedTasks = useMemo(() => countCompleted(montage.tasks), [montage.tasks]);
 	const totalTasks = montage.tasks.length;
-	const materialsSummary = useMemo(
-		() => summarizeMaterialDetails(montage.materialDetails, 72),
-		[montage.materialDetails],
-	);
-	const hasMaterials = Boolean(montage.materialDetails?.trim());
+    const hasClientInfo = Boolean(montage.clientInfo?.trim());
 	const latestUpdate = formatTimestamp(montage.updatedAt);
 	const billingAddress = montage.billingAddress;
 	const installationAddress = montage.installationAddress;
@@ -208,12 +204,12 @@ export function MontagePipelineCard({ montage, threatDays, alertSettings }: Prop
                         )}
                     </div>
 
-                    {hasMaterials && (
+                    {hasClientInfo && (
                         <>
                             <Separator className="bg-border/50" />
                             <div className="space-y-1">
-                                <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Materiały</p>
-                                <p className="line-clamp-2 text-xs text-foreground/80">{materialsSummary}</p>
+                                <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Info od klienta</p>
+                                <p className="line-clamp-2 text-xs text-foreground/80">{montage.clientInfo}</p>
                             </div>
                         </>
                     )}

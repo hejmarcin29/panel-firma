@@ -109,7 +109,7 @@ export function MontageView({ montageId, initialData, portalEnabled }: MontageVi
                             <MontageMaterialCard montage={montage} userRoles={userRoles} />
                         </div>
                         <div className="space-y-6">
-                             <MontageClientInfo montageId={montage.id} initialContent={montage.materialDetails} />
+                             <MontageClientInfo montageId={montage.id} initialContent={montage.clientInfo} />
                              <div className="bg-card rounded-xl border shadow-sm p-6">
                                 <h3 className="font-semibold mb-4">Notatki</h3>
                                 <MontageNotesTab montage={montage} />
@@ -145,7 +145,7 @@ export function MontageView({ montageId, initialData, portalEnabled }: MontageVi
                         )}
 
                         {/* Client Requirements (Lead) */}
-                        <MontageClientInfo montageId={montage.id} initialContent={montage.materialDetails} />
+                        <MontageClientInfo montageId={montage.id} initialContent={montage.clientInfo} />
                     </div>
                 }
                 defaultTab={activeTab}

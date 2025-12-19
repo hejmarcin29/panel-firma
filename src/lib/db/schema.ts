@@ -516,6 +516,7 @@ export const montages = pgTable(
 		finalSkirtingLength: doublePrecision('final_skirting_length'),
 		materialsEditHistory: json('materials_edit_history'),
 		additionalInfo: text('additional_info'),
+        clientInfo: text('client_info'),
 		sketchUrl: text('sketch_url'),
 		forecastedInstallationDate: timestamp('forecasted_installation_date'),
 		status: text('status').$type<MontageStatus>().notNull().default('lead'),

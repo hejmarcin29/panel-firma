@@ -1162,7 +1162,7 @@ export async function updateMontageClientInfo(montageId: string, clientInfo: str
     await requireUser();
     await db.update(montages)
         .set({ 
-            materialDetails: clientInfo,
+            clientInfo: clientInfo,
             updatedAt: new Date() 
         })
         .where(eq(montages.id, montageId));

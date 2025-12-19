@@ -1,0 +1,1 @@
+ALTER TABLE "montages" ADD COLUMN "client_info" text;
