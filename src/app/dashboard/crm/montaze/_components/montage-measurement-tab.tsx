@@ -102,6 +102,33 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
   const [isSkirtingSelectorOpen, setIsSkirtingSelectorOpen] = useState(false);
   const [includeSkirting, setIncludeSkirting] = useState(!!(montage.skirtingLength && parseFloat(montage.skirtingLength.toString()) > 0));
 
+  useEffect(() => {
+    setSketchDataUrl(montage.sketchUrl || null);
+    setFloorArea(montage.floorArea?.toString() || '');
+    setPanelAdditionalMaterials(montage.floorDetails || '');
+    setSkirtingLength(montage.skirtingLength?.toString() || '');
+    setSkirtingAdditionalMaterials(montage.skirtingDetails || '');
+    setPanelModel(montage.panelModel || '');
+    setPanelProductId(montage.panelProductId || null);
+    setPanelWaste(montage.panelWaste?.toString() || '5');
+    setSkirtingModel(montage.skirtingModel || '');
+    setSkirtingProductId(montage.skirtingProductId || null);
+    setSkirtingWaste(montage.skirtingWaste?.toString() || '5');
+    setModelsApproved(montage.modelsApproved || false);
+    setInstallationMethod((montage.measurementInstallationMethod as 'click' | 'glue') || 'click');
+    setSubfloorCondition(montage.measurementSubfloorCondition || 'good');
+    setAdditionalWorkNeeded(montage.measurementAdditionalWorkNeeded || false);
+    setAdditionalWorkDescription(montage.measurementAdditionalWorkDescription || '');
+    setAdditionalMaterials(montage.measurementAdditionalMaterials || '');
+    setSeparateSkirting(montage.measurementSeparateSkirting || false);
+    setAdditionalInfo(montage.additionalInfo || '');
+    setDateRange({
+        from: montage.scheduledInstallationAt ? new Date(montage.scheduledInstallationAt) : undefined,
+        to: montage.scheduledInstallationEndAt ? new Date(montage.scheduledInstallationEndAt) : undefined,
+    });
+    setIncludeSkirting(!!(montage.skirtingLength && parseFloat(montage.skirtingLength.toString()) > 0));
+  }, [montage]);
+
   const technicalAudit = montage.technicalAudit as unknown as TechnicalAuditData | null;
 
   const saveData = useCallback(async () => {

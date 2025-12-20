@@ -1,6 +1,5 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { getMontageDetails } from './actions';
 import { deleteMontage } from '../actions';
@@ -56,12 +55,7 @@ export function MontageView({ montageId, initialData, portalEnabled }: MontageVi
         }
     };
 
-    const { data } = useQuery({
-        queryKey: ['montage', montageId],
-        queryFn: () => getMontageDetails(montageId),
-        initialData,
-        staleTime: 1000 * 60 * 5, // 5 minutes
-    });
+    const data = initialData;
 
     if (!data) return null;
 

@@ -1,6 +1,6 @@
 'use server';
 
-import { asc, desc, sql, eq } from 'drizzle-orm';
+import { asc, desc, sql, eq, isNull } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { revalidatePath } from 'next/cache';
 
@@ -88,6 +88,7 @@ export async function getMontageDetails(montageId: string) {
             architect: true,
             customer: true,
             quotes: {
+                where: isNull(quotes.deletedAt),
                 orderBy: desc(quotes.createdAt),
             },
         },

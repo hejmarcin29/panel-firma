@@ -53,6 +53,20 @@ export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montag
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
+    setFormData({
+        finalPanelAmount: montage.finalPanelAmount?.toString() || '',
+        finalSkirtingLength: montage.finalSkirtingLength?.toString() || '',
+        panelModel: montage.panelModel || '',
+        panelProductId: montage.panelProductId || null,
+        skirtingModel: montage.skirtingModel || '',
+        skirtingProductId: montage.skirtingProductId || null,
+        floorDetails: montage.floorDetails || '',
+        skirtingDetails: montage.skirtingDetails || '',
+        materialDetails: montage.measurementDetails || montage.materialDetails || '',
+    });
+  }, [montage]);
+
+  useEffect(() => {
     if (isEditing) {
         window.history.pushState({ modalOpen: true }, '', window.location.href);
         
