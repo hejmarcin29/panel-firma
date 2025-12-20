@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, Calendar, Image as ImageIcon, Ruler, Calculator, Check, Loader2 } from 'lucide-react';
+import { FileText, Calendar, Image as ImageIcon, Ruler, Calculator, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';

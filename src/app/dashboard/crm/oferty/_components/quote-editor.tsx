@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Trash2, Plus, Wand2, Save, Printer, Mail, MoreHorizontal, ArrowLeft, CheckCircle2, Clock } from 'lucide-react';
-import { formatCurrency, cn } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
@@ -42,7 +42,6 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { updateQuote, sendQuoteEmail, getProductsForQuote, deleteQuote } from '../actions';
 import { FileText as FileTextIcon } from 'lucide-react';
-import { SignaturePad } from '@/components/ui/signature-pad';
 import dynamic from 'next/dynamic';
 import { QuotePdf } from './quote-pdf';
 
@@ -124,7 +123,6 @@ export function QuoteEditor({ quote, templates, companyInfo }: QuoteEditorProps)
     // Terms selection
     const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
     const [termsContent, setTermsContent] = useState<string>(quote.termsContent || '');
-    const [termsDialogOpen, setTermsDialogOpen] = useState(false);
 
     const [isImporting, setIsImporting] = useState(false);
     const [importDialogOpen, setImportDialogOpen] = useState(false);

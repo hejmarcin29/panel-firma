@@ -143,8 +143,25 @@ const styles = StyleSheet.create({
     },
 });
 
+import type { QuoteItem } from '@/lib/db/schema';
+
 interface QuotePdfProps {
-    quote: any; // Replace with proper type
+    quote: {
+        number: string | null;
+        createdAt: string | Date;
+        montage: {
+            clientName: string;
+            address: string | null;
+            contactEmail: string | null;
+            contactPhone: string | null;
+        };
+        items: QuoteItem[];
+        totalNet: number;
+        totalGross: number;
+        termsContent?: string | null;
+        signatureData?: string | null;
+        signedAt?: string | Date | null;
+    };
     companyInfo: {
         name: string;
         address: string;
@@ -159,7 +176,7 @@ export const QuotePdf = ({ quote, companyInfo }: QuotePdfProps) => (
             {/* Header */}
             <View style={styles.header}>
                 <View>
-                    {companyInfo.logoUrl && <Image src={companyInfo.logoUrl} style={styles.logo} />}
+                    {companyInfo.logoUrl && <Image src={companyInfo.logoUrl} style={styles.logo} alt="Logo firmy" />}
                 </View>
                 <View style={styles.companyInfo}>
                     <Text style={{ fontWeight: 700 }}>{companyInfo.name}</Text>
@@ -209,7 +226,7 @@ export const QuotePdf = ({ quote, companyInfo }: QuotePdfProps) => (
                     <Text style={styles.colVat}>VAT</Text>
                     <Text style={styles.colTotal}>Wartość</Text>
                 </View>
-                {quote.items.map((item: any, index: number) => (
+                {quote.items.map((item, index) => (
                     <View key={index} style={styles.tableRow}>
                         <Text style={styles.colName}>{item.name}</Text>
                         <Text style={styles.colQty}>{item.quantity} {item.unit}</Text>
@@ -247,7 +264,7 @@ export const QuotePdf = ({ quote, companyInfo }: QuotePdfProps) => (
                 </View>
                 <View style={styles.signatureBox}>
                     {quote.signatureData ? (
-                        <Image src={quote.signatureData} style={styles.signatureImage} />
+                        <Image src={quote.signatureData} style={styles.signatureImage} alt="Podpis klienta" />
                     ) : null}
                     <Text>Zamawiający</Text>
                     {quote.signedAt && (
