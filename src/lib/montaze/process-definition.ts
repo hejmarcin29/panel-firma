@@ -1,4 +1,5 @@
 import { type MontageStatus } from '@/lib/db/schema';
+import type { Montage } from '@/app/dashboard/crm/montaze/types';
 
 export type ProcessActor = 'client' | 'office' | 'installer' | 'system';
 
@@ -18,7 +19,7 @@ export type ProcessStepDefinition = {
     checkpoints: {
         key: string;
         label: string;
-        condition: (montage: any) => boolean;
+        condition: (montage: Montage) => boolean;
     }[];
 };
 
@@ -50,7 +51,7 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
         checkpoints: [
             { key: 'measurement_scheduled', label: 'Pomiar umówiony', condition: (m) => !!m.measurementDate },
             { key: 'measurement_done', label: 'Pomiar wykonany', condition: (m) => !!m.floorArea }, // Simplification
-            { key: 'quote_created', label: 'Oferta utworzona', condition: (m) => m.quotes && m.quotes.length > 0 }
+            { key: 'quote_created', label: 'Oferta utworzona', condition: (m) => !!m.quotes && m.quotes.length > 0 }
         ]
     },
     {
@@ -64,9 +65,9 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
             { label: 'Przypomnienie o wpłacie', description: 'SMS po 3 dniach braku wpłaty zaliczki.' }
         ],
         checkpoints: [
-            { key: 'quote_accepted', label: 'Oferta zaakceptowana', condition: (m) => m.quotes?.some((q: any) => q.status === 'accepted') },
-            { key: 'contract_signed', label: 'Umowa podpisana', condition: (m) => !!m.contractSignedAt || m.quotes?.some((q: any) => !!q.signedAt) },
-            { key: 'advance_paid', label: 'Zaliczka opłacona', condition: (m) => false } // Placeholder logic for now
+            { key: 'quote_accepted', label: 'Oferta zaakceptowana', condition: (m) => m.quotes?.some((q) => q.status === 'accepted') ?? false },
+            { key: 'contract_signed', label: 'Umowa podpisana', condition: (m) => !!m.contractSignedAt || (m.quotes?.some((q) => !!q.signedAt) ?? false) },
+            { key: 'advance_paid', label: 'Zaliczka opłacona', condition: () => false } // Placeholder logic for now
         ]
     },
     {
@@ -95,7 +96,7 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
             { label: 'Prośba o opinię', description: 'SMS z linkiem do Google Maps po zakończeniu.' }
         ],
         checkpoints: [
-            { key: 'installation_done', label: 'Prace zakończone', condition: (m) => false }, // Manual check usually
+            { key: 'installation_done', label: 'Prace zakończone', condition: () => false }, // Manual check usually
             { key: 'protocol_signed', label: 'Protokół podpisany', condition: (m) => !!m.clientSignatureUrl }
         ]
     },
@@ -107,7 +108,7 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
         actor: 'system',
         automations: [],
         checkpoints: [
-            { key: 'final_payment', label: 'Rozliczenie końcowe', condition: (m) => true }
+            { key: 'final_payment', label: 'Rozliczenie końcowe', condition: () => true }
         ]
     }
 ];

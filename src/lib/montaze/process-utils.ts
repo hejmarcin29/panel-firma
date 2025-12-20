@@ -1,5 +1,6 @@
 import { PROCESS_STEPS, type ProcessStepDefinition } from './process-definition';
 import { type MontageStatus } from '@/lib/db/schema';
+import type { Montage } from '@/app/dashboard/crm/montaze/types';
 
 export type StepStatus = 'completed' | 'current' | 'pending' | 'locked';
 
@@ -14,7 +15,7 @@ export type ProcessStepState = ProcessStepDefinition & {
     }[];
 };
 
-export function getProcessState(montage: any): { 
+export function getProcessState(montage: Montage): { 
     steps: ProcessStepState[]; 
     currentStepIndex: number;
     progress: number;

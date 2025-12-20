@@ -1,7 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { Check, Clock, Lock, User, Building, Hammer, Cpu, AlertCircle } from 'lucide-react';
+import { Check, Clock, Lock, User, Building, Hammer, Cpu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ProcessStepState, StepStatus } from '@/lib/montaze/process-utils';
 import { Badge } from '@/components/ui/badge';

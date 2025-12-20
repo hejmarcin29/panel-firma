@@ -23,6 +23,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MontageProcessTimeline } from "./montage-process-timeline";
 import { cn } from "@/lib/utils";
 import { 
     toggleMontageChecklistItem, 
@@ -375,7 +377,6 @@ export function MontageWorkflowTab({
 
   const materialAlert = getMaterialAlert();
 
-  return (
   return (
     <Tabs defaultValue="simple" className="w-full space-y-6">
         <div className="flex items-center justify-between">
