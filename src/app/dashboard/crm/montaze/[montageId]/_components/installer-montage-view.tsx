@@ -20,16 +20,16 @@ import { pl } from "date-fns/locale";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 import { MontageNotesTab } from "./montage-notes-tab";
 import { MontageGalleryTab } from "./montage-gallery-tab";
 import { MontageTasksTab } from "./montage-tasks-tab";
 import { MontageMeasurementTab } from "../_components/montage-measurement-tab";
 import { MontageClientCard } from "./montage-client-card"; // Reusing for edit capabilities if needed
+import { MontageMaterialCard } from "./montage-material-card";
 import type { Montage, MontageLog } from "../../types";
 
 interface InstallerMontageViewProps {
@@ -158,8 +158,8 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
                                         <Separator />
                                         <p className="text-sm">
                                             1. Zadzwoń do klienta i ustal termin.<br/>
-                                            2. Wpisz datę w zakładce "Info".<br/>
-                                            3. Po wizycie uzupełnij zakładkę "Pomiar".
+                                            2. Wpisz datę w zakładce &quot;Info&quot;.<br/>
+                                            3. Po wizycie uzupełnij zakładkę &quot;Pomiar&quot;.
                                         </p>
                                         <Button className="w-full" onClick={() => setActiveTab('measurement')}>
                                             Przejdź do Formularza Pomiaru
@@ -187,6 +187,11 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
                                         <div className="space-y-2">
                                             <h4 className="font-medium text-sm">Twoje Zadania:</h4>
                                             <MontageTasksTab montage={montage} />
+                                        <Separator />
+                                        <div className="space-y-2">
+                                            <h4 className="font-medium text-sm">Materiały do zabrania:</h4>
+                                            <MontageMaterialCard montage={montage} userRoles={userRoles} />
+                                        </div>
                                         </div>
                                     </div>
                                 )}

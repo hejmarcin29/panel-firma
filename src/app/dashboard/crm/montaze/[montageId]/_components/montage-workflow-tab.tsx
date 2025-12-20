@@ -55,7 +55,6 @@ export function MontageWorkflowTab({
     montage, 
     statusOptions,
     installers = [],
-    measurers = [],
     userRoles = []
 }: { 
     montage: Montage; 

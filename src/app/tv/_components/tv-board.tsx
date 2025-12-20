@@ -12,7 +12,6 @@ const SCROLL_INTERVAL = 15000; // 15 seconds per page
 export function TvBoard() {
     const [montages, setMontages] = useState<Montage[]>([]);
     const [loading, setLoading] = useState(true);
-    const [lastUpdated, setLastUpdated] = useState(new Date());
     const [pageIndex, setPageIndex] = useState(0);
 
     useEffect(() => {
@@ -20,7 +19,6 @@ export function TvBoard() {
             try {
                 const data = await getTvData();
                 setMontages(data);
-                setLastUpdated(new Date());
                 setLoading(false);
             } catch (error) {
                 console.error('Failed to fetch TV data', error);

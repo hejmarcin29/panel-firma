@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, Phone, Mail, Calendar as CalendarIcon, Edit2, Ruler, Loader2, Check, Hammer, User, Megaphone, ExternalLink, Copy, Sparkles } from "lucide-react";
+import { MapPin, Phone, Mail, Calendar as CalendarIcon, Edit2, Ruler, Loader2, Check, Hammer, Megaphone, ExternalLink, Copy, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
@@ -44,7 +44,6 @@ export function MontageClientCard({
     montage, 
     userRoles = ['admin'],
     installers = [],
-    measurers = [],
     portalEnabled = false,
 }: { 
     montage: Montage; 
@@ -247,14 +246,6 @@ export function MontageClientCard({
           installerId: newInstallerId,
           measurerId: newInstallerId, // Sync measurer with installer
           installerStatus: newStatus
-      });
-      router.refresh();
-  };
-
-  const handleMeasurerChange = async (value: string) => {
-      await updateMontageRealizationStatus({
-          montageId: montage.id,
-          measurerId: value === 'none' ? null : value
       });
       router.refresh();
   };

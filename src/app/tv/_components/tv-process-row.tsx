@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { getProcessState, type ProcessStepState } from '@/lib/montaze/process-utils';
 import type { Montage } from '@/app/dashboard/crm/montaze/types';
 import { cn } from '@/lib/utils';
-import { MapPin, User, Calendar, AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
+import { MapPin, Calendar, AlertTriangle } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import { pl } from 'date-fns/locale';
 

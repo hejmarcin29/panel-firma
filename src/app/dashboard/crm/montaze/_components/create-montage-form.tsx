@@ -92,7 +92,7 @@ type CreateMontageFormProps = {
     leads?: LeadOption[];
 };
 
-export function CreateMontageForm({ onSuccess, installers = [], measurers = [], leads = [] }: CreateMontageFormProps) {
+export function CreateMontageForm({ onSuccess, installers = [], leads = [] }: CreateMontageFormProps) {
 	const router = useRouter();
 	const [form, setForm] = useState<FormState>(initialState);
 	const [feedback, setFeedback] = useState<string | null>(null);

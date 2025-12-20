@@ -201,6 +201,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
     sketchDataUrl,
     dateRange,
     includeSkirting,
+    measurementDate,
   ]);
 
   useEffect(() => {
