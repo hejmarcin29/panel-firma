@@ -1,17 +1,20 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
     // Ensure user is logged in
     // Note: In a real scenario, we might want to pass a state parameter to prevent CSRF
     // and to know where to redirect back.
     
     const clientId = await getAppSetting(appSettingKeys.googleOAuthClientId);
     const clientSecret = await getAppSetting(appSettingKeys.googleOAuthClientSecret);
-    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/google/callback`;
+    
+    // Determine base URL dynamically if env var is missing
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
+    const redirectUri = `${baseUrl}/api/auth/google/callback`;
 
     if (!clientId || !clientSecret) {
         return NextResponse.json({ error: 'Missing Google OAuth credentials in settings' }, { status: 500 });

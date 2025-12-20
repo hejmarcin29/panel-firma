@@ -12,13 +12,16 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const code = searchParams.get('code');
     const error = searchParams.get('error');
+    
+    // Determine base URL dynamically if env var is missing
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
 
     if (error) {
-        return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings?error=google_auth_failed`);
+        return NextResponse.redirect(`${baseUrl}/dashboard/settings?error=google_auth_failed`);
     }
 
     if (!code) {
-        return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings?error=no_code`);
+        return NextResponse.redirect(`${baseUrl}/dashboard/settings?error=no_code`);
     }
 
     try {
@@ -28,11 +31,14 @@ export async function GET(request: NextRequest) {
 
         const clientId = await getAppSetting(appSettingKeys.googleOAuthClientId);
         const clientSecret = await getAppSetting(appSettingKeys.googleOAuthClientSecret);
-        const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/google/callback`;
+        
+        // Determine base URL dynamically if env var is missing
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
+        const redirectUri = `${baseUrl}/api/auth/google/callback`;
 
         if (!clientId || !clientSecret) {
              console.error('Missing Google OAuth credentials in settings');
-             return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings?error=config_missing`);
+             return NextResponse.redirect(`${baseUrl}/dashboard/settings?error=config_missing`);
         }
 
         const oauth2Client = new google.auth.OAuth2(
@@ -55,10 +61,10 @@ export async function GET(request: NextRequest) {
             console.warn('No refresh token received from Google');
         }
 
-        return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings?success=google_connected`);
+        return NextResponse.redirect(`${baseUrl}/dashboard/settings?success=google_connected`);
 
     } catch (err) {
         console.error('Error exchanging code for token:', err);
-        return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings?error=exchange_failed`);
+        return NextResponse.redirect(`${baseUrl}/dashboard/settings?error=exchange_failed`);
     }
 }
