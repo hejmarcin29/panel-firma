@@ -1,0 +1,1 @@
+ALTER TABLE "montages" ADD COLUMN "is_housing_vat" boolean DEFAULT false;
