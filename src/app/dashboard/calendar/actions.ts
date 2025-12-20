@@ -45,6 +45,8 @@ export async function getCalendarEvents(): Promise<{ scheduled: CalendarEvent[];
         id: montages.id,
         scheduledInstallationAt: montages.scheduledInstallationAt,
         scheduledInstallationEndAt: montages.scheduledInstallationEndAt,
+        scheduledSkirtingInstallationAt: montages.scheduledSkirtingInstallationAt,
+        scheduledSkirtingInstallationEndAt: montages.scheduledSkirtingInstallationEndAt,
         clientName: montages.clientName,
         address: montages.address,
         status: montages.status,
@@ -71,15 +73,34 @@ export async function getCalendarEvents(): Promise<{ scheduled: CalendarEvent[];
     }).format(order.totalGross / 100),
   }));
 
-  const allMontages: CalendarEvent[] = montagesData.map((montage) => ({
-    id: montage.id,
-    type: 'montage',
-    title: montage.clientName,
-    date: montage.scheduledInstallationAt,
-    endDate: montage.scheduledInstallationEndAt,
-    status: montage.status,
-    address: montage.address || '',
-  }));
+  const allMontages: CalendarEvent[] = [];
+  
+  montagesData.forEach((montage) => {
+      // Floor Event
+      allMontages.push({
+        id: montage.id,
+        type: 'montage',
+        title: montage.clientName,
+        date: montage.scheduledInstallationAt,
+        endDate: montage.scheduledInstallationEndAt,
+        status: montage.status,
+        address: montage.address || '',
+      });
+
+      // Skirting Event
+      if (montage.scheduledSkirtingInstallationAt) {
+          allMontages.push({
+            id: `${montage.id}-skirting`,
+            type: 'montage',
+            title: `${montage.clientName} (Listwy)`,
+            date: montage.scheduledSkirtingInstallationAt,
+            endDate: montage.scheduledSkirtingInstallationEndAt,
+            status: montage.status,
+            address: montage.address || '',
+            description: 'Montaż listew',
+          });
+      }
+  });
 
   const allEvents = [...allOrders, ...allMontages];
 
@@ -100,10 +121,18 @@ export async function updateEventDate(
       .set({ expectedShipDate: date })
       .where(eq(orders.id, id));
   } else {
-    await db
-      .update(montages)
-      .set({ scheduledInstallationAt: date })
-      .where(eq(montages.id, id));
+    if (id.endsWith('-skirting')) {
+        const realId = id.replace('-skirting', '');
+        await db
+            .update(montages)
+            .set({ scheduledSkirtingInstallationAt: date })
+            .where(eq(montages.id, realId));
+    } else {
+        await db
+            .update(montages)
+            .set({ scheduledInstallationAt: date })
+            .where(eq(montages.id, id));
+    }
   }
   revalidatePath('/dashboard/calendar');
 }

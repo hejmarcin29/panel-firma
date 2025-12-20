@@ -22,6 +22,7 @@ import {
 import { uploadMontageObject } from '@/lib/r2/storage';
 import { MontageCategories, MontageSubCategories } from '@/lib/r2/constants';
 import { getMontageChecklistTemplates } from '@/lib/montaze/checklist';
+import { DEFAULT_MONTAGE_CHECKLIST } from '@/lib/montaze/checklist-shared';
 import { getMontageAutomationRules } from '@/lib/montaze/automation';
 import { logSystemEvent } from '@/lib/logging';
 import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
@@ -1373,6 +1374,8 @@ export async function updateMontageMeasurement({
     measurementAdditionalWorkDescription,
     measurementAdditionalMaterials,
     measurementSeparateSkirting,
+    scheduledSkirtingInstallationAt,
+    scheduledSkirtingInstallationEndAt,
 }: {
 	montageId: string;
 	measurementDetails: string;
@@ -1391,6 +1394,8 @@ export async function updateMontageMeasurement({
 	sketchUrl?: string | null;
 	scheduledInstallationAt: number | null;
 	scheduledInstallationEndAt: number | null;
+    scheduledSkirtingInstallationAt?: number | null;
+    scheduledSkirtingInstallationEndAt?: number | null;
     measurementDate?: string | null;
     measurementInstallationMethod?: 'click' | 'glue' | null;
     measurementSubfloorCondition?: string | null;
@@ -1431,6 +1436,8 @@ export async function updateMontageMeasurement({
 			sketchUrl,
 			scheduledInstallationAt: scheduledInstallationAt ? new Date(scheduledInstallationAt) : null,
 			scheduledInstallationEndAt: scheduledInstallationEndAt ? new Date(scheduledInstallationEndAt) : null,
+            scheduledSkirtingInstallationAt: scheduledSkirtingInstallationAt ? new Date(scheduledSkirtingInstallationAt) : null,
+            scheduledSkirtingInstallationEndAt: scheduledSkirtingInstallationEndAt ? new Date(scheduledSkirtingInstallationEndAt) : null,
             measurementInstallationMethod,
             measurementSubfloorCondition,
             measurementAdditionalWorkNeeded,
@@ -1441,6 +1448,33 @@ export async function updateMontageMeasurement({
 			updatedAt: new Date(),
 		})
 		.where(eq(montages.id, montageId));
+
+    if (measurementSeparateSkirting) {
+        // Ensure skirting checklist items exist
+        const skirtingItems = DEFAULT_MONTAGE_CHECKLIST.filter(item => item.id.endsWith('_skirting'));
+        
+        for (const item of skirtingItems) {
+            const existing = await db.query.montageChecklistItems.findFirst({
+                where: (table, { and, eq }) => and(
+                    eq(table.montageId, montageId),
+                    eq(table.templateId, item.id)
+                )
+            });
+
+            if (!existing) {
+                await db.insert(montageChecklistItems).values({
+                    id: crypto.randomUUID(),
+                    montageId,
+                    templateId: item.id,
+                    label: item.label,
+                    completed: false,
+                    orderIndex: 999, // Put them at the end
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                });
+            }
+        }
+    }
 
     // --- GOOGLE CALENDAR SYNC (USER) ---
     // If installation date is set, try to sync with installer's private calendar

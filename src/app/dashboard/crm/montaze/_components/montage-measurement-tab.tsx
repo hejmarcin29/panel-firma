@@ -100,6 +100,11 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
     to: montage.scheduledInstallationEndAt ? new Date(montage.scheduledInstallationEndAt) : undefined,
   });
 
+  const [skirtingDateRange, setSkirtingDateRange] = useState<DateRange | undefined>({
+    from: montage.scheduledSkirtingInstallationAt ? new Date(montage.scheduledSkirtingInstallationAt) : undefined,
+    to: montage.scheduledSkirtingInstallationEndAt ? new Date(montage.scheduledSkirtingInstallationEndAt) : undefined,
+  });
+
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const isFirstRender = useRef(true);
@@ -137,6 +142,10 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
         from: montage.scheduledInstallationAt ? new Date(montage.scheduledInstallationAt) : undefined,
         to: montage.scheduledInstallationEndAt ? new Date(montage.scheduledInstallationEndAt) : undefined,
     });
+    setSkirtingDateRange({
+        from: montage.scheduledSkirtingInstallationAt ? new Date(montage.scheduledSkirtingInstallationAt) : undefined,
+        to: montage.scheduledSkirtingInstallationEndAt ? new Date(montage.scheduledSkirtingInstallationEndAt) : undefined,
+    });
     setIncludeSkirting(!!(montage.skirtingLength && parseFloat(montage.skirtingLength.toString()) > 0));
   }, [montage]);
 
@@ -170,6 +179,8 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
           sketchUrl: sketchDataUrl,
           scheduledInstallationAt: dateRange?.from ? dateRange.from.getTime() : null,
           scheduledInstallationEndAt: dateRange?.to ? dateRange.to.getTime() : null,
+          scheduledSkirtingInstallationAt: skirtingDateRange?.from ? skirtingDateRange.from.getTime() : null,
+          scheduledSkirtingInstallationEndAt: skirtingDateRange?.to ? skirtingDateRange.to.getTime() : null,
         });
         setLastSaved(new Date());
       } catch (err) {
@@ -200,6 +211,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
     additionalInfo,
     sketchDataUrl,
     dateRange,
+    skirtingDateRange,
     includeSkirting,
     measurementDate,
   ]);
@@ -551,6 +563,54 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                             </PopoverContent>
                         </Popover>
                     </div>
+
+                    {separateSkirting && (
+                        <div className="space-y-2 pt-4 border-t animate-in fade-in slide-in-from-top-2">
+                            <Label>Termin montażu listew</Label>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                <Button
+                                    variant={"outline"}
+                                    disabled={isReadOnly}
+                                    className={cn(
+                                    "w-full justify-start text-left font-normal",
+                                    !skirtingDateRange?.from && "text-muted-foreground"
+                                    )}
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {skirtingDateRange?.from ? (
+                                    skirtingDateRange.to ? (
+                                        <>
+                                        {format(skirtingDateRange.from, "PPP", { locale: pl })} -{" "}
+                                        {format(skirtingDateRange.to, "PPP", { locale: pl })}
+                                        </>
+                                    ) : (
+                                        format(skirtingDateRange.from, "PPP", { locale: pl })
+                                    )
+                                    ) : (
+                                    <span>Wybierz termin montażu listew</span>
+                                    )}
+                                </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                    initialFocus
+                                    mode="range"
+                                    defaultMonth={skirtingDateRange?.from}
+                                    selected={skirtingDateRange}
+                                    onSelect={setSkirtingDateRange}
+                                    numberOfMonths={2}
+                                    locale={pl}
+                                    classNames={{
+                                        day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
+                                        day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+                                        day_today: "bg-accent text-accent-foreground",
+                                    }}
+                                />
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
         </div>
