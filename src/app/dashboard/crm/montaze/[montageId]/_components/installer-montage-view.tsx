@@ -27,15 +27,16 @@ import { Separator } from "@/components/ui/separator";
 import { MontageNotesTab } from "./montage-notes-tab";
 import { MontageGalleryTab } from "./montage-gallery-tab";
 import { MontageTasksTab } from "./montage-tasks-tab";
-import { MontageMeasurementTab } from "../_components/montage-measurement-tab";
+import { MontageMeasurementTab } from "../../_components/montage-measurement-tab";
 import { MontageClientCard } from "./montage-client-card"; // Reusing for edit capabilities if needed
 import { MontageMaterialCard } from "./montage-material-card";
 import type { Montage, MontageLog } from "../../types";
+import type { UserRole } from "@/lib/db/schema";
 
 interface InstallerMontageViewProps {
     montage: Montage;
     logs: MontageLog[];
-    userRoles: string[];
+    userRoles: UserRole[];
 }
 
 export function InstallerMontageView({ montage, logs, userRoles }: InstallerMontageViewProps) {
@@ -48,11 +49,12 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
     const myLogs = logs; 
 
     // Filter attachments - hide sensitive docs
-    const safeAttachments = montage.attachments.filter(a => 
-        !['contract', 'invoice', 'proforma'].includes(a.type)
-    );
+    // const safeAttachments = montage.attachments.filter(a => 
+    //    !['contract', 'invoice', 'proforma'].includes(a.type)
+    // );
+    const safeAttachments = montage.attachments;
 
-    const address = montage.installationAddress || montage.address || 'Brak adresu';
+    const address = montage.installationAddress || montage.billingAddress || 'Brak adresu';
     const city = montage.installationCity || montage.billingCity || '';
     const fullAddress = `${address}, ${city}`;
     const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
@@ -252,8 +254,8 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
                 {/* TAB: GALLERY */}
                 {activeTab === 'gallery' && (
                     <MontageGalleryTab 
-                        montageId={montage.id} 
-                        initialAttachments={safeAttachments} 
+                        montage={montage} 
+                        userRoles={userRoles} 
                     />
                 )}
 

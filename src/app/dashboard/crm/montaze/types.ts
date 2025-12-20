@@ -49,6 +49,16 @@ export type MontageChecklistItem = {
 	attachment: MontageAttachment | null;
 };
 
+export type MontageLog = {
+    id: string;
+    userId: string | null;
+    action: string;
+    details: string | null;
+    ipAddress: string | null;
+    userAgent: string | null;
+    createdAt: Date;
+};
+
 export type MaterialsEditHistoryEntry = {
 	date: string;
 	changes: {

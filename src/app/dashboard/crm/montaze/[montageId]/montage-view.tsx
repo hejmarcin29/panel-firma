@@ -122,8 +122,6 @@ export function MontageView({ montageId, initialData, portalEnabled }: MontageVi
         );
     }
 
-    const isInstaller = userRoles?.includes('installer') && !userRoles?.includes('admin');
-
     return (
         <div className="flex min-h-screen flex-col bg-muted/10">
             <MontageDetailsLayout 
