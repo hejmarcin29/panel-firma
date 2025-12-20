@@ -61,11 +61,19 @@ export function DashboardNav({ urgentOrdersCount = 0, userRoles = ['admin'] }: {
         return link.label;
     };
 
+    const getHref = (link: typeof links[0]) => {
+        if (userRoles.includes('installer') && !userRoles.includes('admin') && link.href === '/dashboard/crm') {
+            return '/dashboard/crm/montaze';
+        }
+        return link.href;
+    };
+
 	return (
 		<nav className="mb-8 pb-2 overflow-x-auto no-scrollbar">
 			<ul className="flex items-center gap-1 p-1 bg-zinc-100/50 dark:bg-zinc-900/50 rounded-full border border-zinc-200/50 dark:border-zinc-800/50 w-max mx-auto backdrop-blur-sm">
 				{filteredLinks.map((link) => {
-					const isActive = pathname === link.href || (link.href !== '/dashboard' && pathname?.startsWith(`${link.href}/`));
+                    const href = getHref(link);
+					const isActive = pathname === href || (href !== '/dashboard' && pathname?.startsWith(`${href}/`));
 
 					return (
 						<li key={link.href} className="relative">
@@ -77,7 +85,7 @@ export function DashboardNav({ urgentOrdersCount = 0, userRoles = ['admin'] }: {
                                 />
                             )}
 							<Link
-								href={link.href}
+								href={href}
 								className={cn(
 									'relative z-10 block px-4 py-2 text-sm font-medium transition-colors rounded-full whitespace-nowrap',
 									isActive

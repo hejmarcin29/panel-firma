@@ -66,70 +66,78 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
 
     return (
         <div className="flex flex-col min-h-screen bg-muted/10 pb-20">
-            {/* 1. HEADER (Mobile First) */}
+            {/* 1. HEADER (Mobile First, Desktop Responsive) */}
             <div className="bg-background border-b sticky top-0 z-20 shadow-sm">
-                <div className="p-4 space-y-3">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <h1 className="text-lg font-bold leading-tight">{montage.clientName}</h1>
-                            <div className="flex items-center text-muted-foreground text-sm mt-1">
-                                <MapPin className="w-3 h-3 mr-1" />
-                                {city}, {address}
+                <div className="max-w-4xl mx-auto w-full">
+                    <div className="p-4 space-y-3 md:flex md:items-center md:justify-between md:space-y-0 md:gap-6">
+                        <div className="flex justify-between items-start md:block md:flex-1">
+                            <div>
+                                <h1 className="text-lg font-bold leading-tight md:text-xl">{montage.clientName}</h1>
+                                <div className="flex items-center text-muted-foreground text-sm mt-1">
+                                    <MapPin className="w-3 h-3 mr-1" />
+                                    {city}, {address}
+                                </div>
                             </div>
+                            <Badge variant={isDone ? "default" : "outline"} className="md:hidden">
+                                {isMeasurementStage ? "Pomiar" : isInstallationStage ? "Montaż" : montage.status}
+                            </Badge>
                         </div>
-                        <Badge variant={isDone ? "default" : "outline"}>
-                            {isMeasurementStage ? "Pomiar" : isInstallationStage ? "Montaż" : montage.status}
-                        </Badge>
-                    </div>
 
-                    {/* BIG ACTION BUTTONS */}
-                    <div className="grid grid-cols-2 gap-3">
-                        <Button className="w-full h-12 text-base" variant="outline" asChild>
-                            <a href={`tel:${montage.contactPhone}`}>
-                                <Phone className="mr-2 h-5 w-5" />
-                                Zadzwoń
-                            </a>
-                        </Button>
-                        <Button className="w-full h-12 text-base" asChild>
-                            <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer">
-                                <Navigation className="mr-2 h-5 w-5" />
-                                Nawiguj
-                            </a>
-                        </Button>
+                        <div className="hidden md:block">
+                             <Badge variant={isDone ? "default" : "outline"} className="text-sm px-3 py-1">
+                                {isMeasurementStage ? "Pomiar" : isInstallationStage ? "Montaż" : montage.status}
+                            </Badge>
+                        </div>
+
+                        {/* BIG ACTION BUTTONS */}
+                        <div className="grid grid-cols-2 gap-3 md:flex md:w-auto">
+                            <Button className="w-full h-12 text-base md:w-40" variant="outline" asChild>
+                                <a href={`tel:${montage.contactPhone}`}>
+                                    <Phone className="mr-2 h-5 w-5" />
+                                    Zadzwoń
+                                </a>
+                            </Button>
+                            <Button className="w-full h-12 text-base md:w-40" asChild>
+                                <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer">
+                                    <Navigation className="mr-2 h-5 w-5" />
+                                    Nawiguj
+                                </a>
+                            </Button>
+                        </div>
                     </div>
-                </div>
-                
-                {/* TABS NAVIGATION */}
-                <div className="px-2 overflow-x-auto scrollbar-hide">
-                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                        <TabsList className="w-full justify-start h-12 bg-transparent p-0">
-                            <TabsTrigger value="process" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-4">
-                                <CheckSquare className="w-4 h-4 mr-2" />
-                                Proces
-                            </TabsTrigger>
-                            <TabsTrigger value="measurement" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-4">
-                                <Ruler className="w-4 h-4 mr-2" />
-                                Pomiar
-                            </TabsTrigger>
-                            <TabsTrigger value="notes" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-4">
-                                <MessageSquare className="w-4 h-4 mr-2" />
-                                Notatki
-                            </TabsTrigger>
-                            <TabsTrigger value="gallery" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-4">
-                                <Camera className="w-4 h-4 mr-2" />
-                                Zdjęcia
-                            </TabsTrigger>
-                            <TabsTrigger value="info" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-4">
-                                <FileText className="w-4 h-4 mr-2" />
-                                Info
-                            </TabsTrigger>
-                        </TabsList>
-                    </Tabs>
+                    
+                    {/* TABS NAVIGATION */}
+                    <div className="px-2 overflow-x-auto scrollbar-hide md:px-4">
+                        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                            <TabsList className="w-full justify-start h-12 bg-transparent p-0 md:w-auto md:inline-flex">
+                                <TabsTrigger value="process" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-4">
+                                    <CheckSquare className="w-4 h-4 mr-2" />
+                                    Proces
+                                </TabsTrigger>
+                                <TabsTrigger value="measurement" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-4">
+                                    <Ruler className="w-4 h-4 mr-2" />
+                                    Pomiar
+                                </TabsTrigger>
+                                <TabsTrigger value="notes" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-4">
+                                    <MessageSquare className="w-4 h-4 mr-2" />
+                                    Notatki
+                                </TabsTrigger>
+                                <TabsTrigger value="gallery" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-4">
+                                    <Camera className="w-4 h-4 mr-2" />
+                                    Zdjęcia
+                                </TabsTrigger>
+                                <TabsTrigger value="info" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-4">
+                                    <FileText className="w-4 h-4 mr-2" />
+                                    Info
+                                </TabsTrigger>
+                            </TabsList>
+                        </Tabs>
+                    </div>
                 </div>
             </div>
 
             {/* 2. MAIN CONTENT AREA */}
-            <div className="p-4 space-y-6 max-w-md mx-auto w-full">
+            <div className="p-4 space-y-6 max-w-4xl mx-auto w-full">
                 
                 {/* TAB: PROCESS (The Hub) */}
                 {activeTab === 'process' && (
