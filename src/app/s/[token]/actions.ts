@@ -52,7 +52,7 @@ export async function signQuote(quoteId: string, signatureData: string, token: s
             quoteId: quote.id,
             quoteNumber: quote.number,
             customerId: customer.id,
-            customerName: customer.fullName,
+            customerName: customer.name,
             montageId: quote.montageId
         },
         'system' // or customer.id if we want to track who triggered it, but userId usually refers to admin users

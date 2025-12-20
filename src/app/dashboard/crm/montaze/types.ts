@@ -160,11 +160,7 @@ export type MontageQuote = {
     totalGross: number;
     createdAt: TimestampValue;
     items: QuoteItem[];
-    contract?: {
-        id: string;
-        status: string;
-        signedAt: TimestampValue;
-    } | null;
+    signedAt?: TimestampValue;
 };
 
 export type StatusOption = {

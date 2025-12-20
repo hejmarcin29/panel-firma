@@ -223,11 +223,7 @@ export function mapMontageRow(row: MontageRow, publicBaseUrl: string | null): Mo
             totalGross: q.totalGross,
             createdAt: q.createdAt,
             items: (q.items as unknown as QuoteItem[]) || [],
-            contract: q.contract ? {
-                id: q.contract.id,
-                status: q.contract.status,
-                signedAt: q.contract.signedAt,
-            } : null,
+            signedAt: q.signedAt,
         })),
 		notes: row.notes.map((note) => mapNote(note, publicBaseUrl)),
 		attachments: row.attachments.map((attachment) => mapAttachment(attachment, publicBaseUrl)),

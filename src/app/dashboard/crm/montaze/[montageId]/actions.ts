@@ -89,9 +89,6 @@ export async function getMontageDetails(montageId: string) {
             customer: true,
             quotes: {
                 orderBy: desc(quotes.createdAt),
-                with: {
-                    contract: true
-                }
             },
         },
     });

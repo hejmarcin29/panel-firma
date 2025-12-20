@@ -164,11 +164,7 @@ export async function getDashboardStats(publicBaseUrl: string | null): Promise<D
     const allMontages = await db.query.montages.findMany({
         with: {
             tasks: true,
-            quotes: {
-                with: {
-                    contract: true
-                }
-            },
+            quotes: true,
         }
     });
 

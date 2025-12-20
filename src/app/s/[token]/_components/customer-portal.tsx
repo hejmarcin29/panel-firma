@@ -439,6 +439,7 @@ export function CustomerPortal({ customer, token, bankAccount }: CustomerPortalP
                                                     </DialogContent>
                                                 </Dialog>
                                             </div>
+                                        </div>
                                         )}
                                     </CardContent>
                                 </Card>
