@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MontageProcessTimeline } from "./montage-process-timeline";
+import { DEFAULT_MONTAGE_CHECKLIST } from "@/lib/montaze/checklist-templates";
 import { cn } from "@/lib/utils";
 import { 
     toggleMontageChecklistItem, 
