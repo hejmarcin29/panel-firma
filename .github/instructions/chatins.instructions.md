@@ -46,6 +46,10 @@ Jako AI, masz obowiązek:
 2. Aktualizować ten plik, gdy wprowadzasz nowe automatyzacje lub zmieniasz zasady działania systemu.
 3. Traktować ten plik jako "Single Source of Truth" dla zasad biznesowych.
 
+## Automatyzacje (Automations)
+- **Rejestracja:** Każda zaimplementowana automatyzacja musi zostać dodana do widoku ustawień: `/settings?tab=automations`.
+- **Kategoryzacja:** Automatyzacje muszą być przypisane do odpowiednich kategorii (np. Montaże, Zamówienia, Klienci), aby utrzymać porządek w panelu administracyjnym.
+
 ## Instrukcje dla Użytkowników (User Manuals)
 Przy tworzeniu lub modyfikowaniu ról użytkowników (np. Pomiarowiec, Montażysta, Partner), **ZAWSZE** pamiętaj o zapewnieniu im dostępu do instrukcji obsługi w panelu.
 - Każda rola powinna mieć dedykowaną sekcję lub zakładkę "Pomoc" / "Instrukcja".
@@ -82,6 +86,7 @@ Przy każdej implementacji, modyfikacji lub naprawie błędu, **ZAWSZE** analizu
 - **Baza Danych:** PostgreSQL. Connection string w `.env` musi używać użytkownika `panel_user` (nie `deploy`).
 
 ## Praca z Bazą Danych (PostgreSQL + Drizzle)
+- **Nazewnictwo Tabel:** Nazwy tabel muszą być spójne z funkcją, którą pełnią. Unikaj nazw ogólnych lub mylących. Nazwa powinna jasno wskazywać na zawartość i przeznaczenie tabeli.
 - **Soft Deletes (WAŻNE):** Wiele tabel (np. `montages`, `products`, `customers`, `quotes`) używa mechanizmu "Soft Delete" (kolumna `deletedAt`).
   - **Przy każdym zapytaniu `SELECT` (findMany, findFirst, select) MUSISZ jawnie filtrować usunięte rekordy:** `where: isNull(table.deletedAt)` (lub `and(..., isNull(table.deletedAt))`).
   - Wyjątkiem są tylko widoki administracyjne typu "Kosz" lub historia.

@@ -41,9 +41,15 @@ import {
 } from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { updateQuote, sendQuoteEmail, getProductsForQuote, deleteQuote } from '../actions';
-import { generateContract } from '../../../settings/contracts/actions';
 import { FileText as FileTextIcon } from 'lucide-react';
 import { SignaturePad } from '@/components/ui/signature-pad';
+import dynamic from 'next/dynamic';
+import { QuotePdf } from './quote-pdf';
+
+const PDFDownloadLink = dynamic(() => import('@react-pdf/renderer').then(mod => mod.PDFDownloadLink), {
+  ssr: false,
+  loading: () => <Button variant="outline" disabled>Ładowanie PDF...</Button>,
+});
 
 type ProductAttribute = {
     id: number;
@@ -68,13 +74,19 @@ function getProductAttribute(product: Product, slug: string): ProductAttribute |
 type QuoteEditorProps = {
     quote: {
         id: string;
+        number: string | null;
+        createdAt: string;
         items: QuoteItem[];
         status: QuoteStatus;
         notes: string | null;
+        totalNet: number;
+        totalGross: number;
         montage: {
             id: string;
             clientName: string;
             installationAddress: string | null;
+            contactEmail: string | null;
+            contactPhone: string | null;
             floorArea: number | null;
             skirtingLength: number | null;
             panelModel: string | null;
@@ -84,19 +96,23 @@ type QuoteEditorProps = {
             panelWaste: number | null;
             skirtingWaste: number | null;
             technicalAudit: unknown;
+            address: string | null;
         };
-        contract?: {
-            id: string;
-            status: string;
-            content: string;
-            createdAt: string;
-            signedAt?: string | null;
-        } | null;
+        // New fields
+        termsContent?: string | null;
+        signatureData?: string | null;
+        signedAt?: Date | null;
     };
     templates: Array<{ id: string; name: string; content: string }>;
+    companyInfo: {
+        name: string;
+        address: string;
+        nip: string;
+        logoUrl?: string;
+    };
 };
 
-export function QuoteEditor({ quote, templates }: QuoteEditorProps) {
+export function QuoteEditor({ quote, templates, companyInfo }: QuoteEditorProps) {
     const router = useRouter();
     const isMobile = useIsMobile();
     const [items, setItems] = useState<QuoteItem[]>(quote.items || []);
@@ -104,15 +120,36 @@ export function QuoteEditor({ quote, templates }: QuoteEditorProps) {
     const [notes, setNotes] = useState(quote.notes || '');
     const [isSaving, setIsSaving] = useState(false);
     const [isSending, setIsSending] = useState(false);
-    const [isGeneratingContract, setIsGeneratingContract] = useState(false);
-    const [contractDialogOpen, setContractDialogOpen] = useState(false);
+    
+    // Terms selection
     const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
+    const [termsContent, setTermsContent] = useState<string>(quote.termsContent || '');
+    const [termsDialogOpen, setTermsDialogOpen] = useState(false);
+
     const [isImporting, setIsImporting] = useState(false);
     const [importDialogOpen, setImportDialogOpen] = useState(false);
     const [availableProducts, setAvailableProducts] = useState<Product[]>([]);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
-    const [contractorSignature, setContractorSignature] = useState<string | null>(null);
+
+    // Load initial template if terms are empty
+    useState(() => {
+        if (!quote.termsContent && templates.length > 0) {
+             // Try to find default or first
+             // For now just pick first
+             // setSelectedTemplateId(templates[0].id);
+             // setTermsContent(templates[0].content);
+        }
+    });
+
+    const handleTemplateChange = (templateId: string) => {
+        setSelectedTemplateId(templateId);
+        const template = templates.find(t => t.id === templateId);
+        if (template) {
+            setTermsContent(template.content);
+        }
+    };
+
 
     // Filter products based on montage models
     const filteredProducts = availableProducts.filter(product => {
@@ -339,6 +376,7 @@ export function QuoteEditor({ quote, templates }: QuoteEditorProps) {
                 status,
                 items,
                 notes,
+                termsContent, // Save terms content
             });
             toast.success('Wycena zapisana.');
             router.refresh();
@@ -380,34 +418,18 @@ export function QuoteEditor({ quote, templates }: QuoteEditorProps) {
         }
     };
 
-    const handleGenerateContract = async () => {
-        if (!selectedTemplateId) {
-            toast.error('Wybierz szablon umowy');
-            return;
-        }
-
-        try {
-            setIsGeneratingContract(true);
-            
-            const variables: Record<string, string> = {};
-            if (contractorSignature) {
-                variables['{{podpis_wykonawcy}}'] = `<img src="${contractorSignature}" alt="Podpis Wykonawcy" style="max-width: 200px; max-height: 100px;" />`;
-            }
-
-            await generateContract(quote.id, selectedTemplateId, variables);
-            toast.success('Umowa została wygenerowana');
-            setContractDialogOpen(false);
-            router.refresh();
-        } catch (error) {
-            console.error('Error generating contract:', error);
-            toast.error('Wystąpił błąd podczas generowania umowy');
-        } finally {
-            setIsGeneratingContract(false);
-        }
-    };
-
     const totalNet = items.reduce((sum, item) => sum + item.totalNet, 0);
     const totalGross = items.reduce((sum, item) => sum + item.totalGross, 0);
+
+    const currentQuote = {
+        ...quote,
+        items,
+        status,
+        notes,
+        termsContent,
+        totalNet,
+        totalGross,
+    };
 
     if (isMobile) {
         return (
@@ -433,8 +455,22 @@ export function QuoteEditor({ quote, templates }: QuoteEditorProps) {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                            <DropdownMenuItem asChild>
+                                <PDFDownloadLink
+                                    document={<QuotePdf quote={currentQuote} companyInfo={companyInfo} />}
+                                    fileName={`Oferta_${quote.number || 'draft'}.pdf`}
+                                    className="w-full flex items-center"
+                                >
+                                    {({ loading }) => (
+                                        <>
+                                            <FileTextIcon className="w-4 h-4 mr-2" />
+                                            {loading ? 'Generowanie...' : 'Pobierz PDF'}
+                                        </>
+                                    )}
+                                </PDFDownloadLink>
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={handlePrint}>
-                                <Printer className="w-4 h-4 mr-2" /> Drukuj / PDF
+                                <Printer className="w-4 h-4 mr-2" /> Drukuj
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={handleSendEmail} disabled={isSending}>
                                 <Mail className="w-4 h-4 mr-2" /> Wyślij Email
@@ -680,13 +716,20 @@ export function QuoteEditor({ quote, templates }: QuoteEditorProps) {
                         <Trash2 className="w-4 h-4 mr-2" />
                         Usuń
                     </Button>
-                    <Button variant="outline" onClick={() => setContractDialogOpen(true)}>
-                        <FileTextIcon className="w-4 h-4 mr-2" />
-                        {quote.contract ? 'Regeneruj Umowę' : 'Generuj Umowę'}
-                    </Button>
+                    <PDFDownloadLink
+                        document={<QuotePdf quote={currentQuote} companyInfo={companyInfo} />}
+                        fileName={`Oferta_${quote.number || 'draft'}.pdf`}
+                    >
+                        {({ loading }) => (
+                            <Button variant="outline" disabled={loading}>
+                                <FileTextIcon className="w-4 h-4 mr-2" />
+                                {loading ? 'Generowanie...' : 'Pobierz PDF'}
+                            </Button>
+                        )}
+                    </PDFDownloadLink>
                     <Button variant="outline" onClick={handlePrint}>
                         <Printer className="w-4 h-4 mr-2" />
-                        Drukuj / PDF
+                        Drukuj
                     </Button>
                     <Button variant="outline" onClick={handleSendEmail} disabled={isSending}>
                         <Mail className="w-4 h-4 mr-2" />
@@ -879,177 +922,39 @@ export function QuoteEditor({ quote, templates }: QuoteEditorProps) {
                     </CardContent>
                 </Card>
 
-                {quote.contract && (
-                    <Card className="print-full-width print-border-none no-print">
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle>Podgląd Umowy</CardTitle>
-                            <Button variant="outline" size="sm" onClick={() => {
-                                const printWindow = window.open('', '_blank');
-                                if (printWindow) {
-                                    printWindow.document.write(`
-                                        <html>
-                                            <head>
-                                                <title>Umowa - ${quote.montage.clientName}</title>
-                                                <style>
-                                                    @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Open+Sans:wght@400;600&display=swap');
-                                                    
-                                                    body { 
-                                                        font-family: 'Merriweather', serif;
-                                                        line-height: 1.6;
-                                                        color: #1a1a1a;
-                                                        font-size: 11pt;
-                                                        margin: 0;
-                                                        padding: 0;
-                                                    }
-                                                    
-                                                    .contract-container {
-                                                        max-width: 100%;
-                                                        margin: 0 auto;
-                                                    }
-
-                                                    /* Typography */
-                                                    h1 {
-                                                        font-family: 'Open Sans', sans-serif;
-                                                        font-size: 24pt;
-                                                        font-weight: 700;
-                                                        text-transform: uppercase;
-                                                        text-align: center;
-                                                        margin-bottom: 10px;
-                                                        color: #000;
-                                                        letter-spacing: 1px;
-                                                    }
-                                                    
-                                                    h2 {
-                                                        font-family: 'Open Sans', sans-serif;
-                                                        font-size: 14pt;
-                                                        font-weight: 600;
-                                                        margin-top: 30px;
-                                                        margin-bottom: 15px;
-                                                        border-bottom: 1px solid #ddd;
-                                                        padding-bottom: 5px;
-                                                        color: #333;
-                                                    }
-                                                    
-                                                    p {
-                                                        margin-bottom: 10px;
-                                                        text-align: justify;
-                                                    }
-
-                                                    /* Layout Elements */
-                                                    .contract-header {
-                                                        text-align: center;
-                                                        margin-bottom: 40px;
-                                                        padding-bottom: 20px;
-                                                        border-bottom: 2px solid #000;
-                                                    }
-                                                    
-                                                    .contract-meta {
-                                                        font-family: 'Open Sans', sans-serif;
-                                                        font-size: 10pt;
-                                                        color: #666;
-                                                        margin-top: 5px;
-                                                    }
-
-                                                    .parties-container {
-                                                        display: flex;
-                                                        justify-content: space-between;
-                                                        margin: 30px 0;
-                                                        gap: 40px;
-                                                    }
-                                                    
-                                                    .party-box {
-                                                        flex: 1;
-                                                        background: #f9fafb;
-                                                        padding: 20px;
-                                                        border: 1px solid #e5e7eb;
-                                                        border-radius: 4px;
-                                                    }
-                                                    
-                                                    .party-title {
-                                                        font-family: 'Open Sans', sans-serif;
-                                                        font-weight: 600;
-                                                        text-transform: uppercase;
-                                                        font-size: 0.9em;
-                                                        margin-bottom: 10px;
-                                                        color: #4b5563;
-                                                        border-bottom: 1px solid #e5e7eb;
-                                                        padding-bottom: 5px;
-                                                    }
-
-                                                    .signatures-section {
-                                                        margin-top: 80px;
-                                                        display: flex;
-                                                        justify-content: space-between;
-                                                        page-break-inside: avoid;
-                                                    }
-                                                    
-                                                    .signature-box {
-                                                        width: 40%;
-                                                        text-align: center;
-                                                    }
-                                                    
-                                                    .signature-line {
-                                                        border-top: 1px solid #000;
-                                                        margin-top: 10px;
-                                                        padding-top: 5px;
-                                                        font-size: 0.9em;
-                                                        font-weight: bold;
-                                                    }
-                                                    
-                                                    .signature-image {
-                                                        max-height: 80px;
-                                                        margin-bottom: -10px;
-                                                    }
-
-                                                    /* Print Specifics */
-                                                    @media print {
-                                                        @page { 
-                                                            margin: 2.5cm;
-                                                            size: A4;
-                                                        }
-                                                        body {
-                                                            -webkit-print-color-adjust: exact;
-                                                            print-color-adjust: exact;
-                                                        }
-                                                        .party-box {
-                                                            background-color: #fff !important;
-                                                            border: 1px solid #ccc !important;
-                                                        }
-                                                        .no-print {
-                                                            display: none !important;
-                                                        }
-                                                    }
-                                                </style>
-                                            </head>
-                                            <body>
-                                                <div class="contract-container">
-                                                    ${quote.contract?.content}
-                                                </div>
-                                                <script>
-                                                    window.onload = function() { 
-                                                        setTimeout(function() {
-                                                            window.print();
-                                                        }, 500);
-                                                    }
-                                                </script>
-                                            </body>
-                                        </html>
-                                    `);
-                                    printWindow.document.close();
-                                }
-                            }}>
-                                <Printer className="w-4 h-4 mr-2" />
-                                Drukuj Umowę
-                            </Button>
-                        </CardHeader>
-                        <CardContent>
-                            <div 
-                                className="prose max-w-none border p-8 rounded-md bg-white min-h-[500px]"
-                                dangerouslySetInnerHTML={{ __html: quote.contract.content }}
+                <Card className="print-full-width print-border-none no-print">
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <CardTitle>Warunki Prawne (Umowa)</CardTitle>
+                        <div className="w-[250px]">
+                             <Select value={selectedTemplateId} onValueChange={handleTemplateChange}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Wybierz szablon warunków..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {templates?.map((template) => (
+                                        <SelectItem key={template.id} value={template.id}>
+                                            {template.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-2">
+                            <Label>Treść warunków (widoczna dla klienta)</Label>
+                            <Textarea 
+                                value={termsContent} 
+                                onChange={(e) => setTermsContent(e.target.value)} 
+                                placeholder="Wybierz szablon powyżej lub wpisz własne warunki..."
+                                className="min-h-[300px] font-mono text-sm"
                             />
-                        </CardContent>
-                    </Card>
-                )}
+                            <p className="text-xs text-muted-foreground">
+                                To jest treść, którą klient zobaczy i zaakceptuje. Możesz używać znaczników HTML/Markdown.
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
                 </div>
 
                 <div className="space-y-6 print:hidden">
@@ -1084,37 +989,22 @@ export function QuoteEditor({ quote, templates }: QuoteEditorProps) {
                                 </div>
 
                                 <div>
-                                    <Label>Status Umowy</Label>
+                                    <Label>Status Podpisu</Label>
                                     <div className="mt-1.5">
-                                        {quote.contract ? (
-                                            <div className={cn(
-                                                "flex items-center gap-2 text-sm font-medium p-2 rounded-md border",
-                                                quote.contract.status === 'signed' 
-                                                    ? "bg-green-50 text-green-700 border-green-200" 
-                                                    : "bg-orange-50 text-orange-700 border-orange-200"
-                                            )}>
-                                                {quote.contract.status === 'signed' ? (
-                                                    <>
-                                                        <CheckCircle2 className="w-4 h-4" />
-                                                        <div>
-                                                            <div>Podpisana przez klienta</div>
-                                                            {quote.contract.signedAt && (
-                                                                <div className="text-xs font-normal opacity-90">
-                                                                    {new Date(quote.contract.signedAt).toLocaleDateString('pl-PL')}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <Clock className="w-4 h-4" />
-                                                        <span>Oczekuje na podpis</span>
-                                                    </>
-                                                )}
+                                        {quote.signedAt ? (
+                                            <div className="flex items-center gap-2 text-sm font-medium p-2 rounded-md border bg-green-50 text-green-700 border-green-200">
+                                                <CheckCircle2 className="w-4 h-4" />
+                                                <div>
+                                                    <div>Podpisana przez klienta</div>
+                                                    <div className="text-xs font-normal opacity-90">
+                                                        {new Date(quote.signedAt).toLocaleDateString('pl-PL')}
+                                                    </div>
+                                                </div>
                                             </div>
                                         ) : (
-                                            <div className="text-sm text-muted-foreground italic">
-                                                Umowa nie została jeszcze wygenerowana
+                                            <div className="flex items-center gap-2 text-sm font-medium p-2 rounded-md border bg-orange-50 text-orange-700 border-orange-200">
+                                                <Clock className="w-4 h-4" />
+                                                <span>Oczekuje na podpis</span>
                                             </div>
                                         )}
                                     </div>
@@ -1168,43 +1058,6 @@ export function QuoteEditor({ quote, templates }: QuoteEditorProps) {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-
-            <Dialog open={contractDialogOpen} onOpenChange={setContractDialogOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Generuj Umowę</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                            <Label>Wybierz szablon umowy</Label>
-                            <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Wybierz szablon..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {templates?.map((template) => (
-                                        <SelectItem key={template.id} value={template.id}>
-                                            {template.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Podpis Wykonawcy (opcjonalnie)</Label>
-                            <SignaturePad onSave={setContractorSignature} />
-                        </div>
-
-                        <Button 
-                            className="w-full" 
-                            onClick={handleGenerateContract}
-                            disabled={isGeneratingContract || !selectedTemplateId}
-                        >
-                            {isGeneratingContract ? 'Generowanie...' : 'Generuj Umowę'}
-                        </Button>
-                    </div>
-                </DialogContent>
-            </Dialog>
         </div>
     );
 }

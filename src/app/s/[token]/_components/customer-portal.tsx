@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { signContract } from '../actions';
+import { signQuote } from '../actions';
 import { useState } from 'react';
 import { SignaturePad } from '@/components/ui/signature-pad';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -21,14 +21,6 @@ interface MontageAttachment {
     title: string | null;
 }
 
-interface Contract {
-    id: string;
-    status: 'draft' | 'sent' | 'signed' | 'rejected';
-    content: string;
-    signedAt: Date | null;
-    signatureData: string | null;
-}
-
 interface Quote {
     id: string;
     number: string | null;
@@ -36,7 +28,9 @@ interface Quote {
     totalGross: number;
     createdAt: Date;
     validUntil: Date | null;
-    contract: Contract | null;
+    termsContent: string | null;
+    signedAt: Date | null;
+    signatureData: string | null;
 }
 
 interface Montage {
@@ -81,15 +75,15 @@ export function CustomerPortal({ customer, token, bankAccount }: CustomerPortalP
     const documents = activeMontage?.attachments.filter(att => !isImage(att.url)) || [];
     const activeQuote = activeMontage?.quotes.find(q => q.status === 'sent' || q.status === 'accepted');
 
-    const handleSignContract = async (signatureData: string) => {
-        if (!activeQuote?.contract) return;
+    const handleSignQuote = async (signatureData: string) => {
+        if (!activeQuote) return;
         
         try {
-            await signContract(activeQuote.contract.id, signatureData, token);
-            toast.success('Umowa została podpisana! Dziękujemy.');
+            await signQuote(activeQuote.id, signatureData, token);
+            toast.success('Oferta została zaakceptowana i podpisana! Dziękujemy.');
             setContractDialogOpen(false);
         } catch (error) {
-            toast.error('Wystąpił błąd podczas podpisywania umowy.');
+            toast.error('Wystąpił błąd podczas podpisywania oferty.');
             console.error(error);
         }
     };
@@ -271,15 +265,7 @@ export function CustomerPortal({ customer, token, bankAccount }: CustomerPortalP
                                 )}>
                                     <CardHeader>
                                         <CardTitle className="flex items-center gap-2">
-                                            {activeQuote.contract ? (
-                                                <>
-                                                    <FileText className="h-5 w-5 text-primary" /> Umowa
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Calculator className="h-5 w-5 text-primary" /> Wycena {activeQuote.number}
-                                                </>
-                                            )}
+                                            <Calculator className="h-5 w-5 text-primary" /> Wycena {activeQuote.number}
                                         </CardTitle>
                                         <CardDescription>
                                             Data wystawienia: {new Date(activeQuote.createdAt).toLocaleDateString('pl-PL')}
@@ -292,185 +278,168 @@ export function CustomerPortal({ customer, token, bankAccount }: CustomerPortalP
                                                 {(activeQuote.totalGross / 100).toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' })}
                                             </span>
                                         </div>
-                                        {activeQuote.status === 'sent' && !activeQuote.contract && (
+                                        {activeQuote.status === 'sent' && (
                                             <div className="rounded-md bg-blue-50 p-4 text-sm text-blue-700 dark:bg-blue-900/20 dark:text-blue-300">
-                                                <p>Prosimy o zapoznanie się z wyceną. Aby rozpocząć realizację, wymagana jest akceptacja.</p>
+                                                <p>Prosimy o zapoznanie się z wyceną. Aby rozpocząć realizację, wymagana jest akceptacja i podpisanie warunków.</p>
                                             </div>
                                         )}
-                                        {activeQuote.status === 'accepted' && !activeQuote.contract && (
+                                        {activeQuote.status === 'accepted' && (
                                             <div className="rounded-md bg-green-50 p-4 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-300 flex items-center gap-2">
                                                 <Check className="h-4 w-4" />
-                                                <p>Wycena została zaakceptowana. Dziękujemy!</p>
+                                                <p>Wycena została zaakceptowana i podpisana {activeQuote.signedAt ? new Date(activeQuote.signedAt).toLocaleDateString('pl-PL') : ''}. Dziękujemy!</p>
                                             </div>
                                         )}
 
-                                        {activeQuote.status === 'sent' && (!activeQuote.contract || activeQuote.contract.status === 'rejected') && (
-                                            <div className="mt-4 pt-4 border-t">
-                                                <div className="flex items-center gap-2 text-muted-foreground">
-                                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                                    <p className="text-sm">Umowa jest przygotowywana. Prosimy o cierpliwość.</p>
-                                                </div>
-                                            </div>
-                                        )}
-                                        
                                         {/* Contract Signing */}
-                                        {activeQuote.contract && activeQuote.contract.status !== 'rejected' && (
+                                        {activeQuote.status === 'sent' && activeQuote.termsContent && (
                                             <div className="mt-6 pt-4 border-t">
-                                                {activeQuote.contract.status === 'signed' ? (
-                                                    <div className="rounded-md bg-green-50 p-4 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-300 flex items-center gap-2">
-                                                        <Check className="h-4 w-4" />
-                                                        <p>Umowa została podpisana {activeQuote.contract.signedAt ? new Date(activeQuote.contract.signedAt).toLocaleDateString('pl-PL') : ''}.</p>
-                                                    </div>
-                                                ) : (
-                                                    <div className="space-y-4">
-                                                        <p className="text-sm text-muted-foreground">
-                                                            Do realizacji zamówienia wymagane jest podpisanie umowy.
-                                                        </p>
-                                                        <Dialog open={contractDialogOpen} onOpenChange={setContractDialogOpen}>
-                                                            <DialogTrigger asChild>
-                                                                <Button className="w-full sm:w-auto">
-                                                                    <FileText className="h-4 w-4 mr-2" />
-                                                                    Podgląd i podpisanie umowy
-                                                                </Button>
-                                                            </DialogTrigger>
-                                                            <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
-                                                                <DialogHeader>
-                                                                    <DialogTitle>Umowa</DialogTitle>
-                                                                </DialogHeader>
-                                                                <div className="flex-1 overflow-y-auto border rounded-md p-4 bg-white text-black">
-                                                                    <style jsx global>{`
-                                                                        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Open+Sans:wght@400;600&display=swap');
-                                                                        
-                                                                        .contract-preview-content {
-                                                                            font-family: 'Merriweather', serif;
-                                                                            line-height: 1.6;
-                                                                            color: #1a1a1a;
-                                                                            font-size: 11pt;
-                                                                        }
-                                                                        
-                                                                        .contract-preview-content h1 {
-                                                                            font-family: 'Open Sans', sans-serif;
-                                                                            font-size: 24pt;
-                                                                            font-weight: 700;
-                                                                            text-transform: uppercase;
-                                                                            text-align: center;
-                                                                            margin-bottom: 10px;
-                                                                            color: #000;
-                                                                            letter-spacing: 1px;
-                                                                        }
-                                                                        
-                                                                        .contract-preview-content h2 {
-                                                                            font-family: 'Open Sans', sans-serif;
-                                                                            font-size: 14pt;
-                                                                            font-weight: 600;
-                                                                            margin-top: 30px;
-                                                                            margin-bottom: 15px;
-                                                                            border-bottom: 1px solid #ddd;
-                                                                            padding-bottom: 5px;
-                                                                            color: #333;
-                                                                        }
-                                                                        
-                                                                        .contract-preview-content p {
-                                                                            margin-bottom: 10px;
-                                                                            text-align: justify;
-                                                                        }
-
-                                                                        .contract-header {
-                                                                            text-align: center;
-                                                                            margin-bottom: 40px;
-                                                                            padding-bottom: 20px;
-                                                                            border-bottom: 2px solid #000;
-                                                                        }
-                                                                        
-                                                                        .contract-meta {
-                                                                            font-family: 'Open Sans', sans-serif;
-                                                                            font-size: 10pt;
-                                                                            color: #666;
-                                                                            margin-top: 5px;
-                                                                        }
-
-                                                                        .parties-container {
-                                                                            display: flex;
-                                                                            justify-content: space-between;
-                                                                            margin: 30px 0;
-                                                                            gap: 40px;
-                                                                        }
-                                                                        
-                                                                        .party-box {
-                                                                            flex: 1;
-                                                                            background: #f9fafb;
-                                                                            padding: 20px;
-                                                                            border: 1px solid #e5e7eb;
-                                                                            border-radius: 4px;
-                                                                        }
-                                                                        
-                                                                        .party-title {
-                                                                            font-family: 'Open Sans', sans-serif;
-                                                                            font-weight: 600;
-                                                                            margin-bottom: 15px;
-                                                                            color: #111;
-                                                                            text-transform: uppercase;
-                                                                            font-size: 10pt;
-                                                                            letter-spacing: 0.5px;
-                                                                        }
-                                                                        
-                                                                        .party-details {
-                                                                            font-family: 'Open Sans', sans-serif;
-                                                                            font-size: 10pt;
-                                                                            color: #444;
-                                                                            line-height: 1.6;
-                                                                        }
-
-                                                                        .contract-section {
-                                                                            margin-bottom: 30px;
-                                                                        }
-
-                                                                        .signatures-section {
-                                                                            margin-top: 60px;
-                                                                            display: flex;
-                                                                            justify-content: space-between;
-                                                                            gap: 40px;
-                                                                            page-break-inside: avoid;
-                                                                        }
-                                                                        
-                                                                        .signature-box {
-                                                                            flex: 1;
-                                                                            text-align: center;
-                                                                        }
-                                                                        
-                                                                        .signature-line {
-                                                                            border-top: 1px solid #000;
-                                                                            padding-top: 10px;
-                                                                            font-family: 'Open Sans', sans-serif;
-                                                                            font-size: 10pt;
-                                                                            text-transform: uppercase;
-                                                                        }
-                                                                        
-                                                                        .signature-image {
-                                                                            height: 100px;
-                                                                            display: flex;
-                                                                            align-items: flex-end;
-                                                                            justify-content: center;
-                                                                            margin-bottom: 10px;
+                                                <div className="space-y-4">
+                                                    <p className="text-sm text-muted-foreground">
+                                                        Do realizacji zamówienia wymagane jest podpisanie umowy (warunków współpracy).
+                                                    </p>
+                                                    <Dialog open={contractDialogOpen} onOpenChange={setContractDialogOpen}>
+                                                        <DialogTrigger asChild>
+                                                            <Button className="w-full sm:w-auto">
+                                                                <FileText className="h-4 w-4 mr-2" />
+                                                                Podgląd i podpisanie umowy
+                                                            </Button>
+                                                        </DialogTrigger>
+                                                        <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+                                                            <DialogHeader>
+                                                                <DialogTitle>Umowa / Warunki Współpracy</DialogTitle>
+                                                            </DialogHeader>
+                                                            <div className="flex-1 overflow-y-auto border rounded-md p-4 bg-white text-black">
+                                                                <style jsx global>{`
+                                                                    @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Open+Sans:wght@400;600&display=swap');
+                                                                    
+                                                                    .contract-preview-content {
+                                                                        font-family: 'Merriweather', serif;
+                                                                        line-height: 1.6;
+                                                                        color: #1a1a1a;
+                                                                        font-size: 11pt;
                                                                     }
                                                                     
-                                                                    .signature-image img {
-                                                                        max-height: 80px;
-                                                                        max-width: 100%;
+                                                                    .contract-preview-content h1 {
+                                                                        font-family: 'Open Sans', sans-serif;
+                                                                        font-size: 24pt;
+                                                                        font-weight: 700;
+                                                                        text-transform: uppercase;
+                                                                        text-align: center;
+                                                                        margin-bottom: 10px;
+                                                                        color: #000;
+                                                                        letter-spacing: 1px;
                                                                     }
-                                                                `}</style>
-                                                                <div className="contract-preview-content" dangerouslySetInnerHTML={{ __html: activeQuote.contract.content }} />
-                                                            </div>
-                                                            <div className="pt-4 border-t">
-                                                                <h4 className="font-semibold mb-2">Podpis</h4>
-                                                                <SignaturePad onSave={handleSignContract} />
-                                                            </div>
-                                                        </DialogContent>
-                                                    </Dialog>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
+                                                                    
+                                                                    .contract-preview-content h2 {
+                                                                        font-family: 'Open Sans', sans-serif;
+                                                                        font-size: 14pt;
+                                                                        font-weight: 600;
+                                                                        margin-top: 30px;
+                                                                        margin-bottom: 15px;
+                                                                        border-bottom: 1px solid #ddd;
+                                                                        padding-bottom: 5px;
+                                                                        color: #333;
+                                                                    }
+                                                                    
+                                                                    .contract-preview-content p {
+                                                                        margin-bottom: 10px;
+                                                                        text-align: justify;
+                                                                    }
+
+                                                                    .contract-header {
+                                                                        text-align: center;
+                                                                        margin-bottom: 40px;
+                                                                        padding-bottom: 20px;
+                                                                        border-bottom: 2px solid #000;
+                                                                    }
+                                                                    
+                                                                    .contract-meta {
+                                                                        font-family: 'Open Sans', sans-serif;
+                                                                        font-size: 10pt;
+                                                                        color: #666;
+                                                                        margin-top: 5px;
+                                                                    }
+
+                                                                    .parties-container {
+                                                                        display: flex;
+                                                                        justify-content: space-between;
+                                                                        margin: 30px 0;
+                                                                        gap: 40px;
+                                                                    }
+                                                                    
+                                                                    .party-box {
+                                                                        flex: 1;
+                                                                        background: #f9fafb;
+                                                                        padding: 20px;
+                                                                        border: 1px solid #e5e7eb;
+                                                                        border-radius: 4px;
+                                                                    }
+                                                                    
+                                                                    .party-title {
+                                                                        font-family: 'Open Sans', sans-serif;
+                                                                        font-weight: 600;
+                                                                        margin-bottom: 15px;
+                                                                        color: #111;
+                                                                        text-transform: uppercase;
+                                                                        font-size: 10pt;
+                                                                        letter-spacing: 0.5px;
+                                                                    }
+                                                                    
+                                                                    .party-details {
+                                                                        font-family: 'Open Sans', sans-serif;
+                                                                        font-size: 10pt;
+                                                                        color: #444;
+                                                                        line-height: 1.6;
+                                                                    }
+
+                                                                    .contract-section {
+                                                                        margin-bottom: 30px;
+                                                                    }
+
+                                                                    .signatures-section {
+                                                                        margin-top: 60px;
+                                                                        display: flex;
+                                                                        justify-content: space-between;
+                                                                        gap: 40px;
+                                                                        page-break-inside: avoid;
+                                                                    }
+                                                                    
+                                                                    .signature-box {
+                                                                        flex: 1;
+                                                                        text-align: center;
+                                                                    }
+                                                                    
+                                                                    .signature-line {
+                                                                        border-top: 1px solid #000;
+                                                                        padding-top: 10px;
+                                                                        font-family: 'Open Sans', sans-serif;
+                                                                        font-size: 10pt;
+                                                                        text-transform: uppercase;
+                                                                    }
+                                                                    
+                                                                    .signature-image {
+                                                                        height: 100px;
+                                                                        display: flex;
+                                                                        align-items: flex-end;
+                                                                        justify-content: center;
+                                                                        margin-bottom: 10px;
+                                                                }
+                                                                
+                                                                .signature-image img {
+                                                                    max-height: 80px;
+                                                                    max-width: 100%;
+                                                                }
+                                                            `}</style>
+                                                            <div className="contract-preview-content" dangerouslySetInnerHTML={{ __html: activeQuote.termsContent }} />
+                                                        </div>
+                                                        <div className="pt-4 border-t">
+                                                            <h4 className="font-semibold mb-2">Podpis</h4>
+                                                            <SignaturePad onSave={handleSignQuote} />
+                                                        </div>
+                                                    </DialogContent>
+                                                </Dialog>
+                                            </div>
+                                        )}
                                     </CardContent>
                                 </Card>
                             </motion.div>

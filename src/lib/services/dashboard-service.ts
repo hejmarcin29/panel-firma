@@ -233,10 +233,9 @@ export async function getDashboardStats(publicBaseUrl: string | null): Promise<D
     
     const pendingContractsCount = allMontages.filter(m => {
         if (m.status === 'lead' || m.status === 'completed') return false;
-        const activeQuote = m.quotes.find(q => q.status === 'sent' || q.status === 'accepted');
-        if (!activeQuote) return false;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return (activeQuote as any).contract?.status !== 'signed';
+        // In new model: 'sent' quote means waiting for signature (contract)
+        const activeQuote = m.quotes.find(q => q.status === 'sent');
+        return !!activeQuote;
     }).length;
 
     // Urgent tasks: Montages that are not completed/lead but have no date, or maybe just a placeholder logic for now.

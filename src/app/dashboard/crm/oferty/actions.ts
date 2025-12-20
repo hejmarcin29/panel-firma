@@ -160,7 +160,6 @@ export async function getQuotes() {
         where: isNull(quotes.deletedAt),
         with: {
             montage: true,
-            contract: true,
         },
         orderBy: [desc(quotes.createdAt)],
     });
@@ -171,7 +170,6 @@ export async function getQuote(id: string) {
         where: eq(quotes.id, id),
         with: {
             montage: true,
-            contract: true,
         },
     });
 }
@@ -213,6 +211,7 @@ export async function updateQuote(id: string, data: {
     items?: QuoteItem[];
     validUntil?: Date;
     notes?: string;
+    termsContent?: string;
 }) {
     // Calculate totals if items are updated
     const updates: Partial<typeof quotes.$inferInsert> = { ...data };

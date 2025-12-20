@@ -1063,6 +1063,12 @@ export const quotes = pgTable(
         totalGross: integer('total_gross').notNull().default(0),
         validUntil: timestamp('valid_until'),
         notes: text('notes'),
+        // Contract fields
+        termsContent: text('terms_content'), // Snapshot of legal terms
+        signatureData: text('signature_data'), // Base64 signature
+        signedAt: timestamp('signed_at'),
+        finalPdfUrl: text('final_pdf_url'),
+        
         deletedAt: timestamp('deleted_at'),
         createdAt: timestamp('created_at').notNull().defaultNow(),
         updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -1277,43 +1283,11 @@ export const contractTemplates = pgTable('contract_templates', {
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
-export const contractStatuses = ['draft', 'sent', 'signed', 'rejected'] as const;
-export type ContractStatus = (typeof contractStatuses)[number];
-
-export const contracts = pgTable('contracts', {
-    id: text('id').primaryKey(),
-    quoteId: text('quote_id')
-        .notNull()
-        .references(() => quotes.id, { onDelete: 'cascade' }),
-    templateId: text('template_id').references(() => contractTemplates.id, { onDelete: 'set null' }),
-    status: text('status').$type<ContractStatus>().notNull().default('draft'),
-    content: text('content').notNull(), // Final content snapshot
-    variables: json('variables'), // Stored variables used for generation
-    signedAt: timestamp('signed_at'),
-    signatureData: text('signature_data'), // Base64 signature or metadata
-    createdAt: timestamp('created_at').notNull().defaultNow(),
-    updatedAt: timestamp('updated_at').notNull().defaultNow(),
-}, (table) => ({
-    quoteIdx: uniqueIndex('contracts_quote_id_idx').on(table.quoteId), // One contract per quote for now
-}));
-
-export const contractsRelations = relations(contracts, ({ one }) => ({
-    quote: one(quotes, {
-        fields: [contracts.quoteId],
-        references: [quotes.id],
-    }),
-    template: one(contractTemplates, {
-        fields: [contracts.templateId],
-        references: [contractTemplates.id],
-    }),
-}));
-
 export const quotesRelations = relations(quotes, ({ one }) => ({
     montage: one(montages, {
         fields: [quotes.montageId],
         references: [montages.id],
     }),
-    contract: one(contracts),
 }));
 
 // --- ERP MODULE ---

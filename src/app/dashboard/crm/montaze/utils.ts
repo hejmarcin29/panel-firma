@@ -14,7 +14,6 @@ import {
 	montageTasks,
 	montages,
     quotes,
-    contracts,
 	type MontageStatus,
 	users,
     customers,
@@ -70,9 +69,7 @@ export type MontageRow = typeof montages.$inferSelect & {
 			uploader: typeof users.$inferSelect | null;
 		}
 	>;
-    quotes: Array<typeof quotes.$inferSelect & {
-        contract: typeof contracts.$inferSelect | null;
-    }>;
+    quotes: Array<typeof quotes.$inferSelect>;
     installer?: typeof users.$inferSelect | null;
     measurer?: typeof users.$inferSelect | null;
     architect?: typeof users.$inferSelect | null;

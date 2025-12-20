@@ -47,5 +47,13 @@ export const SYSTEM_NOTIFICATIONS: SystemNotificationDefinition[] = [
         action: 'Nalicza prowizję dla architekta',
         recipient: 'Portfel Architekta',
         defaultEnabled: true
+    },
+    {
+        id: 'quote_signed',
+        type: 'system',
+        trigger: 'Podpisanie wyceny przez klienta (Portal)',
+        action: 'Zmiana statusu wyceny na "Zaakceptowana" + Log systemowy',
+        recipient: 'System + Admin',
+        defaultEnabled: true
     }
 ];

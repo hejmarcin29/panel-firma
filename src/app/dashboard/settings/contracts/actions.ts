@@ -6,7 +6,7 @@ import { nanoid } from 'nanoid';
 
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
-import { contractTemplates, contracts, quotes } from '@/lib/db/schema';
+import { contractTemplates, quotes } from '@/lib/db/schema';
 
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
 import { formatCurrency } from '@/lib/utils';
@@ -159,16 +159,9 @@ export async function resetToDefaultTemplate() {
     revalidatePath('/dashboard/settings');
 }
 
-// --- CONTRACTS ---
+// --- RENDERER ---
 
-export async function getContractForQuote(quoteId: string) {
-    await requireUser();
-    return await db.query.contracts.findFirst({
-        where: eq(contracts.quoteId, quoteId),
-    });
-}
-
-export async function generateContract(quoteId: string, templateId: string, variables: Record<string, string> = {}) {
+export async function renderTemplate(templateId: string, quoteId: string) {
     await requireUser();
     
     const template = await db.query.contractTemplates.findFirst({
@@ -249,58 +242,9 @@ export async function generateContract(quoteId: string, templateId: string, vari
         '{{uwagi_wyceny}}': quote.notes || '',
     };
 
-    // Merge system and user variables
-    const allVariables = { ...systemVariables, ...variables };
-
-    for (const [key, value] of Object.entries(allVariables)) {
+    for (const [key, value] of Object.entries(systemVariables)) {
         content = content.replace(new RegExp(key, 'g'), value);
     }
 
-    // Create or Update Contract
-    const existingContract = await db.query.contracts.findFirst({
-        where: eq(contracts.quoteId, quoteId),
-    });
-
-    if (existingContract) {
-        await db.update(contracts).set({
-            templateId,
-            content,
-            variables,
-            status: 'draft',
-            updatedAt: new Date(),
-        }).where(eq(contracts.id, existingContract.id));
-    } else {
-        await db.insert(contracts).values({
-            id: nanoid(),
-            quoteId,
-            templateId,
-            content,
-            variables,
-            status: 'draft',
-        });
-    }
-
-    revalidatePath(`/dashboard/crm/oferty/${quoteId}`);
-}
-
-export async function updateContractContent(contractId: string, content: string) {
-    await requireUser();
-    
-    await db.update(contracts)
-        .set({ content, updatedAt: new Date() })
-        .where(eq(contracts.id, contractId));
-        
-    revalidatePath('/dashboard/crm/oferty');
-}
-
-export async function sendContract(contractId: string) {
-    await requireUser();
-    
-    await db.update(contracts)
-        .set({ status: 'sent', updatedAt: new Date() })
-        .where(eq(contracts.id, contractId));
-
-    // Here we would trigger email sending logic
-    
-    revalidatePath('/dashboard/crm/oferty');
+    return content;
 }
