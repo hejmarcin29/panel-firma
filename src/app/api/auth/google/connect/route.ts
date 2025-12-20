@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
     // Ensure user is logged in
     // Note: In a real scenario, we might want to pass a state parameter to prevent CSRF
     // and to know where to redirect back.

@@ -73,6 +73,32 @@ To jest krok, o którym najczęściej się zapomina!
    - ID kalendarza możesz też znaleźć w ustawieniach kalendarza Google w sekcji "Integrowanie kalendarza".
 4. Kliknij Zapisz.
 
+## Krok 8: Konfiguracja Logowania Montażystów (OAuth 2.0)
+
+Aby montażyści mogli logować się swoim kontem Google i synchronizować kalendarz prywatny, musisz utworzyć "Identyfikator klienta OAuth 2.0".
+
+1. Wróć do [Google Cloud Console](https://console.cloud.google.com/) -> **APIs & Services** -> **Credentials**.
+2. Kliknij **"+ CREATE CREDENTIALS"** -> **"OAuth client ID"**.
+3. Jeśli zostaniesz poproszony o konfigurację "OAuth consent screen" (Ekran zgody):
+   - User Type: **External** (Zewnętrzny).
+   - App name: np. `Panel Montażysty`.
+   - User support email: Twój email.
+   - Developer contact information: Twój email.
+   - Kliknij "Save and Continue" przez kolejne kroki (Scopes i Test Users można na razie pominąć lub dodać `.../auth/calendar`).
+   - Na końcu "Back to Dashboard".
+4. Wróć do tworzenia **OAuth client ID**:
+   - Application type: **Web application**.
+   - Name: np. `Panel Web`.
+   - **Authorized redirect URIs** (Autoryzowane identyfikatory URI przekierowania):
+     - Kliknij "+ ADD URI".
+     - Wpisz adres: `https://b2b.primepodloga.pl/api/auth/google/callback`
+     - (Opcjonalnie dla testów lokalnych): `http://localhost:3000/api/auth/google/callback`
+5. Kliknij **"Create"**.
+6. Pojawi się okno z **Client ID** oraz **Client Secret**.
+7. Skopiuj te dwie wartości i wklej je w Panelu Administratora w sekcji **Ustawienia -> Integracje -> Kalendarz Google** (na dole formularza).
+
 ## Gotowe!
 
-Teraz, gdy dodasz montaż z datą, system (używając klucza z Kroku 5) połączy się z Google, przedstawi się jako Robot (Krok 3) i poprosi o dodanie wpisu do Twojego kalendarza (do którego dostał dostęp w Kroku 6).
+Teraz system obsługuje dwa rodzaje integracji:
+1. **Kalendarz Firmowy:** System (jako Robot) dodaje montaże do głównego kalendarza firmy.
+2. **Kalendarz Montażysty:** Montażysta loguje się w swoim panelu przez Google, a system dodaje montaże do jego prywatnego kalendarza.

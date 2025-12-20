@@ -42,7 +42,7 @@ export async function GET(
         }
     });
 
-    let icsContent = [
+    const icsContent = [
         'BEGIN:VCALENDAR',
         'VERSION:2.0',
         'PRODID:-//Panel Firma//Montaze//PL',

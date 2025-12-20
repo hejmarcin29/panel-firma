@@ -52,7 +52,7 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
     // const safeAttachments = montage.attachments.filter(a => 
     //    !['contract', 'invoice', 'proforma'].includes(a.type)
     // );
-    const safeAttachments = montage.attachments;
+    // const safeAttachments = montage.attachments;
 
     const address = montage.installationAddress || montage.billingAddress || 'Brak adresu';
     const city = montage.installationCity || montage.billingCity || '';
