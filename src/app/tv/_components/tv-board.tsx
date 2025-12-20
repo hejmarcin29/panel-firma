@@ -2,19 +2,24 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getTvData, TvColumn, TvMontage } from '../actions';
-import { MapPin, Ruler, Hammer, AlertCircle } from 'lucide-react';
+import { getTvData } from '../actions';
+import type { Montage } from '@/app/dashboard/crm/montaze/types';
+import { TvProcessRow } from './tv-process-row';
+
+const ITEMS_PER_PAGE = 7;
+const SCROLL_INTERVAL = 15000; // 15 seconds per page
 
 export function TvBoard() {
-    const [columns, setColumns] = useState<TvColumn[]>([]);
+    const [montages, setMontages] = useState<Montage[]>([]);
     const [loading, setLoading] = useState(true);
     const [lastUpdated, setLastUpdated] = useState(new Date());
+    const [pageIndex, setPageIndex] = useState(0);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const data = await getTvData();
-                setColumns(data);
+                setMontages(data);
                 setLastUpdated(new Date());
                 setLoading(false);
             } catch (error) {
@@ -23,10 +28,30 @@ export function TvBoard() {
         };
 
         fetchData();
-        // Auto-refresh every 30 seconds
-        const interval = setInterval(fetchData, 30000);
-        return () => clearInterval(interval);
-    }, []);
+        // Auto-refresh data every 60 seconds
+        const dataInterval = setInterval(fetchData, 60000);
+        
+        // Auto-scroll pages
+        const scrollInterval = setInterval(() => {
+            setPageIndex(current => {
+                const maxPages = Math.ceil(montages.length / ITEMS_PER_PAGE);
+                if (maxPages <= 1) return 0;
+                return (current + 1) % maxPages;
+            });
+        }, SCROLL_INTERVAL);
+
+        return () => {
+            clearInterval(dataInterval);
+            clearInterval(scrollInterval);
+        };
+    }, [montages.length]);
+
+    const visibleMontages = montages.slice(
+        pageIndex * ITEMS_PER_PAGE, 
+        (pageIndex + 1) * ITEMS_PER_PAGE
+    );
+
+    const totalPages = Math.ceil(montages.length / ITEMS_PER_PAGE);
 
     if (loading) {
         return (
@@ -42,132 +67,67 @@ export function TvBoard() {
     }
 
     return (
-        <div className="min-h-screen w-full bg-slate-950 text-slate-200 p-6 overflow-hidden flex flex-col font-sans">
+        <div className="min-h-screen w-full bg-slate-950 text-slate-200 p-8 overflow-hidden flex flex-col font-sans">
             {/* Header */}
-            <header className="flex justify-between items-center mb-8 px-2">
-                <div className="flex items-center gap-4">
-                    <h1 className="text-4xl font-bold bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                        Panel Realizacji
+            <header className="flex justify-between items-center mb-10 px-2">
+                <div className="flex items-center gap-6">
+                    <h1 className="text-5xl font-bold bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                        Centrum Operacyjne
                     </h1>
-                    <div className="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-400 flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                    <div className="px-4 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-sm text-slate-400 flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
                         LIVE
                     </div>
                 </div>
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-8">
                     <div className="text-right">
                         <ClockDisplay />
-                        <div className="text-xs text-slate-500 mt-1">
-                            Ost. aktualizacja: {lastUpdated.toLocaleTimeString()}
+                        <div className="text-sm text-slate-500 mt-1">
+                            Strona {pageIndex + 1} z {totalPages || 1}
                         </div>
                     </div>
                 </div>
             </header>
 
-            {/* Board */}
-            <div className="flex-1 grid grid-cols-5 gap-4 h-full overflow-hidden">
-                {columns.map((column) => (
-                    <Column key={column.id} column={column} />
-                ))}
-            </div>
-        </div>
-    );
-}
-
-function Column({ column }: { column: TvColumn }) {
-    return (
-        <div className={`flex flex-col h-full rounded-2xl bg-linear-to-b ${column.color} border border-white/5 backdrop-blur-sm overflow-hidden`}>
-            {/* Column Header */}
-            <div className="p-4 border-b border-white/5 flex justify-between items-center bg-black/20">
-                <h2 className="font-semibold text-lg tracking-wide text-white/90">
-                    {column.title}
-                </h2>
-                <span className="bg-white/10 text-white/70 px-2 py-0.5 rounded text-sm font-mono">
-                    {column.items.length}
-                </span>
-            </div>
-
-            {/* Cards Container */}
-            <div className="flex-1 p-3 overflow-y-auto space-y-3 scrollbar-hide">
-                <AnimatePresence mode='popLayout'>
-                    {column.items.map((item) => (
-                        <Card key={item.id} item={item} />
-                    ))}
+            {/* List Container */}
+            <div className="flex-1 relative">
+                <AnimatePresence mode='wait'>
+                    <motion.div
+                        key={pageIndex}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{ duration: 0.5 }}
+                        className="space-y-4"
+                    >
+                        {visibleMontages.map((montage) => (
+                            <TvProcessRow key={montage.id} montage={montage} />
+                        ))}
+                    </motion.div>
                 </AnimatePresence>
-                {column.items.length === 0 && (
-                    <div className="h-32 flex items-center justify-center text-white/20 text-sm italic">
-                        Brak zleceń
+
+                {montages.length === 0 && (
+                    <div className="absolute inset-0 flex items-center justify-center text-slate-700 text-2xl italic">
+                        Brak aktywnych zleceń
                     </div>
                 )}
             </div>
-        </div>
-    );
-}
-
-function Card({ item }: { item: TvMontage }) {
-    const isStuck = item.priority === 'high';
-
-    return (
-        <motion.div
-            layoutId={item.id}
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className={`
-                relative p-4 rounded-xl border backdrop-blur-md shadow-lg group
-                ${isStuck 
-                    ? 'bg-red-500/10 border-red-500/30 hover:border-red-500/50' 
-                    : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
-                }
-                transition-colors duration-300
-            `}
-        >
-            {/* Status Indicator Line */}
-            <div className={`absolute left-0 top-4 bottom-4 w-1 rounded-r-full ${isStuck ? 'bg-red-500' : 'bg-blue-500/50'}`} />
-
-            <div className="pl-3">
-                <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-white text-lg leading-tight truncate pr-2">
-                        {item.clientName}
-                    </h3>
-                    {isStuck && (
-                        <AlertCircle className="w-5 h-5 text-red-400 animate-pulse shrink-0" />
-                    )}
-                </div>
-
-                <div className="space-y-1.5">
-                    <div className="flex items-center text-slate-400 text-sm">
-                        <MapPin className="w-3.5 h-3.5 mr-2 opacity-70" />
-                        <span className="truncate">{item.city}</span>
-                    </div>
-
-                    {(item.installer || item.measurer) && (
-                        <div className="flex items-center gap-3 mt-3 pt-3 border-t border-white/5">
-                            {item.measurer && (
-                                <div className="flex items-center text-xs text-purple-300/80" title="Pomiarowiec">
-                                    <Ruler className="w-3 h-3 mr-1.5" />
-                                    {item.measurer.split(' ')[0]}
-                                </div>
-                            )}
-                            {item.installer && (
-                                <div className="flex items-center text-xs text-orange-300/80" title="Montażysta">
-                                    <Hammer className="w-3 h-3 mr-1.5" />
-                                    {item.installer.split(' ')[0]}
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
-
-                {/* Footer: Time in status */}
-                <div className="mt-3 flex justify-end">
-                    <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${isStuck ? 'bg-red-500/20 text-red-300' : 'bg-white/5 text-slate-500'}`}>
-                        {item.daysInStatus} dni w etapie
-                    </span>
-                </div>
+            
+            {/* Progress Bar for Page Timer */}
+            <div className="fixed bottom-0 left-0 h-1 bg-slate-800 w-full">
+                <motion.div 
+                    className="h-full bg-blue-500"
+                    initial={{ width: "0%" }}
+                    animate={{ width: "100%" }}
+                    transition={{ 
+                        duration: SCROLL_INTERVAL / 1000, 
+                        ease: "linear", 
+                        repeat: Infinity 
+                    }}
+                    key={pageIndex} // Reset animation on page change
+                />
             </div>
-        </motion.div>
+        </div>
     );
 }
 
@@ -180,7 +140,7 @@ function ClockDisplay() {
     }, []);
 
     return (
-        <div className="text-3xl font-mono font-bold text-slate-200 tracking-wider">
+        <div className="text-4xl font-mono font-bold text-slate-200 tracking-wider">
             {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </div>
     );
