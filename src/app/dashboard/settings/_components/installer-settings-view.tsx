@@ -46,9 +46,9 @@ export function InstallerSettingsView({ user }: InstallerSettingsViewProps) {
         }
     };
 
-    // const handleGoogleConnect = () => {
-    //     window.location.href = '/api/auth/google/connect';
-    // };
+    const handleGoogleConnect = () => {
+        window.location.href = '/api/auth/google/connect';
+    };
 
     return (
         <div className="max-w-md mx-auto pb-20 space-y-6">

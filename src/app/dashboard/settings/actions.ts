@@ -55,7 +55,14 @@ export async function updateInstallerProfile(data: {
         throw new Error('Unauthorized');
     }
 
-    const currentProfile = user.installerProfile || {};
+    const dbUser = await db.query.users.findFirst({
+        where: eq(users.id, user.id),
+        columns: {
+            installerProfile: true
+        }
+    });
+
+    const currentProfile = dbUser?.installerProfile || {};
     const newProfile = {
         ...currentProfile,
         ...data

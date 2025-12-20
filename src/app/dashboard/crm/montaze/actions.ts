@@ -1439,8 +1439,10 @@ export async function updateMontageMeasurement({
             const startDate = new Date(scheduledInstallationAt);
             const endDate = scheduledInstallationEndAt ? new Date(scheduledInstallationEndAt) : new Date(startDate.getTime() + 8 * 60 * 60 * 1000);
             
-            const clientName = montage.clientName || montage.customer?.name || 'Klient';
-            const address = [montage.city, montage.address].filter(Boolean).join(', ');
+            const clientName = montage.clientName || 'Klient';
+            const city = montage.installationCity || montage.billingCity;
+            const street = montage.installationAddress || montage.billingAddress;
+            const address = [city, street].filter(Boolean).join(', ');
 
             await createUserCalendarEvent(montage.installerId, {
                 summary: `Montaż: ${clientName}`,

@@ -16,8 +16,9 @@ function escapeText(text: string | null | undefined): string {
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { userId: string } }
+    props: { params: Promise<{ userId: string }> }
 ) {
+    const params = await props.params;
     const userId = params.userId.replace('.ics', ''); // Handle if the param captures the extension or not, though folder structure usually handles it.
     // Actually, if the folder is [userId], and we call /api/calendar/123/feed.ics, we might need a different structure.
     // Let's stick to /api/calendar/[userId]/route.ts and the user can append ?format=ics or just serve it.
@@ -54,7 +55,10 @@ export async function GET(
 
     for (const montage of userMontages) {
         const clientName = montage.clientName || montage.customer?.name || 'Klient';
-        const address = [montage.city, montage.address, montage.postalCode].filter(Boolean).join(', ');
+        const city = montage.installationCity || montage.billingCity;
+        const street = montage.installationAddress || montage.billingAddress;
+        const zip = montage.installationPostalCode || montage.billingPostalCode;
+        const address = [city, street, zip].filter(Boolean).join(', ');
         const phone = montage.contactPhone || montage.customer?.phone || '';
         const url = `https://b2b.primepodloga.pl/dashboard/crm/montaze/${montage.id}`;
         
