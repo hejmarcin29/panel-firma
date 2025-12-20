@@ -470,40 +470,26 @@ export function CreateMontageForm({ onSuccess, installers = [], measurers = [], 
 						Wstępna data. Konkretny termin ustalisz po pomiarach.
 					</p>
 				</div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                     <div>
-                        <Label>Przypisz montażystę</Label>
+                        <Label>Przypisz Montażystę (Opiekuna)</Label>
                         <Select 
                             value={form.installerId} 
-                            onValueChange={(val) => setForm(prev => ({ ...prev, installerId: val }))}
+                            onValueChange={(val) => setForm(prev => ({ ...prev, installerId: val, measurerId: val }))}
                         >
                             <SelectTrigger>
-                                <SelectValue placeholder="Wybierz" />
+                                <SelectValue placeholder="Wybierz z listy" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="none">Brak</SelectItem>
+                                <SelectItem value="none">Brak (do ustalenia później)</SelectItem>
                                 {installers.map(u => (
                                     <SelectItem key={u.id} value={u.id}>{u.name || u.email}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
-                    </div>
-                    <div>
-                        <Label>Przypisz pomiarowca</Label>
-                        <Select 
-                            value={form.measurerId} 
-                            onValueChange={(val) => setForm(prev => ({ ...prev, measurerId: val }))}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Wybierz" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="none">Brak</SelectItem>
-                                {measurers.map(u => (
-                                    <SelectItem key={u.id} value={u.id}>{u.name || u.email}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Ta osoba wykona pomiar oraz montaż.
+                        </p>
                     </div>
                 </div>
 			</div>

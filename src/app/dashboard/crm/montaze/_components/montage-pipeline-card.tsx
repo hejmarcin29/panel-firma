@@ -149,12 +149,6 @@ export function MontagePipelineCard({ montage, threatDays, alertSettings }: Prop
                                     <span className="truncate max-w-[100px]">{initials(montage.installer.name || montage.installer.email)}</span>
                                 </div>
                             )}
-                            {montage.measurer && (
-                                <div className="flex items-center gap-1.5" title={`Pomiarowiec: ${montage.measurer.name || montage.measurer.email}`}>
-                                    <User className="h-3 w-3 shrink-0" />
-                                    <span className="truncate max-w-[100px]">{initials(montage.measurer.name || montage.measurer.email)}</span>
-                                </div>
-                            )}
                             {montage.architect && (
                                 <div className="flex items-center gap-1.5" title={`Architekt: ${montage.architect.name || montage.architect.email}`}>
                                     <User className="h-3 w-3 shrink-0 text-purple-500" />

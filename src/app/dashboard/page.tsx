@@ -13,9 +13,9 @@ import { tryGetR2Config } from '@/lib/r2/config';
 
 import { DashboardBuilder } from './_components/dashboard-builder';
 import { ArchitectDashboard } from './_components/architect-dashboard';
-import { MeasurerDashboard } from './_components/measurer-dashboard';
+import { InstallerDashboard } from './_components/installer-dashboard';
 import type { DashboardLayoutConfig } from './actions';
-import { getDashboardStats, getArchitectDashboardStats, getMeasurerDashboardData } from '@/lib/services/dashboard-service';
+import { getDashboardStats, getArchitectDashboardStats, getInstallerDashboardData } from '@/lib/services/dashboard-service';
 import { redirect } from 'next/navigation';
 
 const DEFAULT_LAYOUT: DashboardLayoutConfig = {
@@ -37,12 +37,12 @@ const DEFAULT_LAYOUT: DashboardLayoutConfig = {
 
 export default async function DashboardPage() {
     let user;
-    let measurerData = null;
+    let installerData = null;
 
     try {
 	    user = await requireUser();
         if (user.roles.includes('installer') && !user.roles.includes('admin')) {
-            measurerData = await getMeasurerDashboardData(user.id);
+            installerData = await getInstallerDashboardData(user.id);
         }
     } catch (error) {
          // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -53,8 +53,8 @@ export default async function DashboardPage() {
         redirect('/login');
     }
 
-    if (measurerData) {
-        return <MeasurerDashboard leads={measurerData.leads} schedule={measurerData.schedule} />;
+    if (installerData) {
+        return <InstallerDashboard leads={installerData.leads} schedule={installerData.schedule} />;
     }
 
     const r2Config = await tryGetR2Config();

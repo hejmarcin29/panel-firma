@@ -239,6 +239,8 @@ export function MontageWorkflowTab({
         } else if (field === 'installerId') {
             const newInstallerId = value === 'none' ? null : value;
             updateData.installerId = newInstallerId;
+            // Sync measurer with installer
+            updateData.measurerId = newInstallerId;
             // Logic: If installer assigned -> default to 'informed'. If removed -> 'none'.
             updateData.installerStatus = newInstallerId ? 'informed' : 'none';
         } else if (field === 'measurerId') {
@@ -466,37 +468,12 @@ export function MontageWorkflowTab({
 
                 <div className={cn(
                     "flex flex-col gap-2 p-4 rounded-lg border transition-colors",
-                    !montage.measurerId ? "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-900" :
-                    "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-900"
-                )}>
-                    <div className="space-y-0.5">
-                        <Label htmlFor="measurer-select" className="text-base font-medium">Przypisz Pomiarowca</Label>
-                        <p className="text-sm text-muted-foreground">Osoba odpowiedzialna za pomiar</p>
-                    </div>
-                    <Select 
-                        value={montage.measurerId || "none"} 
-                        onValueChange={(value) => handleRealizationStatusChange('measurerId', value)}
-                    >
-                        <SelectTrigger id="measurer-select">
-                            <SelectValue placeholder="Wybierz pomiarowca" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="none">Brak</SelectItem>
-                            {measurers.map(u => (
-                                <SelectItem key={u.id} value={u.id}>{u.name || u.email}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div className={cn(
-                    "flex flex-col gap-2 p-4 rounded-lg border transition-colors",
                     !montage.installerId ? "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-900" :
                     "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-900"
                 )}>
                     <div className="space-y-0.5">
-                        <Label htmlFor="installer-select" className="text-base font-medium">Przypisz Montażystę</Label>
-                        <p className="text-sm text-muted-foreground">Osoba odpowiedzialna za montaż</p>
+                        <Label htmlFor="installer-select" className="text-base font-medium">Przypisz Montażystę (Opiekuna)</Label>
+                        <p className="text-sm text-muted-foreground">Osoba odpowiedzialna za pomiar i montaż</p>
                     </div>
                     <Select 
                         value={montage.installerId || "none"} 

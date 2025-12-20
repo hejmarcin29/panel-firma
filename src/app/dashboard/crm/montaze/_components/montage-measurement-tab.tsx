@@ -89,6 +89,12 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
 
   const [additionalInfo, setAdditionalInfo] = useState(montage.additionalInfo || '');
   
+  const [measurementDate, setMeasurementDate] = useState(
+    montage.measurementDate 
+      ? new Date(montage.measurementDate as string | number | Date).toISOString().split("T")[0] 
+      : ""
+  );
+
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: montage.scheduledInstallationAt ? new Date(montage.scheduledInstallationAt) : undefined,
     to: montage.scheduledInstallationEndAt ? new Date(montage.scheduledInstallationEndAt) : undefined,
@@ -122,6 +128,11 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
     setAdditionalMaterials(montage.measurementAdditionalMaterials || '');
     setSeparateSkirting(montage.measurementSeparateSkirting || false);
     setAdditionalInfo(montage.additionalInfo || '');
+    setMeasurementDate(
+      montage.measurementDate 
+        ? new Date(montage.measurementDate as string | number | Date).toISOString().split("T")[0] 
+        : ""
+    );
     setDateRange({
         from: montage.scheduledInstallationAt ? new Date(montage.scheduledInstallationAt) : undefined,
         to: montage.scheduledInstallationEndAt ? new Date(montage.scheduledInstallationEndAt) : undefined,
@@ -148,6 +159,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
           skirtingProductId: includeSkirting ? skirtingProductId : null,
           skirtingWaste: includeSkirting ? parseFloat(skirtingWaste) : 0,
           modelsApproved,
+          measurementDate,
           measurementInstallationMethod: installationMethod,
           measurementSubfloorCondition: subfloorCondition,
           measurementAdditionalWorkNeeded: additionalWorkNeeded,
@@ -334,6 +346,35 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
             ) : null}
         </div>
       </div>
+
+      <Card className={cn("border-l-4", measurementDate ? "border-l-green-500" : "border-l-orange-500")}>
+          <CardHeader className="pb-3">
+              <CardTitle className="text-base font-medium flex items-center gap-2">
+                  <CalendarIcon className="h-4 w-4" />
+                  Termin Pomiaru
+              </CardTitle>
+          </CardHeader>
+          <CardContent>
+              <div className="flex items-center gap-4">
+                  <div className="grid gap-1.5 flex-1">
+                      <Label htmlFor="measurementDate">Data wizyty</Label>
+                      <Input
+                          id="measurementDate"
+                          type="date"
+                          value={measurementDate}
+                          onChange={(e) => setMeasurementDate(e.target.value)}
+                          disabled={isReadOnly}
+                          className="max-w-[200px]"
+                      />
+                  </div>
+                  {!measurementDate && (
+                      <div className="text-sm text-orange-600 font-medium">
+                          Nie ustalono terminu!
+                      </div>
+                  )}
+              </div>
+          </CardContent>
+      </Card>
 
       <div className="grid gap-6 md:grid-cols-2">
           {/* Floor Calculator */}

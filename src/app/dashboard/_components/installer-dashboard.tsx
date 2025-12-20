@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Phone, Calendar, ArrowRight, Send, Navigation, Plus, Inbox, Loader2, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
-import { format } from "date-fns";
+import { format, isToday } from "date-fns";
 import { toast } from "sonner";
 import { sendMeasurementRequestSms } from "../crm/montaze/actions";
 
@@ -18,16 +18,17 @@ interface DashboardItem {
     installationCity?: string | null;
     billingCity?: string | null;
     measurementDate?: Date | string | null;
+    scheduledInstallationAt?: Date | string | null;
     contactPhone?: string | null;
     createdAt: Date | string;
 }
 
-interface MeasurerDashboardProps {
+interface InstallerDashboardProps {
     leads: DashboardItem[];
     schedule: DashboardItem[];
 }
 
-export function MeasurerDashboard({ leads, schedule }: MeasurerDashboardProps) {
+export function InstallerDashboard({ leads, schedule }: InstallerDashboardProps) {
     return (
         <div className="space-y-6 p-4 pb-24 max-w-md mx-auto md:max-w-4xl">
             {/* Header */}
@@ -92,18 +93,36 @@ function ScheduleCard({ item }: { item: DashboardItem }) {
     const fullAddress = `${address}, ${city}`;
     const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
 
+    const measurementDate = item.measurementDate ? new Date(item.measurementDate) : null;
+    const installationDate = item.scheduledInstallationAt ? new Date(item.scheduledInstallationAt) : null;
+
+    const isMeasurement = measurementDate && isToday(measurementDate);
+    const isInstallation = installationDate && isToday(installationDate);
+
+    const timeDisplay = isMeasurement && measurementDate 
+        ? format(measurementDate, 'HH:mm') 
+        : isInstallation && installationDate 
+            ? format(installationDate, 'HH:mm') 
+            : '??:??';
+
+    const typeLabel = isMeasurement ? 'Pomiar' : isInstallation ? 'Montaż' : 'Wizyta';
+    const typeColor = isMeasurement ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800';
+
     return (
         <Card className="overflow-hidden border-l-4 border-l-primary">
             <CardContent className="p-4">
                 <div className="flex justify-between items-start mb-2">
                     <div>
-                        <h3 className="font-semibold text-lg">{item.clientName}</h3>
+                        <div className="flex items-center gap-2 mb-1">
+                            <Badge variant="secondary" className={typeColor}>{typeLabel}</Badge>
+                            <h3 className="font-semibold text-lg">{item.clientName}</h3>
+                        </div>
                         <p className="text-sm text-muted-foreground flex items-center gap-1">
                             <MapPin className="h-3 w-3" /> {fullAddress}
                         </p>
                     </div>
                     <Badge variant="outline">
-                        {item.measurementDate ? format(new Date(item.measurementDate), 'HH:mm') : '??:??'}
+                        {timeDisplay}
                     </Badge>
                 </div>
                 

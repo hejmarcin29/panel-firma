@@ -245,6 +245,7 @@ export function MontageClientCard({
       await updateMontageRealizationStatus({
           montageId: montage.id,
           installerId: newInstallerId,
+          measurerId: newInstallerId, // Sync measurer with installer
           installerStatus: newStatus
       });
       router.refresh();
@@ -657,7 +658,7 @@ export function MontageClientCard({
                     <Hammer className="h-4 w-4 text-muted-foreground" />
                     <div className="grid gap-1 w-full">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs text-muted-foreground">Montażysta</span>
+                            <span className="text-xs text-muted-foreground">Montażysta (Opiekun)</span>
                             <Select
                                 value={montage.installerStatus}
                                 onValueChange={handleInstallerStatusChange}
@@ -692,36 +693,6 @@ export function MontageClientCard({
                         ) : (
                             <span className={cn("text-sm font-medium", !montage.installerId ? "text-red-600" : "text-green-600")}>
                                 {montage.installer?.name || "Brak montażysty"}
-                            </span>
-                        )}
-                    </div>
-                </div>
-
-                {/* Measurer */}
-                <div className="flex items-center gap-3">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <div className="grid gap-1 w-full">
-                        <span className="text-xs text-muted-foreground">Pomiarowiec</span>
-                        {userRoles.includes('admin') ? (
-                            <Select
-                                value={montage.measurerId || "none"}
-                                onValueChange={handleMeasurerChange}
-                            >
-                                <SelectTrigger className={cn("h-8 w-full text-sm", !montage.measurerId ? "text-red-600 border-red-200 bg-red-50" : "text-green-600 border-green-200 bg-green-50")}>
-                                    <SelectValue placeholder="Wybierz pomiarowca" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="none">Brak przypisania</SelectItem>
-                                    {measurers.map((measurer) => (
-                                        <SelectItem key={measurer.id} value={measurer.id}>
-                                            {measurer.name || measurer.email}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        ) : (
-                            <span className={cn("text-sm font-medium", !montage.measurerId ? "text-red-600" : "text-green-600")}>
-                                {montage.measurer?.name || "Brak pomiarowca"}
                             </span>
                         )}
                     </div>

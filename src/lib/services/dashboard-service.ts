@@ -475,7 +475,7 @@ export async function getArchitectDashboardStats(userId: string) {
     };
 }
 
-export async function getMeasurerDashboardData(userId: string) {
+export async function getInstallerDashboardData(userId: string) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);

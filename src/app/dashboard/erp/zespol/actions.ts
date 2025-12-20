@@ -96,6 +96,22 @@ export async function createEmployee({
     revalidatePath(ERP_TEAM_PATH);
 }
 
+export async function deleteUser(userId: string) {
+    const currentUser = await requireUser();
+    
+    if (!currentUser.roles.includes('admin')) {
+        throw new Error('Brak uprawnień do usuwania pracowników.');
+    }
+
+    if (currentUser.id === userId) {
+        throw new Error('Nie możesz usunąć własnego konta.');
+    }
+
+    await db.delete(users).where(eq(users.id, userId));
+    
+    revalidatePath(ERP_TEAM_PATH);
+}
+
 export async function changeUserPassword(userId: string, newPassword: string) {
     const currentUser = await requireUser();
     

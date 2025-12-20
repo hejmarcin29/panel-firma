@@ -17,6 +17,7 @@ import { getUserDetails, getUserFinancials } from '../actions';
 import { requireUser } from '@/lib/auth/session';
 import { ImpersonateButton } from '../_components/impersonate-button';
 import { ChangePasswordDialog } from '../_components/change-password-dialog';
+import { DeleteUserButton } from '../_components/delete-user-button';
 import { FinancialsSection } from '../_components/financials-section';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -71,7 +72,10 @@ export default async function UserProfilePage({ params }: { params: Promise<{ us
                     <div className="flex items-center gap-2">
                         <ChangePasswordDialog userId={user.id} userName={user.name || user.email} />
                         {currentUser.id !== user.id && (
-                            <ImpersonateButton userId={user.id} userName={user.name || user.email} />
+                            <>
+                                <ImpersonateButton userId={user.id} userName={user.name || user.email} />
+                                <DeleteUserButton userId={user.id} userName={user.name || user.email} />
+                            </>
                         )}
                     </div>
                 )}

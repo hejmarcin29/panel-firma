@@ -1355,6 +1355,7 @@ export async function updateMontageMeasurement({
 	sketchUrl,
 	scheduledInstallationAt,
 	scheduledInstallationEndAt,
+    measurementDate,
     measurementInstallationMethod,
     measurementSubfloorCondition,
     measurementAdditionalWorkNeeded,
@@ -1379,6 +1380,7 @@ export async function updateMontageMeasurement({
 	sketchUrl?: string | null;
 	scheduledInstallationAt: number | null;
 	scheduledInstallationEndAt: number | null;
+    measurementDate?: string | null;
     measurementInstallationMethod?: 'click' | 'glue' | null;
     measurementSubfloorCondition?: string | null;
     measurementAdditionalWorkNeeded?: boolean;
@@ -1388,10 +1390,19 @@ export async function updateMontageMeasurement({
 }) {
 	await requireUser();
 
+    let measurementAt: Date | null = null;
+    if (measurementDate) {
+        const parsed = new Date(`${measurementDate}T00:00:00`);
+        if (!Number.isNaN(parsed.getTime())) {
+            measurementAt = parsed;
+        }
+    }
+
 	await db
 		.update(montages)
 		.set({
 			measurementDetails,
+            measurementDate: measurementAt,
 			materialDetails: measurementDetails, // Sync with materialDetails
 			floorArea,
 			floorDetails,
