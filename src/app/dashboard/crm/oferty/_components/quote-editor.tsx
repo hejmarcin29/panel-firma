@@ -43,9 +43,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { updateQuote, sendQuoteEmail, getProductsForQuote, deleteQuote } from '../actions';
 import { FileText as FileTextIcon } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { QuotePdf } from './quote-pdf';
 
-const PDFDownloadLink = dynamic(() => import('@react-pdf/renderer').then(mod => mod.PDFDownloadLink), {
+const QuotePdfWrapper = dynamic(() => import('./quote-pdf-wrapper'), {
   ssr: false,
   loading: () => <Button variant="outline" disabled>Ładowanie PDF...</Button>,
 });
@@ -454,18 +453,18 @@ export function QuoteEditor({ quote, templates, companyInfo }: QuoteEditorProps)
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <DropdownMenuItem asChild>
-                                <PDFDownloadLink
-                                    document={<QuotePdf quote={currentQuote} companyInfo={companyInfo} />}
-                                    fileName={`Oferta_${quote.number || 'draft'}.pdf`}
-                                    className="w-full flex items-center"
-                                >
-                                    {({ loading }) => (
-                                        <>
-                                            <FileTextIcon className="w-4 h-4 mr-2" />
-                                            {loading ? 'Generowanie...' : 'Pobierz PDF'}
-                                        </>
-                                    )}
-                                </PDFDownloadLink>
+                                <div className="w-full">
+                                    <QuotePdfWrapper 
+                                        quote={currentQuote} 
+                                        companyInfo={companyInfo}
+                                        render={(loading) => (
+                                            <div className="flex items-center w-full cursor-pointer">
+                                                <FileTextIcon className="w-4 h-4 mr-2" />
+                                                {loading ? 'Generowanie...' : 'Pobierz PDF'}
+                                            </div>
+                                        )}
+                                    />
+                                </div>
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={handlePrint}>
                                 <Printer className="w-4 h-4 mr-2" /> Drukuj
@@ -714,17 +713,7 @@ export function QuoteEditor({ quote, templates, companyInfo }: QuoteEditorProps)
                         <Trash2 className="w-4 h-4 mr-2" />
                         Usuń
                     </Button>
-                    <PDFDownloadLink
-                        document={<QuotePdf quote={currentQuote} companyInfo={companyInfo} />}
-                        fileName={`Oferta_${quote.number || 'draft'}.pdf`}
-                    >
-                        {({ loading }) => (
-                            <Button variant="outline" disabled={loading}>
-                                <FileTextIcon className="w-4 h-4 mr-2" />
-                                {loading ? 'Generowanie...' : 'Pobierz PDF'}
-                            </Button>
-                        )}
-                    </PDFDownloadLink>
+                    <QuotePdfWrapper quote={currentQuote} companyInfo={companyInfo} />
                     <Button variant="outline" onClick={handlePrint}>
                         <Printer className="w-4 h-4 mr-2" />
                         Drukuj

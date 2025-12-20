@@ -176,7 +176,8 @@ export const QuotePdf = ({ quote, companyInfo }: QuotePdfProps) => (
             {/* Header */}
             <View style={styles.header}>
                 <View>
-                    {companyInfo.logoUrl && <Image src={companyInfo.logoUrl} style={styles.logo} alt="Logo firmy" />}
+                    {/* eslint-disable-next-line jsx-a11y/alt-text */}
+                    {companyInfo.logoUrl && <Image src={companyInfo.logoUrl} style={styles.logo} />}
                 </View>
                 <View style={styles.companyInfo}>
                     <Text style={{ fontWeight: 700 }}>{companyInfo.name}</Text>
@@ -264,7 +265,8 @@ export const QuotePdf = ({ quote, companyInfo }: QuotePdfProps) => (
                 </View>
                 <View style={styles.signatureBox}>
                     {quote.signatureData ? (
-                        <Image src={quote.signatureData} style={styles.signatureImage} alt="Podpis klienta" />
+                        // eslint-disable-next-line jsx-a11y/alt-text
+                        <Image src={quote.signatureData} style={styles.signatureImage} />
                     ) : null}
                     <Text>Zamawiający</Text>
                     {quote.signedAt && (
