@@ -1,4 +1,4 @@
-import { getCalendarClient } from './client';
+import { getCalendarClient, getUserCalendarClient } from './client';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
 
 export type GoogleCalendarEvent = {
@@ -10,6 +10,9 @@ export type GoogleCalendarEvent = {
   attendees?: { email: string }[];
 };
 
+/**
+ * Creates an event in the COMPANY calendar (Service Account)
+ */
 export async function createGoogleCalendarEvent(event: GoogleCalendarEvent) {
   const calendarId = await getAppSetting(appSettingKeys.googleCalendarId);
   if (!calendarId) return null;
@@ -26,6 +29,25 @@ export async function createGoogleCalendarEvent(event: GoogleCalendarEvent) {
     console.error('Error creating Google Calendar event:', error);
     return null;
   }
+}
+
+/**
+ * Creates an event in a USER'S private calendar (OAuth)
+ */
+export async function createUserCalendarEvent(userId: string, event: GoogleCalendarEvent) {
+    const calendar = await getUserCalendarClient(userId);
+    if (!calendar) return null;
+
+    try {
+        const response = await calendar.events.insert({
+            calendarId: 'primary', // Use the user's primary calendar
+            requestBody: event,
+        });
+        return response.data.id;
+    } catch (error) {
+        console.error(`Error creating User Calendar event for ${userId}:`, error);
+        return null;
+    }
 }
 
 export async function updateGoogleCalendarEvent(eventId: string, event: Partial<GoogleCalendarEvent>) {
@@ -64,3 +86,4 @@ export async function deleteGoogleCalendarEvent(eventId: string) {
     return false;
   }
 }
+

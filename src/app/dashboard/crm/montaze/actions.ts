@@ -26,7 +26,7 @@ import { getMontageAutomationRules } from '@/lib/montaze/automation';
 import { logSystemEvent } from '@/lib/logging';
 import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
 import type { MaterialsEditHistoryEntry } from './types';
-import { createGoogleCalendarEvent, updateGoogleCalendarEvent, deleteGoogleCalendarEvent } from '@/lib/google/calendar';
+import { createGoogleCalendarEvent, updateGoogleCalendarEvent, deleteGoogleCalendarEvent, createUserCalendarEvent } from '@/lib/google/calendar';
 import { generatePortalToken } from '@/lib/utils';
 import { sendSms } from '@/lib/sms';
 
@@ -1430,6 +1430,28 @@ export async function updateMontageMeasurement({
 			updatedAt: new Date(),
 		})
 		.where(eq(montages.id, montageId));
+
+    // --- GOOGLE CALENDAR SYNC (USER) ---
+    // If installation date is set, try to sync with installer's private calendar
+    if (scheduledInstallationAt) {
+        const montage = await getMontageOrThrow(montageId);
+        if (montage.installerId) {
+            const startDate = new Date(scheduledInstallationAt);
+            const endDate = scheduledInstallationEndAt ? new Date(scheduledInstallationEndAt) : new Date(startDate.getTime() + 8 * 60 * 60 * 1000);
+            
+            const clientName = montage.clientName || montage.customer?.name || 'Klient';
+            const address = [montage.city, montage.address].filter(Boolean).join(', ');
+
+            await createUserCalendarEvent(montage.installerId, {
+                summary: `Montaż: ${clientName}`,
+                description: `Adres: ${address}\nTelefon: ${montage.contactPhone || ''}\nLink: https://b2b.primepodloga.pl/dashboard/crm/montaze/${montageId}`,
+                location: address,
+                start: { dateTime: startDate.toISOString() },
+                end: { dateTime: endDate.toISOString() },
+            });
+        }
+    }
+    // -----------------------------------
 
     const user = await requireUser();
     await logSystemEvent('update_measurement', `Zaktualizowano protokół pomiaru (Powierzchnia: ${floorArea}m2)`, user.id);

@@ -1,5 +1,8 @@
 import { google } from 'googleapis';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
+import { db } from '@/lib/db';
+import { users } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
 
 export async function getGoogleAuth() {
   const clientEmail = await getAppSetting(appSettingKeys.googleClientEmail);
@@ -27,4 +30,36 @@ export async function getCalendarClient() {
   if (!auth) return null;
 
   return google.calendar({ version: 'v3', auth });
+}
+
+export async function getUserCalendarClient(userId: string) {
+    const user = await db.query.users.findFirst({
+        where: eq(users.id, userId),
+        columns: { googleRefreshToken: true }
+    });
+
+    if (!user || !user.googleRefreshToken) {
+        return null;
+    }
+
+    const clientId = await getAppSetting(appSettingKeys.googleOAuthClientId);
+    const clientSecret = await getAppSetting(appSettingKeys.googleOAuthClientSecret);
+    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/google/callback`;
+
+    if (!clientId || !clientSecret) {
+        console.error('Missing Google OAuth credentials in settings');
+        return null;
+    }
+
+    const oauth2Client = new google.auth.OAuth2(
+        clientId,
+        clientSecret,
+        redirectUri
+    );
+
+    oauth2Client.setCredentials({
+        refresh_token: user.googleRefreshToken
+    });
+
+    return google.calendar({ version: 'v3', auth: oauth2Client });
 }

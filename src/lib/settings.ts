@@ -36,6 +36,8 @@ export const appSettingKeys = {
 	googleCalendarId: 'google.calendar_id',
 	googleClientEmail: 'google.client_email',
 	googlePrivateKey: 'google.private_key',
+    googleOAuthClientId: 'google.oauth_client_id',
+    googleOAuthClientSecret: 'google.oauth_client_secret',
     systemLogoUrl: 'system.logo_url',
     companyName: 'company.name',
     companyAddress: 'company.address',

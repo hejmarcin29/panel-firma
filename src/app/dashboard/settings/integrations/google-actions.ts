@@ -43,6 +43,8 @@ export async function saveGoogleCalendarSettings(formData: FormData) {
   const calendarId = formData.get('calendarId') as string;
   const clientEmail = formData.get('clientEmail') as string;
   const privateKey = formData.get('privateKey') as string;
+  const oauthClientId = formData.get('oauthClientId') as string;
+  const oauthClientSecret = formData.get('oauthClientSecret') as string;
 
   await setAppSetting({
     key: appSettingKeys.googleCalendarId,
@@ -59,6 +61,18 @@ export async function saveGoogleCalendarSettings(formData: FormData) {
   await setAppSetting({
     key: appSettingKeys.googlePrivateKey,
     value: privateKey,
+    userId: user.id,
+  });
+
+  await setAppSetting({
+    key: appSettingKeys.googleOAuthClientId,
+    value: oauthClientId,
+    userId: user.id,
+  });
+
+  await setAppSetting({
+    key: appSettingKeys.googleOAuthClientSecret,
+    value: oauthClientSecret,
     userId: user.id,
   });
 

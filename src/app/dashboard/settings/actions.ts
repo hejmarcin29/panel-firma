@@ -43,7 +43,30 @@ export async function updateWooWebhookSecret(secret: string) {
 	process.env.WOOCOMMERCE_WEBHOOK_SECRET = trimmed;
 	revalidatePath('/dashboard/settings');
 }
+export async function updateInstallerProfile(data: {
+    phone?: string;
+    carPlate?: string;
+    nip?: string;
+    bankAccount?: string;
+}) {
+    const user = await requireUser();
+    // Allow if user is installer OR admin (admin might want to edit installer profile too, but here we focus on self-update)
+    if (!user.roles.includes('installer') && !user.roles.includes('admin')) {
+        throw new Error('Unauthorized');
+    }
 
+    const currentProfile = user.installerProfile || {};
+    const newProfile = {
+        ...currentProfile,
+        ...data
+    };
+
+    await db.update(users)
+        .set({ installerProfile: newProfile })
+        .where(eq(users.id, user.id));
+    
+    revalidatePath('/dashboard/settings');
+}
 export async function testWooWebhookSecret() {
 	const user = await requireUser();
 	if (!user.roles.includes('admin')) {

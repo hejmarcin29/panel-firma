@@ -46,6 +46,7 @@ import { CompanySettingsForm } from './_components/company-settings-form';
 import { PortalSettingsForm } from './_components/portal-settings-form';
 import { ContractTemplatesManager } from './_components/contract-templates-manager';
 import { getContractTemplates } from './contracts/actions';
+import { InstallerSettingsView } from './_components/installer-settings-view';
 
 type LogLevel = 'info' | 'warning' | 'error';
 
@@ -84,7 +85,8 @@ function levelBadgeClass(level: LogLevel) {
 export default async function SettingsPage() {
   const sessionUser = await requireUser();
   
-  if (!sessionUser.roles.includes('admin')) {
+  // Allow installers to access settings
+  if (!sessionUser.roles.includes('admin') && !sessionUser.roles.includes('installer')) {
       redirect('/dashboard');
   }
   
@@ -95,6 +97,11 @@ export default async function SettingsPage() {
   if (!user) {
       // Should not happen if session is valid
       return null;
+  }
+
+  // INSTALLER VIEW
+  if (sessionUser.roles.includes('installer') && !sessionUser.roles.includes('admin')) {
+      return <InstallerSettingsView user={user} />;
   }
   
   // Parsowanie konfiguracji menu mobilnego
@@ -158,6 +165,8 @@ export default async function SettingsPage() {
 		googleCalendarId,
 		googleClientEmail,
 		googlePrivateKey,
+        googleOAuthClientId,
+        googleOAuthClientSecret,
         systemLogoUrl,
         deletedQuotes,
         deletedCustomers,
@@ -203,6 +212,8 @@ export default async function SettingsPage() {
 		getAppSetting(appSettingKeys.googleCalendarId),
 		getAppSetting(appSettingKeys.googleClientEmail),
 		getAppSetting(appSettingKeys.googlePrivateKey),
+        getAppSetting(appSettingKeys.googleOAuthClientId),
+        getAppSetting(appSettingKeys.googleOAuthClientSecret),
         getAppSetting(appSettingKeys.systemLogoUrl),
         getDeletedQuotes(),
         getDeletedCustomers(),
@@ -530,6 +541,8 @@ export default async function SettingsPage() {
 							initialCalendarId={googleCalendarId ?? ''} 
 							initialClientEmail={googleClientEmail ?? ''}
 							initialPrivateKey={googlePrivateKey ?? ''}
+                            initialOAuthClientId={googleOAuthClientId ?? ''}
+                            initialOAuthClientSecret={googleOAuthClientSecret ?? ''}
 						/>
 					</TabsContent>
 					<TabsContent value="mail">

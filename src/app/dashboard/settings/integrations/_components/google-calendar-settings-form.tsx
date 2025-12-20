@@ -17,12 +17,23 @@ interface GoogleCalendarSettingsFormProps {
   initialCalendarId: string;
   initialClientEmail: string;
   initialPrivateKey: string;
+  initialOAuthClientId: string;
+  initialOAuthClientSecret: string;
 }
 
-export function GoogleCalendarSettingsForm({ initialCalendarId, initialClientEmail, initialPrivateKey }: GoogleCalendarSettingsFormProps) {
+export function GoogleCalendarSettingsForm({ 
+    initialCalendarId, 
+    initialClientEmail, 
+    initialPrivateKey,
+    initialOAuthClientId,
+    initialOAuthClientSecret
+}: GoogleCalendarSettingsFormProps) {
   const [calendarId, setCalendarId] = useState(initialCalendarId);
   const [clientEmail, setClientEmail] = useState(initialClientEmail);
   const [privateKey, setPrivateKey] = useState(initialPrivateKey);
+  const [oauthClientId, setOAuthClientId] = useState(initialOAuthClientId);
+  const [oauthClientSecret, setOAuthClientSecret] = useState(initialOAuthClientSecret);
+
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
@@ -34,6 +45,8 @@ export function GoogleCalendarSettingsForm({ initialCalendarId, initialClientEma
       formData.append('calendarId', calendarId);
       formData.append('clientEmail', clientEmail);
       formData.append('privateKey', privateKey);
+      formData.append('oauthClientId', oauthClientId);
+      formData.append('oauthClientSecret', oauthClientSecret);
       await saveGoogleCalendarSettings(formData);
       setTestResult(null); // Reset test result on change
     } catch {
@@ -118,6 +131,31 @@ export function GoogleCalendarSettingsForm({ initialCalendarId, initialClientEma
           <p className="text-xs text-muted-foreground">
             Cała zawartość klucza prywatnego z pliku JSON (włącznie z liniami BEGIN i END).
           </p>
+        </div>
+
+        <div className="border-t pt-4 mt-4">
+            <h3 className="text-sm font-medium mb-3">Logowanie Montażystów (OAuth 2.0)</h3>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="oauthClientId">Client ID</Label>
+                <Input
+                  id="oauthClientId"
+                  value={oauthClientId}
+                  onChange={handleChange(setOAuthClientId)}
+                  placeholder="np. 123456789-abc...apps.googleusercontent.com"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="oauthClientSecret">Client Secret</Label>
+                <Input
+                  id="oauthClientSecret"
+                  type="password"
+                  value={oauthClientSecret}
+                  onChange={handleChange(setOAuthClientSecret)}
+                  placeholder="np. GOCSPX-..."
+                />
+              </div>
+            </div>
         </div>
 
         <div className="flex items-center justify-between pt-4">

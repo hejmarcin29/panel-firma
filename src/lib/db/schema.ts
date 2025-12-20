@@ -72,6 +72,10 @@ export type MontageInstallerStatus = 'none' | 'informed' | 'confirmed';
 export type InstallerProfile = {
 	workScope?: string;
 	operationArea?: string;
+    phone?: string;
+    carPlate?: string;
+    nip?: string;
+    bankAccount?: string;
 	pricing?: {
 		serviceName: string;
 		price: number;
@@ -110,6 +114,7 @@ export const users = pgTable(
 		architectProfile: json('architect_profile').$type<ArchitectProfile>(),
         partnerProfile: json('partner_profile').$type<PartnerProfile>(),
         referralToken: text('referral_token').unique(),
+        googleRefreshToken: text('google_refresh_token'),
 		createdAt: timestamp('created_at').notNull().defaultNow(),
 		updatedAt: timestamp('updated_at').notNull().defaultNow(),
 	},

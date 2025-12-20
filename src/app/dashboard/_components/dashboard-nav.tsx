@@ -47,7 +47,7 @@ export function DashboardNav({ urgentOrdersCount = 0, userRoles = ['admin'] }: {
              return allowedLinks.includes(link.href);
         }
 
-        const restrictedLinks = ['/dashboard/orders', '/dashboard/products', '/dashboard/mail', '/dashboard/settings', '/dashboard/wallet', '/dashboard/erp'];
+        const restrictedLinks = ['/dashboard/orders', '/dashboard/products', '/dashboard/mail', '/dashboard/wallet', '/dashboard/erp'];
         return !restrictedLinks.includes(link.href);
     });
 
@@ -57,6 +57,9 @@ export function DashboardNav({ urgentOrdersCount = 0, userRoles = ['admin'] }: {
         }
         if (userRoles.includes('installer') && !userRoles.includes('admin') && link.href === '/dashboard/crm') {
             return 'Moje Zlecenia';
+        }
+        if (userRoles.includes('installer') && !userRoles.includes('admin') && link.href === '/dashboard/settings') {
+            return 'Mój Profil';
         }
         return link.label;
     };
