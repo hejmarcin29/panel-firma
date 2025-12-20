@@ -176,6 +176,20 @@
       "when": 1766235197442,
       "tag": "0024_watery_leper_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1766264491305,
+      "tag": "0025_messy_warhawk",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1766264694071,
+      "tag": "0026_illegal_hellcat",
+      "breakpoints": true
     }
   ]
 }

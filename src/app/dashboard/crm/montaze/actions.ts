@@ -1376,6 +1376,7 @@ export async function updateMontageMeasurement({
     measurementSeparateSkirting,
     scheduledSkirtingInstallationAt,
     scheduledSkirtingInstallationEndAt,
+    isHousingVat,
 }: {
 	montageId: string;
 	measurementDetails: string;
@@ -1403,6 +1404,7 @@ export async function updateMontageMeasurement({
     measurementAdditionalWorkDescription?: string | null;
     measurementAdditionalMaterials?: string | null;
     measurementSeparateSkirting?: boolean;
+    isHousingVat?: boolean;
 }) {
 	await requireUser();
 
@@ -1423,6 +1425,7 @@ export async function updateMontageMeasurement({
 			floorArea,
 			floorDetails,
             measurementSeparateSkirting,
+            isHousingVat,
 			skirtingLength,
 			skirtingDetails,
 			panelModel,

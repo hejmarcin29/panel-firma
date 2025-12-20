@@ -490,6 +490,7 @@ export const montages = pgTable(
 		billingPostalCode: text('billing_postal_code'),
 		installationPostalCode: text('installation_postal_code'),
 		isCompany: boolean('is_company').notNull().default(false),
+        isHousingVat: boolean('is_housing_vat').default(false),
 		companyName: text('company_name'),
 		nip: text('nip'),
 		scheduledInstallationAt: timestamp('scheduled_installation_at'),

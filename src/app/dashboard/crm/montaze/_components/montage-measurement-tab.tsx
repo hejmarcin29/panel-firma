@@ -86,6 +86,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
   const [additionalWorkDescription, setAdditionalWorkDescription] = useState(montage.measurementAdditionalWorkDescription || '');
   const [additionalMaterials, setAdditionalMaterials] = useState(montage.measurementAdditionalMaterials || '');
   const [separateSkirting, setSeparateSkirting] = useState(montage.measurementSeparateSkirting || false);
+  const [isHousingVat, setIsHousingVat] = useState(montage.isHousingVat || false);
 
   const [additionalInfo, setAdditionalInfo] = useState(montage.additionalInfo || '');
   
@@ -175,6 +176,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
           measurementAdditionalWorkDescription: additionalWorkDescription,
           measurementAdditionalMaterials: additionalMaterials,
           measurementSeparateSkirting: includeSkirting ? separateSkirting : false,
+          isHousingVat,
           additionalInfo,
           sketchUrl: sketchDataUrl,
           scheduledInstallationAt: dateRange?.from ? dateRange.from.getTime() : null,
@@ -208,6 +210,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
     additionalWorkDescription,
     additionalMaterials,
     separateSkirting,
+    isHousingVat,
     additionalInfo,
     sketchDataUrl,
     dateRange,
@@ -385,6 +388,33 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                           Nie ustalono terminu!
                       </div>
                   )}
+              </div>
+          </CardContent>
+      </Card>
+
+      <Card className={cn("border-l-4", isHousingVat ? "border-l-green-500" : "border-l-gray-300")}>
+          <CardHeader className="pb-3">
+              <CardTitle className="text-base font-medium flex items-center gap-2">
+                  <FileIcon className="h-4 w-4" />
+                  Ustalenia Podatkowe
+              </CardTitle>
+          </CardHeader>
+          <CardContent>
+              <div className="flex items-center space-x-2">
+                  <Switch
+                      id="isHousingVat"
+                      checked={isHousingVat}
+                      onCheckedChange={setIsHousingVat}
+                      disabled={isReadOnly}
+                  />
+                  <div className="grid gap-1.5 leading-none">
+                      <Label htmlFor="isHousingVat" className="text-base font-medium cursor-pointer">
+                          Budownictwo objęte społecznym programem mieszkaniowym (VAT 8%)
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                          Lokal mieszkalny do 150m² lub dom jednorodzinny do 300m².
+                      </p>
+                  </div>
               </div>
           </CardContent>
       </Card>

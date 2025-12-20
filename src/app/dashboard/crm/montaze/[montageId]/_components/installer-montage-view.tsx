@@ -228,12 +228,6 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
                 {/* TAB: MEASUREMENT (Form) */}
                 {activeTab === 'measurement' && (
                     <div className="space-y-4">
-                        <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 text-sm text-blue-800 flex gap-2">
-                            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                            <div>
-                                <strong>Ważne:</strong> Dokładny pomiar to podstawa wyceny. Zrób zdjęcia wilgotnościomierza!
-                            </div>
-                        </div>
                         <MontageMeasurementTab montage={montage} userRoles={userRoles} />
                     </div>
                 )}

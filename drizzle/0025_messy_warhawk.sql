@@ -1,0 +1,1 @@
+ALTER TABLE "montages" ADD COLUMN "billing_type" text DEFAULT 'consumer';
