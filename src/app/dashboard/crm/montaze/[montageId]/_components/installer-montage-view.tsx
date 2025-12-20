@@ -4,14 +4,11 @@ import { useState } from "react";
 import { 
     Phone, 
     MapPin, 
-    Calendar, 
     Ruler, 
     Camera, 
     CheckSquare, 
     MessageSquare, 
     History, 
-    ChevronRight,
-    AlertTriangle,
     FileText,
     Navigation
 } from "lucide-react";
