@@ -51,14 +51,14 @@ export function MontageDetailsLayout({
 
   const mobileTabs = useMemo(() => [
     { id: 'info', label: 'Info', icon: <Info className="w-4 h-4" />, content: <div className="space-y-4 p-4 pb-24">{clientCard}{materialCard}</div> },
-    { id: 'notes', label: 'Notatki', icon: <MessageSquare className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.notes}</div> },
-    { id: 'tasks', label: 'Zadania', icon: <ClipboardList className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.tasks}</div> },
-    { id: 'gallery', label: 'Galeria', icon: <ImageIcon className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.gallery}</div> },
-    { id: 'workflow', label: 'Przebieg', icon: <LayoutList className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.workflow}</div> },
-    { id: 'measurement', label: 'Pomiary', icon: <Ruler className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.measurement}</div> },
-    { id: 'quotes', label: 'Oferty', icon: <FileText className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.quotes}</div> },
-    { id: 'history', label: 'Historia', icon: <History className="w-4 h-4" />, content: <div className="p-4 pb-24">{tabs.history}</div> },
-  ], [clientCard, materialCard, tabs]);
+    { id: 'notes', label: 'Notatki', icon: <MessageSquare className="w-4 h-4" />, content: tabs.notes ? <div className="p-4 pb-24">{tabs.notes}</div> : null },
+    { id: 'tasks', label: 'Zadania', icon: <ClipboardList className="w-4 h-4" />, content: tabs.tasks ? <div className="p-4 pb-24">{tabs.tasks}</div> : null },
+    { id: 'gallery', label: 'Galeria', icon: <ImageIcon className="w-4 h-4" />, content: tabs.gallery ? <div className="p-4 pb-24">{tabs.gallery}</div> : null },
+    { id: 'workflow', label: 'Przebieg', icon: <LayoutList className="w-4 h-4" />, content: tabs.workflow ? <div className="p-4 pb-24">{tabs.workflow}</div> : null },
+    { id: 'measurement', label: 'Pomiary', icon: <Ruler className="w-4 h-4" />, content: tabs.measurement ? <div className="p-4 pb-24">{tabs.measurement}</div> : null },
+    { id: 'quotes', label: 'Oferty', icon: <FileText className="w-4 h-4" />, content: tabs.quotes ? <div className="p-4 pb-24">{tabs.quotes}</div> : null },
+    { id: 'history', label: 'Historia', icon: <History className="w-4 h-4" />, content: tabs.history ? <div className="p-4 pb-24">{tabs.history}</div> : null },
+  ].filter(tab => tab.content !== null), [clientCard, materialCard, tabs]);
 
   const scrollToTab = useCallback((tabId: string) => {
     const index = mobileTabs.findIndex(t => t.id === tabId);
@@ -140,36 +140,50 @@ export function MontageDetailsLayout({
 
           <div className="space-y-6">
               <Tabs value={currentTab === 'overview' ? defaultTab : currentTab} onValueChange={handleTabChange} className="w-full">
-                  <TabsList className="flex w-full overflow-x-auto md:grid md:grid-cols-7">
-                      <TabsTrigger value="notes" className="flex-1">Notatki</TabsTrigger>
-                      <TabsTrigger value="workflow" className="flex-1">Przebieg</TabsTrigger>
-                      <TabsTrigger value="measurement" className="flex-1">Pomiar</TabsTrigger>
-                      <TabsTrigger value="quotes" className="flex-1">Oferty</TabsTrigger>
-                      <TabsTrigger value="tasks" className="flex-1">Zadania</TabsTrigger>
-                      <TabsTrigger value="gallery" className="flex-1">Załączniki</TabsTrigger>
-                      <TabsTrigger value="history" className="flex-1">Historia</TabsTrigger>
+                  <TabsList className="flex w-full overflow-x-auto md:flex-wrap">
+                      {tabs.notes && <TabsTrigger value="notes" className="flex-1">Notatki</TabsTrigger>}
+                      {tabs.workflow && <TabsTrigger value="workflow" className="flex-1">Przebieg</TabsTrigger>}
+                      {tabs.measurement && <TabsTrigger value="measurement" className="flex-1">Pomiar</TabsTrigger>}
+                      {tabs.quotes && <TabsTrigger value="quotes" className="flex-1">Oferty</TabsTrigger>}
+                      {tabs.tasks && <TabsTrigger value="tasks" className="flex-1">Zadania</TabsTrigger>}
+                      {tabs.gallery && <TabsTrigger value="gallery" className="flex-1">Załączniki</TabsTrigger>}
+                      {tabs.history && <TabsTrigger value="history" className="flex-1">Historia</TabsTrigger>}
                   </TabsList>
-                  <TabsContent value="notes" className="mt-6">
-                      {tabs.notes}
-                  </TabsContent>
-                  <TabsContent value="workflow" className="mt-6">
-                      {tabs.workflow}
-                  </TabsContent>
-                  <TabsContent value="measurement" className="mt-6">
-                      {tabs.measurement}
-                  </TabsContent>
-                  <TabsContent value="quotes" className="mt-6">
-                      {tabs.quotes}
-                  </TabsContent>
-                  <TabsContent value="tasks" className="mt-6">
-                      {tabs.tasks}
-                  </TabsContent>
-                  <TabsContent value="gallery" className="mt-6">
-                      {tabs.gallery}
-                  </TabsContent>
-                  <TabsContent value="history" className="mt-6">
-                      {tabs.history}
-                  </TabsContent>
+                  {tabs.notes && (
+                    <TabsContent value="notes" className="mt-6">
+                        {tabs.notes}
+                    </TabsContent>
+                  )}
+                  {tabs.workflow && (
+                    <TabsContent value="workflow" className="mt-6">
+                        {tabs.workflow}
+                    </TabsContent>
+                  )}
+                  {tabs.measurement && (
+                    <TabsContent value="measurement" className="mt-6">
+                        {tabs.measurement}
+                    </TabsContent>
+                  )}
+                  {tabs.quotes && (
+                    <TabsContent value="quotes" className="mt-6">
+                        {tabs.quotes}
+                    </TabsContent>
+                  )}
+                  {tabs.tasks && (
+                    <TabsContent value="tasks" className="mt-6">
+                        {tabs.tasks}
+                    </TabsContent>
+                  )}
+                  {tabs.gallery && (
+                    <TabsContent value="gallery" className="mt-6">
+                        {tabs.gallery}
+                    </TabsContent>
+                  )}
+                  {tabs.history && (
+                    <TabsContent value="history" className="mt-6">
+                        {tabs.history}
+                    </TabsContent>
+                  )}
               </Tabs>
           </div>
       </main>

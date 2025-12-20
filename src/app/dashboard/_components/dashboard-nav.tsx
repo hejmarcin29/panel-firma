@@ -10,7 +10,7 @@ const links = [
 	{ href: '/dashboard', label: 'Przegląd' },
     { href: '/dashboard/zadania', label: 'Zadania' },
 	{ href: '/dashboard/calendar', label: 'Kalendarz' },
-    { href: '/dashboard/crm', label: 'CRM' },
+    { href: '/dashboard/crm', label: 'CRM', labelForInstaller: 'Moje Zlecenia' },
 	{ href: '/dashboard/orders', label: 'Zamówienia' },
 	{ href: '/dashboard/products', label: 'Produkty' },
     { href: '/dashboard/erp', label: 'ERP' },
@@ -54,6 +54,9 @@ export function DashboardNav({ urgentOrdersCount = 0, userRoles = ['admin'] }: {
     const getLabel = (link: typeof links[0]) => {
         if (userRoles.includes('architect') && link.href === '/dashboard/crm') {
             return 'Moje Projekty';
+        }
+        if (userRoles.includes('installer') && !userRoles.includes('admin') && link.href === '/dashboard/crm') {
+            return 'Moje Zlecenia';
         }
         return link.label;
     };

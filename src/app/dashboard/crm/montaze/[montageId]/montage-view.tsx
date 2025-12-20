@@ -32,6 +32,7 @@ import { MontageClientInfo } from './_components/montage-client-info';
 
 import { MontageDetailsLayout } from './_components/montage-details-layout';
 import { ConvertLeadDialog } from './_components/convert-lead-dialog';
+import { InstallerMontageView } from './_components/installer-montage-view';
 
 interface MontageViewProps {
     montageId: string;
@@ -60,6 +61,12 @@ export function MontageView({ montageId, initialData, portalEnabled }: MontageVi
     if (!data) return null;
 
     const { montage, logs, installers, measurers, architects, statusOptions, userRoles } = data;
+
+    const isInstaller = userRoles.includes('installer') && !userRoles.includes('admin');
+
+    if (isInstaller) {
+        return <InstallerMontageView montage={montage} logs={logs} userRoles={userRoles} />;
+    }
 
     if (montage.status === 'lead') {
         return (
