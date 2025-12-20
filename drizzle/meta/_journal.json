@@ -169,6 +169,13 @@
       "when": 1766218192748,
       "tag": "0023_wise_vector",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1766235197442,
+      "tag": "0024_watery_leper_queen",
+      "breakpoints": true
     }
   ]
 }
