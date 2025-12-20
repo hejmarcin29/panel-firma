@@ -38,8 +38,6 @@ import {
 } from "../../actions";
 import { type MontageDetailsData } from "../actions";
 import type { Montage, StatusOption } from "../../types";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MontageProcessTimeline } from "./montage-process-timeline";
 
 type UserOption = { id: string; name: string | null; email: string };
 

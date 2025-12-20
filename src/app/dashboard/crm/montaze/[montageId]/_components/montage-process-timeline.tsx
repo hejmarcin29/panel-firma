@@ -28,7 +28,7 @@ export function MontageProcessTimeline({ montage }: MontageProcessTimelineProps)
                         </div>
                         <span className="text-sm font-bold text-blue-700">{progress}%</span>
                     </div>
-                    <Progress value={progress} className="h-2 bg-blue-200" indicatorClassName="bg-blue-600" />
+                    <Progress value={progress} className="h-2 bg-blue-200 [&>div]:bg-blue-600" />
                 </CardContent>
             </Card>
 
