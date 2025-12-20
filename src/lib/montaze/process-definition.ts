@@ -66,7 +66,7 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
         ],
         checkpoints: [
             { key: 'quote_accepted', label: 'Oferta zaakceptowana', condition: (m) => m.quotes?.some((q) => q.status === 'accepted') ?? false },
-            { key: 'contract_signed', label: 'Umowa podpisana', condition: (m) => !!m.contractSignedAt || (m.quotes?.some((q) => !!q.signedAt) ?? false) },
+            { key: 'contract_signed', label: 'Umowa podpisana', condition: (m) => !!m.contractDate || (m.quotes?.some((q) => !!q.signedAt) ?? false) },
             { key: 'advance_paid', label: 'Zaliczka opłacona', condition: () => false } // Placeholder logic for now
         ]
     },
