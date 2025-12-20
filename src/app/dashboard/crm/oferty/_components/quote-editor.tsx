@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { 
     Trash2, Plus, Wand2, Save, Printer, Mail, MoreHorizontal, ArrowLeft, 
@@ -32,7 +32,6 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
     DialogDescription,
     DialogFooter
 } from '@/components/ui/dialog';
@@ -73,12 +72,6 @@ type Product = {
     price: string | null;
     attributes: unknown;
 };
-
-function getProductAttribute(product: Product, slug: string): ProductAttribute | undefined {
-    const attributes = product.attributes as ProductAttribute[];
-    if (!Array.isArray(attributes)) return undefined;
-    return attributes.find((a) => a.slug === slug);
-}
 
 type QuoteEditorProps = {
     quote: {
@@ -910,7 +903,7 @@ export function QuoteEditor({ quote, templates, companyInfo }: QuoteEditorProps)
                                             {items.length === 0 && (
                                                 <TableRow>
                                                     <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                                                        Brak pozycji. Kliknij "Dodaj pozycję" lub użyj importu.
+                                                        Brak pozycji. Kliknij &quot;Dodaj pozycję&quot; lub użyj importu.
                                                     </TableCell>
                                                 </TableRow>
                                             )}

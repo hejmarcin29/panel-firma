@@ -5,6 +5,7 @@ import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
+import Placeholder from '@tiptap/extension-placeholder';
 import { Toggle } from '@/components/ui/toggle';
 import {
     Bold,
@@ -40,6 +41,10 @@ export function RichTextEditor({ value, onChange, className, placeholder }: Rich
             Underline,
             TextAlign.configure({
                 types: ['heading', 'paragraph'],
+            }),
+            Placeholder.configure({
+                placeholder: placeholder || 'Wpisz tekst...',
+                emptyEditorClass: 'is-editor-empty',
             }),
         ],
         content: value,
