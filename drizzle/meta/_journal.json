@@ -190,6 +190,13 @@
       "when": 1766264694071,
       "tag": "0026_illegal_hellcat",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1766265902635,
+      "tag": "0027_sour_tinkerer",
+      "breakpoints": true
     }
   ]
 }
