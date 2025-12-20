@@ -55,5 +55,61 @@ export const SYSTEM_NOTIFICATIONS: SystemNotificationDefinition[] = [
         action: 'Zmiana statusu wyceny na "Zaakceptowana" + Log systemowy',
         recipient: 'System + Admin',
         defaultEnabled: true
+    },
+    {
+        id: 'lead_welcome',
+        type: 'email',
+        trigger: 'Utworzenie nowego leada',
+        action: 'Wysyła e-mail powitalny z informacjami',
+        recipient: 'Klient',
+        defaultEnabled: true
+    },
+    {
+        id: 'measurement_scheduled',
+        type: 'sms',
+        trigger: 'Ustalenie daty pomiaru',
+        action: 'Wysyła SMS z potwierdzeniem terminu',
+        recipient: 'Klient',
+        defaultEnabled: true
+    },
+    {
+        id: 'quote_ready',
+        type: 'email',
+        trigger: 'Zmiana statusu wyceny na "Gotowa"',
+        action: 'Wysyła e-mail z linkiem do wyceny',
+        recipient: 'Klient',
+        defaultEnabled: true
+    },
+    {
+        id: 'order_confirmation',
+        type: 'email',
+        trigger: 'Zatwierdzenie zamówienia',
+        action: 'Wysyła potwierdzenie przyjęcia do realizacji',
+        recipient: 'Klient',
+        defaultEnabled: true
+    },
+    {
+        id: 'logistics_update',
+        type: 'sms',
+        trigger: 'Zmiana statusu materiału na "Dostarczono"',
+        action: 'Wysyła SMS o dostępności towaru',
+        recipient: 'Klient',
+        defaultEnabled: true
+    },
+    {
+        id: 'installation_reminder',
+        type: 'sms',
+        trigger: '24h przed terminem montażu',
+        action: 'Wysyła SMS przypominający',
+        recipient: 'Klient',
+        defaultEnabled: true
+    },
+    {
+        id: 'satisfaction_survey',
+        type: 'email',
+        trigger: 'Zakończenie montażu',
+        action: 'Wysyła prośbę o opinię (Google/Facebook)',
+        recipient: 'Klient',
+        defaultEnabled: true
     }
 ];

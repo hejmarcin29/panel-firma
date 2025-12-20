@@ -36,7 +36,8 @@ import {
 } from "../../actions";
 import { type MontageDetailsData } from "../actions";
 import type { Montage, StatusOption } from "../../types";
-import { DEFAULT_MONTAGE_CHECKLIST } from "@/lib/montaze/checklist-shared";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MontageProcessTimeline } from "./montage-process-timeline";
 
 type UserOption = { id: string; name: string | null; email: string };
 
@@ -375,7 +376,20 @@ export function MontageWorkflowTab({
   const materialAlert = getMaterialAlert();
 
   return (
-    <div className="space-y-8">
+  return (
+    <Tabs defaultValue="simple" className="w-full space-y-6">
+        <div className="flex items-center justify-between">
+             <TabsList>
+                <TabsTrigger value="simple">Lista Zadań</TabsTrigger>
+                <TabsTrigger value="timeline">Oś Czasu (Process Hub)</TabsTrigger>
+             </TabsList>
+        </div>
+
+        <TabsContent value="timeline">
+             <MontageProcessTimeline montage={montage} />
+        </TabsContent>
+
+        <TabsContent value="simple" className="space-y-8">
         <Card className="p-6">
             <h3 className="mb-4 text-lg font-semibold">Status Realizacji</h3>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -656,6 +670,7 @@ export function MontageWorkflowTab({
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
-    </div>
+    </TabsContent>
+    </Tabs>
   );
 }

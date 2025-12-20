@@ -50,6 +50,15 @@ Jako AI, masz obowiązek:
 - **Rejestracja:** Każda zaimplementowana automatyzacja musi zostać dodana do widoku ustawień: `/settings?tab=automations`.
 - **Kategoryzacja:** Automatyzacje muszą być przypisane do odpowiednich kategorii (np. Montaże, Zamówienia, Klienci), aby utrzymać porządek w panelu administracyjnym.
 
+## Process Hub & Timeline (Widok Procesowy)
+System posiada zaawansowany widok osi czasu procesu montażu (`MontageProcessTimeline`), który wizualizuje przeszłość, teraźniejszość i przyszłość zlecenia.
+
+**Zasady aktualizacji:**
+1.  **Nowe Statusy:** Jeśli dodajesz nowy status montażu (`MontageStatus`), musisz zaktualizować definicję kroków w konfiguracji Process Hub, aby status ten był poprawnie mapowany na osi czasu.
+2.  **Nowe Automatyzacje:** Jeśli tworzysz nową automatyzację (np. "Wysłanie SMS po X"), dodaj informację o niej do definicji kroku, w którym występuje. Użytkownik musi widzieć na osi czasu, że system wykona tę akcję automatycznie (np. "🤖 System wyśle powiadomienie").
+3.  **Nowe Akcje Użytkownika:** Jeśli dodajesz kluczową akcję (np. "Generowanie Protokołu"), rozważ dodanie jej jako "Checkpoint" na osi czasu, aby było widać, czy została wykonana (np. ✅ Protokół wygenerowany).
+4.  **Aktorzy:** Przy każdym kroku określaj, kto jest "właścicielem" piłeczki (Klient, Biuro, Montażysta, System), aby wizualizacja jasno pokazywała, na kogo czekamy.
+
 ## Instrukcje dla Użytkowników (User Manuals)
 Przy tworzeniu lub modyfikowaniu ról użytkowników (np. Pomiarowiec, Montażysta, Partner), **ZAWSZE** pamiętaj o zapewnieniu im dostępu do instrukcji obsługi w panelu.
 - Każda rola powinna mieć dedykowaną sekcję lub zakładkę "Pomoc" / "Instrukcja".
