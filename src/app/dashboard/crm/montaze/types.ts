@@ -71,6 +71,7 @@ export type Montage = {
 	id: string;
 	clientName: string;
     isCompany?: boolean;
+    isHousingVat?: boolean | null;
     companyName?: string | null;
     nip?: string | null;
 	contactEmail: string | null;
