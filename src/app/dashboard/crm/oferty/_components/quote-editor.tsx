@@ -1,15 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Trash2, Plus, Wand2, Save, Printer, Mail, MoreHorizontal, ArrowLeft, CheckCircle2, Clock } from 'lucide-react';
+import { 
+    Trash2, Plus, Wand2, Save, Printer, Mail, MoreHorizontal, ArrowLeft, 
+    CheckCircle2, Clock, FileText, LayoutTemplate, Calculator, AlertCircle 
+} from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -18,6 +21,8 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
+    DropdownMenuSeparator,
+    DropdownMenuLabel
 } from '@/components/ui/dropdown-menu';
 import Link from 'next/link';
 import type { QuoteItem, QuoteStatus } from '@/lib/db/schema';
@@ -28,6 +33,8 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
+    DialogDescription,
+    DialogFooter
 } from '@/components/ui/dialog';
 import {
     AlertDialog,
@@ -43,10 +50,14 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { updateQuote, sendQuoteEmail, getProductsForQuote, deleteQuote } from '../actions';
 import { FileText as FileTextIcon } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
 const QuotePdfWrapper = dynamic(() => import('./quote-pdf-wrapper'), {
   ssr: false,
-  loading: () => <Button variant="outline" disabled>Ładowanie PDF...</Button>,
+  loading: () => <Button variant="outline" size="sm" disabled>Ładowanie PDF...</Button>,
 });
 
 type ProductAttribute = {
@@ -96,7 +107,6 @@ type QuoteEditorProps = {
             technicalAudit: unknown;
             address: string | null;
         };
-        // New fields
         termsContent?: string | null;
         signatureData?: string | null;
         signedAt?: Date | null;
@@ -130,27 +140,24 @@ export function QuoteEditor({ quote, templates, companyInfo }: QuoteEditorProps)
     const [isDeleting, setIsDeleting] = useState(false);
 
     // Load initial template if terms are empty
-    useState(() => {
-        if (!quote.termsContent && templates.length > 0) {
-             // Try to find default or first
-             // For now just pick first
-             // setSelectedTemplateId(templates[0].id);
-             // setTermsContent(templates[0].content);
+    useEffect(() => {
+        if (!quote.termsContent && templates.length > 0 && !termsContent) {
+             // Optional: Auto-load default template?
+             // For now, we let the user choose.
         }
-    });
+    }, [quote.termsContent, templates, termsContent]);
 
     const handleTemplateChange = (templateId: string) => {
         setSelectedTemplateId(templateId);
         const template = templates.find(t => t.id === templateId);
         if (template) {
             setTermsContent(template.content);
+            toast.success(`Załadowano szablon: ${template.name}`);
         }
     };
 
-
     // Filter products based on montage models
     const filteredProducts = availableProducts.filter(product => {
-        // Check IDs first
         if (quote.montage.panelProductId === product.id) return true;
         if (quote.montage.skirtingProductId === product.id) return true;
 
@@ -159,13 +166,12 @@ export function QuoteEditor({ quote, templates, companyInfo }: QuoteEditorProps)
             quote.montage.skirtingModel
         ].filter(Boolean).map(t => t?.toLowerCase());
 
-        if (searchTerms.length === 0) return true; // Show all if no models specified
+        if (searchTerms.length === 0) return true;
 
         const productName = product.name.toLowerCase();
         return searchTerms.some(term => term && productName.includes(term));
     });
 
-    // If we have filtered results, use them. Otherwise show all (fallback)
     const productsDisplay = filteredProducts.length > 0 ? filteredProducts : availableProducts;
 
     const calculateItemTotal = (item: QuoteItem) => {
@@ -232,8 +238,8 @@ export function QuoteEditor({ quote, templates, companyInfo }: QuoteEditorProps)
                 name: 'Montaż paneli podłogowych',
                 quantity: quote.montage.floorArea,
                 unit: 'm2',
-                priceNet: 25, // Default price
-                vatRate: 0.08, // Service VAT
+                priceNet: 25,
+                vatRate: 0.08,
                 priceGross: 25 * 1.08,
                 totalNet: quote.montage.floorArea * 25,
                 totalGross: quote.montage.floorArea * 25 * 1.08,
@@ -244,25 +250,19 @@ export function QuoteEditor({ quote, templates, companyInfo }: QuoteEditorProps)
         // Import Selected Product (Material)
         if (selectedProduct) {
             const attributes = selectedProduct.attributes as ProductAttribute[];
-            // Check if it's a skirting board (has length attribute)
             const lengthAttr = attributes?.find((a) => a.slug === 'pa_dlugosc');
             
             if (lengthAttr && quote.montage.skirtingLength) {
                 // SKIRTING BOARD LOGIC
                 const quantityMb = quote.montage.skirtingLength;
-                
-                // Add waste (from montage settings or default 5%)
                 const wastePercent = quote.montage.skirtingWaste ?? 5;
                 const quantityMbWithWaste = quantityMb * (1 + wastePercent / 100);
-                
-                // Parse length from attribute (e.g. "2.4 metra")
                 const lengthStr = lengthAttr.options?.[0] || '0';
                 const lengthPerPiece = parseFloat(lengthStr.replace(',', '.').replace(/[^0-9.]/g, ''));
                 
                 if (!isNaN(lengthPerPiece) && lengthPerPiece > 0) {
                     const piecesNeeded = Math.ceil(quantityMbWithWaste / lengthPerPiece);
                     const notes = `(Zapotrzebowanie: ${quantityMbWithWaste.toFixed(2)} mb [zapas ${wastePercent}%], ${piecesNeeded} szt. po ${lengthPerPiece} mb)`;
-                    
                     const priceNet = parseFloat(selectedProduct.price || '0');
 
                     newItems.push({
@@ -280,20 +280,15 @@ export function QuoteEditor({ quote, templates, companyInfo }: QuoteEditorProps)
                     importedCount++;
                 }
             } else if (quote.montage.floorArea) {
-                // PANEL LOGIC (Default)
+                // PANEL LOGIC
                 const attributes = selectedProduct.attributes as ProductAttribute[];
                 let quantity = quote.montage.floorArea;
                 const unit = 'm2';
                 let notes = '';
-
-                // Add waste (from montage settings or default 5%)
                 const wastePercent = quote.montage.panelWaste ?? 5;
                 const quantityWithWaste = quantity * (1 + wastePercent / 100);
-                
-                // Check for package quantity attribute
                 const packageAttr = attributes?.find((a) => a.slug === 'pa_ilosc_opakowanie');
                 
-                // Recalculate packages with waste
                 if (packageAttr && packageAttr.options && packageAttr.options.length > 0) {
                     const packageSize = parseFloat(packageAttr.options[0].replace(',', '.'));
                     if (!isNaN(packageSize) && packageSize > 0) {
@@ -316,7 +311,7 @@ export function QuoteEditor({ quote, templates, companyInfo }: QuoteEditorProps)
                     quantity: Number(quantity.toFixed(2)),
                     unit: unit,
                     priceNet: priceNet,
-                    vatRate: 0.08, // Material VAT
+                    vatRate: 0.08,
                     priceGross: priceNet * 1.08,
                     totalNet: quantity * priceNet,
                     totalGross: quantity * priceNet * 1.08,
@@ -373,7 +368,7 @@ export function QuoteEditor({ quote, templates, companyInfo }: QuoteEditorProps)
                 status,
                 items,
                 notes,
-                termsContent, // Save terms content
+                termsContent,
             });
             toast.success('Wycena zapisana.');
             router.refresh();
@@ -428,6 +423,27 @@ export function QuoteEditor({ quote, templates, companyInfo }: QuoteEditorProps)
         totalGross,
     };
 
+    const getStatusColor = (s: QuoteStatus) => {
+        switch (s) {
+            case 'draft': return 'bg-gray-100 text-gray-800 border-gray-200';
+            case 'sent': return 'bg-blue-100 text-blue-800 border-blue-200';
+            case 'accepted': return 'bg-green-100 text-green-800 border-green-200';
+            case 'rejected': return 'bg-red-100 text-red-800 border-red-200';
+            default: return 'bg-gray-100 text-gray-800';
+        }
+    };
+
+    const getStatusLabel = (s: QuoteStatus) => {
+        switch (s) {
+            case 'draft': return 'Szkic';
+            case 'sent': return 'Wysłana';
+            case 'accepted': return 'Zaakceptowana';
+            case 'rejected': return 'Odrzucona';
+            default: return s;
+        }
+    };
+
+    // --- MOBILE VIEW ---
     if (isMobile) {
         return (
             <div className="space-y-4 pb-48">
@@ -596,12 +612,11 @@ export function QuoteEditor({ quote, templates, companyInfo }: QuoteEditorProps)
                         </div>
 
                         <div className="space-y-2">
-                            <Label>Notatki</Label>
-                            <Textarea 
-                                value={notes} 
-                                onChange={(e) => setNotes(e.target.value)} 
-                                placeholder="Notatki..."
-                                className="min-h-20"
+                            <Label>Warunki (Edycja uproszczona)</Label>
+                            <RichTextEditor 
+                                value={termsContent} 
+                                onChange={setTermsContent} 
+                                placeholder="Wpisz warunki..."
                             />
                         </div>
                     </CardContent>
@@ -613,7 +628,8 @@ export function QuoteEditor({ quote, templates, companyInfo }: QuoteEditorProps)
                         {isSaving ? 'Zapisywanie...' : 'Zapisz zmiany'}
                     </Button>
                 </div>
-
+                
+                {/* Mobile Dialogs */}
                 <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
                     <DialogContent className="max-w-3xl h-[80vh] flex flex-col">
                         <DialogHeader>
@@ -687,340 +703,426 @@ export function QuoteEditor({ quote, templates, companyInfo }: QuoteEditorProps)
         );
     }
 
+    // --- DESKTOP VIEW ---
     return (
-        <div className="space-y-6">
+        <div className="min-h-screen bg-muted/30">
             <style jsx global>{`
                 @media print {
-                    @page { margin: 2cm; }
+                    @page { margin: 1.5cm; }
                     body * { visibility: hidden; }
                     .quote-print-area, .quote-print-area * { visibility: visible; }
                     .quote-print-area { position: absolute; left: 0; top: 0; width: 100%; }
                     .no-print { display: none !important; }
                     .print-full-width { width: 100% !important; max-width: none !important; }
                     .print-border-none { border: none !important; box-shadow: none !important; }
+                    .print-text-black { color: black !important; }
                 }
             `}</style>
 
-            <div className="flex items-center justify-between no-print">
-                <div>
-                    <h2 className="text-lg font-semibold">Edytor Oferty</h2>
-                    <p className="text-sm text-muted-foreground">
-                        Dla: {quote.montage.clientName} ({quote.montage.installationAddress})
-                    </p>
+            {/* Sticky Header */}
+            <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b px-6 py-3 flex items-center justify-between no-print">
+                <div className="flex items-center gap-4">
+                    <Button variant="ghost" size="icon" asChild>
+                        <Link href="/dashboard/crm/oferty">
+                            <ArrowLeft className="w-5 h-5" />
+                        </Link>
+                    </Button>
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <h1 className="text-xl font-bold tracking-tight">
+                                Oferta {quote.number || `#${quote.id.slice(0, 8)}`}
+                            </h1>
+                            <Badge variant="outline" className={cn("capitalize", getStatusColor(status))}>
+                                {getStatusLabel(status)}
+                            </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground flex items-center gap-2">
+                            {quote.montage.clientName} 
+                            <span className="text-muted-foreground/50">•</span> 
+                            {new Date(quote.createdAt).toLocaleDateString('pl-PL')}
+                        </p>
+                    </div>
                 </div>
-                <div className="flex gap-2">
-                    <Button variant="destructive" onClick={() => setShowDeleteDialog(true)}>
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Usuń
+                <div className="flex items-center gap-2">
+                    <div className="mr-4 text-right hidden xl:block">
+                        <div className="text-xs text-muted-foreground uppercase font-semibold">Wartość Brutto</div>
+                        <div className="text-lg font-bold text-primary">{formatCurrency(totalGross)}</div>
+                    </div>
+                    <Separator orientation="vertical" className="h-8 mr-2 hidden xl:block" />
+                    
+                    <Button variant="outline" onClick={handleSmartImport} disabled={isImporting}>
+                        <Wand2 className="w-4 h-4 mr-2 text-purple-600" />
+                        Import z Pomiaru
                     </Button>
-                    <QuotePdfWrapper quote={currentQuote} companyInfo={companyInfo} />
-                    <Button variant="outline" onClick={handlePrint}>
-                        <Printer className="w-4 h-4 mr-2" />
-                        Drukuj
-                    </Button>
-                    <Button variant="outline" onClick={handleSendEmail} disabled={isSending}>
-                        <Mail className="w-4 h-4 mr-2" />
-                        {isSending ? 'Wysyłanie...' : 'Wyślij Email'}
-                    </Button>
-                    <Button variant="outline" onClick={handleSmartImport}>
-                        <Wand2 className="w-4 h-4 mr-2" />
-                        Inteligentny Import
-                    </Button>
-                    <Button onClick={handleSave} disabled={isSaving}>
+                    
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline">
+                                <MoreHorizontal className="w-4 h-4 mr-2" />
+                                Więcej
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuLabel>Akcje</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={handlePrint}>
+                                <Printer className="w-4 h-4 mr-2" /> Drukuj
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleSendEmail} disabled={isSending}>
+                                <Mail className="w-4 h-4 mr-2" /> Wyślij Email
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                                className="text-destructive focus:text-destructive" 
+                                onClick={() => setShowDeleteDialog(true)}
+                            >
+                                <Trash2 className="w-4 h-4 mr-2" /> Usuń ofertę
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <QuotePdfWrapper 
+                        quote={currentQuote} 
+                        companyInfo={companyInfo}
+                        render={(loading) => (
+                            <Button variant="outline" disabled={loading}>
+                                <FileTextIcon className="w-4 h-4 mr-2" />
+                                {loading ? 'Generowanie...' : 'PDF'}
+                            </Button>
+                        )}
+                    />
+
+                    <Button onClick={handleSave} disabled={isSaving} className="min-w-[120px]">
                         <Save className="w-4 h-4 mr-2" />
-                        Zapisz
+                        {isSaving ? 'Zapisywanie...' : 'Zapisz'}
                     </Button>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 quote-print-area">
-                <div className="lg:col-span-2 space-y-6">
-                    <Card className="print-full-width print-border-none">
-                    <CardHeader className="print:hidden flex flex-row items-center justify-between">
-                        <CardTitle>Pozycje</CardTitle>
-                        <div className="flex gap-2">
-                            <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
-                                <DialogTrigger asChild>
-                                    <Button variant="outline" onClick={handleSmartImport} disabled={isImporting}>
-                                        <Wand2 className="w-4 h-4 mr-2" />
-                                        Inteligentny Import
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-3xl h-[80vh] flex flex-col">
-                                    <DialogHeader>
-                                        <DialogTitle>Inteligentny Import z Pomiaru</DialogTitle>
-                                    </DialogHeader>
-                                    <ScrollArea className="flex-1 border rounded-md p-2">
-                                        <div className="space-y-2">
-                                            <Button
-                                                variant="ghost"
-                                                className="w-full justify-start font-normal"
-                                                onClick={() => executeSmartImport(undefined)}
-                                            >
-                                                <div className="flex flex-col items-start text-left">
-                                                    <span className="font-medium">Tylko usługi (bez materiału)</span>
-                                                    <span className="text-xs text-muted-foreground">
-                                                        Importuje tylko montaż i listwy na podstawie pomiaru
-                                                    </span>
-                                                </div>
-                                            </Button>
-                                            {productsDisplay.map((product) => (
-                                                <Button
-                                                    key={product.id}
-                                                    variant="ghost"
-                                                    className="w-full justify-start h-auto py-3"
-                                                    onClick={() => executeSmartImport(product)}
-                                                >
-                                                    <div className="flex flex-col items-start text-left w-full">
-                                                        <div className="flex justify-between w-full">
-                                                            <span className="font-medium">{product.name}</span>
-                                                            <span className="font-mono text-sm">{product.price} zł</span>
-                                                        </div>
-                                                        <div className="flex gap-2 mt-1">
-                                                            {getProductAttribute(product, 'pa_ilosc_opakowanie') && (
-                                                                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
-                                                                    Paczka: {getProductAttribute(product, 'pa_ilosc_opakowanie')?.options[0]} m²
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </Button>
-                                            ))}
-                                        </div>
-                                    </ScrollArea>
-                                </DialogContent>
-                            </Dialog>
-                            <Button onClick={addItem} variant="outline">
-                                <Plus className="w-4 h-4 mr-2" />
-                                Dodaj pozycję
-                            </Button>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="print:p-0">
-                        <div className="print:mb-8 hidden print:block">
-                            <h1 className="text-2xl font-bold mb-2">Wycena #{quote.id.slice(0, 8)}</h1>
-                            <div className="grid grid-cols-2 gap-8 mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-8 p-6 max-w-[1600px] mx-auto">
+                
+                {/* Left Column: The Document */}
+                <div className="space-y-6 quote-print-area">
+                    <Card className="shadow-sm border-border/60 print-border-none">
+                        <CardContent className="p-8 min-h-[800px] print:p-0">
+                            
+                            {/* Document Header */}
+                            <div className="flex justify-between items-start mb-12 print:mb-8">
                                 <div>
-                                    <h3 className="font-semibold text-gray-500 text-sm uppercase mb-1">Sprzedawca</h3>
-                                    <p>Twoja Firma Sp. z o.o.</p>
-                                    <p>ul. Przykładowa 123</p>
-                                    <p>00-000 Warszawa</p>
-                                    <p>NIP: 123-456-78-90</p>
+                                    <div className="text-2xl font-bold text-primary mb-2">{companyInfo.name}</div>
+                                    <div className="text-sm text-muted-foreground space-y-1">
+                                        <p>{companyInfo.address}</p>
+                                        <p>NIP: {companyInfo.nip}</p>
+                                    </div>
                                 </div>
                                 <div className="text-right">
-                                    <h3 className="font-semibold text-gray-500 text-sm uppercase mb-1">Nabywca</h3>
-                                    <p>{quote.montage.clientName}</p>
-                                    <p>{quote.montage.installationAddress}</p>
+                                    <div className="text-sm text-muted-foreground uppercase tracking-wider font-semibold mb-2">Nabywca</div>
+                                    <div className="font-medium text-lg">{quote.montage.clientName}</div>
+                                    <div className="text-sm text-muted-foreground space-y-1">
+                                        <p>{quote.montage.installationAddress}</p>
+                                        <p>{quote.montage.contactEmail}</p>
+                                        <p>{quote.montage.contactPhone}</p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="overflow-x-auto">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="min-w-[200px]">Nazwa</TableHead>
-                                        <TableHead className="w-20 text-right">Ilość</TableHead>
-                                        <TableHead className="w-[60px]">J.m.</TableHead>
-                                        <TableHead className="w-[100px] text-right">Cena Netto</TableHead>
-                                        <TableHead className="w-20 text-right">VAT</TableHead>
-                                        <TableHead className="w-[120px] text-right">Wartość Brutto</TableHead>
-                                        <TableHead className="w-[50px] no-print"></TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {items.map((item, index) => (
-                                        <TableRow key={item.id}>
-                                            <TableCell>
-                                                <Input 
-                                                    value={item.name} 
-                                                    onChange={(e) => updateItem(index, 'name', e.target.value)}
-                                                    placeholder="Nazwa usługi/produktu"
-                                                    className="print:border-none print:p-0 print:h-auto"
-                                                />
-                                            </TableCell>
-                                            <TableCell>
-                                                <Input 
-                                                    type="number" 
-                                                    value={item.quantity} 
-                                                    onChange={(e) => updateItem(index, 'quantity', parseFloat(e.target.value))}
-                                                    className="text-right print:border-none print:p-0 print:h-auto"
-                                                />
-                                            </TableCell>
-                                            <TableCell>
-                                                <Input 
-                                                    value={item.unit} 
-                                                    onChange={(e) => updateItem(index, 'unit', e.target.value)}
-                                                    className="print:border-none print:p-0 print:h-auto"
-                                                />
-                                            </TableCell>
-                                            <TableCell>
-                                                <Input 
-                                                    type="number" 
-                                                    value={item.priceNet} 
-                                                    onChange={(e) => updateItem(index, 'priceNet', parseFloat(e.target.value))}
-                                                    className="text-right print:border-none print:p-0 print:h-auto"
-                                                />
-                                            </TableCell>
-                                            <TableCell>
-                                                <Select 
-                                                    value={item.vatRate.toString()} 
-                                                    onValueChange={(v) => updateItem(index, 'vatRate', parseFloat(v))}
-                                                >
-                                                    <SelectTrigger className="print:border-none print:p-0 print:h-auto print:justify-end">
-                                                        <SelectValue />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="0.23">23%</SelectItem>
-                                                        <SelectItem value="0.08">8%</SelectItem>
-                                                        <SelectItem value="0">0%</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </TableCell>
-                                            <TableCell className="text-right font-medium">
-                                                {formatCurrency(item.totalGross)}
-                                            </TableCell>
-                                            <TableCell className="no-print">
-                                                <Button variant="ghost" size="icon" onClick={() => removeItem(index)}>
-                                                    <Trash2 className="w-4 h-4 text-destructive" />
-                                                </Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </div>
-                        <Button variant="outline" className="mt-4 w-full no-print" onClick={addItem}>
-                            <Plus className="w-4 h-4 mr-2" /> Dodaj pozycję
-                        </Button>
-
-                        <div className="mt-8 flex justify-end print:mt-4">
-                            <div className="w-1/2 space-y-2">
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-muted-foreground">Suma Netto:</span>
-                                    <span className="font-medium">{formatCurrency(totalNet)}</span>
+                            <div className="mb-8">
+                                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                                    <LayoutTemplate className="w-5 h-5 text-muted-foreground" />
+                                    Pozycje Oferty
+                                </h2>
+                                <div className="rounded-md border">
+                                    <Table>
+                                        <TableHeader className="bg-muted/50">
+                                            <TableRow>
+                                                <TableHead className="w-[40%]">Nazwa / Opis</TableHead>
+                                                <TableHead className="text-right w-[10%]">Ilość</TableHead>
+                                                <TableHead className="w-[10%]">J.m.</TableHead>
+                                                <TableHead className="text-right w-[15%]">Cena Netto</TableHead>
+                                                <TableHead className="text-right w-[10%]">VAT</TableHead>
+                                                <TableHead className="text-right w-[15%]">Wartość</TableHead>
+                                                <TableHead className="w-[50px] no-print"></TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {items.map((item, index) => (
+                                                <TableRow key={item.id} className="group">
+                                                    <TableCell className="align-top">
+                                                        <Textarea 
+                                                            value={item.name} 
+                                                            onChange={(e) => updateItem(index, 'name', e.target.value)}
+                                                            placeholder="Nazwa usługi/produktu"
+                                                            className="min-h-[2.5rem] resize-none border-transparent focus:border-input bg-transparent px-0 py-1 font-medium"
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell className="align-top">
+                                                        <Input 
+                                                            type="number" 
+                                                            value={item.quantity} 
+                                                            onChange={(e) => updateItem(index, 'quantity', parseFloat(e.target.value))}
+                                                            className="text-right border-transparent focus:border-input bg-transparent px-0 h-9"
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell className="align-top">
+                                                        <Input 
+                                                            value={item.unit} 
+                                                            onChange={(e) => updateItem(index, 'unit', e.target.value)}
+                                                            className="border-transparent focus:border-input bg-transparent px-0 h-9"
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell className="align-top">
+                                                        <Input 
+                                                            type="number" 
+                                                            value={item.priceNet} 
+                                                            onChange={(e) => updateItem(index, 'priceNet', parseFloat(e.target.value))}
+                                                            className="text-right border-transparent focus:border-input bg-transparent px-0 h-9 font-mono"
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell className="align-top text-right">
+                                                        <Select 
+                                                            value={item.vatRate.toString()} 
+                                                            onValueChange={(v) => updateItem(index, 'vatRate', parseFloat(v))}
+                                                        >
+                                                            <SelectTrigger className="border-transparent focus:border-input bg-transparent px-0 h-9 justify-end">
+                                                                <SelectValue />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="0.23">23%</SelectItem>
+                                                                <SelectItem value="0.08">8%</SelectItem>
+                                                                <SelectItem value="0">0%</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </TableCell>
+                                                    <TableCell className="align-top text-right font-medium font-mono pt-3">
+                                                        {formatCurrency(item.totalGross)}
+                                                    </TableCell>
+                                                    <TableCell className="align-top no-print">
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="icon" 
+                                                            className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 text-muted-foreground hover:text-destructive"
+                                                            onClick={() => removeItem(index)}
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                            {items.length === 0 && (
+                                                <TableRow>
+                                                    <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                                                        Brak pozycji. Kliknij "Dodaj pozycję" lub użyj importu.
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
+                                        </TableBody>
+                                    </Table>
                                 </div>
-                                <div className="flex justify-between text-lg font-bold border-t pt-2">
-                                    <span>Suma Brutto:</span>
-                                    <span>{formatCurrency(totalGross)}</span>
+                                <div className="mt-2 no-print">
+                                    <Button variant="ghost" size="sm" onClick={addItem} className="text-muted-foreground hover:text-primary">
+                                        <Plus className="w-4 h-4 mr-2" /> Dodaj wiersz
+                                    </Button>
                                 </div>
                             </div>
-                        </div>
-                    </CardContent>
-                </Card>
 
-                <Card className="print-full-width print-border-none no-print">
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <CardTitle>Warunki Prawne (Umowa)</CardTitle>
-                        <div className="w-[250px]">
-                             <Select value={selectedTemplateId} onValueChange={handleTemplateChange}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Wybierz szablon warunków..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {templates?.map((template) => (
-                                        <SelectItem key={template.id} value={template.id}>
-                                            {template.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-2">
-                            <Label>Treść warunków (widoczna dla klienta)</Label>
-                            <Textarea 
-                                value={termsContent} 
-                                onChange={(e) => setTermsContent(e.target.value)} 
-                                placeholder="Wybierz szablon powyżej lub wpisz własne warunki..."
-                                className="min-h-[300px] font-mono text-sm"
-                            />
-                            <p className="text-xs text-muted-foreground">
-                                To jest treść, którą klient zobaczy i zaakceptuje. Możesz używać znaczników HTML/Markdown.
-                            </p>
-                        </div>
-                    </CardContent>
-                </Card>
-                </div>
+                            <div className="flex justify-end mb-12">
+                                <div className="w-1/2 lg:w-1/3 space-y-3">
+                                    <div className="flex justify-between text-sm text-muted-foreground">
+                                        <span>Suma Netto</span>
+                                        <span>{formatCurrency(totalNet)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm text-muted-foreground">
+                                        <span>Podatek VAT</span>
+                                        <span>{formatCurrency(totalGross - totalNet)}</span>
+                                    </div>
+                                    <Separator />
+                                    <div className="flex justify-between text-xl font-bold text-primary">
+                                        <span>Do zapłaty</span>
+                                        <span>{formatCurrency(totalGross)}</span>
+                                    </div>
+                                </div>
+                            </div>
 
-                <div className="space-y-6 print:hidden">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Podsumowanie</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">Suma Netto:</span>
-                                <span className="font-medium">{formatCurrency(totalNet)}</span>
-                            </div>
-                            <div className="flex justify-between text-lg font-bold">
-                                <span>Suma Brutto:</span>
-                                <span>{formatCurrency(totalGross)}</span>
-                            </div>
-                            
-                            <div className="pt-4 border-t space-y-4">
-                                <div>
-                                    <Label>Status Oferty</Label>
-                                    <Select value={status} onValueChange={(v: QuoteStatus) => setStatus(v)}>
-                                        <SelectTrigger>
-                                            <SelectValue />
+                            <Separator className="my-8" />
+
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between no-print">
+                                    <h2 className="text-xl font-semibold flex items-center gap-2">
+                                        <FileText className="w-5 h-5 text-muted-foreground" />
+                                        Warunki Umowy
+                                    </h2>
+                                    <Select value={selectedTemplateId} onValueChange={handleTemplateChange}>
+                                        <SelectTrigger className="w-[250px]">
+                                            <SelectValue placeholder="Wybierz szablon..." />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="draft">Szkic</SelectItem>
-                                            <SelectItem value="sent">Wysłana</SelectItem>
-                                            <SelectItem value="accepted">Zaakceptowana</SelectItem>
-                                            <SelectItem value="rejected">Odrzucona</SelectItem>
+                                            {templates?.map((template) => (
+                                                <SelectItem key={template.id} value={template.id}>
+                                                    {template.name}
+                                                </SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                 </div>
-
-                                <div>
-                                    <Label>Status Podpisu</Label>
-                                    <div className="mt-1.5">
-                                        {quote.signedAt ? (
-                                            <div className="flex items-center gap-2 text-sm font-medium p-2 rounded-md border bg-green-50 text-green-700 border-green-200">
-                                                <CheckCircle2 className="w-4 h-4" />
-                                                <div>
-                                                    <div>Podpisana przez klienta</div>
-                                                    <div className="text-xs font-normal opacity-90">
-                                                        {new Date(quote.signedAt).toLocaleDateString('pl-PL')}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center gap-2 text-sm font-medium p-2 rounded-md border bg-orange-50 text-orange-700 border-orange-200">
-                                                <Clock className="w-4 h-4" />
-                                                <span>Oczekuje na podpis</span>
-                                            </div>
-                                        )}
-                                    </div>
+                                
+                                <div className="min-h-[300px] border rounded-md p-1">
+                                    <RichTextEditor 
+                                        value={termsContent} 
+                                        onChange={setTermsContent} 
+                                        placeholder="Tutaj wpisz treść umowy lub wybierz szablon..."
+                                    />
                                 </div>
+                            </div>
+
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* Right Column: Controls & Summary */}
+                <div className="space-y-6 no-print">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Calculator className="w-5 h-5 text-primary" />
+                                Podsumowanie
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div className="space-y-2">
+                                <Label>Status Oferty</Label>
+                                <Select value={status} onValueChange={(v: QuoteStatus) => setStatus(v)}>
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="draft">Szkic</SelectItem>
+                                        <SelectItem value="sent">Wysłana</SelectItem>
+                                        <SelectItem value="accepted">Zaakceptowana</SelectItem>
+                                        <SelectItem value="rejected">Odrzucona</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label>Status Podpisu</Label>
+                                {quote.signedAt ? (
+                                    <div className="flex items-center gap-3 p-3 rounded-md border bg-green-50/50 border-green-200 text-green-700">
+                                        <CheckCircle2 className="w-5 h-5 shrink-0" />
+                                        <div>
+                                            <div className="font-medium text-sm">Podpisana</div>
+                                            <div className="text-xs opacity-80">
+                                                {new Date(quote.signedAt).toLocaleDateString('pl-PL')}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-3 p-3 rounded-md border bg-orange-50/50 border-orange-200 text-orange-700">
+                                        <Clock className="w-5 h-5 shrink-0" />
+                                        <div>
+                                            <div className="font-medium text-sm">Oczekuje na podpis</div>
+                                            <div className="text-xs opacity-80">Klient nie podpisał jeszcze oferty</div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </CardContent>
                     </Card>
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>Notatki</CardTitle>
+                            <CardTitle className="text-base">Notatki Wewnętrzne</CardTitle>
+                            <CardDescription>Widoczne tylko dla pracowników</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Textarea 
                                 value={notes} 
                                 onChange={(e) => setNotes(e.target.value)} 
-                                placeholder="Notatki do oferty..."
-                                className="min-h-[150px]"
+                                placeholder="Wpisz notatki..."
+                                className="min-h-[150px] resize-none"
                             />
                         </CardContent>
                     </Card>
-                </div>
 
-                {/* Print-only notes section */}
-                <div className="hidden print:block mt-8 pt-8 border-t">
-                    <h3 className="font-bold mb-2">Uwagi:</h3>
-                    <p className="whitespace-pre-wrap text-sm">{notes}</p>
+                    <Card className="border-destructive/20">
+                        <CardHeader>
+                            <CardTitle className="text-base text-destructive flex items-center gap-2">
+                                <AlertCircle className="w-4 h-4" />
+                                Strefa Niebezpieczna
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Button 
+                                variant="destructive" 
+                                className="w-full" 
+                                onClick={() => setShowDeleteDialog(true)}
+                            >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Usuń Ofertę
+                            </Button>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
+
+            {/* Dialogs */}
+            <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+                <DialogContent className="max-w-3xl h-[80vh] flex flex-col">
+                    <DialogHeader>
+                        <DialogTitle>Inteligentny Import z Pomiaru</DialogTitle>
+                        <DialogDescription>
+                            Wybierz produkt, aby automatycznie obliczyć zapotrzebowanie na podstawie wymiarów z pomiaru.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <ScrollArea className="flex-1 border rounded-md p-2 mt-4">
+                        <div className="space-y-2">
+                            <Button
+                                variant="ghost"
+                                className="w-full justify-start font-normal p-4 h-auto hover:bg-accent/50"
+                                onClick={() => executeSmartImport(undefined)}
+                            >
+                                <div className="flex flex-col items-start text-left">
+                                    <span className="font-semibold text-primary">Tylko Usługi (Bez materiału)</span>
+                                    <span className="text-sm text-muted-foreground mt-1">
+                                        Dodaje pozycje montażu paneli i listew na podstawie metrażu ({quote.montage.floorArea} m²).
+                                    </span>
+                                </div>
+                            </Button>
+                            
+                            <Separator className="my-2" />
+                            
+                            {productsDisplay.map((product) => (
+                                <Button
+                                    key={product.id}
+                                    variant="ghost"
+                                    className="w-full justify-start font-normal h-auto p-4 hover:bg-accent/50"
+                                    onClick={() => executeSmartImport(product)}
+                                >
+                                    <div className="flex flex-col items-start text-left w-full">
+                                        <div className="flex justify-between w-full items-center">
+                                            <span className="font-semibold">{product.name}</span>
+                                            <Badge variant="secondary">{product.price} zł</Badge>
+                                        </div>
+                                        <div className="flex gap-2 mt-2">
+                                            {quote.montage.panelProductId === product.id && (
+                                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                                    Wybrany w pomiarze (Panele)
+                                                </Badge>
+                                            )}
+                                            {quote.montage.skirtingProductId === product.id && (
+                                                <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                                                    Wybrany w pomiarze (Listwy)
+                                                </Badge>
+                                            )}
+                                        </div>
+                                    </div>
+                                </Button>
+                            ))}
+                        </div>
+                    </ScrollArea>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setImportDialogOpen(false)}>Anuluj</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
                 <AlertDialogContent>

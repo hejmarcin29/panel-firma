@@ -170,6 +170,18 @@ interface QuotePdfProps {
     };
 }
 
+// Simple HTML stripper for PDF text
+const stripHtml = (html: string) => {
+    if (!html) return '';
+    // Replace block tags with newlines
+    let text = html.replace(/<\/p>/g, '\n').replace(/<br\s*\/?>/g, '\n').replace(/<\/div>/g, '\n');
+    // Remove all other tags
+    text = text.replace(/<[^>]+>/g, '');
+    // Decode entities (basic ones)
+    text = text.replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+    return text.trim();
+};
+
 export const QuotePdf = ({ quote, companyInfo }: QuotePdfProps) => (
     <Document>
         <Page size="A4" style={styles.page}>
@@ -254,7 +266,7 @@ export const QuotePdf = ({ quote, companyInfo }: QuotePdfProps) => (
             {quote.termsContent && (
                 <View style={styles.terms}>
                     <Text style={styles.sectionTitle}>Warunki Współpracy</Text>
-                    <Text style={styles.termsText}>{quote.termsContent}</Text>
+                    <Text style={styles.termsText}>{stripHtml(quote.termsContent)}</Text>
                 </View>
             )}
 
