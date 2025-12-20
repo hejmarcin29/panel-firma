@@ -44,9 +44,7 @@ export async function getUserCalendarClient(userId: string) {
 
     const clientId = await getAppSetting(appSettingKeys.googleOAuthClientId);
     const clientSecret = await getAppSetting(appSettingKeys.googleOAuthClientSecret);
-    // Use dynamic base URL if possible, but here we are in a library function
-    // Ideally we should pass the base URL or use a default
-    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'https://b2b.primepodloga.pl'}/api/auth/google/callback`;
+    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/google/callback`;
 
     if (!clientId || !clientSecret) {
         console.error('Missing Google OAuth credentials in settings');

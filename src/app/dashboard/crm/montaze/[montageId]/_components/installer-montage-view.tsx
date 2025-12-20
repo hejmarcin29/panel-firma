@@ -30,6 +30,7 @@ import { MontageTasksTab } from "./montage-tasks-tab";
 import { MontageMeasurementTab } from "../../_components/montage-measurement-tab";
 import { MontageClientCard } from "./montage-client-card"; // Reusing for edit capabilities if needed
 import { MontageMaterialCard } from "./montage-material-card";
+import { MeasurementScheduler } from "./measurement-scheduler";
 import type { Montage, MontageLog } from "../../types";
 import type { UserRole } from "@/lib/db/schema";
 
@@ -152,29 +153,12 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
                             <CardContent>
                                 {isMeasurementStage && (
                                     <div className="space-y-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-blue-100 text-blue-600 rounded-full">
-                                                <Calendar className="w-6 h-6" />
-                                            </div>
-                                            <div>
-                                                <h3 className="font-bold text-lg">Umów / Wykonaj Pomiar</h3>
-                                                <p className="text-sm text-muted-foreground">
-                                                    {montage.measurementDate 
-                                                        ? `Zaplanowano: ${format(new Date(montage.measurementDate), "dd.MM.yyyy", { locale: pl })}`
-                                                        : "Termin nieustalony"}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <Separator />
-                                        <p className="text-sm">
-                                            1. Zadzwoń do klienta i ustal termin.<br/>
-                                            2. Wpisz datę w zakładce &quot;Info&quot;.<br/>
-                                            3. Po wizycie uzupełnij zakładkę &quot;Pomiar&quot;.
-                                        </p>
-                                        <Button className="w-full" onClick={() => setActiveTab('measurement')}>
-                                            Przejdź do Formularza Pomiaru
-                                            <ChevronRight className="ml-2 w-4 h-4" />
-                                        </Button>
+                                        <MeasurementScheduler 
+                                            montageId={montage.id}
+                                            currentDate={montage.measurementDate ? new Date(montage.measurementDate as string | number | Date) : null}
+                                            clientPhone={montage.contactPhone}
+                                            onSuccess={() => setActiveTab('measurement')}
+                                        />
                                     </div>
                                 )}
 
