@@ -68,7 +68,7 @@ export type MontageStatus = string;
 export type LogisticsStatus = (typeof logisticsStatuses)[number];
 export type CustomerSource = (typeof customerSources)[number];
 export type MontageMaterialStatus = 'none' | 'ordered' | 'in_stock' | 'delivered';
-export type MontageMaterialClaimType = 'installer_pickup' | 'company_delivery' | 'courier' | 'client_pickup';
+export type MontageMaterialClaimType = 'installer_pickup' | 'company_delivery' | 'courier' | 'client_pickup' | 'client_supply';
 export type MontageInstallerStatus = 'none' | 'informed' | 'confirmed';
 
 export type InstallerProfile = {

@@ -86,6 +86,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
   const [additionalWorkDescription, setAdditionalWorkDescription] = useState(montage.measurementAdditionalWorkDescription || '');
   const [additionalMaterials, setAdditionalMaterials] = useState(montage.measurementAdditionalMaterials || '');
   const [separateSkirting, setSeparateSkirting] = useState(montage.measurementSeparateSkirting || false);
+  const [skirtingClientSupply, setSkirtingClientSupply] = useState(montage.skirtingMaterialClaimType === 'client_supply');
   const [isHousingVat, setIsHousingVat] = useState(montage.isHousingVat || false);
 
   const [additionalInfo, setAdditionalInfo] = useState(montage.additionalInfo || '');
@@ -133,6 +134,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
     setAdditionalWorkDescription(montage.measurementAdditionalWorkDescription || '');
     setAdditionalMaterials(montage.measurementAdditionalMaterials || '');
     setSeparateSkirting(montage.measurementSeparateSkirting || false);
+    setSkirtingClientSupply(montage.skirtingMaterialClaimType === 'client_supply');
     setAdditionalInfo(montage.additionalInfo || '');
     setMeasurementDate(
       montage.measurementDate 
@@ -147,7 +149,9 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
         from: montage.scheduledSkirtingInstallationAt ? new Date(montage.scheduledSkirtingInstallationAt) : undefined,
         to: montage.scheduledSkirtingInstallationEndAt ? new Date(montage.scheduledSkirtingInstallationEndAt) : undefined,
     });
-    setIncludeSkirting(!!(montage.skirtingLength && parseFloat(montage.skirtingLength.toString()) > 0));
+    if (montage.skirtingLength && parseFloat(montage.skirtingLength.toString()) > 0) {
+        setIncludeSkirting(true);
+    }
   }, [montage]);
 
   const technicalAudit = montage.technicalAudit as unknown as TechnicalAuditData | null;
@@ -176,6 +180,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
           measurementAdditionalWorkDescription: additionalWorkDescription,
           measurementAdditionalMaterials: additionalMaterials,
           measurementSeparateSkirting: includeSkirting ? separateSkirting : false,
+          skirtingClientSupply: includeSkirting ? skirtingClientSupply : false,
           isHousingVat,
           additionalInfo,
           sketchUrl: sketchDataUrl,
@@ -210,6 +215,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
     additionalWorkDescription,
     additionalMaterials,
     separateSkirting,
+    skirtingClientSupply,
     isHousingVat,
     additionalInfo,
     sketchDataUrl,
@@ -791,6 +797,16 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                         </span>
                     </div>
                     
+                    <div className="pt-2 border-t flex items-center space-x-2">
+                        <Checkbox 
+                            disabled={isReadOnly}
+                            id="skirtingClientSupply" 
+                            checked={skirtingClientSupply} 
+                            onCheckedChange={(checked) => setSkirtingClientSupply(checked as boolean)} 
+                        />
+                        <Label htmlFor="skirtingClientSupply" className="text-sm font-medium">Listwy po stronie klienta</Label>
+                    </div>
+
                     <div className="pt-2 border-t flex items-center space-x-2">
                         <Checkbox 
                             disabled={isReadOnly}

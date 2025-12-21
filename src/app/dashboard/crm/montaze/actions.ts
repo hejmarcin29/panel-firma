@@ -1454,6 +1454,7 @@ export async function updateMontageMeasurement({
     measurementAdditionalMaterials?: string | null;
     measurementSeparateSkirting?: boolean;
     isHousingVat?: boolean;
+    skirtingClientSupply?: boolean;
 }) {
 	await requireUser();
 
@@ -1475,6 +1476,7 @@ export async function updateMontageMeasurement({
 			floorDetails,
             measurementSeparateSkirting,
             isHousingVat,
+            skirtingMaterialClaimType: skirtingClientSupply ? 'client_supply' : undefined,
 			skirtingLength,
 			skirtingDetails,
 			panelModel,
