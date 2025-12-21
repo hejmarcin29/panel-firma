@@ -50,7 +50,7 @@ import { cn } from '@/lib/utils';
 import type { Montage, MeasurementMaterialItem } from '../types';
 import { updateMontageMeasurement, addMontageTask, toggleMontageTask } from '../actions';
 
-import { Loader2, Check, Upload, FileIcon, ExternalLink, Trash2, Info } from 'lucide-react';
+import { Loader2, Check, Upload, FileIcon, ExternalLink, Trash2, Info, Search } from 'lucide-react';
 
 import { ProductSelectorModal } from './product-selector-modal';
 import { AuditForm } from './technical/audit-form';
@@ -141,6 +141,8 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
 
   const [isPanelSelectorOpen, setIsPanelSelectorOpen] = useState(false);
   const [isSkirtingSelectorOpen, setIsSkirtingSelectorOpen] = useState(false);
+  const [isAccessorySelectorOpen, setIsAccessorySelectorOpen] = useState(false);
+  const [currentAccessoryIndex, setCurrentAccessoryIndex] = useState<number | null>(null);
   const [includeSkirting, setIncludeSkirting] = useState(!!(montage.skirtingLength && parseFloat(montage.skirtingLength.toString()) > 0));
 
   useEffect(() => {
@@ -717,17 +719,6 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                             </Button>
                         </div>
                     </div>
-                    <div className="space-y-1">
-                        <Label htmlFor="panelAdditionalMaterials" className="text-xs text-muted-foreground">Dodatkowe (podkład, folia...)</Label>
-                        <Input
-                        id="panelAdditionalMaterials"
-                        placeholder="np. podkład 5mm, folia paroizolacyjna"
-                        value={panelAdditionalMaterials}
-                        disabled={isReadOnly}
-                        onChange={(e) => setPanelAdditionalMaterials(e.target.value)}
-                        className="h-8 text-sm"
-                        />
-                    </div>
                 </div>
 
                 <div className="pt-2 border-t flex justify-between items-center">
@@ -835,16 +826,30 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                                 <div key={item.id} className="grid grid-cols-1 gap-3 p-3 border rounded-md bg-muted/20">
                                     <div className="flex items-start gap-2">
                                         <div className="flex-1 space-y-2">
-                                            <Input
-                                                placeholder="Co potrzeba? (np. Klej montażowy)"
-                                                value={item.name}
-                                                disabled={isReadOnly}
-                                                onChange={(e) => {
-                                                    const newItems = [...additionalMaterials];
-                                                    newItems[index].name = e.target.value;
-                                                    setAdditionalMaterials(newItems);
-                                                }}
-                                            />
+                                            <div className="flex gap-2">
+                                                <Input
+                                                    placeholder="Co potrzeba? (np. Klej montażowy)"
+                                                    value={item.name}
+                                                    disabled={isReadOnly}
+                                                    onChange={(e) => {
+                                                        const newItems = [...additionalMaterials];
+                                                        newItems[index].name = e.target.value;
+                                                        setAdditionalMaterials(newItems);
+                                                    }}
+                                                />
+                                                <Button
+                                                    variant="outline"
+                                                    size="icon"
+                                                    disabled={isReadOnly}
+                                                    onClick={() => {
+                                                        setCurrentAccessoryIndex(index);
+                                                        setIsAccessorySelectorOpen(true);
+                                                    }}
+                                                    title="Wybierz z bazy"
+                                                >
+                                                    <Search className="h-4 w-4" />
+                                                </Button>
+                                            </div>
                                             <div className="flex gap-2">
                                                 <Input
                                                     placeholder="Ilość"
@@ -988,17 +993,6 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                                     Wybierz
                                 </Button>
                             </div>
-                        </div>
-                        <div className="space-y-1">
-                            <Label htmlFor="skirtingAdditionalMaterials" className="text-xs text-muted-foreground">Dodatkowe (klej, narożniki...)</Label>
-                            <Input
-                            id="skirtingAdditionalMaterials"
-                            placeholder="np. klej montażowy, narożniki wew."
-                            value={skirtingAdditionalMaterials}
-                            disabled={isReadOnly}
-                            onChange={(e) => setSkirtingAdditionalMaterials(e.target.value)}
-                            className="h-8 text-sm"
-                            />
                         </div>
                     </div>
 
@@ -1294,6 +1288,24 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                     setIsSkirtingSelectorOpen(false);
                 }}
                 type="skirting"
+            />
+
+            <ProductSelectorModal
+                isOpen={isAccessorySelectorOpen}
+                onClose={() => {
+                    setIsAccessorySelectorOpen(false);
+                    setCurrentAccessoryIndex(null);
+                }}
+                onSelect={(product) => {
+                    if (currentAccessoryIndex !== null) {
+                        const newItems = [...additionalMaterials];
+                        newItems[currentAccessoryIndex].name = product.name;
+                        setAdditionalMaterials(newItems);
+                    }
+                    setIsAccessorySelectorOpen(false);
+                    setCurrentAccessoryIndex(null);
+                }}
+                type="accessory"
             />
         </div>
     );

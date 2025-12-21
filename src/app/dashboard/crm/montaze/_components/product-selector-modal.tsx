@@ -25,7 +25,7 @@ interface ProductSelectorModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (product: Product) => void;
-  type: 'panel' | 'skirting';
+  type: 'panel' | 'skirting' | 'accessory';
   currentValue?: string;
 }
 
@@ -56,12 +56,21 @@ export function ProductSelectorModal({
     (p.sku && p.sku.toLowerCase().includes(search.toLowerCase()))
   );
 
+  const getTitle = () => {
+      switch(type) {
+          case 'panel': return 'model paneli';
+          case 'skirting': return 'model listew';
+          case 'accessory': return 'produkt';
+          default: return 'produkt';
+      }
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-3xl h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>
-            Wybierz {type === 'panel' ? 'model paneli' : 'model listew'}
+            Wybierz {getTitle()}
           </DialogTitle>
         </DialogHeader>
         

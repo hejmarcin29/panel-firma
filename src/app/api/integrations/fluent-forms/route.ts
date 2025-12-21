@@ -73,10 +73,14 @@ export async function POST(req: NextRequest) {
         });
 
         // Initialize checklist items
-        const checklistItems = DEFAULT_MONTAGE_CHECKLIST.map(template => ({
+        const checklistItems = DEFAULT_MONTAGE_CHECKLIST.map((template, index) => ({
+            id: crypto.randomUUID(),
             montageId: montageId,
             templateId: template.id,
-            isChecked: false,
+            label: template.label,
+            allowAttachment: template.allowAttachment,
+            orderIndex: index,
+            completed: false,
             createdAt: new Date(),
             updatedAt: new Date(),
         }));

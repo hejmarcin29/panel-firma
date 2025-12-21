@@ -447,10 +447,14 @@ export async function createMontage({
                 });
 
                 // Initialize checklist items
-                const checklistItems = DEFAULT_MONTAGE_CHECKLIST.map(template => ({
+                const checklistItems = DEFAULT_MONTAGE_CHECKLIST.map((template, index) => ({
+                    id: crypto.randomUUID(),
                     montageId: finalMontageId,
                     templateId: template.id,
-                    isChecked: false,
+                    label: template.label,
+                    allowAttachment: template.allowAttachment,
+                    orderIndex: index,
+                    completed: false,
                     createdAt: now,
                     updatedAt: now,
                 }));
@@ -1395,9 +1399,22 @@ export async function updateMontageChecklistItemLabel({ montageId, itemId, label
 
 import { products } from '@/lib/db/schema';
 
-export async function getMontageProducts(type: 'panel' | 'skirting') {
+export async function getMontageProducts(type: 'panel' | 'skirting' | 'accessory') {
     await requireUser();
     
+    let whereClause;
+    if (type === 'accessory') {
+        whereClause = and(
+            eq(products.isForMontage, true),
+            eq(products.montageType, 'other')
+        );
+    } else {
+        whereClause = and(
+            eq(products.isForMontage, true),
+            eq(products.montageType, type)
+        );
+    }
+
     const results = await db.select({
         id: products.id,
         name: products.name,
@@ -1407,10 +1424,7 @@ export async function getMontageProducts(type: 'panel' | 'skirting') {
         stockQuantity: products.stockQuantity,
     })
     .from(products)
-    .where(and(
-        eq(products.isForMontage, true),
-        eq(products.montageType, type)
-    ));
+    .where(whereClause);
 
     return results;
 }
@@ -1755,10 +1769,14 @@ export async function createLead(data: {
     });
 
     // Initialize checklist items
-    const checklistItems = DEFAULT_MONTAGE_CHECKLIST.map(template => ({
+    const checklistItems = DEFAULT_MONTAGE_CHECKLIST.map((template, index) => ({
+        id: crypto.randomUUID(),
         montageId: montageId,
         templateId: template.id,
-        isChecked: false,
+        label: template.label,
+        allowAttachment: template.allowAttachment,
+        orderIndex: index,
+        completed: false,
         createdAt: now,
         updatedAt: now,
     }));
@@ -1938,10 +1956,14 @@ export async function createExtendedLead(formData: FormData) {
     });
 
     // Initialize checklist items
-    const checklistItems = DEFAULT_MONTAGE_CHECKLIST.map(template => ({
+    const checklistItems = DEFAULT_MONTAGE_CHECKLIST.map((template, index) => ({
+        id: crypto.randomUUID(),
         montageId: montageId,
         templateId: template.id,
-        isChecked: false,
+        label: template.label,
+        allowAttachment: template.allowAttachment,
+        orderIndex: index,
+        completed: false,
         createdAt: now,
         updatedAt: now,
     }));
