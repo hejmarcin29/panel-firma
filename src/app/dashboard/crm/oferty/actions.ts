@@ -169,7 +169,15 @@ export async function getQuote(id: string) {
     return await db.query.quotes.findFirst({
         where: eq(quotes.id, id),
         with: {
-            montage: true,
+            montage: {
+                with: {
+                    serviceItems: {
+                        with: {
+                            service: true
+                        }
+                    }
+                }
+            },
         },
     });
 }

@@ -52,7 +52,7 @@ export function ServiceCatalog({ services }: ServiceCatalogProps) {
             name: formData.get('name') as string,
             unit: formData.get('unit') as string,
             basePriceNet: parseFloat(formData.get('basePriceNet') as string),
-            baseInstallerRate: parseFloat(formData.get('baseInstallerRate') as string),
+            baseInstallerRate: 0, // Disabled base rate
             vatRate: parseFloat(formData.get('vatRate') as string) / 100,
         };
 
@@ -100,7 +100,6 @@ export function ServiceCatalog({ services }: ServiceCatalogProps) {
                             <TableHead>Nazwa</TableHead>
                             <TableHead>Jednostka</TableHead>
                             <TableHead>Cena Bazowa (Netto)</TableHead>
-                            <TableHead>Stawka Bazowa (Montażysta)</TableHead>
                             <TableHead className="w-[100px]">Akcje</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -110,7 +109,6 @@ export function ServiceCatalog({ services }: ServiceCatalogProps) {
                                 <TableCell className="font-medium">{service.name}</TableCell>
                                 <TableCell>{service.unit}</TableCell>
                                 <TableCell>{service.basePriceNet?.toFixed(2)} PLN</TableCell>
-                                <TableCell>{service.baseInstallerRate?.toFixed(2)} PLN</TableCell>
                                 <TableCell>
                                     <div className="flex items-center gap-2">
                                         <Button variant="ghost" size="icon" onClick={() => { setEditingService(service); setIsDialogOpen(true); }}>
@@ -183,17 +181,6 @@ export function ServiceCatalog({ services }: ServiceCatalogProps) {
                                     type="number" 
                                     step="0.01" 
                                     defaultValue={editingService?.basePriceNet || 0} 
-                                    required 
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="baseInstallerRate">Stawka Montażysty</Label>
-                                <Input 
-                                    id="baseInstallerRate" 
-                                    name="baseInstallerRate" 
-                                    type="number" 
-                                    step="0.01" 
-                                    defaultValue={editingService?.baseInstallerRate || 0} 
                                     required 
                                 />
                             </div>

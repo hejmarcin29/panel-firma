@@ -54,6 +54,7 @@ import { updateMontageMeasurement, addMontageTask, toggleMontageTask } from '../
 import { Loader2, Check, Upload, FileIcon, ExternalLink, Trash2, Info, Search } from 'lucide-react';
 
 import { ProductSelectorModal } from './product-selector-modal';
+import { ServiceSelector } from './service-selector';
 import { AuditForm } from './technical/audit-form';
 import type { TechnicalAuditData } from '../technical-data';
 import { addMontageAttachment } from '../actions';
@@ -861,6 +862,14 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                     )}
                 </Card>
 
+                {/* Services */}
+                <ServiceSelector 
+                    montageId={montage.id}
+                    floorArea={parseFloat(floorArea) || 0}
+                    skirtingLength={parseFloat(skirtingLength) || 0}
+                    isReadOnly={isReadOnly}
+                />
+
                 {/* Measurement Tasks */}
                 <Card>
                     <CardHeader className="pb-3">
@@ -1091,42 +1100,13 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
             <div className="grid gap-6 md:grid-cols-2">
                 <Card>
                     <CardHeader className="pb-3">
-                        <CardTitle className="text-base font-medium">Prace dodatkowe i materiały</CardTitle>
+                        <CardTitle className="text-base font-medium">Materiały dodatkowe</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <Label htmlFor="additionalWork" className="flex flex-col gap-1">
-                                    <span>Dodatkowe prace</span>
-                                    <span className="font-normal text-xs text-muted-foreground">Czy wymagane są dodatkowe prace przygotowawcze?</span>
-                                </Label>
-                                <Switch
-                                    id="additionalWork"
-                                    disabled={isReadOnly}
-                                    checked={additionalWorkNeeded}
-                                    onCheckedChange={setAdditionalWorkNeeded}
-                                />
-                            </div>
-                            
-                            {additionalWorkNeeded && (
-                                <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                                    <Label htmlFor="additionalWorkDesc">Opis prac dodatkowych</Label>
-                                    <Textarea
-                                        id="additionalWorkDesc"
-                                        placeholder="Opisz co trzeba zrobić (np. szlifowanie, gruntowanie, wylewka...)"
-                                        disabled={isReadOnly}
-                                        value={additionalWorkDescription}
-                                        onChange={(e) => setAdditionalWorkDescription(e.target.value)}
-                                        className="h-20"
-                                    />
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="space-y-2 pt-4 border-t">
+                        <div className="space-y-2">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <Label>Lista zakupów (dodatkowe materiały)</Label>
+                                    <Label>Lista zakupów</Label>
                                     <Drawer>
                                         <DrawerTrigger asChild>
                                             <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
@@ -1207,34 +1187,39 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                                                     </Button>
                                                 </div>
                                                 <div className="flex gap-2">
-                                                    <Input
-                                                        placeholder="Ilość"
-                                                        value={item.quantity}
-                                                        disabled={isReadOnly}
-                                                        className="w-1/3"
-                                                        onChange={(e) => {
-                                                            const newItems = [...additionalMaterials];
-                                                            newItems[index].quantity = e.target.value;
-                                                            setAdditionalMaterials(newItems);
-                                                        }}
-                                                    />
-                                                    <Select
-                                                        disabled={isReadOnly}
-                                                        value={item.supplySide}
-                                                        onValueChange={(val: 'installer' | 'company') => {
-                                                            const newItems = [...additionalMaterials];
-                                                            newItems[index].supplySide = val;
-                                                            setAdditionalMaterials(newItems);
-                                                        }}
-                                                    >
-                                                        <SelectTrigger className="w-2/3">
-                                                            <SelectValue />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="installer">Kupuje Montażysta</SelectItem>
-                                                            <SelectItem value="company">Zapewnia Firma</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
+                                                    <div className="w-1/3 space-y-1">
+                                                        <Label className="text-[10px] text-muted-foreground uppercase">Ilość</Label>
+                                                        <Input
+                                                            placeholder="np. 2 szt"
+                                                            value={item.quantity}
+                                                            disabled={isReadOnly}
+                                                            onChange={(e) => {
+                                                                const newItems = [...additionalMaterials];
+                                                                newItems[index].quantity = e.target.value;
+                                                                setAdditionalMaterials(newItems);
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <div className="w-2/3 space-y-1">
+                                                        <Label className="text-[10px] text-muted-foreground uppercase">Kto zapewnia?</Label>
+                                                        <Select
+                                                            disabled={isReadOnly}
+                                                            value={item.supplySide}
+                                                            onValueChange={(val: 'installer' | 'company') => {
+                                                                const newItems = [...additionalMaterials];
+                                                                newItems[index].supplySide = val;
+                                                                setAdditionalMaterials(newItems);
+                                                            }}
+                                                        >
+                                                            <SelectTrigger>
+                                                                <SelectValue />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="installer">Kupuje Montażysta</SelectItem>
+                                                                <SelectItem value="company">Zapewnia Firma</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
                                                 </div>
                                                 {item.supplySide === 'installer' && (
                                                     <div className="relative">

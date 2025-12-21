@@ -98,7 +98,19 @@ type QuoteEditorProps = {
             panelWaste: number | null;
             skirtingWaste: number | null;
             technicalAudit: unknown;
+            measurementAdditionalMaterials?: unknown;
             address: string | null;
+            serviceItems?: {
+                id: string;
+                quantity: number;
+                clientPrice: number;
+                vatRate: number | null;
+                snapshotName: string | null;
+                service: {
+                    name: string;
+                    unit: string;
+                }
+            }[];
         };
         termsContent?: string | null;
         signatureData?: string | null;
@@ -224,23 +236,37 @@ export function QuoteEditor({ quote, templates, companyInfo }: QuoteEditorProps)
         const newItems = [...items];
         let importedCount = 0;
 
-        // Import Floor Area (Service)
-        if (quote.montage.floorArea) {
-            newItems.push({
-                id: Math.random().toString(36).substr(2, 9),
-                name: 'Montaż paneli podłogowych',
-                quantity: quote.montage.floorArea,
-                unit: 'm2',
-                priceNet: 25,
-                vatRate: 0.08,
-                priceGross: 25 * 1.08,
-                totalNet: quote.montage.floorArea * 25,
-                totalGross: quote.montage.floorArea * 25 * 1.08,
+        // 1. SERVICES (Labor) - New Logic
+        const serviceItems = quote.montage.serviceItems || [];
+        
+        if (serviceItems.length > 0) {
+            // Import specific services selected in Measurement
+            serviceItems.forEach(serviceItem => {
+                const priceNet = serviceItem.clientPrice;
+                const vatRate = serviceItem.vatRate || 0.08;
+                const quantity = serviceItem.quantity;
+                
+                newItems.push({
+                    id: Math.random().toString(36).substr(2, 9),
+                    name: serviceItem.snapshotName || serviceItem.service.name,
+                    quantity: quantity,
+                    unit: serviceItem.service.unit,
+                    priceNet: priceNet,
+                    vatRate: vatRate,
+                    priceGross: priceNet * (1 + vatRate),
+                    totalNet: quantity * priceNet,
+                    totalGross: quantity * priceNet * (1 + vatRate),
+                });
+                importedCount++;
             });
-            importedCount++;
+        } else {
+            // Fallback: If no services defined, notify user but don't add generic ones
+            if (quote.montage.floorArea || quote.montage.skirtingLength) {
+                 toast.info('Brak zdefiniowanych usług w pomiarze. Dodano tylko materiały (jeśli wybrano).');
+            }
         }
 
-        // Import Selected Product (Material)
+        // 2. MATERIALS (Products)
         if (selectedProduct) {
             const attributes = selectedProduct.attributes as ProductAttribute[];
             const lengthAttr = attributes?.find((a) => a.slug === 'pa_dlugosc');
@@ -313,22 +339,6 @@ export function QuoteEditor({ quote, templates, companyInfo }: QuoteEditorProps)
             }
         }
 
-        // Import Skirting (Service)
-        if (quote.montage.skirtingLength) {
-            newItems.push({
-                id: Math.random().toString(36).substr(2, 9),
-                name: 'Montaż listew przypodłogowych',
-                quantity: quote.montage.skirtingLength,
-                unit: 'mb',
-                priceNet: 15,
-                vatRate: 0.08,
-                priceGross: 15 * 1.08,
-                totalNet: quote.montage.skirtingLength * 15,
-                totalGross: quote.montage.skirtingLength * 15 * 1.08,
-            });
-            importedCount++;
-        }
-
         // Check for additional work in audit
         if (audit && audit.flatness === 'leveling') {
              newItems.push({
@@ -343,6 +353,46 @@ export function QuoteEditor({ quote, templates, companyInfo }: QuoteEditorProps)
                 totalGross: (quote.montage.floorArea || 1) * 30 * 1.08,
             });
             importedCount++;
+        }
+
+        // 3. ADDITIONAL MATERIALS (From Measurement)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const additionalMaterials = quote.montage.measurementAdditionalMaterials as any[];
+        if (Array.isArray(additionalMaterials) && additionalMaterials.length > 0) {
+            additionalMaterials.forEach(mat => {
+                // Only import materials supplied by company or if we want to charge client for installer's materials
+                // Assuming we want to list everything that costs money to the client
+                // If supplySide is 'company', we definitely add it.
+                // If 'installer', it depends if we re-invoice it. Let's assume we add everything as a proposal.
+                
+                // Parse quantity string "2 szt" -> 2
+                const qty = parseFloat(mat.quantity) || 1;
+                const unit = mat.quantity.replace(/[0-9.,]/g, '').trim() || 'szt';
+                
+                let priceNet = 0;
+                let name = mat.name;
+
+                // If installer buys it, use their estimated cost as base price
+                if (mat.supplySide === 'installer' && mat.estimatedCost) {
+                    priceNet = parseFloat(mat.estimatedCost);
+                    name += ' (Zakup montażysty)';
+                } else if (mat.supplySide === 'company') {
+                    name += ' (Z magazynu)';
+                }
+
+                newItems.push({
+                    id: Math.random().toString(36).substr(2, 9),
+                    name: name,
+                    quantity: qty,
+                    unit: unit,
+                    priceNet: priceNet,
+                    vatRate: 0.23, // Materials usually 23%
+                    priceGross: priceNet * 1.23,
+                    totalNet: qty * priceNet,
+                    totalGross: qty * priceNet * 1.23,
+                });
+                importedCount++;
+            });
         }
 
         if (importedCount > 0) {
