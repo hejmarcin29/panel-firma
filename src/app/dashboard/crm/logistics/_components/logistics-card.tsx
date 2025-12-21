@@ -119,6 +119,7 @@ export function LogisticsCard({ montage }: { montage: any }) {
                         </div>
                         {items.length > 0 ? (
                             <div className="grid gap-2">
+                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                                 {items.map((item: any) => (
                                     <div key={item.id} className="flex items-start gap-3 p-2 bg-background rounded border hover:bg-accent/50 transition-colors">
                                         <Checkbox 

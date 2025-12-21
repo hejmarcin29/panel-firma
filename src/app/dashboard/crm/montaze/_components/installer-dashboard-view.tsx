@@ -2,7 +2,7 @@
 
 import { format, isToday, isFuture } from "date-fns";
 import { pl } from "date-fns/locale";
-import { MapPin, Calendar, Clock, AlertTriangle, Package } from "lucide-react";
+import { MapPin, Calendar, Clock, AlertTriangle, Package, Navigation } from "lucide-react";
 import Link from "next/link";
 
 import { Card, CardContent } from "@/components/ui/card";
