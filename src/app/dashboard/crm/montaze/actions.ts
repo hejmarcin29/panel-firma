@@ -445,6 +445,20 @@ export async function createMontage({
                     createdAt: now,
                     updatedAt: now,
                 });
+
+                // Initialize checklist items
+                const checklistItems = DEFAULT_MONTAGE_CHECKLIST.map(template => ({
+                    montageId: finalMontageId,
+                    templateId: template.id,
+                    isChecked: false,
+                    createdAt: now,
+                    updatedAt: now,
+                }));
+
+                if (checklistItems.length > 0) {
+                    await db.insert(montageChecklistItems).values(checklistItems);
+                }
+
                 saved = true;
             } catch (e: unknown) {
                 const message = e instanceof Error ? e.message : String(e);
@@ -1740,6 +1754,19 @@ export async function createLead(data: {
         updatedAt: now,
     });
 
+    // Initialize checklist items
+    const checklistItems = DEFAULT_MONTAGE_CHECKLIST.map(template => ({
+        montageId: montageId,
+        templateId: template.id,
+        isChecked: false,
+        createdAt: now,
+        updatedAt: now,
+    }));
+
+    if (checklistItems.length > 0) {
+        await db.insert(montageChecklistItems).values(checklistItems);
+    }
+
     await logSystemEvent('create_lead', `Utworzono lead ${displayId} dla ${trimmedName}`, user.id);
     revalidatePath(MONTAGE_DASHBOARD_PATH);
     return { status: 'success', montageId };
@@ -1909,6 +1936,19 @@ export async function createExtendedLead(formData: FormData) {
         createdAt: now,
         updatedAt: now,
     });
+
+    // Initialize checklist items
+    const checklistItems = DEFAULT_MONTAGE_CHECKLIST.map(template => ({
+        montageId: montageId,
+        templateId: template.id,
+        isChecked: false,
+        createdAt: now,
+        updatedAt: now,
+    }));
+
+    if (checklistItems.length > 0) {
+        await db.insert(montageChecklistItems).values(checklistItems);
+    }
 
     // Handle file upload
     if (file && file.size > 0) {

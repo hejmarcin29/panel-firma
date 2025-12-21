@@ -1,9 +1,10 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { users, customers, montages } from '@/lib/db/schema';
+import { users, customers, montages, montageChecklistItems } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { generatePortalToken } from '@/lib/utils';
+import { DEFAULT_MONTAGE_CHECKLIST } from '@/lib/montaze/checklist-shared';
 
 export async function submitReferralLead(formData: FormData) {
     const token = formData.get('token') as string;
@@ -72,6 +73,19 @@ export async function submitReferralLead(formData: FormData) {
         createdAt: now,
         updatedAt: now,
     });
+
+    // Initialize checklist items
+    const checklistItems = DEFAULT_MONTAGE_CHECKLIST.map(template => ({
+        montageId: montageId,
+        templateId: template.id,
+        isChecked: false,
+        createdAt: now,
+        updatedAt: now,
+    }));
+
+    if (checklistItems.length > 0) {
+        await db.insert(montageChecklistItems).values(checklistItems);
+    }
     
     return { success: true, partnerName: partner.name };
 }

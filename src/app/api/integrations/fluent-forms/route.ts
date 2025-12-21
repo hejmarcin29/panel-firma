@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { appSettings, customers, montages, systemLogs } from '@/lib/db/schema';
+import { appSettings, customers, montages, systemLogs, montageChecklistItems } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { DEFAULT_MONTAGE_CHECKLIST } from '@/lib/montaze/checklist-shared';
 
 export async function POST(req: NextRequest) {
     try {
@@ -70,6 +71,19 @@ export async function POST(req: NextRequest) {
             createdAt: new Date(),
             updatedAt: new Date(),
         });
+
+        // Initialize checklist items
+        const checklistItems = DEFAULT_MONTAGE_CHECKLIST.map(template => ({
+            montageId: montageId,
+            templateId: template.id,
+            isChecked: false,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        }));
+
+        if (checklistItems.length > 0) {
+            await db.insert(montageChecklistItems).values(checklistItems);
+        }
 
         // 5. Log Success
         await db.insert(systemLogs).values({
