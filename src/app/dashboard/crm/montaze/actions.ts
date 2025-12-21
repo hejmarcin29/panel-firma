@@ -12,6 +12,9 @@ import {
 	montageTasks,
 	montages,
 	type MontageStatus,
+    type MontageMaterialStatus,
+    type MontageMaterialClaimType,
+    type MontageInstallerStatus,
 	montageStatuses,
 	customers,
 	users,
@@ -1571,9 +1574,9 @@ export async function updateMontageRealizationStatus({
     architectId
 }: {
     montageId: string;
-    materialStatus?: 'none' | 'ordered' | 'in_stock' | 'delivered';
-    materialClaimType?: 'installer_pickup' | 'company_delivery' | 'courier' | 'client_pickup' | null;
-    installerStatus?: 'none' | 'informed' | 'confirmed';
+    materialStatus?: MontageMaterialStatus;
+    materialClaimType?: MontageMaterialClaimType | null;
+    installerStatus?: MontageInstallerStatus;
     installerId?: string | null;
     measurerId?: string | null;
     architectId?: string | null;
