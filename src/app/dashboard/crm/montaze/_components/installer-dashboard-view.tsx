@@ -7,9 +7,10 @@ import Link from "next/link";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import type { Montage } from "../types";
+import type { Montage, MeasurementMaterialItem } from "../types";
 
 interface InstallerDashboardViewProps {
   montages: Montage[];
@@ -24,7 +25,7 @@ export function InstallerDashboardView({ montages }: InstallerDashboardViewProps
       const materials = m.measurementAdditionalMaterials;
       if (!Array.isArray(materials)) return false;
       // Check if any item is supplied by installer but has no cost
-      return materials.some((item: any) => item.supplySide === 'installer' && (!item.estimatedCost || item.estimatedCost <= 0));
+      return materials.some((item: MeasurementMaterialItem) => item.supplySide === 'installer' && (!item.estimatedCost || item.estimatedCost <= 0));
   });
 
   return (
