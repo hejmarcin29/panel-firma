@@ -1455,7 +1455,13 @@ export async function updateMontageMeasurement({
     measurementSubfloorCondition?: string | null;
     measurementAdditionalWorkNeeded?: boolean;
     measurementAdditionalWorkDescription?: string | null;
-    measurementAdditionalMaterials?: string | null;
+    measurementAdditionalMaterials?: {
+        id: string;
+        name: string;
+        quantity: string;
+        supplySide: 'installer' | 'company';
+        estimatedCost?: number;
+    }[] | null;
     measurementSeparateSkirting?: boolean;
     isHousingVat?: boolean;
     skirtingClientSupply?: boolean;

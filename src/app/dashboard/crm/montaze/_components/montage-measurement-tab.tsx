@@ -36,11 +36,21 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import { cn } from '@/lib/utils';
-import type { Montage } from '../types';
+import type { Montage, MeasurementMaterialItem } from '../types';
 import { updateMontageMeasurement, addMontageTask, toggleMontageTask } from '../actions';
 
-import { Loader2, Check, Upload, FileIcon, ExternalLink } from 'lucide-react';
+import { Loader2, Check, Upload, FileIcon, ExternalLink, Trash2, Info } from 'lucide-react';
 
 import { ProductSelectorModal } from './product-selector-modal';
 import { AuditForm } from './technical/audit-form';
@@ -84,7 +94,20 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
   const [subfloorCondition, setSubfloorCondition] = useState(montage.measurementSubfloorCondition || 'good');
   const [additionalWorkNeeded, setAdditionalWorkNeeded] = useState(montage.measurementAdditionalWorkNeeded || false);
   const [additionalWorkDescription, setAdditionalWorkDescription] = useState(montage.measurementAdditionalWorkDescription || '');
-  const [additionalMaterials, setAdditionalMaterials] = useState(montage.measurementAdditionalMaterials || '');
+  const [additionalMaterials, setAdditionalMaterials] = useState<MeasurementMaterialItem[]>(() => {
+      const raw = montage.measurementAdditionalMaterials;
+      if (Array.isArray(raw)) return raw;
+      // Fallback for legacy string or null
+      if (typeof raw === 'string' && raw.trim().length > 0) {
+          return [{
+              id: 'legacy-1',
+              name: raw,
+              quantity: '',
+              supplySide: 'installer'
+          }];
+      }
+      return [];
+  });
   const [separateSkirting, setSeparateSkirting] = useState(montage.measurementSeparateSkirting || false);
   const [skirtingClientSupply, setSkirtingClientSupply] = useState(montage.skirtingMaterialClaimType === 'client_supply');
   const [isHousingVat, setIsHousingVat] = useState(montage.isHousingVat || false);
@@ -132,7 +155,21 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
     setSubfloorCondition(montage.measurementSubfloorCondition || 'good');
     setAdditionalWorkNeeded(montage.measurementAdditionalWorkNeeded || false);
     setAdditionalWorkDescription(montage.measurementAdditionalWorkDescription || '');
-    setAdditionalMaterials(montage.measurementAdditionalMaterials || '');
+    
+    const rawMaterials = montage.measurementAdditionalMaterials;
+    if (Array.isArray(rawMaterials)) {
+        setAdditionalMaterials(rawMaterials);
+    } else if (typeof rawMaterials === 'string' && (rawMaterials as string).trim().length > 0) {
+        setAdditionalMaterials([{
+            id: 'legacy-1',
+            name: rawMaterials as string,
+            quantity: '',
+            supplySide: 'installer'
+        }]);
+    } else {
+        setAdditionalMaterials([]);
+    }
+
     setSeparateSkirting(montage.measurementSeparateSkirting || false);
     setSkirtingClientSupply(montage.skirtingMaterialClaimType === 'client_supply');
     setAdditionalInfo(montage.additionalInfo || '');
@@ -688,15 +725,138 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                     </div>
 
                     <div className="space-y-2 pt-4 border-t">
-                        <Label htmlFor="additionalMaterials">Lista zakupów (dodatkowe materiały)</Label>
-                        <Textarea
-                            id="additionalMaterials"
-                            placeholder="Wpisz listę dodatkowych materiałów do kupienia..."
-                            disabled={isReadOnly}
-                            value={additionalMaterials}
-                            onChange={(e) => setAdditionalMaterials(e.target.value)}
-                            className="h-24"
-                        />
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Label>Lista zakupów (dodatkowe materiały)</Label>
+                                <Drawer>
+                                    <DrawerTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
+                                            <Info className="h-4 w-4 text-muted-foreground" />
+                                        </Button>
+                                    </DrawerTrigger>
+                                    <DrawerContent>
+                                        <DrawerHeader>
+                                            <DrawerTitle>Instrukcja zakupów</DrawerTitle>
+                                            <DrawerDescription>
+                                                Wpisz co trzeba dokupić. Jeśli kupujesz Ty (Montażysta), podaj szacunkowy koszt.
+                                                Możesz to uzupełnić teraz lub na spokojnie po powrocie.
+                                                Pozycje bez ceny będą oznaczone jako wymagające uzupełnienia.
+                                            </DrawerDescription>
+                                        </DrawerHeader>
+                                        <DrawerFooter>
+                                            <DrawerClose asChild>
+                                                <Button variant="outline">Rozumiem</Button>
+                                            </DrawerClose>
+                                        </DrawerFooter>
+                                    </DrawerContent>
+                                </Drawer>
+                            </div>
+                            {!isReadOnly && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        setAdditionalMaterials([
+                                            ...additionalMaterials,
+                                            {
+                                                id: crypto.randomUUID(),
+                                                name: '',
+                                                quantity: '',
+                                                supplySide: 'installer'
+                                            }
+                                        ]);
+                                    }}
+                                >
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Dodaj pozycję
+                                </Button>
+                            )}
+                        </div>
+                        
+                        <div className="space-y-3">
+                            {additionalMaterials.length === 0 && (
+                                <div className="text-sm text-muted-foreground italic text-center py-4 border border-dashed rounded-md">
+                                    Brak dodatkowych materiałów.
+                                </div>
+                            )}
+                            {additionalMaterials.map((item, index) => (
+                                <div key={item.id} className="grid grid-cols-1 gap-3 p-3 border rounded-md bg-muted/20">
+                                    <div className="flex items-start gap-2">
+                                        <div className="flex-1 space-y-2">
+                                            <Input
+                                                placeholder="Co potrzeba? (np. Klej montażowy)"
+                                                value={item.name}
+                                                disabled={isReadOnly}
+                                                onChange={(e) => {
+                                                    const newItems = [...additionalMaterials];
+                                                    newItems[index].name = e.target.value;
+                                                    setAdditionalMaterials(newItems);
+                                                }}
+                                            />
+                                            <div className="flex gap-2">
+                                                <Input
+                                                    placeholder="Ilość"
+                                                    value={item.quantity}
+                                                    disabled={isReadOnly}
+                                                    className="w-1/3"
+                                                    onChange={(e) => {
+                                                        const newItems = [...additionalMaterials];
+                                                        newItems[index].quantity = e.target.value;
+                                                        setAdditionalMaterials(newItems);
+                                                    }}
+                                                />
+                                                <Select
+                                                    disabled={isReadOnly}
+                                                    value={item.supplySide}
+                                                    onValueChange={(val: 'installer' | 'company') => {
+                                                        const newItems = [...additionalMaterials];
+                                                        newItems[index].supplySide = val;
+                                                        setAdditionalMaterials(newItems);
+                                                    }}
+                                                >
+                                                    <SelectTrigger className="w-2/3">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="installer">Kupuje Montażysta</SelectItem>
+                                                        <SelectItem value="company">Zapewnia Firma</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                            {item.supplySide === 'installer' && (
+                                                <div className="relative">
+                                                    <Input
+                                                        type="number"
+                                                        placeholder="Szacunkowy koszt (opcjonalne)"
+                                                        value={item.estimatedCost || ''}
+                                                        disabled={isReadOnly}
+                                                        onChange={(e) => {
+                                                            const newItems = [...additionalMaterials];
+                                                            newItems[index].estimatedCost = e.target.value ? parseFloat(e.target.value) : undefined;
+                                                            setAdditionalMaterials(newItems);
+                                                        }}
+                                                    />
+                                                    <span className="absolute right-3 top-2.5 text-xs text-muted-foreground">PLN</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        {!isReadOnly && (
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="text-destructive hover:text-destructive/90"
+                                                onClick={() => {
+                                                    const newItems = additionalMaterials.filter((_, i) => i !== index);
+                                                    setAdditionalMaterials(newItems);
+                                                }}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </CardContent>
             </Card>

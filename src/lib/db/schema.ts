@@ -507,7 +507,13 @@ export const montages = pgTable(
 		measurementSubfloorCondition: text('measurement_subfloor_condition'),
 		measurementAdditionalWorkNeeded: boolean('measurement_additional_work_needed').default(false),
 		measurementAdditionalWorkDescription: text('measurement_additional_work_description'),
-        measurementAdditionalMaterials: text('measurement_additional_materials'),
+        measurementAdditionalMaterials: json('measurement_additional_materials').$type<{
+            id: string;
+            name: string;
+            quantity: string;
+            supplySide: 'installer' | 'company';
+            estimatedCost?: number;
+        }[]>(),
         measurementSeparateSkirting: boolean('measurement_separate_skirting').default(false),
 		floorArea: doublePrecision('floor_area'),
 		floorDetails: text('floor_details'),

@@ -246,6 +246,13 @@
       "when": 1766312134007,
       "tag": "0034_productive_tomorrow_man",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1766312854988,
+      "tag": "0035_flippant_klaw",
+      "breakpoints": true
     }
   ]
 }

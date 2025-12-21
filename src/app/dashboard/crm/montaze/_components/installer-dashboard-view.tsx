@@ -20,12 +20,48 @@ export function InstallerDashboardView({ montages }: InstallerDashboardViewProps
   const installations = montages.filter(m => ['before_installation', 'before_final_invoice'].includes(m.status));
   const skirtings = montages.filter(m => m.status === 'before_skirting_installation');
 
+  const missingCostsMontages = montages.filter(m => {
+      const materials = m.measurementAdditionalMaterials;
+      if (!Array.isArray(materials)) return false;
+      // Check if any item is supplied by installer but has no cost
+      return materials.some((item: any) => item.supplySide === 'installer' && (!item.estimatedCost || item.estimatedCost <= 0));
+  });
+
   return (
     <div className="flex flex-col gap-6 pb-20 max-w-md mx-auto w-full">
       <div className="px-4 pt-4">
         <h1 className="text-2xl font-bold tracking-tight">Cześć! 👋</h1>
         <p className="text-muted-foreground">Twoje zlecenia na najbliższy czas.</p>
       </div>
+
+      {missingCostsMontages.length > 0 && (
+        <div className="px-4">
+            <Card className="border-amber-200 bg-amber-50">
+                <CardContent className="pt-6">
+                    <div className="flex items-start gap-4">
+                        <div className="p-2 bg-amber-100 rounded-full">
+                            <AlertTriangle className="h-5 w-5 text-amber-600" />
+                        </div>
+                        <div className="space-y-1 w-full">
+                            <h3 className="font-medium text-amber-900">Uzupełnij koszty zakupów</h3>
+                            <p className="text-sm text-amber-700">
+                                Masz {missingCostsMontages.length} zleceń z nieuzupełnionymi kosztami materiałów.
+                            </p>
+                            <div className="pt-2 flex flex-col gap-2">
+                                {missingCostsMontages.map(m => (
+                                    <Link key={m.id} href={`/dashboard/crm/montaze/${m.id}?tab=measurement`}>
+                                        <Button variant="outline" size="sm" className="w-full justify-start bg-white border-amber-200 hover:bg-amber-100 text-amber-900">
+                                            {m.clientName}
+                                        </Button>
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+      )}
 
       <Tabs defaultValue="measurements" className="w-full">
         <div className="px-4">

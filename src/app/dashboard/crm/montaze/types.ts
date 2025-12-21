@@ -67,6 +67,14 @@ export type MaterialsEditHistoryEntry = {
 	};
 };
 
+export type MeasurementMaterialItem = {
+    id: string;
+    name: string;
+    quantity: string;
+    supplySide: 'installer' | 'company';
+    estimatedCost?: number;
+};
+
 export type Montage = {
 	id: string;
 	clientName: string;
@@ -106,7 +114,7 @@ export type Montage = {
 	measurementSubfloorCondition: string | null;
 	measurementAdditionalWorkNeeded: boolean;
 	measurementAdditionalWorkDescription: string | null;
-	measurementAdditionalMaterials: string | null;
+	measurementAdditionalMaterials: MeasurementMaterialItem[] | null;
     measurementSeparateSkirting?: boolean | null;
 	finalPanelAmount: number | null;
 	finalSkirtingLength: number | null;
