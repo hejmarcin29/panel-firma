@@ -48,6 +48,7 @@ export const supplierMessageMediums = ['email', 'phone', 'note'] as const;
 export const mailFolderKinds = ['inbox', 'sent', 'drafts', 'spam', 'trash', 'archive', 'custom'] as const;
 export const mailAccountStatuses = ['disabled', 'connected', 'disconnected', 'error'] as const;
 export const montageStatuses = ['lead', 'before_measurement', 'before_first_payment', 'before_installation', 'before_skirting_installation', 'before_final_invoice', 'completed'] as const;
+export const logisticsStatuses = ['pending', 'ready', 'loaded', 'delivered'] as const;
 export const customerSources = ['internet', 'social_media', 'recommendation', 'architect', 'event', 'drive_by', 'phone', 'other'] as const;
 
 export type UserRole = (typeof userRoles)[number];
@@ -64,6 +65,7 @@ export type SupplierMessageMedium = (typeof supplierMessageMediums)[number];
 export type MailFolderKind = (typeof mailFolderKinds)[number];
 export type MailAccountStatus = (typeof mailAccountStatuses)[number];
 export type MontageStatus = string;
+export type LogisticsStatus = (typeof logisticsStatuses)[number];
 export type CustomerSource = (typeof customerSources)[number];
 export type MontageMaterialStatus = 'none' | 'ordered' | 'in_stock' | 'delivered';
 export type MontageMaterialClaimType = 'installer_pickup' | 'company_delivery' | 'courier' | 'client_pickup';
@@ -563,6 +565,12 @@ export const montages = pgTable(
 
         technicalAudit: json('technical_audit').$type<TechnicalAuditData>(),
         materialLog: json('material_log').$type<MaterialLogData>(),
+        
+        // Logistics
+        logisticsStatus: text('logistics_status').$type<LogisticsStatus>().default('pending'),
+        logisticsNotes: text('logistics_notes'),
+        cargoChecklist: json('cargo_checklist').$type<Record<string, { picked: boolean }>>(),
+
 		deletedAt: timestamp('deleted_at'),
 		createdAt: timestamp('created_at').notNull().defaultNow(),
 		updatedAt: timestamp('updated_at').notNull().defaultNow(),

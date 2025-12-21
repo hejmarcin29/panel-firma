@@ -2,10 +2,9 @@
 
 import { format, isToday, isFuture } from "date-fns";
 import { pl } from "date-fns/locale";
-import { MapPin, Phone, Calendar, Clock, Navigation, AlertTriangle, Package } from "lucide-react";
+import { MapPin, Calendar, Clock, AlertTriangle, Package } from "lucide-react";
 import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -133,7 +132,7 @@ function MontageList({ montages, dateField, fallbackDateField, showLogisticsAler
   );
 }
 
-function MontageCard({ montage, date, isToday = false, compact = false, showLogisticsAlert = false }: { montage: Montage, date: Date | null, isToday?: boolean, compact?: boolean, showLogisticsAlert?: boolean }) {
+function MontageCard({ montage, date, isToday = false, showLogisticsAlert = false }: { montage: Montage, date: Date | null, isToday?: boolean, compact?: boolean, showLogisticsAlert?: boolean }) {
   
   return (
     <Link href={`/dashboard/crm/montaze/${montage.id}`} className="block group">
