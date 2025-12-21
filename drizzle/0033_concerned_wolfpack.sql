@@ -1,1 +1,1 @@
-ALTER TABLE "montages" ALTER COLUMN "measurement_additional_materials" SET DATA TYPE json;
+ALTER TABLE "montages" ALTER COLUMN "measurement_additional_materials" TYPE json USING CASE WHEN measurement_additional_materials IS NULL OR measurement_additional_materials = '' THEN NULL ELSE json_build_array(json_build_object('id', 'migrated', 'name', measurement_additional_materials, 'quantity', '', 'supplySide', 'installer')) END;
