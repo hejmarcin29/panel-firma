@@ -100,23 +100,40 @@ export async function createSettlement(montageId: string, calculation: Settlemen
         where: eq(settlements.montageId, montageId),
     });
 
-    if (existing) throw new Error('Rozliczenie dla tego montażu już istnieje');
+    if (existing) {
+        if (existing.status === 'paid' || existing.status === 'approved') {
+             throw new Error('Rozliczenie jest już zatwierdzone lub wypłacone');
+        }
+        
+        await db.update(settlements).set({
+            totalAmount: calculation.total,
+            calculations: calculation,
+            note: note,
+            updatedAt: new Date(),
+        }).where(eq(settlements.id, existing.id));
 
-    await db.insert(settlements).values({
-        id: generateId('set'),
-        montageId: montageId,
-        installerId: montage.installerId,
-        status: 'draft',
-        totalAmount: calculation.total,
-        calculations: calculation,
-        note: note,
-    });
+        await logSystemEvent(
+            'settlement.updated',
+            `Zaktualizowano rozliczenie dla montażu ${montageId} na kwotę ${calculation.total.toFixed(2)} PLN`,
+            user.id
+        );
+    } else {
+        await db.insert(settlements).values({
+            id: generateId('set'),
+            montageId: montageId,
+            installerId: montage.installerId,
+            status: 'draft',
+            totalAmount: calculation.total,
+            calculations: calculation,
+            note: note,
+        });
 
-    await logSystemEvent(
-        'settlement.created',
-        `Utworzono rozliczenie dla montażu ${montageId} na kwotę ${calculation.total.toFixed(2)} PLN`,
-        user.id
-    );
+        await logSystemEvent(
+            'settlement.created',
+            `Utworzono rozliczenie dla montażu ${montageId} na kwotę ${calculation.total.toFixed(2)} PLN`,
+            user.id
+        );
+    }
 
     revalidatePath(SETTLEMENTS_PATH);
     revalidatePath(`/dashboard/crm/montaze/${montageId}`);

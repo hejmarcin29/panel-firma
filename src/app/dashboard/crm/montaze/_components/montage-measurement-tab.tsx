@@ -67,7 +67,8 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   
-  const isReadOnly = !userRoles.includes('admin') && !userRoles.includes('installer');
+  const isLockedBySettlement = montage.settlement?.status === 'approved' || montage.settlement?.status === 'paid';
+  const isReadOnly = (!userRoles.includes('admin') && !userRoles.includes('installer')) || isLockedBySettlement;
 
   const [isSketchOpen, setIsSketchOpen] = useState(false);
   const [sketchDataUrl, setSketchDataUrl] = useState<string | null>(montage.sketchUrl || null);
@@ -393,6 +394,22 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
 
   return (
     <div className="space-y-6">
+      {isLockedBySettlement && (
+        <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-md">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-amber-100 rounded-full text-amber-600">
+              <Info className="h-5 w-5" />
+            </div>
+            <div>
+              <h4 className="font-semibold text-amber-800">Edycja zablokowana</h4>
+              <p className="text-sm text-amber-700">
+                Do tego montażu istnieje zatwierdzone rozliczenie finansowe. 
+                Aby wprowadzić zmiany w pomiarach, musisz najpierw cofnąć lub usunąć rozliczenie.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-medium">Karta Pomiarowa</h3>
