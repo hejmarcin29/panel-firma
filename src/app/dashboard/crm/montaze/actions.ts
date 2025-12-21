@@ -1429,6 +1429,7 @@ export async function updateMontageMeasurement({
     scheduledSkirtingInstallationAt,
     scheduledSkirtingInstallationEndAt,
     isHousingVat,
+    skirtingClientSupply,
 }: {
 	montageId: string;
 	measurementDetails: string;
