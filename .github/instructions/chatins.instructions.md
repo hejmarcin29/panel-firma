@@ -74,6 +74,14 @@ W panelu operacyjnym (Dashboard) stosujemy zasadę **Auto-save** zamiast ręczny
 - **Feedback:** Użytkownik musi widzieć status operacji (np. mały wskaźnik "Zapisywanie...", "Zapisano" lub toast).
 - **Usuwanie:** Operacje destrukcyjne nadal wymagają potwierdzenia.
 
+### Auto-save vs Server Refresh (Race Condition)
+Przy implementacji formularzy z auto-zapisem (Auto-save) w Next.js (Server Actions + `router.refresh()`), występuje ryzyko nadpisania lokalnego stanu przez dane z serwera w trakcie pisania.
+- **Problem:** Użytkownik pisze -> Auto-save wysyła dane -> Server Action kończy się `revalidatePath` -> `router.refresh()` odświeża propsy komponentu -> `useEffect` nadpisuje stan lokalny starą/nową wartością z serwera, przerywając pisanie.
+- **Rozwiązanie:** W `useEffect` synchronizującym stan z propsami, **NIE** dodawaj całego obiektu danych do tablicy zależności.
+  - **Źle:** `useEffect(() => { setForm(data) }, [data])` - każde odświeżenie serwera resetuje formularz.
+  - **Dobrze:** `useEffect(() => { setForm(data) }, [data.id])` - resetuj formularz TYLKO gdy zmienia się ID rekordu (np. nawigacja do innego montażu).
+- **Zasada:** Stan lokalny formularza ma priorytet nad danymi z serwera w trakcie edycji. Synchronizacja z serwera powinna następować tylko przy inicjalizacji lub zmianie kontekstu (ID).
+
 ## Widok TV (Wallboard)
 Przy implementacji nowych, kluczowych funkcjonalności biznesowych (np. nowe statusy, ważne alerty, KPI), **ZAWSZE** rozważ ich uwzględnienie w widoku TV (`/tv`).
 - Jeśli nowa funkcja wpływa na przepływ pracy (workflow), zaktualizuj logikę w `src/app/tv/actions.ts`.

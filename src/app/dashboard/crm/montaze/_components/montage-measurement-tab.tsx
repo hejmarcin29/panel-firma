@@ -441,61 +441,63 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
         </TabsList>
 
         <TabsContent value="main" className="space-y-6 mt-4">
-            <Card className={cn("border-l-4", measurementDate ? "border-l-green-500" : "border-l-orange-500")}>
-                <CardHeader className="pb-3">
-                    <CardTitle className="text-base font-medium flex items-center gap-2">
-                        <CalendarIcon className="h-4 w-4" />
-                        Termin Pomiaru
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex items-center gap-4">
-                        <div className="grid gap-1.5 flex-1">
-                            <Label htmlFor="measurementDate">Data wizyty</Label>
-                            <Input
-                                id="measurementDate"
-                                type="date"
-                                value={measurementDate}
-                                onChange={(e) => setMeasurementDate(e.target.value)}
-                                disabled={isReadOnly}
-                                className="max-w-[200px]"
-                            />
-                        </div>
-                        {!measurementDate && (
-                            <div className="text-sm text-orange-600 font-medium">
-                                Nie ustalono terminu!
+            <div className="grid gap-6 md:grid-cols-2">
+                <Card className={cn("border-l-4", measurementDate ? "border-l-green-500" : "border-l-orange-500")}>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-base font-medium flex items-center gap-2">
+                            <CalendarIcon className="h-4 w-4" />
+                            Termin Pomiaru
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex items-center gap-4">
+                            <div className="grid gap-1.5 flex-1">
+                                <Label htmlFor="measurementDate">Data wizyty</Label>
+                                <Input
+                                    id="measurementDate"
+                                    type="date"
+                                    value={measurementDate}
+                                    onChange={(e) => setMeasurementDate(e.target.value)}
+                                    disabled={isReadOnly}
+                                    className="max-w-[200px]"
+                                />
                             </div>
-                        )}
-                    </div>
-                </CardContent>
-            </Card>
-
-            <Card className={cn("border-l-4", isHousingVat ? "border-l-green-500" : "border-l-gray-300")}>
-                <CardHeader className="pb-3">
-                    <CardTitle className="text-base font-medium flex items-center gap-2">
-                        <FileIcon className="h-4 w-4" />
-                        Ustalenia Podatkowe
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex items-center space-x-2">
-                        <Switch
-                            id="isHousingVat"
-                            checked={isHousingVat}
-                            onCheckedChange={setIsHousingVat}
-                            disabled={isReadOnly}
-                        />
-                        <div className="grid gap-1.5 leading-none">
-                            <Label htmlFor="isHousingVat" className="text-base font-medium cursor-pointer">
-                                Budownictwo objęte społecznym programem mieszkaniowym (VAT 8%)
-                            </Label>
-                            <p className="text-sm text-muted-foreground">
-                                Lokal mieszkalny do 150m² lub dom jednorodzinny do 300m².
-                            </p>
+                            {!measurementDate && (
+                                <div className="text-sm text-orange-600 font-medium">
+                                    Nie ustalono terminu!
+                                </div>
+                            )}
                         </div>
-                    </div>
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
+
+                <Card className={cn("border-l-4", isHousingVat ? "border-l-green-500" : "border-l-gray-300")}>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-base font-medium flex items-center gap-2">
+                            <FileIcon className="h-4 w-4" />
+                            Ustalenia Podatkowe
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex items-center space-x-2">
+                            <Switch
+                                id="isHousingVat"
+                                checked={isHousingVat}
+                                onCheckedChange={setIsHousingVat}
+                                disabled={isReadOnly}
+                            />
+                            <div className="grid gap-1.5 leading-none">
+                                <Label htmlFor="isHousingVat" className="text-base font-medium cursor-pointer">
+                                    Budownictwo objęte społecznym programem mieszkaniowym (VAT 8%)
+                                </Label>
+                                <p className="text-sm text-muted-foreground">
+                                    Lokal mieszkalny do 150m² lub dom jednorodzinny do 300m².
+                                </p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
 
             <div className="grid gap-6 md:grid-cols-2">
                 {/* Technical Details (Moved Up) */}
@@ -762,6 +764,28 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                     </CardHeader>
                     {includeSkirting && (
                         <CardContent className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                            <div className="flex flex-col gap-2 pb-2 border-b border-dashed">
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox 
+                                        disabled={isReadOnly}
+                                        id="skirtingClientSupply" 
+                                        checked={skirtingClientSupply} 
+                                        onCheckedChange={(checked) => setSkirtingClientSupply(checked as boolean)} 
+                                    />
+                                    <Label htmlFor="skirtingClientSupply" className="text-sm font-medium">Listwy po stronie klienta</Label>
+                                </div>
+
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox 
+                                        disabled={isReadOnly}
+                                        id="separateSkirting" 
+                                        checked={separateSkirting} 
+                                        onCheckedChange={(checked) => setSeparateSkirting(checked as boolean)} 
+                                    />
+                                    <Label htmlFor="separateSkirting" className="text-sm font-medium">Zalecany montaż listew w osobnym terminie</Label>
+                                </div>
+                            </div>
+
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
                                     <Label htmlFor="skirtingLength" className="text-xs text-muted-foreground">Wymiar netto (mb)</Label>
@@ -798,12 +822,12 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                                     <div className="flex gap-2">
                                         <Input
                                             id="skirtingModel"
-                                            placeholder="Kliknij aby wybrać z listy..."
+                                            placeholder={skirtingClientSupply ? "Po stronie klienta" : "Kliknij aby wybrać z listy..."}
                                             value={skirtingModel}
                                             readOnly
-                                            onClick={() => !isReadOnly && setIsSkirtingSelectorOpen(true)}
-                                            className="h-8 text-sm flex-1 cursor-pointer bg-muted/50"
-                                            disabled={isReadOnly}
+                                            onClick={() => !isReadOnly && !skirtingClientSupply && setIsSkirtingSelectorOpen(true)}
+                                            className={cn("h-8 text-sm flex-1 cursor-pointer bg-muted/50", skirtingClientSupply && "opacity-50 cursor-not-allowed")}
+                                            disabled={isReadOnly || skirtingClientSupply}
                                         />
                                         <Button 
                                             type="button" 
@@ -811,7 +835,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                                             size="sm" 
                                             className="h-8 px-2"
                                             onClick={() => setIsSkirtingSelectorOpen(true)}
-                                            disabled={isReadOnly}
+                                            disabled={isReadOnly || skirtingClientSupply}
                                         >
                                             Wybierz
                                         </Button>
@@ -824,26 +848,6 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                                 <span className="text-lg font-bold">
                                     {skirtingLength ? (parseFloat(skirtingLength) * (1 + parseInt(skirtingWaste)/100)).toFixed(2) : '0.00'} mb
                                 </span>
-                            </div>
-                            
-                            <div className="pt-2 border-t flex items-center space-x-2">
-                                <Checkbox 
-                                    disabled={isReadOnly}
-                                    id="skirtingClientSupply" 
-                                    checked={skirtingClientSupply} 
-                                    onCheckedChange={(checked) => setSkirtingClientSupply(checked as boolean)} 
-                                />
-                                <Label htmlFor="skirtingClientSupply" className="text-sm font-medium">Listwy po stronie klienta</Label>
-                            </div>
-
-                            <div className="pt-2 border-t flex items-center space-x-2">
-                                <Checkbox 
-                                    disabled={isReadOnly}
-                                    id="separateSkirting" 
-                                    checked={separateSkirting} 
-                                    onCheckedChange={(checked) => setSeparateSkirting(checked as boolean)} 
-                                />
-                                <Label htmlFor="separateSkirting" className="text-sm font-medium">Zalecany montaż listew w osobnym terminie</Label>
                             </div>
                         </CardContent>
                     )}

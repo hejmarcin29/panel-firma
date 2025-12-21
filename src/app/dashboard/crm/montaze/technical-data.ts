@@ -5,6 +5,7 @@ export interface TechnicalAuditData {
     subfloorType: 'concrete' | 'anhydrite' | 'osb' | 'other' | null;
     heating: boolean;
     heatingProtocol: boolean;
+    floorHeated: boolean;
     notes: string;
     photos: string[]; // URLs
 }

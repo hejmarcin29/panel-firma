@@ -29,15 +29,16 @@ interface AuditFormProps {
 export function AuditForm({ montageId, initialData, readOnly = false }: AuditFormProps) {
   const [isPending, startTransition] = useTransition();
   
-  const defaultValues: TechnicalAuditData = initialData || {
-    humidity: null,
-    humidityMethod: 'CM',
-    flatness: null,
-    subfloorType: null,
-    heating: false,
-    heatingProtocol: false,
-    notes: '',
-    photos: [],
+  const defaultValues: TechnicalAuditData = {
+    humidity: initialData?.humidity ?? null,
+    humidityMethod: initialData?.humidityMethod ?? 'CM',
+    flatness: initialData?.flatness ?? null,
+    subfloorType: initialData?.subfloorType ?? null,
+    heating: initialData?.heating ?? false,
+    heatingProtocol: initialData?.heatingProtocol ?? false,
+    floorHeated: initialData?.floorHeated ?? false,
+    notes: initialData?.notes ?? '',
+    photos: initialData?.photos ?? [],
   };
 
   const [formData, setFormData] = useState<TechnicalAuditData>(defaultValues);
@@ -138,13 +139,23 @@ export function AuditForm({ montageId, initialData, readOnly = false }: AuditFor
                 />
             </div>
             {formData.heating && (
-                <div className="flex items-center justify-between pl-4 border-l-2 border-blue-200">
-                    <Label>Protokół wygrzania</Label>
-                    <Switch 
-                        checked={formData.heatingProtocol} 
-                        onCheckedChange={(v) => handleChange('heatingProtocol', v)}
-                        disabled={readOnly}
-                    />
+                <div className="space-y-2 pl-4 border-l-2 border-blue-200">
+                    <div className="flex items-center justify-between">
+                        <Label>Protokół wygrzania</Label>
+                        <Switch 
+                            checked={formData.heatingProtocol} 
+                            onCheckedChange={(v) => handleChange('heatingProtocol', v)}
+                            disabled={readOnly}
+                        />
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <Label>Posadzka wygrzana</Label>
+                        <Switch 
+                            checked={formData.floorHeated} 
+                            onCheckedChange={(v) => handleChange('floorHeated', v)}
+                            disabled={readOnly}
+                        />
+                    </div>
                 </div>
             )}
           </div>
