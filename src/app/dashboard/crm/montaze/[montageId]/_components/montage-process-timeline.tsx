@@ -19,7 +19,7 @@ export function MontageProcessTimeline({ montage }: MontageProcessTimelineProps)
     return (
         <div className="space-y-6">
             {/* Header / Progress */}
-            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-100">
+            <Card className="bg-linear-to-r from-blue-50 to-indigo-50 border-blue-100">
                 <CardContent className="pt-6">
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { format, addDays, differenceInCalendarDays } from "date-fns";
 import { pl } from "date-fns/locale";
-import { Calendar as CalendarIcon, Phone, ChevronRight, Loader2, Check, Clock, CalendarDays, Edit2, ArrowRight } from "lucide-react";
+import { Calendar as CalendarIcon, Phone, Loader2, Check, Clock, CalendarDays, Edit2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -94,7 +94,16 @@ export function MeasurementScheduler({ montageId, currentDate, clientPhone, onSu
     );
 }
 
-function SelectionView({ date, isOpen, setIsOpen, handleDateSelect, isSaving, clientPhone }: any) {
+interface SelectionViewProps {
+    date: Date | undefined;
+    isOpen: boolean;
+    setIsOpen: (open: boolean) => void;
+    handleDateSelect: (date: Date | undefined) => void;
+    isSaving: boolean;
+    clientPhone: string | null;
+}
+
+function SelectionView({ date, isOpen, setIsOpen, handleDateSelect, isSaving, clientPhone }: SelectionViewProps) {
     const quickDates = [
         { label: "Jutro", value: addDays(new Date(), 1) },
         { label: "Pojutrze", value: addDays(new Date(), 2) },
@@ -232,20 +241,20 @@ function ConfirmationView({ date, onReschedule, googleCalendarLink, hasGoogleCal
                         </h3>
                         <ul className="space-y-3">
                             <li className="flex gap-3 text-sm text-muted-foreground">
-                                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold">1</div>
+                                <div className="shrink-0 w-6 h-6 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold">1</div>
                                 <span>
-                                    W dniu pomiaru ({format(date, "dd.MM")}) w tym miejscu pojawi się przycisk <span className="font-medium text-foreground">"Rozpocznij Protokół"</span>.
+                                    W dniu pomiaru ({format(date, "dd.MM")}) w tym miejscu pojawi się przycisk <span className="font-medium text-foreground">&quot;Rozpocznij Protokół&quot;</span>.
                                 </span>
                             </li>
                             <li className="flex gap-3 text-sm text-muted-foreground">
-                                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold">2</div>
+                                <div className="shrink-0 w-6 h-6 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold">2</div>
                                 <span>
                                     Klient otrzymał automatyczne powiadomienie SMS z potwierdzeniem terminu.
                                 </span>
                             </li>
                             {hasGoogleCalendar && (
                                 <li className="flex gap-3 text-sm text-muted-foreground">
-                                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-green-50 text-green-600 flex items-center justify-center text-xs font-bold">
+                                    <div className="shrink-0 w-6 h-6 rounded-full bg-green-50 text-green-600 flex items-center justify-center text-xs font-bold">
                                         <CalendarDays className="w-3 h-3" />
                                     </div>
                                     <span>
