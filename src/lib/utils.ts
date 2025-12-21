@@ -20,3 +20,12 @@ export function generatePortalToken(): string {
   }
   return token;
 }
+
+export function generateId(prefix?: string): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let token = '';
+  for (let i = 0; i < 21; i++) {
+    token += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return prefix ? `${prefix}_${token}` : token;
+}

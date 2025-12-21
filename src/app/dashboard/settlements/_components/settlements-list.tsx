@@ -39,6 +39,7 @@ import { updateSettlementStatus, paySettlementWithDeductions } from '../actions'
 
 type Settlement = {
     id: string;
+    montageId: string;
     status: string;
     totalAmount: number;
     createdAt: Date | string;
@@ -47,6 +48,7 @@ type Settlement = {
         clientName: string;
         address: string | null;
         installationAddress: string | null;
+        installationCity: string | null;
     } | null;
     installer: {
         name: string | null;
@@ -58,6 +60,8 @@ type Advance = {
     id: string;
     amount: number;
     installerId: string;
+    requestDate: Date | string;
+    description: string | null;
 };
 
 interface SettlementsListProps {

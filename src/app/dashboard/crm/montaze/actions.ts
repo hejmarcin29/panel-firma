@@ -1421,6 +1421,7 @@ export async function updateMontageMeasurement({
 	scheduledInstallationEndAt,
     measurementDate,
     measurementInstallationMethod,
+    measurementFloorPattern,
     measurementSubfloorCondition,
     measurementAdditionalWorkNeeded,
     measurementAdditionalWorkDescription,
