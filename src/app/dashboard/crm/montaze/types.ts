@@ -119,6 +119,12 @@ export type Montage = {
     clientSignatureUrl?: string | null;
     installerSignatureUrl?: string | null;
 
+    // Skirting Protocol & Logistics
+    skirtingMaterialStatus?: MontageMaterialStatus | null;
+    skirtingMaterialClaimType?: MontageMaterialClaimType | null;
+    skirtingProtocolData?: Record<string, unknown> | null;
+    skirtingClientSignatureUrl?: string | null;
+
 	materialsEditHistory: MaterialsEditHistoryEntry[] | null;
 	additionalInfo: string | null;
 	sketchUrl?: string | null;

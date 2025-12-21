@@ -49,6 +49,22 @@ export const SYSTEM_NOTIFICATIONS: SystemNotificationDefinition[] = [
         defaultEnabled: true
     },
     {
+        id: 'workflow_skirting_split',
+        type: 'system',
+        trigger: 'Podpisanie protokołu (gdy listwy osobno)',
+        action: 'Przenosi do etapu "Przed montażem listew"',
+        recipient: 'System Workflow',
+        defaultEnabled: true
+    },
+    {
+        id: 'alert_skirting_pickup',
+        type: 'system',
+        trigger: 'Status "Na magazynie" + Odbiór własny',
+        action: 'Wyświetla alert "ZABIERZ LISTWY" w aplikacji',
+        recipient: 'Montażysta',
+        defaultEnabled: true
+    },
+    {
         id: 'quote_signed',
         type: 'system',
         trigger: 'Podpisanie wyceny przez klienta (Portal)',

@@ -12,6 +12,8 @@ interface MontageTimelineProps {
         scheduledInstallationAt: Date | null;
         forecastedInstallationDate: Date | null;
         installationCity: string | null;
+        measurementSeparateSkirting: boolean | null;
+        scheduledSkirtingInstallationAt: Date | null;
     }
 }
 
@@ -25,13 +27,13 @@ type TimelineStep = {
 };
 
 export function MontageTimeline({ montage }: MontageTimelineProps) {
-    const { status, createdAt, scheduledInstallationAt: scheduledDate, forecastedInstallationDate: forecastedDate, installationCity: city } = montage;
+    const { status, createdAt, scheduledInstallationAt: scheduledDate, forecastedInstallationDate: forecastedDate, installationCity: city, measurementSeparateSkirting, scheduledSkirtingInstallationAt } = montage;
     
     // Mapowanie statusów z bazy na kroki osi czasu
-    // DB: ['lead', 'before_measurement', 'before_first_payment', 'before_installation', 'before_final_invoice', 'completed']
+    // DB: ['lead', 'before_measurement', 'before_first_payment', 'before_installation', 'before_skirting_installation', 'before_final_invoice', 'completed']
     
     const getStepState = (targetStatus: string, currentStatus: string): 'completed' | 'current' | 'upcoming' => {
-        const statusOrder = ['lead', 'before_measurement', 'before_first_payment', 'before_installation', 'before_final_invoice', 'completed'];
+        const statusOrder = ['lead', 'before_measurement', 'before_first_payment', 'before_installation', 'before_skirting_installation', 'before_final_invoice', 'completed'];
         const currentIndex = statusOrder.indexOf(currentStatus);
         const targetIndex = statusOrder.indexOf(targetStatus);
 
@@ -39,6 +41,8 @@ export function MontageTimeline({ montage }: MontageTimelineProps) {
         if (currentIndex === targetIndex) return 'current';
         return 'upcoming';
     };
+
+    const floorTarget = measurementSeparateSkirting ? 'before_skirting_installation' : 'before_final_invoice';
 
     const steps: TimelineStep[] = [
         {
@@ -71,21 +75,33 @@ export function MontageTimeline({ montage }: MontageTimelineProps) {
             status: getStepState('before_installation', status)
         },
         {
-            id: 'before_final_invoice',
-            label: 'Montaż',
+            id: 'floor_install',
+            label: measurementSeparateSkirting ? 'Montaż Podłogi' : 'Montaż',
             description: scheduledDate ? 'Zaplanowany termin prac' : 'Oczekiwanie na termin',
             icon: Hammer,
             date: scheduledDate || forecastedDate,
-            status: getStepState('before_final_invoice', status)
-        },
-        {
-            id: 'completed',
-            label: 'Zakończono',
-            description: 'Prace odebrane',
-            icon: Check,
-            status: getStepState('completed', status)
+            status: getStepState(floorTarget, status)
         }
     ];
+
+    if (measurementSeparateSkirting) {
+        steps.push({
+            id: 'skirting_install',
+            label: 'Montaż Listew',
+            description: scheduledSkirtingInstallationAt ? 'Zaplanowany termin listew' : 'Oczekiwanie na termin',
+            icon: Ruler,
+            date: scheduledSkirtingInstallationAt,
+            status: getStepState('before_final_invoice', status)
+        });
+    }
+
+    steps.push({
+        id: 'completed',
+        label: 'Zakończono',
+        description: 'Prace odebrane',
+        icon: Check,
+        status: getStepState('completed', status)
+    });
 
     return (
         <div className="bg-white dark:bg-zinc-950 rounded-xl border shadow-sm p-6">

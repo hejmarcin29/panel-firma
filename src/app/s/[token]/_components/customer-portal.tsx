@@ -50,6 +50,8 @@ interface Montage {
     skirtingDetails: string | null;
     measurementDetails: string | null;
     installationCity: string | null;
+    measurementSeparateSkirting: boolean | null;
+    scheduledSkirtingInstallationAt: Date | null;
 }
 
 interface Customer {

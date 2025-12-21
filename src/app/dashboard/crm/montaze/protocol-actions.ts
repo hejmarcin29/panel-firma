@@ -60,6 +60,16 @@ export async function submitMontageProtocol(data: {
     installerName: string;
 }) {
     try {
+        // Fetch montage to check for separate skirting
+        const montage = await db.query.montages.findFirst({
+            where: eq(montages.id, data.montageId),
+            columns: {
+                measurementSeparateSkirting: true
+            }
+        });
+
+        const nextStatus = montage?.measurementSeparateSkirting ? 'before_skirting_installation' : 'before_final_invoice';
+
         // 1. Update Montage Record
         await db.update(montages).set({
             contractNumber: data.contractNumber,
@@ -73,7 +83,7 @@ export async function submitMontageProtocol(data: {
             },
             clientSignatureUrl: data.clientSignatureUrl,
             installerSignatureUrl: data.installerSignatureUrl,
-            status: 'before_final_invoice', // Move to next stage automatically
+            status: nextStatus, // Move to next stage automatically
         }).where(eq(montages.id, data.montageId));
 
         // 2. Generate PDF
@@ -144,5 +154,32 @@ export async function submitMontageProtocol(data: {
     } catch (error) {
         console.error('Error submitting protocol:', error);
         return { success: false, error: 'Failed to submit protocol' };
+    }
+}
+
+export async function submitSkirtingProtocol(data: {
+    montageId: string;
+    location: string;
+    notes: string;
+    clientSignatureUrl: string;
+}) {
+    try {
+        // 1. Update Montage Record
+        await db.update(montages).set({
+            skirtingProtocolData: {
+                isHousingVat: false, 
+                location: data.location,
+                signedAt: new Date().toISOString(),
+                notes: data.notes,
+            },
+            skirtingClientSignatureUrl: data.clientSignatureUrl,
+            status: 'before_final_invoice', // Move to final stage
+        }).where(eq(montages.id, data.montageId));
+
+        revalidatePath(`/dashboard/crm/montaze/${data.montageId}`);
+        return { success: true };
+    } catch (error) {
+        console.error('Error submitting skirting protocol:', error);
+        return { success: false, error: 'Failed to submit skirting protocol' };
     }
 }

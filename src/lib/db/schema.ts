@@ -47,7 +47,7 @@ export const supplierMessageMediums = ['email', 'phone', 'note'] as const;
 
 export const mailFolderKinds = ['inbox', 'sent', 'drafts', 'spam', 'trash', 'archive', 'custom'] as const;
 export const mailAccountStatuses = ['disabled', 'connected', 'disconnected', 'error'] as const;
-export const montageStatuses = ['lead', 'before_measurement', 'before_first_payment', 'before_installation', 'before_final_invoice', 'completed'] as const;
+export const montageStatuses = ['lead', 'before_measurement', 'before_first_payment', 'before_installation', 'before_skirting_installation', 'before_final_invoice', 'completed'] as const;
 export const customerSources = ['internet', 'social_media', 'recommendation', 'architect', 'event', 'drive_by', 'phone', 'other'] as const;
 
 export type UserRole = (typeof userRoles)[number];
@@ -548,6 +548,17 @@ export const montages = pgTable(
             notes: string;
         }>(),
         clientSignatureUrl: text('client_signature_url'),
+
+        // Skirting Protocol & Logistics
+        skirtingMaterialStatus: text('skirting_material_status').$type<MontageMaterialStatus>().default('none'),
+        skirtingMaterialClaimType: text('skirting_material_claim_type').$type<MontageMaterialClaimType>(),
+        skirtingProtocolData: json('skirting_protocol_data').$type<{
+            isHousingVat: boolean;
+            location: string;
+            signedAt: string;
+            notes: string;
+        }>(),
+        skirtingClientSignatureUrl: text('skirting_client_signature_url'),
         installerSignatureUrl: text('installer_signature_url'),
 
         technicalAudit: json('technical_audit').$type<TechnicalAuditData>(),

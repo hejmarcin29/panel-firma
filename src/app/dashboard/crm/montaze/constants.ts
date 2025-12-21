@@ -24,6 +24,10 @@ export const statusLabels: Record<MontageStatus, StatusLabelConfig> = {
 		label: 'Przed montazem',
 		description: 'Przygotuj ekipe i materialy do montazu.',
 	},
+	before_skirting_installation: {
+		label: 'Przed montażem listew',
+		description: 'Montaż podłogi zakończony, czekamy na listwy.',
+	},
 	before_final_invoice: {
 		label: 'Przed FV i protokolem',
 		description: 'Czekamy na odbior, fakture koncowa i protokol.',
