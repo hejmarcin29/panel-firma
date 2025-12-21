@@ -15,6 +15,7 @@ import {
   MessageSquare,
   FileText,
   Bot,
+  Banknote,
 } from "lucide-react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -33,6 +34,7 @@ interface SettingsViewProps {
   trash: React.ReactNode;
   portalSettings: React.ReactNode;
   contractTemplatesManager: React.ReactNode;
+  servicesSettings: React.ReactNode;
 }
 
 export function SettingsView({
@@ -49,6 +51,7 @@ export function SettingsView({
   trash,
   portalSettings,
   contractTemplatesManager,
+  servicesSettings,
 }: SettingsViewProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -116,6 +119,20 @@ export function SettingsView({
           <span className="flex flex-col text-left">
             <span className="text-sm font-medium">Ogólne</span>
             <span className="text-xs text-muted-foreground">Podstawowe ustawienia systemu.</span>
+          </span>
+        </Button>
+
+        <Button
+          variant="ghost"
+          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3 bg-card border shadow-sm"
+          onClick={() => handleTabChange("services")}
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
+            <Banknote className="h-4 w-4" />
+          </span>
+          <span className="flex flex-col text-left">
+            <span className="text-sm font-medium">Usługi i Stawki</span>
+            <span className="text-xs text-muted-foreground">Katalog usług i cenniki.</span>
           </span>
         </Button>
 
@@ -282,6 +299,13 @@ export function SettingsView({
               Ogólne
             </TabsTrigger>
             <TabsTrigger 
+              value="services" 
+              className="w-full justify-start gap-2 px-3 py-2 h-9 data-[state=active]:bg-muted data-[state=active]:shadow-none ring-offset-background transition-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <Banknote className="h-4 w-4" />
+              Usługi i Stawki
+            </TabsTrigger>
+            <TabsTrigger 
               value="documentation" 
               className="w-full justify-start gap-2 px-3 py-2 h-9 data-[state=active]:bg-muted data-[state=active]:shadow-none ring-offset-background transition-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
@@ -361,6 +385,10 @@ export function SettingsView({
 
           <TabsContent value="general" className="m-0 space-y-4">
               {children}
+          </TabsContent>
+
+          <TabsContent value="services" className="m-0 space-y-4">
+            {servicesSettings}
           </TabsContent>
 
           <TabsContent value="team" className="m-0 space-y-4">

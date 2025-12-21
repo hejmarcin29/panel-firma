@@ -718,6 +718,7 @@ export const montagesRelations = relations(montages, ({ one, many }) => ({
         references: [customers.id],
     }),
     quotes: many(quotes),
+    serviceItems: many(montageServiceItems),
     settlement: one(settlements, {
         fields: [montages.id],
         references: [settlements.montageId],
@@ -1285,6 +1286,7 @@ export const usersRelations = relations(users, ({ many }) => ({
     assignedProducts: many(architectProducts),
     partnerPayouts: many(partnerPayouts),
     partnerCommissions: many(partnerCommissions),
+    serviceRates: many(userServiceRates),
 }));
 
 export const architectProducts = pgTable(
@@ -1470,6 +1472,73 @@ export const advancesRelations = relations(advances, ({ one }) => ({
     installer: one(users, {
         fields: [advances.installerId],
         references: [users.id],
+    }),
+}));
+
+// --- SERVICE CATALOG & RATES ---
+
+export const services = pgTable('services', {
+    id: text('id').primaryKey(),
+    name: text('name').notNull(),
+    unit: text('unit').notNull(), // m2, mb, szt, kpl
+    vatRate: doublePrecision('vat_rate').default(0.23),
+    basePriceNet: doublePrecision('base_price_net').default(0), // Client price
+    baseInstallerRate: doublePrecision('base_installer_rate').default(0), // Default installer rate
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+    deletedAt: timestamp('deleted_at'),
+});
+
+export const userServiceRates = pgTable('user_service_rates', {
+    id: text('id').primaryKey(),
+    userId: text('user_id').references(() => users.id).notNull(),
+    serviceId: text('service_id').references(() => services.id).notNull(),
+    customRate: doublePrecision('custom_rate').notNull(), // The override rate
+    updatedAt: timestamp('updated_at').defaultNow(),
+}, (t) => ({
+    unq: uniqueIndex('user_service_rate_unq').on(t.userId, t.serviceId),
+}));
+
+export const montageServiceItems = pgTable('montage_service_items', {
+    id: text('id').primaryKey(),
+    montageId: text('montage_id').references(() => montages.id).notNull(),
+    serviceId: text('service_id').references(() => services.id).notNull(),
+    
+    quantity: doublePrecision('quantity').notNull(),
+    
+    // Snapshots
+    snapshotName: text('snapshot_name'), // Name at the time of adding
+    installerRate: doublePrecision('installer_rate').notNull(), 
+    clientPrice: doublePrecision('client_price').notNull(),
+    vatRate: doublePrecision('vat_rate').default(0.23), // Snapshot VAT
+    
+    createdAt: timestamp('created_at').defaultNow(),
+});
+
+export const servicesRelations = relations(services, ({ many }) => ({
+    userRates: many(userServiceRates),
+    montageItems: many(montageServiceItems),
+}));
+
+export const userServiceRatesRelations = relations(userServiceRates, ({ one }) => ({
+    user: one(users, {
+        fields: [userServiceRates.userId],
+        references: [users.id],
+    }),
+    service: one(services, {
+        fields: [userServiceRates.serviceId],
+        references: [services.id],
+    }),
+}));
+
+export const montageServiceItemsRelations = relations(montageServiceItems, ({ one }) => ({
+    montage: one(montages, {
+        fields: [montageServiceItems.montageId],
+        references: [montages.id],
+    }),
+    service: one(services, {
+        fields: [montageServiceItems.serviceId],
+        references: [services.id],
     }),
 }));
 

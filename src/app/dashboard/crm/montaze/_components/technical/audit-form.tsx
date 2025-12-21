@@ -54,13 +54,18 @@ export function AuditForm({ montageId, initialData, readOnly = false }: AuditFor
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Audyt Techniczny Podłoża</CardTitle>
-        <CardDescription>Wypełnia pomiarowiec przed zamówieniem materiału.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <Label className="text-base font-medium">Audyt Techniczny Podłoża</Label>
+        {!readOnly && (
+            <Button onClick={handleSave} disabled={isPending} size="sm" variant="outline">
+                {isPending && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
+                Zapisz Audyt
+            </Button>
+        )}
+      </div>
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 gap-4">
           <div className="space-y-2">
             <Label>Wilgotność (%)</Label>
             <div className="flex gap-2">
@@ -170,16 +175,7 @@ export function AuditForm({ montageId, initialData, readOnly = false }: AuditFor
                 placeholder="Opisz ewentualne pęknięcia, dylatacje itp."
             />
         </div>
-
-        {!readOnly && (
-            <div className="flex justify-end">
-                <Button onClick={handleSave} disabled={isPending}>
-                    {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Zapisz Audyt
-                </Button>
-            </div>
-        )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

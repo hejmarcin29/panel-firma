@@ -47,6 +47,7 @@ import { PortalSettingsForm } from './_components/portal-settings-form';
 import { ContractTemplatesManager } from './_components/contract-templates-manager';
 import { getContractTemplates } from './contracts/actions';
 import { InstallerSettingsView } from './_components/installer-settings-view';
+import ServicesSettingsPage from './services/page';
 
 type LogLevel = 'info' | 'warning' | 'error';
 
@@ -349,6 +350,7 @@ export default async function SettingsPage() {
             documentation={
                 <DocumentationView content={businessLogicContent} />
             }
+            servicesSettings={<ServicesSettingsPage />}
             appearance={
                 <div className="grid gap-4">
                     <LogoSettings currentLogoUrl={systemLogoUrl ?? null} />

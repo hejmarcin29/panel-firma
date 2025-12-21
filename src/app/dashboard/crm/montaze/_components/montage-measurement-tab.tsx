@@ -548,7 +548,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                             </div>
 
                             <div className="space-y-2">
-                                <Label>Stan podłoża</Label>
+                                <Label>Stan podłoża (wstępna ocena)</Label>
                                 <Select value={subfloorCondition} onValueChange={setSubfloorCondition}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Wybierz stan podłoża" />
@@ -655,6 +655,14 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                                     </Popover>
                                 </div>
                             )}
+
+                            <div className="pt-4 border-t">
+                                <AuditForm 
+                                    montageId={montage.id} 
+                                    initialData={technicalAudit} 
+                                    readOnly={isReadOnly}
+                                />
+                            </div>
                         </CardContent>
                     </Card>
 
@@ -1267,18 +1275,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                 </Card>
 
                 {/* Audit Form */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-base font-medium">Audyt techniczny</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <AuditForm 
-                            montageId={montage.id} 
-                            initialData={technicalAudit} 
-                            readOnly={isReadOnly}
-                        />
-                    </CardContent>
-                </Card>
+                {/* Moved to Technical Details in Main Tab */}
             </div>
         </TabsContent>
       </Tabs>

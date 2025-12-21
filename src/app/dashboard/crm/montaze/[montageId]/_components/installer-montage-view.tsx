@@ -10,7 +10,8 @@ import {
     MessageSquare, 
     History, 
     FileText,
-    Navigation
+    Navigation,
+    Banknote
 } from "lucide-react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
@@ -25,6 +26,7 @@ import { MontageNotesTab } from "./montage-notes-tab";
 import { MontageGalleryTab } from "./montage-gallery-tab";
 import { MontageTasksTab } from "./montage-tasks-tab";
 import { MontageMeasurementTab } from "../../_components/montage-measurement-tab";
+import { MontageSettlementTab } from "../../_components/montage-settlement-tab";
 import { MontageClientCard } from "./montage-client-card"; // Reusing for edit capabilities if needed
 import { MontageMaterialCard } from "./montage-material-card";
 import { MeasurementScheduler } from "./measurement-scheduler";
@@ -124,6 +126,10 @@ export function InstallerMontageView({ montage, logs, userRoles, hasGoogleCalend
                                 <TabsTrigger value="gallery" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-4">
                                     <Camera className="w-4 h-4 mr-2" />
                                     Zdjęcia
+                                </TabsTrigger>
+                                <TabsTrigger value="settlement" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-4">
+                                    <Banknote className="w-4 h-4 mr-2" />
+                                    Rozliczenia
                                 </TabsTrigger>
                                 <TabsTrigger value="info" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-4">
                                     <FileText className="w-4 h-4 mr-2" />
@@ -241,6 +247,11 @@ export function InstallerMontageView({ montage, logs, userRoles, hasGoogleCalend
                         montage={montage} 
                         userRoles={userRoles} 
                     />
+                )}
+
+                {/* TAB: SETTLEMENT */}
+                {activeTab === 'settlement' && (
+                    <MontageSettlementTab montage={montage} userRoles={userRoles} />
                 )}
 
                 {/* TAB: INFO (Client Details) */}

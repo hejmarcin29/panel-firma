@@ -267,6 +267,20 @@
       "when": 1766318360459,
       "tag": "0037_public_ben_urich",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1766350191387,
+      "tag": "0038_hard_venom",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1766350516197,
+      "tag": "0039_flimsy_cargill",
+      "breakpoints": true
     }
   ]
 }

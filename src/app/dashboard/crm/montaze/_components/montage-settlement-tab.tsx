@@ -157,15 +157,17 @@ export function MontageSettlementTab({ montage, userRoles }: MontageSettlementTa
                                 Wykryto zmiany w pomiarach lub stawkach od czasu utworzenia tego rozliczenia.
                                 Kwota może być nieaktualna.
                             </p>
-                            <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="bg-white border-yellow-300 hover:bg-yellow-100 text-yellow-800"
-                                onClick={handleCalculate}
-                            >
-                                <RefreshCw className="mr-2 h-3 w-3" />
-                                Przelicz ponownie
-                            </Button>
+                            {isAdmin && (
+                                <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="bg-white border-yellow-300 hover:bg-yellow-100 text-yellow-800"
+                                    onClick={handleCalculate}
+                                >
+                                    <RefreshCw className="mr-2 h-3 w-3" />
+                                    Przelicz ponownie
+                                </Button>
+                            )}
                         </div>
                     </div>
                 )}
