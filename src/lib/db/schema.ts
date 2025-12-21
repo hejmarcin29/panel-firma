@@ -78,6 +78,13 @@ export type InstallerProfile = {
     carPlate?: string;
     nip?: string;
     bankAccount?: string;
+    rates?: {
+        classicClick?: number;
+        classicGlue?: number;
+        herringboneClick?: number;
+        herringboneGlue?: number;
+        skirting?: number;
+    };
 	pricing?: {
 		serviceName: string;
 		price: number;
@@ -504,6 +511,7 @@ export const montages = pgTable(
 		materialDetails: text('material_details'),
 		measurementDetails: text('measurement_details'),
 		measurementInstallationMethod: text('measurement_installation_method').$type<'click' | 'glue'>(),
+        measurementFloorPattern: text('measurement_floor_pattern').$type<'classic' | 'herringbone'>().default('classic'),
 		measurementSubfloorCondition: text('measurement_subfloor_condition'),
 		measurementAdditionalWorkNeeded: boolean('measurement_additional_work_needed').default(false),
 		measurementAdditionalWorkDescription: text('measurement_additional_work_description'),
@@ -710,6 +718,10 @@ export const montagesRelations = relations(montages, ({ one, many }) => ({
         references: [customers.id],
     }),
     quotes: many(quotes),
+    settlement: one(settlements, {
+        fields: [montages.id],
+        references: [settlements.montageId],
+    }),
 }));
 
 export const montageNotesRelations = relations(montageNotes, ({ one, many }) => ({
@@ -1409,6 +1421,54 @@ export const warehouseMovementsRelations = relations(warehouseMovements, ({ one 
     }),
     user: one(users, {
         fields: [warehouseMovements.createdBy],
+        references: [users.id],
+    }),
+}));
+
+export const settlementStatuses = ['draft', 'pending', 'approved', 'paid'] as const;
+export type SettlementStatus = (typeof settlementStatuses)[number];
+
+export const settlements = pgTable('settlements', {
+    id: text('id').primaryKey(),
+    montageId: text('montage_id').notNull().references(() => montages.id),
+    installerId: text('installer_id').notNull().references(() => users.id),
+    status: text('status').$type<SettlementStatus>().notNull().default('draft'),
+    totalAmount: doublePrecision('total_amount').notNull(),
+    calculations: json('calculations').notNull(),
+    note: text('note'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const advanceStatuses = ['pending', 'paid', 'deducted'] as const;
+export type AdvanceStatus = (typeof advanceStatuses)[number];
+
+export const advances = pgTable('advances', {
+    id: text('id').primaryKey(),
+    installerId: text('installer_id').notNull().references(() => users.id),
+    amount: doublePrecision('amount').notNull(),
+    status: text('status').$type<AdvanceStatus>().notNull().default('pending'),
+    requestDate: timestamp('request_date').notNull().defaultNow(),
+    paidDate: timestamp('paid_date'),
+    description: text('description'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const settlementsRelations = relations(settlements, ({ one }) => ({
+    montage: one(montages, {
+        fields: [settlements.montageId],
+        references: [montages.id],
+    }),
+    installer: one(users, {
+        fields: [settlements.installerId],
+        references: [users.id],
+    }),
+}));
+
+export const advancesRelations = relations(advances, ({ one }) => ({
+    installer: one(users, {
+        fields: [advances.installerId],
         references: [users.id],
     }),
 }));

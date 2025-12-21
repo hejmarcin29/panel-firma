@@ -64,6 +64,13 @@ interface EmployeeDetailsSheetProps {
 const profileSchema = z.object({
     workScope: z.string().optional(),
     operationArea: z.string().optional(),
+    rates: z.object({
+        classicClick: z.coerce.number().min(0).optional(),
+        classicGlue: z.coerce.number().min(0).optional(),
+        herringboneClick: z.coerce.number().min(0).optional(),
+        herringboneGlue: z.coerce.number().min(0).optional(),
+        skirting: z.coerce.number().min(0).optional(),
+    }).optional(),
     pricing: z.array(z.object({
         serviceName: z.string().min(1, "Nazwa usługi wymagana"),
         price: z.coerce.number().min(0, "Cena musi być dodatnia"),
@@ -100,6 +107,7 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
         defaultValues: {
             workScope: '',
             operationArea: '',
+            rates: {},
             pricing: [],
         },
     });
@@ -131,12 +139,14 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
             form.reset({
                 workScope: member.installerProfile.workScope || '',
                 operationArea: member.installerProfile.operationArea || '',
+                rates: member.installerProfile.rates || {},
                 pricing: member.installerProfile.pricing || [],
             });
         } else {
             form.reset({
                 workScope: '',
                 operationArea: '',
+                rates: {},
                 pricing: [],
             });
         }
@@ -318,9 +328,82 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
                                     )}
                                 />
 
+                                <div className="space-y-4 border rounded-md p-4 bg-muted/20">
+                                    <FormLabel className="text-base font-semibold">Stawki Podstawowe (PLN/m²)</FormLabel>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <FormField
+                                            control={form.control}
+                                            name="rates.classicClick"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel className="text-xs">Klasycznie (Click)</FormLabel>
+                                                    <FormControl>
+                                                        <Input type="number" placeholder="0.00" {...field} onBlur={form.handleSubmit(onSubmit)} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="rates.classicGlue"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel className="text-xs">Klasycznie (Klej)</FormLabel>
+                                                    <FormControl>
+                                                        <Input type="number" placeholder="0.00" {...field} onBlur={form.handleSubmit(onSubmit)} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="rates.herringboneClick"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel className="text-xs">Jodełka (Click)</FormLabel>
+                                                    <FormControl>
+                                                        <Input type="number" placeholder="0.00" {...field} onBlur={form.handleSubmit(onSubmit)} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="rates.herringboneGlue"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel className="text-xs">Jodełka (Klej)</FormLabel>
+                                                    <FormControl>
+                                                        <Input type="number" placeholder="0.00" {...field} onBlur={form.handleSubmit(onSubmit)} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+                                    <div className="pt-2 border-t">
+                                        <FormField
+                                            control={form.control}
+                                            name="rates.skirting"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel className="text-xs">Listwy (PLN/mb)</FormLabel>
+                                                    <FormControl>
+                                                        <Input type="number" placeholder="0.00" {...field} onBlur={form.handleSubmit(onSubmit)} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+                                </div>
+
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between">
-                                        <FormLabel>Cennik usług</FormLabel>
+                                        <FormLabel>Cennik usług dodatkowych</FormLabel>
                                         <Button 
                                             type="button" 
                                             variant="outline" 

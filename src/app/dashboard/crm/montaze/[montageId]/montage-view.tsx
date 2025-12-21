@@ -27,6 +27,7 @@ import { MontageGalleryTab } from './_components/montage-gallery-tab';
 import { MontageNotesTab } from './_components/montage-notes-tab';
 import { MontageHistoryTab } from './_components/montage-history-tab';
 import { MontageMeasurementTab } from '../_components/montage-measurement-tab';
+import { MontageSettlementTab } from '../_components/montage-settlement-tab';
 import { MontageQuotes } from './_components/montage-quotes';
 import { MontageClientInfo } from './_components/montage-client-info';
 
@@ -154,6 +155,7 @@ export function MontageView({ montageId, initialData, portalEnabled }: MontageVi
                     workflow: <MontageWorkflowTab montage={montage} statusOptions={statusOptions} installers={installers} measurers={measurers} userRoles={userRoles} />,
                     measurement: <MontageMeasurementTab montage={montage} userRoles={userRoles} />,
                     quotes: !isInstaller ? <MontageQuotes montageId={montage.id} quotes={montage.quotes} /> : undefined,
+                    settlement: <MontageSettlementTab montage={montage} userRoles={userRoles} />,
                     tasks: <MontageTasksTab montage={montage} />,
                     gallery: <MontageGalleryTab montage={montage} userRoles={userRoles} />,
                 }}

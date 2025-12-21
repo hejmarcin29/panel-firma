@@ -91,6 +91,9 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
   const [installationMethod, setInstallationMethod] = useState<'click' | 'glue'>(
     (montage.measurementInstallationMethod as 'click' | 'glue') || 'click'
   );
+  const [floorPattern, setFloorPattern] = useState<'classic' | 'herringbone'>(
+    (montage.measurementFloorPattern as 'classic' | 'herringbone') || 'classic'
+  );
   const [subfloorCondition, setSubfloorCondition] = useState(montage.measurementSubfloorCondition || 'good');
   const [additionalWorkNeeded, setAdditionalWorkNeeded] = useState(montage.measurementAdditionalWorkNeeded || false);
   const [additionalWorkDescription, setAdditionalWorkDescription] = useState(montage.measurementAdditionalWorkDescription || '');
@@ -153,6 +156,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
     setSkirtingWaste(montage.skirtingWaste?.toString() || '5');
     setModelsApproved(montage.modelsApproved || false);
     setInstallationMethod((montage.measurementInstallationMethod as 'click' | 'glue') || 'click');
+    setFloorPattern((montage.measurementFloorPattern as 'classic' | 'herringbone') || 'classic');
     setSubfloorCondition(montage.measurementSubfloorCondition || 'good');
     setAdditionalWorkNeeded(montage.measurementAdditionalWorkNeeded || false);
     setAdditionalWorkDescription(montage.measurementAdditionalWorkDescription || '');
@@ -213,6 +217,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
           modelsApproved,
           measurementDate,
           measurementInstallationMethod: installationMethod,
+          measurementFloorPattern: floorPattern,
           measurementSubfloorCondition: subfloorCondition,
           measurementAdditionalWorkNeeded: additionalWorkNeeded,
           measurementAdditionalWorkDescription: additionalWorkDescription,
@@ -248,6 +253,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
     skirtingWaste,
     modelsApproved,
     installationMethod,
+    floorPattern,
     subfloorCondition,
     additionalWorkNeeded,
     additionalWorkDescription,
@@ -464,105 +470,39 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
       </Card>
 
       <div className="grid gap-6 md:grid-cols-2">
-          {/* Floor Calculator */}
-          <Card>
-            <CardHeader className="pb-3">
-                <CardTitle className="text-base font-medium flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-blue-500"></span>
-                    Podłoga
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                        <Label htmlFor="floorArea" className="text-xs text-muted-foreground flex items-center gap-2">
-                            Wymiar netto (m²)
-                            {montage.status === 'lead' && montage.floorArea && (
-                                <span className="text-[10px] font-bold text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded-full">
-                                    (Szacowany)
-                                </span>
-                            )}
-                        </Label>
-                        <Input
-                        id="floorArea"
-                        type="number"
-                        step="0.01"
-                        placeholder="0.00"
-                        value={floorArea}
-                        onChange={(e) => setFloorArea(e.target.value)}
-                        disabled={isReadOnly}
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label htmlFor="panelWaste" className="text-xs text-muted-foreground">Zapas (%)</Label>
-                        <Select value={panelWaste} onValueChange={setPanelWaste} disabled={isReadOnly}>
-                            <SelectTrigger id="panelWaste">
-                                <SelectValue placeholder="Zapas" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="0">0%</SelectItem>
-                                <SelectItem value="5">5%</SelectItem>
-                                <SelectItem value="7">7%</SelectItem>
-                                <SelectItem value="10">10%</SelectItem>
-                                <SelectItem value="15">15%</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
-                
-                <div className="space-y-2 pt-2 border-t border-dashed">
-                    <div className="space-y-1">
-                        <Label htmlFor="panelModel" className="text-xs text-muted-foreground">Model paneli</Label>
-                        <div className="flex gap-2">
-                            <Input
-                                id="panelModel"
-                                placeholder="Kliknij aby wybrać z listy..."
-                                value={panelModel}
-                                readOnly
-                                onClick={() => !isReadOnly && setIsPanelSelectorOpen(true)}
-                                className="h-8 text-sm flex-1 cursor-pointer bg-muted/50"
-                                disabled={isReadOnly}
-                            />
-                            <Button 
-                                type="button" 
-                                variant="outline" 
-                                size="sm" 
-                                className="h-8 px-2"
-                                onClick={() => setIsPanelSelectorOpen(true)}
-                                disabled={isReadOnly}
-                            >
-                                Wybierz
-                            </Button>
-                        </div>
-                    </div>
-                    <div className="space-y-1">
-                        <Label htmlFor="panelAdditionalMaterials" className="text-xs text-muted-foreground">Dodatkowe (podkład, folia...)</Label>
-                        <Input
-                        id="panelAdditionalMaterials"
-                        placeholder="np. podkład 5mm, folia paroizolacyjna"
-                        value={panelAdditionalMaterials}
-                        disabled={isReadOnly}
-                        onChange={(e) => setPanelAdditionalMaterials(e.target.value)}
-                        className="h-8 text-sm"
-                        />
-                    </div>
-                </div>
-
-                <div className="pt-2 border-t flex justify-between items-center">
-                    <span className="text-sm font-medium text-muted-foreground">Do zamówienia:</span>
-                    <span className="text-lg font-bold">
-                        {floorArea ? (parseFloat(floorArea) * (1 + parseInt(panelWaste)/100)).toFixed(2) : '0.00'} m²
-                    </span>
-                </div>
-            </CardContent>
-          </Card>
-
-          {/* Technical Details */}
+          {/* Technical Details (Moved Up) */}
             <Card>
                 <CardHeader className="pb-3">
                     <CardTitle className="text-base font-medium">Szczegóły techniczne</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                        <Label>Wzór ułożenia</Label>
+                        <RadioGroup 
+                            value={floorPattern} 
+                            onValueChange={(v) => {
+                                const val = v as 'classic' | 'herringbone';
+                                setFloorPattern(val);
+                                if (val === 'herringbone') {
+                                    setPanelWaste('12');
+                                } else {
+                                    setPanelWaste('5');
+                                }
+                            }} 
+                            className="flex gap-4" 
+                            disabled={isReadOnly}
+                        >
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="classic" id="pattern-classic" />
+                                <Label htmlFor="pattern-classic">Klasycznie</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="herringbone" id="pattern-herringbone" />
+                                <Label htmlFor="pattern-herringbone">Jodełka</Label>
+                            </div>
+                        </RadioGroup>
+                    </div>
+
                     <div className="space-y-2">
                         <Label>Sposób montażu</Label>
                         <RadioGroup value={installationMethod} onValueChange={(v) => setInstallationMethod(v as 'click' | 'glue')} className="flex gap-4" disabled={isReadOnly}>
@@ -687,7 +627,101 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                     )}
                 </CardContent>
             </Card>
-        </div>
+
+          {/* Floor Calculator (Moved Down) */}
+          <Card>
+            <CardHeader className="pb-3">
+                <CardTitle className="text-base font-medium flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-blue-500"></span>
+                    Podłoga
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                        <Label htmlFor="floorArea" className="text-xs text-muted-foreground flex items-center gap-2">
+                            Wymiar netto (m²)
+                            {montage.status === 'lead' && montage.floorArea && (
+                                <span className="text-[10px] font-bold text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded-full">
+                                    (Szacowany)
+                                </span>
+                            )}
+                        </Label>
+                        <Input
+                        id="floorArea"
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={floorArea}
+                        onChange={(e) => setFloorArea(e.target.value)}
+                        disabled={isReadOnly}
+                        />
+                    </div>
+                    <div className="space-y-1">
+                        <Label htmlFor="panelWaste" className="text-xs text-muted-foreground">Zapas (%)</Label>
+                        <Select value={panelWaste} onValueChange={setPanelWaste} disabled={isReadOnly}>
+                            <SelectTrigger id="panelWaste">
+                                <SelectValue placeholder="Zapas" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="0">0%</SelectItem>
+                                <SelectItem value="5">5%</SelectItem>
+                                <SelectItem value="7">7%</SelectItem>
+                                <SelectItem value="10">10%</SelectItem>
+                                <SelectItem value="12">12%</SelectItem>
+                                <SelectItem value="15">15%</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+                
+                <div className="space-y-2 pt-2 border-t border-dashed">
+                    <div className="space-y-1">
+                        <Label htmlFor="panelModel" className="text-xs text-muted-foreground">Model paneli</Label>
+                        <div className="flex gap-2">
+                            <Input
+                                id="panelModel"
+                                placeholder="Kliknij aby wybrać z listy..."
+                                value={panelModel}
+                                readOnly
+                                onClick={() => !isReadOnly && setIsPanelSelectorOpen(true)}
+                                className="h-8 text-sm flex-1 cursor-pointer bg-muted/50"
+                                disabled={isReadOnly}
+                            />
+                            <Button 
+                                type="button" 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-8 px-2"
+                                onClick={() => setIsPanelSelectorOpen(true)}
+                                disabled={isReadOnly}
+                            >
+                                Wybierz
+                            </Button>
+                        </div>
+                    </div>
+                    <div className="space-y-1">
+                        <Label htmlFor="panelAdditionalMaterials" className="text-xs text-muted-foreground">Dodatkowe (podkład, folia...)</Label>
+                        <Input
+                        id="panelAdditionalMaterials"
+                        placeholder="np. podkład 5mm, folia paroizolacyjna"
+                        value={panelAdditionalMaterials}
+                        disabled={isReadOnly}
+                        onChange={(e) => setPanelAdditionalMaterials(e.target.value)}
+                        className="h-8 text-sm"
+                        />
+                    </div>
+                </div>
+
+                <div className="pt-2 border-t flex justify-between items-center">
+                    <span className="text-sm font-medium text-muted-foreground">Do zamówienia:</span>
+                    <span className="text-lg font-bold">
+                        {floorArea ? (parseFloat(floorArea) * (1 + parseInt(panelWaste)/100)).toFixed(2) : '0.00'} m²
+                    </span>
+                </div>
+            </CardContent>
+          </Card>
+      </div>
 
         {/* Additional Work & Skirting */}
         <div className="grid gap-6 md:grid-cols-2">
@@ -828,7 +862,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                                                 <div className="relative">
                                                     <Input
                                                         type="number"
-                                                        placeholder="Szacunkowy koszt (opcjonalne)"
+                                                        placeholder="Koszt netto (opcjonalne)"
                                                         value={item.estimatedCost || ''}
                                                         disabled={isReadOnly}
                                                         onChange={(e) => {
@@ -837,7 +871,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                                                             setAdditionalMaterials(newItems);
                                                         }}
                                                     />
-                                                    <span className="absolute right-3 top-2.5 text-xs text-muted-foreground">PLN</span>
+                                                    <span className="absolute right-3 top-2.5 text-xs text-muted-foreground">PLN netto</span>
                                                 </div>
                                             )}
                                         </div>

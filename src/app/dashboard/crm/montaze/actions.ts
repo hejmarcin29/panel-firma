@@ -1452,6 +1452,7 @@ export async function updateMontageMeasurement({
     scheduledSkirtingInstallationEndAt?: number | null;
     measurementDate?: string | null;
     measurementInstallationMethod?: 'click' | 'glue' | null;
+    measurementFloorPattern?: 'classic' | 'herringbone' | null;
     measurementSubfloorCondition?: string | null;
     measurementAdditionalWorkNeeded?: boolean;
     measurementAdditionalWorkDescription?: string | null;
@@ -1503,6 +1504,7 @@ export async function updateMontageMeasurement({
             scheduledSkirtingInstallationAt: scheduledSkirtingInstallationAt ? new Date(scheduledSkirtingInstallationAt) : null,
             scheduledSkirtingInstallationEndAt: scheduledSkirtingInstallationEndAt ? new Date(scheduledSkirtingInstallationEndAt) : null,
             measurementInstallationMethod,
+            measurementFloorPattern,
             measurementSubfloorCondition,
             measurementAdditionalWorkNeeded,
             measurementAdditionalWorkDescription,

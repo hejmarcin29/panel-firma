@@ -253,6 +253,20 @@
       "when": 1766312854988,
       "tag": "0035_flippant_klaw",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1766314050999,
+      "tag": "0036_calm_scorpion",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1766318360459,
+      "tag": "0037_public_ben_urich",
+      "breakpoints": true
     }
   ]
 }

@@ -92,6 +92,7 @@ export async function getMontageDetails(montageId: string) {
                 where: isNull(quotes.deletedAt),
                 orderBy: desc(quotes.createdAt),
             },
+            settlement: true,
         },
     });
 

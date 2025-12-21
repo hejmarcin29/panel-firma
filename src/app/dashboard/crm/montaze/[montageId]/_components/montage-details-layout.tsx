@@ -20,6 +20,7 @@ interface MontageDetailsLayoutProps {
     tasks: React.ReactNode;
     gallery: React.ReactNode;
     quotes: React.ReactNode;
+    settlement?: React.ReactNode;
   };
   defaultTab?: string;
 }
@@ -57,6 +58,7 @@ export function MontageDetailsLayout({
     { id: 'workflow', label: 'Przebieg', icon: <LayoutList className="w-4 h-4" />, content: tabs.workflow ? <div className="p-4 pb-24">{tabs.workflow}</div> : null },
     { id: 'measurement', label: 'Pomiary', icon: <Ruler className="w-4 h-4" />, content: tabs.measurement ? <div className="p-4 pb-24">{tabs.measurement}</div> : null },
     { id: 'quotes', label: 'Oferty', icon: <FileText className="w-4 h-4" />, content: tabs.quotes ? <div className="p-4 pb-24">{tabs.quotes}</div> : null },
+    { id: 'settlement', label: 'Rozliczenie', icon: <FileText className="w-4 h-4" />, content: tabs.settlement ? <div className="p-4 pb-24">{tabs.settlement}</div> : null },
     { id: 'history', label: 'Historia', icon: <History className="w-4 h-4" />, content: tabs.history ? <div className="p-4 pb-24">{tabs.history}</div> : null },
   ].filter(tab => tab.content !== null), [clientCard, materialCard, tabs]);
 
@@ -144,8 +146,7 @@ export function MontageDetailsLayout({
                       {tabs.notes && <TabsTrigger value="notes" className="flex-1">Notatki</TabsTrigger>}
                       {tabs.workflow && <TabsTrigger value="workflow" className="flex-1">Przebieg</TabsTrigger>}
                       {tabs.measurement && <TabsTrigger value="measurement" className="flex-1">Pomiar</TabsTrigger>}
-                      {tabs.quotes && <TabsTrigger value="quotes" className="flex-1">Oferty</TabsTrigger>}
-                      {tabs.tasks && <TabsTrigger value="tasks" className="flex-1">Zadania</TabsTrigger>}
+                      {tabs.quotes && <TabsTrigger value="quotes" className="flex-1">Oferty</TabsTrigger>}                      {tabs.settlement && <TabsTrigger value="settlement" className="flex-1">Rozliczenie</TabsTrigger>}                      {tabs.tasks && <TabsTrigger value="tasks" className="flex-1">Zadania</TabsTrigger>}
                       {tabs.gallery && <TabsTrigger value="gallery" className="flex-1">Załączniki</TabsTrigger>}
                       {tabs.history && <TabsTrigger value="history" className="flex-1">Historia</TabsTrigger>}
                   </TabsList>
@@ -167,6 +168,11 @@ export function MontageDetailsLayout({
                   {tabs.quotes && (
                     <TabsContent value="quotes" className="mt-6">
                         {tabs.quotes}
+                    </TabsContent>
+                  )}
+                  {tabs.settlement && (
+                    <TabsContent value="settlement" className="mt-6">
+                        {tabs.settlement}
                     </TabsContent>
                   )}
                   {tabs.tasks && (

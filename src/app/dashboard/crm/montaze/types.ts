@@ -111,6 +111,7 @@ export type Montage = {
 	skirtingWaste: number | null;
 	modelsApproved: boolean;
 	measurementInstallationMethod: 'click' | 'glue' | null;
+    measurementFloorPattern?: 'classic' | 'herringbone' | null;
 	measurementSubfloorCondition: string | null;
 	measurementAdditionalWorkNeeded: boolean;
 	measurementAdditionalWorkDescription: string | null;
@@ -166,6 +167,15 @@ export type Montage = {
 	tasks: MontageTask[];
 	checklistItems: MontageChecklistItem[];
     quotes: MontageQuote[];
+    settlement?: MontageSettlement | null;
+};
+
+export type MontageSettlement = {
+    id: string;
+    status: string;
+    totalAmount: number;
+    calculations: any;
+    createdAt: TimestampValue;
 };
 
 export type QuoteItem = {
