@@ -17,7 +17,7 @@ import type { Montage } from "../../types";
 import { type UserRole } from '@/lib/db/schema';
 import { cn } from "@/lib/utils";
 
-export function MontageNotesTab({ montage, userRoles = ['admin'] }: { montage: Montage; userRoles?: UserRole[] }) {
+export function MontageNotesTab({ montage, userRoles = [] }: { montage: Montage; userRoles?: UserRole[] }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const formRef = useRef<HTMLFormElement>(null);

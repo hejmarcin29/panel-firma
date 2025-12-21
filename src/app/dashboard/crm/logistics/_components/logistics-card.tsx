@@ -151,7 +151,7 @@ export function LogisticsCard({ montage }: { montage: any }) {
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
                             onBlur={handleNotesBlur}
-                            className="min-h-[80px] text-sm"
+                            className="min-h-20 text-sm"
                         />
                     </div>
                 </div>

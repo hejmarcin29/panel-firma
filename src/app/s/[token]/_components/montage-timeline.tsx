@@ -14,6 +14,7 @@ interface MontageTimelineProps {
         installationCity: string | null;
         measurementSeparateSkirting: boolean | null;
         scheduledSkirtingInstallationAt: Date | null;
+        measurementDate: Date | null;
     }
 }
 
@@ -27,7 +28,7 @@ type TimelineStep = {
 };
 
 export function MontageTimeline({ montage }: MontageTimelineProps) {
-    const { status, createdAt, scheduledInstallationAt: scheduledDate, forecastedInstallationDate: forecastedDate, installationCity: city, measurementSeparateSkirting, scheduledSkirtingInstallationAt } = montage;
+    const { status, createdAt, scheduledInstallationAt: scheduledDate, forecastedInstallationDate: forecastedDate, installationCity: city, measurementSeparateSkirting, scheduledSkirtingInstallationAt, measurementDate } = montage;
     
     // Mapowanie statusów z bazy na kroki osi czasu
     // DB: ['lead', 'before_measurement', 'before_first_payment', 'before_installation', 'before_skirting_installation', 'before_final_invoice', 'completed']
@@ -56,8 +57,9 @@ export function MontageTimeline({ montage }: MontageTimelineProps) {
         {
             id: 'before_measurement',
             label: 'Pomiar',
-            description: 'Weryfikacja wymiarów i warunków',
+            description: measurementDate ? 'Zaplanowany termin pomiaru' : 'Weryfikacja wymiarów i warunków',
             icon: Ruler,
+            date: measurementDate,
             status: getStepState('before_measurement', status)
         },
         {

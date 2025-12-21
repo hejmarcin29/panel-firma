@@ -114,7 +114,7 @@ export function MontageView({ montageId, initialData, portalEnabled }: MontageVi
                              <MontageClientInfo montageId={montage.id} initialContent={montage.clientInfo} />
                              <div className="bg-card rounded-xl border shadow-sm p-6">
                                 <h3 className="font-semibold mb-4">Notatki</h3>
-                                <MontageNotesTab montage={montage} />
+                                <MontageNotesTab montage={montage} userRoles={userRoles} />
                              </div>
                         </div>
                     </div>
@@ -150,7 +150,7 @@ export function MontageView({ montageId, initialData, portalEnabled }: MontageVi
                 }
                 defaultTab={activeTab}
                 tabs={{
-                    notes: <MontageNotesTab montage={montage} />,
+                    notes: <MontageNotesTab montage={montage} userRoles={userRoles} />,
                     history: !isInstaller ? <MontageHistoryTab montage={montage} logs={logs} /> : undefined,
                     workflow: <MontageWorkflowTab montage={montage} statusOptions={statusOptions} installers={installers} measurers={measurers} userRoles={userRoles} />,
                     measurement: <MontageMeasurementTab montage={montage} userRoles={userRoles} />,

@@ -232,7 +232,7 @@ export function InstallerMontageView({ montage, logs, userRoles, hasGoogleCalend
 
                 {/* TAB: NOTES */}
                 {activeTab === 'notes' && (
-                    <MontageNotesTab montage={montage} />
+                    <MontageNotesTab montage={montage} userRoles={userRoles} />
                 )}
 
                 {/* TAB: GALLERY */}

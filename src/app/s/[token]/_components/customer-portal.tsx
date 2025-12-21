@@ -52,6 +52,7 @@ interface Montage {
     installationCity: string | null;
     measurementSeparateSkirting: boolean | null;
     scheduledSkirtingInstallationAt: Date | null;
+    measurementDate: Date | null;
 }
 
 interface Customer {
@@ -170,6 +171,14 @@ export function CustomerPortal({ customer, token, bankAccount }: CustomerPortalP
                                                 {new Date(activeMontage.createdAt).toLocaleDateString('pl-PL')}
                                             </span>
                                         </div>
+                                        {activeMontage.measurementDate && (
+                                            <div className="flex justify-between border-b pb-2">
+                                                <span className="text-muted-foreground">Data pomiaru:</span>
+                                                <span className="font-medium">
+                                                    {new Date(activeMontage.measurementDate).toLocaleDateString('pl-PL')}
+                                                </span>
+                                            </div>
+                                        )}
                                         {activeMontage.forecastedInstallationDate && (
                                             <div className="flex justify-between border-b pb-2">
                                                 <span className="text-muted-foreground">Planowany montaż:</span>
@@ -183,6 +192,14 @@ export function CustomerPortal({ customer, token, bankAccount }: CustomerPortalP
                                                 <span className="text-muted-foreground">Potwierdzony termin:</span>
                                                 <span className="font-medium text-green-600">
                                                     {new Date(activeMontage.scheduledInstallationAt).toLocaleDateString('pl-PL')}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {activeMontage.scheduledSkirtingInstallationAt && (
+                                            <div className="flex justify-between border-b pb-2">
+                                                <span className="text-muted-foreground">Montaż listew:</span>
+                                                <span className="font-medium text-green-600">
+                                                    {new Date(activeMontage.scheduledSkirtingInstallationAt).toLocaleDateString('pl-PL')}
                                                 </span>
                                             </div>
                                         )}
