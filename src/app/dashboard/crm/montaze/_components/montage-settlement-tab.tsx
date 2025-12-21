@@ -45,7 +45,7 @@ export function MontageSettlementTab({ montage, userRoles }: MontageSettlementTa
                     const savedCalc = montage.settlement!.calculations as SettlementCalculation;
                     
                     // Simple comparison of total amount
-                    if (Math.abs(currentCalc.totalAmount - savedCalc.totalAmount) > 0.01) {
+                    if (Math.abs(currentCalc.total - savedCalc.total) > 0.01) {
                         setIsOutdated(true);
                     }
                 } catch (e) {
