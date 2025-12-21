@@ -12,7 +12,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { updateCargoChecklist, updateLogisticsStatus, updateLogisticsNotes } from '../actions';
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import type { Montage } from "../../montaze/types";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function LogisticsCard({ montage }: { montage: any }) {
