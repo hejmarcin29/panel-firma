@@ -1,0 +1,1 @@
+ALTER TABLE "montages" ALTER COLUMN "measurement_additional_materials" SET DATA TYPE text;
