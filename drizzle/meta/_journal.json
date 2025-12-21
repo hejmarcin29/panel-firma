@@ -204,6 +204,13 @@
       "when": 1766307130844,
       "tag": "0028_regular_hercules",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1766307693023,
+      "tag": "0029_tired_sphinx",
+      "breakpoints": true
     }
   ]
 }

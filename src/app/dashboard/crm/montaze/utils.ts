@@ -216,6 +216,12 @@ export function mapMontageRow(row: MontageRow, publicBaseUrl: string | null): Mo
         clientSignatureUrl: row.clientSignatureUrl,
         installerSignatureUrl: row.installerSignatureUrl,
 
+        // Skirting Protocol & Logistics
+        skirtingMaterialStatus: row.skirtingMaterialStatus,
+        skirtingMaterialClaimType: row.skirtingMaterialClaimType,
+        skirtingProtocolData: row.skirtingProtocolData,
+        skirtingClientSignatureUrl: row.skirtingClientSignatureUrl,
+
         quotes: row.quotes.map(q => ({
             id: q.id,
             status: q.status,
