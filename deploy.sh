@@ -36,6 +36,10 @@ fi
 # Wygeneruj klienta bazy danych
 npm run db:generate
 
+# Napraw migrację kolumny (jeśli potrzebne)
+echo "Naprawianie migracji kolumny..."
+node scripts/fix-migration-column.js
+
 # Synchronizuj schemat bazy danych (push zamiast migrate dla bezpieczeństwa przy zmianach deweloperskich)
 echo "Synchronizacja schematu bazy danych..."
 npx drizzle-kit push
