@@ -29,7 +29,6 @@ import {
     removeMontageService, 
     updateMontageServiceQuantity 
 } from '../actions-services';
-import type { Service, MontageServiceItem } from '@/lib/db/schema'; // We might need to infer types if not exported
 import { cn } from '@/lib/utils';
 
 // Temporary type definitions if not available from schema directly

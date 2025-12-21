@@ -54,7 +54,7 @@ export function RateMatrix({ services, installers }: RateMatrixProps) {
                             <TableHead className="w-[100px] bg-muted/50">Bazowa</TableHead>
                             {installers.map(installer => (
                                 <TableHead key={installer.id} className="min-w-[120px] text-center">
-                                    {installer.fullName || installer.email}
+                                    {installer.name || installer.email}
                                 </TableHead>
                             ))}
                         </TableRow>
