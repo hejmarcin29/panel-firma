@@ -27,7 +27,10 @@ export async function getLogisticsMontages() {
 
 export async function updateLogisticsStatus(montageId: string, status: LogisticsStatus) {
     await db.update(montages)
-        .set({ logisticsStatus: status })
+        .set({ 
+            logisticsStatus: status,
+            logisticsUpdatedAt: new Date()
+        })
         .where(eq(montages.id, montageId));
     
     revalidatePath('/dashboard/crm/logistics');
@@ -48,7 +51,10 @@ export async function updateCargoChecklist(montageId: string, itemId: string, pi
     };
 
     await db.update(montages)
-        .set({ cargoChecklist: newChecklist })
+        .set({ 
+            cargoChecklist: newChecklist,
+            logisticsUpdatedAt: new Date()
+        })
         .where(eq(montages.id, montageId));
 
     revalidatePath('/dashboard/crm/logistics');
@@ -56,7 +62,10 @@ export async function updateCargoChecklist(montageId: string, itemId: string, pi
 
 export async function updateLogisticsNotes(montageId: string, notes: string) {
     await db.update(montages)
-        .set({ logisticsNotes: notes })
+        .set({ 
+            logisticsNotes: notes,
+            logisticsUpdatedAt: new Date()
+        })
         .where(eq(montages.id, montageId));
     
     revalidatePath('/dashboard/crm/logistics');

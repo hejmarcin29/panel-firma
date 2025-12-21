@@ -569,6 +569,7 @@ export const montages = pgTable(
         // Logistics
         logisticsStatus: text('logistics_status').$type<LogisticsStatus>().default('pending'),
         logisticsNotes: text('logistics_notes'),
+        logisticsUpdatedAt: timestamp('logistics_updated_at'),
         cargoChecklist: json('cargo_checklist').$type<Record<string, { picked: boolean }>>(),
 
 		deletedAt: timestamp('deleted_at'),

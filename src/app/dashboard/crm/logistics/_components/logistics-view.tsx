@@ -3,12 +3,28 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Search, AlertTriangle, ArrowRight } from "lucide-react";
 import { LogisticsCard } from './logistics-card';
+import Link from 'next/link';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function LogisticsView({ initialMontages }: { initialMontages: any[] }) {
     const [searchQuery, setSearchQuery] = useState('');
+
+    // Detect conflicts: Quote updated AFTER logistics action
+    const conflicts = initialMontages.filter(m => {
+        const quote = m.quotes?.[0];
+        if (!quote || !m.logisticsUpdatedAt) return false;
+        
+        const quoteUpdated = new Date(quote.updatedAt).getTime();
+        const logisticsUpdated = new Date(m.logisticsUpdatedAt).getTime();
+        
+        // If quote is newer than last logistics action, and we have started packing (checklist not empty)
+        const hasStartedPacking = m.cargoChecklist && Object.keys(m.cargoChecklist).length > 0;
+        
+        return hasStartedPacking && quoteUpdated > logisticsUpdated;
+    });
 
     const filteredMontages = initialMontages.filter(m => {
         const searchLower = searchQuery.toLowerCase();
@@ -39,6 +55,32 @@ export function LogisticsView({ initialMontages }: { initialMontages: any[] }) {
                     />
                 </div>
             </div>
+
+            {conflicts.length > 0 && (
+                <Alert variant="destructive" className="bg-yellow-50 border-yellow-200 text-yellow-900">
+                    <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                    <AlertTitle className="text-yellow-800 font-semibold">Uwaga! Zmiany w wycenach</AlertTitle>
+                    <AlertDescription className="mt-2">
+                        <p className="mb-2 text-yellow-700">
+                            Następujące montaże mają zaktualizowane wyceny po rozpoczęciu pakowania. Sprawdź listę towarów ponownie!
+                        </p>
+                        <ul className="space-y-1">
+                            {conflicts.map(m => (
+                                <li key={m.id} className="flex items-center gap-2 text-sm">
+                                    <span className="font-medium">{m.displayId}</span>
+                                    <span>- {m.clientName}</span>
+                                    <Link 
+                                        href={`/dashboard/crm/montaze/${m.id}`} 
+                                        className="inline-flex items-center gap-1 text-blue-600 hover:underline ml-2"
+                                    >
+                                        Przejdź do montażu <ArrowRight className="w-3 h-3" />
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                    </AlertDescription>
+                </Alert>
+            )}
 
             <Tabs defaultValue="all" className="w-full">
                 <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
