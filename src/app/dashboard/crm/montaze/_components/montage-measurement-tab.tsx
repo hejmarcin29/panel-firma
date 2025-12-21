@@ -95,7 +95,8 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
   const [additionalWorkNeeded, setAdditionalWorkNeeded] = useState(montage.measurementAdditionalWorkNeeded || false);
   const [additionalWorkDescription, setAdditionalWorkDescription] = useState(montage.measurementAdditionalWorkDescription || '');
   const [additionalMaterials, setAdditionalMaterials] = useState<MeasurementMaterialItem[]>(() => {
-      const raw = montage.measurementAdditionalMaterials;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const raw = montage.measurementAdditionalMaterials as any;
       if (Array.isArray(raw)) return raw;
       // Fallback for legacy string or null
       if (typeof raw === 'string' && raw.trim().length > 0) {
