@@ -15,7 +15,7 @@ export async function getLogisticsMontages() {
         with: {
             installer: true,
             quotes: {
-                where: isNull(quotes.deletedAt),
+                where: (quotes, { isNull }) => isNull(quotes.deletedAt),
                 orderBy: (quotes, { desc }) => [desc(quotes.createdAt)],
                 limit: 1,
             }
