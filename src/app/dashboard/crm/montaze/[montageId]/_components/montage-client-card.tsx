@@ -132,7 +132,8 @@ export function MontageClientCard({
         to: montage.scheduledSkirtingInstallationEndAt ? new Date(montage.scheduledSkirtingInstallationEndAt) : undefined,
     });
     setIsSkirtingSeparate(!!montage.scheduledSkirtingInstallationAt);
-  }, [montage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [montage.id]);
 
   const debouncedSave = useDebouncedCallback(async (data: typeof formData) => {
     setIsSaving(true);

@@ -52,7 +52,7 @@ export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montag
 
   const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
+    useEffect(() => {
     setFormData({
         finalPanelAmount: montage.finalPanelAmount?.toString() || '',
         finalSkirtingLength: montage.finalSkirtingLength?.toString() || '',
@@ -64,7 +64,8 @@ export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montag
         skirtingDetails: montage.skirtingDetails || '',
         materialDetails: montage.measurementDetails || montage.materialDetails || '',
     });
-  }, [montage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [montage.id]);
 
   useEffect(() => {
     if (isEditing) {

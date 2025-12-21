@@ -46,6 +46,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from '@/lib/utils';
 import type { Montage, MeasurementMaterialItem } from '../types';
 import { updateMontageMeasurement, addMontageTask, toggleMontageTask } from '../actions';
@@ -197,7 +198,8 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
     if (montage.skirtingLength && parseFloat(montage.skirtingLength.toString()) > 0) {
         setIncludeSkirting(true);
     }
-  }, [montage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [montage.id]);
 
   const technicalAudit = montage.technicalAudit as unknown as TechnicalAuditData | null;
 
@@ -432,666 +434,486 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
         </div>
       </div>
 
-      <Card className={cn("border-l-4", measurementDate ? "border-l-green-500" : "border-l-orange-500")}>
-          <CardHeader className="pb-3">
-              <CardTitle className="text-base font-medium flex items-center gap-2">
-                  <CalendarIcon className="h-4 w-4" />
-                  Termin Pomiaru
-              </CardTitle>
-          </CardHeader>
-          <CardContent>
-              <div className="flex items-center gap-4">
-                  <div className="grid gap-1.5 flex-1">
-                      <Label htmlFor="measurementDate">Data wizyty</Label>
-                      <Input
-                          id="measurementDate"
-                          type="date"
-                          value={measurementDate}
-                          onChange={(e) => setMeasurementDate(e.target.value)}
-                          disabled={isReadOnly}
-                          className="max-w-[200px]"
-                      />
-                  </div>
-                  {!measurementDate && (
-                      <div className="text-sm text-orange-600 font-medium">
-                          Nie ustalono terminu!
-                      </div>
-                  )}
-              </div>
-          </CardContent>
-      </Card>
+<Tabs defaultValue="main" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="main">Główne Dane</TabsTrigger>
+          <TabsTrigger value="additional">Prace i Materiały</TabsTrigger>
+        </TabsList>
 
-      <Card className={cn("border-l-4", isHousingVat ? "border-l-green-500" : "border-l-gray-300")}>
-          <CardHeader className="pb-3">
-              <CardTitle className="text-base font-medium flex items-center gap-2">
-                  <FileIcon className="h-4 w-4" />
-                  Ustalenia Podatkowe
-              </CardTitle>
-          </CardHeader>
-          <CardContent>
-              <div className="flex items-center space-x-2">
-                  <Switch
-                      id="isHousingVat"
-                      checked={isHousingVat}
-                      onCheckedChange={setIsHousingVat}
-                      disabled={isReadOnly}
-                  />
-                  <div className="grid gap-1.5 leading-none">
-                      <Label htmlFor="isHousingVat" className="text-base font-medium cursor-pointer">
-                          Budownictwo objęte społecznym programem mieszkaniowym (VAT 8%)
-                      </Label>
-                      <p className="text-sm text-muted-foreground">
-                          Lokal mieszkalny do 150m² lub dom jednorodzinny do 300m².
-                      </p>
-                  </div>
-              </div>
-          </CardContent>
-      </Card>
-
-      <div className="grid gap-6 md:grid-cols-2">
-          {/* Technical Details (Moved Up) */}
-            <Card>
+        <TabsContent value="main" className="space-y-6 mt-4">
+            <Card className={cn("border-l-4", measurementDate ? "border-l-green-500" : "border-l-orange-500")}>
                 <CardHeader className="pb-3">
-                    <CardTitle className="text-base font-medium">Szczegóły techniczne</CardTitle>
+                    <CardTitle className="text-base font-medium flex items-center gap-2">
+                        <CalendarIcon className="h-4 w-4" />
+                        Termin Pomiaru
+                    </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                        <Label>Wzór ułożenia</Label>
-                        <RadioGroup 
-                            value={floorPattern} 
-                            onValueChange={(v) => {
-                                const val = v as 'classic' | 'herringbone';
-                                setFloorPattern(val);
-                                if (val === 'herringbone') {
-                                    setPanelWaste('12');
-                                } else {
-                                    setPanelWaste('5');
-                                }
-                            }} 
-                            className="flex gap-4" 
-                            disabled={isReadOnly}
-                        >
-                            <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="classic" id="pattern-classic" />
-                                <Label htmlFor="pattern-classic">Klasycznie</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="herringbone" id="pattern-herringbone" />
-                                <Label htmlFor="pattern-herringbone">Jodełka</Label>
-                            </div>
-                        </RadioGroup>
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label>Sposób montażu</Label>
-                        <RadioGroup value={installationMethod} onValueChange={(v) => setInstallationMethod(v as 'click' | 'glue')} className="flex gap-4" disabled={isReadOnly}>
-                            <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="click" id="method-click" />
-                                <Label htmlFor="method-click">Pływająca (Click)</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="glue" id="method-glue" />
-                                <Label htmlFor="method-glue">Klejona</Label>
-                            </div>
-                        </RadioGroup>
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label>Stan podłoża</Label>
-                        <Select value={subfloorCondition} onValueChange={setSubfloorCondition}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Wybierz stan podłoża" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="ideal">Idealne (bez uwag)</SelectItem>
-                                <SelectItem value="good">Dobre (drobne nierówności)</SelectItem>
-                                <SelectItem value="bad">Złe (wymaga szlifowania/naprawy)</SelectItem>
-                                <SelectItem value="critical">Krytyczne (wymaga wylewki)</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    <div className="space-y-2 pt-4 border-t">
-                        <Label>Termin montażu</Label>
-                        <Popover>
-                            <PopoverTrigger asChild>
-                            <Button
-                                variant={"outline"}
-                                disabled={isReadOnly}
-                                className={cn(
-                                "w-full justify-start text-left font-normal",
-                                !dateRange?.from && "text-muted-foreground"
-                                )}
-                            >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {dateRange?.from ? (
-                                dateRange.to ? (
-                                    <>
-                                    {format(dateRange.from, "PPP", { locale: pl })} -{" "}
-                                    {format(dateRange.to, "PPP", { locale: pl })}
-                                    </>
-                                ) : (
-                                    format(dateRange.from, "PPP", { locale: pl })
-                                )
-                                ) : (
-                                <span>Wybierz termin montażu</span>
-                                )}
-                            </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                                initialFocus
-                                mode="range"
-                                defaultMonth={dateRange?.from}
-                                selected={dateRange}
-                                onSelect={setDateRange}
-                                numberOfMonths={2}
-                                locale={pl}
-                                classNames={{
-                                    day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
-                                    day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-                                    day_today: "bg-accent text-accent-foreground",
-                                }}
-                            />
-                            </PopoverContent>
-                        </Popover>
-                    </div>
-
-                    {separateSkirting && (
-                        <div className="space-y-2 pt-4 border-t animate-in fade-in slide-in-from-top-2">
-                            <Label>Termin montażu listew</Label>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                <Button
-                                    variant={"outline"}
-                                    disabled={isReadOnly}
-                                    className={cn(
-                                    "w-full justify-start text-left font-normal",
-                                    !skirtingDateRange?.from && "text-muted-foreground"
-                                    )}
-                                >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {skirtingDateRange?.from ? (
-                                    skirtingDateRange.to ? (
-                                        <>
-                                        {format(skirtingDateRange.from, "PPP", { locale: pl })} -{" "}
-                                        {format(skirtingDateRange.to, "PPP", { locale: pl })}
-                                        </>
-                                    ) : (
-                                        format(skirtingDateRange.from, "PPP", { locale: pl })
-                                    )
-                                    ) : (
-                                    <span>Wybierz termin montażu listew</span>
-                                    )}
-                                </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                    initialFocus
-                                    mode="range"
-                                    defaultMonth={skirtingDateRange?.from}
-                                    selected={skirtingDateRange}
-                                    onSelect={setSkirtingDateRange}
-                                    numberOfMonths={2}
-                                    locale={pl}
-                                    classNames={{
-                                        day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
-                                        day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-                                        day_today: "bg-accent text-accent-foreground",
-                                    }}
-                                />
-                                </PopoverContent>
-                            </Popover>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-
-          {/* Floor Calculator (Moved Down) */}
-          <Card>
-            <CardHeader className="pb-3">
-                <CardTitle className="text-base font-medium flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-blue-500"></span>
-                    Podłoga
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                        <Label htmlFor="floorArea" className="text-xs text-muted-foreground flex items-center gap-2">
-                            Wymiar netto (m²)
-                            {montage.status === 'lead' && montage.floorArea && (
-                                <span className="text-[10px] font-bold text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded-full">
-                                    (Szacowany)
-                                </span>
-                            )}
-                        </Label>
-                        <Input
-                        id="floorArea"
-                        type="number"
-                        step="0.01"
-                        placeholder="0.00"
-                        value={floorArea}
-                        onChange={(e) => setFloorArea(e.target.value)}
-                        disabled={isReadOnly}
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <Label htmlFor="panelWaste" className="text-xs text-muted-foreground">Zapas (%)</Label>
-                        <Select value={panelWaste} onValueChange={setPanelWaste} disabled={isReadOnly}>
-                            <SelectTrigger id="panelWaste">
-                                <SelectValue placeholder="Zapas" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="0">0%</SelectItem>
-                                <SelectItem value="5">5%</SelectItem>
-                                <SelectItem value="7">7%</SelectItem>
-                                <SelectItem value="10">10%</SelectItem>
-                                <SelectItem value="12">12%</SelectItem>
-                                <SelectItem value="15">15%</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
-                
-                <div className="space-y-2 pt-2 border-t border-dashed">
-                    <div className="space-y-1">
-                        <Label htmlFor="panelModel" className="text-xs text-muted-foreground">Model paneli</Label>
-                        <div className="flex gap-2">
+                <CardContent>
+                    <div className="flex items-center gap-4">
+                        <div className="grid gap-1.5 flex-1">
+                            <Label htmlFor="measurementDate">Data wizyty</Label>
                             <Input
-                                id="panelModel"
-                                placeholder="Kliknij aby wybrać z listy..."
-                                value={panelModel}
-                                readOnly
-                                onClick={() => !isReadOnly && setIsPanelSelectorOpen(true)}
-                                className="h-8 text-sm flex-1 cursor-pointer bg-muted/50"
+                                id="measurementDate"
+                                type="date"
+                                value={measurementDate}
+                                onChange={(e) => setMeasurementDate(e.target.value)}
                                 disabled={isReadOnly}
-                            />
-                            <Button 
-                                type="button" 
-                                variant="outline" 
-                                size="sm" 
-                                className="h-8 px-2"
-                                onClick={() => setIsPanelSelectorOpen(true)}
-                                disabled={isReadOnly}
-                            >
-                                Wybierz
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="pt-2 border-t flex justify-between items-center">
-                    <span className="text-sm font-medium text-muted-foreground">Do zamówienia:</span>
-                    <span className="text-lg font-bold">
-                        {floorArea ? (parseFloat(floorArea) * (1 + parseInt(panelWaste)/100)).toFixed(2) : '0.00'} m²
-                    </span>
-                </div>
-            </CardContent>
-          </Card>
-      </div>
-
-        {/* Additional Work & Skirting */}
-        <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-                <CardHeader className="pb-3">
-                    <CardTitle className="text-base font-medium">Prace dodatkowe i materiały</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <Label htmlFor="additionalWork" className="flex flex-col gap-1">
-                                <span>Dodatkowe prace</span>
-                                <span className="font-normal text-xs text-muted-foreground">Czy wymagane są dodatkowe prace przygotowawcze?</span>
-                            </Label>
-                            <Switch
-                                id="additionalWork"
-                                disabled={isReadOnly}
-                                checked={additionalWorkNeeded}
-                                onCheckedChange={setAdditionalWorkNeeded}
+                                className="max-w-[200px]"
                             />
                         </div>
-                        
-                        {additionalWorkNeeded && (
-                            <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                                <Label htmlFor="additionalWorkDesc">Opis prac dodatkowych</Label>
-                                <Textarea
-                                    id="additionalWorkDesc"
-                                    placeholder="Opisz co trzeba zrobić (np. szlifowanie, gruntowanie, wylewka...)"
-                                    disabled={isReadOnly}
-                                    value={additionalWorkDescription}
-                                    onChange={(e) => setAdditionalWorkDescription(e.target.value)}
-                                    className="h-20"
-                                />
+                        {!measurementDate && (
+                            <div className="text-sm text-orange-600 font-medium">
+                                Nie ustalono terminu!
                             </div>
                         )}
                     </div>
+                </CardContent>
+            </Card>
 
-                    <div className="space-y-2 pt-4 border-t">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <Label>Lista zakupów (dodatkowe materiały)</Label>
-                                <Drawer>
-                                    <DrawerTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
-                                            <Info className="h-4 w-4 text-muted-foreground" />
-                                        </Button>
-                                    </DrawerTrigger>
-                                    <DrawerContent>
-                                        <DrawerHeader>
-                                            <DrawerTitle>Instrukcja zakupów</DrawerTitle>
-                                            <DrawerDescription>
-                                                Wpisz co trzeba dokupić. Jeśli kupujesz Ty (Montażysta), podaj szacunkowy koszt.
-                                                Możesz to uzupełnić teraz lub na spokojnie po powrocie.
-                                                Pozycje bez ceny będą oznaczone jako wymagające uzupełnienia.
-                                            </DrawerDescription>
-                                        </DrawerHeader>
-                                        <DrawerFooter>
-                                            <DrawerClose asChild>
-                                                <Button variant="outline">Rozumiem</Button>
-                                            </DrawerClose>
-                                        </DrawerFooter>
-                                    </DrawerContent>
-                                </Drawer>
-                            </div>
-                            {!isReadOnly && (
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                        setAdditionalMaterials([
-                                            ...additionalMaterials,
-                                            {
-                                                id: crypto.randomUUID(),
-                                                name: '',
-                                                quantity: '',
-                                                supplySide: 'installer'
-                                            }
-                                        ]);
-                                    }}
-                                >
-                                    <Plus className="h-4 w-4 mr-2" />
-                                    Dodaj pozycję
-                                </Button>
-                            )}
+            <Card className={cn("border-l-4", isHousingVat ? "border-l-green-500" : "border-l-gray-300")}>
+                <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-medium flex items-center gap-2">
+                        <FileIcon className="h-4 w-4" />
+                        Ustalenia Podatkowe
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex items-center space-x-2">
+                        <Switch
+                            id="isHousingVat"
+                            checked={isHousingVat}
+                            onCheckedChange={setIsHousingVat}
+                            disabled={isReadOnly}
+                        />
+                        <div className="grid gap-1.5 leading-none">
+                            <Label htmlFor="isHousingVat" className="text-base font-medium cursor-pointer">
+                                Budownictwo objęte społecznym programem mieszkaniowym (VAT 8%)
+                            </Label>
+                            <p className="text-sm text-muted-foreground">
+                                Lokal mieszkalny do 150m² lub dom jednorodzinny do 300m².
+                            </p>
                         </div>
-                        
-                        <div className="space-y-3">
-                            {additionalMaterials.length === 0 && (
-                                <div className="text-sm text-muted-foreground italic text-center py-4 border border-dashed rounded-md">
-                                    Brak dodatkowych materiałów.
+                    </div>
+                </CardContent>
+            </Card>
+
+            <div className="grid gap-6 md:grid-cols-2">
+                {/* Technical Details (Moved Up) */}
+                    <Card>
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-base font-medium">Szczegóły techniczne</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label>Wzór ułożenia</Label>
+                                <RadioGroup 
+                                    value={floorPattern} 
+                                    onValueChange={(v) => {
+                                        const val = v as 'classic' | 'herringbone';
+                                        setFloorPattern(val);
+                                        if (val === 'herringbone') {
+                                            setPanelWaste('12');
+                                        } else {
+                                            setPanelWaste('5');
+                                        }
+                                    }} 
+                                    className="flex gap-4" 
+                                    disabled={isReadOnly}
+                                >
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="classic" id="pattern-classic" />
+                                        <Label htmlFor="pattern-classic">Klasycznie</Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="herringbone" id="pattern-herringbone" />
+                                        <Label htmlFor="pattern-herringbone">Jodełka</Label>
+                                    </div>
+                                </RadioGroup>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label>Sposób montażu</Label>
+                                <RadioGroup value={installationMethod} onValueChange={(v) => setInstallationMethod(v as 'click' | 'glue')} className="flex gap-4" disabled={isReadOnly}>
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="click" id="method-click" />
+                                        <Label htmlFor="method-click">Pływająca (Click)</Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="glue" id="method-glue" />
+                                        <Label htmlFor="method-glue">Klejona</Label>
+                                    </div>
+                                </RadioGroup>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label>Stan podłoża</Label>
+                                <Select value={subfloorCondition} onValueChange={setSubfloorCondition}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Wybierz stan podłoża" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="ideal">Idealne (bez uwag)</SelectItem>
+                                        <SelectItem value="good">Dobre (drobne nierówności)</SelectItem>
+                                        <SelectItem value="bad">Złe (wymaga szlifowania/naprawy)</SelectItem>
+                                        <SelectItem value="critical">Krytyczne (wymaga wylewki)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2 pt-4 border-t">
+                                <Label>Termin montażu</Label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                    <Button
+                                        variant={"outline"}
+                                        disabled={isReadOnly}
+                                        className={cn(
+                                        "w-full justify-start text-left font-normal",
+                                        !dateRange?.from && "text-muted-foreground"
+                                        )}
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {dateRange?.from ? (
+                                        dateRange.to ? (
+                                            <>
+                                            {format(dateRange.from, "PPP", { locale: pl })} -{" "}
+                                            {format(dateRange.to, "PPP", { locale: pl })}
+                                            </>
+                                        ) : (
+                                            format(dateRange.from, "PPP", { locale: pl })
+                                        )
+                                        ) : (
+                                        <span>Wybierz termin montażu</span>
+                                        )}
+                                    </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                        initialFocus
+                                        mode="range"
+                                        defaultMonth={dateRange?.from}
+                                        selected={dateRange}
+                                        onSelect={setDateRange}
+                                        numberOfMonths={2}
+                                        locale={pl}
+                                        classNames={{
+                                            day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
+                                            day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+                                            day_today: "bg-accent text-accent-foreground",
+                                        }}
+                                    />
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+
+                            {separateSkirting && (
+                                <div className="space-y-2 pt-4 border-t animate-in fade-in slide-in-from-top-2">
+                                    <Label>Termin montażu listew</Label>
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                        <Button
+                                            variant={"outline"}
+                                            disabled={isReadOnly}
+                                            className={cn(
+                                            "w-full justify-start text-left font-normal",
+                                            !skirtingDateRange?.from && "text-muted-foreground"
+                                            )}
+                                        >
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {skirtingDateRange?.from ? (
+                                            skirtingDateRange.to ? (
+                                                <>
+                                                {format(skirtingDateRange.from, "PPP", { locale: pl })} -{" "}
+                                                {format(skirtingDateRange.to, "PPP", { locale: pl })}
+                                                </>
+                                            ) : (
+                                                format(skirtingDateRange.from, "PPP", { locale: pl })
+                                            )
+                                            ) : (
+                                            <span>Wybierz termin montażu listew</span>
+                                            )}
+                                        </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar
+                                            initialFocus
+                                            mode="range"
+                                            defaultMonth={skirtingDateRange?.from}
+                                            selected={skirtingDateRange}
+                                            onSelect={setSkirtingDateRange}
+                                            numberOfMonths={2}
+                                            locale={pl}
+                                            classNames={{
+                                                day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
+                                                day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+                                                day_today: "bg-accent text-accent-foreground",
+                                            }}
+                                        />
+                                        </PopoverContent>
+                                    </Popover>
                                 </div>
                             )}
-                            {additionalMaterials.map((item, index) => (
-                                <div key={item.id} className="grid grid-cols-1 gap-3 p-3 border rounded-md bg-muted/20">
-                                    <div className="flex items-start gap-2">
-                                        <div className="flex-1 space-y-2">
-                                            <div className="flex gap-2">
-                                                <Input
-                                                    placeholder="Co potrzeba? (np. Klej montażowy)"
-                                                    value={item.name}
-                                                    disabled={isReadOnly}
-                                                    onChange={(e) => {
-                                                        const newItems = [...additionalMaterials];
-                                                        newItems[index].name = e.target.value;
-                                                        setAdditionalMaterials(newItems);
-                                                    }}
-                                                />
-                                                <Button
-                                                    variant="outline"
-                                                    size="icon"
-                                                    disabled={isReadOnly}
-                                                    onClick={() => {
-                                                        setCurrentAccessoryIndex(index);
-                                                        setIsAccessorySelectorOpen(true);
-                                                    }}
-                                                    title="Wybierz z bazy"
-                                                >
-                                                    <Search className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                            <div className="flex gap-2">
-                                                <Input
-                                                    placeholder="Ilość"
-                                                    value={item.quantity}
-                                                    disabled={isReadOnly}
-                                                    className="w-1/3"
-                                                    onChange={(e) => {
-                                                        const newItems = [...additionalMaterials];
-                                                        newItems[index].quantity = e.target.value;
-                                                        setAdditionalMaterials(newItems);
-                                                    }}
-                                                />
-                                                <Select
-                                                    disabled={isReadOnly}
-                                                    value={item.supplySide}
-                                                    onValueChange={(val: 'installer' | 'company') => {
-                                                        const newItems = [...additionalMaterials];
-                                                        newItems[index].supplySide = val;
-                                                        setAdditionalMaterials(newItems);
-                                                    }}
-                                                >
-                                                    <SelectTrigger className="w-2/3">
-                                                        <SelectValue />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="installer">Kupuje Montażysta</SelectItem>
-                                                        <SelectItem value="company">Zapewnia Firma</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                            {item.supplySide === 'installer' && (
-                                                <div className="relative">
-                                                    <Input
-                                                        type="number"
-                                                        placeholder="Koszt netto (opcjonalne)"
-                                                        value={item.estimatedCost || ''}
-                                                        disabled={isReadOnly}
-                                                        onChange={(e) => {
-                                                            const newItems = [...additionalMaterials];
-                                                            newItems[index].estimatedCost = e.target.value ? parseFloat(e.target.value) : undefined;
-                                                            setAdditionalMaterials(newItems);
-                                                        }}
-                                                    />
-                                                    <span className="absolute right-3 top-2.5 text-xs text-muted-foreground">PLN netto</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                        {!isReadOnly && (
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="text-destructive hover:text-destructive/90"
-                                                onClick={() => {
-                                                    const newItems = additionalMaterials.filter((_, i) => i !== index);
-                                                    setAdditionalMaterials(newItems);
-                                                }}
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        )}
+                        </CardContent>
+                    </Card>
+
+                {/* Floor Calculator (Moved Down) */}
+                <Card>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-base font-medium flex items-center gap-2">
+                            <span className="h-2 w-2 rounded-full bg-blue-500"></span>
+                            Podłoga
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                                <Label htmlFor="floorArea" className="text-xs text-muted-foreground flex items-center gap-2">
+                                    Wymiar netto (m²)
+                                    {montage.status === 'lead' && montage.floorArea && (
+                                        <span className="text-[10px] font-bold text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded-full">
+                                            (Szacowany)
+                                        </span>
+                                    )}
+                                </Label>
+                                <Input
+                                id="floorArea"
+                                type="number"
+                                step="0.01"
+                                placeholder="0.00"
+                                value={floorArea}
+                                onChange={(e) => setFloorArea(e.target.value)}
+                                disabled={isReadOnly}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <Label htmlFor="panelWaste" className="text-xs text-muted-foreground">Zapas (%)</Label>
+                                <Select value={panelWaste} onValueChange={setPanelWaste} disabled={isReadOnly}>
+                                    <SelectTrigger id="panelWaste">
+                                        <SelectValue placeholder="Zapas" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="0">0%</SelectItem>
+                                        <SelectItem value="5">5%</SelectItem>
+                                        <SelectItem value="7">7%</SelectItem>
+                                        <SelectItem value="10">10%</SelectItem>
+                                        <SelectItem value="12">12%</SelectItem>
+                                        <SelectItem value="15">15%</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        
+                        <div className="space-y-2 pt-2 border-t border-dashed">
+                            <div className="space-y-1">
+                                <Label htmlFor="panelModel" className="text-xs text-muted-foreground">Model paneli</Label>
+                                <div className="flex gap-2">
+                                    <Input
+                                        id="panelModel"
+                                        placeholder="Kliknij aby wybrać z listy..."
+                                        value={panelModel}
+                                        readOnly
+                                        onClick={() => !isReadOnly && setIsPanelSelectorOpen(true)}
+                                        className="h-8 text-sm flex-1 cursor-pointer bg-muted/50"
+                                        disabled={isReadOnly}
+                                    />
+                                    <Button 
+                                        type="button" 
+                                        variant="outline" 
+                                        size="sm" 
+                                        className="h-8 px-2"
+                                        onClick={() => setIsPanelSelectorOpen(true)}
+                                        disabled={isReadOnly}
+                                    >
+                                        Wybierz
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="pt-2 border-t flex justify-between items-center">
+                            <span className="text-sm font-medium text-muted-foreground">Do zamówienia:</span>
+                            <span className="text-lg font-bold">
+                                {floorArea ? (parseFloat(floorArea) * (1 + parseInt(panelWaste)/100)).toFixed(2) : '0.00'} m²
+                            </span>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2">
+                {/* Skirting Calculator */}
+                <Card>
+                    <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                            <CardTitle className="text-base font-medium flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-amber-500"></span>
+                                Listwy
+                            </CardTitle>
+                            <div className="flex items-center gap-2">
+                                <Label htmlFor="includeSkirting" className="text-sm font-normal text-muted-foreground">Montaż listew</Label>
+                                <Switch 
+                                    id="includeSkirting"
+                                    checked={includeSkirting} 
+                                    onCheckedChange={setIncludeSkirting} 
+                                    disabled={isReadOnly}
+                                />
+                            </div>
+                        </div>
+                    </CardHeader>
+                    {includeSkirting && (
+                        <CardContent className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                    <Label htmlFor="skirtingLength" className="text-xs text-muted-foreground">Wymiar netto (mb)</Label>
+                                    <Input
+                                    id="skirtingLength"
+                                    type="number"
+                                    step="0.01"
+                                    placeholder="0.00"
+                                    value={skirtingLength}
+                                    disabled={isReadOnly}
+                                    onChange={(e) => setSkirtingLength(e.target.value)}
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label htmlFor="skirtingWaste" className="text-xs text-muted-foreground">Zapas (%)</Label>
+                                    <Select value={skirtingWaste} onValueChange={setSkirtingWaste} disabled={isReadOnly}>
+                                        <SelectTrigger id="skirtingWaste">
+                                            <SelectValue placeholder="Zapas" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="0">0%</SelectItem>
+                                            <SelectItem value="5">5%</SelectItem>
+                                            <SelectItem value="7">7%</SelectItem>
+                                            <SelectItem value="10">10%</SelectItem>
+                                            <SelectItem value="15">15%</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2 pt-2 border-t border-dashed">
+                                <div className="space-y-1">
+                                    <Label htmlFor="skirtingModel" className="text-xs text-muted-foreground">Model listew</Label>
+                                    <div className="flex gap-2">
+                                        <Input
+                                            id="skirtingModel"
+                                            placeholder="Kliknij aby wybrać z listy..."
+                                            value={skirtingModel}
+                                            readOnly
+                                            onClick={() => !isReadOnly && setIsSkirtingSelectorOpen(true)}
+                                            className="h-8 text-sm flex-1 cursor-pointer bg-muted/50"
+                                            disabled={isReadOnly}
+                                        />
+                                        <Button 
+                                            type="button" 
+                                            variant="outline" 
+                                            size="sm" 
+                                            className="h-8 px-2"
+                                            onClick={() => setIsSkirtingSelectorOpen(true)}
+                                            disabled={isReadOnly}
+                                        >
+                                            Wybierz
+                                        </Button>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-
-          {/* Skirting Calculator */}
-          <Card>
-            <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                    <CardTitle className="text-base font-medium flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-                        Listwy
-                    </CardTitle>
-                    <div className="flex items-center gap-2">
-                        <Label htmlFor="includeSkirting" className="text-sm font-normal text-muted-foreground">Montaż listew</Label>
-                        <Switch 
-                            id="includeSkirting"
-                            checked={includeSkirting} 
-                            onCheckedChange={setIncludeSkirting} 
-                            disabled={isReadOnly}
-                        />
-                    </div>
-                </div>
-            </CardHeader>
-            {includeSkirting && (
-                <CardContent className="space-y-4 animate-in fade-in slide-in-from-top-2">
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1">
-                            <Label htmlFor="skirtingLength" className="text-xs text-muted-foreground">Wymiar netto (mb)</Label>
-                            <Input
-                            id="skirtingLength"
-                            type="number"
-                            step="0.01"
-                            placeholder="0.00"
-                            value={skirtingLength}
-                            disabled={isReadOnly}
-                            onChange={(e) => setSkirtingLength(e.target.value)}
-                            />
-                        </div>
-                        <div className="space-y-1">
-                            <Label htmlFor="skirtingWaste" className="text-xs text-muted-foreground">Zapas (%)</Label>
-                            <Select value={skirtingWaste} onValueChange={setSkirtingWaste} disabled={isReadOnly}>
-                                <SelectTrigger id="skirtingWaste">
-                                    <SelectValue placeholder="Zapas" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="0">0%</SelectItem>
-                                    <SelectItem value="5">5%</SelectItem>
-                                    <SelectItem value="7">7%</SelectItem>
-                                    <SelectItem value="10">10%</SelectItem>
-                                    <SelectItem value="15">15%</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-
-                    <div className="space-y-2 pt-2 border-t border-dashed">
-                        <div className="space-y-1">
-                            <Label htmlFor="skirtingModel" className="text-xs text-muted-foreground">Model listew</Label>
-                            <div className="flex gap-2">
-                                <Input
-                                    id="skirtingModel"
-                                    placeholder="Kliknij aby wybrać z listy..."
-                                    value={skirtingModel}
-                                    readOnly
-                                    onClick={() => !isReadOnly && setIsSkirtingSelectorOpen(true)}
-                                    className="h-8 text-sm flex-1 cursor-pointer bg-muted/50"
-                                    disabled={isReadOnly}
-                                />
-                                <Button 
-                                    type="button" 
-                                    variant="outline" 
-                                    size="sm" 
-                                    className="h-8 px-2"
-                                    onClick={() => setIsSkirtingSelectorOpen(true)}
-                                    disabled={isReadOnly}
-                                >
-                                    Wybierz
-                                </Button>
                             </div>
-                        </div>
-                    </div>
 
-                    <div className="pt-2 border-t flex justify-between items-center">
-                        <span className="text-sm font-medium text-muted-foreground">Do zamówienia:</span>
-                        <span className="text-lg font-bold">
-                            {skirtingLength ? (parseFloat(skirtingLength) * (1 + parseInt(skirtingWaste)/100)).toFixed(2) : '0.00'} mb
-                        </span>
-                    </div>
-                    
-                    <div className="pt-2 border-t flex items-center space-x-2">
-                        <Checkbox 
-                            disabled={isReadOnly}
-                            id="skirtingClientSupply" 
-                            checked={skirtingClientSupply} 
-                            onCheckedChange={(checked) => setSkirtingClientSupply(checked as boolean)} 
-                        />
-                        <Label htmlFor="skirtingClientSupply" className="text-sm font-medium">Listwy po stronie klienta</Label>
-                    </div>
-
-                    <div className="pt-2 border-t flex items-center space-x-2">
-                        <Checkbox 
-                            disabled={isReadOnly}
-                            id="separateSkirting" 
-                            checked={separateSkirting} 
-                            onCheckedChange={(checked) => setSeparateSkirting(checked as boolean)} 
-                        />
-                        <Label htmlFor="separateSkirting" className="text-sm font-medium">Zalecany montaż listew w osobnym terminie</Label>
-                    </div>
-                </CardContent>
-            )}
-          </Card>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-2">
-            {/* Measurement Tasks */}
-            <Card>
-                <CardHeader className="pb-3">
-                    <CardTitle className="text-base font-medium">Zadania z pomiaru</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                        {measurementTasks.map(task => (
-                            <div key={task.id} className="flex items-center gap-2 p-2 bg-muted/30 rounded border">
-                                <Checkbox 
-                                    checked={task.completed} 
-                                    disabled={isReadOnly}
-                                    onCheckedChange={(checked) => {
-                                        startTransition(async () => {
-                                            await toggleMontageTask({
-                                                taskId: task.id,
-                                                montageId: montage.id,
-                                                completed: !!checked
-                                            });
-                                            router.refresh();
-                                        });
-                                    }}
-                                />
-                                <span className={cn("text-sm", task.completed && "line-through text-muted-foreground")}>
-                                    {task.title}
+                            <div className="pt-2 border-t flex justify-between items-center">
+                                <span className="text-sm font-medium text-muted-foreground">Do zamówienia:</span>
+                                <span className="text-lg font-bold">
+                                    {skirtingLength ? (parseFloat(skirtingLength) * (1 + parseInt(skirtingWaste)/100)).toFixed(2) : '0.00'} mb
                                 </span>
                             </div>
-                        ))}
-                        {measurementTasks.length === 0 && (
-                            <p className="text-sm text-muted-foreground italic">Brak zadań z pomiaru.</p>
-                        )}
-                        {!isReadOnly && (
-                            <div className="flex gap-2 mt-2">
-                                <Input 
-                                    placeholder="Dodaj nowe zadanie..." 
-                                    value={newTaskTitle}
-                                    onChange={(e) => setNewTaskTitle(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                            e.preventDefault();
-                                            handleAddTask();
-                                        }
-                                    }}
+                            
+                            <div className="pt-2 border-t flex items-center space-x-2">
+                                <Checkbox 
+                                    disabled={isReadOnly}
+                                    id="skirtingClientSupply" 
+                                    checked={skirtingClientSupply} 
+                                    onCheckedChange={(checked) => setSkirtingClientSupply(checked as boolean)} 
                                 />
-                                <Button type="button" onClick={handleAddTask} disabled={!newTaskTitle.trim() || isPending} size="icon">
-                                    <Plus className="h-4 w-4" />
-                                </Button>
+                                <Label htmlFor="skirtingClientSupply" className="text-sm font-medium">Listwy po stronie klienta</Label>
                             </div>
-                        )}
-                    </div>
 
-                    <div className="space-y-2 pt-4 border-t">
-                        <div className="flex items-center space-x-2">
-                            <Checkbox 
-                                disabled={isReadOnly}
-                                id="modelsApproved" 
-                                checked={modelsApproved} 
-                                onCheckedChange={(checked) => setModelsApproved(checked as boolean)} 
-                            />
-                            <Label htmlFor="modelsApproved">Wybrane modele zaakceptowane przez klienta</Label>
+                            <div className="pt-2 border-t flex items-center space-x-2">
+                                <Checkbox 
+                                    disabled={isReadOnly}
+                                    id="separateSkirting" 
+                                    checked={separateSkirting} 
+                                    onCheckedChange={(checked) => setSeparateSkirting(checked as boolean)} 
+                                />
+                                <Label htmlFor="separateSkirting" className="text-sm font-medium">Zalecany montaż listew w osobnym terminie</Label>
+                            </div>
+                        </CardContent>
+                    )}
+                </Card>
+
+                {/* Measurement Tasks */}
+                <Card>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-base font-medium">Zadania z pomiaru</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            {measurementTasks.map(task => (
+                                <div key={task.id} className="flex items-center gap-2 p-2 bg-muted/30 rounded border">
+                                    <Checkbox 
+                                        checked={task.completed} 
+                                        disabled={isReadOnly}
+                                        onCheckedChange={(checked) => {
+                                            startTransition(async () => {
+                                                await toggleMontageTask({
+                                                    taskId: task.id,
+                                                    montageId: montage.id,
+                                                    completed: !!checked
+                                                });
+                                                router.refresh();
+                                            });
+                                        }}
+                                    />
+                                    <span className={cn("text-sm", task.completed && "line-through text-muted-foreground")}>
+                                        {task.title}
+                                    </span>
+                                </div>
+                            ))}
+                            {measurementTasks.length === 0 && (
+                                <p className="text-sm text-muted-foreground italic">Brak zadań z pomiaru.</p>
+                            )}
+                            {!isReadOnly && (
+                                <div className="flex gap-2 mt-2">
+                                    <Input 
+                                        placeholder="Dodaj nowe zadanie..." 
+                                        value={newTaskTitle}
+                                        onChange={(e) => setNewTaskTitle(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                handleAddTask();
+                                            }
+                                        }}
+                                    />
+                                    <Button type="button" onClick={handleAddTask} disabled={!newTaskTitle.trim() || isPending} size="icon">
+                                        <Plus className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            )}
                         </div>
-                    </div>
-                </CardContent>
-            </Card>
+
+                        <div className="space-y-2 pt-4 border-t">
+                            <div className="flex items-center space-x-2">
+                                <Checkbox 
+                                    disabled={isReadOnly}
+                                    id="modelsApproved" 
+                                    checked={modelsApproved} 
+                                    onCheckedChange={(checked) => setModelsApproved(checked as boolean)} 
+                                />
+                                <Label htmlFor="modelsApproved">Wybrane modele zaakceptowane przez klienta</Label>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
 
             {/* Sketch */}
             <Card>
@@ -1166,105 +988,296 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                     </div>
                 </CardContent>
             </Card>
-        </div>
 
-        {/* Audit Form */}
-        <Card>
-            <CardHeader>
-                <CardTitle className="text-base font-medium">Audyt techniczny</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <AuditForm 
-                    montageId={montage.id} 
-                    initialData={technicalAudit} 
-                    readOnly={isReadOnly}
-                />
-            </CardContent>
-        </Card>
+            {/* Measurement Attachments */}
+            <Card>
+                <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+                    <CardTitle className="text-base font-medium flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-purple-500"></span>
+                        Zdjęcia z pomiaru
+                    </CardTitle>
+                    {!isReadOnly && (
+                        <div className="relative">
+                            <input
+                                type="file"
+                                multiple
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                onChange={(e) => {
+                                    const files = e.target.files;
+                                    if (!files || files.length === 0) return;
 
-        {/* Measurement Attachments */}
-        <Card>
-            <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
-                <CardTitle className="text-base font-medium flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-purple-500"></span>
-                    Zdjęcia z pomiaru
-                </CardTitle>
-                {!isReadOnly && (
-                    <div className="relative">
-                        <input
-                            type="file"
-                            multiple
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                            onChange={(e) => {
-                                const files = e.target.files;
-                                if (!files || files.length === 0) return;
-
-                                startTransition(async () => {
-                                    try {
-                                        for (let i = 0; i < files.length; i++) {
-                                            const file = files[i];
-                                            const formData = new FormData();
-                                            formData.append("montageId", montage.id);
-                                            formData.append("file", file);
-                                            formData.append("title", file.name);
-                                            formData.append("category", MontageSubCategories.MEASUREMENT_BEFORE);
-                                            
-                                            await addMontageAttachment(formData);
+                                    startTransition(async () => {
+                                        try {
+                                            for (let i = 0; i < files.length; i++) {
+                                                const file = files[i];
+                                                const formData = new FormData();
+                                                formData.append("montageId", montage.id);
+                                                formData.append("file", file);
+                                                formData.append("title", file.name);
+                                                formData.append("category", MontageSubCategories.MEASUREMENT_BEFORE);
+                                                
+                                                await addMontageAttachment(formData);
+                                            }
+                                            router.refresh();
+                                        } catch (error) {
+                                            console.error(error);
+                                            alert("Wystąpił błąd podczas przesyłania plików.");
                                         }
-                                        router.refresh();
-                                    } catch (error) {
-                                        console.error(error);
-                                        alert("Wystąpił błąd podczas przesyłania plików.");
-                                    }
-                                    // Reset input
-                                    e.target.value = "";
-                                });
-                            }}
-                        />
-                        <Button variant="outline" size="sm" disabled={isPending}>
-                            {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
-                            Dodaj zdjęcia
-                        </Button>
-                    </div>
-                )}
-            </CardHeader>
-            <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {montage.attachments
-                        ?.filter(att => att.url.includes(MontageSubCategories.MEASUREMENT_BEFORE))
-                        .map((att) => (
-                        <div key={att.id} className="group relative aspect-square rounded-lg border bg-background overflow-hidden">
-                            {/\.(jpg|jpeg|png|gif|webp)$/i.test(att.url) ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img 
-                                    src={att.url} 
-                                    alt={att.title || 'Załącznik'} 
-                                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                                />
-                            ) : (
-                                <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground p-2">
-                                    <FileIcon className="h-8 w-8 mb-2" />
-                                    <span className="text-xs text-center truncate w-full">{att.title}</span>
-                                </div>
-                            )}
-                            <a 
-                                href={att.url} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100"
-                            >
-                                <ExternalLink className="text-white h-6 w-6 drop-shadow-md" />
-                            </a>
-                        </div>
-                    ))}
-                    {(!montage.attachments || !montage.attachments.some(att => att.url.includes(MontageSubCategories.MEASUREMENT_BEFORE))) && (
-                        <div className="col-span-full py-8 text-center text-muted-foreground text-sm">
-                            Brak zdjęć z pomiaru.
+                                        // Reset input
+                                        e.target.value = "";
+                                    });
+                                }}
+                            />
+                            <Button variant="outline" size="sm" disabled={isPending}>
+                                {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
+                                Dodaj zdjęcia
+                            </Button>
                         </div>
                     )}
-                </div>
-            </CardContent>
-        </Card>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {montage.attachments
+                            ?.filter(att => att.url.includes(MontageSubCategories.MEASUREMENT_BEFORE))
+                            .map((att) => (
+                            <div key={att.id} className="group relative aspect-square rounded-lg border bg-background overflow-hidden">
+                                {/\.(jpg|jpeg|png|gif|webp)$/i.test(att.url) ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img 
+                                        src={att.url} 
+                                        alt={att.title || 'Załącznik'} 
+                                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground p-2">
+                                        <FileIcon className="h-8 w-8 mb-2" />
+                                        <span className="text-xs text-center truncate w-full">{att.title}</span>
+                                    </div>
+                                )}
+                                <a 
+                                    href={att.url} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100"
+                                >
+                                    <ExternalLink className="text-white h-6 w-6 drop-shadow-md" />
+                                </a>
+                            </div>
+                        ))}
+                        {(!montage.attachments || !montage.attachments.some(att => att.url.includes(MontageSubCategories.MEASUREMENT_BEFORE))) && (
+                            <div className="col-span-full py-8 text-center text-muted-foreground text-sm">
+                                Brak zdjęć z pomiaru.
+                            </div>
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
+        </TabsContent>
+
+        <TabsContent value="additional" className="space-y-6 mt-4">
+            {/* Additional Work & Skirting */}
+            <div className="grid gap-6 md:grid-cols-2">
+                <Card>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-base font-medium">Prace dodatkowe i materiały</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <Label htmlFor="additionalWork" className="flex flex-col gap-1">
+                                    <span>Dodatkowe prace</span>
+                                    <span className="font-normal text-xs text-muted-foreground">Czy wymagane są dodatkowe prace przygotowawcze?</span>
+                                </Label>
+                                <Switch
+                                    id="additionalWork"
+                                    disabled={isReadOnly}
+                                    checked={additionalWorkNeeded}
+                                    onCheckedChange={setAdditionalWorkNeeded}
+                                />
+                            </div>
+                            
+                            {additionalWorkNeeded && (
+                                <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                                    <Label htmlFor="additionalWorkDesc">Opis prac dodatkowych</Label>
+                                    <Textarea
+                                        id="additionalWorkDesc"
+                                        placeholder="Opisz co trzeba zrobić (np. szlifowanie, gruntowanie, wylewka...)"
+                                        disabled={isReadOnly}
+                                        value={additionalWorkDescription}
+                                        onChange={(e) => setAdditionalWorkDescription(e.target.value)}
+                                        className="h-20"
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="space-y-2 pt-4 border-t">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <Label>Lista zakupów (dodatkowe materiały)</Label>
+                                    <Drawer>
+                                        <DrawerTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
+                                                <Info className="h-4 w-4 text-muted-foreground" />
+                                            </Button>
+                                        </DrawerTrigger>
+                                        <DrawerContent>
+                                            <DrawerHeader>
+                                                <DrawerTitle>Instrukcja zakupów</DrawerTitle>
+                                                <DrawerDescription>
+                                                    Wpisz co trzeba dokupić. Jeśli kupujesz Ty (Montażysta), podaj szacunkowy koszt.
+                                                    Możesz to uzupełnić teraz lub na spokojnie po powrocie.
+                                                    Pozycje bez ceny będą oznaczone jako wymagające uzupełnienia.
+                                                </DrawerDescription>
+                                            </DrawerHeader>
+                                            <DrawerFooter>
+                                                <DrawerClose asChild>
+                                                    <Button variant="outline">Rozumiem</Button>
+                                                </DrawerClose>
+                                            </DrawerFooter>
+                                        </DrawerContent>
+                                    </Drawer>
+                                </div>
+                                {!isReadOnly && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            setAdditionalMaterials([
+                                                ...additionalMaterials,
+                                                {
+                                                    id: crypto.randomUUID(),
+                                                    name: '',
+                                                    quantity: '',
+                                                    supplySide: 'installer'
+                                                }
+                                            ]);
+                                        }}
+                                    >
+                                        <Plus className="h-4 w-4 mr-2" />
+                                        Dodaj pozycję
+                                    </Button>
+                                )}
+                            </div>
+                            
+                            <div className="space-y-3">
+                                {additionalMaterials.length === 0 && (
+                                    <div className="text-sm text-muted-foreground italic text-center py-4 border border-dashed rounded-md">
+                                        Brak dodatkowych materiałów.
+                                    </div>
+                                )}
+                                {additionalMaterials.map((item, index) => (
+                                    <div key={item.id} className="grid grid-cols-1 gap-3 p-3 border rounded-md bg-muted/20">
+                                        <div className="flex items-start gap-2">
+                                            <div className="flex-1 space-y-2">
+                                                <div className="flex gap-2">
+                                                    <Input
+                                                        placeholder="Co potrzeba? (np. Klej montażowy)"
+                                                        value={item.name}
+                                                        disabled={isReadOnly}
+                                                        onChange={(e) => {
+                                                            const newItems = [...additionalMaterials];
+                                                            newItems[index].name = e.target.value;
+                                                            setAdditionalMaterials(newItems);
+                                                        }}
+                                                    />
+                                                    <Button
+                                                        variant="outline"
+                                                        size="icon"
+                                                        disabled={isReadOnly}
+                                                        onClick={() => {
+                                                            setCurrentAccessoryIndex(index);
+                                                            setIsAccessorySelectorOpen(true);
+                                                        }}
+                                                        title="Wybierz z bazy"
+                                                    >
+                                                        <Search className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <Input
+                                                        placeholder="Ilość"
+                                                        value={item.quantity}
+                                                        disabled={isReadOnly}
+                                                        className="w-1/3"
+                                                        onChange={(e) => {
+                                                            const newItems = [...additionalMaterials];
+                                                            newItems[index].quantity = e.target.value;
+                                                            setAdditionalMaterials(newItems);
+                                                        }}
+                                                    />
+                                                    <Select
+                                                        disabled={isReadOnly}
+                                                        value={item.supplySide}
+                                                        onValueChange={(val: 'installer' | 'company') => {
+                                                            const newItems = [...additionalMaterials];
+                                                            newItems[index].supplySide = val;
+                                                            setAdditionalMaterials(newItems);
+                                                        }}
+                                                    >
+                                                        <SelectTrigger className="w-2/3">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="installer">Kupuje Montażysta</SelectItem>
+                                                            <SelectItem value="company">Zapewnia Firma</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                {item.supplySide === 'installer' && (
+                                                    <div className="relative">
+                                                        <Input
+                                                            type="number"
+                                                            placeholder="Koszt netto (opcjonalne)"
+                                                            value={item.estimatedCost || ''}
+                                                            disabled={isReadOnly}
+                                                            onChange={(e) => {
+                                                                const newItems = [...additionalMaterials];
+                                                                newItems[index].estimatedCost = e.target.value ? parseFloat(e.target.value) : undefined;
+                                                                setAdditionalMaterials(newItems);
+                                                            }}
+                                                        />
+                                                        <span className="absolute right-3 top-2.5 text-xs text-muted-foreground">PLN netto</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {!isReadOnly && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="text-destructive hover:text-destructive/90"
+                                                    onClick={() => {
+                                                        const newItems = additionalMaterials.filter((_, i) => i !== index);
+                                                        setAdditionalMaterials(newItems);
+                                                    }}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Audit Form */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-base font-medium">Audyt techniczny</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <AuditForm 
+                            montageId={montage.id} 
+                            initialData={technicalAudit} 
+                            readOnly={isReadOnly}
+                        />
+                    </CardContent>
+                </Card>
+            </div>
+        </TabsContent>
+      </Tabs>
 
 
 
