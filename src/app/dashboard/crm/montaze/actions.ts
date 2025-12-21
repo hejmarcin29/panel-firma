@@ -1585,9 +1585,9 @@ export async function updateMontageRealizationStatus({
     const user = await requireUser();
 
     const updateData: { 
-        materialStatus?: 'none' | 'ordered' | 'in_stock' | 'delivered'; 
-        materialClaimType?: 'installer_pickup' | 'company_delivery' | 'courier' | 'client_pickup' | null;
-        installerStatus?: 'none' | 'informed' | 'confirmed';
+        materialStatus?: MontageMaterialStatus; 
+        materialClaimType?: MontageMaterialClaimType | null;
+        installerStatus?: MontageInstallerStatus;
         installerId?: string | null;
         measurerId?: string | null;
         architectId?: string | null;
