@@ -35,9 +35,10 @@ interface InstallerMontageViewProps {
     montage: Montage;
     logs: MontageLog[];
     userRoles: UserRole[];
+    hasGoogleCalendar?: boolean;
 }
 
-export function InstallerMontageView({ montage, logs, userRoles }: InstallerMontageViewProps) {
+export function InstallerMontageView({ montage, logs, userRoles, hasGoogleCalendar = false }: InstallerMontageViewProps) {
     const [activeTab, setActiveTab] = useState("process");
 
     // Filter logs to show only current user's actions (or system actions relevant to him)
@@ -154,7 +155,7 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
                                             montageId={montage.id}
                                             currentDate={montage.measurementDate ? new Date(montage.measurementDate as string | number | Date) : null}
                                             clientPhone={montage.contactPhone}
-                                            onSuccess={() => setActiveTab('measurement')}
+                                            hasGoogleCalendar={hasGoogleCalendar}
                                         />
                                     </div>
                                 )}

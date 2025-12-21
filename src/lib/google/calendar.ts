@@ -50,6 +50,39 @@ export async function createUserCalendarEvent(userId: string, event: GoogleCalen
     }
 }
 
+export async function updateUserCalendarEvent(userId: string, eventId: string, event: Partial<GoogleCalendarEvent>) {
+    const calendar = await getUserCalendarClient(userId);
+    if (!calendar) return null;
+
+    try {
+        await calendar.events.patch({
+            calendarId: 'primary',
+            eventId: eventId,
+            requestBody: event,
+        });
+        return true;
+    } catch (error) {
+        console.error(`Error updating User Calendar event for ${userId}:`, error);
+        return false;
+    }
+}
+
+export async function deleteUserCalendarEvent(userId: string, eventId: string) {
+    const calendar = await getUserCalendarClient(userId);
+    if (!calendar) return null;
+
+    try {
+        await calendar.events.delete({
+            calendarId: 'primary',
+            eventId: eventId,
+        });
+        return true;
+    } catch (error) {
+        console.error(`Error deleting User Calendar event for ${userId}:`, error);
+        return false;
+    }
+}
+
 export async function updateGoogleCalendarEvent(eventId: string, event: Partial<GoogleCalendarEvent>) {
   const calendarId = await getAppSetting(appSettingKeys.googleCalendarId);
   if (!calendarId) return null;

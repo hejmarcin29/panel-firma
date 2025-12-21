@@ -49,4 +49,12 @@ Ten plik służy jako "Single Source of Truth" dla zasad działania systemu. Ka�
   - Montaż: Zmniejsza stan (jeśli materiał pobrany z magazynu).
 
 ---
-*Ostatnia aktualizacja: 18.12.2025*
+*Ostatnia aktualizacja: 20.12.2025*
+
+## 5. UX/UI Procesu Pomiarowego (Mobile First)
+
+### Umawianie Pomiaru
+- **Interfejs:** Dwuetapowy (Wybór -> Potwierdzenie).
+- **Stan Potwierdzenia:** Po wybraniu daty, montażysta widzi "Kartę Oczekiwania" z odliczaniem dni i instrukcją "Co dalej".
+- **Integracja Kalendarza:** System generuje linki do Google Calendar.
+- **Oś Czasu:** Wizualizacja zaplanowanego terminu na osi czasu procesu.

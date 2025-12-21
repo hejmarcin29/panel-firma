@@ -15,6 +15,7 @@ import {
     quotes,
     customers,
     montages,
+    users,
 } from '@/lib/db/schema';
 import { tryGetR2Config } from '@/lib/r2/config';
 import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
@@ -106,6 +107,14 @@ export async function getMontageDetails(montageId: string) {
 
     const montage = mapMontageRow(montageRow as MontageRow, publicBaseUrl);
 
+    const currentUser = await db.query.users.findFirst({
+        where: eq(users.id, user.id),
+        columns: {
+            googleRefreshToken: true,
+        }
+    });
+    const hasGoogleCalendar = !!currentUser?.googleRefreshToken;
+
     return {
         montage,
         logs,
@@ -115,6 +124,7 @@ export async function getMontageDetails(montageId: string) {
         statusOptions,
         userRoles: user.roles,
         userId: user.id,
+        hasGoogleCalendar,
     };
 }
 

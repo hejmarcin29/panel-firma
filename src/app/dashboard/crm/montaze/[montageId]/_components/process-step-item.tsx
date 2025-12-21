@@ -1,6 +1,8 @@
 'use client';
 
 import { Check, Clock, Lock, User, Building, Hammer, Cpu } from 'lucide-react';
+import { format } from 'date-fns';
+import { pl } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import type { ProcessStepState, StepStatus } from '@/lib/montaze/process-utils';
 import { Badge } from '@/components/ui/badge';
@@ -87,6 +89,16 @@ export function ProcessStepItem({ step, isLast }: ProcessStepItemProps) {
                         {getActorLabel(step.actor)}
                     </Badge>
                 </div>
+
+                {/* Scheduled Date Indicator */}
+                {step.scheduledDate && (
+                    <div className="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-md border border-blue-100 w-fit">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span className="text-xs font-medium">
+                            Zaplanowano: {format(step.scheduledDate, "d MMMM yyyy", { locale: pl })}
+                        </span>
+                    </div>
+                )}
 
                 {/* Checkpoints */}
                 {step.checkpointsState.length > 0 && (

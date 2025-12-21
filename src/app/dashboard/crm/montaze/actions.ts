@@ -27,7 +27,14 @@ import { getMontageAutomationRules } from '@/lib/montaze/automation';
 import { logSystemEvent } from '@/lib/logging';
 import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
 import type { MaterialsEditHistoryEntry } from './types';
-import { createGoogleCalendarEvent, updateGoogleCalendarEvent, deleteGoogleCalendarEvent, createUserCalendarEvent } from '@/lib/google/calendar';
+import { 
+    createGoogleCalendarEvent, 
+    updateGoogleCalendarEvent, 
+    deleteGoogleCalendarEvent, 
+    createUserCalendarEvent, 
+    updateUserCalendarEvent, 
+    deleteUserCalendarEvent 
+} from '@/lib/google/calendar';
 import { generatePortalToken } from '@/lib/utils';
 import { sendSms } from '@/lib/sms';
 
@@ -1171,13 +1178,55 @@ export async function updateMontageClientInfo(montageId: string, clientInfo: str
 }
 
 export async function updateMontageMeasurementDate(montageId: string, date: Date | null) {
-    await requireUser();
+    const user = await requireUser();
+    
     await db.update(montages)
         .set({ 
             measurementDate: date,
             updatedAt: new Date() 
         })
         .where(eq(montages.id, montageId));
+
+    // Calendar Sync
+    try {
+        const montage = await db.query.montages.findFirst({
+            where: eq(montages.id, montageId),
+        });
+
+        if (montage) {
+            // Priority: Measurer -> Installer -> Current User
+            const targetUserId = montage.measurerId || montage.installerId || user.id;
+
+            if (date) {
+                const event = {
+                    summary: `Pomiar: ${montage.clientName}`,
+                    description: `Adres: ${montage.installationAddress || montage.address || 'Brak adresu'}\nTel: ${montage.contactPhone || 'Brak'}\nLink: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard/crm/montaze/${montage.id}`,
+                    location: montage.installationAddress || montage.address || '',
+                    start: { dateTime: date.toISOString() },
+                    end: { dateTime: new Date(date.getTime() + 60 * 60 * 1000).toISOString() }, // Default 1h
+                };
+
+                if (montage.googleEventId) {
+                    await updateUserCalendarEvent(targetUserId, montage.googleEventId, event);
+                } else {
+                    const newEventId = await createUserCalendarEvent(targetUserId, event);
+                    if (newEventId) {
+                        await db.update(montages)
+                            .set({ googleEventId: newEventId })
+                            .where(eq(montages.id, montageId));
+                    }
+                }
+            } else if (montage.googleEventId) {
+                await deleteUserCalendarEvent(targetUserId, montage.googleEventId);
+                await db.update(montages)
+                    .set({ googleEventId: null })
+                    .where(eq(montages.id, montageId));
+            }
+        }
+    } catch (e) {
+        console.error("Calendar sync failed", e);
+    }
+
     revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
 

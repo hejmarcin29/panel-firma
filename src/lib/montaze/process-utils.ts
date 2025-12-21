@@ -13,6 +13,7 @@ export type ProcessStepState = ProcessStepDefinition & {
         label: string;
         isMet: boolean;
     }[];
+    scheduledDate?: Date | null;
 };
 
 export function getProcessState(montage: Montage): { 
@@ -55,15 +56,21 @@ export function getProcessState(montage: Montage): {
             isMet: cp.condition(montage)
         }));
 
-        // If it's the current step, but all checkpoints are met, maybe we should suggest it's "ready to advance"?
-        // For now, simple logic.
+        // Determine scheduled date for specific steps
+        let scheduledDate: Date | null = null;
+        if (step.id === 'measurement_valuation' && montage.measurementDate) {
+            scheduledDate = new Date(montage.measurementDate);
+        } else if (step.id === 'logistics' && montage.scheduledInstallationAt) {
+            scheduledDate = new Date(montage.scheduledInstallationAt);
+        }
 
         return {
             ...step,
             status,
             isCompleted: status === 'completed',
             isCurrent: status === 'current',
-            checkpointsState
+            checkpointsState,
+            scheduledDate
         };
     });
 

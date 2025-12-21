@@ -60,12 +60,12 @@ export function MontageView({ montageId, initialData, portalEnabled }: MontageVi
 
     if (!data) return null;
 
-    const { montage, logs, installers, measurers, architects, statusOptions, userRoles } = data;
+    const { montage, logs, installers, measurers, architects, statusOptions, userRoles, hasGoogleCalendar } = data;
 
     const isInstaller = userRoles.includes('installer') && !userRoles.includes('admin');
 
     if (isInstaller) {
-        return <InstallerMontageView montage={montage} logs={logs} userRoles={userRoles} />;
+        return <InstallerMontageView montage={montage} logs={logs} userRoles={userRoles} hasGoogleCalendar={hasGoogleCalendar} />;
     }
 
     if (montage.status === 'lead') {
