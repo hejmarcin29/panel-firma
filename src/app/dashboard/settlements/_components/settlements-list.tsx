@@ -24,21 +24,52 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 
 import { updateSettlementStatus, paySettlementWithDeductions } from '../actions';
 
+type Settlement = {
+    id: string;
+    status: string;
+    totalAmount: number;
+    createdAt: Date | string;
+    installerId: string;
+    montage: {
+        clientName: string;
+        address: string | null;
+        installationAddress: string | null;
+    } | null;
+    installer: {
+        name: string | null;
+        email: string;
+    } | null;
+};
+
+type Advance = {
+    id: string;
+    amount: number;
+    installerId: string;
+};
+
 interface SettlementsListProps {
-    data: any[];
-    pendingAdvances?: any[]; // Pass all pending advances to filter client-side
+    data: Settlement[];
+    pendingAdvances?: Advance[]; // Pass all pending advances to filter client-side
     isHistory?: boolean;
 }
 
 export function SettlementsList({ data, pendingAdvances = [], isHistory = false }: SettlementsListProps) {
     const [isPending, startTransition] = useTransition();
     const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
-    const [selectedSettlement, setSelectedSettlement] = useState<any>(null);
+    const [selectedSettlement, setSelectedSettlement] = useState<Settlement | null>(null);
     const [selectedAdvances, setSelectedAdvances] = useState<string[]>([]);
 
     const handleStatusChange = (id: string, status: 'paid' | 'pending') => {
@@ -46,13 +77,13 @@ export function SettlementsList({ data, pendingAdvances = [], isHistory = false 
             try {
                 await updateSettlementStatus(id, status);
                 toast.success('Status został zaktualizowany');
-            } catch (error) {
+            } catch {
                 toast.error('Wystąpił błąd');
             }
         });
     };
 
-    const openPaymentDialog = (settlement: any) => {
+    const openPaymentDialog = (settlement: Settlement) => {
         setSelectedSettlement(settlement);
         setSelectedAdvances([]);
         setPaymentDialogOpen(true);

@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
-import { Calculator, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Calculator, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -35,7 +35,6 @@ export function MontageSettlementTab({ montage, userRoles }: MontageSettlementTa
     const [note, setNote] = useState('');
 
     const isAdmin = userRoles.includes('admin');
-    const isInstaller = userRoles.includes('installer');
 
     const handleCalculate = () => {
         startTransition(async () => {

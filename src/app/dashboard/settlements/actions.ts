@@ -1,9 +1,9 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { montages, users, settlements, advances, type SettlementStatus, type AdvanceStatus } from '@/lib/db/schema';
+import { montages, users, settlements, advances, type SettlementStatus } from '@/lib/db/schema';
 import { requireUser } from '@/lib/auth/session';
 import { generateId } from '@/lib/utils';
 import { logSystemEvent } from '@/lib/logging';

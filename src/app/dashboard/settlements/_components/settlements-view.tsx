@@ -6,7 +6,9 @@ import { AdvancesList } from './advances-list';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface SettlementsViewProps {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     settlements: any[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     advances: any[];
 }
 

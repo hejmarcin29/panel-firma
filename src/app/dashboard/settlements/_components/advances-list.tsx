@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useTransition } from 'react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
-import { CheckCircle2, MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -27,9 +27,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 import { approveAdvance } from '../actions';
 
+type Advance = {
+    id: string;
+    requestDate: Date | string;
+    amount: number;
+    description: string | null;
+    status: string;
+    installer: {
+        name: string | null;
+        email: string;
+    } | null;
+};
+
 interface AdvancesListProps {
-    pending: any[];
-    history: any[];
+    pending: Advance[];
+    history: Advance[];
 }
 
 export function AdvancesList({ pending, history }: AdvancesListProps) {
@@ -40,13 +52,13 @@ export function AdvancesList({ pending, history }: AdvancesListProps) {
             try {
                 await approveAdvance(id);
                 toast.success('Zaliczka zatwierdzona (wypłacona)');
-            } catch (error) {
+            } catch {
                 toast.error('Wystąpił błąd');
             }
         });
     };
 
-    const renderTable = (data: any[], showActions = false) => (
+    const renderTable = (data: Advance[], showActions = false) => (
         <div className="rounded-md border">
             <Table>
                 <TableHeader>
@@ -97,7 +109,7 @@ export function AdvancesList({ pending, history }: AdvancesListProps) {
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuLabel>Akcje</DropdownMenuLabel>
-                                                <DropdownMenuItem onClick={() => handleApprove(item.id)}>
+                                                <DropdownMenuItem onClick={() => handleApprove(item.id)} disabled={isPending}>
                                                     <CheckCircle2 className="mr-2 h-4 w-4" />
                                                     Zatwierdź wypłatę
                                                 </DropdownMenuItem>

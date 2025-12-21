@@ -174,7 +174,7 @@ export type MontageSettlement = {
     id: string;
     status: string;
     totalAmount: number;
-    calculations: any;
+    calculations: Record<string, unknown>;
     createdAt: TimestampValue;
 };
 
