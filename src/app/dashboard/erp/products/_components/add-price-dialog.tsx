@@ -36,7 +36,7 @@ import { toast } from "sonner";
 
 const formSchema = z.object({
     supplierId: z.string().min(1, "Wybierz dostawcę"),
-    netPrice: z.coerce.number().min(0.01, "Cena musi być większa od 0"),
+    netPrice: z.string().refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, "Cena musi być większa od 0"),
     supplierSku: z.string().optional(),
     isDefault: z.boolean().default(false),
 });
@@ -54,7 +54,7 @@ export function AddPriceDialog({ productId, suppliers }: AddPriceDialogProps) {
         resolver: zodResolver(formSchema),
         defaultValues: {
             supplierId: "",
-            netPrice: 0,
+            netPrice: "",
             supplierSku: "",
             isDefault: false,
         },
@@ -66,6 +66,7 @@ export function AddPriceDialog({ productId, suppliers }: AddPriceDialogProps) {
             await addProductPrice({
                 productId,
                 ...values,
+                netPrice: parseFloat(values.netPrice),
             });
             toast.success("Cena dodana");
             setOpen(false);
