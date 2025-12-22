@@ -46,6 +46,18 @@ export default function ERPLayout({ children }: { children: ReactNode }) {
                         Zamówienia (PO)
                     </Button>
                 </Link>
+                 <Link href="/dashboard/erp/invoices">
+                    <Button variant="ghost" size="sm" className="gap-2">
+                        <FileText className="h-4 w-4" />
+                        Faktury
+                    </Button>
+                </Link>
+                 <Link href="/dashboard/erp/zespol">
+                    <Button variant="ghost" size="sm" className="gap-2">
+                        <Users className="h-4 w-4" />
+                        Zespół
+                    </Button>
+                </Link>
             </div>
 
             <div className="flex-1">

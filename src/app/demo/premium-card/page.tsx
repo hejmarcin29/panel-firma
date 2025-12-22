@@ -25,7 +25,7 @@ export default function DemoPage() {
           </p>
         </div>
         
-        <div className="grid gap-16 lg:grid-cols-1 xl:grid-cols-1 perspective-1000">
+        <div className="grid gap-16 lg:grid-cols-1 xl:grid-cols-1" style={{ perspective: "1000px" }}>
           <PremiumProductCard />
         </div>
 

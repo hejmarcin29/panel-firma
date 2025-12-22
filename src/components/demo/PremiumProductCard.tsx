@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useRef, useState } from "react"
+import React, { useRef, useState, useEffect } from "react"
 import { motion, useMotionTemplate, useMotionValue, useSpring, useTransform, AnimatePresence } from "framer-motion"
 import { ArrowRight, Maximize2, Ruler, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -10,25 +10,28 @@ const ROTATION_RANGE = 25
 
 const VARIANTS = [
   {
-    id: "dark",
-    name: "Dark Oak",
-    color: "#3E2723",
-    image: "https://images.unsplash.com/photo-1516455590571-18256e5bb9ff?q=80&w=1000&auto=format&fit=crop",
+    id: "mg001",
+    name: "Valley Oak",
+    code: "MG-001-HB",
+    color: "#8D7B68",
+    image: "/demo/dark-oak.jpg",
     price: "189,00"
   },
   {
-    id: "light",
-    name: "Nordic Ash",
-    color: "#D7CCC8",
-    image: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?q=80&w=1000&auto=format&fit=crop",
-    price: "179,00"
+    id: "mg002",
+    name: "Province Oak",
+    code: "MG-002-HB",
+    color: "#A4907C",
+    image: "/demo/nordic-ash.jpg",
+    price: "189,00"
   },
   {
-    id: "warm",
-    name: "Warm Walnut",
-    color: "#8D6E63",
-    image: "https://images.unsplash.com/photo-1543459176-4426b363e15c?q=80&w=1000&auto=format&fit=crop",
-    price: "199,00"
+    id: "mg003",
+    name: "Upland Oak",
+    code: "MG-003-HB",
+    color: "#C8B6A6",
+    image: "/demo/warm-walnut.jpg",
+    price: "189,00"
   }
 ]
 
@@ -48,6 +51,21 @@ export function PremiumProductCard() {
 
   const transform = useMotionTemplate`rotateX(${xSpring}deg) rotateY(${ySpring}deg)`
   
+  // Handle Escape key and Body Scroll Lock
+  useEffect(() => {
+    if (isExpanded) {
+      document.body.style.overflow = "hidden"
+      const handleEsc = (e: KeyboardEvent) => {
+        if (e.key === "Escape") setIsExpanded(false)
+      }
+      window.addEventListener("keydown", handleEsc)
+      return () => {
+        document.body.style.overflow = "unset"
+        window.removeEventListener("keydown", handleEsc)
+      }
+    }
+  }, [isExpanded])
+
   // Glare effect opacity based on mouse position
   const glareOpacity = useTransform(
     mouseY,
@@ -93,10 +111,18 @@ export function PremiumProductCard() {
           zIndex: isExpanded ? 50 : 1,
         }}
         className={cn(
-          "relative h-[550px] w-full max-w-[380px] cursor-pointer rounded-2xl transition-all duration-500",
+          "relative h-[550px] w-full max-w-[380px] cursor-pointer rounded-2xl transition-all duration-500 outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950",
           isExpanded ? "fixed inset-0 z-50 h-full w-full max-w-none rounded-none" : ""
         )}
         onClick={() => !isExpanded && setIsExpanded(true)}
+        onKeyDown={(e) => {
+            if (!isExpanded && (e.key === "Enter" || e.key === " ")) {
+                e.preventDefault()
+                setIsExpanded(true)
+            }
+        }}
+        role="button"
+        tabIndex={isExpanded ? -1 : 0}
         layoutId="product-card-container"
       >
         <div
@@ -111,7 +137,7 @@ export function PremiumProductCard() {
         >
           {/* Background Texture Image */}
           <motion.div 
-            className="absolute inset-0 h-full w-full"
+            className="absolute inset-0 h-full w-full bg-neutral-800"
             layoutId="product-image"
           >
              <div className="absolute inset-0 bg-black/40 z-10" />
@@ -125,6 +151,9 @@ export function PremiumProductCard() {
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.5 }}
                     className="absolute inset-0 h-full w-full object-cover"
+                    onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                    }}
                 />
              </AnimatePresence>
           </motion.div>
@@ -179,7 +208,7 @@ export function PremiumProductCard() {
                         layoutId="product-desc"
                         className={cn("mt-4 text-neutral-300 font-light", isExpanded ? "text-xl max-w-2xl" : "text-sm")}
                     >
-                        Naturalny dąb o głębokiej strukturze synchronicznej. 
+                        <span className="font-semibold text-amber-500">{activeVariant.code}</span> • Naturalny dąb o głębokiej strukturze synchronicznej. 
                         Idealny do wnętrz w stylu skandynawskim i japandi.
                         {isExpanded && " Wyjątkowa trwałość dzięki technologii SPC i zintegrowany podkład akustyczny zapewniają komfort użytkowania na lata."}
                     </motion.p>
@@ -192,13 +221,14 @@ export function PremiumProductCard() {
                             key={variant.id}
                             onClick={() => setActiveVariant(variant)}
                             className={cn(
-                                "h-8 w-8 rounded-full border-2 transition-all hover:scale-110",
+                                "h-8 w-8 rounded-full border-2 transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-neutral-900",
                                 activeVariant.id === variant.id 
                                     ? "border-white scale-110 ring-2 ring-white/20 ring-offset-2 ring-offset-black" 
                                     : "border-transparent opacity-70 hover:opacity-100"
                             )}
                             style={{ backgroundColor: variant.color }}
                             title={variant.name}
+                            aria-label={`Wybierz wariant ${variant.name}`}
                         />
                     ))}
                 </div>
@@ -238,12 +268,12 @@ export function PremiumProductCard() {
                     className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8 border-t border-white/10 pt-12"
                 >
                     {[
-                        { label: "Klasa ścieralności", value: "AC5 / 33" },
-                        { label: "Wymiar deski", value: "600 x 120 mm" },
-                        { label: "Ogrzewanie podłogowe", value: "Tak, do 27°C" },
-                        { label: "Gwarancja", value: "25 lat (domowa)" },
+                        { label: "Klasa użyteczności", value: "33 / 42 (Obiektowa)" },
+                        { label: "Wymiar deski", value: "750 x 150 mm" },
+                        { label: "Grubość całkowita", value: "6.0 mm (SPC)" },
+                        { label: "Warstwa ścieralna", value: "0.55 mm" },
                         { label: "Wodoodporność", value: "100% Waterproof" },
-                        { label: "Montaż", value: "Click System 5G" },
+                        { label: "Montaż", value: "Click System" },
                     ].map((item, i) => (
                         <div key={i} className="flex flex-col gap-1">
                             <span className="text-sm text-neutral-500 uppercase tracking-wider">{item.label}</span>
@@ -266,7 +296,7 @@ export function PremiumProductCard() {
 
                 <div className="absolute -left-16 top-1/3 flex -rotate-90 items-center gap-3 text-xs font-medium text-neutral-400 tracking-widest uppercase">
                     <Ruler className="h-3 w-3" />
-                    <span>600 x 120 mm</span>
+                    <span>750 x 150 mm</span>
                 </div>
             </>
           )}
