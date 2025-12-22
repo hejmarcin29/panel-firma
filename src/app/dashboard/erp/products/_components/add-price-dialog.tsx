@@ -53,6 +53,9 @@ export function AddPriceDialog({ productId, suppliers }: AddPriceDialogProps) {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
+            supplierId: "",
+            netPrice: 0,
+            supplierSku: "",
             isDefault: false,
         },
     });
