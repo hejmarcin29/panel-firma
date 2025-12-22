@@ -27,12 +27,12 @@ const formSchema = z.object({
     phone: z.string().optional(),
     website: z.string().url("Niepoprawny URL").optional().or(z.literal("")),
     bankAccount: z.string().optional(),
-    paymentTerms: z.coerce.number().default(14),
+    paymentTerms: z.string(),
     description: z.string().optional(),
     street: z.string().optional(),
     city: z.string().optional(),
     zip: z.string().optional(),
-    country: z.string().default("Polska"),
+    country: z.string(),
 });
 
 interface SupplierFormProps {
@@ -47,7 +47,7 @@ export function SupplierForm({ onSuccess }: SupplierFormProps) {
         resolver: zodResolver(formSchema),
         defaultValues: {
             name: "",
-            paymentTerms: 14,
+            paymentTerms: "14",
             country: "Polska",
         },
     });
@@ -55,7 +55,10 @@ export function SupplierForm({ onSuccess }: SupplierFormProps) {
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setIsLoading(true);
         try {
-            await createSupplier(values);
+            await createSupplier({
+                ...values,
+                paymentTerms: parseInt(values.paymentTerms),
+            });
             toast.success("Dostawca utworzony");
             if (onSuccess) {
                 onSuccess();
