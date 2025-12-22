@@ -29,14 +29,14 @@ import { toast } from "sonner";
 const formSchema = z.object({
     name: z.string().min(2, "Nazwa musi mieć min. 2 znaki"),
     sku: z.string().min(2, "SKU musi mieć min. 2 znaki"),
-    unit: z.string().default("szt"),
-    type: z.enum(["product", "service"]).default("product"),
+    unit: z.string(),
+    type: z.enum(["product", "service"]),
     categoryId: z.string().optional(),
     description: z.string().optional(),
-    width: z.coerce.number().optional(),
-    height: z.coerce.number().optional(),
-    length: z.coerce.number().optional(),
-    weight: z.coerce.number().optional(),
+    width: z.string().optional(),
+    height: z.string().optional(),
+    length: z.string().optional(),
+    weight: z.string().optional(),
 });
 
 export function ProductForm() {
@@ -56,7 +56,13 @@ export function ProductForm() {
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setIsLoading(true);
         try {
-            await createProduct(values);
+            await createProduct({
+                ...values,
+                width: values.width ? parseFloat(values.width) : null,
+                height: values.height ? parseFloat(values.height) : null,
+                length: values.length ? parseFloat(values.length) : null,
+                weight: values.weight ? parseFloat(values.weight) : null,
+            });
             toast.success("Produkt utworzony");
             router.push("/dashboard/erp/products");
             router.refresh();
