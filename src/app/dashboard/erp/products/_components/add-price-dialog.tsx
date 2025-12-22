@@ -38,7 +38,7 @@ const formSchema = z.object({
     supplierId: z.string().min(1, "Wybierz dostawcę"),
     netPrice: z.string().refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, "Cena musi być większa od 0"),
     supplierSku: z.string().optional(),
-    isDefault: z.boolean().default(false),
+    isDefault: z.boolean(),
 });
 
 interface AddPriceDialogProps {
