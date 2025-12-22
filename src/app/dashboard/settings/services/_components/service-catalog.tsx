@@ -18,7 +18,6 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
     DialogFooter,
 } from '@/components/ui/dialog';
 import {
@@ -66,7 +65,7 @@ export function ServiceCatalog({ services }: ServiceCatalogProps) {
             }
             setIsDialogOpen(false);
             setEditingService(null);
-        } catch (error) {
+        } catch {
             toast.error('Wystąpił błąd');
         } finally {
             setIsLoading(false);
@@ -78,7 +77,7 @@ export function ServiceCatalog({ services }: ServiceCatalogProps) {
         try {
             await deleteService(id);
             toast.success('Usługa usunięta');
-        } catch (error) {
+        } catch {
             toast.error('Wystąpił błąd');
         }
     };

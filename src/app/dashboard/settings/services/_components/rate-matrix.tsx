@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import {
@@ -25,22 +24,22 @@ interface RateMatrixProps {
 }
 
 export function RateMatrix({ services, installers }: RateMatrixProps) {
-    const [updating, setUpdating] = useState<string | null>(null);
+    // const [updating, setUpdating] = useState<string | null>(null);
 
     const handleRateChange = async (userId: string, serviceId: string, value: string) => {
         const rate = parseFloat(value);
         if (isNaN(rate)) return;
 
-        const key = `${userId}-${serviceId}`;
-        setUpdating(key);
+        // const key = `${userId}-${serviceId}`;
+        // setUpdating(key);
 
         try {
             await updateInstallerRate(userId, serviceId, rate);
             toast.success('Stawka zaktualizowana');
-        } catch (error) {
+        } catch {
             toast.error('Błąd aktualizacji stawki');
         } finally {
-            setUpdating(null);
+            // setUpdating(null);
         }
     };
 

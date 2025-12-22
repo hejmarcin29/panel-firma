@@ -1,5 +1,4 @@
 import { PremiumProductCard } from "@/components/demo/PremiumProductCard"
-import { ArrowRight } from "lucide-react"
 
 export default function DemoPage() {
   return (

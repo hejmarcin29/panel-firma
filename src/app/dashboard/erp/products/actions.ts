@@ -1,10 +1,11 @@
 'use server';
 
 import { db } from "@/lib/db";
-import { erpProducts, erpPurchasePrices, erpSuppliers } from "@/lib/db/schema";
+import { erpProducts, erpPurchasePrices } from "@/lib/db/schema";
 import { revalidatePath } from "next/cache";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function createProduct(data: any) {
     await db.insert(erpProducts).values({
         name: data.name,

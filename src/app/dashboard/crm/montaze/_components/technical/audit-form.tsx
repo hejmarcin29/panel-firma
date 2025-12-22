@@ -15,7 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 import { updateTechnicalAudit } from '../../technical-actions';
 import type { TechnicalAuditData } from '../../technical-data';

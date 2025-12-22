@@ -8,13 +8,11 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Star, Trash2 } from "lucide-react";
 import { AddPriceDialog } from "./add-price-dialog";
 import { deleteProductPrice, setMainSupplier } from "../actions";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 
 interface Price {
     id: string;
@@ -35,14 +33,13 @@ interface ProductPricesProps {
 }
 
 export function ProductPrices({ productId, prices, suppliers }: ProductPricesProps) {
-    const router = useRouter();
 
     async function handleDelete(priceId: string) {
         if (!confirm("Czy na pewno chcesz usunąć tę cenę?")) return;
         try {
             await deleteProductPrice(priceId, productId);
             toast.success("Cena usunięta");
-        } catch (error) {
+        } catch {
             toast.error("Błąd usuwania");
         }
     }
@@ -51,7 +48,7 @@ export function ProductPrices({ productId, prices, suppliers }: ProductPricesPro
         try {
             await setMainSupplier(priceId, productId);
             toast.success("Główny dostawca zmieniony");
-        } catch (error) {
+        } catch {
             toast.error("Błąd zmiany");
         }
     }

@@ -27,9 +27,7 @@ import {
     getMontageServices, 
     addMontageService, 
     removeMontageService, 
-    updateMontageServiceQuantity 
 } from '../actions-services';
-import { cn } from '@/lib/utils';
 
 // Temporary type definitions if not available from schema directly
 type ServiceType = {
@@ -77,8 +75,7 @@ export function ServiceSelector({
                 ]);
                 setServices(allServices as ServiceType[]);
                 setAddedServices(currentItems as unknown as MontageServiceItemType[]);
-            } catch (error) {
-                console.error(error);
+            } catch {
                 toast.error('Nie udało się pobrać listy usług');
             } finally {
                 setLoading(false);
@@ -120,7 +117,7 @@ export function ServiceSelector({
                 setSelectedServiceId('');
                 setQuantity('');
                 toast.success('Dodano usługę');
-            } catch (error) {
+            } catch {
                 toast.error('Błąd podczas dodawania usługi');
             }
         });
@@ -132,7 +129,7 @@ export function ServiceSelector({
                 await removeMontageService(itemId, montageId);
                 setAddedServices(prev => prev.filter(item => item.id !== itemId));
                 toast.success('Usunięto usługę');
-            } catch (error) {
+            } catch {
                 toast.error('Błąd usuwania');
             }
         });

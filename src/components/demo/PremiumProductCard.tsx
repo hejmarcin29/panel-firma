@@ -2,17 +2,41 @@
 
 import React, { useRef, useState } from "react"
 import { motion, useMotionTemplate, useMotionValue, useSpring, useTransform, AnimatePresence } from "framer-motion"
-import { ArrowRight, Maximize2, Ruler, X, CheckCircle2 } from "lucide-react"
+import { ArrowRight, Maximize2, Ruler, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 const ROTATION_RANGE = 25
-const HALF_ROTATION_RANGE = ROTATION_RANGE / 2
+
+const VARIANTS = [
+  {
+    id: "dark",
+    name: "Dark Oak",
+    color: "#3E2723",
+    image: "https://images.unsplash.com/photo-1516455590571-18256e5bb9ff?q=80&w=1000&auto=format&fit=crop",
+    price: "189,00"
+  },
+  {
+    id: "light",
+    name: "Nordic Ash",
+    color: "#D7CCC8",
+    image: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?q=80&w=1000&auto=format&fit=crop",
+    price: "179,00"
+  },
+  {
+    id: "warm",
+    name: "Warm Walnut",
+    color: "#8D6E63",
+    image: "https://images.unsplash.com/photo-1543459176-4426b363e15c?q=80&w=1000&auto=format&fit=crop",
+    price: "199,00"
+  }
+]
 
 export function PremiumProductCard() {
   const ref = useRef<HTMLDivElement>(null)
   const [isHovered, setIsHovered] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
+  const [activeVariant, setActiveVariant] = useState(VARIANTS[0])
 
   const x = useMotionValue(0)
   const y = useMotionValue(0)
@@ -91,13 +115,18 @@ export function PremiumProductCard() {
             layoutId="product-image"
           >
              <div className="absolute inset-0 bg-black/40 z-10" />
-             <motion.img 
-                src="https://images.unsplash.com/photo-1516455590571-18256e5bb9ff?q=80&w=1000&auto=format&fit=crop"
-                alt="Wood Texture"
-                className="h-full w-full object-cover"
-                whileHover={!isExpanded ? { scale: 1.1 } : {}}
-                transition={{ duration: 0.8 }}
-             />
+             <AnimatePresence mode="wait">
+                <motion.img 
+                    key={activeVariant.id}
+                    src={activeVariant.image}
+                    alt={activeVariant.name}
+                    initial={{ opacity: 0, scale: 1.1 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="absolute inset-0 h-full w-full object-cover"
+                />
+             </AnimatePresence>
           </motion.div>
 
           {/* Glare Effect (Only in card mode) */}
@@ -144,7 +173,7 @@ export function PremiumProductCard() {
                         layoutId="product-title"
                         className={cn("font-bold text-white leading-tight", isExpanded ? "text-6xl md:text-8xl" : "text-4xl")}
                     >
-                        Solen <br/> Herringbone
+                        {activeVariant.name}
                     </motion.h3>
                     <motion.p 
                         layoutId="product-desc"
@@ -156,11 +185,29 @@ export function PremiumProductCard() {
                     </motion.p>
                 </div>
 
+                {/* Color Variants Selector */}
+                <div className="mt-6 flex gap-3" onClick={(e) => e.stopPropagation()}>
+                    {VARIANTS.map((variant) => (
+                        <button
+                            key={variant.id}
+                            onClick={() => setActiveVariant(variant)}
+                            className={cn(
+                                "h-8 w-8 rounded-full border-2 transition-all hover:scale-110",
+                                activeVariant.id === variant.id 
+                                    ? "border-white scale-110 ring-2 ring-white/20 ring-offset-2 ring-offset-black" 
+                                    : "border-transparent opacity-70 hover:opacity-100"
+                            )}
+                            style={{ backgroundColor: variant.color }}
+                            title={variant.name}
+                        />
+                    ))}
+                </div>
+
                 <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-6">
                     <div className="flex flex-col">
                         <span className="text-xs uppercase tracking-widest text-neutral-400">Cena katalogowa</span>
                         <div className="flex items-baseline gap-1">
-                            <span className={cn("font-bold text-white", isExpanded ? "text-4xl" : "text-2xl")}>189,00</span>
+                            <span className={cn("font-bold text-white", isExpanded ? "text-4xl" : "text-2xl")}>{activeVariant.price}</span>
                             <span className="text-sm text-neutral-400">zł / m²</span>
                         </div>
                     </div>
