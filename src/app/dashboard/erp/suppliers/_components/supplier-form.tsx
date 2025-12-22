@@ -27,15 +27,19 @@ const formSchema = z.object({
     phone: z.string().optional(),
     website: z.string().url("Niepoprawny URL").optional().or(z.literal("")),
     bankAccount: z.string().optional(),
-    paymentTerms: z.string(),
+    paymentTerms: z.coerce.number().default(14),
     description: z.string().optional(),
     street: z.string().optional(),
     city: z.string().optional(),
     zip: z.string().optional(),
-    country: z.string(),
+    country: z.string().default("Polska"),
 });
 
-export function SupplierForm() {
+interface SupplierFormProps {
+    onSuccess?: () => void;
+}
+
+export function SupplierForm({ onSuccess }: SupplierFormProps) {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
 
@@ -43,7 +47,7 @@ export function SupplierForm() {
         resolver: zodResolver(formSchema),
         defaultValues: {
             name: "",
-            paymentTerms: "14",
+            paymentTerms: 14,
             country: "Polska",
         },
     });
@@ -51,12 +55,13 @@ export function SupplierForm() {
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setIsLoading(true);
         try {
-            await createSupplier({
-                ...values,
-                paymentTerms: parseInt(values.paymentTerms),
-            });
+            await createSupplier(values);
             toast.success("Dostawca utworzony");
-            router.push("/dashboard/erp/suppliers");
+            if (onSuccess) {
+                onSuccess();
+            } else {
+                router.push("/dashboard/erp/suppliers");
+            }
             router.refresh();
         } catch (error) {
             toast.error("Błąd podczas tworzenia dostawcy");

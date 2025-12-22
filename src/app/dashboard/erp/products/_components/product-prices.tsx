@@ -9,10 +9,17 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Star, Trash2 } from "lucide-react";
+import { Star, Trash2, MoreHorizontal } from "lucide-react";
 import { AddPriceDialog } from "./add-price-dialog";
 import { deleteProductPrice, setMainSupplier } from "../actions";
 import { toast } from "sonner";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Price {
     id: string;
@@ -60,7 +67,8 @@ export function ProductPrices({ productId, prices, suppliers }: ProductPricesPro
                 <AddPriceDialog productId={productId} suppliers={suppliers} />
             </div>
 
-            <div className="rounded-md border">
+            {/* Desktop View */}
+            <div className="hidden md:block rounded-md border">
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -118,6 +126,61 @@ export function ProductPrices({ productId, prices, suppliers }: ProductPricesPro
                         )}
                     </TableBody>
                 </Table>
+            </div>
+
+            {/* Mobile View */}
+            <div className="md:hidden space-y-4">
+                {prices.length === 0 ? (
+                    <div className="text-center p-8 border rounded-md text-muted-foreground">
+                        Brak przypisanych dostawców.
+                    </div>
+                ) : (
+                    prices.map((price) => (
+                        <Card key={price.id}>
+                            <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+                                <div className="space-y-1">
+                                    <CardTitle className="text-base font-medium leading-none flex items-center gap-2">
+                                        {price.isDefault && (
+                                            <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                                        )}
+                                        {price.supplier.shortName || price.supplier.name}
+                                    </CardTitle>
+                                    <p className="text-sm text-muted-foreground">
+                                        SKU: {price.supplierSku || '-'}
+                                    </p>
+                                </div>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="-mr-2 h-8 w-8">
+                                            <MoreHorizontal className="h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        {!price.isDefault && (
+                                            <DropdownMenuItem onClick={() => handleSetDefault(price.id)}>
+                                                <Star className="mr-2 h-4 w-4" />
+                                                Ustaw jako głównego
+                                            </DropdownMenuItem>
+                                        )}
+                                        <DropdownMenuItem 
+                                            onClick={() => handleDelete(price.id)}
+                                            className="text-destructive focus:text-destructive"
+                                        >
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            Usuń
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-muted-foreground text-sm">Cena Netto:</span>
+                                    <span className="font-mono font-medium">{price.netPrice.toFixed(2)} PLN</span>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))
+                )}
             </div>
         </div>
     );

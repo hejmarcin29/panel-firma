@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { erpSuppliers } from "@/lib/db/schema";
 import { desc } from "drizzle-orm";
 import { SuppliersTable } from "./_components/suppliers-table";
+import { SupplierSheet } from "./_components/supplier-sheet";
 
 export default async function SuppliersPage() {
     const suppliers = await db.query.erpSuppliers.findMany({
@@ -20,16 +21,12 @@ export default async function SuppliersPage() {
                         Lista dostawców towarów i usług.
                     </p>
                 </div>
-                <Link href="/dashboard/erp/suppliers/new">
-                    <Button>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Dodaj Dostawcę
-                    </Button>
-                </Link>
+                <SupplierSheet />
             </div>
 
             <SuppliersTable data={suppliers} />
         </div>
     );
 }
+
 

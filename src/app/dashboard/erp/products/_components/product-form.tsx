@@ -39,7 +39,11 @@ const formSchema = z.object({
     weight: z.string().optional(),
 });
 
-export function ProductForm() {
+interface ProductFormProps {
+    onSuccess?: () => void;
+}
+
+export function ProductForm({ onSuccess }: ProductFormProps) {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
 
@@ -64,7 +68,11 @@ export function ProductForm() {
                 weight: values.weight ? parseFloat(values.weight) : null,
             });
             toast.success("Produkt utworzony");
-            router.push("/dashboard/erp/products");
+            if (onSuccess) {
+                onSuccess();
+            } else {
+                router.push("/dashboard/erp/products");
+            }
             router.refresh();
         } catch (error) {
             toast.error("Błąd podczas tworzenia produktu");

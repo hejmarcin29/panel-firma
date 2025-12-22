@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { erpProducts } from "@/lib/db/schema";
 import { desc } from "drizzle-orm";
 import { ProductsTable } from "./_components/products-table";
+import { ProductSheet } from "./_components/product-sheet";
 
 export default async function ProductsPage() {
     const products = await db.query.erpProducts.findMany({
@@ -23,15 +24,11 @@ export default async function ProductsPage() {
                         Lista wszystkich produktów i usług w systemie.
                     </p>
                 </div>
-                <Link href="/dashboard/erp/products/new">
-                    <Button>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Dodaj Produkt
-                    </Button>
-                </Link>
+                <ProductSheet />
             </div>
 
             <ProductsTable data={products} />
         </div>
     );
 }
+
