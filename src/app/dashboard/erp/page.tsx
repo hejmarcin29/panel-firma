@@ -34,7 +34,7 @@ export default function ERPDashboardPage() {
         className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
       >
         <motion.div variants={item} className="h-full">
-          <Link href="/dashboard/erp/kartoteki">
+          <Link href="/dashboard/erp/products">
             <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Kartoteki</CardTitle>
@@ -51,7 +51,7 @@ export default function ERPDashboardPage() {
         </motion.div>
 
         <motion.div variants={item} className="h-full">
-          <Link href="/dashboard/erp/purchases">
+          <Link href="/dashboard/erp/orders">
             <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Zakupy (PO)</CardTitle>
@@ -68,7 +68,7 @@ export default function ERPDashboardPage() {
         </motion.div>
 
         <motion.div variants={item} className="h-full">
-          <Link href="/dashboard/erp/warehouse">
+          <Link href="/dashboard/erp/inventory">
             <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Magazyn</CardTitle>

@@ -1542,4 +1542,142 @@ export const montageServiceItemsRelations = relations(montageServiceItems, ({ on
     }),
 }));
 
+// --- ERP MODULE TABLES ---
+
+// 1. Suppliers (Dostawcy)
+export const erpSuppliers = pgTable('erp_suppliers', {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    name: text('name').notNull(),
+    shortName: text('short_name'), // For display
+    nip: text('nip'),
+    email: text('email'),
+    phone: text('phone'),
+    website: text('website'),
+    address: json('address'), // { street, city, zip, country }
+    bankAccount: text('bank_account'),
+    paymentTerms: integer('payment_terms').default(14), // Days
+    description: text('description'),
+    status: text('status').default('active'), // active, inactive
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// 2. Product Categories (Kategorie Produktów)
+export const erpCategories = pgTable('erp_categories', {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    name: text('name').notNull(),
+    parentId: text('parent_id'), // For hierarchy
+    slug: text('slug').unique(),
+    createdAt: timestamp('created_at').defaultNow(),
+});
+
+// 3. Products (Kartoteka Towarowa)
+export const erpProducts = pgTable('erp_products', {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    sku: text('sku').unique().notNull(), // Kod produktu
+    ean: text('ean'), // Kod kreskowy
+    name: text('name').notNull(),
+    description: text('description'),
+    categoryId: text('category_id').references(() => erpCategories.id),
+    unit: text('unit').default('szt'), // szt, m2, mb, kpl, opak
+    
+    // Dimensions & Weight
+    width: doublePrecision('width'),
+    height: doublePrecision('height'),
+    length: doublePrecision('length'),
+    weight: doublePrecision('weight'),
+    
+    // Type
+    type: text('type').default('product'), // product, service
+    
+    // Status
+    status: text('status').default('active'), // active, archived
+    
+    // Media
+    imageUrl: text('image_url'),
+    
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// 4. Purchase Prices (Cenniki Zakupowe)
+export const erpPurchasePrices = pgTable('erp_purchase_prices', {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    productId: text('product_id').references(() => erpProducts.id).notNull(),
+    supplierId: text('supplier_id').references(() => erpSuppliers.id).notNull(),
+    
+    supplierSku: text('supplier_sku'), // Kod u dostawcy
+    
+    netPrice: doublePrecision('net_price').notNull(),
+    currency: text('currency').default('PLN'),
+    vatRate: doublePrecision('vat_rate').default(0.23),
+    
+    minOrderQuantity: doublePrecision('min_order_quantity').default(1),
+    
+    isDefault: boolean('is_default').default(false), // Główny dostawca
+    
+    createdAt: timestamp('created_at').defaultNow(),
+    updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// 5. Inventory Items (Stany Magazynowe - Simple version for now)
+export const erpInventory = pgTable('erp_inventory', {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    productId: text('product_id').references(() => erpProducts.id).notNull(),
+    warehouseId: text('warehouse_id'), // Optional if multiple warehouses
+    
+    quantityOnHand: doublePrecision('quantity_on_hand').default(0),
+    quantityReserved: doublePrecision('quantity_reserved').default(0),
+    quantityAvailable: doublePrecision('quantity_available').default(0), // Computed or stored
+    
+    location: text('location'), // Shelf/Bin
+    
+    updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// --- ERP RELATIONS ---
+
+export const erpProductsRelations = relations(erpProducts, ({ one, many }) => ({
+    category: one(erpCategories, {
+        fields: [erpProducts.categoryId],
+        references: [erpCategories.id],
+    }),
+    purchasePrices: many(erpPurchasePrices),
+    inventory: many(erpInventory),
+}));
+
+export const erpSuppliersRelations = relations(erpSuppliers, ({ many }) => ({
+    purchasePrices: many(erpPurchasePrices),
+}));
+
+export const erpCategoriesRelations = relations(erpCategories, ({ one, many }) => ({
+    parent: one(erpCategories, {
+        fields: [erpCategories.parentId],
+        references: [erpCategories.id],
+        relationName: 'category_hierarchy'
+    }),
+    children: many(erpCategories, {
+        relationName: 'category_hierarchy'
+    }),
+    products: many(erpProducts),
+}));
+
+export const erpPurchasePricesRelations = relations(erpPurchasePrices, ({ one }) => ({
+    product: one(erpProducts, {
+        fields: [erpPurchasePrices.productId],
+        references: [erpProducts.id],
+    }),
+    supplier: one(erpSuppliers, {
+        fields: [erpPurchasePrices.supplierId],
+        references: [erpSuppliers.id],
+    }),
+}));
+
+export const erpInventoryRelations = relations(erpInventory, ({ one }) => ({
+    product: one(erpProducts, {
+        fields: [erpInventory.productId],
+        references: [erpProducts.id],
+    }),
+}));
+
 
