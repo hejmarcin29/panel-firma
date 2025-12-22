@@ -37,31 +37,22 @@ export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montag
   // Form State
   const [formData, setFormData] = useState({
     finalPanelAmount: montage.finalPanelAmount?.toString() || '',
-    finalSkirtingLength: montage.finalSkirtingLength?.toString() || '',
     panelModel: montage.panelModel || '',
     panelProductId: montage.panelProductId || null,
-    skirtingModel: montage.skirtingModel || '',
-    skirtingProductId: montage.skirtingProductId || null,
     floorDetails: montage.floorDetails || '',
-    skirtingDetails: montage.skirtingDetails || '',
     materialDetails: montage.measurementDetails || montage.materialDetails || '',
   });
 
   const [isPanelSelectorOpen, setIsPanelSelectorOpen] = useState(false);
-  const [isSkirtingSelectorOpen, setIsSkirtingSelectorOpen] = useState(false);
 
   const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
     setFormData({
         finalPanelAmount: montage.finalPanelAmount?.toString() || '',
-        finalSkirtingLength: montage.finalSkirtingLength?.toString() || '',
         panelModel: montage.panelModel || '',
         panelProductId: montage.panelProductId || null,
-        skirtingModel: montage.skirtingModel || '',
-        skirtingProductId: montage.skirtingProductId || null,
         floorDetails: montage.floorDetails || '',
-        skirtingDetails: montage.skirtingDetails || '',
         materialDetails: montage.measurementDetails || montage.materialDetails || '',
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -96,9 +87,6 @@ export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montag
   const calculatedPanelAmount = montage.floorArea 
     ? (montage.floorArea * (1 + (montage.panelWaste || 5) / 100)).toFixed(2) 
     : null;
-  const calculatedSkirtingLength = montage.skirtingLength 
-    ? (montage.skirtingLength * (1 + (montage.skirtingWaste || 5) / 100)).toFixed(2) 
-    : null;
 
   const debouncedSave = useDebouncedCallback(async (data: typeof formData) => {
     setIsSaving(true);
@@ -107,13 +95,9 @@ export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montag
         montageId: montage.id,
         materialDetails: data.materialDetails,
         finalPanelAmount: data.finalPanelAmount ? parseFloat(data.finalPanelAmount) : null,
-        finalSkirtingLength: data.finalSkirtingLength ? parseFloat(data.finalSkirtingLength) : null,
         panelModel: data.panelModel || null,
         panelProductId: data.panelProductId,
-        skirtingModel: data.skirtingModel || null,
-        skirtingProductId: data.skirtingProductId,
         floorDetails: data.floorDetails || null,
-        skirtingDetails: data.skirtingDetails || null,
       });
       router.refresh();
     } finally {
@@ -258,46 +242,6 @@ export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montag
               </div>
 
               <div className='space-y-2'>
-                <Label>Ilość listew do zamówienia (mb)</Label>
-                <div className='flex gap-2 items-center'>
-                    <Input 
-                        name='finalSkirtingLength' 
-                        type='number' 
-                        step='0.01' 
-                        value={formData.finalSkirtingLength}
-                        onChange={(e) => handleChange('finalSkirtingLength', e.target.value)}
-                        className='w-32'
-                    />
-                    <div className='text-xs text-muted-foreground'>
-                        (Wyliczono z pomiaru: {calculatedSkirtingLength || 0} mb)
-                    </div>
-                </div>
-                <div className="flex gap-2">
-                    <Input 
-                        name='skirtingModel' 
-                        placeholder='Model listew'
-                        value={formData.skirtingModel}
-                        readOnly
-                        onClick={() => setIsSkirtingSelectorOpen(true)}
-                        className="cursor-pointer bg-muted/50"
-                    />
-                    <Button 
-                        type="button" 
-                        variant="outline" 
-                        onClick={() => setIsSkirtingSelectorOpen(true)}
-                    >
-                        Wybierz
-                    </Button>
-                </div>
-                <Input 
-                    name='skirtingDetails' 
-                    placeholder='Dodatkowe materiały do listew'
-                    value={formData.skirtingDetails}
-                    onChange={(e) => handleChange('skirtingDetails', e.target.value)}
-                />
-              </div>
-
-              <div className='space-y-2'>
                 <Label>Uwagi dotyczące listew i podłogi / Materiały</Label>
                 <Textarea
                     name='materialDetails'
@@ -318,7 +262,6 @@ export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montag
                                 <span className='font-medium'>{new Date(entry.date).toLocaleString('pl-PL')}</span>
                                 <div className='pl-2 border-l-2 border-muted'>
                                     {entry.changes.finalPanelAmount && <div>Panele: {entry.changes.finalPanelAmount} m²</div>}
-                                    {entry.changes.finalSkirtingLength && <div>Listwy: {entry.changes.finalSkirtingLength} mb</div>}
                                 </div>
                             </div>
                         ))}
