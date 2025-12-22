@@ -79,16 +79,10 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
   const [floorArea, setFloorArea] = useState<string>(montage.floorArea?.toString() || '');
   // floorDetails repurposed as Panel Additional Materials
   const [panelAdditionalMaterials, setPanelAdditionalMaterials] = useState(montage.floorDetails || '');
-  const [skirtingLength, setSkirtingLength] = useState<string>(montage.skirtingLength?.toString() || '');
-  // skirtingDetails repurposed as Skirting Additional Materials
-  const [skirtingAdditionalMaterials, setSkirtingAdditionalMaterials] = useState(montage.skirtingDetails || '');
   
   const [panelModel, setPanelModel] = useState(montage.panelModel || '');
   const [panelProductId, setPanelProductId] = useState<number | null>(montage.panelProductId || null);
   const [panelWaste, setPanelWaste] = useState<string>(montage.panelWaste?.toString() || '5');
-  const [skirtingModel, setSkirtingModel] = useState(montage.skirtingModel || '');
-  const [skirtingProductId, setSkirtingProductId] = useState<number | null>(montage.skirtingProductId || null);
-  const [skirtingWaste, setSkirtingWaste] = useState<string>(montage.skirtingWaste?.toString() || '5');
   const [modelsApproved, setModelsApproved] = useState(montage.modelsApproved || false);
 
   const [installationMethod, setInstallationMethod] = useState<'click' | 'glue'>(
@@ -115,8 +109,6 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
       }
       return [];
   });
-  const [separateSkirting, setSeparateSkirting] = useState(montage.measurementSeparateSkirting || false);
-  const [skirtingClientSupply, setSkirtingClientSupply] = useState(montage.skirtingMaterialClaimType === 'client_supply');
   const [isHousingVat, setIsHousingVat] = useState(montage.isHousingVat || false);
 
   const [additionalInfo, setAdditionalInfo] = useState(montage.additionalInfo || '');
@@ -132,33 +124,21 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
     to: montage.scheduledInstallationEndAt ? new Date(montage.scheduledInstallationEndAt) : undefined,
   });
 
-  const [skirtingDateRange, setSkirtingDateRange] = useState<DateRange | undefined>({
-    from: montage.scheduledSkirtingInstallationAt ? new Date(montage.scheduledSkirtingInstallationAt) : undefined,
-    to: montage.scheduledSkirtingInstallationEndAt ? new Date(montage.scheduledSkirtingInstallationEndAt) : undefined,
-  });
-
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const isFirstRender = useRef(true);
 
   const [isPanelSelectorOpen, setIsPanelSelectorOpen] = useState(false);
-  const [isSkirtingSelectorOpen, setIsSkirtingSelectorOpen] = useState(false);
   const [isAccessorySelectorOpen, setIsAccessorySelectorOpen] = useState(false);
   const [currentAccessoryIndex, setCurrentAccessoryIndex] = useState<number | null>(null);
-  const [includeSkirting, setIncludeSkirting] = useState(!!(montage.skirtingLength && parseFloat(montage.skirtingLength.toString()) > 0));
 
   useEffect(() => {
     setSketchDataUrl(montage.sketchUrl || null);
     setFloorArea(montage.floorArea?.toString() || '');
     setPanelAdditionalMaterials(montage.floorDetails || '');
-    setSkirtingLength(montage.skirtingLength?.toString() || '');
-    setSkirtingAdditionalMaterials(montage.skirtingDetails || '');
     setPanelModel(montage.panelModel || '');
     setPanelProductId(montage.panelProductId || null);
     setPanelWaste(montage.panelWaste?.toString() || '5');
-    setSkirtingModel(montage.skirtingModel || '');
-    setSkirtingProductId(montage.skirtingProductId || null);
-    setSkirtingWaste(montage.skirtingWaste?.toString() || '5');
     setModelsApproved(montage.modelsApproved || false);
     setInstallationMethod((montage.measurementInstallationMethod as 'click' | 'glue') || 'click');
     setFloorPattern((montage.measurementFloorPattern as 'classic' | 'herringbone') || 'classic');
@@ -180,8 +160,6 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
         setAdditionalMaterials([]);
     }
 
-    setSeparateSkirting(montage.measurementSeparateSkirting || false);
-    setSkirtingClientSupply(montage.skirtingMaterialClaimType === 'client_supply');
     setAdditionalInfo(montage.additionalInfo || '');
     setMeasurementDate(
       montage.measurementDate 
@@ -192,13 +170,6 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
         from: montage.scheduledInstallationAt ? new Date(montage.scheduledInstallationAt) : undefined,
         to: montage.scheduledInstallationEndAt ? new Date(montage.scheduledInstallationEndAt) : undefined,
     });
-    setSkirtingDateRange({
-        from: montage.scheduledSkirtingInstallationAt ? new Date(montage.scheduledSkirtingInstallationAt) : undefined,
-        to: montage.scheduledSkirtingInstallationEndAt ? new Date(montage.scheduledSkirtingInstallationEndAt) : undefined,
-    });
-    if (montage.skirtingLength && parseFloat(montage.skirtingLength.toString()) > 0) {
-        setIncludeSkirting(true);
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [montage.id]);
 
@@ -212,14 +183,9 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
           measurementDetails,
           floorArea: floorArea ? parseFloat(floorArea) : null,
           floorDetails: panelAdditionalMaterials,
-          skirtingLength: includeSkirting && skirtingLength ? parseFloat(skirtingLength) : null,
-          skirtingDetails: includeSkirting ? skirtingAdditionalMaterials : '',
           panelModel,
           panelProductId,
           panelWaste: parseFloat(panelWaste),
-          skirtingModel: includeSkirting ? skirtingModel : '',
-          skirtingProductId: includeSkirting ? skirtingProductId : null,
-          skirtingWaste: includeSkirting ? parseFloat(skirtingWaste) : 0,
           modelsApproved,
           measurementDate,
           measurementInstallationMethod: installationMethod,
@@ -228,15 +194,11 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
           measurementAdditionalWorkNeeded: additionalWorkNeeded,
           measurementAdditionalWorkDescription: additionalWorkDescription,
           measurementAdditionalMaterials: additionalMaterials,
-          measurementSeparateSkirting: includeSkirting ? separateSkirting : false,
-          skirtingClientSupply: includeSkirting ? skirtingClientSupply : false,
           isHousingVat,
           additionalInfo,
           sketchUrl: sketchDataUrl,
           scheduledInstallationAt: dateRange?.from ? dateRange.from.getTime() : null,
           scheduledInstallationEndAt: dateRange?.to ? dateRange.to.getTime() : null,
-          scheduledSkirtingInstallationAt: skirtingDateRange?.from ? skirtingDateRange.from.getTime() : null,
-          scheduledSkirtingInstallationEndAt: skirtingDateRange?.to ? skirtingDateRange.to.getTime() : null,
         });
         setLastSaved(new Date());
       } catch (err) {
@@ -249,14 +211,9 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
     measurementDetails,
     floorArea,
     panelAdditionalMaterials,
-    skirtingLength,
-    skirtingAdditionalMaterials,
     panelModel,
     panelProductId,
     panelWaste,
-    skirtingModel,
-    skirtingProductId,
-    skirtingWaste,
     modelsApproved,
     installationMethod,
     floorPattern,
@@ -264,14 +221,10 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
     additionalWorkNeeded,
     additionalWorkDescription,
     additionalMaterials,
-    separateSkirting,
-    skirtingClientSupply,
     isHousingVat,
     additionalInfo,
     sketchDataUrl,
     dateRange,
-    skirtingDateRange,
-    includeSkirting,
     measurementDate,
   ]);
 
@@ -609,54 +562,6 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                                 </Popover>
                             </div>
 
-                            {separateSkirting && (
-                                <div className="space-y-2 pt-4 border-t animate-in fade-in slide-in-from-top-2">
-                                    <Label>Termin montażu listew</Label>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                        <Button
-                                            variant={"outline"}
-                                            disabled={isReadOnly}
-                                            className={cn(
-                                            "w-full justify-start text-left font-normal",
-                                            !skirtingDateRange?.from && "text-muted-foreground"
-                                            )}
-                                        >
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {skirtingDateRange?.from ? (
-                                            skirtingDateRange.to ? (
-                                                <>
-                                                {format(skirtingDateRange.from, "PPP", { locale: pl })} -{" "}
-                                                {format(skirtingDateRange.to, "PPP", { locale: pl })}
-                                                </>
-                                            ) : (
-                                                format(skirtingDateRange.from, "PPP", { locale: pl })
-                                            )
-                                            ) : (
-                                            <span>Wybierz termin montażu listew</span>
-                                            )}
-                                        </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0" align="start">
-                                        <Calendar
-                                            initialFocus
-                                            mode="range"
-                                            defaultMonth={skirtingDateRange?.from}
-                                            selected={skirtingDateRange}
-                                            onSelect={setSkirtingDateRange}
-                                            numberOfMonths={2}
-                                            locale={pl}
-                                            classNames={{
-                                                day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
-                                                day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-                                                day_today: "bg-accent text-accent-foreground",
-                                            }}
-                                        />
-                                        </PopoverContent>
-                                    </Popover>
-                                </div>
-                            )}
-
                             <div className="pt-4 border-t">
                                 <AuditForm 
                                     montageId={montage.id} 
@@ -752,121 +657,10 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
-                {/* Skirting Calculator */}
-                <Card>
-                    <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                            <CardTitle className="text-base font-medium flex items-center gap-2">
-                                <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-                                Listwy
-                            </CardTitle>
-                            <div className="flex items-center gap-2">
-                                <Label htmlFor="includeSkirting" className="text-sm font-normal text-muted-foreground">Montaż listew</Label>
-                                <Switch 
-                                    id="includeSkirting"
-                                    checked={includeSkirting} 
-                                    onCheckedChange={setIncludeSkirting} 
-                                    disabled={isReadOnly}
-                                />
-                            </div>
-                        </div>
-                    </CardHeader>
-                    {includeSkirting && (
-                        <CardContent className="space-y-4 animate-in fade-in slide-in-from-top-2">
-                            <div className="flex flex-col gap-2 pb-2 border-b border-dashed">
-                                <div className="flex items-center space-x-2">
-                                    <Checkbox 
-                                        disabled={isReadOnly}
-                                        id="skirtingClientSupply" 
-                                        checked={skirtingClientSupply} 
-                                        onCheckedChange={(checked) => setSkirtingClientSupply(checked as boolean)} 
-                                    />
-                                    <Label htmlFor="skirtingClientSupply" className="text-sm font-medium">Listwy po stronie klienta</Label>
-                                </div>
-
-                                <div className="flex items-center space-x-2">
-                                    <Checkbox 
-                                        disabled={isReadOnly}
-                                        id="separateSkirting" 
-                                        checked={separateSkirting} 
-                                        onCheckedChange={(checked) => setSeparateSkirting(checked as boolean)} 
-                                    />
-                                    <Label htmlFor="separateSkirting" className="text-sm font-medium">Zalecany montaż listew w osobnym terminie</Label>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-1">
-                                    <Label htmlFor="skirtingLength" className="text-xs text-muted-foreground">Wymiar netto (mb)</Label>
-                                    <Input
-                                    id="skirtingLength"
-                                    type="number"
-                                    step="0.01"
-                                    placeholder="0.00"
-                                    value={skirtingLength}
-                                    disabled={isReadOnly}
-                                    onChange={(e) => setSkirtingLength(e.target.value)}
-                                    />
-                                </div>
-                                <div className="space-y-1">
-                                    <Label htmlFor="skirtingWaste" className="text-xs text-muted-foreground">Zapas (%)</Label>
-                                    <Select value={skirtingWaste} onValueChange={setSkirtingWaste} disabled={isReadOnly}>
-                                        <SelectTrigger id="skirtingWaste">
-                                            <SelectValue placeholder="Zapas" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="0">0%</SelectItem>
-                                            <SelectItem value="5">5%</SelectItem>
-                                            <SelectItem value="7">7%</SelectItem>
-                                            <SelectItem value="10">10%</SelectItem>
-                                            <SelectItem value="15">15%</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-
-                            <div className="space-y-2 pt-2 border-t border-dashed">
-                                <div className="space-y-1">
-                                    <Label htmlFor="skirtingModel" className="text-xs text-muted-foreground">Model listew</Label>
-                                    <div className="flex gap-2">
-                                        <Input
-                                            id="skirtingModel"
-                                            placeholder={skirtingClientSupply ? "Po stronie klienta" : "Kliknij aby wybrać z listy..."}
-                                            value={skirtingModel}
-                                            readOnly
-                                            onClick={() => !isReadOnly && !skirtingClientSupply && setIsSkirtingSelectorOpen(true)}
-                                            className={cn("h-8 text-sm flex-1 cursor-pointer bg-muted/50", skirtingClientSupply && "opacity-50 cursor-not-allowed")}
-                                            disabled={isReadOnly || skirtingClientSupply}
-                                        />
-                                        <Button 
-                                            type="button" 
-                                            variant="outline" 
-                                            size="sm" 
-                                            className="h-8 px-2"
-                                            onClick={() => setIsSkirtingSelectorOpen(true)}
-                                            disabled={isReadOnly || skirtingClientSupply}
-                                        >
-                                            Wybierz
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="pt-2 border-t flex justify-between items-center">
-                                <span className="text-sm font-medium text-muted-foreground">Do zamówienia:</span>
-                                <span className="text-lg font-bold">
-                                    {skirtingLength ? (parseFloat(skirtingLength) * (1 + parseInt(skirtingWaste)/100)).toFixed(2) : '0.00'} mb
-                                </span>
-                            </div>
-                        </CardContent>
-                    )}
-                </Card>
-
                 {/* Services */}
                 <ServiceSelector 
                     montageId={montage.id}
                     floorArea={parseFloat(floorArea) || 0}
-                    skirtingLength={parseFloat(skirtingLength) || 0}
                     isReadOnly={isReadOnly}
                 />
 
@@ -1276,17 +1070,6 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                     setIsPanelSelectorOpen(false);
                 }}
                 type="panel"
-            />
-
-            <ProductSelectorModal
-                isOpen={isSkirtingSelectorOpen}
-                onClose={() => setIsSkirtingSelectorOpen(false)}
-                onSelect={(product) => {
-                    setSkirtingModel(product.name);
-                    setSkirtingProductId(product.id);
-                    setIsSkirtingSelectorOpen(false);
-                }}
-                type="skirting"
             />
 
             <ProductSelectorModal

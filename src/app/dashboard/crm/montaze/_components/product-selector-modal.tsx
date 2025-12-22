@@ -25,7 +25,7 @@ interface ProductSelectorModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (product: Product) => void;
-  type: 'panel' | 'skirting' | 'accessory';
+  type: 'panel' | 'accessory';
   currentValue?: string;
 }
 
@@ -59,7 +59,6 @@ export function ProductSelectorModal({
   const getTitle = () => {
       switch(type) {
           case 'panel': return 'model paneli';
-          case 'skirting': return 'model listew';
           case 'accessory': return 'produkt';
           default: return 'produkt';
       }

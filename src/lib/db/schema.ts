@@ -1141,7 +1141,7 @@ export const products = pgTable('products', {
 	categories: json('categories'), // JSON array of category IDs
 	attributes: json('attributes'), // JSON array of attributes
 	isForMontage: boolean('is_for_montage').default(false),
-	montageType: text('montage_type').$type<'panel' | 'skirting' | 'other'>(),
+	montageType: text('montage_type').$type<'panel' | 'other'>(),
     // ERP Fields
     source: text('source').$type<'woocommerce' | 'local'>().notNull().default('woocommerce'),
     unit: text('unit').default('szt'),

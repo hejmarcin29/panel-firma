@@ -49,22 +49,6 @@ export const SYSTEM_NOTIFICATIONS: SystemNotificationDefinition[] = [
         defaultEnabled: true
     },
     {
-        id: 'workflow_skirting_split',
-        type: 'system',
-        trigger: 'Podpisanie protokołu (gdy listwy osobno)',
-        action: 'Przenosi do etapu "Przed montażem listew"',
-        recipient: 'System Workflow',
-        defaultEnabled: true
-    },
-    {
-        id: 'alert_skirting_pickup',
-        type: 'system',
-        trigger: 'Status "Na magazynie" + Odbiór własny',
-        action: 'Wyświetla alert "ZABIERZ LISTWY" w aplikacji',
-        recipient: 'Montażysta',
-        defaultEnabled: true
-    },
-    {
         id: 'quote_signed',
         type: 'system',
         trigger: 'Podpisanie wyceny przez klienta (Portal)',
@@ -126,22 +110,6 @@ export const SYSTEM_NOTIFICATIONS: SystemNotificationDefinition[] = [
         trigger: 'Zakończenie montażu',
         action: 'Wysyła prośbę o opinię (Google/Facebook)',
         recipient: 'Klient',
-        defaultEnabled: true
-    },
-    {
-        id: 'workflow_skirting_split',
-        type: 'system',
-        trigger: 'Podpisanie protokołu podłogi (gdy listwy osobno)',
-        action: 'Zmienia status na "Przed montażem listew"',
-        recipient: 'System',
-        defaultEnabled: true
-    },
-    {
-        id: 'alert_skirting_pickup',
-        type: 'system',
-        trigger: 'Status "Przed montażem listew" + Odbiór własny',
-        action: 'Wyświetla alert "ZABIERZ LISTWY" w panelu',
-        recipient: 'Montażysta',
         defaultEnabled: true
     }
 ];

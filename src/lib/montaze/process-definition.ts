@@ -86,20 +86,6 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
         ]
     },
     {
-        id: 'skirting_stage',
-        label: 'Montaż Listew',
-        description: 'Dokończenie montażu listew przypodłogowych.',
-        relatedStatuses: ['before_skirting_installation'],
-        actor: 'installer',
-        automations: [
-             { label: 'Powiadomienie o listwach', description: 'Przypomnienie o terminie montażu listew.' }
-        ],
-        checkpoints: [
-            { key: 'skirting_scheduled', label: 'Termin listew', condition: (m) => !!m.scheduledSkirtingInstallationAt },
-            { key: 'skirting_done', label: 'Listwy zamontowane', condition: (m) => !!m.skirtingClientSignatureUrl }
-        ]
-    },
-    {
         id: 'realization',
         label: 'Realizacja i Odbiór',
         description: 'Fizyczny montaż, odbiór prac i rozliczenie końcowe.',

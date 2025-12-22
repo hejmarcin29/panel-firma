@@ -105,13 +105,6 @@ export function MontageSettlementTab({ montage, userRoles }: MontageSettlementTa
                                 Typ: {calculation.floor.pattern === 'herringbone' ? 'Jodełka' : 'Klasycznie'}, Metoda: {calculation.floor.method === 'glue' ? 'Klej' : 'Click'}
                             </div>
                         </div>
-                        
-                        <div className="space-y-2">
-                            <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">Listwy ({calculation.skirting.length} mb x {calculation.skirting.rate} PLN):</span>
-                                <span className="font-medium">{calculation.skirting.amount.toFixed(2)} PLN</span>
-                            </div>
-                        </div>
 
                         <Separator />
                         
@@ -204,22 +197,6 @@ export function MontageSettlementTab({ montage, userRoles }: MontageSettlementTa
                                 <div className="flex justify-between font-medium pt-2 border-t">
                                     <span>Razem Podłoga:</span>
                                     <span>{calc.floor.amount.toFixed(2)} PLN</span>
-                                </div>
-                            </div>
-
-                            <div className="space-y-4">
-                                <h4 className="font-medium text-sm text-muted-foreground">Listwy</h4>
-                                <div className="flex justify-between text-sm">
-                                    <span>Długość:</span>
-                                    <span>{calc.skirting.length.toFixed(2)} mb</span>
-                                </div>
-                                <div className="flex justify-between text-sm">
-                                    <span>Stawka:</span>
-                                    <span>{calc.skirting.rate.toFixed(2)} PLN</span>
-                                </div>
-                                <div className="flex justify-between font-medium pt-2 border-t">
-                                    <span>Razem Listwy:</span>
-                                    <span>{calc.skirting.amount.toFixed(2)} PLN</span>
                                 </div>
                             </div>
                         </div>

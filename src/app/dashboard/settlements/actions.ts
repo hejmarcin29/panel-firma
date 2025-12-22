@@ -18,11 +18,6 @@ export type SettlementCalculation = {
         method: string;
         pattern: string;
     };
-    skirting: {
-        length: number;
-        rate: number;
-        amount: number;
-    };
     total: number;
 };
 
@@ -61,11 +56,6 @@ export async function calculateSettlement(montageId: string) {
     const floorArea = montage.floorArea || 0;
     const floorAmount = floorArea * floorRate;
 
-    // Determine Skirting Rate
-    const skirtingRate = rates.skirting || 0;
-    const skirtingLength = montage.skirtingLength || 0;
-    const skirtingAmount = skirtingLength * skirtingRate;
-
     const calculation: SettlementCalculation = {
         floor: {
             area: floorArea,
@@ -74,12 +64,7 @@ export async function calculateSettlement(montageId: string) {
             method: method || 'unknown',
             pattern: pattern,
         },
-        skirting: {
-            length: skirtingLength,
-            rate: skirtingRate,
-            amount: skirtingAmount,
-        },
-        total: floorAmount + skirtingAmount,
+        total: floorAmount,
     };
 
     return calculation;

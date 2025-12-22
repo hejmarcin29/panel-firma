@@ -51,14 +51,12 @@ type MontageServiceItemType = {
 interface ServiceSelectorProps {
     montageId: string;
     floorArea: number;
-    skirtingLength: number;
     isReadOnly?: boolean;
 }
 
 export function ServiceSelector({ 
     montageId, 
     floorArea, 
-    skirtingLength, 
     isReadOnly = false 
 }: ServiceSelectorProps) {
     const [services, setServices] = useState<ServiceType[]>([]);
@@ -96,8 +94,6 @@ export function ServiceSelector({
             // Heuristic: Auto-fill quantity based on unit
             if (service.unit === 'm2') {
                 setQuantity(floorArea ? floorArea.toString() : '');
-            } else if (service.unit === 'mb') {
-                setQuantity(skirtingLength ? skirtingLength.toString() : '');
             } else {
                 setQuantity('1');
             }

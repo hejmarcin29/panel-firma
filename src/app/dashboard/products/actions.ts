@@ -51,19 +51,17 @@ export async function toggleProductAssignment(architectId: string, productId: nu
 
 export async function bulkUpdateMontageSettings(
     productIds: number[],
-    action: 'SET_PANEL' | 'SET_SKIRTING' | 'DISABLE'
+    action: 'SET_PANEL' | 'DISABLE'
 ) {
     if (!productIds.length) return { success: false };
 
-    let updateData: { isForMontage: boolean; montageType: 'panel' | 'skirting' | 'other' | null } = {
+    let updateData: { isForMontage: boolean; montageType: 'panel' | 'other' | null } = {
         isForMontage: false,
         montageType: null
     };
 
     if (action === 'SET_PANEL') {
         updateData = { isForMontage: true, montageType: 'panel' };
-    } else if (action === 'SET_SKIRTING') {
-        updateData = { isForMontage: true, montageType: 'skirting' };
     } else if (action === 'DISABLE') {
         updateData = { isForMontage: false, montageType: null };
     }
@@ -79,7 +77,7 @@ export async function bulkUpdateMontageSettings(
 export async function updateProductMontageSettings(
     productId: number, 
     isForMontage: boolean, 
-    montageType: 'panel' | 'skirting' | 'other' | null
+    montageType: 'panel' | 'other' | null
 ) {
     await db.update(products)
         .set({ isForMontage, montageType })
@@ -131,7 +129,7 @@ export interface WooCommerceProduct {
     stock_status: string;
     backorders: string;
     isForMontage?: boolean;
-    montageType?: 'panel' | 'skirting' | 'other' | null;
+    montageType?: 'panel' | 'other' | null;
     backorders_allowed: boolean;
     backordered: boolean;
     sold_individually: boolean;

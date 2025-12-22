@@ -42,22 +42,4 @@ export const DEFAULT_MONTAGE_CHECKLIST: readonly MontageChecklistTemplate[] = [
 		allowAttachment: false,
         associatedStage: 'before_final_invoice',
 	},
-	{
-		id: 'protocol_signed_skirting',
-		label: 'Podpisano protokół odbioru (Listwy)',
-		allowAttachment: true,
-        associatedStage: 'before_final_invoice',
-	},
-	{
-		id: 'final_invoice_issued_skirting',
-		label: 'Wystawiono FV końcową (Listwy)',
-		allowAttachment: false,
-        associatedStage: 'before_final_invoice',
-	},
-	{
-		id: 'final_invoice_paid_skirting',
-		label: 'Zapłacono FV końcową (Listwy)',
-		allowAttachment: false,
-        associatedStage: 'before_final_invoice',
-	},
 ] as const;

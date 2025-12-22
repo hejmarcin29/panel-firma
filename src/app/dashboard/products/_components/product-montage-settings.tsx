@@ -16,7 +16,7 @@ import { Loader2 } from 'lucide-react';
 interface ProductMontageSettingsProps {
   productId: number;
   initialIsForMontage: boolean;
-  initialMontageType: 'panel' | 'skirting' | 'other' | null;
+  initialMontageType: 'panel' | 'other' | null;
 }
 
 export function ProductMontageSettings({
@@ -42,7 +42,7 @@ export function ProductMontageSettings({
     }
   };
 
-  const handleTypeChange = async (value: 'panel' | 'skirting' | 'other') => {
+  const handleTypeChange = async (value: 'panel' | 'other') => {
     setMontageType(value);
     setIsPending(true);
     try {
@@ -73,7 +73,7 @@ export function ProductMontageSettings({
       {isForMontage && (
         <Select
           value={montageType || 'other'}
-          onValueChange={(val) => handleTypeChange(val as 'panel' | 'skirting' | 'other')}
+          onValueChange={(val) => handleTypeChange(val as 'panel' | 'other')}
           disabled={isPending}
         >
           <SelectTrigger className="h-7 text-xs">
@@ -81,7 +81,6 @@ export function ProductMontageSettings({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="panel">Panel</SelectItem>
-            <SelectItem value="skirting">Listwa</SelectItem>
             <SelectItem value="other">Inne</SelectItem>
           </SelectContent>
         </Select>

@@ -69,7 +69,6 @@ const profileSchema = z.object({
         classicGlue: z.coerce.number().min(0).optional(),
         herringboneClick: z.coerce.number().min(0).optional(),
         herringboneGlue: z.coerce.number().min(0).optional(),
-        skirting: z.coerce.number().min(0).optional(),
     }).optional(),
     pricing: z.array(z.object({
         serviceName: z.string().min(1, "Nazwa usługi wymagana"),
@@ -376,21 +375,6 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
                                             render={({ field }) => (
                                                 <FormItem>
                                                     <FormLabel className="text-xs">Jodełka (Klej)</FormLabel>
-                                                    <FormControl>
-                                                        <Input type="number" placeholder="0.00" {...field} onBlur={form.handleSubmit(onSubmit)} />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                    </div>
-                                    <div className="pt-2 border-t">
-                                        <FormField
-                                            control={form.control}
-                                            name="rates.skirting"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel className="text-xs">Listwy (PLN/mb)</FormLabel>
                                                     <FormControl>
                                                         <Input type="number" placeholder="0.00" {...field} onBlur={form.handleSubmit(onSubmit)} />
                                                     </FormControl>

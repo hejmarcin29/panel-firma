@@ -1136,13 +1136,9 @@ type UpdateMontageMaterialsInput = {
 	montageId: string;
 	materialDetails: string;
 	finalPanelAmount?: number | null;
-	finalSkirtingLength?: number | null;
 	panelModel?: string | null;
     panelProductId?: number | null;
-	skirtingModel?: string | null;
-    skirtingProductId?: number | null;
 	floorDetails?: string | null;
-	skirtingDetails?: string | null;
 	materialsEditHistory?: MaterialsEditHistoryEntry[];
 };
 
@@ -1150,13 +1146,9 @@ export async function updateMontageMaterialDetails({
 	montageId,
 	materialDetails,
 	finalPanelAmount,
-	finalSkirtingLength,
 	panelModel,
     panelProductId,
-	skirtingModel,
-    skirtingProductId,
 	floorDetails,
-	skirtingDetails,
 	materialsEditHistory,
 }: UpdateMontageMaterialsInput) {
 	await requireUser();
@@ -1169,13 +1161,9 @@ export async function updateMontageMaterialDetails({
 			materialDetails: sanitized ? sanitized : null,
 			measurementDetails: sanitized ? sanitized : null, // Sync with measurementDetails
 			finalPanelAmount,
-			finalSkirtingLength,
 			panelModel,
             panelProductId,
-			skirtingModel,
-            skirtingProductId,
 			floorDetails,
-			skirtingDetails,
 			materialsEditHistory,
 			updatedAt: new Date(),
 		})
@@ -1399,7 +1387,7 @@ export async function updateMontageChecklistItemLabel({ montageId, itemId, label
 
 import { products } from '@/lib/db/schema';
 
-export async function getMontageProducts(type: 'panel' | 'skirting' | 'accessory') {
+export async function getMontageProducts(type: 'panel' | 'accessory') {
     await requireUser();
     
     let whereClause;
@@ -1434,14 +1422,9 @@ export async function updateMontageMeasurement({
 	measurementDetails,
 	floorArea,
 	floorDetails,
-	skirtingLength,
-	skirtingDetails,
 	panelModel,
     panelProductId,
 	panelWaste,
-	skirtingModel,
-    skirtingProductId,
-	skirtingWaste,
 	modelsApproved,
 	additionalInfo,
 	sketchUrl,
@@ -1454,31 +1437,20 @@ export async function updateMontageMeasurement({
     measurementAdditionalWorkNeeded,
     measurementAdditionalWorkDescription,
     measurementAdditionalMaterials,
-    measurementSeparateSkirting,
-    scheduledSkirtingInstallationAt,
-    scheduledSkirtingInstallationEndAt,
     isHousingVat,
-    skirtingClientSupply,
 }: {
 	montageId: string;
 	measurementDetails: string;
 	floorArea: number | null;
 	floorDetails: string;
-	skirtingLength: number | null;
-	skirtingDetails: string;
 	panelModel: string;
     panelProductId?: number | null;
 	panelWaste: number;
-	skirtingModel: string;
-    skirtingProductId?: number | null;
-	skirtingWaste: number;
 	modelsApproved: boolean;
 	additionalInfo: string;
 	sketchUrl?: string | null;
 	scheduledInstallationAt: number | null;
 	scheduledInstallationEndAt: number | null;
-    scheduledSkirtingInstallationAt?: number | null;
-    scheduledSkirtingInstallationEndAt?: number | null;
     measurementDate?: string | null;
     measurementInstallationMethod?: 'click' | 'glue' | null;
     measurementFloorPattern?: 'classic' | 'herringbone' | null;
@@ -1492,9 +1464,7 @@ export async function updateMontageMeasurement({
         supplySide: 'installer' | 'company';
         estimatedCost?: number;
     }[] | null;
-    measurementSeparateSkirting?: boolean;
     isHousingVat?: boolean;
-    skirtingClientSupply?: boolean;
 }) {
 	await requireUser();
 
@@ -1514,24 +1484,15 @@ export async function updateMontageMeasurement({
 			materialDetails: measurementDetails, // Sync with materialDetails
 			floorArea,
 			floorDetails,
-            measurementSeparateSkirting,
             isHousingVat,
-            skirtingMaterialClaimType: skirtingClientSupply ? 'client_supply' : undefined,
-			skirtingLength,
-			skirtingDetails,
 			panelModel,
             panelProductId,
 			panelWaste,
-			skirtingModel,
-            skirtingProductId,
-			skirtingWaste,
 			modelsApproved,
 			additionalInfo,
 			sketchUrl,
 			scheduledInstallationAt: scheduledInstallationAt ? new Date(scheduledInstallationAt) : null,
 			scheduledInstallationEndAt: scheduledInstallationEndAt ? new Date(scheduledInstallationEndAt) : null,
-            scheduledSkirtingInstallationAt: scheduledSkirtingInstallationAt ? new Date(scheduledSkirtingInstallationAt) : null,
-            scheduledSkirtingInstallationEndAt: scheduledSkirtingInstallationEndAt ? new Date(scheduledSkirtingInstallationEndAt) : null,
             measurementInstallationMethod,
             measurementFloorPattern,
             measurementSubfloorCondition,
@@ -1539,37 +1500,9 @@ export async function updateMontageMeasurement({
             measurementAdditionalWorkDescription,
             measurementAdditionalMaterials,
 			finalPanelAmount: null, // Reset to auto-calculation on measurement update
-			finalSkirtingLength: null, // Reset to auto-calculation on measurement update
 			updatedAt: new Date(),
 		})
 		.where(eq(montages.id, montageId));
-
-    if (measurementSeparateSkirting) {
-        // Ensure skirting checklist items exist
-        const skirtingItems = DEFAULT_MONTAGE_CHECKLIST.filter(item => item.id.endsWith('_skirting'));
-        
-        for (const item of skirtingItems) {
-            const existing = await db.query.montageChecklistItems.findFirst({
-                where: (table, { and, eq }) => and(
-                    eq(table.montageId, montageId),
-                    eq(table.templateId, item.id)
-                )
-            });
-
-            if (!existing) {
-                await db.insert(montageChecklistItems).values({
-                    id: crypto.randomUUID(),
-                    montageId,
-                    templateId: item.id,
-                    label: item.label,
-                    completed: false,
-                    orderIndex: 999, // Put them at the end
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                });
-            }
-        }
-    }
 
     // --- GOOGLE CALENDAR SYNC (USER) ---
     // If installation date is set, try to sync with installer's private calendar

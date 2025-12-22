@@ -46,12 +46,8 @@ interface Montage {
     quotes: Quote[];
     floorArea: number | null;
     floorDetails: string | null;
-    skirtingLength: number | null;
-    skirtingDetails: string | null;
     measurementDetails: string | null;
     installationCity: string | null;
-    measurementSeparateSkirting: boolean | null;
-    scheduledSkirtingInstallationAt: Date | null;
     measurementDate: Date | null;
 }
 
@@ -195,14 +191,6 @@ export function CustomerPortal({ customer, token, bankAccount }: CustomerPortalP
                                                 </span>
                                             </div>
                                         )}
-                                        {activeMontage.scheduledSkirtingInstallationAt && (
-                                            <div className="flex justify-between border-b pb-2">
-                                                <span className="text-muted-foreground">Montaż listew:</span>
-                                                <span className="font-medium text-green-600">
-                                                    {new Date(activeMontage.scheduledSkirtingInstallationAt).toLocaleDateString('pl-PL')}
-                                                </span>
-                                            </div>
-                                        )}
                                     </CardContent>
                                 </Card>
                             </motion.div>
@@ -241,7 +229,7 @@ export function CustomerPortal({ customer, token, bankAccount }: CustomerPortalP
                         </div>
 
                         {/* Measurement Results */}
-                        {(activeMontage.floorArea || activeMontage.skirtingLength || activeMontage.measurementDetails) && (
+                        {(activeMontage.floorArea || activeMontage.measurementDetails) && (
                             <motion.div variants={itemVariants}>
                                 <Card className="hover:shadow-md transition-shadow duration-300">
                                     <CardHeader>
@@ -255,13 +243,6 @@ export function CustomerPortal({ customer, token, bankAccount }: CustomerPortalP
                                                 <span className="text-sm text-muted-foreground">Powierzchnia podłogi</span>
                                                 <p className="font-medium text-lg">{activeMontage.floorArea} m²</p>
                                                 {activeMontage.floorDetails && <p className="text-sm text-muted-foreground">{activeMontage.floorDetails}</p>}
-                                            </div>
-                                        )}
-                                        {activeMontage.skirtingLength && (
-                                            <div className="space-y-1">
-                                                <span className="text-sm text-muted-foreground">Długość listew</span>
-                                                <p className="font-medium text-lg">{activeMontage.skirtingLength} mb</p>
-                                                {activeMontage.skirtingDetails && <p className="text-sm text-muted-foreground">{activeMontage.skirtingDetails}</p>}
                                             </div>
                                         )}
                                         {activeMontage.measurementDetails && (

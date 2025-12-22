@@ -88,7 +88,7 @@ export function ProductsListClient({
         }
     };
 
-    const handleBulkAction = async (action: 'SET_PANEL' | 'SET_SKIRTING' | 'DISABLE') => {
+    const handleBulkAction = async (action: 'SET_PANEL' | 'DISABLE') => {
         if (selectedIds.length === 0) return;
         
         setIsBulkActionPending(true);
@@ -177,9 +177,6 @@ export function ProductsListClient({
                         <DropdownMenuContent align="center">
                             <DropdownMenuItem onClick={() => handleBulkAction('SET_PANEL')}>
                                 🛠️ Ustaw jako: PANELE
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleBulkAction('SET_SKIRTING')}>
-                                🛠️ Ustaw jako: LISTWY
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleBulkAction('DISABLE')} className="text-red-600 focus:text-red-600">
                                 🚫 Wyłącz z montażu

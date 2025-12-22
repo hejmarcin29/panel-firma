@@ -45,8 +45,6 @@ export async function getCalendarEvents(): Promise<{ scheduled: CalendarEvent[];
         id: montages.id,
         scheduledInstallationAt: montages.scheduledInstallationAt,
         scheduledInstallationEndAt: montages.scheduledInstallationEndAt,
-        scheduledSkirtingInstallationAt: montages.scheduledSkirtingInstallationAt,
-        scheduledSkirtingInstallationEndAt: montages.scheduledSkirtingInstallationEndAt,
         clientName: montages.clientName,
         address: montages.address,
         status: montages.status,
@@ -86,20 +84,6 @@ export async function getCalendarEvents(): Promise<{ scheduled: CalendarEvent[];
         status: montage.status,
         address: montage.address || '',
       });
-
-      // Skirting Event
-      if (montage.scheduledSkirtingInstallationAt) {
-          allMontages.push({
-            id: `${montage.id}-skirting`,
-            type: 'montage',
-            title: `${montage.clientName} (Listwy)`,
-            date: montage.scheduledSkirtingInstallationAt,
-            endDate: montage.scheduledSkirtingInstallationEndAt,
-            status: montage.status,
-            address: montage.address || '',
-            description: 'Montaż listew',
-          });
-      }
   });
 
   const allEvents = [...allOrders, ...allMontages];

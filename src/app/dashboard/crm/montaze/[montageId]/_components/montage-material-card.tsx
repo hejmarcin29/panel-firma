@@ -350,28 +350,9 @@ export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montag
         type="panel"
       />
 
-      <ProductSelectorModal
-        isOpen={isSkirtingSelectorOpen}
-        onClose={() => setIsSkirtingSelectorOpen(false)}
-        onSelect={(product) => {
-            setFormData(prev => ({
-                ...prev,
-                skirtingModel: product.name,
-                skirtingProductId: product.id
-            }));
-            setIsSkirtingSelectorOpen(false);
-            debouncedSave({
-                ...formData,
-                skirtingModel: product.name,
-                skirtingProductId: product.id
-            });
-        }}
-        type="skirting"
-      />
-
       <CardContent className='space-y-4'>
         {/* Calculated Materials Section */}
-        {(calculatedPanelAmount || calculatedSkirtingLength) && (
+        {calculatedPanelAmount && (
             <div className='mb-4 p-3 bg-muted/30 rounded-md border border-border/50'>
                 <h4 className='text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3'>POMIAR</h4>
                 <div className='grid grid-cols-2 gap-4'>
@@ -388,26 +369,12 @@ export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montag
                             {montage.panelModel && <div className='text-sm font-medium mt-1'>{montage.panelModel}</div>}
                         </div>
                     )}
-                    {calculatedSkirtingLength && (
-                        <div className='space-y-1'>
-                            <div className='flex items-center gap-2'>
-                                <span className='h-2 w-2 rounded-full bg-amber-500'></span>
-                                <span className='text-sm font-medium'>Listwy</span>
-                            </div>
-                            <div className='text-lg font-bold'>{calculatedSkirtingLength} mb</div>
-                            <div className='text-xs text-muted-foreground'>
-                                ({montage.skirtingLength} mb + {montage.skirtingWaste}%)
-                            </div>
-                            {montage.skirtingModel && <div className='text-sm font-medium mt-1'>{montage.skirtingModel}</div>}
-                        </div>
-                    )}
                 </div>
             </div>
         )}
 
         {/* Manual overrides display if they exist and differ from calculated */}
-        {((montage.finalPanelAmount && montage.finalPanelAmount !== parseFloat(calculatedPanelAmount || '0')) || 
-          (montage.finalSkirtingLength && montage.finalSkirtingLength !== parseFloat(calculatedSkirtingLength || '0'))) && (
+        {(montage.finalPanelAmount && montage.finalPanelAmount !== parseFloat(calculatedPanelAmount || '0')) && (
             <div className='grid grid-cols-2 gap-4 pt-2 border-t border-border/50'>
                 <div className='space-y-1'>
                     {montage.finalPanelAmount && montage.finalPanelAmount !== parseFloat(calculatedPanelAmount || '0') && (
@@ -419,20 +386,10 @@ export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montag
                         </>
                     )}
                 </div>
-                <div className='space-y-1'>
-                    {montage.finalSkirtingLength && montage.finalSkirtingLength !== parseFloat(calculatedSkirtingLength || '0') && (
-                        <>
-                            <span className='text-xs text-muted-foreground'>Listwy (ręczna zmiana)</span>
-                            <div className='font-medium text-orange-600'>
-                                {montage.finalSkirtingLength} mb
-                            </div>
-                        </>
-                    )}
-                </div>
             </div>
         )}
 
-        {(montage.floorDetails || montage.skirtingDetails) && (
+        {montage.floorDetails && (
             <div className='pt-4 border-t border-border/50 grid grid-cols-2 gap-4'>
                 {montage.floorDetails && (
                     <div className='space-y-1'>
@@ -440,16 +397,11 @@ export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montag
                         <div className='text-sm'>{montage.floorDetails}</div>
                     </div>
                 )}
-                {montage.skirtingDetails && (
-                    <div className='space-y-1'>
-                        <span className='text-xs text-muted-foreground'>Dodatkowe (Listwy)</span>
-                        <div className='text-sm'>{montage.skirtingDetails}</div>
-                    </div>
-                )}
+
             </div>
         )}
 
-        {!montage.finalPanelAmount && !montage.finalSkirtingLength && !montage.measurementDetails && !montage.materialDetails && !calculatedPanelAmount && (
+        {!montage.finalPanelAmount && !montage.measurementDetails && !montage.materialDetails && !calculatedPanelAmount && (
           <div className='flex flex-col items-center justify-center py-4 text-center text-sm text-muted-foreground'>
             <Package className='mb-2 h-8 w-8 opacity-50' />
             <p>Brak danych materiałowych</p>

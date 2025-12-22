@@ -344,14 +344,6 @@ export async function renderTemplate(templateId: string, quoteId: string) {
     // Replace placeholders
     let content = template.content;
     
-    // Skirting dates logic
-    let skirtingDatesDescription = '';
-    if (quote.montage.measurementSeparateSkirting) {
-        const start = quote.montage.scheduledSkirtingInstallationAt ? quote.montage.scheduledSkirtingInstallationAt.toLocaleDateString('pl-PL') : 'Do ustalenia';
-        const end = quote.montage.scheduledSkirtingInstallationEndAt ? quote.montage.scheduledSkirtingInstallationEndAt.toLocaleDateString('pl-PL') : 'Do ustalenia';
-        skirtingDatesDescription = `<p>4. Montaż listew przypodłogowych zostanie wykonany w osobnym terminie: od <strong>${start}</strong> do <strong>${end}</strong>.</p>`;
-    }
-
     // Housing VAT clause
     let housingVatClause = '';
     if (quote.montage.isHousingVat) {
@@ -371,7 +363,6 @@ export async function renderTemplate(templateId: string, quoteId: string) {
         '{{adres_montazu}}': quote.montage.installationAddress || quote.montage.address || '',
         '{{data_rozpoczecia}}': quote.montage.scheduledInstallationAt ? quote.montage.scheduledInstallationAt.toLocaleDateString('pl-PL') : 'Do ustalenia',
         '{{termin_zakonczenia}}': quote.montage.scheduledInstallationEndAt ? quote.montage.scheduledInstallationEndAt.toLocaleDateString('pl-PL') : 'Do ustalenia',
-        '{{opis_terminow_listew}}': skirtingDatesDescription,
         '{{oswiadczenie_vat}}': housingVatClause,
         '{{logo_firmy}}': logoHtml,
         '{{tabela_produktow}}': itemsHtml,
