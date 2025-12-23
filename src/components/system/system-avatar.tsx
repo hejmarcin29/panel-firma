@@ -73,7 +73,7 @@ export function SystemAvatar() {
             }
         }}
       >
-        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg flex items-center justify-center text-white overflow-hidden border-2 border-white dark:border-zinc-800">
+        <div className="w-12 h-12 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 shadow-lg flex items-center justify-center text-white overflow-hidden border-2 border-white dark:border-zinc-800">
             {/* Można tu dać obrazek */}
             <span className="text-xl">🤖</span>
         </div>

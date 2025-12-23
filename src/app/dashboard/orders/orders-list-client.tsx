@@ -232,7 +232,7 @@ export function OrdersListClient({ initialOrders, initialTab = 'all' }: OrdersLi
       <OrdersStats orders={ordersFilteredByDate} />
 
       <Tabs defaultValue={initialTab} className="w-full" onValueChange={setActiveTab}>
-        <div className="flex items-center justify-between px-4 md:px-0 overflow-x-auto pb-2 md:pb-0 -mx-4 md:mx-0 px-4 md:px-0">
+        <div className="flex items-center justify-between px-4 md:px-0 overflow-x-auto pb-2 md:pb-0 -mx-4 md:mx-0">
           <TabsList className="w-full justify-start md:w-auto h-auto flex-wrap md:flex-nowrap gap-1 bg-transparent md:bg-muted p-0 md:p-1">
             <TabsTrigger value="verification" className="data-[state=active]:bg-background data-[state=active]:shadow-sm flex-1 md:flex-none">
               Do weryfikacji
