@@ -39,7 +39,7 @@ export default function ShowroomPage() {
 
     useEffect(() => {
         if (user?.id) {
-            getAssignedProducts(user.id)
+            getAssignedProducts()
                 .then((data) => {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     setProducts(data as any[]); // Casting because of type mismatch in action return vs interface

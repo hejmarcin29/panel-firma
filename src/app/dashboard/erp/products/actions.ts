@@ -3,7 +3,7 @@
 import { db } from "@/lib/db";
 import { erpProducts, erpPurchasePrices, erpProductAttributes, products } from "@/lib/db/schema";
 import { revalidatePath } from "next/cache";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { requireUser } from "@/lib/auth/session";
 import { logSystemEvent } from "@/lib/logging";
 import { getWooCredentials } from "./import-actions";
@@ -116,7 +116,7 @@ export async function permanentDeleteProduct(id: number) {
     revalidatePath('/dashboard/settings');
 }
 
-export async function getAssignedProducts(userId: string) {
+export async function getAssignedProducts() {
     // For now, return all active products from legacy table
     // In future, this should filter by user permissions if needed
     return await db.query.products.findMany({

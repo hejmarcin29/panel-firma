@@ -3,20 +3,10 @@
 import { useSystemAvatar } from "@/components/providers/system-avatar-provider";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
-import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 export function SystemAvatar() {
   const { message, dismiss } = useSystemAvatar();
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    if (message) {
-      setIsVisible(true);
-    } else {
-      setIsVisible(false);
-    }
-  }, [message]);
 
   // Jeśli nie ma wiadomości, nie renderujemy nic (lub renderujemy samego avatara w stanie spoczynku)
   // Tutaj zrobimy, że avatar pojawia się tylko gdy ma coś do powiedzenia, 
