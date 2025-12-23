@@ -175,7 +175,7 @@ export function PremiumProductCard() {
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.5 }}
                     className="absolute inset-0 h-full w-full object-cover"
-                    onError={(e) => {
+                    onError={() => {
                         // e.currentTarget.style.display = 'none';
                         console.error("Image failed to load:", activeVariant.image);
                     }}
@@ -186,7 +186,7 @@ export function PremiumProductCard() {
           {/* Glare Effect (Only in card mode) */}
           {!isExpanded && (
             <motion.div
-                className="absolute inset-0 z-20 bg-gradient-to-tr from-white/0 via-white/30 to-white/0 pointer-events-none mix-blend-overlay"
+                className="absolute inset-0 z-20 bg-linear-to-tr from-white/0 via-white/30 to-white/0 pointer-events-none mix-blend-overlay"
                 style={{
                     opacity: isHovered ? glareOpacity : 0,
                     background: useMotionTemplate`radial-gradient(

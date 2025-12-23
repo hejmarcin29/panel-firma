@@ -1,8 +1,8 @@
 'use server';
 
 import { db } from "@/lib/db";
-import { erpProducts, erpSuppliers, erpPurchasePrices } from "@/lib/db/schema";
-import { count, desc, eq, isNull, sql } from "drizzle-orm";
+import { erpProducts, erpSuppliers } from "@/lib/db/schema";
+import { count, desc, eq, isNull } from "drizzle-orm";
 
 export async function getDashboardStats() {
     // 1. Total Products

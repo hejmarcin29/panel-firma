@@ -894,7 +894,7 @@ export function QuoteEditor({ quote, templates, companyInfo }: QuoteEditorProps)
                                                             value={item.name} 
                                                             onChange={(e) => updateItem(index, 'name', e.target.value)}
                                                             placeholder="Nazwa usługi/produktu"
-                                                            className="min-h-[2.5rem] resize-none border-transparent focus:border-input bg-transparent px-0 py-1 font-medium"
+                                                            className="min-h-10 resize-none border-transparent focus:border-input bg-transparent px-0 py-1 font-medium"
                                                         />
                                                     </TableCell>
                                                     <TableCell className="align-top">

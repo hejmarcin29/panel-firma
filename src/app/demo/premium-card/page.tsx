@@ -5,7 +5,7 @@ export default function DemoPage() {
     <div className="relative min-h-screen w-full overflow-hidden bg-neutral-950 selection:bg-amber-500/30">
       
       {/* Background Gradients */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-gradient-to-b from-amber-900/20 to-transparent opacity-50 blur-3xl pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-linear-to-b from-amber-900/20 to-transparent opacity-50 blur-3xl pointer-events-none" />
       
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center p-6 md:p-12">
         
@@ -16,7 +16,7 @@ export default function DemoPage() {
           </div>
           
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white">
-            Poczuj <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-500">Jakość</span>
+            Poczuj <span className="text-transparent bg-clip-text bg-linear-to-r from-amber-200 to-amber-500">Jakość</span>
           </h1>
           
           <p className="text-lg md:text-xl text-neutral-400 leading-relaxed">

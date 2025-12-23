@@ -104,7 +104,7 @@ export function ProductForm({ onSuccess, availableAttributes = [] }: ProductForm
     }
 
     // Helper to get attribute details by ID
-    const getAttribute = (id: string) => availableAttributes.find(a => a.id === id);
+    const getAttribute = (id: string | undefined) => availableAttributes.find(a => a.id === id);
 
     return (
         <Form {...form}>
