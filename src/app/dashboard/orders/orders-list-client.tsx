@@ -119,6 +119,10 @@ export function OrdersListClient({ initialOrders }: OrdersListClientProps) {
     });
   }, [initialOrders, selectedMonth]);
 
+  const verificationCount = useMemo(() => {
+    return ordersFilteredByDate.filter(o => o.status === 'Zamówienie utworzone' || o.requiresReview).length;
+  }, [ordersFilteredByDate]);
+
   const filteredOrders = useMemo(() => {
     const query = search.toLowerCase().trim();
     
@@ -130,9 +134,13 @@ export function OrdersListClient({ initialOrders }: OrdersListClientProps) {
         order.status === 'order.fulfillment_confirmed' || 
         order.status === 'order.final_invoice';
 
+      const isVerification = order.status === 'Zamówienie utworzone' || order.requiresReview;
+
       // Tab filtering
-      if (activeTab === 'active') {
-        if (isCompleted || order.status === 'cancelled') return false;
+      if (activeTab === 'verification') {
+        if (!isVerification) return false;
+      } else if (activeTab === 'active') {
+        if (isCompleted || order.status === 'cancelled' || isVerification) return false;
       } else if (activeTab === 'completed') {
         if (!isCompleted) return false;
       }
@@ -222,12 +230,20 @@ export function OrdersListClient({ initialOrders }: OrdersListClientProps) {
 
       <OrdersStats orders={ordersFilteredByDate} />
 
-      <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
-        <div className="flex items-center justify-between px-4 md:px-0">
-          <TabsList>
-            <TabsTrigger value="all">Wszystkie</TabsTrigger>
-            <TabsTrigger value="active">Aktywne</TabsTrigger>
-            <TabsTrigger value="completed">Zakończone</TabsTrigger>
+      <Tabs defaultValue="verification" className="w-full" onValueChange={setActiveTab}>
+        <div className="flex items-center justify-between px-4 md:px-0 overflow-x-auto pb-2 md:pb-0 -mx-4 md:mx-0 px-4 md:px-0">
+          <TabsList className="w-full justify-start md:w-auto h-auto flex-wrap md:flex-nowrap gap-1 bg-transparent md:bg-muted p-0 md:p-1">
+            <TabsTrigger value="verification" className="data-[state=active]:bg-background data-[state=active]:shadow-sm flex-1 md:flex-none">
+              Do weryfikacji
+              {verificationCount > 0 && (
+                <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                  {verificationCount}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="active" className="data-[state=active]:bg-background data-[state=active]:shadow-sm flex-1 md:flex-none">Aktywne</TabsTrigger>
+            <TabsTrigger value="completed" className="data-[state=active]:bg-background data-[state=active]:shadow-sm flex-1 md:flex-none">Zakończone</TabsTrigger>
+            <TabsTrigger value="all" className="data-[state=active]:bg-background data-[state=active]:shadow-sm flex-1 md:flex-none">Wszystkie</TabsTrigger>
           </TabsList>
         </div>
 
@@ -277,6 +293,9 @@ export function OrdersListClient({ initialOrders }: OrdersListClientProps) {
           </div>
         </div>
 
+        <TabsContent value="verification" className="mt-0">
+          <OrdersTable orders={filteredOrders} />
+        </TabsContent>
         <TabsContent value="all" className="mt-0">
           <OrdersTable orders={filteredOrders} />
         </TabsContent>

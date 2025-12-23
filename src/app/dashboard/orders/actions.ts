@@ -78,6 +78,7 @@ const updatedRow = await db
 .set({
 requiresReview: false,
 type,
+status: 'Weryfikacja i płatność',
 updatedAt: new Date(),
 })
 .where(eq(manualOrders.id, orderId))
