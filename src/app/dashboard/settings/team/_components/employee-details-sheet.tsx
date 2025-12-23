@@ -252,7 +252,7 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
                     </SheetDescription>
                 </SheetHeader>
 
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6 px-4">
                     <TabsList className="grid w-full grid-cols-3">
                         <TabsTrigger value="general">Ogólne</TabsTrigger>
                         <TabsTrigger value="profile" disabled={!isInstaller && !isArchitect && !isPartner}>

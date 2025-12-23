@@ -181,7 +181,7 @@ export default function ShowroomPage() {
                         </SheetDescription>
                     </SheetHeader>
 
-                    <div className="flex-1 overflow-y-auto py-6 space-y-4">
+                    <div className="flex-1 overflow-y-auto py-6 px-4 space-y-4">
                         {favoriteProducts.length === 0 ? (
                             <div className="text-center py-10 text-muted-foreground">
                                 Twój moodboard jest pusty.

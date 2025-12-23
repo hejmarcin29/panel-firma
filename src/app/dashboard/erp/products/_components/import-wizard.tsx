@@ -106,7 +106,7 @@ export function ImportWizard({ existingAttributes }: ImportWizardProps) {
                     Importuj z WP
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[800px]">
+            <DialogContent className="sm:max-w-[1000px]">
                 <DialogHeader>
                     <DialogTitle>Import Produktów z WooCommerce</DialogTitle>
                     <DialogDescription>
@@ -129,12 +129,12 @@ export function ImportWizard({ existingAttributes }: ImportWizardProps) {
 
                     {step === 'map' && (
                         <div className="space-y-4">
-                            <div className="border rounded-md max-h-[400px] overflow-y-auto">
+                            <div className="border rounded-md max-h-[60vh] overflow-y-auto relative">
                                 <Table>
-                                    <TableHeader>
+                                    <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
                                         <TableRow>
-                                            <TableHead>Atrybut w WP</TableHead>
-                                            <TableHead>Akcja</TableHead>
+                                            <TableHead className="w-[35%]">Atrybut w WP</TableHead>
+                                            <TableHead className="w-[200px]">Akcja</TableHead>
                                             <TableHead>Atrybut w Panelu</TableHead>
                                         </TableRow>
                                     </TableHeader>

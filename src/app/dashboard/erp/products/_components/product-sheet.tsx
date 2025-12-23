@@ -48,7 +48,7 @@ export function ProductSheet({ attributes = [], categories = [] }: ProductSheetP
                         Dodaj nowy produkt lub usługę do kartoteki.
                     </SheetDescription>
                 </SheetHeader>
-                <div className="mt-6">
+                <div className="mt-6 px-4">
                     <ProductForm 
                         onSuccess={() => setOpen(false)} 
                         availableAttributes={attributes} 

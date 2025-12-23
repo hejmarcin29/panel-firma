@@ -9,8 +9,6 @@ import { UserProvider } from "@/lib/auth/client";
 import { getCurrentSession } from "@/lib/auth/session";
 import { cookies } from "next/headers";
 import { QueryProvider } from "@/components/providers/query-provider";
-import { SystemAvatarProvider } from "@/components/providers/system-avatar-provider";
-import { SystemAvatar } from "@/components/system/system-avatar";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -59,24 +57,21 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} antialiased overflow-x-hidden`}
       >
         <QueryProvider>
-          <SystemAvatarProvider>
-            <UserProvider initialUser={session?.user ?? null}>
-              <DensityProvider initialDensity={density}>
-                <ThemeProvider
-                    attribute="class"
-                    defaultTheme="light"
-                    enableSystem
-                    disableTransitionOnChange
-                  >
-                    {children}
-                    <Toaster position="top-center" />
-                    <VersionChecker />
-                    <OfflineIndicator />
-                    <SystemAvatar />
-                </ThemeProvider>
-              </DensityProvider>
-            </UserProvider>
-          </SystemAvatarProvider>
+          <UserProvider initialUser={session?.user ?? null}>
+            <DensityProvider initialDensity={density}>
+              <ThemeProvider
+                  attribute="class"
+                  defaultTheme="light"
+                  enableSystem
+                  disableTransitionOnChange
+                >
+                  {children}
+                  <Toaster position="top-center" />
+                  <VersionChecker />
+                  <OfflineIndicator />
+              </ThemeProvider>
+            </DensityProvider>
+          </UserProvider>
         </QueryProvider>
       </body>
     </html>

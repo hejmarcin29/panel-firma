@@ -31,7 +31,7 @@ export function SupplierSheet() {
                         Dodaj nowego dostawcę do bazy.
                     </SheetDescription>
                 </SheetHeader>
-                <div className="mt-6">
+                <div className="mt-6 px-4">
                     <SupplierForm onSuccess={() => setOpen(false)} />
                 </div>
             </SheetContent>
