@@ -1,6 +1,6 @@
 'use client';
 
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createProduct } from "../actions";
 import { toast } from "sonner";
+import { Plus, Trash2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const formSchema = z.object({
     name: z.string().min(2, "Nazwa musi mieć min. 2 znaki"),
@@ -37,13 +39,26 @@ const formSchema = z.object({
     height: z.string().optional(),
     length: z.string().optional(),
     weight: z.string().optional(),
+    attributes: z.array(z.object({
+        attributeId: z.string().min(1, "Wybierz atrybut"),
+        value: z.string().optional(),
+        optionId: z.string().optional(),
+    })).optional(),
 });
+
+interface Attribute {
+    id: string;
+    name: string;
+    type: string | null;
+    options: { id: string; value: string; order: number | null }[];
+}
 
 interface ProductFormProps {
     onSuccess?: () => void;
+    availableAttributes?: Attribute[];
 }
 
-export function ProductForm({ onSuccess }: ProductFormProps) {
+export function ProductForm({ onSuccess, availableAttributes = [] }: ProductFormProps) {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
 
@@ -54,7 +69,13 @@ export function ProductForm({ onSuccess }: ProductFormProps) {
             sku: "",
             unit: "szt",
             type: "product",
+            attributes: [],
         },
+    });
+
+    const { fields, append, remove } = useFieldArray({
+        control: form.control,
+        name: "attributes",
     });
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -81,6 +102,9 @@ export function ProductForm({ onSuccess }: ProductFormProps) {
             setIsLoading(false);
         }
     }
+
+    // Helper to get attribute details by ID
+    const getAttribute = (id: string) => availableAttributes.find(a => a.id === id);
 
     return (
         <Form {...form}>
@@ -230,6 +254,119 @@ export function ProductForm({ onSuccess }: ProductFormProps) {
                         )}
                     />
                 </div>
+
+                {/* Attributes Section */}
+                <Card>
+                    <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                            <CardTitle className="text-base">Atrybuty Produktu</CardTitle>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => append({ attributeId: "", value: "", optionId: "" })}
+                            >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Dodaj Atrybut
+                            </Button>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {fields.map((field, index) => {
+                            const selectedAttrId = form.watch(`attributes.${index}.attributeId`);
+                            const selectedAttr = getAttribute(selectedAttrId);
+
+                            return (
+                                <div key={field.id} className="flex gap-4 items-start">
+                                    <FormField
+                                        control={form.control}
+                                        name={`attributes.${index}.attributeId`}
+                                        render={({ field }) => (
+                                            <FormItem className="flex-1">
+                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                    <FormControl>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Wybierz atrybut" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        {availableAttributes.map((attr) => (
+                                                            <SelectItem key={attr.id} value={attr.id}>
+                                                                {attr.name}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    {selectedAttr && (
+                                        <div className="flex-1">
+                                            {selectedAttr.type === 'select' ? (
+                                                <FormField
+                                                    control={form.control}
+                                                    name={`attributes.${index}.optionId`}
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                                <FormControl>
+                                                                    <SelectTrigger>
+                                                                        <SelectValue placeholder="Wybierz wartość" />
+                                                                    </SelectTrigger>
+                                                                </FormControl>
+                                                                <SelectContent>
+                                                                    {selectedAttr.options.map((opt) => (
+                                                                        <SelectItem key={opt.id} value={opt.id}>
+                                                                            {opt.value}
+                                                                        </SelectItem>
+                                                                    ))}
+                                                                </SelectContent>
+                                                            </Select>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                            ) : (
+                                                <FormField
+                                                    control={form.control}
+                                                    name={`attributes.${index}.value`}
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormControl>
+                                                                <Input 
+                                                                    type={selectedAttr.type === 'number' ? 'number' : 'text'} 
+                                                                    placeholder="Wartość" 
+                                                                    {...field} 
+                                                                />
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                            )}
+                                        </div>
+                                    )}
+
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => remove(index)}
+                                    >
+                                        <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                                    </Button>
+                                </div>
+                            );
+                        })}
+                        {fields.length === 0 && (
+                            <p className="text-sm text-muted-foreground text-center py-4">
+                                Brak przypisanych atrybutów.
+                            </p>
+                        )}
+                    </CardContent>
+                </Card>
 
                 <Button type="submit" disabled={isLoading}>
                     {isLoading ? "Zapisywanie..." : "Utwórz Produkt"}

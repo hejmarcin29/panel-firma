@@ -1,13 +1,13 @@
 'use server';
 
 import { db } from "@/lib/db";
-import { erpProducts, erpPurchasePrices } from "@/lib/db/schema";
+import { erpProducts, erpPurchasePrices, erpProductAttributes } from "@/lib/db/schema";
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function createProduct(data: any) {
-    await db.insert(erpProducts).values({
+    const [product] = await db.insert(erpProducts).values({
         name: data.name,
         sku: data.sku,
         unit: data.unit,
@@ -18,8 +18,23 @@ export async function createProduct(data: any) {
         length: data.length,
         weight: data.weight,
         categoryId: data.categoryId || null,
-    });
+    }).returning({ id: erpProducts.id });
+
+    if (data.attributes && Array.isArray(data.attributes)) {
+        for (const attr of data.attributes) {
+            if (attr.attributeId && (attr.value || attr.optionId)) {
+                await db.insert(erpProductAttributes).values({
+                    productId: product.id,
+                    attributeId: attr.attributeId,
+                    value: attr.value, // For text/number types
+                    optionId: attr.optionId, // For select types
+                });
+            }
+        }
+    }
+
     revalidatePath("/dashboard/erp/products");
+    return { success: true, id: product.id };
 }
 
 export async function addProductPrice(data: {
@@ -78,6 +93,12 @@ export async function getProductDetails(id: string) {
             purchasePrices: {
                 with: {
                     supplier: true
+                }
+            },
+            attributes: {
+                with: {
+                    attribute: true,
+                    option: true
                 }
             }
         }

@@ -1,6 +1,9 @@
 import { ProductForm } from "../_components/product-form";
+import { getAttributes } from "../../attributes/actions";
 
-export default function NewProductPage() {
+export default async function NewProductPage() {
+    const attributes = await getAttributes();
+
     return (
         <div className="space-y-6">
             <div>
@@ -9,7 +12,7 @@ export default function NewProductPage() {
                     Dodaj nowy produkt lub usługę do kartoteki.
                 </p>
             </div>
-            <ProductForm />
+            <ProductForm availableAttributes={attributes} />
         </div>
     );
 }

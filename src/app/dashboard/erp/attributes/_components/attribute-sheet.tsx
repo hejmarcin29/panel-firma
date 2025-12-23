@@ -10,21 +10,10 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { ProductForm } from "./product-form";
+import { AttributeForm } from "./attribute-form";
 import { useState } from "react";
 
-interface Attribute {
-    id: string;
-    name: string;
-    type: string | null;
-    options: { id: string; value: string; order: number | null }[];
-}
-
-interface ProductSheetProps {
-    attributes?: Attribute[];
-}
-
-export function ProductSheet({ attributes = [] }: ProductSheetProps) {
+export function AttributeSheet() {
     const [open, setOpen] = useState(false);
 
     return (
@@ -32,18 +21,18 @@ export function ProductSheet({ attributes = [] }: ProductSheetProps) {
             <SheetTrigger asChild>
                 <Button>
                     <Plus className="mr-2 h-4 w-4" />
-                    Dodaj Produkt
+                    Nowy Atrybut
                 </Button>
             </SheetTrigger>
-            <SheetContent className="sm:max-w-[600px] overflow-y-auto">
+            <SheetContent className="sm:max-w-[500px]">
                 <SheetHeader>
-                    <SheetTitle>Nowy Produkt</SheetTitle>
+                    <SheetTitle>Definicja Atrybutu</SheetTitle>
                     <SheetDescription>
-                        Dodaj nowy produkt lub usługę do kartoteki.
+                        Dodaj nową cechę, którą będziesz mógł przypisywać do produktów.
                     </SheetDescription>
                 </SheetHeader>
                 <div className="mt-6">
-                    <ProductForm onSuccess={() => setOpen(false)} availableAttributes={attributes} />
+                    <AttributeForm onSuccess={() => setOpen(false)} />
                 </div>
             </SheetContent>
         </Sheet>

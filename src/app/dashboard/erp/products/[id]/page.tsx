@@ -81,6 +81,25 @@ export default async function ProductDetailsPage({ params }: PageProps) {
                                 </div>
                             </>
                         )}
+
+                        {product.attributes && product.attributes.length > 0 && (
+                            <>
+                                <Separator />
+                                <div>
+                                    <span className="text-muted-foreground text-sm block mb-2">Atrybuty:</span>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {product.attributes.map((attr: any) => (
+                                            <div key={attr.id} className="text-sm border rounded px-2 py-1 bg-muted/30">
+                                                <span className="text-muted-foreground text-xs block">{attr.attribute.name}</span>
+                                                <span className="font-medium">
+                                                    {attr.option ? attr.option.value : attr.value}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </CardContent>
                 </Card>
 

@@ -92,6 +92,26 @@ export function PremiumProductCard() {
     mouseY.set(clientY)
   }
 
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!ref.current || isExpanded) return
+
+    const rect = ref.current.getBoundingClientRect()
+    const width = rect.width
+    const height = rect.height
+
+    const touch = e.touches[0]
+    const clientX = touch.clientX - rect.left
+    const clientY = touch.clientY - rect.top
+
+    const rX = (clientY / height - 0.5) * -ROTATION_RANGE
+    const rY = (clientX / width - 0.5) * ROTATION_RANGE
+
+    x.set(rX)
+    y.set(rY)
+    mouseX.set(clientX)
+    mouseY.set(clientY)
+  }
+
   const handleMouseLeave = () => {
     x.set(0)
     y.set(0)
@@ -103,13 +123,18 @@ export function PremiumProductCard() {
       <motion.div
         ref={ref}
         onMouseMove={handleMouseMove}
+        onTouchMove={handleTouchMove}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={handleMouseLeave}
+        onTouchEnd={handleMouseLeave}
         style={{
           transformStyle: "preserve-3d",
           transform: isExpanded ? "none" : transform,
           zIndex: isExpanded ? 50 : 1,
         }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
         className={cn(
           "relative h-[550px] w-full max-w-[380px] cursor-pointer rounded-2xl transition-all duration-500 outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950",
           isExpanded ? "fixed inset-0 z-50 h-full w-full max-w-none rounded-none" : ""
@@ -123,7 +148,6 @@ export function PremiumProductCard() {
         }}
         role="button"
         tabIndex={isExpanded ? -1 : 0}
-        layoutId="product-card-container"
       >
         <div
           style={{
@@ -138,7 +162,7 @@ export function PremiumProductCard() {
           {/* Background Texture Image */}
           <motion.div 
             className="absolute inset-0 h-full w-full bg-neutral-800"
-            layoutId="product-image"
+            layout
           >
              <div className="absolute inset-0 bg-black/40 z-10" />
              <AnimatePresence mode="wait">
@@ -152,7 +176,8 @@ export function PremiumProductCard() {
                     transition={{ duration: 0.5 }}
                     className="absolute inset-0 h-full w-full object-cover"
                     onError={(e) => {
-                        e.currentTarget.style.display = 'none';
+                        // e.currentTarget.style.display = 'none';
+                        console.error("Image failed to load:", activeVariant.image);
                     }}
                 />
              </AnimatePresence>
@@ -179,7 +204,7 @@ export function PremiumProductCard() {
               isExpanded ? "max-w-7xl mx-auto w-full pb-24" : ""
           )}>
             <motion.div
-                layoutId="product-content"
+                layout
                 className="flex flex-col gap-4"
             >
                 <div className="flex items-center gap-3">
@@ -199,13 +224,13 @@ export function PremiumProductCard() {
                 
                 <div>
                     <motion.h3 
-                        layoutId="product-title"
+                        layout
                         className={cn("font-bold text-white leading-tight", isExpanded ? "text-6xl md:text-8xl" : "text-4xl")}
                     >
                         {activeVariant.name}
                     </motion.h3>
                     <motion.p 
-                        layoutId="product-desc"
+                        layout
                         className={cn("mt-4 text-neutral-300 font-light", isExpanded ? "text-xl max-w-2xl" : "text-sm")}
                     >
                         <span className="font-semibold text-amber-500">{activeVariant.code}</span> • Naturalny dąb o głębokiej strukturze synchronicznej. 

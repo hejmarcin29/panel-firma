@@ -1635,6 +1635,34 @@ export const erpInventory = pgTable('erp_inventory', {
     updatedAt: timestamp('updated_at').defaultNow(),
 });
 
+// 6. Attributes Definition (Słownik Atrybutów)
+export const erpAttributes = pgTable('erp_attributes', {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    name: text('name').notNull(), // np. "Klasa ścieralności", "Kolor"
+    type: text('type').default('select'), // select, text, number
+    categoryId: text('category_id').references(() => erpCategories.id), // Opcjonalne przypisanie do kategorii
+    createdAt: timestamp('created_at').defaultNow(),
+});
+
+// 7. Attribute Options (Wartości Słownika)
+export const erpAttributeOptions = pgTable('erp_attribute_options', {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    attributeId: text('attribute_id').references(() => erpAttributes.id).notNull(),
+    value: text('value').notNull(), // np. "AC4", "AC5"
+    order: integer('order').default(0),
+});
+
+// 8. Product Attributes (Wartości Produktów)
+export const erpProductAttributes = pgTable('erp_product_attributes', {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    productId: text('product_id').references(() => erpProducts.id).notNull(),
+    attributeId: text('attribute_id').references(() => erpAttributes.id).notNull(),
+    
+    // Wartość może być wybrana ze słownika LUB wpisana ręcznie (jeśli typ=text)
+    optionId: text('option_id').references(() => erpAttributeOptions.id), 
+    value: text('value'), // Fallback dla wartości tekstowych/liczbowych
+});
+
 // --- ERP RELATIONS ---
 
 export const erpProductsRelations = relations(erpProducts, ({ one, many }) => ({
@@ -1644,6 +1672,37 @@ export const erpProductsRelations = relations(erpProducts, ({ one, many }) => ({
     }),
     purchasePrices: many(erpPurchasePrices),
     inventory: many(erpInventory),
+    attributes: many(erpProductAttributes),
+}));
+
+export const erpAttributesRelations = relations(erpAttributes, ({ one, many }) => ({
+    category: one(erpCategories, {
+        fields: [erpAttributes.categoryId],
+        references: [erpCategories.id],
+    }),
+    options: many(erpAttributeOptions),
+}));
+
+export const erpAttributeOptionsRelations = relations(erpAttributeOptions, ({ one }) => ({
+    attribute: one(erpAttributes, {
+        fields: [erpAttributeOptions.attributeId],
+        references: [erpAttributes.id],
+    }),
+}));
+
+export const erpProductAttributesRelations = relations(erpProductAttributes, ({ one }) => ({
+    product: one(erpProducts, {
+        fields: [erpProductAttributes.productId],
+        references: [erpProducts.id],
+    }),
+    attribute: one(erpAttributes, {
+        fields: [erpProductAttributes.attributeId],
+        references: [erpAttributes.id],
+    }),
+    option: one(erpAttributeOptions, {
+        fields: [erpProductAttributes.optionId],
+        references: [erpAttributeOptions.id],
+    }),
 }));
 
 export const erpSuppliersRelations = relations(erpSuppliers, ({ many }) => ({

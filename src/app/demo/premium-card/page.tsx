@@ -21,7 +21,7 @@ export default function DemoPage() {
           
           <p className="text-lg md:text-xl text-neutral-400 leading-relaxed">
             To nie jest zwykła karta produktu. To interaktywne doświadczenie, które buduje zaufanie i pożądanie.
-            Najedź kursorem, aby poczuć głębię. Kliknij, aby zobaczyć detale.
+            Najedź kursorem lub dotknij, aby poczuć głębię. Kliknij, aby zobaczyć detale.
           </p>
         </div>
         
