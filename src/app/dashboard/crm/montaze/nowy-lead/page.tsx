@@ -1,7 +1,7 @@
 'use server';
 
 import { requireUser } from '@/lib/auth/session';
-import { getAssignedProducts } from '@/app/dashboard/products/actions';
+import { getAssignedProducts } from '@/app/dashboard/erp/products/actions';
 import { LeadForm } from './_components/lead-form';
 
 export default async function NewLeadPage() {

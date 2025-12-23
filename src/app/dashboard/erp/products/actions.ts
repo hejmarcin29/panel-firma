@@ -1,9 +1,12 @@
 'use server';
 
 import { db } from "@/lib/db";
-import { erpProducts, erpPurchasePrices, erpProductAttributes } from "@/lib/db/schema";
+import { erpProducts, erpPurchasePrices, erpProductAttributes, products } from "@/lib/db/schema";
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
+import { requireUser } from "@/lib/auth/session";
+import { logSystemEvent } from "@/lib/logging";
+import { getWooCredentials } from "./import-actions";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function createProduct(data: any) {
@@ -83,6 +86,125 @@ export async function setMainSupplier(priceId: string, productId: string) {
         .where(eq(erpPurchasePrices.id, priceId));
 
     revalidatePath(`/dashboard/erp/products/${productId}`);
+}
+
+// --- LEGACY ACTIONS (To be migrated) ---
+
+export async function restoreProduct(id: number) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) {
+        throw new Error('Brak uprawnień');
+    }
+
+    await db.update(products)
+        .set({ deletedAt: null })
+        .where(eq(products.id, id));
+    
+    await logSystemEvent('restore_product', `Przywrócono produkt ${id}`, user.id);
+    revalidatePath('/dashboard/settings');
+}
+
+export async function permanentDeleteProduct(id: number) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) {
+        throw new Error('Brak uprawnień');
+    }
+
+    await db.delete(products).where(eq(products.id, id));
+    
+    await logSystemEvent('permanent_delete_product', `Trwale usunięto produkt ${id}`, user.id);
+    revalidatePath('/dashboard/settings');
+}
+
+export async function getAssignedProducts(userId: string) {
+    // For now, return all active products from legacy table
+    // In future, this should filter by user permissions if needed
+    return await db.query.products.findMany({
+        where: (table, { isNull, eq, and }) => and(
+            isNull(table.deletedAt),
+            eq(table.status, 'publish')
+        ),
+        columns: {
+            id: true,
+            name: true
+        }
+    });
+}
+
+export async function syncProductsAction() {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) {
+        throw new Error('Brak uprawnień');
+    }
+
+    const creds = await getWooCredentials();
+    if (!creds) {
+        throw new Error("Brak konfiguracji WooCommerce");
+    }
+
+    let page = 1;
+    const perPage = 50;
+    let syncedCount = 0;
+
+    try {
+        while (true) {
+            const response = await fetch(`${creds.baseUrl}/wp-json/wc/v3/products?page=${page}&per_page=${perPage}`, {
+                headers: { 'Authorization': creds.authHeader },
+                cache: 'no-store'
+            });
+
+            if (!response.ok) break;
+
+            const data = await response.json();
+            if (!Array.isArray(data) || data.length === 0) break;
+
+            for (const item of data) {
+                await db.insert(products).values({
+                    id: item.id,
+                    name: item.name,
+                    slug: item.slug,
+                    sku: item.sku,
+                    price: item.price,
+                    regularPrice: item.regular_price,
+                    salePrice: item.sale_price,
+                    status: item.status,
+                    stockStatus: item.stock_status,
+                    stockQuantity: item.stock_quantity,
+                    imageUrl: item.images?.[0]?.src,
+                    categories: item.categories,
+                    attributes: item.attributes,
+                    syncedAt: new Date(),
+                }).onConflictDoUpdate({
+                    target: products.id,
+                    set: {
+                        name: item.name,
+                        slug: item.slug,
+                        sku: item.sku,
+                        price: item.price,
+                        regularPrice: item.regular_price,
+                        salePrice: item.sale_price,
+                        status: item.status,
+                        stockStatus: item.stock_status,
+                        stockQuantity: item.stock_quantity,
+                        imageUrl: item.images?.[0]?.src,
+                        categories: item.categories,
+                        attributes: item.attributes,
+                        syncedAt: new Date(),
+                        updatedAt: new Date(),
+                    }
+                });
+                syncedCount++;
+            }
+            page++;
+        }
+        
+        await logSystemEvent('sync_products', `Zsynchronizowano ${syncedCount} produktów (Legacy)`, user.id);
+        revalidatePath('/dashboard/showroom');
+        return { success: true, count: syncedCount };
+    } catch (error) {
+        console.error("Sync error:", error);
+        throw new Error("Błąd synchronizacji");
+    }
 }
 
 export async function getProductDetails(id: string) {

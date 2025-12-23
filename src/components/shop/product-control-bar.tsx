@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { syncProductsAction } from '@/app/dashboard/products/actions';
+import { syncProductsAction } from '@/app/dashboard/erp/products/actions';
 import { toast } from 'sonner';
 
 export function ProductControlBar({ totalProducts, onOpenFilters }: { totalProducts: number, onOpenFilters: () => void }) {

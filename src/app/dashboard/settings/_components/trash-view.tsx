@@ -48,7 +48,7 @@ import {
     bulkRestoreCustomers,
     bulkDeleteCustomers
 } from '../actions';
-import { restoreProduct, permanentDeleteProduct } from '../../products/actions';
+import { restoreProduct, permanentDeleteProduct } from '../../erp/products/actions';
 
 interface DeletedQuote {
     id: string;

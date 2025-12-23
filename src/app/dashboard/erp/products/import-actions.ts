@@ -25,7 +25,7 @@ interface WooCommerceProduct {
     description: string;
 }
 
-async function getWooCredentials() {
+export async function getWooCredentials() {
     const settings = await getAppSettings([
         appSettingKeys.wooUrl,
         appSettingKeys.wooConsumerKey,
