@@ -19,11 +19,17 @@ export async function bulkUpdateSyncStatus(ids: string[], enabled: boolean) {
 }
 
 export async function toggleProductSync(id: string, enabled: boolean) {
-    await db.update(erpProducts)
-        .set({ isSyncEnabled: enabled, updatedAt: new Date() })
-        .where(eq(erpProducts.id, id));
+    try {
+        await db.update(erpProducts)
+            .set({ isSyncEnabled: enabled, updatedAt: new Date() })
+            .where(eq(erpProducts.id, id));
 
-    revalidatePath('/dashboard/erp/products');
+        revalidatePath('/dashboard/erp/products');
+        return { success: true };
+    } catch (error) {
+        console.error("Error toggling product sync:", error);
+        return { success: false };
+    }
 }
 
 

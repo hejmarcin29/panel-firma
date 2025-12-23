@@ -88,7 +88,7 @@ export function ProductsTable({ data }: ProductsTableProps) {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[40px]">
+                            <TableHead className="w-10">
                                 <Checkbox 
                                     checked={data.length > 0 && selectedIds.length === data.length}
                                     onCheckedChange={(checked) => handleSelectAll(!!checked)}
@@ -218,7 +218,7 @@ export function ProductsTable({ data }: ProductsTableProps) {
                     ))
                 )}
             </div>
-        </>
+        </div>
     );
 }
 
