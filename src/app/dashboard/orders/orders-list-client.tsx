@@ -91,13 +91,14 @@ function includesQuery(value: string, query: string) {
 
 export type OrdersListClientProps = {
   initialOrders: Order[];
+  initialTab?: string;
 };
 
-export function OrdersListClient({ initialOrders }: OrdersListClientProps) {
+export function OrdersListClient({ initialOrders, initialTab = 'all' }: OrdersListClientProps) {
   const [statusFilter, setStatusFilter] = useState<StatusFilterValue>('all');
   const [sourceFilter, setSourceFilter] = useState<SourceFilterValue>('all');
   const [search, setSearch] = useState('');
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
 
   const availableMonths = useMemo(() => {
@@ -230,7 +231,7 @@ export function OrdersListClient({ initialOrders }: OrdersListClientProps) {
 
       <OrdersStats orders={ordersFilteredByDate} />
 
-      <Tabs defaultValue="verification" className="w-full" onValueChange={setActiveTab}>
+      <Tabs defaultValue={initialTab} className="w-full" onValueChange={setActiveTab}>
         <div className="flex items-center justify-between px-4 md:px-0 overflow-x-auto pb-2 md:pb-0 -mx-4 md:mx-0 px-4 md:px-0">
           <TabsList className="w-full justify-start md:w-auto h-auto flex-wrap md:flex-nowrap gap-1 bg-transparent md:bg-muted p-0 md:p-1">
             <TabsTrigger value="verification" className="data-[state=active]:bg-background data-[state=active]:shadow-sm flex-1 md:flex-none">

@@ -21,15 +21,21 @@ type PageProps = {
 export default async function OrdersPage({ searchParams }: PageProps) {
 	await requireUser();
     const { filter } = await searchParams;
-	const orders = await getManualOrders(filter);
+    
+    // If filter is 'verification', we want to load ALL orders so tabs work correctly,
+    // but default the view to the 'verification' tab.
+    // For other filters (urgent, invoice), we keep the strict filtering behavior.
+    const effectiveFilter = filter === 'verification' ? undefined : filter;
+	const orders = await getManualOrders(effectiveFilter);
+    
+    const showBanner = filter && filter !== 'verification';
 	
     return (
         <div className="h-full flex flex-col">
-            {filter && (
+            {showBanner && (
                 <div className="bg-amber-50 border-b border-amber-200 px-4 md:px-6 py-2.5 text-sm text-amber-800 flex justify-between items-center shrink-0">
                     <div className="flex items-center gap-2">
                         <span className="font-medium">
-                            {filter === 'verification' && 'Filtrowanie: Do weryfikacji'}
                             {filter === 'urgent' && 'Filtrowanie: Pilne (ponad 3 dni)'}
                             {filter === 'invoice' && 'Filtrowanie: Wiszące (brak faktury)'}
                         </span>
@@ -66,7 +72,10 @@ export default async function OrdersPage({ searchParams }: PageProps) {
                     </div>
 
                     <TabsContent value="list" className="flex-1 mt-0">
-                        <OrdersListClient initialOrders={orders} />
+                        <OrdersListClient 
+                            initialOrders={orders} 
+                            initialTab={filter === 'verification' ? 'verification' : 'all'}
+                        />
                     </TabsContent>
                     
                     <TabsContent value="board" className="mt-0">
