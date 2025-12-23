@@ -2,8 +2,10 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { Users, Hammer, FileText } from "lucide-react";
+import { Users, Hammer, FileText, ArrowRight, Plus, Search } from "lucide-react";
 import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const container = {
   hidden: { opacity: 0 },
@@ -22,67 +24,97 @@ const item = {
 
 export default function CRMDashboardPage() {
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">CRM</h1>
-      </div>
-
+    <div className="space-y-8 max-w-[1600px] mx-auto">
       <motion.div 
         variants={container}
         initial="hidden"
         animate="show"
-        className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+        className="grid gap-6 md:grid-cols-3"
       >
-        <motion.div variants={item} className="h-full">
-          <Link href="/dashboard/crm/customers">
-            <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Klienci</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
+        {/* Customers Card */}
+        <motion.div variants={item} className="h-full group">
+          <Link href="/dashboard/crm/customers" className="block h-full">
+            <Card className="h-full border-border/50 bg-linear-to-br from-card to-muted/20 transition-all duration-300 hover:shadow-lg hover:border-primary/20 hover:-translate-y-1 overflow-hidden relative">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <Users className="w-24 h-24" />
+              </div>
+              <CardHeader>
+                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-2 text-blue-600 dark:text-blue-400">
+                    <Users className="h-5 w-5" />
+                </div>
+                <CardTitle className="text-xl">Klienci</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">Baza Klientów</div>
-                <p className="text-xs text-muted-foreground">
-                  Zarządzaj relacjami z klientami i historią kontaktów
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Kompletna baza kontrahentów, historia kontaktów i preferencje.
                 </p>
+                <div className="flex items-center text-sm font-medium text-primary group-hover:translate-x-1 transition-transform">
+                    Przejdź do bazy <ArrowRight className="ml-1 h-4 w-4" />
+                </div>
               </CardContent>
             </Card>
           </Link>
         </motion.div>
 
-        <motion.div variants={item} className="h-full">
-          <Link href="/dashboard/crm/montaze">
-            <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Montaże</CardTitle>
-                <Hammer className="h-4 w-4 text-muted-foreground" />
+        {/* Montages Card */}
+        <motion.div variants={item} className="h-full group">
+          <Link href="/dashboard/crm/montaze" className="block h-full">
+            <Card className="h-full border-border/50 bg-linear-to-br from-card to-muted/20 transition-all duration-300 hover:shadow-lg hover:border-primary/20 hover:-translate-y-1 overflow-hidden relative">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <Hammer className="w-24 h-24" />
+              </div>
+              <CardHeader>
+                <div className="w-10 h-10 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mb-2 text-orange-600 dark:text-orange-400">
+                    <Hammer className="h-5 w-5" />
+                </div>
+                <CardTitle className="text-xl">Realizacje</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">Realizacje</div>
-                <p className="text-xs text-muted-foreground">
-                  Śledź postępy prac montażowych i harmonogram
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Tablica Kanban, harmonogram prac, przydzielanie ekip i kontrola terminów.
                 </p>
+                <div className="flex items-center text-sm font-medium text-primary group-hover:translate-x-1 transition-transform">
+                    Zarządzaj montażami <ArrowRight className="ml-1 h-4 w-4" />
+                </div>
               </CardContent>
             </Card>
           </Link>
         </motion.div>
 
-        <motion.div variants={item} className="h-full">
-          <Link href="/dashboard/crm/oferty">
-            <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Oferty</CardTitle>
-                <FileText className="h-4 w-4 text-muted-foreground" />
+        {/* Quotes Card */}
+        <motion.div variants={item} className="h-full group">
+          <Link href="/dashboard/crm/oferty" className="block h-full">
+            <Card className="h-full border-border/50 bg-linear-to-br from-card to-muted/20 transition-all duration-300 hover:shadow-lg hover:border-primary/20 hover:-translate-y-1 overflow-hidden relative">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <FileText className="w-24 h-24" />
+              </div>
+              <CardHeader>
+                <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-2 text-green-600 dark:text-green-400">
+                    <FileText className="h-5 w-5" />
+                </div>
+                <CardTitle className="text-xl">Oferty</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">Wyceny</div>
-                <p className="text-xs text-muted-foreground">
-                  Twórz i zarządzaj ofertami dla klientów
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Generator wycen, szablony umów i śledzenie statusu akceptacji.
                 </p>
+                <div className="flex items-center text-sm font-medium text-primary group-hover:translate-x-1 transition-transform">
+                    Twórz oferty <ArrowRight className="ml-1 h-4 w-4" />
+                </div>
               </CardContent>
             </Card>
           </Link>
         </motion.div>
+      </motion.div>
+
+      {/* Quick Stats / Recent Activity Placeholder */}
+      <motion.div 
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="grid gap-6 md:grid-cols-2"
+      >
+         {/* Future widgets can go here */}
       </motion.div>
     </div>
   );
