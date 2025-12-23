@@ -1,12 +1,13 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Phone, Mail, MapPin, CheckSquare, Hammer, User } from 'lucide-react';
+import { Phone, Mail, MapPin, Calendar, AlertCircle, CheckSquare, MessageSquare, User } from 'lucide-react';
 import Link from 'next/link';
 
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 
 import type { Montage, StatusOption, AlertSettings } from '../types';
@@ -98,112 +99,119 @@ export function MontagePipelineCard({ montage, threatDays, alertSettings }: Prop
     }, [montage, threatDays, alertSettings]);
 
     return (
-        <Link href={`/dashboard/crm/montaze/${montage.id}`} className="block group">
-            <Card className={`w-full border border-border/60 bg-linear-to-br from-background via-background to-muted/30 shadow-sm transition-all hover:shadow-md hover:border-primary/20 ${isThreatened ? 'border-destructive/50 bg-destructive/5' : ''}`}>
-                <CardHeader className="space-y-3 p-4">
-                    <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-                                {initials(montage.clientName)}
-                            </div>
-                            <div className="space-y-0.5">
-                                <CardTitle className="text-sm font-semibold leading-tight text-foreground">
-                                    {montage.clientName}
-                                </CardTitle>
-                                <div className="flex flex-col gap-0.5">
-                                    {montage.displayId && (
-                                        <span className="text-[10px] font-medium text-primary/80">{montage.displayId}</span>
-                                    )}
-                                    <CardDescription className="text-[10px] text-muted-foreground">Aktualizacja: {latestUpdate}</CardDescription>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="flex flex-col items-end gap-1">
-                            {isThreatened && (
-                                <Badge variant="destructive" className="shrink-0 rounded-full px-1.5 py-0 text-[10px] font-normal animate-pulse">
-                                    Zagrożony
-                                </Badge>
+        <Link href={`/dashboard/crm/montaze/${montage.id}`} className="block group relative">
+             <Card className={cn(
+                "w-full transition-all duration-200 border-border/50 shadow-sm hover:shadow-md hover:border-primary/30 overflow-hidden",
+                isThreatened ? "bg-red-50/50 dark:bg-red-950/10 border-red-200/50 dark:border-red-900/30" : "bg-card"
+            )}>
+                {/* Status Strip for Threatened */}
+                {isThreatened && (
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500" />
+                )}
+
+                <div className={cn("p-3 space-y-3", isThreatened && "pl-4")}>
+                    {/* Header: Name & ID */}
+                    <div className="flex justify-between items-start gap-2">
+                        <div className="space-y-0.5 min-w-0">
+                            <h3 className="font-semibold text-sm leading-tight truncate pr-2">
+                                {montage.clientName}
+                            </h3>
+                            {montage.displayId && (
+                                <p className="text-[10px] text-muted-foreground font-mono">
+                                    {montage.displayId}
+                                </p>
                             )}
-                            {pendingTasksCount > 0 && (
-                                <Badge variant="destructive" className="shrink-0 rounded-full px-1.5 py-0 text-[10px] font-normal flex items-center gap-1">
-                                    <CheckSquare className="h-3 w-3" />
-                                    {pendingTasksCount}
-                                </Badge>
+                        </div>
+                        {/* Team Avatars */}
+                        <div className="flex -space-x-2 shrink-0">
+                            {montage.installer && (
+                                <Avatar className="h-6 w-6 border-2 border-background" title={`Montażysta: ${montage.installer.name}`}>
+                                    <AvatarFallback className="text-[9px] bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                                        {initials(montage.installer.name || montage.installer.email)}
+                                    </AvatarFallback>
+                                </Avatar>
+                            )}
+                            {montage.architect && (
+                                <Avatar className="h-6 w-6 border-2 border-background" title={`Architekt: ${montage.architect.name}`}>
+                                    <AvatarFallback className="text-[9px] bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
+                                        {initials(montage.architect.name || montage.architect.email)}
+                                    </AvatarFallback>
+                                </Avatar>
+                            )}
+                             {montage.measurer && !montage.installer && (
+                                <Avatar className="h-6 w-6 border-2 border-background" title={`Pomiarowiec: ${montage.measurer.name}`}>
+                                    <AvatarFallback className="text-[9px] bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300">
+                                        {initials(montage.measurer.name || montage.measurer.email)}
+                                    </AvatarFallback>
+                                </Avatar>
                             )}
                         </div>
                     </div>
-                    {(addressLine || cityLine) && (
-                        <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
-                            <MapPin className="mt-0.5 h-3 w-3 shrink-0" />
-                            <div className="line-clamp-2">
-                                {addressLine}{cityLine ? `, ${cityLine}` : ''}
-                            </div>
-                        </div>
-                    )}
 
-                    {(montage.installer || montage.measurer || montage.architect) && (
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1">
-                            {montage.installer && (
-                                <div className="flex items-center gap-1.5" title={`Montażysta: ${montage.installer.name || montage.installer.email}`}>
-                                    <Hammer className="h-3 w-3 shrink-0" />
-                                    <span className="truncate max-w-[100px]">{initials(montage.installer.name || montage.installer.email)}</span>
-                                </div>
-                            )}
-                            {montage.architect && (
-                                <div className="flex items-center gap-1.5" title={`Architekt: ${montage.architect.name || montage.architect.email}`}>
-                                    <User className="h-3 w-3 shrink-0 text-purple-500" />
-                                    <span className="truncate max-w-[100px] text-purple-600">{initials(montage.architect.name || montage.architect.email)}</span>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </CardHeader>
-                <CardContent className="space-y-3 p-4 pt-0">
-                    {(montage.contactPhone || montage.contactEmail) && (
-                        <div className="flex flex-wrap gap-3 text-xs text-muted-foreground" onClick={(e) => e.stopPropagation()}>
-                            {montage.contactPhone && (
-                                <a href={`tel:${montage.contactPhone}`} className="flex items-center gap-1.5 hover:text-primary transition-colors">
-                                    <Phone className="h-3 w-3" />
-                                    {montage.contactPhone}
-                                </a>
-                            )}
-                            {montage.contactEmail && (
-                                <a href={`mailto:${montage.contactEmail}`} className="flex items-center gap-1.5 hover:text-primary transition-colors">
-                                    <Mail className="h-3 w-3" />
-                                    <span className="truncate max-w-[150px]">{montage.contactEmail}</span>
-                                </a>
-                            )}
-                        </div>
-                    )}
-                    
-                    <div className="flex flex-wrap items-center gap-1.5">
-                        <Badge variant="outline" className="rounded-md px-1.5 py-0 text-[10px] font-normal text-muted-foreground">
-                            {totalTasks === 0 ? 'Brak zadań' : `${completedTasks}/${totalTasks} zad.`}
-                        </Badge>
-                        <Badge variant="outline" className="rounded-md px-1.5 py-0 text-[10px] font-normal text-muted-foreground">
-                            {montage.notes.length} not.
-                        </Badge>
+                    {/* Location & Date */}
+                    <div className="space-y-1.5">
+                        {(addressLine || cityLine) && (
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                <MapPin className="h-3 w-3 shrink-0 opacity-70" />
+                                <span className="truncate">
+                                    {cityLine}{cityLine && addressLine ? ', ' : ''}{addressLine}
+                                </span>
+                            </div>
+                        )}
+                        
                         {(scheduledDate || forecastedDate) && (
-                            <Badge variant="outline" className={cn(
-                                "rounded-md px-1.5 py-0 text-[10px] font-normal",
-                                scheduledDate ? "text-blue-600 bg-blue-50/50 border-blue-100" : "text-muted-foreground bg-muted/50 border-border italic"
+                            <div className={cn(
+                                "flex items-center gap-1.5 text-xs rounded-md px-2 py-1 w-fit",
+                                scheduledDate 
+                                    ? "bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300" 
+                                    : "bg-muted text-muted-foreground"
                             )}>
-                                {scheduledDate || `Szac: ${forecastedDate}`}
-                            </Badge>
+                                <Calendar className="h-3 w-3 shrink-0" />
+                                <span className="font-medium">
+                                    {scheduledDate || `Szac: ${forecastedDate}`}
+                                </span>
+                            </div>
                         )}
                     </div>
 
-                    {hasClientInfo && (
-                        <>
-                            <Separator className="bg-border/50" />
-                            <div className="space-y-1">
-                                <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Info od klienta</p>
-                                <p className="line-clamp-2 text-xs text-foreground/80">{montage.clientInfo}</p>
+                    {/* Footer: Stats & Actions */}
+                    <div className="flex items-center justify-between pt-1">
+                        <div className="flex items-center gap-3 text-muted-foreground">
+                            {/* Tasks */}
+                            <div className={cn("flex items-center gap-1 text-[10px]", pendingTasksCount > 0 && "text-orange-600 font-medium")}>
+                                <CheckSquare className="h-3 w-3" />
+                                <span>{completedTasks}/{totalTasks}</span>
                             </div>
-                        </>
+                            {/* Notes */}
+                            {montage.notes.length > 0 && (
+                                <div className="flex items-center gap-1 text-[10px]">
+                                    <MessageSquare className="h-3 w-3" />
+                                    <span>{montage.notes.length}</span>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Contact Icons */}
+                        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                            {montage.contactPhone && (
+                                <a href={`tel:${montage.contactPhone}`} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title={montage.contactPhone}>
+                                    <Phone className="h-3 w-3" />
+                                </a>
+                            )}
+                            {montage.contactEmail && (
+                                <a href={`mailto:${montage.contactEmail}`} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title={montage.contactEmail}>
+                                    <Mail className="h-3 w-3" />
+                                </a>
+                            )}
+                        </div>
+                    </div>
+                    
+                    {/* Client Info Snippet */}
+                    {hasClientInfo && (
+                        <div className="text-[10px] text-muted-foreground bg-muted/30 p-1.5 rounded border border-border/30 line-clamp-1">
+                            <span className="font-semibold mr-1">Info:</span>
+                            {montage.clientInfo}
+                        </div>
                     )}
-                </CardContent>
-            </Card>
-        </Link>
-	);
+                </div>
 }

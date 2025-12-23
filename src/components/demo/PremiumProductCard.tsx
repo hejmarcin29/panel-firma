@@ -132,9 +132,9 @@ export function PremiumProductCard() {
           transform: isExpanded ? "none" : transform,
           zIndex: isExpanded ? 50 : 1,
         }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        // initial={{ opacity: 0, y: 20 }}
+        // animate={{ opacity: 1, y: 0 }}
+        // transition={{ duration: 0.5 }}
         className={cn(
           "relative h-[550px] w-full max-w-[380px] cursor-pointer rounded-2xl transition-all duration-500 outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-950",
           isExpanded ? "fixed inset-0 z-50 h-full w-full max-w-none rounded-none" : ""

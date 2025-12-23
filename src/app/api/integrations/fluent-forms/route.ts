@@ -3,9 +3,15 @@ import { db } from '@/lib/db';
 import { appSettings, customers, montages, systemLogs, montageChecklistItems } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { DEFAULT_MONTAGE_CHECKLIST } from '@/lib/montaze/checklist-shared';
+import { isSystemAutomationEnabled } from '@/lib/montaze/automation';
 
 export async function POST(req: NextRequest) {
     try {
+        const isEnabled = await isSystemAutomationEnabled('webhook_fluent_lead');
+        if (!isEnabled) {
+            return NextResponse.json({ error: 'Automation disabled' }, { status: 200 });
+        }
+
         // 1. Validate Secret
         const secretHeader = req.headers.get('x-api-secret');
         

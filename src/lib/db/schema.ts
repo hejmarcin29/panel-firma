@@ -1144,6 +1144,8 @@ export const products = pgTable('products', {
 	montageType: text('montage_type').$type<'panel' | 'other'>(),
     // ERP Fields
     source: text('source').$type<'woocommerce' | 'local'>().notNull().default('woocommerce'),
+    wooId: integer('woo_id'), // ID from WooCommerce
+    isSyncEnabled: boolean('is_sync_enabled').default(true), // Auto-sync switch
     unit: text('unit').default('szt'),
     vatRate: integer('vat_rate').default(23),
     purchasePrice: integer('purchase_price'), // Netto in grosz
@@ -1595,6 +1597,12 @@ export const erpProducts = pgTable('erp_products', {
     
     // Media
     imageUrl: text('image_url'),
+
+    // Woo Data
+    price: text('price'),
+    regularPrice: text('regular_price'),
+    salePrice: text('sale_price'),
+    stockQuantity: integer('stock_quantity'),
     
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),

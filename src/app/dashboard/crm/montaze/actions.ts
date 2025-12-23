@@ -819,48 +819,57 @@ export async function updateMontageContactDetails({
     const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') || '';
     const montageUrl = appUrl ? `${appUrl}/dashboard/crm/montaze/${montageId}` : '';
 
+    const isCalendarUpdateEnabled = await isSystemAutomationEnabled('calendar_update');
+    const isCalendarCreateEnabled = await isSystemAutomationEnabled('calendar_create');
+
     if (montage && montage.googleEventId) {
         if (scheduledInstallationAt) {
+            if (isCalendarUpdateEnabled) {
+                const endDate = scheduledInstallationEndAt || new Date(scheduledInstallationAt.getTime() + 60 * 60 * 1000);
+                await updateGoogleCalendarEvent(montage.googleEventId, {
+                    summary: `Montaż: ${trimmedName} (${montage.displayId})`,
+                    description: `Montaż dla klienta: ${trimmedName}\nTelefon: ${normalizedPhone || 'Brak'}\nAdres: ${combinedAddress || 'Brak'}${montageUrl ? `\n\nLink do montażu: ${montageUrl}` : ''}`,
+                    location: combinedAddress || '',
+                    start: { dateTime: scheduledInstallationAt.toISOString() },
+                    end: { dateTime: endDate.toISOString() },
+                });
+            }
+        } else {
+            // If date is removed, maybe delete event? Or keep it?
+            // For now, let's delete it if date is removed
+            if (isCalendarUpdateEnabled) {
+                await deleteGoogleCalendarEvent(montage.googleEventId);
+                await db.update(montages).set({ googleEventId: null }).where(eq(montages.id, montageId));
+            }
+        }
+    } else if (montage && !montage.googleEventId && scheduledInstallationAt) {
+        if (isCalendarCreateEnabled) {
+            // Create new event if it doesn't exist
             const endDate = scheduledInstallationEndAt || new Date(scheduledInstallationAt.getTime() + 60 * 60 * 1000);
-            await updateGoogleCalendarEvent(montage.googleEventId, {
+            
+            const attendees: { email: string }[] = [];
+            if (montage.installerId) {
+                const installer = await db.query.users.findFirst({
+                    where: eq(users.id, montage.installerId),
+                    columns: { email: true }
+                });
+                if (installer?.email) {
+                    attendees.push({ email: installer.email });
+                }
+            }
+
+            const eventId = await createGoogleCalendarEvent({
                 summary: `Montaż: ${trimmedName} (${montage.displayId})`,
                 description: `Montaż dla klienta: ${trimmedName}\nTelefon: ${normalizedPhone || 'Brak'}\nAdres: ${combinedAddress || 'Brak'}${montageUrl ? `\n\nLink do montażu: ${montageUrl}` : ''}`,
                 location: combinedAddress || '',
                 start: { dateTime: scheduledInstallationAt.toISOString() },
                 end: { dateTime: endDate.toISOString() },
+                attendees,
             });
-        } else {
-            // If date is removed, maybe delete event? Or keep it?
-            // For now, let's delete it if date is removed
-            await deleteGoogleCalendarEvent(montage.googleEventId);
-            await db.update(montages).set({ googleEventId: null }).where(eq(montages.id, montageId));
-        }
-    } else if (montage && !montage.googleEventId && scheduledInstallationAt) {
-        // Create new event if it doesn't exist
-        const endDate = scheduledInstallationEndAt || new Date(scheduledInstallationAt.getTime() + 60 * 60 * 1000);
-        
-        const attendees: { email: string }[] = [];
-        if (montage.installerId) {
-             const installer = await db.query.users.findFirst({
-                where: eq(users.id, montage.installerId),
-                columns: { email: true }
-            });
-            if (installer?.email) {
-                attendees.push({ email: installer.email });
+
+            if (eventId) {
+                await db.update(montages).set({ googleEventId: eventId }).where(eq(montages.id, montageId));
             }
-        }
-
-        const eventId = await createGoogleCalendarEvent({
-            summary: `Montaż: ${trimmedName} (${montage.displayId})`,
-            description: `Montaż dla klienta: ${trimmedName}\nTelefon: ${normalizedPhone || 'Brak'}\nAdres: ${combinedAddress || 'Brak'}${montageUrl ? `\n\nLink do montażu: ${montageUrl}` : ''}`,
-            location: combinedAddress || '',
-            start: { dateTime: scheduledInstallationAt.toISOString() },
-            end: { dateTime: endDate.toISOString() },
-            attendees,
-        });
-
-        if (eventId) {
-            await db.update(montages).set({ googleEventId: eventId }).where(eq(montages.id, montageId));
         }
     }
 

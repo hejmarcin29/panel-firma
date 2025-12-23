@@ -6,7 +6,26 @@ import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { requireUser } from "@/lib/auth/session";
 import { logSystemEvent } from "@/lib/logging";
-import { getWooCredentials } from "./import-actions";
+import { inArray } from "drizzle-orm";
+
+export async function bulkUpdateSyncStatus(ids: string[], enabled: boolean) {
+    if (ids.length === 0) return;
+
+    await db.update(erpProducts)
+        .set({ isSyncEnabled: enabled, updatedAt: new Date() })
+        .where(inArray(erpProducts.id, ids));
+
+    revalidatePath('/dashboard/erp/products');
+}
+
+export async function toggleProductSync(id: string, enabled: boolean) {
+    await db.update(erpProducts)
+        .set({ isSyncEnabled: enabled, updatedAt: new Date() })
+        .where(eq(erpProducts.id, id));
+
+    revalidatePath('/dashboard/erp/products');
+}
+
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function createProduct(data: any) {

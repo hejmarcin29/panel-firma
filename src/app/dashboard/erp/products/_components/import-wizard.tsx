@@ -17,6 +17,8 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
+    SelectGroup,
+    SelectLabel,
 } from "@/components/ui/select";
 import {
     Table,
@@ -169,9 +171,19 @@ export function ImportWizard({ existingAttributes }: ImportWizardProps) {
                                                                 <SelectValue placeholder="Wybierz atrybut..." />
                                                             </SelectTrigger>
                                                             <SelectContent>
-                                                                {existingAttributes.map(ea => (
-                                                                    <SelectItem key={ea.id} value={ea.id}>{ea.name}</SelectItem>
-                                                                ))}
+                                                                <SelectGroup>
+                                                                    <SelectLabel>Pola Systemowe</SelectLabel>
+                                                                    <SelectItem value="__sys_width">Szerokość (Width)</SelectItem>
+                                                                    <SelectItem value="__sys_height">Wysokość (Height)</SelectItem>
+                                                                    <SelectItem value="__sys_length">Długość (Length)</SelectItem>
+                                                                    <SelectItem value="__sys_weight">Waga (Weight)</SelectItem>
+                                                                </SelectGroup>
+                                                                <SelectGroup>
+                                                                    <SelectLabel>Atrybuty</SelectLabel>
+                                                                    {existingAttributes.map(ea => (
+                                                                        <SelectItem key={ea.id} value={ea.id}>{ea.name}</SelectItem>
+                                                                    ))}
+                                                                </SelectGroup>
                                                             </SelectContent>
                                                         </Select>
                                                     )}

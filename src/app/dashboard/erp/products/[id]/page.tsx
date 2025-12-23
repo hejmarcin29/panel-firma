@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getProductDetails, getSuppliersList } from "../actions";
 import { ProductPrices } from "../_components/product-prices";
+import { ProductSyncToggle } from "../_components/product-sync-toggle";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -40,6 +41,11 @@ export default async function ProductDetailsPage({ params }: PageProps) {
                         <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>
                             {product.status === 'active' ? 'Aktywny' : 'Archiwum'}
                         </Badge>
+                        <ProductSyncToggle 
+                            productId={product.id} 
+                            initialIsSyncEnabled={product.isSyncEnabled ?? false} 
+                            source={product.source ?? 'local'} 
+                        />
                     </div>
                     <p className="text-muted-foreground mt-1">
                         SKU: <span className="font-mono text-foreground">{product.sku}</span>

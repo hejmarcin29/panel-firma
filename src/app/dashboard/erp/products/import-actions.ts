@@ -109,6 +109,12 @@ export async function importProductsFromWoo(mapping: AttributeMapping = {}) {
                 const [product] = await db.insert(erpProducts).values({
                     name: wooProduct.name,
                     sku: wooProduct.sku || `WOO-${wooProduct.id}`,
+                    wooId: wooProduct.id,
+                    isSyncEnabled: true,
+                    price: wooProduct.price,
+                    regularPrice: wooProduct.regular_price,
+                    salePrice: wooProduct.sale_price,
+                    stockQuantity: wooProduct.stock_quantity,
                     unit: 'szt', // Default
                     type: 'product',
                     description: wooProduct.description.replace(/<[^>]*>?/gm, ''), // Strip HTML
@@ -121,6 +127,11 @@ export async function importProductsFromWoo(mapping: AttributeMapping = {}) {
                     target: erpProducts.sku, // Assuming SKU is unique and we want to update by SKU
                     set: {
                         name: wooProduct.name,
+                        wooId: wooProduct.id,
+                        price: wooProduct.price,
+                        regularPrice: wooProduct.regular_price,
+                        salePrice: wooProduct.sale_price,
+                        stockQuantity: wooProduct.stock_quantity,
                         description: wooProduct.description.replace(/<[^>]*>?/gm, ''),
                         status: wooProduct.status === 'publish' ? 'active' : 'archived',
                         updatedAt: new Date(),
@@ -132,6 +143,34 @@ export async function importProductsFromWoo(mapping: AttributeMapping = {}) {
                     const mapRule = mapping[wooAttr.name] || { action: 'create' }; // Default to create if not mapped
                     
                     if (mapRule.action === 'ignore') continue;
+
+                    // Handle System Fields Mapping (Width, Height, Length, Weight)
+                    if (mapRule.action === 'map' && mapRule.targetId && mapRule.targetId.startsWith('__sys_')) {
+                        const field = mapRule.targetId.replace('__sys_', '');
+                        const valueStr = wooAttr.options[0]; // Assume single value for dimensions
+
+                        if (valueStr) {
+                            // Parse float: replace comma with dot, remove non-numeric chars (except dot and minus)
+                            // Note: This is a simple parser, might need adjustment for complex strings like "120 cm"
+                            const cleanStr = valueStr.replace(',', '.').replace(/[^\d.-]/g, '');
+                            const value = parseFloat(cleanStr);
+
+                            if (!isNaN(value)) {
+                                const updateData: Partial<typeof erpProducts.$inferInsert> = {};
+                                if (field === 'width') updateData.width = value;
+                                if (field === 'height') updateData.height = value;
+                                if (field === 'length') updateData.length = value;
+                                if (field === 'weight') updateData.weight = value;
+
+                                if (Object.keys(updateData).length > 0) {
+                                    await db.update(erpProducts)
+                                        .set(updateData)
+                                        .where(eq(erpProducts.id, product.id));
+                                }
+                            }
+                        }
+                        continue; // Skip attribute creation for this field
+                    }
 
                     let attributeId: string | undefined;
 

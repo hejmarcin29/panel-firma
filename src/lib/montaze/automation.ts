@@ -2,11 +2,28 @@ import 'server-only';
 
 import { appSettingKeys, getAppSetting, setAppSetting } from '@/lib/settings';
 import { type MontageStatus, montageStatuses } from '@/lib/db/schema';
+import { SYSTEM_NOTIFICATIONS } from './notifications';
 
 export type MontageAutomationRule = {
 	checklistItemId: string;
 	targetStatus: MontageStatus;
 };
+
+export async function isSystemAutomationEnabled(id: string): Promise<boolean> {
+    const rawValue = await getAppSetting(appSettingKeys.montageNotifications);
+    const definition = SYSTEM_NOTIFICATIONS.find(n => n.id === id);
+    const defaultEnabled = definition?.defaultEnabled ?? true;
+
+    if (!rawValue) {
+        return defaultEnabled;
+    }
+    try {
+        const settings = JSON.parse(rawValue) as Record<string, boolean>;
+        return settings[id] ?? defaultEnabled;
+    } catch {
+        return defaultEnabled;
+    }
+}
 
 export async function getMontageAutomationRules(): Promise<MontageAutomationRule[]> {
 	const rawValue = await getAppSetting(appSettingKeys.montageAutomation);

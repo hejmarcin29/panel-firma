@@ -11,6 +11,7 @@ import { MONTAGE_ROOT_PREFIX } from '@/lib/r2/constants';
 import { renderToStream } from '@react-pdf/renderer';
 import { ProtocolDocument } from '@/components/documents/protocol-pdf';
 import { format } from 'date-fns';
+import { isSystemAutomationEnabled } from '@/lib/montaze/automation';
 // import { sendEmail } from '@/lib/email'; // Placeholder if email exists
 
 export async function uploadSignature(montageId: string, base64Data: string, type: 'client' | 'installer') {
@@ -60,6 +61,8 @@ export async function submitMontageProtocol(data: {
     installerName: string;
 }) {
     try {
+        const isAutoStatusEnabled = await isSystemAutomationEnabled('auto_status_protocol');
+
         // 1. Update Montage Record
         await db.update(montages).set({
             contractNumber: data.contractNumber,
@@ -73,7 +76,7 @@ export async function submitMontageProtocol(data: {
             },
             clientSignatureUrl: data.clientSignatureUrl,
             installerSignatureUrl: data.installerSignatureUrl,
-            status: 'before_final_invoice', // Move to next stage automatically
+            ...(isAutoStatusEnabled ? { status: 'before_final_invoice' } : {}), // Move to next stage automatically if enabled
         }).where(eq(montages.id, data.montageId));
 
         // 2. Generate PDF
