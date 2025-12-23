@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from "@/lib/db";
-import { erpProducts, erpAttributes, erpAttributeOptions, erpProductAttributes, erpCategories } from "@/lib/db/schema";
+import { erpProducts, erpAttributes, erpAttributeOptions, erpProductAttributes } from "@/lib/db/schema";
 import { getAppSettings, appSettingKeys } from "@/lib/settings";
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";

@@ -66,7 +66,7 @@ export function ImportWizard({ existingAttributes }: ImportWizardProps) {
             } else {
                 toast.error(result.error || "Nie udało się pobrać atrybutów z WP");
             }
-        } catch (error) {
+        } catch {
             toast.error("Błąd połączenia");
         } finally {
             setIsLoading(false);
@@ -85,7 +85,7 @@ export function ImportWizard({ existingAttributes }: ImportWizardProps) {
                 toast.error(result.error || "Błąd importu");
                 setStep('map'); // Go back on error
             }
-        } catch (error) {
+        } catch {
             toast.error("Wystąpił błąd krytyczny");
             setStep('map');
         }
@@ -147,7 +147,7 @@ export function ImportWizard({ existingAttributes }: ImportWizardProps) {
                                                 <TableCell>
                                                     <Select 
                                                         value={mapping[wa.name]?.action} 
-                                                        onValueChange={(val: any) => updateMapping(wa.name, { action: val })}
+                                                        onValueChange={(val) => updateMapping(wa.name, { action: val as 'create' | 'map' | 'ignore' })}
                                                     >
                                                         <SelectTrigger className="w-[140px]">
                                                             <SelectValue />
