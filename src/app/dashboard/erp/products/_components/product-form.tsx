@@ -53,12 +53,18 @@ interface Attribute {
     options: { id: string; value: string; order: number | null }[];
 }
 
+interface Category {
+    id: string;
+    name: string;
+}
+
 interface ProductFormProps {
     onSuccess?: () => void;
     availableAttributes?: Attribute[];
+    availableCategories?: Category[];
 }
 
-export function ProductForm({ onSuccess, availableAttributes = [] }: ProductFormProps) {
+export function ProductForm({ onSuccess, availableAttributes = [], availableCategories = [] }: ProductFormProps) {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
 
@@ -109,12 +115,12 @@ export function ProductForm({ onSuccess, availableAttributes = [] }: ProductForm
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-2xl">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                         control={form.control}
                         name="name"
                         render={({ field }) => (
-                            <FormItem className="col-span-2">
+                            <FormItem className="col-span-1 md:col-span-2">
                                 <FormLabel>Nazwa Produktu</FormLabel>
                                 <FormControl>
                                     <Input placeholder="np. Panel Dąb Naturalny" {...field} />
@@ -184,6 +190,31 @@ export function ProductForm({ onSuccess, availableAttributes = [] }: ProductForm
                             </FormItem>
                         )}
                     />
+
+                    <FormField
+                        control={form.control}
+                        name="categoryId"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Kategoria</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Wybierz kategorię" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        {availableCategories.map((cat) => (
+                                            <SelectItem key={cat.id} value={cat.id}>
+                                                {cat.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
                 </div>
 
                 <FormField
@@ -200,7 +231,7 @@ export function ProductForm({ onSuccess, availableAttributes = [] }: ProductForm
                     )}
                 />
 
-                <div className="grid grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                      <FormField
                         control={form.control}
                         name="length"
@@ -267,7 +298,8 @@ export function ProductForm({ onSuccess, availableAttributes = [] }: ProductForm
                                 onClick={() => append({ attributeId: "", value: "", optionId: "" })}
                             >
                                 <Plus className="h-4 w-4 mr-2" />
-                                Dodaj Atrybut
+                                <span className="hidden sm:inline">Dodaj Atrybut</span>
+                                <span className="sm:hidden">Dodaj</span>
                             </Button>
                         </div>
                     </CardHeader>
@@ -277,12 +309,12 @@ export function ProductForm({ onSuccess, availableAttributes = [] }: ProductForm
                             const selectedAttr = getAttribute(selectedAttrId);
 
                             return (
-                                <div key={field.id} className="flex gap-4 items-start">
+                                <div key={field.id} className="flex flex-col sm:flex-row gap-4 items-start border-b pb-4 sm:border-0 sm:pb-0 last:border-0">
                                     <FormField
                                         control={form.control}
                                         name={`attributes.${index}.attributeId`}
                                         render={({ field }) => (
-                                            <FormItem className="flex-1">
+                                            <FormItem className="flex-1 w-full">
                                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                     <FormControl>
                                                         <SelectTrigger>
@@ -303,7 +335,7 @@ export function ProductForm({ onSuccess, availableAttributes = [] }: ProductForm
                                     />
 
                                     {selectedAttr && (
-                                        <div className="flex-1">
+                                        <div className="flex-1 w-full">
                                             {selectedAttr.type === 'select' ? (
                                                 <FormField
                                                     control={form.control}
@@ -353,6 +385,7 @@ export function ProductForm({ onSuccess, availableAttributes = [] }: ProductForm
                                         type="button"
                                         variant="ghost"
                                         size="icon"
+                                        className="self-end sm:self-auto"
                                         onClick={() => remove(index)}
                                     >
                                         <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
@@ -368,7 +401,7 @@ export function ProductForm({ onSuccess, availableAttributes = [] }: ProductForm
                     </CardContent>
                 </Card>
 
-                <Button type="submit" disabled={isLoading}>
+                <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
                     {isLoading ? "Zapisywanie..." : "Utwórz Produkt"}
                 </Button>
             </form>

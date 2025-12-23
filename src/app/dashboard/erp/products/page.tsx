@@ -1,19 +1,23 @@
 import { db } from "@/lib/db";
-import { erpProducts } from "@/lib/db/schema";
+import { erpProducts, erpCategories } from "@/lib/db/schema";
 import { desc } from "drizzle-orm";
 import { ProductsTable } from "./_components/products-table";
 import { ProductSheet } from "./_components/product-sheet";
 import { getAttributes } from "../attributes/actions";
+import { ImportWizard } from "./_components/import-wizard";
 
 export default async function ProductsPage() {
-    const [products, attributes] = await Promise.all([
+    const [products, attributes, categories] = await Promise.all([
         db.query.erpProducts.findMany({
             orderBy: [desc(erpProducts.createdAt)],
             with: {
                 category: true,
             }
         }),
-        getAttributes()
+        getAttributes(),
+        db.query.erpCategories.findMany({
+            orderBy: [desc(erpCategories.name)],
+        })
     ]);
 
     return (
@@ -25,7 +29,10 @@ export default async function ProductsPage() {
                         Lista wszystkich produktów i usług w systemie.
                     </p>
                 </div>
-                <ProductSheet attributes={attributes} />
+                <div className="flex gap-2">
+                    <ImportWizard existingAttributes={attributes} />
+                    <ProductSheet attributes={attributes} categories={categories} />
+                </div>
             </div>
 
             <ProductsTable data={products} />

@@ -20,11 +20,17 @@ interface Attribute {
     options: { id: string; value: string; order: number | null }[];
 }
 
-interface ProductSheetProps {
-    attributes?: Attribute[];
+interface Category {
+    id: string;
+    name: string;
 }
 
-export function ProductSheet({ attributes = [] }: ProductSheetProps) {
+interface ProductSheetProps {
+    attributes?: Attribute[];
+    categories?: Category[];
+}
+
+export function ProductSheet({ attributes = [], categories = [] }: ProductSheetProps) {
     const [open, setOpen] = useState(false);
 
     return (
@@ -43,7 +49,11 @@ export function ProductSheet({ attributes = [] }: ProductSheetProps) {
                     </SheetDescription>
                 </SheetHeader>
                 <div className="mt-6">
-                    <ProductForm onSuccess={() => setOpen(false)} availableAttributes={attributes} />
+                    <ProductForm 
+                        onSuccess={() => setOpen(false)} 
+                        availableAttributes={attributes} 
+                        availableCategories={categories}
+                    />
                 </div>
             </SheetContent>
         </Sheet>
