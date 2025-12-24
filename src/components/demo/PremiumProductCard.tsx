@@ -2,6 +2,7 @@
 
 import React, { useRef, useState, useEffect } from "react"
 import { motion, useMotionTemplate, useMotionValue, useSpring, useTransform, AnimatePresence } from "framer-motion"
+import Image from "next/image"
 import { ArrowRight, Maximize2, Ruler, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -164,23 +165,27 @@ export function PremiumProductCard() {
             className="absolute inset-0 h-full w-full bg-neutral-800"
             layout
           >
-             <div className="absolute inset-0 bg-black/40 z-10" />
              <AnimatePresence mode="wait">
-                <motion.img 
+                <motion.div 
                     key={activeVariant.id}
-                    src={activeVariant.image}
-                    alt={activeVariant.name}
                     initial={{ opacity: 0, scale: 1.1 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="absolute inset-0 h-full w-full object-cover"
-                    onError={() => {
-                        // e.currentTarget.style.display = 'none';
-                        console.error("Image failed to load:", activeVariant.image);
-                    }}
-                />
+                    className="absolute inset-0 h-full w-full"
+                >
+                    <Image
+                        src={activeVariant.image}
+                        alt={activeVariant.name}
+                        fill
+                        className="object-cover"
+                        priority
+                        sizes="100vw"
+                    />
+                </motion.div>
              </AnimatePresence>
+             
+             <div className="absolute inset-0 bg-black/40 z-10 pointer-events-none" />
           </motion.div>
 
           {/* Glare Effect (Only in card mode) */}

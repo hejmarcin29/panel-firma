@@ -7,7 +7,7 @@ import type { Montage } from "../../types";
 
 const STAGES = [
   { id: "lead", label: "Nowy Lead" },
-  { id: "before_measurement", label: "Przed Pomiorem" },
+  { id: "before_measurement", label: "Przed Pomiarem" },
   { id: "before_first_payment", label: "Wycena / Zaliczka" },
   { id: "before_installation", label: "Oczekiwanie na Montaż" },
   { id: "before_skirting_installation", label: "Montaż Listew" },
