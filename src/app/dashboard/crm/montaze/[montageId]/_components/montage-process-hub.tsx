@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { Check } from "lucide-react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { Check, ArrowRight, History, FileText, Ruler, ClipboardCheck, Truck, Hammer, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import type { Montage, StatusOption } from "../../types";
 import { updateMontageStatus } from "../../actions";
 import {
@@ -20,6 +21,8 @@ interface MontageProcessHubProps {
 
 export function MontageProcessHub({ montage, stages }: MontageProcessHubProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
   const [pending, startTransition] = useTransition();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const currentStageRef = useRef<HTMLDivElement>(null);
@@ -29,6 +32,18 @@ export function MontageProcessHub({ montage, stages }: MontageProcessHubProps) {
 
   const currentStageIndex = visibleStages.findIndex(s => s.value === montage.status);
 
+  const getStageIcon = (statusId: string) => {
+    switch (statusId) {
+      case 'lead': return FileText;
+      case 'before_measurement': return Ruler;
+      case 'before_first_payment': return ClipboardCheck;
+      case 'before_installation': return Truck;
+      case 'before_final_invoice': return Hammer;
+      case 'completed': return CheckCircle2;
+      default: return Check;
+    }
+  };
+
   const handleStageClick = (value: string) => {
     if (value === montage.status || pending) return;
     
@@ -36,6 +51,12 @@ export function MontageProcessHub({ montage, stages }: MontageProcessHubProps) {
         await updateMontageStatus({ montageId: montage.id, status: value });
         router.refresh();
     });
+  };
+
+  const handleViewTimeline = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", "workflow");
+    router.push(`${pathname}?${params.toString()}`);
   };
 
   useEffect(() => {
@@ -59,6 +80,20 @@ export function MontageProcessHub({ montage, stages }: MontageProcessHubProps) {
 
   return (
     <div className="w-full bg-white border rounded-xl shadow-sm overflow-hidden">
+      <div className="flex items-center justify-between px-3 py-2 border-b bg-gray-50/50">
+          <div className="flex items-center gap-2">
+            <History className="w-3.5 h-3.5 text-muted-foreground" />
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Etapy realizacji</span>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-6 text-xs gap-1 hover:bg-white hover:text-blue-600" 
+            onClick={handleViewTimeline}
+          >
+             Przebieg <ArrowRight className="w-3 h-3" />
+          </Button>
+      </div>
       <div 
         ref={scrollContainerRef}
         className="overflow-x-auto scrollbar-hide py-3 px-2 md:py-4 md:px-8 flex items-center gap-4 md:gap-0 md:justify-between relative"
@@ -71,6 +106,7 @@ export function MontageProcessHub({ montage, stages }: MontageProcessHubProps) {
         {visibleStages.map((stage, index) => {
           const isCompleted = index < currentStageIndex;
           const isCurrent = index === currentStageIndex;
+          const Icon = getStageIcon(stage.value);
           
           return (
             <Tooltip key={stage.value}>
@@ -90,7 +126,7 @@ export function MontageProcessHub({ montage, stages }: MontageProcessHubProps) {
                         isCurrent ? "border-blue-600 text-blue-600 shadow-[0_0_0_4px_rgba(37,99,235,0.1)]" : 
                         "border-gray-200 text-gray-300 group-hover:border-gray-300"
                     )}>
-                        {isCompleted ? <Check className="w-3 h-3 md:w-5 md:h-5" /> : <span className="text-[10px] md:text-sm font-medium">{index + 1}</span>}
+                        {isCompleted ? <Check className="w-3 h-3 md:w-5 md:h-5" /> : <Icon className="w-3 h-3 md:w-5 md:h-5" />}
                     </div>
                     
                     <div className="text-center">
