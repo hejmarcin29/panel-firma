@@ -27,7 +27,7 @@ export function CRMNavigation() {
 
     return (
         <>
-            <div className="flex items-center justify-between border-b pb-4">
+            <div className="hidden md:flex items-center justify-between border-b pb-4">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight">Centrum CRM</h1>
                     <p className="text-muted-foreground">
@@ -36,7 +36,7 @@ export function CRMNavigation() {
                 </div>
             </div>
 
-            <div className="flex space-x-2 border-b pb-2 overflow-x-auto">
+            <div className="hidden md:flex space-x-2 border-b pb-2 overflow-x-auto">
                 <Link href="/dashboard/crm">
                     <Button 
                         variant={pathname === '/dashboard/crm' ? "secondary" : "ghost"} 

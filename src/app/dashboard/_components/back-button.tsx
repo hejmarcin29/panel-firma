@@ -22,6 +22,7 @@ export function BackButton() {
     }
 
     if (pathname?.startsWith('/dashboard/orders/')) return '/dashboard/orders';
+    if (pathname?.startsWith('/dashboard/crm/montaze/ekipy/')) return '/dashboard/crm/montaze/ekipy';
     if (pathname?.startsWith('/dashboard/crm/montaze/')) return '/dashboard/crm/montaze';
     if (pathname?.startsWith('/dashboard/crm/customers/')) return '/dashboard/crm/customers';
     if (pathname?.startsWith('/dashboard/crm/oferty/')) return '/dashboard/crm/oferty';
@@ -32,7 +33,35 @@ export function BackButton() {
 
   const backPath = getBackPath();
 
+  // Smart Back Logic for CRM:
+  // Prefer router.back() to preserve scroll/filters, but fallback to backPath if history is empty (e.g. new tab)
+  const handleSmartBack = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+        router.back();
+    } else if (backPath) {
+        router.push(backPath);
+    } else {
+        router.back();
+    }
+  };
+
+  const isCrmPath = pathname?.startsWith('/dashboard/crm/');
+
   if (backPath) {
+    if (isCrmPath) {
+        return (
+            <Button 
+                variant="ghost" 
+                size="sm" 
+                className="gap-1 text-muted-foreground hover:text-foreground"
+                onClick={handleSmartBack}
+            >
+                <ChevronLeft className="h-4 w-4" />
+                Wstecz
+            </Button>
+        );
+    }
+
     return (
       <Button 
           variant="ghost" 
