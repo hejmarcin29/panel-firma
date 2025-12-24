@@ -12,6 +12,10 @@ Provide project context and coding guidelines that AI should follow when generat
   - Stosuj subtelne animacje wejścia (fade-in, slide-up, staggered children) dla list, kart i widgetów (np. przy użyciu `framer-motion` lub `tailwindcss-animate`).
   - Elementy interaktywne powinny dawać natychmiastowy feedback wizualny.
   - Unikaj "sztywnych" przejść; interfejs ma "oddychać".
+- **Responsywność (Desktop & Mobile):**
+  - Każdy widok **MUSI** działać poprawnie i wyglądać estetycznie zarówno na desktopie, jak i na urządzeniach mobilnych.
+  - Nie akceptujemy rozwiązań "tylko desktop" lub "tylko mobile" (chyba że specyfika funkcji to wymusza).
+  - Testuj (symuluj) widoki na małych ekranach (iPhone SE/12) oraz dużych monitorach.
 
 ## Mobile UI Patterns (Mobile-First)
 - **Edytory i Listy Szczegółowe:**

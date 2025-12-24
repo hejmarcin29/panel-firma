@@ -26,7 +26,7 @@ import { uploadMontageObject } from '@/lib/r2/storage';
 import { MontageCategories, MontageSubCategories } from '@/lib/r2/constants';
 import { getMontageChecklistTemplates } from '@/lib/montaze/checklist';
 import { DEFAULT_MONTAGE_CHECKLIST } from '@/lib/montaze/checklist-shared';
-import { getMontageAutomationRules } from '@/lib/montaze/automation';
+import { getMontageAutomationRules, isSystemAutomationEnabled } from '@/lib/montaze/automation';
 import { logSystemEvent } from '@/lib/logging';
 import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
 import type { MaterialsEditHistoryEntry } from './types';

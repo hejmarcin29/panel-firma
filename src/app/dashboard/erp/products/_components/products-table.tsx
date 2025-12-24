@@ -32,7 +32,7 @@ interface Product {
     type: string | null;
     status: string | null;
     category: { name: string } | null;
-    source: 'woocommerce' | 'local';
+    source: string | null;
     isSyncEnabled: boolean | null;
 }
 

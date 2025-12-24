@@ -1604,6 +1604,10 @@ export const erpProducts = pgTable('erp_products', {
     salePrice: text('sale_price'),
     stockQuantity: integer('stock_quantity'),
     
+    source: text('source').default('local'), // local, woocommerce
+    isSyncEnabled: boolean('is_sync_enabled').default(false),
+    wooId: integer('woo_id'),
+
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
 });

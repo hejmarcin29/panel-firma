@@ -10,7 +10,7 @@ import { Loader2 } from 'lucide-react';
 interface ProductSyncToggleProps {
   productId: string;
   initialIsSyncEnabled: boolean;
-  source: 'local' | 'woocommerce';
+  source: string;
 }
 
 export function ProductSyncToggle({ productId, initialIsSyncEnabled, source }: ProductSyncToggleProps) {

@@ -214,4 +214,7 @@ export function MontagePipelineCard({ montage, threatDays, alertSettings }: Prop
                         </div>
                     )}
                 </div>
+            </Card>
+        </Link>
+    );
 }

@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 import { requireUser } from "@/lib/auth/session";
 import { logSystemEvent } from "@/lib/logging";
 import { inArray } from "drizzle-orm";
+import { getWooCredentials } from "./import-actions";
 
 export async function bulkUpdateSyncStatus(ids: string[], enabled: boolean) {
     if (ids.length === 0) return;
