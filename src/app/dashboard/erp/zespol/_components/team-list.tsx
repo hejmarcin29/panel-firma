@@ -95,6 +95,7 @@ export function TeamList({ members }: { members: TeamMember[] }) {
                         <TabsTrigger value="measurer">Pomiary</TabsTrigger>
                         <TabsTrigger value="installer">Montaże</TabsTrigger>
                         <TabsTrigger value="architect">Architekci</TabsTrigger>
+                        <TabsTrigger value="partner">Partnerzy</TabsTrigger>
                     </TabsList>
                 </Tabs>
             </div>

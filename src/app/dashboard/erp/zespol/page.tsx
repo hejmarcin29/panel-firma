@@ -3,6 +3,7 @@ import { Users } from 'lucide-react';
 import { getTeamMembers } from './actions';
 import { TeamList } from './_components/team-list';
 import { AddEmployeeDialog } from './_components/add-employee-dialog';
+import { PartnerLinksDialog } from './_components/partner-links-dialog';
 import { requireUser } from '@/lib/auth/session';
 
 export const dynamic = 'force-dynamic';
@@ -26,7 +27,10 @@ export default async function TeamPage() {
                         Zarządzaj dostępem i rolami pracowników w systemie. Przeglądaj profile, uprawnienia i historię aktywności.
                     </p>
                 </div>
-                {isAdmin && <AddEmployeeDialog />}
+                <div className="flex gap-2">
+                    {isAdmin && <PartnerLinksDialog />}
+                    {isAdmin && <AddEmployeeDialog />}
+                </div>
             </div>
 
             <Suspense fallback={<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

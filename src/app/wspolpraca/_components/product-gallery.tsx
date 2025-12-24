@@ -3,11 +3,11 @@
 import { motion } from 'framer-motion';
 
 const products = [
-    { id: 1, name: 'Dąb Naturalny', type: 'Winyl', image: 'https://images.unsplash.com/photo-1581858726768-7589d36dc976?q=80&w=1000&auto=format&fit=crop', size: 'large' },
-    { id: 2, name: 'Beton Architektoniczny', type: 'Winyl', image: 'https://images.unsplash.com/photo-1516455590571-18256e5bb9ff?q=80&w=1000&auto=format&fit=crop', size: 'small' },
-    { id: 3, name: 'Jodełka Klasyczna', type: 'Drewno', image: 'https://images.unsplash.com/photo-1532323544230-7191fd51bc1b?q=80&w=1000&auto=format&fit=crop', size: 'small' },
-    { id: 4, name: 'Marmur Carrara', type: 'Spiek', image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=1000&auto=format&fit=crop', size: 'large' },
-    { id: 5, name: 'Orzech Amerykański', type: 'Winyl', image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=1000&auto=format&fit=crop', size: 'small' },
+    { id: 1, name: 'Jagerndorf', type: 'Jodełka Klasyczna', image: 'https://primepodloga.pl/wp-content/uploads/2025/01/bali-e1750747884395-794x630.jpg', size: 'large' },
+    { id: 2, name: 'Sand Maple', type: 'Jodełka Klasyczna', image: 'https://primepodloga.pl/wp-content/uploads/2025/01/SAND-MAPLE-1-e1750747931920-840x630.jpg', size: 'small' },
+    { id: 3, name: 'Korfu', type: 'Jodełka Francuska', image: 'https://primepodloga.pl/wp-content/uploads/2025/01/KORFU-840x630.jpg', size: 'small' },
+    { id: 4, name: 'Fresh Pine', type: 'Deska Winylowa', image: 'https://primepodloga.pl/wp-content/uploads/2025/01/Fresh-Pine-.jpg.webp', size: 'large' },
+    { id: 5, name: 'Shepard Chestnut', type: 'Jodełka Klasyczna', image: 'https://primepodloga.pl/wp-content/uploads/2025/01/CHEPARD-CHESTNUT_sklep-e1750747965636-794x630.jpeg', size: 'small' },
 ];
 
 export function ProductGallery() {
