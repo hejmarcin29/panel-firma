@@ -34,6 +34,7 @@ import { MontageClientInfo } from './_components/montage-client-info';
 import { MontageDetailsLayout } from './_components/montage-details-layout';
 import { ConvertLeadDialog } from './_components/convert-lead-dialog';
 import { InstallerMontageView } from './_components/installer-montage-view';
+import { MontageProcessHub } from './_components/montage-process-hub';
 
 interface MontageViewProps {
     montageId: string;
@@ -126,7 +127,12 @@ export function MontageView({ montageId, initialData, portalEnabled }: MontageVi
     return (
         <div className="flex min-h-screen flex-col bg-muted/10">
             <MontageDetailsLayout 
-                header={<MontageHeader montage={montage} statusOptions={statusOptions} userRoles={userRoles} />}
+                header={
+                    <div className="space-y-4 pb-4 px-4 md:px-6 pt-4 md:pt-6">
+                        <MontageHeader montage={montage} statusOptions={statusOptions} userRoles={userRoles} />
+                        <MontageProcessHub montage={montage} logs={logs} />
+                    </div>
+                }
                 clientCard={<MontageClientCard montage={montage} userRoles={userRoles} installers={installers} measurers={measurers} architects={architects} portalEnabled={portalEnabled} />}
                 materialCard={
                     <div className="space-y-6">
