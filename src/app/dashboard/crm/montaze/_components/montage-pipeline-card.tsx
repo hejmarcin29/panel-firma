@@ -1,36 +1,18 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Phone, Mail, MapPin, Calendar, AlertCircle, CheckSquare, MessageSquare, User } from 'lucide-react';
+import { Phone, Mail, MapPin, Calendar, CheckSquare, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
 
 import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
 
 import type { Montage, StatusOption, AlertSettings } from '../types';
 import { formatScheduleRange } from '../utils';
 
 function countCompleted(tasks: Montage['tasks']): number {
 	return tasks.filter((task) => task.completed).length;
-}
-
-function formatTimestamp(value: Montage['updatedAt']) {
-	if (!value) {
-		return 'brak danych';
-	}
-
-	const date = value instanceof Date ? value : new Date(Number(value));
-	if (Number.isNaN(date.getTime())) {
-		return 'brak danych';
-	}
-
-	return new Intl.RelativeTimeFormat('pl', { numeric: 'auto' }).format(
-		Math.round((date.getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
-		'day',
-	);
 }
 
 function initials(name: string) {
@@ -53,7 +35,6 @@ export function MontagePipelineCard({ montage, threatDays, alertSettings }: Prop
 	const completedTasks = useMemo(() => countCompleted(montage.tasks), [montage.tasks]);
 	const totalTasks = montage.tasks.length;
     const hasClientInfo = Boolean(montage.clientInfo?.trim());
-	const latestUpdate = formatTimestamp(montage.updatedAt);
 	const billingAddress = montage.billingAddress;
 	const installationAddress = montage.installationAddress;
 	const addressLine = installationAddress || billingAddress;

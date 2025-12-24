@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SmartStepperVariant } from "./_components/variant-1-stepper";
 import { VerticalFeedVariant } from "./_components/variant-2-feed";
@@ -58,7 +57,7 @@ export default function ProcessHubLabPage() {
           <h3 className="font-semibold text-blue-900 mb-2">Jak testować?</h3>
           <p className="text-sm text-blue-800 mb-4">
             Otwórz ten widok na telefonie (użyj DevTools w przeglądarce lub wejdź z telefonu).
-            Zwróć uwagę na czytelność "gdzie jestem" i łatwość dostępu do historii.
+            Zwróć uwagę na czytelność &quot;gdzie jestem&quot; i łatwość dostępu do historii.
           </p>
           <div className="text-xs text-blue-600">
             Rekomendacja AI: <strong>Wariant 2 (Vertical Feed)</strong> dla najlepszego balansu.

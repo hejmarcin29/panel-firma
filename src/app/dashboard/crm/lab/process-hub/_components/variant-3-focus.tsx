@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { History, ArrowRight, CheckCircle2, AlertTriangle, X } from "lucide-react";
+import { History, ArrowRight, CheckCircle2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import {
   Sheet,
   SheetContent,
@@ -24,7 +23,7 @@ export function FocusHubVariant() {
       <div className="text-center mb-8">
         <h3 className="text-lg font-semibold">Wariant 3: Focus Hub</h3>
         <p className="text-muted-foreground text-sm">
-          Minimalistyczny widget "Next Action" + Drawer z historią.
+          Minimalistyczny widget &quot;Next Action&quot; + Drawer z historią.
         </p>
       </div>
 

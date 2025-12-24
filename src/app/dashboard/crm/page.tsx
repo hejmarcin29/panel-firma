@@ -2,10 +2,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { Users, Hammer, FileText, ArrowRight, Plus, Search } from "lucide-react";
+import { Users, Hammer, FileText, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 const container = {
   hidden: { opacity: 0 },

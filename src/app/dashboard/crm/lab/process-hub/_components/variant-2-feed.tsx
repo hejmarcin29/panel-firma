@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import { Check, Clock, AlertCircle, FileText, ArrowRight } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MOCK_STAGES, MOCK_LOGS } from "./data";
@@ -13,7 +12,7 @@ export function VerticalFeedVariant() {
       <div className="text-center mb-6">
         <h3 className="text-lg font-semibold">Wariant 2: Vertical Action Feed</h3>
         <p className="text-muted-foreground text-sm">
-          Pionowa oś czasu z wyróżnioną kartą "Tu i Teraz".
+          Pionowa oś czasu z wyróżnioną kartą &quot;Tu i Teraz&quot;.
         </p>
       </div>
 
@@ -21,7 +20,7 @@ export function VerticalFeedVariant() {
         {/* Vertical Line */}
         <div className="absolute left-6 top-4 bottom-4 w-0.5 bg-gray-200 -z-10" />
 
-        {MOCK_STAGES.map((stage, index) => {
+        {MOCK_STAGES.map((stage) => {
           const isCompleted = stage.status === "completed";
           const isCurrent = stage.status === "current";
           const stageLogs = MOCK_LOGS.filter(l => l.stageId === stage.id);

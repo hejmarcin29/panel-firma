@@ -33,7 +33,7 @@ export function ProductSyncToggle({ productId, initialIsSyncEnabled, source }: P
         // Revert state if failed
         setIsSyncEnabled(!checked);
       }
-    } catch (error) {
+    } catch {
       toast.error('Wystąpił błąd');
       // Revert state if failed
       setIsSyncEnabled(!checked);
