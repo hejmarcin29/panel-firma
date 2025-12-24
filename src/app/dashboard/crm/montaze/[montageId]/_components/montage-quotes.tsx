@@ -10,8 +10,9 @@ import { createQuote } from '@/app/dashboard/crm/oferty/actions';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import type { Montage } from '../../types';
+import { ProtocolWizard } from './protocol/protocol-wizard';
 
-export function MontageQuotes({ montageId, quotes }: { montageId: string, quotes: Montage['quotes'] }) {
+export function MontageQuotes({ montageId, quotes, montage, userRoles }: { montageId: string, quotes: Montage['quotes'], montage: Montage, userRoles: string[] }) {
     const router = useRouter();
 
     const handleCreate = async () => {
@@ -24,14 +25,31 @@ export function MontageQuotes({ montageId, quotes }: { montageId: string, quotes
         }
     };
 
+    const acceptedQuote = montage.quotes?.find(q => q.status === 'accepted') || montage.quotes?.[0];
+    const defaultIsHousingVat = acceptedQuote 
+        ? acceptedQuote.items.some(i => i.vatRate === 8) 
+        : true;
+
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h3 className="text-lg font-medium">Oferty do zlecenia</h3>
-                <Button onClick={handleCreate}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Nowa Oferta
-                </Button>
+                <div className="flex gap-2">
+                    <ProtocolWizard 
+                        montageId={montage.id}
+                        clientName={montage.clientName}
+                        installerName={userRoles.includes('installer') ? 'Ja' : 'Montażysta'}
+                        defaultLocation={montage.installationCity || ''}
+                        contractNumber={montage.contractNumber || ''}
+                        contractDate={montage.contractDate ? new Date(montage.contractDate as string) : null}
+                        defaultIsHousingVat={defaultIsHousingVat}
+                        onComplete={() => router.refresh()}
+                    />
+                    <Button onClick={handleCreate}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Nowa Oferta
+                    </Button>
+                </div>
             </div>
 
             <div className="grid gap-4">

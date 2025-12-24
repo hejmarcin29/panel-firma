@@ -130,7 +130,7 @@ export function MontageView({ montageId, initialData, portalEnabled }: MontageVi
                 header={
                     <div className="space-y-4 pb-4 px-4 md:px-6 pt-4 md:pt-6">
                         <MontageHeader montage={montage} statusOptions={statusOptions} userRoles={userRoles} />
-                        <MontageProcessHub montage={montage} />
+                        <MontageProcessHub montage={montage} stages={statusOptions} />
                     </div>
                 }
                 clientCard={<MontageClientCard montage={montage} userRoles={userRoles} installers={installers} measurers={measurers} architects={architects} portalEnabled={portalEnabled} />}
@@ -160,7 +160,7 @@ export function MontageView({ montageId, initialData, portalEnabled }: MontageVi
                     history: !isInstaller ? <MontageHistoryTab montage={montage} logs={logs} /> : undefined,
                     workflow: <MontageWorkflowTab montage={montage} statusOptions={statusOptions} installers={installers} measurers={measurers} userRoles={userRoles} />,
                     measurement: <MontageMeasurementTab montage={montage} userRoles={userRoles} />,
-                    quotes: !isInstaller ? <MontageQuotes montageId={montage.id} quotes={montage.quotes} /> : undefined,
+                    quotes: !isInstaller ? <MontageQuotes montageId={montage.id} quotes={montage.quotes} montage={montage} userRoles={userRoles} /> : undefined,
                     settlement: <MontageSettlementTab montage={montage} userRoles={userRoles} />,
                     tasks: <MontageTasksTab montage={montage} />,
                     gallery: <MontageGalleryTab montage={montage} userRoles={userRoles} />,

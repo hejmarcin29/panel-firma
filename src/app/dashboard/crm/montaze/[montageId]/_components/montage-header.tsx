@@ -110,18 +110,8 @@ export function MontageHeader({ montage, statusOptions, userRoles = ['admin'] }:
           </div>
         </div>
 
-        <div className="flex items-center gap-2">            {showProtocolButton && (
-                <ProtocolWizard 
-                    montageId={montage.id}
-                    clientName={montage.clientName}
-                    installerName={userRoles.includes('installer') ? 'Ja' : 'Montażysta'}
-                    defaultLocation={montage.installationCity || ''}
-                    contractNumber={montage.contractNumber || ''}
-                    contractDate={montage.contractDate ? new Date(montage.contractDate as string) : null}
-                    defaultIsHousingVat={defaultIsHousingVat}
-                    onComplete={() => router.refresh()}
-                />
-            )}          {isMobile && (
+        <div className="flex items-center gap-2">
+          {isMobile && (
              <div className="flex gap-1">
                 {montage.contactPhone && (
                     <Button size="icon" variant="outline" asChild>
