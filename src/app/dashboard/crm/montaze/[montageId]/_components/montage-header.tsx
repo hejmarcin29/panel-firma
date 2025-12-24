@@ -7,13 +7,6 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
@@ -136,36 +129,7 @@ export function MontageHeader({ montage, statusOptions, userRoles = ['admin'] }:
              </div>
           )}
 
-            <Select
-                value={montage.status}
-                onValueChange={handleStatusChange}
-                disabled={pending || !canEditStatus}
-            >
-                <SelectTrigger className={cn("w-[180px] hidden sm:flex", isMobile && "w-[140px] flex", (pending || !canEditStatus) && "opacity-50")}>
-                <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                {statusOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                    <div className="flex items-center gap-2">
-                        <div
-                        className={cn(
-                            "h-2 w-2 rounded-full",
-                            option.value === "before_final_invoice" ? "bg-green-500" :
-                            option.value === "before_installation" ? "bg-blue-500" :
-                            option.value === "before_first_payment" ? "bg-yellow-500" :
-                            option.value === "before_measurement" ? "bg-orange-500" :
-                            "bg-slate-300"
-                        )}
-                        />
-                        {option.label}
-                    </div>
-                    </SelectItem>
-                ))}
-                </SelectContent>
-            </Select>
-
-          {canDelete && (
+          {(canDelete || canEditStatus) && (
             <>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -174,39 +138,51 @@ export function MontageHeader({ montage, statusOptions, userRoles = ['admin'] }:
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuItem 
-                            className="text-red-600 focus:text-red-600 focus:bg-red-50"
-                            onClick={() => setShowDeleteDialog(true)}
-                        >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Usuń montaż
-                        </DropdownMenuItem>
+                        {canEditStatus && montage.status !== 'cancelled' && (
+                             <DropdownMenuItem 
+                                onClick={() => handleStatusChange('cancelled')}
+                                disabled={pending}
+                            >
+                                Anuluj montaż
+                            </DropdownMenuItem>
+                        )}
+                        {canDelete && (
+                            <DropdownMenuItem 
+                                className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                                onClick={() => setShowDeleteDialog(true)}
+                            >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Usuń montaż
+                            </DropdownMenuItem>
+                        )}
                     </DropdownMenuContent>
                 </DropdownMenu>
 
-                <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Czy na pewno chcesz usunąć ten montaż?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                Montaż zostanie przeniesiony do kosza. Będziesz mógł go przywrócić przez 365 dni w ustawieniach.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel disabled={isDeleting}>Anuluj</AlertDialogCancel>
-                            <AlertDialogAction
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    handleDelete();
-                                }}
-                                className="bg-red-600 hover:bg-red-700"
-                                disabled={isDeleting}
-                            >
-                                {isDeleting ? "Usuwanie..." : "Usuń"}
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
+                {canDelete && (
+                    <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Czy na pewno chcesz usunąć ten montaż?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Montaż zostanie przeniesiony do kosza. Będziesz mógł go przywrócić przez 365 dni w ustawieniach.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel disabled={isDeleting}>Anuluj</AlertDialogCancel>
+                                <AlertDialogAction
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        handleDelete();
+                                    }}
+                                    className="bg-red-600 hover:bg-red-700"
+                                    disabled={isDeleting}
+                                >
+                                    {isDeleting ? "Usuwanie..." : "Usuń"}
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                )}
             </>
           )}
         </div>
