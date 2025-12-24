@@ -2,7 +2,7 @@
 
 import { CheckCircle2, Circle, Upload, FileText, RefreshCw, Pencil, Trash2, Plus, X, AlertTriangle, Lock } from "lucide-react";
 import { useTransition, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { differenceInCalendarDays } from "date-fns";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -64,6 +64,20 @@ export function MontageWorkflowTab({
     userRoles?: string[];
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const currentView = searchParams.get("view") || "simple";
+
+  const handleTabChange = (value: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value === 'simple') {
+          params.delete('view');
+      } else {
+          params.set('view', value);
+      }
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+
   const queryClient = useQueryClient();
   const [pending, startTransition] = useTransition();
   const [isEditing, setIsEditing] = useState(false);
@@ -378,7 +392,7 @@ export function MontageWorkflowTab({
   const materialAlert = getMaterialAlert();
 
   return (
-    <Tabs defaultValue="simple" className="w-full space-y-6">
+    <Tabs value={currentView} onValueChange={handleTabChange} className="w-full space-y-6">
         <div className="flex items-center justify-between">
              <TabsList>
                 <TabsTrigger value="simple">Lista Zadań</TabsTrigger>

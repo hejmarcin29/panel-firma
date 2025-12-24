@@ -56,6 +56,7 @@ export function MontageProcessHub({ montage, stages }: MontageProcessHubProps) {
   const handleViewTimeline = () => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", "workflow");
+    params.set("view", "timeline");
     router.push(`${pathname}?${params.toString()}`);
   };
 
