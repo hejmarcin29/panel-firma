@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Montage, StatusOption } from "../../types";
+import { updateMontageStatus } from "../../actions";
 import {
   Tooltip,
   TooltipContent,
@@ -17,6 +19,8 @@ interface MontageProcessHubProps {
 }
 
 export function MontageProcessHub({ montage, stages }: MontageProcessHubProps) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const currentStageRef = useRef<HTMLDivElement>(null);
 
@@ -24,6 +28,15 @@ export function MontageProcessHub({ montage, stages }: MontageProcessHubProps) {
   const visibleStages = stages.filter(s => s.value !== 'cancelled');
 
   const currentStageIndex = visibleStages.findIndex(s => s.value === montage.status);
+
+  const handleStageClick = (value: string) => {
+    if (value === montage.status || pending) return;
+    
+    startTransition(async () => {
+        await updateMontageStatus({ montageId: montage.id, status: value });
+        router.refresh();
+    });
+  };
 
   useEffect(() => {
     if (scrollContainerRef.current && currentStageRef.current) {
@@ -48,7 +61,7 @@ export function MontageProcessHub({ montage, stages }: MontageProcessHubProps) {
     <div className="w-full bg-white border rounded-xl shadow-sm overflow-hidden">
       <div 
         ref={scrollContainerRef}
-        className="overflow-x-auto scrollbar-hide py-4 px-4 md:px-8 flex items-center gap-6 md:gap-0 md:justify-between relative"
+        className="overflow-x-auto scrollbar-hide py-3 px-2 md:py-4 md:px-8 flex items-center gap-4 md:gap-0 md:justify-between relative"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {/* Desktop Connecting Line */}
@@ -64,23 +77,25 @@ export function MontageProcessHub({ montage, stages }: MontageProcessHubProps) {
                 <TooltipTrigger asChild>
                     <div 
                     ref={isCurrent ? currentStageRef : null}
+                    onClick={() => handleStageClick(stage.value)}
                     className={cn(
-                        "flex flex-col items-center gap-3 min-w-[100px] md:min-w-0 relative z-10 transition-all duration-300 shrink-0 cursor-pointer group",
-                        isCurrent ? "opacity-100" : "opacity-70 md:opacity-100"
+                        "flex flex-col items-center gap-2 md:gap-3 min-w-[70px] md:min-w-0 relative z-10 transition-all duration-300 shrink-0 cursor-pointer group",
+                        isCurrent ? "opacity-100" : "opacity-70 md:opacity-100",
+                        pending && "opacity-50 cursor-not-allowed"
                     )}
                     >
                     <div className={cn(
-                        "w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center border-2 transition-colors bg-white",
+                        "w-7 h-7 md:w-10 md:h-10 rounded-full flex items-center justify-center border-2 transition-colors bg-white",
                         isCompleted ? "bg-green-500 border-green-500 text-white" : 
                         isCurrent ? "border-blue-600 text-blue-600 shadow-[0_0_0_4px_rgba(37,99,235,0.1)]" : 
                         "border-gray-200 text-gray-300 group-hover:border-gray-300"
                     )}>
-                        {isCompleted ? <Check className="w-4 h-4 md:w-5 md:h-5" /> : <span className="text-xs md:text-sm font-medium">{index + 1}</span>}
+                        {isCompleted ? <Check className="w-3 h-3 md:w-5 md:h-5" /> : <span className="text-[10px] md:text-sm font-medium">{index + 1}</span>}
                     </div>
                     
                     <div className="text-center">
                         <div className={cn(
-                        "text-xs font-medium whitespace-nowrap transition-colors px-2 py-1 rounded-full",
+                        "text-[10px] md:text-xs font-medium whitespace-nowrap transition-colors px-2 py-1 rounded-full",
                         isCurrent ? "bg-blue-50 text-blue-700" : 
                         isCompleted ? "text-green-700" : "text-gray-400 group-hover:text-gray-600"
                         )}>

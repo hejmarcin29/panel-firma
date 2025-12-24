@@ -87,7 +87,7 @@ export function MontageHeader({ montage, statusOptions, userRoles = ['admin'] }:
   return (
     <div className="sticky top-0 z-10 flex flex-col gap-4 border-b bg-background/95 px-4 py-4 backdrop-blur supports-backdrop-filter:bg-background/60 sm:px-6">
       <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2 overflow-hidden">
+        <div className="flex flex-1 min-w-0 items-center gap-2 overflow-hidden">
           <Button
             variant="ghost"
             size="icon"
@@ -211,25 +211,6 @@ export function MontageHeader({ montage, statusOptions, userRoles = ['admin'] }:
           )}
         </div>
       </div>
-      
-      {isMobile && (
-         <Select
-            value={montage.status}
-            onValueChange={handleStatusChange}
-            disabled={pending}
-        >
-            <SelectTrigger className={cn("w-full", pending && "opacity-50")}>
-            <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-            {statusOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                {option.label}
-                </SelectItem>
-            ))}
-            </SelectContent>
-        </Select>
-      )}
     </div>
   );
 }
