@@ -2,8 +2,12 @@ import { Metadata } from 'next';
 import { HeroSection } from './_components/hero-section';
 import { TechShowcase } from './_components/tech-showcase';
 import { ProductGallery } from './_components/product-gallery';
+import { Realizations } from './_components/realizations';
 import { BenefitsGrid } from './_components/benefits-grid';
 import { RegistrationForm } from './_components/registration-form';
+import { ProcessSteps } from './_components/process-steps';
+import { FAQ } from './_components/faq';
+import { DesignerResources } from './_components/designer-resources';
 
 export const metadata: Metadata = {
     title: 'Strefa Architekta | Współpraca B2B',
@@ -14,9 +18,13 @@ export default function WspolpracaPage() {
   return (
     <main className="min-h-screen bg-white">
       <HeroSection />
+      <BenefitsGrid />
+      <ProcessSteps />
       <TechShowcase />
       <ProductGallery />
-      <BenefitsGrid />
+      <Realizations />
+      <DesignerResources />
+      <FAQ />
       <RegistrationForm />
       
       {/* Simple Footer */}

@@ -6,7 +6,7 @@ const products = [
     { id: 1, name: 'Jagerndorf', type: 'Jodełka Klasyczna', image: 'https://primepodloga.pl/wp-content/uploads/2025/01/bali-e1750747884395-794x630.jpg', size: 'large' },
     { id: 2, name: 'Sand Maple', type: 'Jodełka Klasyczna', image: 'https://primepodloga.pl/wp-content/uploads/2025/01/SAND-MAPLE-1-e1750747931920-840x630.jpg', size: 'small' },
     { id: 3, name: 'Korfu', type: 'Jodełka Francuska', image: 'https://primepodloga.pl/wp-content/uploads/2025/01/KORFU-840x630.jpg', size: 'small' },
-    { id: 4, name: 'Fresh Pine', type: 'Deska Winylowa', image: 'https://primepodloga.pl/wp-content/uploads/2025/01/Fresh-Pine-.jpg.webp', size: 'large' },
+    { id: 4, name: 'Jasper', type: 'Deska Winylowa', image: 'https://primepodloga.pl/wp-content/uploads/2025/09/jasper-2-e1757177430635-560x420.webp', size: 'large' },
     { id: 5, name: 'Shepard Chestnut', type: 'Jodełka Klasyczna', image: 'https://primepodloga.pl/wp-content/uploads/2025/01/CHEPARD-CHESTNUT_sklep-e1750747965636-794x630.jpeg', size: 'small' },
 ];
 

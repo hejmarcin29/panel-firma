@@ -302,6 +302,13 @@
       "when": 1766563337538,
       "tag": "0042_abandoned_harpoon",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1766650110733,
+      "tag": "0043_sudden_spencer_smythe",
+      "breakpoints": true
     }
   ]
 }

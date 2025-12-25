@@ -1440,6 +1440,9 @@ export const settlements = pgTable('settlements', {
     totalAmount: doublePrecision('total_amount').notNull(),
     calculations: json('calculations').notNull(),
     note: text('note'),
+    overrideAmount: doublePrecision('override_amount'),
+    overrideReason: text('override_reason'),
+    corrections: json('corrections'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });

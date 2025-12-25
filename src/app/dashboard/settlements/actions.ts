@@ -1,9 +1,9 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { montages, users, settlements, advances, type SettlementStatus } from '@/lib/db/schema';
+import { montages, users, settlements, advances, services, userServiceRates, type SettlementStatus } from '@/lib/db/schema';
 import { requireUser } from '@/lib/auth/session';
 import { generateId } from '@/lib/utils';
 import { logSystemEvent } from '@/lib/logging';
@@ -17,8 +17,19 @@ export type SettlementCalculation = {
         amount: number;
         method: string;
         pattern: string;
+        serviceId?: string;
+    };
+    corrections: {
+        id: string;
+        description: string;
+        amount: number;
+    }[];
+    override?: {
+        amount: number;
+        reason: string;
     };
     total: number;
+    systemTotal: number;
 };
 
 export async function calculateSettlement(montageId: string) {
@@ -38,52 +49,91 @@ export async function calculateSettlement(montageId: string) {
         where: eq(users.id, montage.installerId),
     });
 
-    if (!installer || !installer.installerProfile) throw new Error('Profil montażysty niekompletny');
+    if (!installer) throw new Error('Profil montażysty niekompletny');
 
-    const rates = installer.installerProfile.rates || {};
-    
-    // Determine Floor Rate
-    let floorRate = 0;
-    const method = montage.measurementInstallationMethod; // 'click' | 'glue'
-    const pattern = montage.measurementFloorPattern || 'classic'; // 'classic' | 'herringbone'
+    // Determine Service ID
+    let serviceId = '';
+    const method = montage.measurementInstallationMethod || 'click';
+    const pattern = montage.measurementFloorPattern || 'classic';
 
     if (pattern === 'herringbone') {
-        floorRate = method === 'glue' ? (rates.herringboneGlue || 0) : (rates.herringboneClick || 0);
+        serviceId = method === 'glue' ? 'svc_montaz_jodelka_klej' : 'svc_montaz_jodelka_klik';
     } else {
-        floorRate = method === 'glue' ? (rates.classicGlue || 0) : (rates.classicClick || 0);
+        serviceId = method === 'glue' ? 'svc_montaz_deska_klej' : 'svc_montaz_deska_klik';
+    }
+
+    // Get Rate
+    let rate = 0;
+    
+    // 1. Check User Custom Rate
+    const userRate = await db.query.userServiceRates.findFirst({
+        where: and(
+            eq(userServiceRates.userId, montage.installerId),
+            eq(userServiceRates.serviceId, serviceId)
+        )
+    });
+
+    if (userRate) {
+        rate = userRate.customRate;
+    } else {
+        // 2. Check Base Service Rate
+        const service = await db.query.services.findFirst({
+            where: eq(services.id, serviceId)
+        });
+        if (service) {
+            rate = service.baseInstallerRate || 0;
+        } else {
+             // Fallback to legacy profile rates if service not found
+             const rates = installer.installerProfile?.rates || {};
+             if (pattern === 'herringbone') {
+                rate = method === 'glue' ? (rates.herringboneGlue || 0) : (rates.herringboneClick || 0);
+            } else {
+                rate = method === 'glue' ? (rates.classicGlue || 0) : (rates.classicClick || 0);
+            }
+        }
     }
 
     const floorArea = montage.floorArea || 0;
-    const floorAmount = floorArea * floorRate;
+    const floorAmount = floorArea * rate;
 
     const calculation: SettlementCalculation = {
         floor: {
             area: floorArea,
-            rate: floorRate,
+            rate: rate,
             amount: floorAmount,
             method: method || 'unknown',
             pattern: pattern,
+            serviceId: serviceId
         },
+        corrections: [],
         total: floorAmount,
+        systemTotal: floorAmount
     };
 
     return calculation;
 }
 
-export async function createSettlement(montageId: string, calculation: SettlementCalculation, note?: string) {
+export async function saveSettlement(montageId: string, calculation: SettlementCalculation, note?: string, asDraft: boolean = true) {
     const user = await requireUser();
-    if (!user.roles.includes('admin')) throw new Error('Brak uprawnień');
-
+    
     const montage = await db.query.montages.findFirst({
         where: eq(montages.id, montageId),
     });
 
     if (!montage || !montage.installerId) throw new Error('Brak danych montażu');
 
+    // Allow installer assigned to montage or admin
+    const isInstaller = user.roles.includes('installer') && montage.installerId === user.id;
+    const isAdmin = user.roles.includes('admin');
+
+    if (!isInstaller && !isAdmin) throw new Error('Brak uprawnień');
+
     // Check if settlement already exists
     const existing = await db.query.settlements.findFirst({
         where: eq(settlements.montageId, montageId),
     });
+
+    const status = asDraft ? 'draft' : 'pending';
 
     if (existing) {
         if (existing.status === 'paid' || existing.status === 'approved') {
@@ -94,6 +144,10 @@ export async function createSettlement(montageId: string, calculation: Settlemen
             totalAmount: calculation.total,
             calculations: calculation,
             note: note,
+            overrideAmount: calculation.override?.amount,
+            overrideReason: calculation.override?.reason,
+            corrections: calculation.corrections,
+            status: (existing.status === 'draft' && !asDraft) ? 'pending' : existing.status,
             updatedAt: new Date(),
         }).where(eq(settlements.id, existing.id));
 
@@ -107,10 +161,13 @@ export async function createSettlement(montageId: string, calculation: Settlemen
             id: generateId('set'),
             montageId: montageId,
             installerId: montage.installerId,
-            status: 'draft',
+            status: status,
             totalAmount: calculation.total,
             calculations: calculation,
             note: note,
+            overrideAmount: calculation.override?.amount,
+            overrideReason: calculation.override?.reason,
+            corrections: calculation.corrections,
         });
 
         await logSystemEvent(
