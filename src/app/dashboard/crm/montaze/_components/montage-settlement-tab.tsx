@@ -54,7 +54,7 @@ export function MontageSettlementTab({ montage, userRoles }: MontageSettlementTa
     // Actually, we don't have currentUserId here. Let's assume if user is installer, they are the owner if they can see this page.
     
     const settlement = montage.settlement;
-    const isReadOnly = settlement && (settlement.status === 'paid' || (settlement.status === 'approved' && !isAdmin));
+    const isReadOnly = Boolean(settlement && (settlement.status === 'paid' || (settlement.status === 'approved' && !isAdmin)));
 
     // Load initial data
     useEffect(() => {
@@ -215,15 +215,15 @@ export function MontageSettlementTab({ montage, userRoles }: MontageSettlementTa
                 <div>
                     <h3 className="text-lg font-medium">Rozliczenie Montażu</h3>
                     <p className="text-sm text-muted-foreground">
-                        {settlement ? `Ostatnia aktualizacja: ${format(new Date(settlement.updatedAt), 'PPP', { locale: pl })}` : 'Nowe rozliczenie'}
+                        {settlement?.updatedAt ? `Ostatnia aktualizacja: ${format(new Date(settlement.updatedAt), 'PPP', { locale: pl })}` : 'Nowe rozliczenie'}
                     </p>
                 </div>
                 {settlement && (
-                    <Badge variant={
-                        settlement.status === 'paid' ? 'default' : 
-                        settlement.status === 'approved' ? 'success' : 
-                        settlement.status === 'pending' ? 'warning' : 'secondary'
-                    } className="text-base px-4 py-1">
+                    <Badge variant={settlement.status === 'paid' ? 'default' : 'secondary'} 
+                    className={`text-base px-4 py-1 ${
+                        settlement.status === 'approved' ? 'bg-green-600 hover:bg-green-700 text-white' : 
+                        settlement.status === 'pending' ? 'bg-yellow-500 hover:bg-yellow-600 text-white' : ''
+                    }`}>
                         {settlement.status === 'draft' && 'Szkic'}
                         {settlement.status === 'pending' && 'Oczekuje na akceptację'}
                         {settlement.status === 'approved' && 'Zatwierdzone'}

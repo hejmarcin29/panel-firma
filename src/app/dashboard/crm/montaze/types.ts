@@ -175,7 +175,12 @@ export type MontageSettlement = {
     status: string;
     totalAmount: number;
     calculations: Record<string, unknown>;
+    note?: string | null;
+    overrideAmount?: number | null;
+    overrideReason?: string | null;
+    corrections?: unknown | null;
     createdAt: TimestampValue;
+    updatedAt: TimestampValue;
 };
 
 export type QuoteItem = {

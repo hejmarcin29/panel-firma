@@ -1,18 +1,28 @@
 'use client';
 
-import { Check, Clock, Lock, User, Building, Hammer, Cpu } from 'lucide-react';
+import { Check, Clock, Lock, User, Building, Hammer, Cpu, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import type { ProcessStepState, StepStatus } from '@/lib/montaze/process-utils';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ProcessStepItemProps {
     step: ProcessStepState;
     isLast: boolean;
+    onAdvance?: (nextStatus: string) => void;
+    nextStatus?: string;
+    isPending?: boolean;
 }
 
-export function ProcessStepItem({ step, isLast }: ProcessStepItemProps) {
+export function ProcessStepItem({ step, isLast, onAdvance, nextStatus, isPending }: ProcessStepItemProps) {
     const getStatusIcon = (status: StepStatus) => {
         switch (status) {
             case 'completed': return <Check className="w-4 h-4 text-white" />;
@@ -50,6 +60,10 @@ export function ProcessStepItem({ step, isLast }: ProcessStepItemProps) {
             default: return actor;
         }
     };
+
+    // Validation Logic
+    const allCheckpointsMet = step.checkpointsState.every(cp => cp.isMet);
+    const missingCheckpoints = step.checkpointsState.filter(cp => !cp.isMet).map(cp => cp.label);
 
     return (
         <div className="relative flex gap-4 pb-8 last:pb-0">
@@ -138,6 +152,55 @@ export function ProcessStepItem({ step, isLast }: ProcessStepItemProps) {
                                 </div>
                             </div>
                         ))}
+                    </div>
+                )}
+
+                {/* Action Button (Only for Current Step) */}
+                {step.status === 'current' && nextStatus && onAdvance && (
+                    <div className="pt-2 flex justify-end">
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <span tabIndex={0}> {/* Wrapper for disabled button tooltip */}
+                                        <Button 
+                                            size="sm" 
+                                            onClick={() => onAdvance(nextStatus)}
+                                            disabled={!allCheckpointsMet || isPending}
+                                            className={cn(
+                                                "gap-2 transition-all",
+                                                allCheckpointsMet 
+                                                    ? "bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg" 
+                                                    : "opacity-50 cursor-not-allowed"
+                                            )}
+                                        >
+                                            {isPending ? (
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                            ) : (
+                                                <>
+                                                    Zatwierdź i przejdź dalej
+                                                    <ArrowRight className="w-4 h-4" />
+                                                </>
+                                            )}
+                                        </Button>
+                                    </span>
+                                </TooltipTrigger>
+                                {!allCheckpointsMet && (
+                                    <TooltipContent className="max-w-xs bg-red-50 text-red-900 border-red-200">
+                                        <div className="flex items-start gap-2">
+                                            <AlertCircle className="w-4 h-4 mt-0.5 text-red-600" />
+                                            <div>
+                                                <p className="font-semibold mb-1">Wymagane działania:</p>
+                                                <ul className="list-disc list-inside text-xs space-y-0.5">
+                                                    {missingCheckpoints.map((label, i) => (
+                                                        <li key={i}>{label}</li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </TooltipContent>
+                                )}
+                            </Tooltip>
+                        </TooltipProvider>
                     </div>
                 )}
             </div>

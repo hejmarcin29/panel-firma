@@ -45,12 +45,11 @@ export function MontageProcessHub({ montage, stages }: MontageProcessHubProps) {
   };
 
   const handleStageClick = (value: string) => {
-    if (value === montage.status || pending) return;
-    
-    startTransition(async () => {
-        await updateMontageStatus({ montageId: montage.id, status: value });
-        router.refresh();
-    });
+    // Navigate to timeline view instead of changing status
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", "workflow");
+    params.set("view", "timeline");
+    router.push(`${pathname}?${params.toString()}`);
   };
 
   const handleViewTimeline = () => {
@@ -97,11 +96,11 @@ export function MontageProcessHub({ montage, stages }: MontageProcessHubProps) {
       </div>
       <div 
         ref={scrollContainerRef}
-        className="overflow-x-auto scrollbar-hide py-3 px-2 md:py-4 md:px-8 flex items-center gap-4 md:gap-0 md:justify-between relative"
+        className="overflow-x-auto scrollbar-hide py-2 px-2 md:py-3 md:px-4 flex items-center gap-2 md:gap-0 md:justify-between relative"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {/* Desktop Connecting Line */}
-        <div className="hidden md:block absolute top-[26px] left-12 right-12 h-0.5 bg-gray-100 -z-10" />
+        <div className="hidden md:block absolute top-[22px] left-12 right-12 h-0.5 bg-gray-100 -z-10" />
 
         <TooltipProvider>
         {visibleStages.map((stage, index) => {
@@ -116,23 +115,23 @@ export function MontageProcessHub({ montage, stages }: MontageProcessHubProps) {
                     ref={isCurrent ? currentStageRef : null}
                     onClick={() => handleStageClick(stage.value)}
                     className={cn(
-                        "flex flex-col items-center gap-2 md:gap-3 min-w-[70px] md:min-w-0 relative z-10 transition-all duration-300 shrink-0 cursor-pointer group",
+                        "flex flex-col items-center gap-1 md:gap-2 min-w-[60px] md:min-w-0 relative z-10 transition-all duration-300 shrink-0 cursor-pointer group",
                         isCurrent ? "opacity-100" : "opacity-70 md:opacity-100",
                         pending && "opacity-50 cursor-not-allowed"
                     )}
                     >
                     <div className={cn(
-                        "w-7 h-7 md:w-10 md:h-10 rounded-full flex items-center justify-center border-2 transition-colors bg-white",
+                        "w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center border-2 transition-colors bg-white",
                         isCompleted ? "bg-green-500 border-green-500 text-white" : 
-                        isCurrent ? "border-blue-600 text-blue-600 shadow-[0_0_0_4px_rgba(37,99,235,0.1)]" : 
+                        isCurrent ? "border-blue-600 text-blue-600 shadow-[0_0_0_3px_rgba(37,99,235,0.1)]" : 
                         "border-gray-200 text-gray-300 group-hover:border-gray-300"
                     )}>
-                        {isCompleted ? <Check className="w-3 h-3 md:w-5 md:h-5" /> : <Icon className="w-3 h-3 md:w-5 md:h-5" />}
+                        {isCompleted ? <Check className="w-3 h-3 md:w-4 md:h-4" /> : <Icon className="w-3 h-3 md:w-4 md:h-4" />}
                     </div>
                     
                     <div className="text-center">
                         <div className={cn(
-                        "text-[10px] md:text-xs font-medium whitespace-nowrap transition-colors px-2 py-1 rounded-full",
+                        "text-[9px] md:text-[10px] font-medium whitespace-nowrap transition-colors px-2 py-0.5 rounded-full",
                         isCurrent ? "bg-blue-50 text-blue-700" : 
                         isCompleted ? "text-green-700" : "text-gray-400 group-hover:text-gray-600"
                         )}>
