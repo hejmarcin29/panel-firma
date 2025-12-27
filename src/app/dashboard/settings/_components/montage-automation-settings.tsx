@@ -10,6 +10,8 @@ import type { MontageAutomationRule } from '@/lib/montaze/automation';
 import type { StatusOption } from '../../crm/montaze/types';
 import { PROCESS_STEPS } from '@/lib/montaze/process-definition';
 
+import { MontageProcessMap } from '../../crm/montaze/[montageId]/_components/montage-process-map';
+
 interface MontageAutomationSettingsProps {
   templates: MontageChecklistTemplate[];
   initialRules: MontageAutomationRule[]; // Kept for compatibility but unused
@@ -71,26 +73,7 @@ export function MontageAutomationSettings({ templates, statusOptions }: MontageA
                 </div>
             </CardHeader>
             <CardContent>
-                <div className="relative flex items-center justify-between px-4 py-8 overflow-x-auto">
-                    {/* Simple CSS-only visualization of the process steps */}
-                    <div className="absolute left-4 right-4 top-1/2 h-0.5 bg-slate-200 -z-10" />
-                    {PROCESS_STEPS.map((step, i) => (
-                        <div key={step.id} className="flex flex-col items-center gap-3 min-w-[120px]">
-                            <div className="w-8 h-8 rounded-full bg-white border-2 border-blue-500 flex items-center justify-center shadow-sm z-10">
-                                <span className="text-xs font-bold text-blue-600">{i + 1}</span>
-                            </div>
-                            <div className="text-center">
-                                <p className="text-xs font-semibold text-slate-700">{step.label}</p>
-                                <p className="text-[10px] text-slate-500 mt-0.5">{step.actor}</p>
-                            </div>
-                            {step.automations.length > 0 && (
-                                <Badge variant="secondary" className="text-[10px] h-4 px-1 bg-purple-100 text-purple-700 border-purple-200">
-                                    {step.automations.length} auto
-                                </Badge>
-                            )}
-                        </div>
-                    ))}
-                </div>
+                <MontageProcessMap />
             </CardContent>
         </Card>
 

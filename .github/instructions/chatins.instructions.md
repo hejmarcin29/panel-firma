@@ -63,6 +63,12 @@ System posiada zaawansowany widok osi czasu procesu montażu (`MontageProcessTim
 3.  **Nowe Akcje Użytkownika:** Jeśli dodajesz kluczową akcję (np. "Generowanie Protokołu"), rozważ dodanie jej jako "Checkpoint" na osi czasu, aby było widać, czy została wykonana (np. ✅ Protokół wygenerowany).
 4.  **Aktorzy:** Przy każdym kroku określaj, kto jest "właścicielem" piłeczki (Klient, Biuro, Montażysta, System), aby wizualizacja jasno pokazywała, na kogo czekamy.
 
+## Wizualizacja Procesu (Process Map / Flowchart)
+Do wizualizacji skomplikowanych przepływów i zależności logicznych używamy biblioteki **React Flow**.
+- **Cel:** Graficzne przedstawienie logiki biznesowej (Etapy jako bloki, Checkpointy jako punkty decyzyjne/romby).
+- **Interaktywność:** Mapa w widoku szczegółów montażu służy do podglądu (read-only) i wskazuje aktywny etap (pulsowanie). Mapa w ustawieniach służy do analizy całego procesu.
+- **Spójność:** Mapa jest generowana dynamicznie na podstawie `PROCESS_STEPS` z pliku `process-definition.ts`. Nie rysujemy jej "na sztywno" – musi odzwierciedlać kod.
+
 ## Instrukcje dla Użytkowników (User Manuals)
 Przy tworzeniu lub modyfikowaniu ról użytkowników (np. Pomiarowiec, Montażysta, Partner), **ZAWSZE** pamiętaj o zapewnieniu im dostępu do instrukcji obsługi w panelu.
 - Każda rola powinna mieć dedykowaną sekcję lub zakładkę "Pomoc" / "Instrukcja".

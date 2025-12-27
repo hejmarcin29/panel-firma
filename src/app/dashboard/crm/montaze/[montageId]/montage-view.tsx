@@ -34,7 +34,7 @@ import { MontageClientInfo } from './_components/montage-client-info';
 import { MontageDetailsLayout } from './_components/montage-details-layout';
 import { ConvertLeadDialog } from './_components/convert-lead-dialog';
 import { InstallerMontageView } from './_components/installer-montage-view';
-import { MontageProcessHub } from './_components/montage-process-hub';
+import { MontageProcessMap } from './_components/montage-process-map';
 
 interface MontageViewProps {
     montageId: string;
@@ -164,6 +164,7 @@ export function MontageView({ montageId, initialData, portalEnabled }: MontageVi
                     settlement: <MontageSettlementTab montage={montage} userRoles={userRoles} />,
                     tasks: <MontageTasksTab montage={montage} />,
                     gallery: <MontageGalleryTab montage={montage} userRoles={userRoles} />,
+                    map: <MontageProcessMap montage={montage} />,
                 }}
             />
         </div>
