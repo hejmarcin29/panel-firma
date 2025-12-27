@@ -152,6 +152,7 @@ export default async function SettingsPage() {
 		montageAutomationRules,
 		montageStatusDefinitions,
         montageNotificationsJson,
+        montageAutomationSettingsJson,
 		kpiMontageThreatDays,
 		kpiOrderUrgentDays,
         kpiAlertMissingMaterialStatusDays,
@@ -199,6 +200,7 @@ export default async function SettingsPage() {
 		getMontageAutomationRules(),
 		getMontageStatusDefinitions(),
         getAppSetting(appSettingKeys.montageNotifications),
+        getAppSetting(appSettingKeys.montageAutomationSettings),
 		getAppSetting(appSettingKeys.kpiMontageThreatDays),
 		getAppSetting(appSettingKeys.kpiOrderUrgentDays),
         getAppSetting(appSettingKeys.kpiAlertMissingMaterialStatusDays),
@@ -239,6 +241,7 @@ export default async function SettingsPage() {
     }));
 
     const montageNotifications = montageNotificationsJson ? JSON.parse(montageNotificationsJson) : {};
+    const montageAutomationSettings = montageAutomationSettingsJson ? JSON.parse(montageAutomationSettingsJson) : {};
 
 	const [pendingRow] = await db
 		.select({ count: sql<number>`count(*)` })
@@ -385,6 +388,7 @@ export default async function SettingsPage() {
                         initialRules={montageAutomationRules} 
                         statusOptions={statusOptions}
                         initialNotifications={montageNotifications}
+                        initialAutomationSettings={montageAutomationSettings}
                     />
 				</div>
 			}

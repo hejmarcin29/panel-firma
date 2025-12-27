@@ -19,9 +19,10 @@ interface AutomationRegistryProps {
   initialRules: MontageAutomationRule[];
   statusOptions: StatusOption[];
   initialNotifications: Record<string, boolean>;
+  initialAutomationSettings: Record<string, boolean>;
 }
 
-export function AutomationRegistry({ templates, initialRules, statusOptions, initialNotifications }: AutomationRegistryProps) {
+export function AutomationRegistry({ templates, initialRules, statusOptions, initialNotifications, initialAutomationSettings }: AutomationRegistryProps) {
     const [notifications, setNotifications] = useState<Record<string, boolean>>(initialNotifications);
     const [isPending, startTransition] = useTransition();
 
@@ -61,6 +62,7 @@ export function AutomationRegistry({ templates, initialRules, statusOptions, ini
                 templates={templates} 
                 initialRules={initialRules} 
                 statusOptions={statusOptions} 
+                initialSettings={initialAutomationSettings}
             />
         </div>
 

@@ -647,5 +647,22 @@ export async function updateMontageNotificationsAction(notifications: Record<str
     revalidatePath('/dashboard/settings');
 }
 
+export async function updateMontageAutomationSettings(settings: Record<string, boolean>) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) {
+        throw new Error('Tylko administrator może zmieniać ustawienia automatyzacji.');
+    }
+
+    await setAppSetting({
+        key: appSettingKeys.montageAutomationSettings,
+        value: settings,
+        userId: user.id,
+    });
+
+    await logSystemEvent('update_automation_settings', 'Zaktualizowano ustawienia automatyzacji', user.id);
+    revalidatePath('/dashboard/settings');
+}
+
+
 
 

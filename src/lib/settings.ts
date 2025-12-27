@@ -18,7 +18,8 @@ export const appSettingKeys = {
 	r2ApiToken: 'r2.api_token',
 	r2PublicBaseUrl: 'r2.public_base_url',
 	montageChecklist: 'montage.checklist',
-	montageAutomation: 'montage.automation',
+	montageAutomation: 'montage.automation', // Legacy: Array of rules
+    montageAutomationSettings: 'montage.automation_settings', // New: Record<string, boolean>
 	montageNotifications: 'montage.notifications',
 	montageStatuses: 'montage.statuses',
 	kpiMontageThreatDays: 'kpi.montage_threat_days',

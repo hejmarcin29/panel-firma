@@ -26,7 +26,8 @@ import { uploadMontageObject } from '@/lib/r2/storage';
 import { MontageCategories, MontageSubCategories } from '@/lib/r2/constants';
 import { getMontageChecklistTemplates } from '@/lib/montaze/checklist';
 import { DEFAULT_MONTAGE_CHECKLIST } from '@/lib/montaze/checklist-shared';
-import { getMontageAutomationRules, isSystemAutomationEnabled } from '@/lib/montaze/automation';
+import { getMontageAutomationRules, isSystemAutomationEnabled, isProcessAutomationEnabled } from '@/lib/montaze/automation';
+import { PROCESS_STEPS } from '@/lib/montaze/process-definition';
 import { logSystemEvent } from '@/lib/logging';
 import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
 import type { MaterialsEditHistoryEntry } from './types';
@@ -1071,7 +1072,14 @@ export async function toggleMontageChecklistItem({ itemId, montageId, completed 
                         });
 
                         if (montage && montage.status === stage) {
-                            await updateMontageStatus({ montageId, status: nextStatus.id });
+                            // Check automation setting
+                            const step = PROCESS_STEPS.find(s => s.relatedStatuses.includes(stage as any));
+                            const autoAdvanceId = step ? `auto_advance_${step.id}` : null;
+                            const shouldAutoAdvance = autoAdvanceId ? await isProcessAutomationEnabled(autoAdvanceId) : true;
+
+                            if (shouldAutoAdvance) {
+                                await updateMontageStatus({ montageId, status: nextStatus.id });
+                            }
                         }
                     }
                 }

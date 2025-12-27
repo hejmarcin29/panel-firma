@@ -313,7 +313,7 @@ export function MontageProcessMap({ montage }: MontageProcessMapProps) {
                 </DialogTrigger>
             </div>
 
-            <DialogContent className="max-w-[95vw] w-[95vw] h-[90vh] p-0 gap-0 border-none bg-slate-50">
+            <DialogContent className="max-w-[95vw]! w-[95vw]! h-[90vh]! p-0 gap-0 border-none bg-slate-50">
                 <div className="relative w-full h-full">
                     <ReactFlow
                         nodes={nodes}

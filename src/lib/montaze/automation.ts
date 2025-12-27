@@ -25,6 +25,22 @@ export async function isSystemAutomationEnabled(id: string): Promise<boolean> {
     }
 }
 
+export async function isProcessAutomationEnabled(id: string): Promise<boolean> {
+    const rawValue = await getAppSetting(appSettingKeys.montageAutomationSettings);
+    // Default to true if not set, as we want features to be enabled by default
+    const defaultEnabled = true;
+
+    if (!rawValue) {
+        return defaultEnabled;
+    }
+    try {
+        const settings = JSON.parse(rawValue) as Record<string, boolean>;
+        return settings[id] ?? defaultEnabled;
+    } catch {
+        return defaultEnabled;
+    }
+}
+
 export async function getMontageAutomationRules(): Promise<MontageAutomationRule[]> {
 	const rawValue = await getAppSetting(appSettingKeys.montageAutomation);
 	if (!rawValue) {

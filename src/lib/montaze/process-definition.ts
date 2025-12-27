@@ -4,6 +4,7 @@ import type { Montage } from '@/app/dashboard/crm/montaze/types';
 export type ProcessActor = 'client' | 'office' | 'installer' | 'system';
 
 export type ProcessAutomation = {
+    id: string;
     label: string;
     description?: string;
     trigger?: string;
@@ -31,7 +32,7 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
         relatedStatuses: ['lead'],
         actor: 'office',
         automations: [
-            { label: 'Powiadomienie SMS', description: 'System wysyła powitanie do klienta po utworzeniu leada.' }
+            { id: 'sms_lead_welcome', label: 'Powiadomienie SMS', description: 'System wysyła powitanie do klienta po utworzeniu leada.' }
         ],
         checkpoints: [
             { key: 'contact_established', label: 'Kontakt nawiązany', condition: (m) => !!m.contactPhone || !!m.contactEmail },
@@ -45,8 +46,8 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
         relatedStatuses: ['before_measurement'],
         actor: 'installer',
         automations: [
-            { label: 'Przypomnienie o pomiarze', description: 'SMS do klienta 24h przed pomiarem.' },
-            { label: 'Powiadomienie pomiarowca', description: 'Email/SMS do pomiarowca o nowym zleceniu.' }
+            { id: 'sms_measurement_reminder', label: 'Przypomnienie o pomiarze', description: 'SMS do klienta 24h przed pomiarem.' },
+            { id: 'notify_measurer_new_job', label: 'Powiadomienie pomiarowca', description: 'Email/SMS do pomiarowca o nowym zleceniu.' }
         ],
         checkpoints: [
             { key: 'measurement_scheduled', label: 'Pomiar umówiony', condition: (m) => !!m.measurementDate },
@@ -61,8 +62,8 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
         relatedStatuses: ['before_first_payment'],
         actor: 'client',
         automations: [
-            { label: 'Link do umowy', description: 'Wysłanie linku do akceptacji oferty i umowy.' },
-            { label: 'Przypomnienie o wpłacie', description: 'SMS po 3 dniach braku wpłaty zaliczki.' }
+            { id: 'send_contract_link', label: 'Link do umowy', description: 'Wysłanie linku do akceptacji oferty i umowy.' },
+            { id: 'remind_advance_payment', label: 'Przypomnienie o wpłacie', description: 'SMS po 3 dniach braku wpłaty zaliczki.' }
         ],
         checkpoints: [
             { key: 'quote_accepted', label: 'Oferta zaakceptowana', condition: (m) => m.quotes?.some((q) => q.status === 'accepted') ?? false },
@@ -77,8 +78,8 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
         relatedStatuses: ['before_installation'],
         actor: 'office',
         automations: [
-            { label: 'Zamówienie do dostawcy', description: 'Generowanie zamówienia PDF do dostawcy.' },
-            { label: 'Potwierdzenie terminu', description: 'SMS do klienta z potwierdzeniem daty montażu.' }
+            { id: 'generate_supplier_order', label: 'Zamówienie do dostawcy', description: 'Generowanie zamówienia PDF do dostawcy.' },
+            { id: 'confirm_installation_date', label: 'Potwierdzenie terminu', description: 'SMS do klienta z potwierdzeniem daty montażu.' }
         ],
         checkpoints: [
             { key: 'materials_ordered', label: 'Materiały zamówione', condition: (m) => m.materialStatus === 'ordered' || m.materialStatus === 'in_stock' || m.materialStatus === 'delivered' },
@@ -92,8 +93,8 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
         relatedStatuses: ['before_final_invoice'],
         actor: 'installer',
         automations: [
-            { label: 'Protokół odbioru', description: 'Link do elektronicznego protokołu odbioru.' },
-            { label: 'Prośba o opinię', description: 'SMS z linkiem do Google Maps po zakończeniu.' }
+            { id: 'send_protocol_link', label: 'Protokół odbioru', description: 'Link do elektronicznego protokołu odbioru.' },
+            { id: 'request_review', label: 'Prośba o opinię', description: 'SMS z linkiem do Google Maps po zakończeniu.' }
         ],
         checkpoints: [
             { key: 'installation_done', label: 'Prace zakończone', condition: () => false }, // Manual check usually

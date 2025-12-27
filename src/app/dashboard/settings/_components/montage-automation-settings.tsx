@@ -1,62 +1,51 @@
 'use client';
 
+import { useState, useTransition } from 'react';
+import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { Bot, Zap } from 'lucide-react';
 
 import type { MontageChecklistTemplate } from '@/lib/montaze/checklist-shared';
 import type { MontageAutomationRule } from '@/lib/montaze/automation';
 import type { StatusOption } from '../../crm/montaze/types';
 import { PROCESS_STEPS } from '@/lib/montaze/process-definition';
+import { updateMontageAutomationSettings } from '../actions';
 
 import { MontageProcessMap } from '../../crm/montaze/[montageId]/_components/montage-process-map';
 
 interface MontageAutomationSettingsProps {
   templates: MontageChecklistTemplate[];
-  initialRules: MontageAutomationRule[]; // Kept for compatibility but unused
+  initialRules: MontageAutomationRule[];
   statusOptions: StatusOption[];
+  initialSettings: Record<string, boolean>;
 }
 
-export function MontageAutomationSettings({ templates, statusOptions }: MontageAutomationSettingsProps) {
-  
-  // 1. Automatyzacje przejść statusów (na podstawie checklist)
-  const statusAutomationRows = statusOptions.map((status, index) => {
-    const nextStatus = statusOptions[index + 1];
-    if (!nextStatus) return null;
+export function MontageAutomationSettings({ templates, statusOptions, initialSettings }: MontageAutomationSettingsProps) {
+  const [settings, setSettings] = useState<Record<string, boolean>>(initialSettings);
+  const [isPending, startTransition] = useTransition();
 
-    // Check if this stage has any checklist items associated
-    const hasChecklistItems = templates.some(t => t.associatedStage === status.value);
+  const handleToggle = (id: string, checked: boolean) => {
+    const next = { ...settings, [id]: checked };
+    setSettings(next);
     
-    if (!hasChecklistItems) return null;
+    startTransition(async () => {
+        try {
+            await updateMontageAutomationSettings(next);
+            toast.success("Zaktualizowano ustawienia automatyzacji.");
+        } catch {
+            toast.error("Błąd zapisu ustawień.");
+            setSettings(settings); // Revert
+        }
+    });
+  };
 
-    return {
-      id: `status-${status.value}`,
-      trigger: `Ukończenie etapu: ${status.label}`,
-      action: `Zmiana statusu na: ${nextStatus.label}`,
-      description: 'Automatyczne przejście po wykonaniu wszystkich zadań.',
-      recipient: 'System',
-      type: 'status' as const
-    };
-  }).filter((row): row is NonNullable<typeof row> => row !== null);
-
-  // 2. Automatyzacje procesowe (z definicji procesu)
-  const processAutomationRows = PROCESS_STEPS.flatMap(step => 
-    step.automations.map((auto, idx) => ({
-      id: `process-${step.id}-${idx}`,
-      trigger: `Etap: ${step.label}`,
-      action: auto.label,
-      description: auto.description || 'Akcja systemowa',
-      recipient: 'System/Użytkownik',
-      type: 'process' as const
-    }))
-  );
-
-  const allAutomations = [...statusAutomationRows, ...processAutomationRows];
+  const isEnabled = (id: string) => settings[id] ?? true; // Default to true if not set
 
   return (
     <div className="space-y-6">
-        {/* Process Map Visualization Placeholder */}
+        {/* Process Map Visualization */}
         <Card className="bg-slate-50 border-slate-200 overflow-hidden">
             <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
@@ -77,57 +66,74 @@ export function MontageAutomationSettings({ templates, statusOptions }: MontageA
             </CardContent>
         </Card>
 
-        <Card>
-        <CardHeader>
-            <CardTitle>Lista Reguł Automatyzacji</CardTitle>
-            <CardDescription>
-            Szczegółowy wykaz aktywnych reguł, powiadomień i akcji systemowych.
-            </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead className="w-[50px]"></TableHead>
-                        <TableHead>Wyzwalacz / Etap</TableHead>
-                        <TableHead>Akcja</TableHead>
-                        <TableHead>Opis</TableHead>
-                        <TableHead className="text-right">Typ</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {allAutomations.map((row) => (
-                        <TableRow key={row.id}>
-                            <TableCell>
-                                {row.type === 'status' ? (
-                                    <Bot className="h-4 w-4 text-purple-500" />
-                                ) : (
-                                    <Zap className="h-4 w-4 text-amber-500" />
-                                )}
-                            </TableCell>
-                            <TableCell className="font-medium">{row.trigger}</TableCell>
-                            <TableCell>{row.action}</TableCell>
-                            <TableCell className="text-muted-foreground text-sm">
-                                {row.description}
-                            </TableCell>
-                            <TableCell className="text-right">
-                                <Badge variant={row.type === 'status' ? 'outline' : 'secondary'}>
-                                    {row.type === 'status' ? 'Workflow' : 'Akcja'}
-                                </Badge>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                    {allAutomations.length === 0 && (
-                        <TableRow>
-                            <TableCell colSpan={5} className="text-center text-muted-foreground py-4">
-                                Brak zdefiniowanych automatyzacji.
-                            </TableCell>
-                        </TableRow>
-                    )}
-                </TableBody>
-            </Table>
-        </CardContent>
-        </Card>
+        <div className="grid gap-6">
+            {PROCESS_STEPS.map((step) => {
+                // Filter automations for this step
+                const stepAutomations = step.automations;
+                
+                // Check for status transition automation
+                const primaryStatus = step.relatedStatuses[0];
+                const statusIndex = statusOptions.findIndex(s => s.value === primaryStatus);
+                const nextStatusOption = statusOptions[statusIndex + 1];
+                
+                const hasChecklistItems = templates.some(t => t.associatedStage === primaryStatus);
+                const showAutoAdvance = hasChecklistItems && nextStatusOption;
+                const autoAdvanceId = `auto_advance_${step.id}`;
+
+                if (stepAutomations.length === 0 && !showAutoAdvance) return null;
+
+                return (
+                    <Card key={step.id}>
+                        <CardHeader className="pb-3">
+                            <div className="flex items-center gap-2">
+                                <Badge variant="outline">{step.id}</Badge>
+                                <CardTitle className="text-base">{step.label}</CardTitle>
+                            </div>
+                            <CardDescription>{step.description}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="grid gap-4">
+                            {showAutoAdvance && (
+                                <div className="flex items-center justify-between space-x-4 rounded-lg border p-4 bg-slate-50/50">
+                                    <div className="flex items-center space-x-4">
+                                        <Bot className="h-5 w-5 text-purple-500" />
+                                        <div className="space-y-0.5">
+                                            <div className="font-medium">Automatyczne przejście do: {nextStatusOption.label}</div>
+                                            <div className="text-sm text-muted-foreground">
+                                                Po wykonaniu wszystkich zadań z checklisty.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <Switch 
+                                        checked={isEnabled(autoAdvanceId)}
+                                        onCheckedChange={(c) => handleToggle(autoAdvanceId, c)}
+                                        disabled={isPending}
+                                    />
+                                </div>
+                            )}
+
+                            {stepAutomations.map((auto, idx) => (
+                                <div key={auto.id || idx} className="flex items-center justify-between space-x-4 rounded-lg border p-4">
+                                    <div className="flex items-center space-x-4">
+                                        <Zap className="h-5 w-5 text-amber-500" />
+                                        <div className="space-y-0.5">
+                                            <div className="font-medium">{auto.label}</div>
+                                            <div className="text-sm text-muted-foreground">
+                                                {auto.description}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <Switch 
+                                        checked={isEnabled(auto.id)}
+                                        onCheckedChange={(c) => handleToggle(auto.id, c)}
+                                        disabled={isPending}
+                                    />
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+                );
+            })}
+        </div>
     </div>
   );
 }
