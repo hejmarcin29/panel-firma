@@ -16,9 +16,11 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { PROCESS_STEPS } from '@/lib/montaze/process-definition';
 import { cn } from '@/lib/utils';
-import { Check, User, Building, Hammer, Cpu, Zap, ListChecks } from 'lucide-react';
+import { Check, User, Building, Hammer, Cpu, Zap, ListChecks, Maximize2, X } from 'lucide-react';
 import type { Montage } from '../../types';
 import { getProcessState } from '@/lib/montaze/process-utils';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogTrigger, DialogClose } from '@/components/ui/dialog';
 
 // --- Custom Node Components ---
 
@@ -282,21 +284,63 @@ export function MontageProcessMap({ montage }: MontageProcessMapProps) {
     const [edges, , onEdgesChange] = useEdgesState(initialEdges);
 
     return (
-        <div className="w-full h-[600px] bg-slate-50 rounded-xl border border-slate-200 overflow-hidden">
-            <ReactFlow
-                nodes={nodes}
-                edges={edges}
-                nodeTypes={nodeTypes}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                fitView
-                attributionPosition="bottom-right"
-                minZoom={0.5}
-                maxZoom={1.5}
-            >
-                <Background color="#e2e8f0" gap={16} />
-                <Controls />
-            </ReactFlow>
-        </div>
+        <Dialog>
+            <div className="w-full h-[400px] bg-slate-50 rounded-xl border border-slate-200 overflow-hidden relative group">
+                <ReactFlow
+                    nodes={nodes}
+                    edges={edges}
+                    nodeTypes={nodeTypes}
+                    onNodesChange={onNodesChange}
+                    onEdgesChange={onEdgesChange}
+                    fitView
+                    attributionPosition="bottom-right"
+                    minZoom={0.5}
+                    maxZoom={1.5}
+                >
+                    <Background color="#e2e8f0" gap={16} />
+                    <Controls />
+                </ReactFlow>
+                
+                <DialogTrigger asChild>
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="absolute top-4 right-4 z-10 gap-2 shadow-sm bg-white/90 hover:bg-white"
+                    >
+                        <Maximize2 className="w-4 h-4" />
+                        Pełny ekran
+                    </Button>
+                </DialogTrigger>
+            </div>
+
+            <DialogContent className="max-w-[95vw] w-[95vw] h-[90vh] p-0 gap-0 border-none bg-slate-50">
+                <div className="relative w-full h-full">
+                    <ReactFlow
+                        nodes={nodes}
+                        edges={edges}
+                        nodeTypes={nodeTypes}
+                        onNodesChange={onNodesChange}
+                        onEdgesChange={onEdgesChange}
+                        fitView
+                        attributionPosition="bottom-right"
+                        minZoom={0.1}
+                        maxZoom={2}
+                    >
+                        <Background color="#e2e8f0" gap={16} />
+                        <Controls />
+                    </ReactFlow>
+                    
+                    <DialogClose asChild>
+                        <Button 
+                            variant="outline" 
+                            size="icon" 
+                            className="absolute top-4 right-4 z-10 shadow-sm bg-white/90 hover:bg-white"
+                        >
+                            <X className="w-4 h-4" />
+                        </Button>
+                    </DialogClose>
+                </div>
+            </DialogContent>
+        </Dialog>
     );
 }

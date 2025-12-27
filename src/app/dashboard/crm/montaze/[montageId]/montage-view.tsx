@@ -165,7 +165,6 @@ export function MontageView({ montageId, initialData, portalEnabled }: MontageVi
                     settlement: <MontageSettlementTab montage={montage} userRoles={userRoles} />,
                     tasks: <MontageTasksTab montage={montage} />,
                     gallery: <MontageGalleryTab montage={montage} userRoles={userRoles} />,
-                    map: <MontageProcessMap montage={montage} />,
                 }}
             />
         </div>

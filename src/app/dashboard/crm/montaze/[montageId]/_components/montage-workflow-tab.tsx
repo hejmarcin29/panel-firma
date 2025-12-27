@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MontageProcessTimeline } from "./montage-process-timeline";
+import { MontageProcessMap } from "./montage-process-map";
 import { DEFAULT_MONTAGE_CHECKLIST } from "@/lib/montaze/checklist-shared";
 import { cn } from "@/lib/utils";
 import { 
@@ -397,11 +398,16 @@ export function MontageWorkflowTab({
              <TabsList>
                 <TabsTrigger value="simple">Lista Zadań</TabsTrigger>
                 <TabsTrigger value="timeline">Oś Czasu (Process Hub)</TabsTrigger>
+                <TabsTrigger value="map">Mapa Procesu</TabsTrigger>
              </TabsList>
         </div>
 
         <TabsContent value="timeline">
              <MontageProcessTimeline montage={montage} />
+        </TabsContent>
+
+        <TabsContent value="map">
+             <MontageProcessMap montage={montage} />
         </TabsContent>
 
         <TabsContent value="simple" className="space-y-8">

@@ -21,7 +21,6 @@ interface MontageDetailsLayoutProps {
     gallery: React.ReactNode;
     quotes: React.ReactNode;
     settlement?: React.ReactNode;
-    map?: React.ReactNode;
   };
   defaultTab?: string;
 }
@@ -57,7 +56,6 @@ export function MontageDetailsLayout({
     { id: 'tasks', label: 'Zadania', icon: <ClipboardList className="w-4 h-4" />, content: tabs.tasks ? <div className="p-4 pb-24">{tabs.tasks}</div> : null },
     { id: 'gallery', label: 'Galeria', icon: <ImageIcon className="w-4 h-4" />, content: tabs.gallery ? <div className="p-4 pb-24">{tabs.gallery}</div> : null },
     { id: 'workflow', label: 'Przebieg', icon: <LayoutList className="w-4 h-4" />, content: tabs.workflow ? <div className="p-4 pb-24">{tabs.workflow}</div> : null },
-    { id: 'map', label: 'Mapa', icon: <Map className="w-4 h-4" />, content: tabs.map ? <div className="p-4 pb-24">{tabs.map}</div> : null },
     { id: 'measurement', label: 'Pomiary', icon: <Ruler className="w-4 h-4" />, content: tabs.measurement ? <div className="p-4 pb-24">{tabs.measurement}</div> : null },
     { id: 'quotes', label: 'Oferty', icon: <FileText className="w-4 h-4" />, content: tabs.quotes ? <div className="p-4 pb-24">{tabs.quotes}</div> : null },
     { id: 'settlement', label: 'Rozliczenie', icon: <FileText className="w-4 h-4" />, content: tabs.settlement ? <div className="p-4 pb-24">{tabs.settlement}</div> : null },
@@ -150,7 +148,6 @@ export function MontageDetailsLayout({
                       {tabs.measurement && <TabsTrigger value="measurement" className="flex-1">Pomiar</TabsTrigger>}
                       {tabs.quotes && <TabsTrigger value="quotes" className="flex-1">Oferty</TabsTrigger>}                      {tabs.settlement && <TabsTrigger value="settlement" className="flex-1">Rozliczenie</TabsTrigger>}                      {tabs.tasks && <TabsTrigger value="tasks" className="flex-1">Zadania</TabsTrigger>}
                       {tabs.gallery && <TabsTrigger value="gallery" className="flex-1">Załączniki</TabsTrigger>}
-                      {tabs.map && <TabsTrigger value="map" className="flex-1">Mapa</TabsTrigger>}
                       {tabs.history && <TabsTrigger value="history" className="flex-1">Historia</TabsTrigger>}
                   </TabsList>
                   {tabs.notes && (
@@ -161,11 +158,6 @@ export function MontageDetailsLayout({
                   {tabs.workflow && (
                     <TabsContent value="workflow" className="mt-6">
                         {tabs.workflow}
-                    </TabsContent>
-                  )}
-                  {tabs.map && (
-                    <TabsContent value="map" className="mt-6">
-                        {tabs.map}
                     </TabsContent>
                   )}
                   {tabs.measurement && (
