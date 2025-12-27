@@ -655,7 +655,7 @@ export async function updateMontageAutomationSettings(settings: Record<string, b
 
     await setAppSetting({
         key: appSettingKeys.montageAutomationSettings,
-        value: settings,
+        value: JSON.stringify(settings),
         userId: user.id,
     });
 
