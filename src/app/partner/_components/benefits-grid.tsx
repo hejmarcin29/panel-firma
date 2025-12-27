@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Banknote, ShieldCheck, Truck, Clock, Users, Building2 } from 'lucide-react';
+import { Banknote, ShieldCheck, Clock, Users, Building2 } from 'lucide-react';
 
 const benefits = [
     {

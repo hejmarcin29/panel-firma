@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useTransition } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Check, ArrowRight, History, FileText, Ruler, ClipboardCheck, Truck, Hammer, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import type { Montage, StatusOption } from "../../types";
-import { updateMontageStatus } from "../../actions";
 import {
   Tooltip,
   TooltipContent,
@@ -23,7 +22,6 @@ export function MontageProcessHub({ montage, stages }: MontageProcessHubProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const [pending, startTransition] = useTransition();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const currentStageRef = useRef<HTMLDivElement>(null);
 
@@ -44,7 +42,7 @@ export function MontageProcessHub({ montage, stages }: MontageProcessHubProps) {
     }
   };
 
-  const handleStageClick = (value: string) => {
+  const handleStageClick = () => {
     // Navigate to timeline view instead of changing status
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", "workflow");
@@ -113,11 +111,10 @@ export function MontageProcessHub({ montage, stages }: MontageProcessHubProps) {
                 <TooltipTrigger asChild>
                     <div 
                     ref={isCurrent ? currentStageRef : null}
-                    onClick={() => handleStageClick(stage.value)}
+                    onClick={() => handleStageClick()}
                     className={cn(
                         "flex flex-col items-center gap-1 md:gap-2 min-w-[60px] md:min-w-0 relative z-10 transition-all duration-300 shrink-0 cursor-pointer group",
-                        isCurrent ? "opacity-100" : "opacity-70 md:opacity-100",
-                        pending && "opacity-50 cursor-not-allowed"
+                        isCurrent ? "opacity-100" : "opacity-70 md:opacity-100"
                     )}
                     >
                     <div className={cn(

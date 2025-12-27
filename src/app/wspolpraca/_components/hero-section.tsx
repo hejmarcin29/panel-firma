@@ -10,7 +10,6 @@ export function HeroSection() {
       {/* Background Image/Video Placeholder */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/90 z-10" />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <motion.img 
             src="https://images.unsplash.com/photo-1600607686527-6fb886090705?q=80&w=2700&auto=format&fit=crop" 
             alt="Luxury Interior" 

@@ -22,12 +22,10 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { cn } from "@/lib/utils";
 import type { Montage, StatusOption } from "../../types";
 import { updateMontageStatus, deleteMontage } from "../../actions";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { type UserRole } from '@/lib/db/schema';
-import { ProtocolWizard } from './protocol/protocol-wizard';
 
 interface MontageHeaderProps {
   montage: Montage;
@@ -35,7 +33,7 @@ interface MontageHeaderProps {
   userRoles?: UserRole[];
 }
 
-export function MontageHeader({ montage, statusOptions, userRoles = ['admin'] }: MontageHeaderProps) {
+export function MontageHeader({ montage, userRoles = ['admin'] }: MontageHeaderProps) {
   const router = useRouter();
   const isMobile = useIsMobile();
   const [pending, startTransition] = useTransition();
@@ -66,16 +64,6 @@ export function MontageHeader({ montage, statusOptions, userRoles = ['admin'] }:
 
   const canEditStatus = userRoles.includes('admin') || userRoles.includes('installer');
   const canDelete = userRoles.includes('admin');
-  const showProtocolButton = (userRoles.includes('installer') || userRoles.includes('admin')) && 
-                             montage.status !== 'lead';
-
-  const acceptedQuote = montage.quotes?.find(q => q.status === 'accepted') || montage.quotes?.[0];
-  // If there is a quote, check if any item has 8% VAT. If so, it's likely housing.
-  // If all items are 23%, it's likely commercial.
-  // If no quote, default to true (housing).
-  const defaultIsHousingVat = acceptedQuote 
-      ? acceptedQuote.items.some(i => i.vatRate === 8) 
-      : true;
 
   return (
     <div className="sticky top-0 z-10 flex flex-col gap-4 border-b bg-background/95 px-4 py-4 backdrop-blur supports-backdrop-filter:bg-background/60 sm:px-6">

@@ -3,11 +3,11 @@
 import { useState, useTransition, useEffect } from 'react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
-import { Calculator, Loader2, AlertTriangle, RefreshCw, Lock, Edit2, Plus, Trash2, Info } from 'lucide-react';
+import { Calculator, Loader2, Edit2, Plus, Trash2, Info } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Dialog,
     DialogContent,
@@ -18,7 +18,6 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -48,10 +47,6 @@ export function MontageSettlementTab({ montage, userRoles }: MontageSettlementTa
     const [newCorrectionAmount, setNewCorrectionAmount] = useState('');
 
     const isAdmin = userRoles.includes('admin');
-    const isInstaller = userRoles.includes('installer');
-    const isOwner = montage.installerId === montage.installer?.id; // Assuming current user context check is done in parent or via roles/id match. 
-    // Ideally we should pass currentUserId to check ownership, but for now relying on roles.
-    // Actually, we don't have currentUserId here. Let's assume if user is installer, they are the owner if they can see this page.
     
     const settlement = montage.settlement;
     const isReadOnly = Boolean(settlement && (settlement.status === 'paid' || (settlement.status === 'approved' && !isAdmin)));
@@ -113,7 +108,7 @@ export function MontageSettlementTab({ montage, userRoles }: MontageSettlementTa
             try {
                 await updateSettlementStatus(settlement.id, 'approved');
                 toast.success('Rozliczenie zatwierdzone');
-            } catch (error) {
+            } catch {
                 toast.error('Błąd podczas zatwierdzania');
             }
         });
@@ -125,7 +120,7 @@ export function MontageSettlementTab({ montage, userRoles }: MontageSettlementTa
             try {
                 await updateSettlementStatus(settlement.id, 'draft'); // Revert to draft
                 toast.success('Rozliczenie odrzucone (przywrócono do szkicu)');
-            } catch (error) {
+            } catch {
                 toast.error('Błąd podczas odrzucania');
             }
         });
