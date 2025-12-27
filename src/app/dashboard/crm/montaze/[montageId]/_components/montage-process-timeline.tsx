@@ -2,16 +2,24 @@
 
 import { useMemo, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 import { getProcessState } from '@/lib/montaze/process-utils';
 import { ProcessStepItem } from './process-step-item';
 import type { Montage } from '../../types';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Map } from 'lucide-react';
 import { updateMontageStatus } from '../../actions';
 import { toast } from 'sonner';
 import { PROCESS_STEPS } from '@/lib/montaze/process-definition';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface MontageProcessTimelineProps {
     montage: Montage;
@@ -45,7 +53,23 @@ export function MontageProcessTimeline({ montage }: MontageProcessTimelineProps)
                             <Sparkles className="w-4 h-4 text-blue-600" />
                             <span className="text-sm font-medium text-blue-900">Postęp procesu</span>
                         </div>
-                        <span className="text-sm font-bold text-blue-700">{progress}%</span>
+                        <div className="flex items-center gap-3">
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Link href="/dashboard/settings?tab=automations">
+                                            <Button variant="ghost" size="icon" className="h-6 w-6 text-blue-700 hover:text-blue-900 hover:bg-blue-200/50">
+                                                <Map className="w-4 h-4" />
+                                            </Button>
+                                        </Link>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Zobacz mapę procesu i automatyzacje</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                            <span className="text-sm font-bold text-blue-700">{progress}%</span>
+                        </div>
                     </div>
                     <Progress value={progress} className="h-2 bg-blue-200 [&>div]:bg-blue-600" />
                 </CardContent>
