@@ -34,7 +34,6 @@ import { MontageClientInfo } from './_components/montage-client-info';
 import { MontageDetailsLayout } from './_components/montage-details-layout';
 import { ConvertLeadDialog } from './_components/convert-lead-dialog';
 import { InstallerMontageView } from './_components/installer-montage-view';
-import { MontageProcessMap } from './_components/montage-process-map';
 import { MontageProcessHub } from './_components/montage-process-hub';
 
 interface MontageViewProps {

@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useRef, useState, useEffect, useCallback, useMemo } from "react";
-import { ClipboardList, LayoutList, Ruler, History, Image as ImageIcon, FileText, Info, MessageSquare, Map } from "lucide-react";
+import { ClipboardList, LayoutList, Ruler, History, Image as ImageIcon, FileText, Info, MessageSquare } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
