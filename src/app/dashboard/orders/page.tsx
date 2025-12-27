@@ -1,4 +1,5 @@
 import { requireUser } from '@/lib/auth/session';
+import { redirect } from 'next/navigation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LayoutGrid, List, X } from 'lucide-react';
 import Link from 'next/link';
@@ -19,7 +20,11 @@ type PageProps = {
 };
 
 export default async function OrdersPage({ searchParams }: PageProps) {
-	await requireUser();
+	const user = await requireUser();
+    if (user.roles.includes('installer') && !user.roles.includes('admin')) {
+        redirect('/dashboard');
+    }
+
     const { filter } = await searchParams;
     
     // If filter is 'verification', we want to load ALL orders so tabs work correctly,

@@ -9,6 +9,7 @@ import type { CustomerSource } from '@/lib/db/schema';
 import { generatePortalToken } from '@/lib/utils';
 import { sendSms } from '@/lib/sms';
 import { appSettingKeys, getAppSetting } from '@/lib/settings';
+import { getCurrentSession } from '@/lib/auth/session';
 
 export type CustomerWithStats = typeof customers.$inferSelect & {
 	ordersCount: number;
@@ -83,6 +84,32 @@ export async function generateCustomerPortalAccess(customerId: string) {
 }
 
 export async function getCustomers(query?: string): Promise<CustomerWithStats[]> {
+    const session = await getCurrentSession();
+    if (!session) return [];
+
+    const user = session.user;
+    const isAdmin = user.roles.includes('admin');
+
+    let allowedCustomerIds: string[] | undefined;
+
+    if (!isAdmin) {
+        const userMontages = await db.query.montages.findMany({
+            where: or(
+                eq(montages.installerId, user.id),
+                eq(montages.measurerId, user.id)
+            ),
+            columns: { customerId: true }
+        });
+        
+        allowedCustomerIds = userMontages
+            .map(m => m.customerId)
+            .filter((id): id is string => id !== null);
+            
+        if (allowedCustomerIds.length === 0) {
+            return [];
+        }
+    }
+
 	const searchFilter = query
 		? and(
             isNull(customers.deletedAt),
@@ -95,8 +122,12 @@ export async function getCustomers(query?: string): Promise<CustomerWithStats[]>
         )
 		: isNull(customers.deletedAt);
 
+    const finalFilter = allowedCustomerIds 
+        ? and(searchFilter, inArray(customers.id, allowedCustomerIds))
+        : searchFilter;
+
 	const rows = await db.query.customers.findMany({
-		where: searchFilter,
+		where: finalFilter,
 		orderBy: [desc(customers.createdAt)],
 		limit: 50,
         with: {
@@ -163,6 +194,28 @@ export async function getCustomers(query?: string): Promise<CustomerWithStats[]>
 }
 
 export async function getCustomerDetails(customerId: string): Promise<CustomerDetails> {
+    const session = await getCurrentSession();
+    if (!session) throw new Error("Unauthorized");
+    
+    const user = session.user;
+    const isAdmin = user.roles.includes('admin');
+
+    if (!isAdmin) {
+        const hasAccess = await db.query.montages.findFirst({
+            where: and(
+                eq(montages.customerId, customerId),
+                or(
+                    eq(montages.installerId, user.id),
+                    eq(montages.measurerId, user.id)
+                )
+            )
+        });
+
+        if (!hasAccess) {
+             throw new Error("Unauthorized access to customer details");
+        }
+    }
+
 	const customer = await db.query.customers.findFirst({
 		where: eq(customers.id, customerId),
         with: {
@@ -208,6 +261,11 @@ export async function getCustomerDetails(customerId: string): Promise<CustomerDe
 }
 
 export async function deleteCustomer(id: string) {
+    const session = await getCurrentSession();
+    if (!session || !session.user.roles.includes('admin')) {
+        throw new Error("Unauthorized");
+    }
+
     await db.update(customers)
         .set({ deletedAt: new Date() })
         .where(eq(customers.id, id));

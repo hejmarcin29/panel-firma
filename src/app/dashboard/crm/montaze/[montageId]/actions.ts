@@ -100,6 +100,15 @@ export async function getMontageDetails(montageId: string) {
         return null;
     }
 
+    // Security check for installers
+    const isInstaller = user.roles.includes('installer') && !user.roles.includes('admin');
+    if (isInstaller) {
+        const isAssigned = montageRow.installerId === user.id || montageRow.measurerId === user.id;
+        if (!isAssigned) {
+            throw new Error('Unauthorized access to montage details');
+        }
+    }
+
     const logs = await db
         .select()
         .from(systemLogs)

@@ -8,6 +8,7 @@ import { randomUUID } from 'crypto';
 import { createTransport } from 'nodemailer';
 import { formatCurrency } from '@/lib/utils';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
+import { getCurrentSession } from '@/lib/auth/session';
 
 function decodeSecret(secret: string | null | undefined): string | null {
     if (!secret) {
@@ -22,6 +23,11 @@ function decodeSecret(secret: string | null | undefined): string | null {
 }
 
 export async function sendQuoteEmail(quoteId: string) {
+    const session = await getCurrentSession();
+    if (!session || (session.user.roles.includes('installer') && !session.user.roles.includes('admin'))) {
+        throw new Error('Unauthorized');
+    }
+
     const quote = await db.query.quotes.findFirst({
         where: eq(quotes.id, quoteId),
         with: {
@@ -156,6 +162,14 @@ export async function sendQuoteEmail(quoteId: string) {
 }
 
 export async function getQuotes() {
+    const session = await getCurrentSession();
+    if (!session) return [];
+
+    // Installers should not see quotes
+    if (session.user.roles.includes('installer') && !session.user.roles.includes('admin')) {
+        return [];
+    }
+
     return await db.query.quotes.findMany({
         where: isNull(quotes.deletedAt),
         with: {
@@ -166,6 +180,14 @@ export async function getQuotes() {
 }
 
 export async function getQuote(id: string) {
+    const session = await getCurrentSession();
+    if (!session) return undefined;
+
+    // Installers should not see quotes
+    if (session.user.roles.includes('installer') && !session.user.roles.includes('admin')) {
+        return undefined;
+    }
+
     return await db.query.quotes.findFirst({
         where: eq(quotes.id, id),
         with: {
@@ -183,6 +205,11 @@ export async function getQuote(id: string) {
 }
 
 export async function createQuote(montageId: string) {
+    const session = await getCurrentSession();
+    if (!session || (session.user.roles.includes('installer') && !session.user.roles.includes('admin'))) {
+        throw new Error('Unauthorized');
+    }
+
     const id = randomUUID();
 
     const montage = await db.query.montages.findFirst({
@@ -221,6 +248,11 @@ export async function updateQuote(id: string, data: {
     notes?: string;
     termsContent?: string;
 }) {
+    const session = await getCurrentSession();
+    if (!session || (session.user.roles.includes('installer') && !session.user.roles.includes('admin'))) {
+        throw new Error('Unauthorized');
+    }
+
     // Calculate totals if items are updated
     const updates: Partial<typeof quotes.$inferInsert> = { ...data };
     
@@ -241,6 +273,11 @@ export async function updateQuote(id: string, data: {
 }
 
 export async function deleteQuote(id: string) {
+    const session = await getCurrentSession();
+    if (!session || (session.user.roles.includes('installer') && !session.user.roles.includes('admin'))) {
+        throw new Error('Unauthorized');
+    }
+
     await db.update(quotes)
         .set({ deletedAt: new Date() })
         .where(eq(quotes.id, id));

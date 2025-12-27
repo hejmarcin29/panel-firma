@@ -41,10 +41,18 @@ throw new Error('Plik jest zbyt duży. Maksymalny rozmiar to 25 MB.');
 }
 
 export async function getManualOrderById(id: string): Promise<Order | null> {
+    const user = await requireUser();
+    if (user.roles.includes('installer') && !user.roles.includes('admin')) {
+        return null;
+    }
     return getOrderByIdService(id);
 }
 
 export async function getManualOrders(filter?: string): Promise<Order[]> {
+    const user = await requireUser();
+    if (user.roles.includes('installer') && !user.roles.includes('admin')) {
+        return [];
+    }
     return getFilteredOrders(filter);
 }
 
@@ -60,11 +68,17 @@ return created;
 
 export async function createManualOrder(payload: ManualOrderPayload): Promise<Order> {
 const user = await requireUser();
+if (user.roles.includes('installer') && !user.roles.includes('admin')) {
+    throw new Error('Unauthorized');
+}
 return createOrder(payload, user.id);
 }
 
 export async function confirmManualOrder(orderId: string, type: 'production' | 'sample' = 'production'): Promise<Order> {
 const user = await requireUser();
+if (user.roles.includes('installer') && !user.roles.includes('admin')) {
+    throw new Error('Unauthorized');
+}
 const orderRow = await db.query.manualOrders.findFirst({
 where: eq(manualOrders.id, orderId),
 });

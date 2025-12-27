@@ -12,7 +12,7 @@ const links = [
 	{ href: '/dashboard/calendar', label: 'Kalendarz' },
     { href: '/dashboard/crm', label: 'CRM', labelForInstaller: 'Moje Zlecenia' },
 	{ href: '/dashboard/orders', label: 'Zamówienia' },
-	{ href: '/dashboard/products', label: 'Produkty' },
+	{ href: '/dashboard/erp/products', label: 'Produkty' },
     { href: '/dashboard/erp', label: 'ERP' },
 	{ href: '/dashboard/mail', label: 'Poczta' },
 	{ href: '/dashboard/settings', label: 'Ustawienia' },

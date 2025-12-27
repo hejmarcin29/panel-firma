@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { Calculator, Loader2, Edit2, Plus, Trash2, Info } from 'lucide-react';
@@ -32,6 +33,7 @@ interface MontageSettlementTabProps {
 }
 
 export function MontageSettlementTab({ montage, userRoles }: MontageSettlementTabProps) {
+    const router = useRouter();
     const [isPending, startTransition] = useTransition();
     
     // State for the settlement data
@@ -95,6 +97,7 @@ export function MontageSettlementTab({ montage, userRoles }: MontageSettlementTa
             try {
                 await saveSettlement(montage.id, calculation, note, asDraft);
                 toast.success(asDraft ? 'Zapisano szkic' : 'Wysłano do akceptacji');
+                router.refresh();
             } catch (error) {
                 toast.error('Wystąpił błąd podczas zapisywania');
                 console.error(error);
@@ -108,6 +111,7 @@ export function MontageSettlementTab({ montage, userRoles }: MontageSettlementTa
             try {
                 await updateSettlementStatus(settlement.id, 'approved');
                 toast.success('Rozliczenie zatwierdzone');
+                router.refresh();
             } catch {
                 toast.error('Błąd podczas zatwierdzania');
             }
@@ -120,6 +124,7 @@ export function MontageSettlementTab({ montage, userRoles }: MontageSettlementTa
             try {
                 await updateSettlementStatus(settlement.id, 'draft'); // Revert to draft
                 toast.success('Rozliczenie odrzucone (przywrócono do szkicu)');
+                router.refresh();
             } catch {
                 toast.error('Błąd podczas odrzucania');
             }

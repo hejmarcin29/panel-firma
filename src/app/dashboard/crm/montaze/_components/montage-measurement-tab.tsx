@@ -201,6 +201,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
           scheduledInstallationEndAt: dateRange?.to ? dateRange.to.getTime() : null,
         });
         setLastSaved(new Date());
+        router.refresh();
       } catch (err) {
         console.error("Auto-save failed", err);
       } finally {

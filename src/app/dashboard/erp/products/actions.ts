@@ -10,6 +10,11 @@ import { inArray } from "drizzle-orm";
 import { getWooCredentials } from "./import-actions";
 
 export async function bulkUpdateSyncStatus(ids: string[], enabled: boolean) {
+    const user = await requireUser();
+    if (user.roles.includes('installer') && !user.roles.includes('admin')) {
+        throw new Error('Unauthorized');
+    }
+
     if (ids.length === 0) return;
 
     await db.update(erpProducts)
@@ -20,6 +25,11 @@ export async function bulkUpdateSyncStatus(ids: string[], enabled: boolean) {
 }
 
 export async function toggleProductSync(id: string, enabled: boolean) {
+    const user = await requireUser();
+    if (user.roles.includes('installer') && !user.roles.includes('admin')) {
+        throw new Error('Unauthorized');
+    }
+
     try {
         await db.update(erpProducts)
             .set({ isSyncEnabled: enabled, updatedAt: new Date() })
@@ -36,6 +46,11 @@ export async function toggleProductSync(id: string, enabled: boolean) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function createProduct(data: any) {
+    const user = await requireUser();
+    if (user.roles.includes('installer') && !user.roles.includes('admin')) {
+        throw new Error('Unauthorized');
+    }
+
     const [product] = await db.insert(erpProducts).values({
         name: data.name,
         sku: data.sku,
@@ -74,6 +89,11 @@ export async function addProductPrice(data: {
     vatRate?: number;
     isDefault?: boolean;
 }) {
+    const user = await requireUser();
+    if (user.roles.includes('installer') && !user.roles.includes('admin')) {
+        throw new Error('Unauthorized');
+    }
+
     // If setting as default, unset others
     if (data.isDefault) {
         await db.update(erpPurchasePrices)
@@ -94,6 +114,11 @@ export async function addProductPrice(data: {
 }
 
 export async function deleteProductPrice(priceId: string, productId: string) {
+    const user = await requireUser();
+    if (user.roles.includes('installer') && !user.roles.includes('admin')) {
+        throw new Error('Unauthorized');
+    }
+
     await db.delete(erpPurchasePrices)
         .where(eq(erpPurchasePrices.id, priceId));
     

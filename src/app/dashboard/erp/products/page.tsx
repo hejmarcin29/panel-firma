@@ -5,8 +5,15 @@ import { ProductsTable } from "./_components/products-table";
 import { ProductSheet } from "./_components/product-sheet";
 import { getAttributes } from "../attributes/actions";
 import { ImportWizard } from "./_components/import-wizard";
+import { requireUser } from "@/lib/auth/session";
+import { redirect } from "next/navigation";
 
 export default async function ProductsPage() {
+    const user = await requireUser();
+    if (user.roles.includes('installer') && !user.roles.includes('admin')) {
+        redirect('/dashboard');
+    }
+
     const [products, attributes, categories] = await Promise.all([
         db.query.erpProducts.findMany({
             orderBy: [desc(erpProducts.createdAt)],
