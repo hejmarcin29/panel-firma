@@ -69,12 +69,6 @@ export function MontageClientCard({
     scheduledInstallationEndAt: montage.scheduledInstallationEndAt 
       ? new Date(montage.scheduledInstallationEndAt as string | number | Date).toISOString().split("T")[0] 
       : "",
-    scheduledSkirtingInstallationAt: montage.scheduledSkirtingInstallationAt 
-      ? new Date(montage.scheduledSkirtingInstallationAt as string | number | Date).toISOString().split("T")[0] 
-      : "",
-    scheduledSkirtingInstallationEndAt: montage.scheduledSkirtingInstallationEndAt 
-      ? new Date(montage.scheduledSkirtingInstallationEndAt as string | number | Date).toISOString().split("T")[0] 
-      : "",
     source: montage.customer?.source || "other",
     forecastedInstallationDate: montage.forecastedInstallationDate
       ? new Date(montage.forecastedInstallationDate as string | number | Date).toISOString().split("T")[0]
@@ -89,13 +83,6 @@ export function MontageClientCard({
     to: montage.scheduledInstallationEndAt ? new Date(montage.scheduledInstallationEndAt) : undefined,
   });
 
-  const [skirtingDateRange, setSkirtingDateRange] = useState<DateRange | undefined>({
-    from: montage.scheduledSkirtingInstallationAt ? new Date(montage.scheduledSkirtingInstallationAt) : undefined,
-    to: montage.scheduledSkirtingInstallationEndAt ? new Date(montage.scheduledSkirtingInstallationEndAt) : undefined,
-  });
-
-  const [isSkirtingSeparate, setIsSkirtingSeparate] = useState(!!montage.scheduledSkirtingInstallationAt);
-
   // Update local state when prop changes (e.g. after refresh)
   useEffect(() => {
     setFormData({
@@ -109,12 +96,6 @@ export function MontageClientCard({
         scheduledInstallationEndAt: montage.scheduledInstallationEndAt 
           ? new Date(montage.scheduledInstallationEndAt as string | number | Date).toISOString().split("T")[0] 
           : "",
-        scheduledSkirtingInstallationAt: montage.scheduledSkirtingInstallationAt 
-          ? new Date(montage.scheduledSkirtingInstallationAt as string | number | Date).toISOString().split("T")[0] 
-          : "",
-        scheduledSkirtingInstallationEndAt: montage.scheduledSkirtingInstallationEndAt 
-          ? new Date(montage.scheduledSkirtingInstallationEndAt as string | number | Date).toISOString().split("T")[0] 
-          : "",
         source: montage.customer?.source || "other",
         forecastedInstallationDate: montage.forecastedInstallationDate
           ? new Date(montage.forecastedInstallationDate as string | number | Date).toISOString().split("T")[0]
@@ -127,11 +108,6 @@ export function MontageClientCard({
         from: montage.scheduledInstallationAt ? new Date(montage.scheduledInstallationAt) : undefined,
         to: montage.scheduledInstallationEndAt ? new Date(montage.scheduledInstallationEndAt) : undefined,
     });
-    setSkirtingDateRange({
-        from: montage.scheduledSkirtingInstallationAt ? new Date(montage.scheduledSkirtingInstallationAt) : undefined,
-        to: montage.scheduledSkirtingInstallationEndAt ? new Date(montage.scheduledSkirtingInstallationEndAt) : undefined,
-    });
-    setIsSkirtingSeparate(!!montage.scheduledSkirtingInstallationAt);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [montage.id]);
 
@@ -152,8 +128,6 @@ export function MontageClientCard({
         measurementDate: data.measurementDate,
         scheduledInstallationDate: data.scheduledInstallationAt,
         scheduledInstallationEndDate: data.scheduledInstallationEndAt,
-        scheduledSkirtingInstallationDate: data.scheduledSkirtingInstallationAt,
-        scheduledSkirtingInstallationEndDate: data.scheduledSkirtingInstallationEndAt,
       });
       router.refresh();
     } catch {
@@ -184,42 +158,11 @@ export function MontageClientCard({
     debouncedSave(newData);
   };
 
-  const handleSkirtingDateRangeChange = (range: DateRange | undefined) => {
-    setSkirtingDateRange(range);
-    
-    const newFrom = range?.from ? format(range.from, "yyyy-MM-dd") : "";
-    const newTo = range?.to ? format(range.to, "yyyy-MM-dd") : "";
-    
-    const newData = { 
-        ...formData, 
-        scheduledSkirtingInstallationAt: newFrom,
-        scheduledSkirtingInstallationEndAt: newTo 
-    };
-    setFormData(newData);
-    debouncedSave(newData);
-  };
-
-  const toggleSkirtingSeparate = (checked: boolean) => {
-      setIsSkirtingSeparate(checked);
-      if (!checked) {
-          // Clear skirting dates if disabled
-          setSkirtingDateRange(undefined);
-          const newData = { 
-            ...formData, 
-            scheduledSkirtingInstallationAt: "",
-            scheduledSkirtingInstallationEndAt: "" 
-        };
-        setFormData(newData);
-        debouncedSave(newData);
-      }
-  };
-
   const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
     (montage.installationAddress || "") + " " + (montage.installationCity || "")
   )}`;
 
   const formattedDate = formatScheduleRange(montage.scheduledInstallationAt, montage.scheduledInstallationEndAt);
-  const formattedSkirtingDate = formatScheduleRange(montage.scheduledSkirtingInstallationAt, montage.scheduledSkirtingInstallationEndAt);
   
   const forecastedDate = montage.forecastedInstallationDate 
     ? new Date(montage.forecastedInstallationDate as string | number | Date).toLocaleDateString('pl-PL')
@@ -398,61 +341,6 @@ export function MontageClientCard({
                 </Popover>
                </div>
 
-               <Separator />
-               <div className="flex items-center justify-between">
-                   <Label htmlFor="separateSkirting">Montaż listew w osobnym terminie</Label>
-                   <Switch 
-                        id="separateSkirting" 
-                        checked={isSkirtingSeparate}
-                        onCheckedChange={toggleSkirtingSeparate}
-                   />
-               </div>
-
-               {isSkirtingSeparate && (
-                   <div className="space-y-2">
-                    <Label>Data montażu listew (zakres)</Label>
-                    <Popover>
-                        <PopoverTrigger asChild>
-                        <Button
-                            variant={"outline"}
-                            className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !skirtingDateRange && "text-muted-foreground"
-                            )}
-                        >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {skirtingDateRange?.from ? (
-                            skirtingDateRange.to ? (
-                                <>
-                                {format(skirtingDateRange.from, "dd.MM.yyyy", { locale: pl })} -{" "}
-                                {format(skirtingDateRange.to, "dd.MM.yyyy", { locale: pl })}
-                                </>
-                            ) : (
-                                format(skirtingDateRange.from, "dd.MM.yyyy", { locale: pl })
-                            )
-                            ) : (
-                            <span>Wybierz datę</span>
-                            )}
-                        </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                            mode="range"
-                            selected={skirtingDateRange}
-                            onSelect={handleSkirtingDateRangeChange}
-                            numberOfMonths={2}
-                            locale={pl}
-                            classNames={{
-                                day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
-                                day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-                                day_today: "bg-accent text-accent-foreground",
-                            }}
-                        />
-                        </PopoverContent>
-                    </Popover>
-                   </div>
-               )}
-               
                <div className="flex items-center justify-end gap-2 pt-2">
                   {isSaving ? (
                     <span className="text-xs text-muted-foreground flex items-center gap-1">
@@ -629,11 +517,6 @@ export function MontageClientCard({
                         <span className="text-sm font-medium">
                             {formattedDate || "Nie zaplanowano"}
                         </span>
-                        {formattedSkirtingDate && (
-                            <span className="text-[10px] text-amber-600 font-medium mt-0.5">
-                                Listwy: {formattedSkirtingDate}
-                            </span>
-                        )}
                     </div>
                 </div>
             </div>

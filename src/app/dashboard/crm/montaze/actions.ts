@@ -656,8 +656,6 @@ type UpdateMontageContactDetailsInput = {
 	scheduledInstallationDate?: string;
 	scheduledInstallationEndDate?: string;
     measurementDate?: string;
-    scheduledSkirtingInstallationDate?: string;
-    scheduledSkirtingInstallationEndDate?: string;
 	billingAddress?: string;
 	billingCity?: string;
 	installationAddress?: string;
@@ -674,8 +672,6 @@ export async function updateMontageContactDetails({
 	scheduledInstallationDate,
 	scheduledInstallationEndDate,
     measurementDate,
-    scheduledSkirtingInstallationDate,
-    scheduledSkirtingInstallationEndDate,
 	billingAddress,
 	billingCity,
 	installationAddress,
@@ -733,24 +729,6 @@ export async function updateMontageContactDetails({
         measurementAt = parsed;
     }
 
-    let scheduledSkirtingInstallationAt: Date | null = null;
-    if (scheduledSkirtingInstallationDate && scheduledSkirtingInstallationDate.trim()) {
-        const parsed = new Date(`${scheduledSkirtingInstallationDate}T00:00:00`);
-        if (Number.isNaN(parsed.getTime())) {
-            throw new Error('Podaj prawidłową datę montażu listew.');
-        }
-        scheduledSkirtingInstallationAt = parsed;
-    }
-
-    let scheduledSkirtingInstallationEndAt: Date | null = null;
-    if (scheduledSkirtingInstallationEndDate && scheduledSkirtingInstallationEndDate.trim()) {
-        const parsed = new Date(`${scheduledSkirtingInstallationEndDate}T00:00:00`);
-        if (Number.isNaN(parsed.getTime())) {
-            throw new Error('Podaj prawidłową datę zakończenia montażu listew.');
-        }
-        scheduledSkirtingInstallationEndAt = parsed;
-    }
-
     let forecastedInstallationAt: Date | null = null;
     if (forecastedInstallationDate && forecastedInstallationDate.trim()) {
         const parsed = new Date(`${forecastedInstallationDate}T00:00:00`);
@@ -788,8 +766,6 @@ export async function updateMontageContactDetails({
 			scheduledInstallationAt,
 			scheduledInstallationEndAt,
             measurementDate: measurementAt,
-            scheduledSkirtingInstallationAt,
-            scheduledSkirtingInstallationEndAt,
 			billingAddress: normalizedBillingAddress,
 			billingCity: normalizedBillingCity,
 			installationAddress: normalizedInstallationAddress,

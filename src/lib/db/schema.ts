@@ -47,7 +47,7 @@ export const supplierMessageMediums = ['email', 'phone', 'note'] as const;
 
 export const mailFolderKinds = ['inbox', 'sent', 'drafts', 'spam', 'trash', 'archive', 'custom'] as const;
 export const mailAccountStatuses = ['disabled', 'connected', 'disconnected', 'error'] as const;
-export const montageStatuses = ['lead', 'before_measurement', 'before_first_payment', 'before_installation', 'before_skirting_installation', 'before_final_invoice', 'completed'] as const;
+export const montageStatuses = ['lead', 'before_measurement', 'before_first_payment', 'before_installation', 'before_final_invoice', 'completed'] as const;
 export const logisticsStatuses = ['pending', 'ready', 'loaded', 'delivered'] as const;
 export const customerSources = ['internet', 'social_media', 'recommendation', 'architect', 'event', 'drive_by', 'phone', 'other'] as const;
 
@@ -506,8 +506,6 @@ export const montages = pgTable(
 		scheduledInstallationEndAt: timestamp('scheduled_installation_end_at'),
         installationDateConfirmed: boolean('installation_date_confirmed').default(false),
         measurementDate: timestamp('measurement_date'),
-        scheduledSkirtingInstallationAt: timestamp('scheduled_skirting_installation_at'),
-        scheduledSkirtingInstallationEndAt: timestamp('scheduled_skirting_installation_end_at'),
 		materialDetails: text('material_details'),
 		measurementDetails: text('measurement_details'),
 		measurementInstallationMethod: text('measurement_installation_method').$type<'click' | 'glue'>(),
@@ -522,20 +520,13 @@ export const montages = pgTable(
             supplySide: 'installer' | 'company';
             estimatedCost?: number;
         }[]>(),
-        measurementSeparateSkirting: boolean('measurement_separate_skirting').default(false),
 		floorArea: doublePrecision('floor_area'),
 		floorDetails: text('floor_details'),
-		skirtingLength: doublePrecision('skirting_length'),
-		skirtingDetails: text('skirting_details'),
 		panelModel: text('panel_model'),
 		panelProductId: integer('panel_product_id'),
 		panelWaste: doublePrecision('panel_waste'),
-		skirtingModel: text('skirting_model'),
-		skirtingProductId: integer('skirting_product_id'),
-		skirtingWaste: doublePrecision('skirting_waste'),
 		modelsApproved: boolean('models_approved').notNull().default(false),
 		finalPanelAmount: doublePrecision('final_panel_amount'),
-		finalSkirtingLength: doublePrecision('final_skirting_length'),
 		materialsEditHistory: json('materials_edit_history'),
 		additionalInfo: text('additional_info'),
         clientInfo: text('client_info'),
@@ -565,16 +556,6 @@ export const montages = pgTable(
         }>(),
         clientSignatureUrl: text('client_signature_url'),
 
-        // Skirting Protocol & Logistics
-        skirtingMaterialStatus: text('skirting_material_status').$type<MontageMaterialStatus>().default('none'),
-        skirtingMaterialClaimType: text('skirting_material_claim_type').$type<MontageMaterialClaimType>(),
-        skirtingProtocolData: json('skirting_protocol_data').$type<{
-            isHousingVat: boolean;
-            location: string;
-            signedAt: string;
-            notes: string;
-        }>(),
-        skirtingClientSignatureUrl: text('skirting_client_signature_url'),
         installerSignatureUrl: text('installer_signature_url'),
 
         technicalAudit: json('technical_audit').$type<TechnicalAuditData>(),

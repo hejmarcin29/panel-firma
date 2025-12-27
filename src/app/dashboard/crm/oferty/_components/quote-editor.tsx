@@ -90,13 +90,9 @@ type QuoteEditorProps = {
             contactEmail: string | null;
             contactPhone: string | null;
             floorArea: number | null;
-            skirtingLength: number | null;
             panelModel: string | null;
             panelProductId?: number | null;
-            skirtingModel: string | null;
-            skirtingProductId?: number | null;
             panelWaste: number | null;
-            skirtingWaste: number | null;
             technicalAudit: unknown;
             measurementAdditionalMaterials?: unknown;
             address: string | null;
@@ -164,11 +160,9 @@ export function QuoteEditor({ quote, templates, companyInfo }: QuoteEditorProps)
     // Filter products based on montage models
     const filteredProducts = availableProducts.filter(product => {
         if (quote.montage.panelProductId === product.id) return true;
-        if (quote.montage.skirtingProductId === product.id) return true;
 
         const searchTerms = [
             quote.montage.panelModel,
-            quote.montage.skirtingModel
         ].filter(Boolean).map(t => t?.toLowerCase());
 
         if (searchTerms.length === 0) return true;
@@ -261,44 +255,14 @@ export function QuoteEditor({ quote, templates, companyInfo }: QuoteEditorProps)
             });
         } else {
             // Fallback: If no services defined, notify user but don't add generic ones
-            if (quote.montage.floorArea || quote.montage.skirtingLength) {
+            if (quote.montage.floorArea) {
                  toast.info('Brak zdefiniowanych usług w pomiarze. Dodano tylko materiały (jeśli wybrano).');
             }
         }
 
         // 2. MATERIALS (Products)
         if (selectedProduct) {
-            const attributes = selectedProduct.attributes as ProductAttribute[];
-            const lengthAttr = attributes?.find((a) => a.slug === 'pa_dlugosc');
-            
-            if (lengthAttr && quote.montage.skirtingLength) {
-                // SKIRTING BOARD LOGIC
-                const quantityMb = quote.montage.skirtingLength;
-                const wastePercent = quote.montage.skirtingWaste ?? 5;
-                const quantityMbWithWaste = quantityMb * (1 + wastePercent / 100);
-                const lengthStr = lengthAttr.options?.[0] || '0';
-                const lengthPerPiece = parseFloat(lengthStr.replace(',', '.').replace(/[^0-9.]/g, ''));
-                
-                if (!isNaN(lengthPerPiece) && lengthPerPiece > 0) {
-                    const piecesNeeded = Math.ceil(quantityMbWithWaste / lengthPerPiece);
-                    const notes = `(Zapotrzebowanie: ${quantityMbWithWaste.toFixed(2)} mb [zapas ${wastePercent}%], ${piecesNeeded} szt. po ${lengthPerPiece} mb)`;
-                    const priceNet = parseFloat(selectedProduct.price || '0');
-
-                    newItems.push({
-                        id: Math.random().toString(36).substr(2, 9),
-                        productId: selectedProduct.id,
-                        name: selectedProduct.name + ` ${notes}`,
-                        quantity: piecesNeeded,
-                        unit: 'szt',
-                        priceNet: priceNet,
-                        vatRate: 0.08,
-                        priceGross: priceNet * 1.08,
-                        totalNet: piecesNeeded * priceNet,
-                        totalGross: piecesNeeded * priceNet * 1.08,
-                    });
-                    importedCount++;
-                }
-            } else if (quote.montage.floorArea) {
+            if (quote.montage.floorArea) {
                 // PANEL LOGIC
                 const attributes = selectedProduct.attributes as ProductAttribute[];
                 let quantity = quote.montage.floorArea;
@@ -706,9 +670,6 @@ export function QuoteEditor({ quote, templates, companyInfo }: QuoteEditorProps)
                                                 <span>Cena: {product.price} zł</span>
                                                 {quote.montage.panelProductId === product.id && (
                                                     <span className="text-primary font-medium">Wybrany w pomiarze (Panele)</span>
-                                                )}
-                                                {quote.montage.skirtingProductId === product.id && (
-                                                    <span className="text-primary font-medium">Wybrany w pomiarze (Listwy)</span>
                                                 )}
                                             </div>
                                         </div>
@@ -1148,11 +1109,6 @@ export function QuoteEditor({ quote, templates, companyInfo }: QuoteEditorProps)
                                             {quote.montage.panelProductId === product.id && (
                                                 <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                                                     Wybrany w pomiarze (Panele)
-                                                </Badge>
-                                            )}
-                                            {quote.montage.skirtingProductId === product.id && (
-                                                <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
-                                                    Wybrany w pomiarze (Listwy)
                                                 </Badge>
                                             )}
                                         </div>

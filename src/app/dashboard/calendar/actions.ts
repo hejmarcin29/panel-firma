@@ -105,18 +105,10 @@ export async function updateEventDate(
       .set({ expectedShipDate: date })
       .where(eq(orders.id, id));
   } else {
-    if (id.endsWith('-skirting')) {
-        const realId = id.replace('-skirting', '');
-        await db
-            .update(montages)
-            .set({ scheduledSkirtingInstallationAt: date })
-            .where(eq(montages.id, realId));
-    } else {
-        await db
-            .update(montages)
-            .set({ scheduledInstallationAt: date })
-            .where(eq(montages.id, id));
-    }
+    await db
+        .update(montages)
+        .set({ scheduledInstallationAt: date })
+        .where(eq(montages.id, id));
   }
   revalidatePath('/dashboard/calendar');
 }

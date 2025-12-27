@@ -63,7 +63,6 @@ export type MaterialsEditHistoryEntry = {
 	date: string;
 	changes: {
 		finalPanelAmount?: number | null;
-		finalSkirtingLength?: number | null;
 	};
 };
 
@@ -94,21 +93,14 @@ export type Montage = {
 	scheduledInstallationAt: TimestampValue;
 	scheduledInstallationEndAt: TimestampValue;
     measurementDate?: TimestampValue;
-    scheduledSkirtingInstallationAt?: TimestampValue;
-    scheduledSkirtingInstallationEndAt?: TimestampValue;
 	materialDetails: string | null;
     clientInfo: string | null;
 	measurementDetails: string | null;
 	floorArea: number | null;
 	floorDetails: string | null;
-	skirtingLength: number | null;
-	skirtingDetails: string | null;
 	panelModel: string | null;
     panelProductId?: number | null;
 	panelWaste: number | null;
-	skirtingModel: string | null;
-    skirtingProductId?: number | null;
-	skirtingWaste: number | null;
 	modelsApproved: boolean;
 	measurementInstallationMethod: 'click' | 'glue' | null;
     measurementFloorPattern?: 'classic' | 'herringbone' | null;
@@ -116,9 +108,7 @@ export type Montage = {
 	measurementAdditionalWorkNeeded: boolean;
 	measurementAdditionalWorkDescription: string | null;
 	measurementAdditionalMaterials: MeasurementMaterialItem[] | null;
-    measurementSeparateSkirting?: boolean | null;
 	finalPanelAmount: number | null;
-	finalSkirtingLength: number | null;
     
     // Protocol Fields
     contractNumber?: string | null;
@@ -127,12 +117,6 @@ export type Montage = {
     protocolData?: Record<string, unknown> | null; // Using Record<string, unknown> instead of any
     clientSignatureUrl?: string | null;
     installerSignatureUrl?: string | null;
-
-    // Skirting Protocol & Logistics
-    skirtingMaterialStatus?: MontageMaterialStatus | null;
-    skirtingMaterialClaimType?: MontageMaterialClaimType | null;
-    skirtingProtocolData?: Record<string, unknown> | null;
-    skirtingClientSignatureUrl?: string | null;
 
 	materialsEditHistory: MaterialsEditHistoryEntry[] | null;
 	additionalInfo: string | null;

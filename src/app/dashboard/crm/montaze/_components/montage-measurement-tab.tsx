@@ -891,7 +891,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
         </TabsContent>
 
         <TabsContent value="additional" className="space-y-6 mt-4">
-            {/* Additional Work & Skirting */}
+            {/* Additional Work */}
             <div className="grid gap-6 md:grid-cols-2">
                 <Card>
                     <CardHeader className="pb-3">

@@ -19,7 +19,6 @@ interface InstallerDashboardViewProps {
 export function InstallerDashboardView({ montages }: InstallerDashboardViewProps) {
   const measurements = montages.filter(m => m.status === 'before_measurement');
   const installations = montages.filter(m => ['before_installation', 'before_final_invoice'].includes(m.status));
-  const skirtings = montages.filter(m => m.status === 'before_skirting_installation');
 
   const missingCostsMontages = montages.filter(m => {
       const materials = m.measurementAdditionalMaterials;
@@ -66,10 +65,9 @@ export function InstallerDashboardView({ montages }: InstallerDashboardViewProps
 
       <Tabs defaultValue="measurements" className="w-full">
         <div className="px-4">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="measurements">Pomiary</TabsTrigger>
                 <TabsTrigger value="installations">Montaże</TabsTrigger>
-                <TabsTrigger value="skirtings">Listwy</TabsTrigger>
             </TabsList>
         </div>
 
@@ -80,16 +78,12 @@ export function InstallerDashboardView({ montages }: InstallerDashboardViewProps
         <TabsContent value="installations" className="mt-4">
             <MontageList montages={installations} dateField="scheduledInstallationAt" />
         </TabsContent>
-
-        <TabsContent value="skirtings" className="mt-4">
-            <MontageList montages={skirtings} dateField="scheduledSkirtingInstallationAt" showLogisticsAlert />
-        </TabsContent>
       </Tabs>
     </div>
   );
 }
 
-function MontageList({ montages, dateField, fallbackDateField, showLogisticsAlert }: { montages: Montage[], dateField: keyof Montage, fallbackDateField?: keyof Montage, showLogisticsAlert?: boolean }) {
+function MontageList({ montages, dateField, fallbackDateField }: { montages: Montage[], dateField: keyof Montage, fallbackDateField?: keyof Montage }) {
   const sortedMontages = [...montages].sort((a, b) => {
     const dateAVal = a[dateField] || (fallbackDateField ? a[fallbackDateField] : null);
     const dateBVal = b[dateField] || (fallbackDateField ? b[fallbackDateField] : null);
@@ -137,7 +131,7 @@ function MontageList({ montages, dateField, fallbackDateField, showLogisticsAler
           </Card>
         ) : (
           todayMontages.map(montage => (
-            <MontageCard key={montage.id} montage={montage} date={getDate(montage)} isToday={true} showLogisticsAlert={showLogisticsAlert} />
+            <MontageCard key={montage.id} montage={montage} date={getDate(montage)} isToday={true} />
           ))
         )}
       </div>
@@ -149,7 +143,7 @@ function MontageList({ montages, dateField, fallbackDateField, showLogisticsAler
             Nadchodzące
           </h2>
           {upcomingMontages.map(montage => (
-            <MontageCard key={montage.id} montage={montage} date={getDate(montage)} showLogisticsAlert={showLogisticsAlert} />
+            <MontageCard key={montage.id} montage={montage} date={getDate(montage)} />
           ))}
         </div>
       )}
@@ -161,7 +155,7 @@ function MontageList({ montages, dateField, fallbackDateField, showLogisticsAler
             Do ustalenia / Inne
           </h2>
           {unscheduledMontages.map(montage => (
-            <MontageCard key={montage.id} montage={montage} date={null} compact showLogisticsAlert={showLogisticsAlert} />
+            <MontageCard key={montage.id} montage={montage} date={null} compact />
           ))}
         </div>
       )}
@@ -169,7 +163,7 @@ function MontageList({ montages, dateField, fallbackDateField, showLogisticsAler
   );
 }
 
-function MontageCard({ montage, date, isToday = false, showLogisticsAlert = false }: { montage: Montage, date: Date | null, isToday?: boolean, compact?: boolean, showLogisticsAlert?: boolean }) {
+function MontageCard({ montage, date, isToday = false }: { montage: Montage, date: Date | null, isToday?: boolean, compact?: boolean }) {
   
   return (
     <Link href={`/dashboard/crm/montaze/${montage.id}`} className="block group">
@@ -207,29 +201,6 @@ function MontageCard({ montage, date, isToday = false, showLogisticsAlert = fals
                     {isToday && " (Dziś)"}
                   </span>
                 </div>
-              )}
-
-              {showLogisticsAlert && (
-                  <div className="pt-2 space-y-1">
-                      {montage.skirtingMaterialStatus === 'in_stock' && montage.skirtingMaterialClaimType === 'installer_pickup' && (
-                          <Badge variant="destructive" className="w-full justify-center py-1 animate-pulse">
-                              <AlertTriangle className="w-3 h-3 mr-1" />
-                              ZABIERZ LISTWY Z MAGAZYNU!
-                          </Badge>
-                      )}
-                      {montage.skirtingMaterialStatus === 'in_stock' && montage.skirtingMaterialClaimType !== 'installer_pickup' && (
-                          <Badge variant="outline" className="w-full justify-center py-1">
-                              <Navigation className="w-3 h-3 mr-1" />
-                              Dostawa firmowa (Na magazynie)
-                          </Badge>
-                      )}
-                      {montage.skirtingMaterialStatus === 'delivered' && (
-                          <Badge variant="secondary" className="w-full justify-center py-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
-                              <Package className="w-3 h-3 mr-1" />
-                              Listwy są u klienta
-                          </Badge>
-                      )}
-                  </div>
               )}
             </div>
 

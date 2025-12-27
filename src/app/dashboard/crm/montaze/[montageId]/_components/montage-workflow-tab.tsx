@@ -577,49 +577,7 @@ export function MontageWorkflowTab({
                             return template?.associatedStage === status.value;
                         });
 
-                        // Filter out skirting items if separate skirting is NOT enabled
-                        if (!montage.measurementSeparateSkirting) {
-                            stageItems = stageItems.filter(item => !item.templateId?.endsWith('_skirting'));
-                        }
-
                         if (stageItems.length === 0) return null;
-
-                        // If separate skirting is enabled, we might want to group them visually
-                        const showSplit = montage.measurementSeparateSkirting && stageItems.some(i => i.templateId?.endsWith('_skirting'));
-
-                        if (showSplit) {
-                             const floorItems = stageItems.filter(item => !item.templateId?.endsWith('_skirting'));
-                             const skirtingItems = stageItems.filter(item => item.templateId?.endsWith('_skirting'));
-
-                             return (
-                                <div key={status.value} className="space-y-4">
-                                    <div className="flex items-center gap-2 pb-1 border-b">
-                                        <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                                            {status.label}
-                                        </h4>
-                                        <span className="text-xs bg-muted px-2 py-0.5 rounded-full font-medium">
-                                            {stageItems.filter(i => i.completed).length}/{stageItems.length}
-                                        </span>
-                                    </div>
-                                    
-                                    {/* Floor Section */}
-                                    {floorItems.length > 0 && (
-                                        <div className="pl-2 border-l-2 border-primary/20 space-y-2">
-                                            <h5 className="text-xs font-medium text-muted-foreground uppercase mb-2">Podłoga</h5>
-                                            {floorItems.map(renderChecklistItem)}
-                                        </div>
-                                    )}
-
-                                    {/* Skirting Section */}
-                                    {skirtingItems.length > 0 && (
-                                        <div className="pl-2 border-l-2 border-orange-500/20 space-y-2">
-                                            <h5 className="text-xs font-medium text-muted-foreground uppercase mb-2">Listwy</h5>
-                                            {skirtingItems.map(renderChecklistItem)}
-                                        </div>
-                                    )}
-                                </div>
-                             );
-                        }
 
                         return (
                             <div key={status.value} className="space-y-3">
