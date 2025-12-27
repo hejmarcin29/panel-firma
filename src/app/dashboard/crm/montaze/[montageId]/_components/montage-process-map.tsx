@@ -49,8 +49,8 @@ const StepNode = ({ data }: NodeProps) => {
             "px-4 py-3 rounded-lg border-2 shadow-sm min-w-[180px] transition-all relative",
             getStatusColor(status)
         )}>
-            <Handle type="target" position={Position.Left} className="!bg-slate-400" />
-            <Handle type="source" position={Position.Top} id="top" className="!bg-transparent !border-0 !top-0" />
+            <Handle type="target" position={Position.Left} className="bg-slate-400!" />
+            <Handle type="source" position={Position.Top} id="top" className="bg-transparent! border-0! top-0!" />
             
             <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-bold uppercase tracking-wider opacity-70">{actor}</span>
@@ -66,7 +66,7 @@ const StepNode = ({ data }: NodeProps) => {
                 </div>
             )}
 
-            <Handle type="source" position={Position.Right} className="!bg-slate-400" />
+            <Handle type="source" position={Position.Right} className="bg-slate-400!" />
         </div>
     );
 };
@@ -80,7 +80,7 @@ const CheckpointNode = ({ data }: NodeProps) => {
             isMet ? "bg-emerald-100 border-emerald-500" : 
             isCurrentStep ? "bg-white border-blue-400" : "bg-slate-50 border-slate-200"
         )}>
-            <Handle type="target" position={Position.Top} className="!bg-transparent !border-0" />
+            <Handle type="target" position={Position.Top} className="bg-transparent! border-0!" />
             <div className="-rotate-45">
                 {isMet ? (
                     <Check className="w-4 h-4 text-emerald-600" />
@@ -99,7 +99,7 @@ const CheckpointNode = ({ data }: NodeProps) => {
                 </span>
             </div>
 
-            <Handle type="source" position={Position.Bottom} className="!bg-transparent !border-0" />
+            <Handle type="source" position={Position.Bottom} className="bg-transparent! border-0!" />
         </div>
     );
 };
@@ -111,7 +111,7 @@ const AutomationNode = ({ data }: NodeProps) => {
             <div className="w-8 h-8 rounded-full bg-amber-100 border border-amber-300 flex items-center justify-center shadow-sm text-amber-700">
                 <Zap className="w-4 h-4" />
             </div>
-            <Handle type="target" position={Position.Bottom} className="!bg-transparent !border-0" />
+            <Handle type="target" position={Position.Bottom} className="bg-transparent! border-0!" />
             
             <div className="absolute -top-8 opacity-0 group-hover:opacity-100 transition-opacity bg-black/80 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none z-50">
                 {label}
@@ -125,12 +125,12 @@ const GateNode = ({ data }: NodeProps) => {
     const { label } = data;
     return (
         <div className="flex flex-col items-center justify-center bg-white border border-slate-200 rounded-md px-2 py-1 shadow-sm">
-            <Handle type="target" position={Position.Left} className="!bg-transparent !border-0" />
+            <Handle type="target" position={Position.Left} className="bg-transparent! border-0!" />
             <div className="flex items-center gap-1 text-[10px] font-medium text-slate-600">
                 <ListChecks className="w-3 h-3" />
                 {label}
             </div>
-            <Handle type="source" position={Position.Right} className="!bg-transparent !border-0" />
+            <Handle type="source" position={Position.Right} className="bg-transparent! border-0!" />
         </div>
     );
 };

@@ -48,7 +48,7 @@ export function TechShowcase() {
 
           <div className="relative h-[600px] w-full rounded-2xl overflow-hidden border border-gray-800 bg-gray-950/50 backdrop-blur-sm">
              {/* Abstract UI Representation */}
-             <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-blue-500/10" />
+             <div className="absolute inset-0 bg-linear-to-br from-emerald-500/10 to-blue-500/10" />
              
              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[70%] bg-gray-900 rounded-xl border border-gray-700 shadow-2xl p-6 flex flex-col gap-4">
                 <div className="flex items-center justify-between border-b border-gray-800 pb-4">

@@ -96,7 +96,7 @@ export function MontageDetailsLayout({
 
   if (isMobile) {
     return (
-      <div className="fixed inset-0 z-[100] flex flex-col bg-background overflow-hidden pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+      <div className="fixed inset-0 z-100 flex flex-col bg-background overflow-hidden pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
         <div className="shrink-0 z-10 bg-background shadow-sm">
             {header}
             <div ref={tabsRef} className="flex overflow-x-auto scrollbar-hide px-2 pb-0 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>

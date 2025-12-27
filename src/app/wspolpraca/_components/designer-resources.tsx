@@ -52,7 +52,7 @@ export function DesignerResources() {
 
             <div className="md:w-1/2 flex justify-center">
                 <motion.div 
-                    className="bg-gradient-to-br from-zinc-800 to-zinc-950 p-8 rounded-2xl border border-white/10 max-w-md w-full text-center"
+                    className="bg-linear-to-br from-zinc-800 to-zinc-950 p-8 rounded-2xl border border-white/10 max-w-md w-full text-center"
                     whileHover={{ y: -5 }}
                     transition={{ duration: 0.3 }}
                 >

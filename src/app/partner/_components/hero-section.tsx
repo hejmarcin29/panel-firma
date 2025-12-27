@@ -9,7 +9,7 @@ export function HeroSection() {
     <section className="relative h-[90vh] w-full overflow-hidden bg-black text-white">
       {/* Background Image/Video Placeholder */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/50 to-black/90 z-10" />
+        <div className="absolute inset-0 bg-linear-to-b from-black/80 via-black/50 to-black/90 z-10" />
         <motion.img 
             src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2700&auto=format&fit=crop" 
             alt="Modern Business Building" 
@@ -29,7 +29,7 @@ export function HeroSection() {
         >
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-tight">
                 Zarabiaj na poleceniach. <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-500">
+                <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-cyan-500">
                     Pasywny dochód dla Twojej firmy.
                 </span>
             </h1>

@@ -9,7 +9,7 @@ export function HeroSection() {
     <section className="relative h-[90vh] w-full overflow-hidden bg-black text-white">
       {/* Background Image/Video Placeholder */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/90 z-10" />
+        <div className="absolute inset-0 bg-linear-to-b from-black/70 via-black/40 to-black/90 z-10" />
         <motion.img 
             src="https://images.unsplash.com/photo-1600607686527-6fb886090705?q=80&w=2700&auto=format&fit=crop" 
             alt="Luxury Interior" 
@@ -29,7 +29,7 @@ export function HeroSection() {
         >
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-tight">
                 Twórz wnętrza. <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-yellow-500">
+                <span className="text-transparent bg-clip-text bg-linear-to-r from-amber-200 to-yellow-500">
                     My zajmiemy się resztą.
                 </span>
             </h1>

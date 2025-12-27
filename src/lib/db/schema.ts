@@ -83,7 +83,6 @@ export type InstallerProfile = {
         classicGlue?: number;
         herringboneClick?: number;
         herringboneGlue?: number;
-        skirting?: number;
     };
 	pricing?: {
 		serviceName: string;

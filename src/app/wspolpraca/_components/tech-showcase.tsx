@@ -71,7 +71,7 @@ export function TechShowcase() {
                         </div>
                         
                         {/* Glow effect */}
-                        <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200 -z-10" />
+                        <div className="absolute -inset-1 bg-linear-to-r from-blue-600 to-purple-600 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200 -z-10" />
                     </div>
                 </motion.div>
                 
