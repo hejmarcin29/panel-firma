@@ -208,6 +208,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
         setIsSaving(false);
       }
   }, [
+    router,
     montage.id,
     measurementDetails,
     floorArea,

@@ -572,7 +572,7 @@ export function MontageWorkflowTab({
             ) : (
                 <div className="space-y-6">
                     {statusOptions.map(status => {
-                        let stageItems = montage.checklistItems.filter(item => {
+                        const stageItems = montage.checklistItems.filter(item => {
                             const template = DEFAULT_MONTAGE_CHECKLIST.find(t => t.id === item.templateId);
                             return template?.associatedStage === status.value;
                         });
