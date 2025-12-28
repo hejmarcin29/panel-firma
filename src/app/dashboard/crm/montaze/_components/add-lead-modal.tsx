@@ -14,9 +14,17 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { createLead } from '../actions';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import { type MontageSampleStatus } from '@/lib/db/schema';
 
 export function AddLeadModal({ 
     open: controlledOpen, 
@@ -37,6 +45,8 @@ export function AddLeadModal({
         contactPhone: '',
         address: '',
         description: '',
+        forecastedInstallationDate: '',
+        sampleStatus: 'none' as MontageSampleStatus,
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -57,6 +67,8 @@ export function AddLeadModal({
                     contactPhone: '',
                     address: '',
                     description: '',
+                    forecastedInstallationDate: '',
+                    sampleStatus: 'none',
                 });
             } catch (error) {
                 toast.error(error instanceof Error ? error.message : 'Wystąpił błąd');
@@ -113,7 +125,35 @@ export function AddLeadModal({
                         />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="description">Opis / Notatki</Label>
+                        <Label htmlFor="forecastedInstallationDate">Szacowany termin montażu</Label>
+                        <Input
+                            id="forecastedInstallationDate"
+                            type="date"
+                            value={formData.forecastedInstallationDate}
+                            onChange={(e) => setFormData({ ...formData, forecastedInstallationDate: e.target.value })}
+                            disabled={isPending}
+                        />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="sampleStatus">Status próbki</Label>
+                        <Select
+                            value={formData.sampleStatus}
+                            onValueChange={(value) => setFormData({ ...formData, sampleStatus: value as MontageSampleStatus })}
+                            disabled={isPending}
+                        >
+                            <SelectTrigger id="sampleStatus">
+                                <SelectValue placeholder="Wybierz status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="none">⛔ Nie dotyczy</SelectItem>
+                                <SelectItem value="to_send">📦 Do wysłania</SelectItem>
+                                <SelectItem value="sent">🚚 Wysłana</SelectItem>
+                                <SelectItem value="delivered">✅ Odebrana / Zaakceptowana</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="description">Info od klienta</Label>
                         <Textarea
                             id="description"
                             value={formData.description}

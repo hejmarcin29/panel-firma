@@ -15,6 +15,7 @@ import {
     type MontageMaterialStatus,
     type MontageMaterialClaimType,
     type MontageInstallerStatus,
+    type MontageSampleStatus,
 	montageStatuses,
 	customers,
 	users,
@@ -1665,6 +1666,8 @@ export async function createLead(data: {
     contactPhone?: string;
     address?: string;
     description?: string;
+    forecastedInstallationDate?: string;
+    sampleStatus?: MontageSampleStatus;
 }) {
     const user = await requireUser();
     
@@ -1687,25 +1690,52 @@ export async function createLead(data: {
         contactPhone: data.contactPhone?.trim() || null,
         installationCity: data.address?.trim() || null,
         billingCity: data.address?.trim() || null,
-        materialDetails: data.description?.trim() || null,
+        clientInfo: data.description?.trim() || null,
+        forecastedInstallationDate: data.forecastedInstallationDate ? new Date(data.forecastedInstallationDate) : null,
+        sampleStatus: data.sampleStatus || 'none',
         status: 'lead',
         architectId,
         createdAt: now,
         updatedAt: now,
     });
 
+    // Add note if description is provided
+    if (data.description?.trim()) {
+        await db.insert(montageNotes).values({
+            id: crypto.randomUUID(),
+            montageId: montageId,
+            content: `[Info od klienta]: ${data.description.trim()}`,
+            isInternal: false,
+            createdBy: user.id,
+            createdAt: now,
+        });
+    }
+
     // Initialize checklist items
-    const checklistItems = DEFAULT_MONTAGE_CHECKLIST.map((template, index) => ({
-        id: crypto.randomUUID(),
-        montageId: montageId,
-        templateId: template.id,
-        label: template.label,
-        allowAttachment: template.allowAttachment,
-        orderIndex: index,
-        completed: false,
-        createdAt: now,
-        updatedAt: now,
-    }));
+    const templates = await getMontageChecklistTemplates();
+    const checklistItems = templates.map((template, index) => {
+        let isCompleted = false;
+        
+        // Smart Checklist Logic for Sample Verification
+        if (template.id === 'sample_verification') {
+            const status = data.sampleStatus || 'none';
+            if (status === 'none' || status === 'delivered') {
+                isCompleted = true;
+            }
+        }
+
+        return {
+            id: crypto.randomUUID(),
+            montageId: montageId,
+            templateId: template.id,
+            label: template.label,
+            allowAttachment: template.allowAttachment,
+            orderIndex: index,
+            completed: isCompleted,
+            createdAt: now,
+            updatedAt: now,
+        };
+    });
 
     if (checklistItems.length > 0) {
         await db.insert(montageChecklistItems).values(checklistItems);

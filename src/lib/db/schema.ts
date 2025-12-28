@@ -48,6 +48,7 @@ export const supplierMessageMediums = ['email', 'phone', 'note'] as const;
 export const mailFolderKinds = ['inbox', 'sent', 'drafts', 'spam', 'trash', 'archive', 'custom'] as const;
 export const mailAccountStatuses = ['disabled', 'connected', 'disconnected', 'error'] as const;
 export const montageStatuses = ['lead', 'before_measurement', 'before_first_payment', 'before_installation', 'before_final_invoice', 'completed'] as const;
+export const montageSampleStatuses = ['none', 'to_send', 'sent', 'delivered'] as const;
 export const logisticsStatuses = ['pending', 'ready', 'loaded', 'delivered'] as const;
 export const customerSources = ['internet', 'social_media', 'recommendation', 'architect', 'event', 'drive_by', 'phone', 'other'] as const;
 
@@ -65,6 +66,7 @@ export type SupplierMessageMedium = (typeof supplierMessageMediums)[number];
 export type MailFolderKind = (typeof mailFolderKinds)[number];
 export type MailAccountStatus = (typeof mailAccountStatuses)[number];
 export type MontageStatus = string;
+export type MontageSampleStatus = (typeof montageSampleStatuses)[number];
 export type LogisticsStatus = (typeof logisticsStatuses)[number];
 export type CustomerSource = (typeof customerSources)[number];
 export type MontageMaterialStatus = 'none' | 'ordered' | 'in_stock' | 'delivered';
@@ -532,6 +534,7 @@ export const montages = pgTable(
 		sketchUrl: text('sketch_url'),
 		forecastedInstallationDate: timestamp('forecasted_installation_date'),
 		status: text('status').$type<MontageStatus>().notNull().default('lead'),
+        sampleStatus: text('sample_status').$type<MontageSampleStatus>().default('none'),
 		displayId: text('display_id'),
 		materialStatus: text('material_status').$type<MontageMaterialStatus>().notNull().default('none'),
         materialClaimType: text('material_claim_type').$type<MontageMaterialClaimType>(),

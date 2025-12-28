@@ -6,6 +6,12 @@ export type MontageChecklistTemplate = {
 };
 
 export const DEFAULT_MONTAGE_CHECKLIST: readonly MontageChecklistTemplate[] = [
+    {
+        id: 'sample_verification',
+        label: 'Weryfikacja próbki (Smart)',
+        allowAttachment: false,
+        associatedStage: 'lead',
+    },
 	{
 		id: 'contract_signed_check',
 		label: 'Podpisano umowę/cenę',
