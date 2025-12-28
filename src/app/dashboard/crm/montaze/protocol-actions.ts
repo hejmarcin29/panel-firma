@@ -12,6 +12,7 @@ import { renderToStream } from '@react-pdf/renderer';
 import { ProtocolDocument } from '@/components/documents/protocol-pdf';
 import { format } from 'date-fns';
 import { isSystemAutomationEnabled } from '@/lib/montaze/automation';
+import { toggleMontageChecklistItem } from './actions';
 // import { sendEmail } from '@/lib/email'; // Placeholder if email exists
 
 export async function uploadSignature(montageId: string, base64Data: string, type: 'client' | 'installer') {
@@ -123,10 +124,6 @@ export async function submitMontageProtocol(data: {
         }));
 
         const pdfUrl = `${config.publicBaseUrl}/${pdfKey}`;
-
-import { toggleMontageChecklistItem } from './actions';
-
-// ... existing code ...
 
         // 3. Update Checklist (Auto-check "protocol_signed")
         // Find the checklist item with templateId 'protocol_signed'
