@@ -23,14 +23,20 @@ export async function generateMetadata(
 
 export default async function MontageDetailsPage({ params }: MontageDetailsPageParams) {
     const { montageId } = await params;
-    const [data, portalEnabled] = await Promise.all([
+    const [data, portalEnabled, requireInstallerForMeasurement] = await Promise.all([
         getMontageDetails(montageId),
-        getAppSetting(appSettingKeys.portalEnabled)
+        getAppSetting(appSettingKeys.portalEnabled),
+        getAppSetting(appSettingKeys.requireInstallerForMeasurement)
     ]);
 
     if (!data) {
         notFound();
     }
 
-    return <MontageView montageId={montageId} initialData={data} portalEnabled={portalEnabled === 'true'} />;
+    return <MontageView 
+        montageId={montageId} 
+        initialData={data} 
+        portalEnabled={portalEnabled === 'true'} 
+        requireInstallerForMeasurement={requireInstallerForMeasurement === 'true'}
+    />;
 }

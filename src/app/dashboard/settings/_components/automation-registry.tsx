@@ -71,6 +71,7 @@ export function AutomationRegistry({
                 initialRules={initialRules} 
                 statusOptions={statusOptions} 
                 initialSettings={initialAutomationSettings}
+                requireInstallerForMeasurement={requireInstallerForMeasurement}
             />
         </div>
 

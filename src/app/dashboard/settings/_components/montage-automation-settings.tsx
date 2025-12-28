@@ -133,7 +133,7 @@ export function MontageAutomationSettings({ templates: initialTemplates, statusO
                     <div className="flex flex-col space-y-1">
                         <span className="font-medium">Wymagaj montażysty do pomiaru</span>
                         <span className="text-sm text-muted-foreground">
-                            Blokuj zlecenie pomiaru (Lead -> Pomiar), jeśli nie przypisano montażysty.
+                            Blokuj zlecenie pomiaru (Lead -&gt; Pomiar), jeśli nie przypisano montażysty.
                         </span>
                     </div>
                     <Switch 
