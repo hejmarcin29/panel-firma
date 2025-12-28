@@ -111,7 +111,7 @@ export async function setMontageChecklistTemplates({ templates, userId }: Persis
 				order: index,
 			};
 		})
-		.filter((entry): entry is { id: string; label: string; allowAttachment: boolean; associatedStage?: string; order: number } => Boolean(entry));
+		.filter((entry): entry is { id: string; label: string; allowAttachment: boolean; associatedStage: string | undefined; order: number } => Boolean(entry));
 
 	if (sanitized.length === 0) {
 		throw new Error('Lista checkboxów nie może być pusta. Dodaj przynajmniej jeden etap.');
