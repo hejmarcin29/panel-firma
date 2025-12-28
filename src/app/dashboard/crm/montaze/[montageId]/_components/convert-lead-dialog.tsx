@@ -40,9 +40,10 @@ import type { Montage } from '../../types';
 
 interface ConvertLeadDialogProps {
     montage: Montage;
+    requireInstallerForMeasurement?: boolean;
 }
 
-export function ConvertLeadDialog({ montage }: ConvertLeadDialogProps) {
+export function ConvertLeadDialog({ montage, requireInstallerForMeasurement }: ConvertLeadDialogProps) {
     const [open, setOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
     const router = useRouter();
@@ -127,6 +128,7 @@ export function ConvertLeadDialog({ montage }: ConvertLeadDialogProps) {
     };
 
     const isSampleBlocking = montage.sampleStatus === 'to_send' || montage.sampleStatus === 'sent';
+    const isInstallerBlocking = requireInstallerForMeasurement && !montage.installerId;
 
     if (isSampleBlocking) {
         return (
@@ -146,6 +148,30 @@ export function ConvertLeadDialog({ montage }: ConvertLeadDialogProps) {
                     </TooltipTrigger>
                     <TooltipContent>
                         <p>Musisz zweryfikować próbki (status &quot;Dostarczono&quot; lub &quot;Brak&quot;) aby przejść dalej.</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+        );
+    }
+
+    if (isInstallerBlocking) {
+        return (
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <span tabIndex={0} className="inline-block w-full sm:w-auto">
+                            <Button 
+                                className="w-full sm:w-auto bg-gray-400 text-white cursor-not-allowed"
+                                size="lg"
+                                disabled
+                            >
+                                <CheckCircle2 className="mr-2 h-5 w-5" />
+                                Akceptuj i zleć pomiar
+                            </Button>
+                        </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Wymagane przypisanie montażysty przed zleceniem pomiaru.</p>
                     </TooltipContent>
                 </Tooltip>
             </TooltipProvider>

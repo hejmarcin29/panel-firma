@@ -664,6 +664,7 @@ type UpdateMontageContactDetailsInput = {
 	installationCity?: string;
     source?: string;
     forecastedInstallationDate?: string;
+    sampleStatus?: string;
 };
 
 export async function updateMontageContactDetails({
@@ -680,6 +681,7 @@ export async function updateMontageContactDetails({
 	installationCity,
     source,
     forecastedInstallationDate,
+    sampleStatus,
 }: UpdateMontageContactDetailsInput) {
 	await requireUser();
 
@@ -772,6 +774,7 @@ export async function updateMontageContactDetails({
 			billingCity: normalizedBillingCity,
 			installationAddress: normalizedInstallationAddress,
 			installationCity: normalizedInstallationCity,
+            sampleStatus: sampleStatus ? (sampleStatus as MontageSampleStatus) : undefined,
 			updatedAt: new Date(),
 		})
 		.where(eq(montages.id, montageId));

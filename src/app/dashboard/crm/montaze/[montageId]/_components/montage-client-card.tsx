@@ -75,6 +75,7 @@ export function MontageClientCard({
     measurementDate: montage.measurementDate
       ? new Date(montage.measurementDate as string | number | Date).toISOString().split("T")[0]
       : "",
+    sampleStatus: montage.sampleStatus || "none",
   });
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -102,6 +103,7 @@ export function MontageClientCard({
         measurementDate: montage.measurementDate
           ? new Date(montage.measurementDate as string | number | Date).toISOString().split("T")[0]
           : "",
+        sampleStatus: montage.sampleStatus || "none",
     });
     setDateRange({
         from: montage.scheduledInstallationAt ? new Date(montage.scheduledInstallationAt) : undefined,
@@ -127,6 +129,7 @@ export function MontageClientCard({
         measurementDate: data.measurementDate,
         scheduledInstallationDate: data.scheduledInstallationAt,
         scheduledInstallationEndDate: data.scheduledInstallationEndAt,
+        sampleStatus: data.sampleStatus,
       });
       router.refresh();
     } catch {
@@ -242,6 +245,23 @@ export function MontageClientCard({
                                  'Inne'}
                             </SelectItem>
                         ))}
+                    </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sampleStatus">Status próbek</Label>
+                <Select 
+                    value={formData.sampleStatus} 
+                    onValueChange={(value) => handleChange("sampleStatus", value)}
+                >
+                    <SelectTrigger id="sampleStatus">
+                        <SelectValue placeholder="Wybierz status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="none">Brak / Nie dotyczy</SelectItem>
+                        <SelectItem value="to_send">Do wysłania</SelectItem>
+                        <SelectItem value="sent">Wysłano</SelectItem>
+                        <SelectItem value="delivered">Dostarczono</SelectItem>
                     </SelectContent>
                 </Select>
               </div>
@@ -476,6 +496,23 @@ export function MontageClientCard({
                     </span>
                 </div>
             )}
+
+            <div className="flex items-center gap-3">
+                <div className="h-4 w-4 flex items-center justify-center">
+                    <div className={cn("h-2.5 w-2.5 rounded-full", 
+                        montage.sampleStatus === 'delivered' ? "bg-green-500" :
+                        montage.sampleStatus === 'sent' ? "bg-blue-500" :
+                        montage.sampleStatus === 'to_send' ? "bg-amber-500" :
+                        "bg-slate-300"
+                    )} />
+                </div>
+                <span className="text-sm">
+                    {montage.sampleStatus === 'delivered' ? 'Próbki dostarczone' :
+                     montage.sampleStatus === 'sent' ? 'Próbki wysłane' :
+                     montage.sampleStatus === 'to_send' ? 'Próbki do wysłania' :
+                     'Brak próbek'}
+                </span>
+            </div>
         </div>
 
         <Separator />

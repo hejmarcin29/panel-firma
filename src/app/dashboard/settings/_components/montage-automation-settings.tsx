@@ -13,7 +13,7 @@ import type { MontageChecklistTemplate } from '@/lib/montaze/checklist-shared';
 import type { MontageAutomationRule } from '@/lib/montaze/automation';
 import type { StatusOption } from '../../crm/montaze/types';
 import { PROCESS_STEPS } from '@/lib/montaze/process-definition';
-import { updateMontageAutomationSettings, updateMontageChecklistTemplates } from '../actions';
+import { updateMontageAutomationSettings, updateMontageChecklistTemplates, updateRequireInstallerForMeasurement } from '../actions';
 
 import { MontageProcessMap } from '../../crm/montaze/[montageId]/_components/montage-process-map';
 
@@ -22,10 +22,12 @@ interface MontageAutomationSettingsProps {
   initialRules: MontageAutomationRule[];
   statusOptions: StatusOption[];
   initialSettings: Record<string, boolean>;
+  requireInstallerForMeasurement: boolean;
 }
 
-export function MontageAutomationSettings({ templates: initialTemplates, statusOptions, initialSettings }: MontageAutomationSettingsProps) {
+export function MontageAutomationSettings({ templates: initialTemplates, statusOptions, initialSettings, requireInstallerForMeasurement }: MontageAutomationSettingsProps) {
   const [settings, setSettings] = useState<Record<string, boolean>>(initialSettings);
+  const [requireInstaller, setRequireInstaller] = useState(requireInstallerForMeasurement);
   const [templates, setTemplates] = useState<MontageChecklistTemplate[]>(initialTemplates);
   const [isPending, startTransition] = useTransition();
   
@@ -33,6 +35,19 @@ export function MontageAutomationSettings({ templates: initialTemplates, statusO
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editLabel, setEditLabel] = useState('');
   const [newItemLabels, setNewItemLabels] = useState<Record<string, string>>({});
+
+  const handleRequireInstallerToggle = (checked: boolean) => {
+      setRequireInstaller(checked);
+      startTransition(async () => {
+          try {
+              await updateRequireInstallerForMeasurement(checked);
+              toast.success("Zaktualizowano ustawienie.");
+          } catch {
+              toast.error("Błąd zapisu.");
+              setRequireInstaller(!checked);
+          }
+      });
+  };
 
   const handleToggle = (id: string, checked: boolean) => {
     const next = { ...settings, [id]: checked };
@@ -107,6 +122,29 @@ export function MontageAutomationSettings({ templates: initialTemplates, statusO
 
   return (
     <div className="space-y-6">
+        {/* General Settings */}
+        <Card>
+            <CardHeader>
+                <CardTitle>Ustawienia Ogólne</CardTitle>
+                <CardDescription>Konfiguracja zachowania procesu.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="flex items-center justify-between space-x-2">
+                    <div className="flex flex-col space-y-1">
+                        <span className="font-medium">Wymagaj montażysty do pomiaru</span>
+                        <span className="text-sm text-muted-foreground">
+                            Blokuj zlecenie pomiaru (Lead -> Pomiar), jeśli nie przypisano montażysty.
+                        </span>
+                    </div>
+                    <Switch 
+                        checked={requireInstaller}
+                        onCheckedChange={handleRequireInstallerToggle}
+                        disabled={isPending}
+                    />
+                </div>
+            </CardContent>
+        </Card>
+
         {/* Process Map Visualization */}
         <Card className="bg-slate-50 border-slate-200 overflow-hidden">
             <CardHeader className="pb-4">

@@ -184,6 +184,7 @@ export default async function SettingsPage() {
         smsProvider,
         smsToken,
         smsSenderName,
+        requireInstallerForMeasurement,
 	] = await Promise.all([
 		getAppSetting(appSettingKeys.wooWebhookSecret),
 		getAppSetting(appSettingKeys.wooConsumerKey),
@@ -232,6 +233,7 @@ export default async function SettingsPage() {
         getAppSetting(appSettingKeys.smsProvider),
         getAppSetting(appSettingKeys.smsToken),
         getAppSetting(appSettingKeys.smsSenderName),
+        getAppSetting(appSettingKeys.requireInstallerForMeasurement),
 	]);
 
     const statusOptions = montageStatusDefinitions.map(def => ({
@@ -348,6 +350,8 @@ export default async function SettingsPage() {
         updatedAt: t.updatedAt.toISOString(),
     }));
 
+    const requireInstallerForMeasurementValue = requireInstallerForMeasurement === 'true';
+
 	return (
 		<SettingsView
             documentation={
@@ -389,6 +393,7 @@ export default async function SettingsPage() {
                         statusOptions={statusOptions}
                         initialNotifications={montageNotifications}
                         initialAutomationSettings={montageAutomationSettings}
+                        requireInstallerForMeasurement={requireInstallerForMeasurementValue}
                     />
 				</div>
 			}

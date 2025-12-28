@@ -40,9 +40,10 @@ interface MontageViewProps {
     montageId: string;
     initialData: NonNullable<Awaited<ReturnType<typeof getMontageDetails>>>;
     portalEnabled: boolean;
+    requireInstallerForMeasurement: boolean;
 }
 
-export function MontageView({ montageId, initialData, portalEnabled }: MontageViewProps) {
+export function MontageView({ montageId, initialData, portalEnabled, requireInstallerForMeasurement }: MontageViewProps) {
     const searchParams = useSearchParams();
     const router = useRouter();
     const tab = searchParams.get('tab');
@@ -102,7 +103,10 @@ export function MontageView({ montageId, initialData, portalEnabled }: MontageVi
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialog>
-                            <ConvertLeadDialog montage={montage} />
+                            <ConvertLeadDialog 
+                                montage={montage} 
+                                requireInstallerForMeasurement={requireInstallerForMeasurement}
+                            />
                         </div>
                     </div>
 

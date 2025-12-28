@@ -678,6 +678,21 @@ export async function updateMontageChecklistTemplates(templates: MontageChecklis
     revalidatePath('/dashboard/settings');
 }
 
+export async function updateRequireInstallerForMeasurement(value: boolean) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) {
+        throw new Error('Unauthorized');
+    }
+    
+    await setAppSetting({
+        key: appSettingKeys.requireInstallerForMeasurement,
+        value: String(value),
+        userId: user.id
+    });
+    
+    revalidatePath('/dashboard/settings');
+}
+
 
 
 

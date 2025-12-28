@@ -20,9 +20,17 @@ interface AutomationRegistryProps {
   statusOptions: StatusOption[];
   initialNotifications: Record<string, boolean>;
   initialAutomationSettings: Record<string, boolean>;
+  requireInstallerForMeasurement: boolean;
 }
 
-export function AutomationRegistry({ templates, initialRules, statusOptions, initialNotifications, initialAutomationSettings }: AutomationRegistryProps) {
+export function AutomationRegistry({ 
+    templates, 
+    initialRules, 
+    statusOptions, 
+    initialNotifications, 
+    initialAutomationSettings,
+    requireInstallerForMeasurement
+}: AutomationRegistryProps) {
     const [notifications, setNotifications] = useState<Record<string, boolean>>(initialNotifications);
     const [isPending, startTransition] = useTransition();
 

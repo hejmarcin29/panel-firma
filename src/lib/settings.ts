@@ -48,6 +48,8 @@ export const appSettingKeys = {
     // Portal & SMS
     portalEnabled: 'portal.enabled',
     smsProvider: 'sms.provider',
+    requireInstallerForMeasurement: 'montage.require_installer_for_measurement',
+};
     smsToken: 'sms.token',
     smsSenderName: 'sms.sender_name',
     companyLogoUrl: 'company.logo_url',
