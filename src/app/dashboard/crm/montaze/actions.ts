@@ -1808,6 +1808,7 @@ export async function createExtendedLead(formData: FormData) {
     const shippingCity = formData.get('shippingCity') as string;
     
     const productId = formData.get('productId') as string;
+    const sampleStatus = formData.get('sampleStatus') as string;
     const floorArea = formData.get('floorArea') as string;
     const estimatedDate = formData.get('estimatedDate') as string;
     const notes = formData.get('notes') as string;
@@ -1925,6 +1926,7 @@ export async function createExtendedLead(formData: FormData) {
         additionalInfo,
         
         status: 'lead',
+        sampleStatus: (sampleStatus as MontageSampleStatus) || 'none',
         architectId,
         createdAt: now,
         updatedAt: now,

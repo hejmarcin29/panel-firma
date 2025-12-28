@@ -58,6 +58,7 @@ export function LeadForm({ assignedProducts, isArchitect }: LeadFormProps) {
         shippingPostalCode: '',
         shippingCity: '',
         productId: '',
+        sampleStatus: 'none',
         floorArea: '',
         estimatedDate: undefined as Date | undefined,
         source: '',
@@ -119,6 +120,9 @@ export function LeadForm({ assignedProducts, isArchitect }: LeadFormProps) {
         if (formData.productId) {
             submitData.append('productId', formData.productId);
         }
+        
+        submitData.append('sampleStatus', formData.sampleStatus);
+
         if (formData.floorArea) {
             submitData.append('floorArea', formData.floorArea);
         }
@@ -383,6 +387,26 @@ export function LeadForm({ assignedProducts, isArchitect }: LeadFormProps) {
                         <p className="text-xs text-muted-foreground">
                             Lista zawiera tylko produkty przypisane do Twojego konta.
                         </p>
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="sampleStatus">Status próbek</Label>
+                        <Select
+                            value={formData.sampleStatus}
+                            onValueChange={(value) => setFormData({ ...formData, sampleStatus: value })}
+                            disabled={isPending}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Wybierz status..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="none">Brak</SelectItem>
+                                <SelectItem value="to_send">Do wysłania</SelectItem>
+                                <SelectItem value="sent">Wysłane</SelectItem>
+                                <SelectItem value="delivered">Dostarczone</SelectItem>
+                                <SelectItem value="returned">Zwrócone</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
 
                     <div className="grid gap-2">
