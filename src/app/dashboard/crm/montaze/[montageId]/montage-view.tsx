@@ -33,6 +33,7 @@ import { MontageClientInfo } from './_components/montage-client-info';
 
 import { MontageDetailsLayout } from './_components/montage-details-layout';
 import { ConvertLeadDialog } from './_components/convert-lead-dialog';
+import { RequestDataButton } from './_components/request-data-button';
 import { InstallerMontageView } from './_components/installer-montage-view';
 import { MontageProcessHub } from './_components/montage-process-hub';
 
@@ -103,6 +104,10 @@ export function MontageView({ montageId, initialData, portalEnabled, requireInst
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialog>
+                            <RequestDataButton 
+                                montage={montage} 
+                                requireInstallerForMeasurement={requireInstallerForMeasurement}
+                            />
                             <ConvertLeadDialog 
                                 montage={montage} 
                                 requireInstallerForMeasurement={requireInstallerForMeasurement}
