@@ -86,6 +86,11 @@ export function MontageWorkflowTab({
   const [newItemAttachment, setNewItemAttachment] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
+  
+  // Rollback Safety State
+  const [rollbackAlertOpen, setRollbackAlertOpen] = useState(false);
+  const [pendingToggle, setPendingToggle] = useState<{ itemId: string, completed: boolean } | null>(null);
+  const [rollbackStageLabel, setRollbackStageLabel] = useState("");
 
   const isInstaller = userRoles.includes('installer') && !userRoles.includes('admin');
 
@@ -150,7 +155,59 @@ export function MontageWorkflowTab({
 
   const handleToggle = (itemId: string, completed: boolean) => {
     if (isEditing) return;
+
+    // If checking (completed = true), just do it.
+    if (completed) {
+        mutateChecklist({ itemId, completed });
+        return;
+    }
+
+    // If unchecking (completed = false), check for rollback.
+    const item = montage.checklistItems.find(i => i.id === itemId);
+    if (!item || !item.templateId) {
+        // If no templateId, it's likely a custom item without stage logic, so just toggle.
+        mutateChecklist({ itemId, completed });
+        return;
+    }
+
+    const template = DEFAULT_MONTAGE_CHECKLIST.find(t => t.id === item.templateId);
+    if (!template || !template.associatedStage) {
+        mutateChecklist({ itemId, completed });
+        return;
+    }
+
+    const stageId = template.associatedStage;
+    const stageIndex = statusOptions.findIndex(s => s.value === stageId);
+    const currentStatusIndex = statusOptions.findIndex(s => s.value === montage.status);
+
+    if (currentStatusIndex > stageIndex) {
+        // Rollback scenario!
+        
+        // 1. Check Admin
+        const isAdmin = userRoles.includes('admin');
+        if (!isAdmin) {
+            toast.error("Tylko administrator może cofnąć etap procesu poprzez odznaczenie zadania.");
+            return;
+        }
+
+        // 2. Show Confirmation
+        const stageLabel = statusOptions[stageIndex]?.label || stageId;
+        setRollbackStageLabel(stageLabel);
+        setPendingToggle({ itemId, completed });
+        setRollbackAlertOpen(true);
+        return;
+    }
+
+    // No rollback, just toggle
     mutateChecklist({ itemId, completed });
+  };
+
+  const confirmRollback = () => {
+      if (pendingToggle) {
+          mutateChecklist(pendingToggle);
+          setPendingToggle(null);
+      }
+      setRollbackAlertOpen(false);
   };
 
   const handleFileUpload = async (itemId: string, file: File) => {
@@ -663,6 +720,23 @@ export function MontageWorkflowTab({
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogAction onClick={() => setAlertOpen(false)}>Rozumiem</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={rollbackAlertOpen} onOpenChange={setRollbackAlertOpen}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Uwaga: Cofnięcie statusu</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Odznaczenie tego elementu spowoduje cofnięcie statusu montażu do etapu: <strong>{rollbackStageLabel}</strong>.
+                        <br /><br />
+                        Czy na pewno chcesz kontynuować?
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogAction onClick={() => setRollbackAlertOpen(false)} className="bg-secondary text-secondary-foreground hover:bg-secondary/80">Anuluj</AlertDialogAction>
+                    <AlertDialogAction onClick={confirmRollback} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Tak, cofnij status</AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
