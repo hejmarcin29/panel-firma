@@ -1,4 +1,4 @@
-import { desc, eq, asc, and, lt, or } from 'drizzle-orm';
+import { desc, eq, asc, and, lt, or, isNull } from 'drizzle-orm';
 import { differenceInCalendarDays, addBusinessDays, startOfDay } from 'date-fns';
 import { parseTaskOverrides } from '@/app/dashboard/orders/utils';
 import { db } from '@/lib/db';
@@ -120,6 +120,7 @@ export async function getDashboardStats(publicBaseUrl: string | null): Promise<D
 
     // Fetch Recent Montages (for Activity Feed)
     const recentMontageRows = await db.query.montages.findMany({
+        where: isNull(montages.deletedAt),
         orderBy: desc(montages.updatedAt),
         limit: 5,
         with: {
@@ -162,6 +163,7 @@ export async function getDashboardStats(publicBaseUrl: string | null): Promise<D
 
     // Fetch All Montages (Lightweight for Stats)
     const allMontages = await db.query.montages.findMany({
+        where: isNull(montages.deletedAt),
         with: {
             tasks: true,
             quotes: true,
@@ -450,7 +452,7 @@ export async function getDashboardStats(publicBaseUrl: string | null): Promise<D
 
 export async function getArchitectDashboardStats(userId: string) {
     const architectProjects = await db.query.montages.findMany({
-        where: eq(montages.architectId, userId),
+        where: and(eq(montages.architectId, userId), isNull(montages.deletedAt)),
         orderBy: desc(montages.updatedAt),
         columns: {
             id: true,
