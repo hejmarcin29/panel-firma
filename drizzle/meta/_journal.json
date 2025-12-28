@@ -316,6 +316,13 @@
       "when": 1766846590223,
       "tag": "0044_next_ronan",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1766926843808,
+      "tag": "0045_steady_vector",
+      "breakpoints": true
     }
   ]
 }
