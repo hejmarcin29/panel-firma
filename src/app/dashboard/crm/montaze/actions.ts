@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { eq, and, sql, ne } from 'drizzle-orm';
+import { createTransport } from 'nodemailer';
 
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
@@ -20,6 +21,7 @@ import {
 	customers,
 	users,
     commissions,
+    mailAccounts,
     // referralCommissions,
     type CustomerSource,
 } from '@/lib/db/schema';
@@ -1717,9 +1719,22 @@ export async function createLead(data: {
     // Auto-assign architect if the creator has the architect role
     const architectId = user.roles.includes('architect') ? user.id : null;
 
+    // Create customer record
+    const customerId = crypto.randomUUID();
+    await db.insert(customers).values({
+        id: customerId,
+        name: trimmedName,
+        phone: data.contactPhone?.trim() || null,
+        source: architectId ? 'architect' : 'other',
+        architectId,
+        createdAt: now,
+        updatedAt: now,
+    });
+
     await db.insert(montages).values({
         id: montageId,
         displayId,
+        customerId, // Link to customer
         clientName: trimmedName,
         contactPhone: data.contactPhone?.trim() || null,
         installationCity: data.address?.trim() || null,
@@ -2115,4 +2130,145 @@ export async function sendMeasurementRequestSms(montageId: string) {
     } else {
         return { error: result.error || 'Błąd wysyłania SMS' };
     }
+}
+
+function decodeSecret(secret: string | null | undefined): string | null {
+	if (!secret) {
+		return null;
+	}
+
+	try {
+		return Buffer.from(secret, 'base64').toString('utf8');
+	} catch {
+		return null;
+	}
+}
+
+export async function sendDataRequest(montageId: string) {
+    const user = await requireUser();
+    
+    const montage = await db.query.montages.findFirst({
+        where: eq(montages.id, montageId),
+        with: {
+            customer: true,
+        }
+    });
+
+    if (!montage) {
+        throw new Error('Nie znaleziono montażu');
+    }
+
+    let customerId = montage.customerId;
+    let referralToken = montage.customer?.referralToken;
+
+    // Self-healing: Create customer if missing
+    if (!customerId) {
+        customerId = crypto.randomUUID();
+        await db.insert(customers).values({
+            id: customerId,
+            name: montage.clientName,
+            phone: montage.contactPhone,
+            email: montage.contactEmail,
+            billingCity: montage.billingCity,
+            billingPostalCode: montage.billingPostalCode,
+            billingStreet: montage.billingAddress,
+            shippingCity: montage.installationCity,
+            shippingPostalCode: montage.installationPostalCode,
+            shippingStreet: montage.installationAddress,
+            source: 'other',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        });
+
+        await db.update(montages)
+            .set({ customerId })
+            .where(eq(montages.id, montageId));
+    }
+
+    // Generate token if missing
+    if (!referralToken) {
+        referralToken = generatePortalToken();
+        await db.update(customers)
+            .set({ referralToken })
+            .where(eq(customers.id, customerId!));
+    }
+
+    const portalLink = `https://b2b.primepodloga.pl/s/${referralToken}`;
+    const message = `Dzień dobry! Rozpoczynamy współpracę. Utworzyliśmy dla Ciebie Panel Klienta, gdzie będziesz widzieć postępy prac: ${portalLink}. Prosimy o uzupełnienie adresu, abyśmy mogli zlecić pomiar.`;
+
+    const sentChannels: string[] = [];
+
+    // Send SMS if phone exists
+    if (montage.contactPhone) {
+        const smsEnabled = await isSystemAutomationEnabled('data_request_sms');
+        if (smsEnabled) {
+            try {
+                await sendSms(montage.contactPhone, message);
+                sentChannels.push('SMS');
+            } catch (error) {
+                console.error('Failed to send SMS:', error);
+                // Don't throw, just log
+            }
+        }
+    }
+
+    // Send Email if email exists
+    if (montage.contactEmail) {
+        const emailEnabled = await isSystemAutomationEnabled('data_request_email');
+        if (emailEnabled) {
+            try {
+                // Find active mail account
+            const accounts = await db.select().from(mailAccounts).where(ne(mailAccounts.status, 'disabled')).limit(1);
+            const mailAccount = accounts[0];
+
+            if (mailAccount && mailAccount.smtpHost && mailAccount.smtpPort && mailAccount.passwordSecret) {
+                 const password = decodeSecret(mailAccount.passwordSecret);
+                 if (password) {
+                    const transporter = createTransport({
+                        host: mailAccount.smtpHost,
+                        port: mailAccount.smtpPort,
+                        secure: Boolean(mailAccount.smtpSecure),
+                        auth: {
+                            user: mailAccount.username,
+                            pass: password,
+                        },
+                    });
+
+                    await transporter.sendMail({
+                        from: `${mailAccount.displayName} <${mailAccount.email}>`,
+                        to: montage.contactEmail,
+                        subject: 'Witamy w Panelu Klienta - Prime Podłogi',
+                        text: message,
+                        html: `<p>Dzień dobry!</p><p>Rozpoczynamy współpracę. Utworzyliśmy dla Ciebie Panel Klienta, gdzie będziesz widzieć postępy prac.</p><p><a href="${portalLink}">Kliknij tutaj, aby przejść do panelu</a></p><p>Prosimy o uzupełnienie adresu, abyśmy mogli zlecić pomiar.</p><br><p>Pozdrawiamy,<br>Zespół Prime Podłogi</p>`
+                    });
+                    sentChannels.push('Email');
+                 }
+            }
+        } catch (error) {
+            console.error('Failed to send Email:', error);
+        }
+    }
+
+    const channelsText = sentChannels.length > 0 ? sentChannels.join(', ') : 'brak wysyłki';
+    const actionText = sentChannels.length > 0 ? 'Wysłano prośbę o uzupełnienie danych' : 'Wygenerowano link do uzupełnienia danych';
+
+    // Log event
+    await logSystemEvent(
+        'montage.data_request_sent',
+        `${actionText} do klienta (${channelsText})`,
+        user.id
+    );
+    
+    // Add note
+    await db.insert(montageNotes).values({
+        id: crypto.randomUUID(),
+        montageId: montageId,
+        content: `[System]: ${actionText} (${channelsText}). Link: ${portalLink}`,
+        isInternal: false,
+        createdBy: user.id,
+        createdAt: new Date(),
+    });
+
+    revalidatePath(`${MONTAGE_DASHBOARD_PATH}/${montageId}`);
+    return { success: true };
 }

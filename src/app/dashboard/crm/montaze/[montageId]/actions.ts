@@ -150,15 +150,41 @@ export async function generateCustomerToken(montageId: string) {
         }
     });
 
-    if (!montage || !montage.customer) {
-        throw new Error('Nie znaleziono montażu lub klienta');
+    if (!montage) {
+        throw new Error('Nie znaleziono montażu');
+    }
+
+    let customerId = montage.customerId;
+
+    // Self-healing: Create customer if missing
+    if (!customerId) {
+        customerId = randomUUID();
+        await db.insert(customers).values({
+            id: customerId,
+            name: montage.clientName,
+            phone: montage.contactPhone,
+            email: montage.contactEmail,
+            billingCity: montage.billingCity,
+            billingPostalCode: montage.billingPostalCode,
+            billingStreet: montage.billingAddress,
+            shippingCity: montage.installationCity,
+            shippingPostalCode: montage.installationPostalCode,
+            shippingStreet: montage.installationAddress,
+            source: 'other',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        });
+
+        await db.update(montages)
+            .set({ customerId })
+            .where(eq(montages.id, montageId));
     }
 
     const token = randomUUID();
 
     await db.update(customers)
         .set({ referralToken: token })
-        .where(eq(customers.id, montage.customer.id));
+        .where(eq(customers.id, customerId));
 
     revalidatePath(`/dashboard/crm/montaze/${montageId}`);
     return token;

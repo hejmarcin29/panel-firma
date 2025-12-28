@@ -18,6 +18,22 @@ export const SYSTEM_NOTIFICATIONS: SystemNotificationDefinition[] = [
         defaultEnabled: false
     },
     {
+        id: 'data_request_sms',
+        type: 'sms',
+        trigger: 'Ręczne kliknięcie "Poproś o dane"',
+        action: 'Wysyła SMS z linkiem do Portalu Klienta',
+        recipient: 'Klient',
+        defaultEnabled: true
+    },
+    {
+        id: 'data_request_email',
+        type: 'email',
+        trigger: 'Ręczne kliknięcie "Poproś o dane"',
+        action: 'Wysyła E-mail z linkiem do Portalu Klienta',
+        recipient: 'Klient',
+        defaultEnabled: true
+    },
+    {
         id: 'calendar_create',
         type: 'calendar',
         trigger: 'Utworzenie montażu z datą szacowaną',

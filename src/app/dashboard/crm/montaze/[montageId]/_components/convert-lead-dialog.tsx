@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2, Loader2 } from 'lucide-react';
+import { CheckCircle2, Loader2, Send } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -35,7 +35,7 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-import { convertLeadToMontage } from '../../actions';
+import { convertLeadToMontage, sendDataRequest } from '../../actions';
 import type { Montage } from '../../types';
 
 interface ConvertLeadDialogProps {
@@ -78,6 +78,18 @@ export function ConvertLeadDialog({ montage, requireInstallerForMeasurement }: C
             installationCity: checked ? prev.billingCity : prev.installationCity,
             installationPostalCode: checked ? prev.billingPostalCode : prev.installationPostalCode,
         }));
+    };
+
+    const handleRequestData = async () => {
+        startTransition(async () => {
+            try {
+                await sendDataRequest(montage.id);
+                toast.success('Wysłano prośbę o uzupełnienie danych');
+                setOpen(false);
+            } catch (error) {
+                toast.error('Wystąpił błąd podczas wysyłania prośby');
+            }
+        });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -375,9 +387,19 @@ export function ConvertLeadDialog({ montage, requireInstallerForMeasurement }: C
                         </div>
                     </div>
 
-                    <DialogFooter>
+                    <DialogFooter className="gap-2 sm:gap-0">
                         <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isPending}>
                             Anuluj
+                        </Button>
+                        <Button 
+                            type="button" 
+                            variant="outline" 
+                            onClick={handleRequestData} 
+                            disabled={isPending}
+                            className="border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800"
+                        >
+                            <Send className="mr-2 h-4 w-4" />
+                            Poproś o dane
                         </Button>
                         <Button type="submit" disabled={isPending} className="bg-green-600 hover:bg-green-700 text-white">
                             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
