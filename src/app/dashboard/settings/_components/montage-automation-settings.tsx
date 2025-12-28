@@ -77,6 +77,10 @@ export function MontageAutomationSettings({ templates: initialTemplates, statusO
   };
 
   const handleDeleteItem = (itemId: string) => {
+      if (itemId === 'protocol_signed') {
+          toast.error("Nie można usunąć tego elementu, ponieważ jest on wymagany przez automatyzację systemową.");
+          return;
+      }
       if (!confirm("Czy na pewno chcesz usunąć ten element z szablonu?")) return;
       const newTemplates = templates.filter(t => t.id !== itemId);
       saveTemplates(newTemplates);
@@ -183,7 +187,19 @@ export function MontageAutomationSettings({ templates: initialTemplates, statusO
                                                 ) : (
                                                     <>
                                                         <div className="flex-1 text-sm border rounded px-3 py-1.5 bg-white flex items-center justify-between">
-                                                            <span>{item.label}</span>
+                                                            <div className="flex items-center gap-2">
+                                                                <span>{item.label}</span>
+                                                                {item.id === 'protocol_signed' && (
+                                                                    <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-100 gap-1">
+                                                                        <Bot className="w-3 h-3" /> Auto
+                                                                    </Badge>
+                                                                )}
+                                                                {['advance_invoice_issued', 'advance_invoice_paid', 'contract_signed_check', 'final_invoice_issued', 'final_invoice_paid'].includes(item.id) && (
+                                                                    <Badge variant="outline" className="text-slate-500 font-normal text-[10px]">
+                                                                        Manual
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
                                                             {item.allowAttachment && <Badge variant="secondary" className="text-[10px]">Załącznik</Badge>}
                                                         </div>
                                                         <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
