@@ -1553,6 +1553,7 @@ export async function updateMontageRealizationStatus({
     materialStatus,
     materialClaimType,
     installerStatus,
+    sampleStatus,
     installerId,
     measurerId,
     architectId
@@ -1561,6 +1562,7 @@ export async function updateMontageRealizationStatus({
     materialStatus?: MontageMaterialStatus;
     materialClaimType?: MontageMaterialClaimType | null;
     installerStatus?: MontageInstallerStatus;
+    sampleStatus?: MontageSampleStatus;
     installerId?: string | null;
     measurerId?: string | null;
     architectId?: string | null;
@@ -1571,6 +1573,7 @@ export async function updateMontageRealizationStatus({
         materialStatus?: MontageMaterialStatus; 
         materialClaimType?: MontageMaterialClaimType | null;
         installerStatus?: MontageInstallerStatus;
+        sampleStatus?: MontageSampleStatus;
         installerId?: string | null;
         measurerId?: string | null;
         architectId?: string | null;
@@ -1582,6 +1585,7 @@ export async function updateMontageRealizationStatus({
     if (materialStatus !== undefined) updateData.materialStatus = materialStatus;
     if (materialClaimType !== undefined) updateData.materialClaimType = materialClaimType;
     if (installerStatus !== undefined) updateData.installerStatus = installerStatus;
+    if (sampleStatus !== undefined) updateData.sampleStatus = sampleStatus;
     if (installerId !== undefined) updateData.installerId = installerId;
     if (measurerId !== undefined) updateData.measurerId = measurerId;
     if (architectId !== undefined) updateData.architectId = architectId;
@@ -1610,6 +1614,17 @@ export async function updateMontageRealizationStatus({
             'confirmed': 'Potwierdzony'
         };
         changes.push(`Status montażysty: ${labels[installerStatus] || installerStatus}`);
+    }
+
+    if (sampleStatus) {
+        const labels: Record<string, string> = {
+            'none': 'Brak',
+            'to_send': 'Do wysłania',
+            'sent': 'Wysłane',
+            'delivered': 'Dostarczone',
+            'returned': 'Zwrócone'
+        };
+        changes.push(`Status próbek: ${labels[sampleStatus] || sampleStatus}`);
     }
     
     if (installerId !== undefined) {

@@ -37,7 +37,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { type UserRole } from '@/lib/db/schema';
+import { type UserRole, type MontageSampleStatus } from '@/lib/db/schema';
 
 export function MontageClientCard({ 
     montage, 
@@ -178,6 +178,14 @@ export function MontageClientCard({
       await updateMontageRealizationStatus({
           montageId: montage.id,
           installerStatus: value as 'none' | 'informed' | 'confirmed'
+      });
+      router.refresh();
+  };
+
+  const handleSampleStatusChange = async (value: string) => {
+      await updateMontageRealizationStatus({
+          montageId: montage.id,
+          sampleStatus: value as MontageSampleStatus
       });
       router.refresh();
   };
@@ -507,13 +515,21 @@ export function MontageClientCard({
                         "bg-slate-300"
                     )} />
                 </div>
-                <span className="text-sm">
-                    {montage.sampleStatus === 'delivered' ? 'Próbki dostarczone' :
-                     montage.sampleStatus === 'sent' ? 'Próbki wysłane' :
-                     montage.sampleStatus === 'to_send' ? 'Próbki do wysłania' :
-                     montage.sampleStatus === 'returned' ? 'Próbki zwrócone' :
-                     'Brak próbek'}
-                </span>
+                <Select
+                    value={montage.sampleStatus || "none"}
+                    onValueChange={handleSampleStatusChange}
+                >
+                    <SelectTrigger className="h-auto p-0 border-0 shadow-none bg-transparent text-sm hover:bg-transparent focus:ring-0 w-auto data-[placeholder]:text-foreground">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="none">Brak próbek</SelectItem>
+                        <SelectItem value="to_send">Próbki do wysłania</SelectItem>
+                        <SelectItem value="sent">Próbki wysłane</SelectItem>
+                        <SelectItem value="delivered">Próbki dostarczone</SelectItem>
+                        <SelectItem value="returned">Próbki zwrócone</SelectItem>
+                    </SelectContent>
+                </Select>
             </div>
         </div>
 
