@@ -82,7 +82,7 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
         relatedStatuses: ['before_final_invoice'],
         actor: 'installer',
         automations: [
-            { id: 'auto_status_protocol', label: 'Automatyczne zakończenie', description: 'Zmienia status na "Przed końcową fakturą" po podpisaniu protokołu.' }
+            { id: 'auto_status_protocol', label: 'Automatyczne zakończenie', description: 'Wymusza status "Realizacja i Odbiór" po podpisaniu protokołu (jeśli montaż utknął w planowaniu). Nie cofa statusu, jeśli montaż jest już zakończony.' }
         ],
         checkpoints: [
             { key: 'installation_done', label: 'Prace zakończone', condition: () => false }, // Manual check usually

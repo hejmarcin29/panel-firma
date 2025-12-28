@@ -149,9 +149,16 @@ export function MontageAutomationSettings({ templates: initialTemplates, statusO
                 return (
                     <Card key={step.id}>
                         <CardHeader className="pb-3">
-                            <div className="flex items-center gap-2">
-                                <Badge variant="outline">{step.id}</Badge>
-                                <CardTitle className="text-base">{step.label}</CardTitle>
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <CardTitle className="text-base mr-2">{step.label}</CardTitle>
+                                <Badge variant="outline" className="text-xs text-slate-500 font-normal" title="ID Kroku Procesu">
+                                    Step: {step.id}
+                                </Badge>
+                                {primaryStatus && (
+                                    <Badge variant="secondary" className="text-xs font-mono" title="ID Statusu w Bazie (DB)">
+                                        Status: {primaryStatus}
+                                    </Badge>
+                                )}
                             </div>
                             <CardDescription>{step.description}</CardDescription>
                         </CardHeader>
@@ -245,7 +252,8 @@ export function MontageAutomationSettings({ templates: initialTemplates, statusO
                                                 <div className="space-y-0.5">
                                                     <div className="font-medium text-sm">Automatyczne przejście do: {nextStatusOption.label}</div>
                                                     <div className="text-xs text-muted-foreground">
-                                                        Gdy wszystkie zadania z powyższej listy zostaną wykonane (lub oznaczone jako &quot;nie dotyczy&quot;).
+                                                        Gdy wszystkie zadania zostaną wykonane, status zmieni się automatycznie. <br/>
+                                                        <span className="text-amber-600 font-medium">Uwaga:</span> Odznaczenie zadania spowoduje cofnięcie statusu.
                                                     </div>
                                                 </div>
                                             </div>

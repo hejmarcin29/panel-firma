@@ -63,6 +63,14 @@ export async function submitMontageProtocol(data: {
     try {
         const isAutoStatusEnabled = await isSystemAutomationEnabled('auto_status_protocol');
 
+        // Check current status to avoid regression if already completed
+        const currentMontage = await db.query.montages.findFirst({
+            where: eq(montages.id, data.montageId),
+            columns: { status: true }
+        });
+
+        const shouldUpdateStatus = isAutoStatusEnabled && currentMontage?.status !== 'completed';
+
         // 1. Update Montage Record
         await db.update(montages).set({
             contractNumber: data.contractNumber,
@@ -76,7 +84,7 @@ export async function submitMontageProtocol(data: {
             },
             clientSignatureUrl: data.clientSignatureUrl,
             installerSignatureUrl: data.installerSignatureUrl,
-            ...(isAutoStatusEnabled ? { status: 'before_final_invoice' } : {}), // Move to next stage automatically if enabled
+            ...(shouldUpdateStatus ? { status: 'before_final_invoice' } : {}), // Move to next stage automatically if enabled, but don't revert completed
         }).where(eq(montages.id, data.montageId));
 
         // 2. Generate PDF
@@ -116,6 +124,10 @@ export async function submitMontageProtocol(data: {
 
         const pdfUrl = `${config.publicBaseUrl}/${pdfKey}`;
 
+import { toggleMontageChecklistItem } from './actions';
+
+// ... existing code ...
+
         // 3. Update Checklist (Auto-check "protocol_signed")
         // Find the checklist item with templateId 'protocol_signed'
         const checklistItem = await db.query.montageChecklistItems.findFirst({
@@ -126,12 +138,12 @@ export async function submitMontageProtocol(data: {
         });
 
         if (checklistItem) {
-            await db.update(montageChecklistItems)
-                .set({ 
-                    completed: true,
-                    updatedAt: new Date(),
-                })
-                .where(eq(montageChecklistItems.id, checklistItem.id));
+            // Use the shared action to ensure "Auto-Next" logic is triggered
+            await toggleMontageChecklistItem({
+                itemId: checklistItem.id,
+                montageId: data.montageId,
+                completed: true
+            });
         }
 
         // 4. Send Notifications (SMS/Email)
