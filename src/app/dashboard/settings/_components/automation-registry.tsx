@@ -77,53 +77,69 @@ export function AutomationRegistry({ templates, initialRules, statusOptions, ini
                 </div>
             </div>
             
-            <Card>
-                <CardContent className="p-0">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-[50px]"></TableHead>
-                                <TableHead>Wyzwalacz</TableHead>
-                                <TableHead>Akcja</TableHead>
-                                <TableHead>Odbiorca</TableHead>
-                                <TableHead className="text-right">Status</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {SYSTEM_NOTIFICATIONS.map((notif) => {
-                                const enabled = isEnabled(notif.id, notif.defaultEnabled);
-                                return (
-                                <TableRow key={notif.id}>
-                                    <TableCell>
-                                        {notif.type === 'sms' && <MessageSquare className="h-4 w-4 text-blue-500" />}
-                                        {notif.type === 'email' && <Mail className="h-4 w-4 text-yellow-500" />}
-                                        {notif.type === 'calendar' && <Calendar className="h-4 w-4 text-green-500" />}
-                                        {notif.type === 'system' && <Bot className="h-4 w-4 text-purple-500" />}
-                                    </TableCell>
-                                    <TableCell className="font-medium">{notif.trigger}</TableCell>
-                                    <TableCell>{notif.action}</TableCell>
-                                    <TableCell>
-                                        <Badge variant="outline">{notif.recipient}</Badge>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <div className="flex items-center justify-end gap-2">
-                                            <span className={`text-xs ${enabled ? 'text-green-600' : 'text-muted-foreground'}`}>
-                                                {enabled ? 'Aktywne' : 'Wyłączone'}
-                                            </span>
-                                            <Switch 
-                                                checked={enabled}
-                                                onCheckedChange={(checked) => handleToggle(notif.id, checked)}
-                                                disabled={isPending}
-                                            />
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                                );
-                            })}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+            <div className="grid gap-6">
+                {/* Group by Type */}
+                {['sms', 'email', 'calendar', 'system'].map(type => {
+                    const notifications = SYSTEM_NOTIFICATIONS.filter(n => !n.locked && n.type === type);
+                    if (notifications.length === 0) return null;
+
+                    const typeLabels: Record<string, string> = {
+                        sms: 'Powiadomienia SMS',
+                        email: 'Powiadomienia E-mail',
+                        calendar: 'Kalendarz',
+                        system: 'Integracje Systemowe'
+                    };
+
+                    return (
+                        <Card key={type}>
+                            <CardHeader className="pb-3">
+                                <CardTitle className="text-base flex items-center gap-2">
+                                    {type === 'sms' && <MessageSquare className="h-4 w-4 text-blue-500" />}
+                                    {type === 'email' && <Mail className="h-4 w-4 text-yellow-500" />}
+                                    {type === 'calendar' && <Calendar className="h-4 w-4 text-green-500" />}
+                                    {type === 'system' && <Bot className="h-4 w-4 text-purple-500" />}
+                                    {typeLabels[type]}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Wyzwalacz</TableHead>
+                                            <TableHead>Akcja</TableHead>
+                                            <TableHead>Odbiorca</TableHead>
+                                            <TableHead className="text-right">Status</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {notifications.map((notif) => {
+                                            const enabled = isEnabled(notif.id, notif.defaultEnabled);
+                                            return (
+                                            <TableRow key={notif.id}>
+                                                <TableCell className="font-medium">{notif.trigger}</TableCell>
+                                                <TableCell>{notif.action}</TableCell>
+                                                <TableCell>
+                                                    <Badge variant="outline">{notif.recipient}</Badge>
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <Switch 
+                                                            checked={enabled}
+                                                            onCheckedChange={(checked) => handleToggle(notif.id, checked)}
+                                                            disabled={isPending}
+                                                        />
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                            );
+                                        })}
+                                    </TableBody>
+                                </Table>
+                            </CardContent>
+                        </Card>
+                    );
+                })}
+            </div>
         </div>
     </div>
   );

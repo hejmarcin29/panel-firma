@@ -31,9 +31,7 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
         description: 'Wstępna weryfikacja klienta i ustalenie potrzeb.',
         relatedStatuses: ['lead'],
         actor: 'office',
-        automations: [
-            { id: 'sms_lead_welcome', label: 'Powiadomienie SMS', description: 'System wysyła powitanie do klienta po utworzeniu leada.' }
-        ],
+        automations: [],
         checkpoints: [
             { key: 'contact_established', label: 'Kontakt nawiązany', condition: (m) => !!m.contactPhone || !!m.contactEmail },
             { key: 'address_verified', label: 'Adres zweryfikowany', condition: (m) => !!m.installationAddress }
@@ -45,10 +43,7 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
         description: 'Realizacja pomiaru u klienta i przygotowanie oferty.',
         relatedStatuses: ['before_measurement'],
         actor: 'installer',
-        automations: [
-            { id: 'sms_measurement_reminder', label: 'Przypomnienie o pomiarze', description: 'SMS do klienta 24h przed pomiarem.' },
-            { id: 'notify_measurer_new_job', label: 'Powiadomienie pomiarowca', description: 'Email/SMS do pomiarowca o nowym zleceniu.' }
-        ],
+        automations: [],
         checkpoints: [
             { key: 'measurement_scheduled', label: 'Pomiar umówiony', condition: (m) => !!m.measurementDate },
             { key: 'measurement_done', label: 'Pomiar wykonany', condition: (m) => !!m.floorArea }, // Simplification
@@ -61,10 +56,7 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
         description: 'Podpisanie umowy i wpłata zaliczki przez klienta.',
         relatedStatuses: ['before_first_payment'],
         actor: 'client',
-        automations: [
-            { id: 'send_contract_link', label: 'Link do umowy', description: 'Wysłanie linku do akceptacji oferty i umowy.' },
-            { id: 'remind_advance_payment', label: 'Przypomnienie o wpłacie', description: 'SMS po 3 dniach braku wpłaty zaliczki.' }
-        ],
+        automations: [],
         checkpoints: [
             { key: 'quote_accepted', label: 'Oferta zaakceptowana', condition: (m) => m.quotes?.some((q) => q.status === 'accepted') ?? false },
             { key: 'contract_signed', label: 'Umowa podpisana', condition: (m) => !!m.contractDate || (m.quotes?.some((q) => !!q.signedAt) ?? false) },
@@ -77,10 +69,7 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
         description: 'Zamówienie materiałów i ustalenie terminu montażu.',
         relatedStatuses: ['before_installation'],
         actor: 'office',
-        automations: [
-            { id: 'generate_supplier_order', label: 'Zamówienie do dostawcy', description: 'Generowanie zamówienia PDF do dostawcy.' },
-            { id: 'confirm_installation_date', label: 'Potwierdzenie terminu', description: 'SMS do klienta z potwierdzeniem daty montażu.' }
-        ],
+        automations: [],
         checkpoints: [
             { key: 'materials_ordered', label: 'Materiały zamówione', condition: (m) => m.materialStatus === 'ordered' || m.materialStatus === 'in_stock' || m.materialStatus === 'delivered' },
             { key: 'installation_scheduled', label: 'Montaż zaplanowany', condition: (m) => !!m.scheduledInstallationAt }
@@ -93,8 +82,7 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
         relatedStatuses: ['before_final_invoice'],
         actor: 'installer',
         automations: [
-            { id: 'send_protocol_link', label: 'Protokół odbioru', description: 'Link do elektronicznego protokołu odbioru.' },
-            { id: 'request_review', label: 'Prośba o opinię', description: 'SMS z linkiem do Google Maps po zakończeniu.' }
+            { id: 'auto_status_protocol', label: 'Automatyczne zakończenie', description: 'Zmienia status na "Przed końcową fakturą" po podpisaniu protokołu.' }
         ],
         checkpoints: [
             { key: 'installation_done', label: 'Prace zakończone', condition: () => false }, // Manual check usually

@@ -5,6 +5,7 @@ export type SystemNotificationDefinition = {
     action: string;
     recipient: string;
     defaultEnabled: boolean;
+    locked?: boolean;
 };
 
 export const SYSTEM_NOTIFICATIONS: SystemNotificationDefinition[] = [
@@ -38,7 +39,8 @@ export const SYSTEM_NOTIFICATIONS: SystemNotificationDefinition[] = [
         trigger: 'Każda kluczowa akcja (edycja, status, checklista)',
         action: '(Systemowe - zawsze aktywne) Zapisuje wpis w Historii Zdarzeń',
         recipient: 'System Logs',
-        defaultEnabled: true
+        defaultEnabled: true,
+        locked: true
     },
     {
         id: 'commission_architect',
@@ -54,7 +56,8 @@ export const SYSTEM_NOTIFICATIONS: SystemNotificationDefinition[] = [
         trigger: 'Podpisanie wyceny przez klienta (Portal)',
         action: '(Systemowe - zawsze aktywne) Zmiana statusu wyceny na "Zaakceptowana" + Log systemowy',
         recipient: 'System + Admin',
-        defaultEnabled: true
+        defaultEnabled: true,
+        locked: true
     },
     {
         id: 'lead_welcome',
@@ -142,6 +145,79 @@ export const SYSTEM_NOTIFICATIONS: SystemNotificationDefinition[] = [
         trigger: 'Podpisanie protokołu odbioru',
         action: 'Zmienia status montażu na "Przed końcową fakturą"',
         recipient: 'Montaż',
+        defaultEnabled: true,
+        locked: true // Controlled by Process Map
+    },
+    {
+        id: 'sms_lead_welcome',
+        type: 'sms',
+        trigger: 'Utworzenie nowego leada',
+        action: '(Planowane) Wysyła SMS powitalny',
+        recipient: 'Klient',
+        defaultEnabled: false
+    },
+    {
+        id: 'sms_measurement_reminder',
+        type: 'sms',
+        trigger: '24h przed pomiarem',
+        action: '(Planowane) Wysyła SMS przypominający o pomiarze',
+        recipient: 'Klient',
+        defaultEnabled: false
+    },
+    {
+        id: 'remind_advance_payment',
+        type: 'sms',
+        trigger: '3 dni braku wpłaty zaliczki',
+        action: '(Planowane) Wysyła SMS przypominający o wpłacie',
+        recipient: 'Klient',
+        defaultEnabled: false
+    },
+    {
+        id: 'confirm_installation_date',
+        type: 'sms',
+        trigger: 'Ustalenie daty montażu',
+        action: '(Planowane) Wysyła SMS z potwierdzeniem terminu',
+        recipient: 'Klient',
+        defaultEnabled: false
+    },
+    {
+        id: 'request_review',
+        type: 'sms',
+        trigger: 'Zakończenie montażu',
+        action: '(Planowane) Wysyła SMS z prośbą o opinię',
+        recipient: 'Klient',
+        defaultEnabled: false
+    },
+    {
+        id: 'notify_measurer_new_job',
+        type: 'email',
+        trigger: 'Przypisanie pomiarowca do zlecenia',
+        action: 'Wysyła powiadomienie o nowym zleceniu',
+        recipient: 'Montażysta',
+        defaultEnabled: true
+    },
+    {
+        id: 'send_contract_link',
+        type: 'email',
+        trigger: 'Zmiana statusu na "Formalności"',
+        action: 'Wysyła link do umowy i zaliczki',
+        recipient: 'Klient',
+        defaultEnabled: true
+    },
+    {
+        id: 'generate_supplier_order',
+        type: 'system',
+        trigger: 'Zatwierdzenie listy materiałów',
+        action: 'Generuje zamówienie PDF do dostawcy',
+        recipient: 'System / Dostawca',
+        defaultEnabled: true
+    },
+    {
+        id: 'send_protocol_link',
+        type: 'sms',
+        trigger: 'Zakończenie prac montażowych',
+        action: 'Wysyła link do protokołu odbioru',
+        recipient: 'Klient',
         defaultEnabled: true
     }
 ];
