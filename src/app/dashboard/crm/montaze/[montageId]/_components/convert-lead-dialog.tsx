@@ -86,7 +86,7 @@ export function ConvertLeadDialog({ montage, requireInstallerForMeasurement }: C
                 await sendDataRequest(montage.id);
                 toast.success('Wysłano prośbę o uzupełnienie danych');
                 setOpen(false);
-            } catch (error) {
+            } catch {
                 toast.error('Wystąpił błąd podczas wysyłania prośby');
             }
         });

@@ -2247,6 +2247,7 @@ export async function sendDataRequest(montageId: string) {
         } catch (error) {
             console.error('Failed to send Email:', error);
         }
+        }
     }
 
     const channelsText = sentChannels.length > 0 ? sentChannels.join(', ') : 'brak wysyłki';
