@@ -48,7 +48,7 @@ export const supplierMessageMediums = ['email', 'phone', 'note'] as const;
 export const mailFolderKinds = ['inbox', 'sent', 'drafts', 'spam', 'trash', 'archive', 'custom'] as const;
 export const mailAccountStatuses = ['disabled', 'connected', 'disconnected', 'error'] as const;
 export const montageStatuses = ['lead', 'before_measurement', 'before_first_payment', 'before_installation', 'before_final_invoice', 'completed'] as const;
-export const montageSampleStatuses = ['none', 'to_send', 'sent', 'delivered'] as const;
+export const montageSampleStatuses = ['none', 'to_send', 'sent', 'delivered', 'returned'] as const;
 export const logisticsStatuses = ['pending', 'ready', 'loaded', 'delivered'] as const;
 export const customerSources = ['internet', 'social_media', 'recommendation', 'architect', 'event', 'drive_by', 'phone', 'other'] as const;
 

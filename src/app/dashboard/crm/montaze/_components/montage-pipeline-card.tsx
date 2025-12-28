@@ -174,6 +174,21 @@ export function MontagePipelineCard({ montage, threatDays, alertSettings }: Prop
 
                         {/* Contact Icons */}
                         <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                            {/* Sample Status */}
+                            {montage.sampleStatus && montage.sampleStatus !== 'none' && (
+                                <div className={cn("flex items-center gap-1 text-[10px] mr-2", 
+                                    montage.sampleStatus === 'to_send' && "text-amber-600 font-medium",
+                                    montage.sampleStatus === 'returned' && "text-red-600 font-medium"
+                                )} title={`Status próbek: ${montage.sampleStatus}`}>
+                                    <span className="text-[10px]">📦</span>
+                                    <span>
+                                        {montage.sampleStatus === 'to_send' ? 'Do wysłania' : 
+                                         montage.sampleStatus === 'sent' ? 'Wysłane' : 
+                                         montage.sampleStatus === 'delivered' ? 'Dostarczone' :
+                                         montage.sampleStatus === 'returned' ? 'Zwrócone' : ''}
+                                    </span>
+                                </div>
+                            )}
                             {montage.contactPhone && (
                                 <a href={`tel:${montage.contactPhone}`} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title={montage.contactPhone}>
                                     <Phone className="h-3 w-3" />

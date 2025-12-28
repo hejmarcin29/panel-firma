@@ -287,6 +287,20 @@ return (
 <Badge variant='outline' className='rounded-md border-primary/20 bg-primary/5 px-2 py-0.5 text-xs font-medium text-primary'>
 #{montage.displayId}
 </Badge>
+{montage.sampleStatus && montage.sampleStatus !== 'none' && (
+    <Badge variant='outline' className={cn(
+        'rounded-md px-2 py-0.5 text-xs font-medium',
+        montage.sampleStatus === 'to_send' && 'border-amber-200 bg-amber-50 text-amber-700',
+        montage.sampleStatus === 'sent' && 'border-blue-200 bg-blue-50 text-blue-700',
+        montage.sampleStatus === 'delivered' && 'border-green-200 bg-green-50 text-green-700',
+        montage.sampleStatus === 'returned' && 'border-red-200 bg-red-50 text-red-700'
+    )}>
+        {montage.sampleStatus === 'to_send' ? '📦 Do wysłania' : 
+         montage.sampleStatus === 'sent' ? '🚚 Wysłane' : 
+         montage.sampleStatus === 'delivered' ? '✅ Dostarczone' :
+         montage.sampleStatus === 'returned' ? '↩️ Zwrócone' : ''}
+    </Badge>
+)}
 <span className='text-xs text-muted-foreground'>Utworzono: {formatTimestamp(montage.createdAt)}</span>
 </div>
 <h1 className='text-2xl font-bold tracking-tight text-foreground md:text-3xl'>{montage.clientName}</h1>

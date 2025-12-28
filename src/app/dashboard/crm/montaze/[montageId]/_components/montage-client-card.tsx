@@ -503,6 +503,7 @@ export function MontageClientCard({
                         montage.sampleStatus === 'delivered' ? "bg-green-500" :
                         montage.sampleStatus === 'sent' ? "bg-blue-500" :
                         montage.sampleStatus === 'to_send' ? "bg-amber-500" :
+                        montage.sampleStatus === 'returned' ? "bg-red-500" :
                         "bg-slate-300"
                     )} />
                 </div>
@@ -510,6 +511,7 @@ export function MontageClientCard({
                     {montage.sampleStatus === 'delivered' ? 'Próbki dostarczone' :
                      montage.sampleStatus === 'sent' ? 'Próbki wysłane' :
                      montage.sampleStatus === 'to_send' ? 'Próbki do wysłania' :
+                     montage.sampleStatus === 'returned' ? 'Próbki zwrócone' :
                      'Brak próbek'}
                 </span>
             </div>

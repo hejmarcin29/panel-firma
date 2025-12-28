@@ -149,6 +149,7 @@ export function AddLeadModal({
                                 <SelectItem value="to_send">📦 Do wysłania</SelectItem>
                                 <SelectItem value="sent">🚚 Wysłana</SelectItem>
                                 <SelectItem value="delivered">✅ Odebrana / Zaakceptowana</SelectItem>
+                                <SelectItem value="returned">↩️ Zwrócona</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
