@@ -663,6 +663,21 @@ export async function updateMontageAutomationSettings(settings: Record<string, b
     revalidatePath('/dashboard/settings');
 }
 
+export async function updateMontageChecklistTemplates(templates: MontageChecklistTemplate[]) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) {
+        throw new Error('Tylko administrator może zmieniać szablony checklist.');
+    }
+
+    await setMontageChecklistTemplates({
+        templates,
+        userId: user.id,
+    });
+
+    await logSystemEvent('update_checklist_templates', 'Zaktualizowano szablony checklist montażu', user.id);
+    revalidatePath('/dashboard/settings');
+}
+
 
 
 
