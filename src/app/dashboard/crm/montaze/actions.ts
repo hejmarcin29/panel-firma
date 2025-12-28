@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, ne } from 'drizzle-orm';
 
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
@@ -1030,6 +1030,21 @@ export async function toggleMontageChecklistItem({ itemId, montageId, completed 
     const itemLabel = item.label || 'Element listy';
     await logSystemEvent(actionType, `Zmieniono status elementu "${itemLabel}" na: ${completed ? 'Wykonane' : 'Do zrobienia'}`, user.id);
 
+    // Smart Checklist Logic: Sample Verification
+    if (item.templateId === 'sample_verification') {
+        if (completed) {
+             await db.update(montages)
+                .set({ sampleStatus: 'delivered' })
+                .where(and(eq(montages.id, montageId), ne(montages.sampleStatus, 'none')));
+        } else {
+             await db.update(montages)
+                .set({ sampleStatus: 'sent' })
+                .where(and(eq(montages.id, montageId), ne(montages.sampleStatus, 'none')));
+        }
+        revalidatePath(MONTAGE_DASHBOARD_PATH);
+        revalidatePath(`/dashboard/crm/montaze/${montageId}`);
+    }
+
     // Stage Completion Logic
     if (item.templateId) {
         const templates = await getMontageChecklistTemplates();
@@ -1078,7 +1093,8 @@ export async function toggleMontageChecklistItem({ itemId, montageId, completed 
                             const autoAdvanceId = step ? `auto_advance_${step.id}` : null;
                             const shouldAutoAdvance = autoAdvanceId ? await isProcessAutomationEnabled(autoAdvanceId) : true;
 
-                            if (shouldAutoAdvance) {
+                            // Special case: 'lead' stage requires manual data entry (ConvertLeadDialog), so we skip auto-advance
+                            if (shouldAutoAdvance && stage !== 'lead') {
                                 await updateMontageStatus({ montageId, status: nextStatus.id });
                             }
                         }

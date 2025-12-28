@@ -28,6 +28,12 @@ import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import { convertLeadToMontage } from '../../actions';
 import type { Montage } from '../../types';
@@ -119,6 +125,32 @@ export function ConvertLeadDialog({ montage }: ConvertLeadDialogProps) {
             }
         });
     };
+
+    const isSampleBlocking = montage.sampleStatus === 'to_send' || montage.sampleStatus === 'sent';
+
+    if (isSampleBlocking) {
+        return (
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <span tabIndex={0} className="inline-block w-full sm:w-auto">
+                            <Button 
+                                className="w-full sm:w-auto bg-gray-400 text-white cursor-not-allowed"
+                                size="lg"
+                                disabled
+                            >
+                                <CheckCircle2 className="mr-2 h-5 w-5" />
+                                Akceptuj i zleć pomiar
+                            </Button>
+                        </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Musisz zweryfikować próbki (status &quot;Dostarczono&quot; lub &quot;Brak&quot;) aby przejść dalej.</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+        );
+    }
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>

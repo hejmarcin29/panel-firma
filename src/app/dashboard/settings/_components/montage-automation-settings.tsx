@@ -140,7 +140,8 @@ export function MontageAutomationSettings({ templates: initialTemplates, statusO
                 
                 const stepTemplates = templates.filter(t => t.associatedStage === primaryStatus);
                 const hasChecklistItems = stepTemplates.length > 0;
-                const showAutoAdvance = hasChecklistItems && nextStatusOption;
+                // Exclude 'lead_verification' from auto-advance UI as it requires manual conversion dialog
+                const showAutoAdvance = hasChecklistItems && nextStatusOption && step.id !== 'lead_verification';
                 const autoAdvanceId = `auto_advance_${step.id}`;
 
                 // Show card if there are automations OR if it's a valid stage for checklist (has primaryStatus)
