@@ -70,18 +70,22 @@ export function AddLeadModal({
 
         startTransition(async () => {
             try {
-                await createLead(formData);
-                toast.success('Lead został dodany');
-                setOpen(false);
-                setFormData({
-                    clientName: '',
-                    contactPhone: '',
-                    contactEmail: '',
-                    address: '',
-                    description: '',
-                    forecastedInstallationDate: '',
-                    sampleStatus: 'none',
-                });
+                const result = await createLead(formData);
+                if (result.success) {
+                    toast.success('Lead został dodany');
+                    setOpen(false);
+                    setFormData({
+                        clientName: '',
+                        contactPhone: '',
+                        contactEmail: '',
+                        address: '',
+                        description: '',
+                        forecastedInstallationDate: '',
+                        sampleStatus: 'none',
+                    });
+                } else {
+                    toast.error(result.error || 'Wystąpił błąd');
+                }
             } catch (error) {
                 toast.error(error instanceof Error ? error.message : 'Wystąpił błąd');
             }
