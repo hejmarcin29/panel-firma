@@ -8,7 +8,7 @@ import { MapPin, Phone, Calendar, ArrowRight, Send, Navigation, Plus, Inbox, Loa
 import Link from "next/link";
 import { format, isToday } from "date-fns";
 import { toast } from "sonner";
-import { sendMeasurementRequestSms } from "../crm/montaze/actions";
+import { sendDataRequest } from "../crm/montaze/actions";
 
 interface DashboardItem {
     id: string;
@@ -161,12 +161,12 @@ function LeadCard({ item }: { item: DashboardItem }) {
         
         setIsLoading(true);
         try {
-            const result = await sendMeasurementRequestSms(item.id);
+            const result = await sendDataRequest(item.id);
             if (result.success) {
                 toast.success("Wysłano prośbę o dane!");
                 setIsSent(true);
             } else {
-                toast.error(result.error || "Błąd wysyłki");
+                toast.error("Błąd wysyłki");
             }
         } catch {
             toast.error("Wystąpił błąd");
