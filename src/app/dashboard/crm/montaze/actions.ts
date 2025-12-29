@@ -1723,13 +1723,38 @@ export async function createLead(data: {
     // Auto-assign architect if the creator has the architect role
     const architectId = user.roles.includes('architect') ? user.id : null;
 
+    const normalizedEmail = data.contactEmail?.trim() || null;
+    const normalizedPhone = data.contactPhone?.trim() || null;
+
+    // Check if customer with this email already exists
+    if (normalizedEmail) {
+        const existingCustomer = await db.query.customers.findFirst({
+            where: (table, { eq }) => eq(table.email, normalizedEmail),
+        });
+
+        if (existingCustomer) {
+            throw new Error(`Klient o adresie email ${normalizedEmail} już istnieje w bazie.`);
+        }
+    }
+
+    // Check if customer with this phone already exists
+    if (normalizedPhone) {
+        const existingCustomer = await db.query.customers.findFirst({
+            where: (table, { eq }) => eq(table.phone, normalizedPhone),
+        });
+
+        if (existingCustomer) {
+            throw new Error(`Klient o numerze telefonu ${normalizedPhone} już istnieje w bazie.`);
+        }
+    }
+
     // Create customer record
     const customerId = crypto.randomUUID();
     await db.insert(customers).values({
         id: customerId,
         name: trimmedName,
-        phone: data.contactPhone?.trim() || null,
-        email: data.contactEmail?.trim() || null,
+        phone: normalizedPhone,
+        email: normalizedEmail,
         source: architectId ? 'architect' : 'other',
         architectId,
         createdAt: now,
