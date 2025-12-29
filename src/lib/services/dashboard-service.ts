@@ -487,7 +487,6 @@ export async function getInstallerDashboardData(userId: string) {
         where: (table, { and, eq, or, isNull }) => and(
             eq(table.status, 'lead'),
             or(
-                isNull(table.measurerId),
                 eq(table.measurerId, userId),
                 eq(table.installerId, userId)
             ),

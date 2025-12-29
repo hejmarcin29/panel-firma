@@ -1225,8 +1225,9 @@ export async function updateMontageMeasurementDate(montageId: string, date: Date
             const targetUserId = montage.measurerId || montage.installerId || user.id;
 
             if (date) {
+                const city = montage.installationCity || 'Brak miasta';
                 const event = {
-                    summary: `Pomiar: ${montage.clientName}`,
+                    summary: `Pomiar: ${montage.clientName} - ${city} - Prime Podłogi`,
                     description: `Adres: ${montage.installationAddress || montage.address || 'Brak adresu'}\nTel: ${montage.contactPhone || 'Brak'}\nLink: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard/crm/montaze/${montage.id}`,
                     location: montage.installationAddress || montage.address || '',
                     start: { dateTime: date.toISOString() },
@@ -1248,6 +1249,74 @@ export async function updateMontageMeasurementDate(montageId: string, date: Date
                 await db.update(montages)
                     .set({ googleEventId: null })
                     .where(eq(montages.id, montageId));
+            }
+
+            // Notifications (SMS & Email)
+            if (date) {
+                const formattedDate = date.toLocaleDateString('pl-PL');
+                const formattedTime = date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+                const address = montage.installationAddress || montage.address || 'Brak adresu';
+                
+                // SMS
+                const smsEnabled = await isSystemAutomationEnabled('measurement_scheduled');
+                if (smsEnabled && montage.contactPhone) {
+                    const smsMessage = `Dzień dobry, potwierdzamy termin pomiaru: ${formattedDate} godz. ${formattedTime}. Adres: ${address}. Do zobaczenia!`;
+                    await sendSms(montage.contactPhone, smsMessage);
+                }
+
+                // Email
+                const emailEnabled = await isSystemAutomationEnabled('measurement_scheduled_email');
+                if (emailEnabled && montage.contactEmail) {
+                    const accounts = await db.select().from(mailAccounts).where(ne(mailAccounts.status, 'disabled')).limit(1);
+                    const mailAccount = accounts[0];
+
+                    if (mailAccount && mailAccount.smtpHost && mailAccount.smtpPort && mailAccount.passwordSecret) {
+                        const password = decodeSecret(mailAccount.passwordSecret);
+                        if (password) {
+                            const transporter = createTransport({
+                                host: mailAccount.smtpHost,
+                                port: mailAccount.smtpPort,
+                                secure: Boolean(mailAccount.smtpSecure),
+                                auth: {
+                                    user: mailAccount.username,
+                                    pass: password,
+                                },
+                            });
+
+                            const emailHtml = `
+                                <div style="font-family: sans-serif; color: #333;">
+                                    <h2>Potwierdzenie terminu pomiaru</h2>
+                                    <p>Dzień dobry,</p>
+                                    <p>Potwierdzamy termin pomiaru dla zlecenia <strong>${montage.displayId}</strong>.</p>
+                                    <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                                        <p style="margin: 5px 0;">📅 <strong>Data:</strong> ${formattedDate}</p>
+                                        <p style="margin: 5px 0;">🕒 <strong>Godzina:</strong> ${formattedTime}</p>
+                                        <p style="margin: 5px 0;">📍 <strong>Adres:</strong> ${address}</p>
+                                    </div>
+                                    <h3>Jak przygotować się do pomiaru?</h3>
+                                    <ul>
+                                        <li>Prosimy o zapewnienie dostępu do wszystkich pomieszczeń, które mają być mierzone.</li>
+                                        <li>Jeśli to możliwe, prosimy o uprzątnięcie podłogi z drobnych przedmiotów.</li>
+                                        <li>Prosimy o zapewnienie dostępu do prądu (dla urządzeń pomiarowych).</li>
+                                    </ul>
+                                    <p>W razie pytań prosimy o kontakt.</p>
+                                    <p>Pozdrawiamy,<br>Zespół Prime Podłogi</p>
+                                </div>
+                            `;
+
+                            try {
+                                await transporter.sendMail({
+                                    from: `"${mailAccount.fromName}" <${mailAccount.fromEmail}>`,
+                                    to: montage.contactEmail,
+                                    subject: `Potwierdzenie terminu pomiaru - ${montage.displayId}`,
+                                    html: emailHtml,
+                                });
+                            } catch (error) {
+                                console.error('Failed to send email:', error);
+                            }
+                        }
+                    }
+                }
             }
         }
     } catch (e) {
@@ -2330,7 +2399,7 @@ export async function sendDataRequest(montageId: string) {
     await db.insert(montageNotes).values({
         id: crypto.randomUUID(),
         montageId: montageId,
-        content: `[System]: ${actionText} (${channelsText}). Link: ${portalLink}`,
+        content: `[System]: ${actionText} (${channelsText}).`,
         isInternal: false,
         createdBy: user.id,
         createdAt: new Date(),

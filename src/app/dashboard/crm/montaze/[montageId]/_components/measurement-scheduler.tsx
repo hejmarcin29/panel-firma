@@ -249,7 +249,7 @@ function ConfirmationView({ date, onReschedule, googleCalendarLink, hasGoogleCal
                             <li className="flex gap-3 text-sm text-muted-foreground">
                                 <div className="shrink-0 w-6 h-6 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold">2</div>
                                 <span>
-                                    Klient otrzymał automatyczne powiadomienie SMS z potwierdzeniem terminu.
+                                    Klient otrzymał automatyczne powiadomienie SMS oraz E-mail z potwierdzeniem terminu.
                                 </span>
                             </li>
                             {hasGoogleCalendar && (

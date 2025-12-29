@@ -92,6 +92,14 @@ export const SYSTEM_NOTIFICATIONS: SystemNotificationDefinition[] = [
         defaultEnabled: false
     },
     {
+        id: 'measurement_scheduled_email',
+        type: 'email',
+        trigger: 'Ustalenie daty pomiaru',
+        action: 'Wysyła E-mail z potwierdzeniem terminu i instrukcją',
+        recipient: 'Klient',
+        defaultEnabled: true
+    },
+    {
         id: 'quote_ready',
         type: 'email',
         trigger: 'Zmiana statusu wyceny na "Gotowa"',
