@@ -20,6 +20,7 @@ interface DashboardItem {
     measurementDate?: Date | string | null;
     scheduledInstallationAt?: Date | string | null;
     contactPhone?: string | null;
+    contactEmail?: string | null;
     createdAt: Date | string;
 }
 
@@ -153,9 +154,9 @@ function LeadCard({ item }: { item: DashboardItem }) {
     const [isLoading, setIsLoading] = useState(false);
     const [isSent, setIsSent] = useState(false);
 
-    const handleSendSms = async () => {
-        if (!item.contactPhone) {
-            toast.error("Brak numeru telefonu!");
+    const handleSendRequest = async () => {
+        if (!item.contactPhone && !item.contactEmail) {
+            toast.error("Brak numeru telefonu i adresu email!");
             return;
         }
         
@@ -208,11 +209,11 @@ function LeadCard({ item }: { item: DashboardItem }) {
                         <Button 
                             size="sm" 
                             className="w-full justify-start" 
-                            onClick={handleSendSms}
-                            disabled={isLoading || !item.contactPhone}
+                            onClick={handleSendRequest}
+                            disabled={isLoading || (!item.contactPhone && !item.contactEmail)}
                         >
                             {isLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
-                            Wyślij prośbę o dane (SMS)
+                            Wyślij prośbę o dane
                         </Button>
                     )}
                 </div>
