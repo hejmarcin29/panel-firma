@@ -98,9 +98,8 @@ export async function updateMontageData(montageId: string, data: MontageUpdateDa
     if (currentMontage?.status === 'lead') {
         await logSystemEvent(
             'montage.status_changed',
-            'Klient uzupełnił dane - automatyczna zmiana statusu na Przed Pomiarem',
-            'system',
-            montageId
+            `Klient uzupełnił dane - automatyczna zmiana statusu na Przed Pomiarem (ID: ${montageId})`,
+            'system'
         );
     }
 
