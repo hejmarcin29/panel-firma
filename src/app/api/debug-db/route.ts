@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sql } from 'drizzle-orm';
+import { montages } from '@/lib/db/schema';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,15 +21,31 @@ export async function GET() {
 
         const hasColumn = columns.length > 0;
 
-        // 3. Check Schema vs DB mismatch (simple check)
-        // We can't easily check schema definition at runtime here without importing it, 
-        // but we know we expect the column.
+        // 3. Try to fetch one record using Drizzle ORM
+        let montageCheck = null;
+        let montageError = null;
+        try {
+            montageCheck = await db.query.montages.findFirst({
+                columns: {
+                    id: true,
+                    clientName: true,
+                    estimatedFloorArea: true // Explicitly ask for this column
+                }
+            });
+        } catch (e) {
+            montageError = e instanceof Error ? e.message : String(e);
+        }
 
         return NextResponse.json({
             status: 'ok',
             connection: 'success',
             hasEstimatedFloorArea: hasColumn,
             columnDetails: columns[0] || null,
+            drizzleQuery: {
+                success: !montageError,
+                data: montageCheck,
+                error: montageError
+            },
             env: {
                 hasDbUrl: !!process.env.DATABASE_URL
             }
