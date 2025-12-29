@@ -25,7 +25,10 @@ interface DataRequestCardProps {
 }
 
 export function DataRequestCard({ montage, token }: DataRequestCardProps) {
-    const [isEditing, setIsEditing] = useState(false);
+    // Auto-open if critical data is missing
+    const isMissingData = !montage.address || !montage.installationCity || !montage.installationPostalCode;
+    
+    const [isEditing, setIsEditing] = useState(isMissingData);
     const [isSaving, setIsSaving] = useState(false);
     
     // Initial values
@@ -90,14 +93,14 @@ export function DataRequestCard({ montage, token }: DataRequestCardProps) {
     }
 
     return (
-        <Card className="border-primary shadow-md">
-            <CardHeader>
-                <CardTitle>Uzupełnij dane</CardTitle>
+        <Card className="border-primary shadow-md border-2">
+            <CardHeader className="bg-primary/5">
+                <CardTitle className="text-primary">Uzupełnij dane do pomiaru</CardTitle>
                 <CardDescription>
-                    Wprowadź poprawne dane, abyśmy mogli sprawnie przeprowadzić pomiar.
+                    Wprowadź adres, pod którym ma odbyć się pomiar i montaż.
                 </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-6">
                 <div className="space-y-2">
                     <Label>Ulica i numer</Label>
                     <Input 

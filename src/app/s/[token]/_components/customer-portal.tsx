@@ -119,6 +119,14 @@ export function CustomerPortal({ customer, token, bankAccount }: CustomerPortalP
             <div className="space-y-6">
                 {activeMontage ? (
                     <motion.div variants={containerVariants} className="space-y-6">
+                        
+                        {/* Action First: Data Request at the top */}
+                        {(activeMontage.status === 'lead' || activeMontage.status === 'before_measurement') && (
+                            <motion.div variants={itemVariants}>
+                                <DataRequestCard montage={activeMontage} token={token} />
+                            </motion.div>
+                        )}
+
                         <motion.div variants={itemVariants}>
                             <MontageTimeline montage={activeMontage} />
                         </motion.div>
@@ -143,12 +151,6 @@ export function CustomerPortal({ customer, token, bankAccount }: CustomerPortalP
                                     isPaid={false} 
                                     bankAccount={bankAccount}
                                 />
-                            </motion.div>
-                        )}
-
-                        {(activeMontage.status === 'lead' || activeMontage.status === 'before_measurement') && (
-                            <motion.div variants={itemVariants}>
-                                <DataRequestCard montage={activeMontage} token={token} />
                             </motion.div>
                         )}
 
