@@ -667,6 +667,7 @@ type UpdateMontageContactDetailsInput = {
     source?: string;
     forecastedInstallationDate?: string;
     sampleStatus?: string;
+    estimatedFloorArea?: number;
 };
 
 export async function updateMontageContactDetails({
@@ -684,6 +685,7 @@ export async function updateMontageContactDetails({
     source,
     forecastedInstallationDate,
     sampleStatus,
+    estimatedFloorArea,
 }: UpdateMontageContactDetailsInput) {
 	await requireUser();
 
@@ -777,6 +779,7 @@ export async function updateMontageContactDetails({
 			installationAddress: normalizedInstallationAddress,
 			installationCity: normalizedInstallationCity,
             sampleStatus: sampleStatus ? (sampleStatus as MontageSampleStatus) : undefined,
+            estimatedFloorArea: estimatedFloorArea,
 			updatedAt: new Date(),
 		})
 		.where(eq(montages.id, montageId));

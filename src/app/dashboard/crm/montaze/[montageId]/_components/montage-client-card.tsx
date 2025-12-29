@@ -76,6 +76,7 @@ export function MontageClientCard({
       ? new Date(montage.measurementDate as string | number | Date).toISOString().split("T")[0]
       : "",
     sampleStatus: montage.sampleStatus || "none",
+    estimatedFloorArea: montage.estimatedFloorArea?.toString() || "",
   });
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -104,6 +105,7 @@ export function MontageClientCard({
           ? new Date(montage.measurementDate as string | number | Date).toISOString().split("T")[0]
           : "",
         sampleStatus: montage.sampleStatus || "none",
+        estimatedFloorArea: montage.estimatedFloorArea?.toString() || "",
     });
     setDateRange({
         from: montage.scheduledInstallationAt ? new Date(montage.scheduledInstallationAt) : undefined,
@@ -130,6 +132,7 @@ export function MontageClientCard({
         scheduledInstallationDate: data.scheduledInstallationAt,
         scheduledInstallationEndDate: data.scheduledInstallationEndAt,
         sampleStatus: data.sampleStatus,
+        estimatedFloorArea: data.estimatedFloorArea ? parseFloat(data.estimatedFloorArea) : undefined,
       });
       router.refresh();
     } catch {
@@ -280,6 +283,16 @@ export function MontageClientCard({
                   type="date"
                   value={formData.measurementDate}
                   onChange={(e) => handleChange("measurementDate", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="estimatedFloorArea">Szacowana powierzchnia (m²)</Label>
+                <Input
+                  id="estimatedFloorArea"
+                  type="number"
+                  step="0.01"
+                  value={formData.estimatedFloorArea}
+                  onChange={(e) => handleChange("estimatedFloorArea", e.target.value)}
                 />
               </div>
               <div className="space-y-2">

@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db';
 import { customers, montages, quotes } from '@/lib/db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, isNull, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { logSystemEvent } from '@/lib/logging';
 
@@ -142,6 +142,7 @@ export async function getCustomerByToken(token: string) {
         where: eq(customers.referralToken, token),
         with: {
             montages: {
+                where: (montages, { isNull }) => isNull(montages.deletedAt),
                 orderBy: [desc(montages.createdAt)],
                 with: {
                     attachments: true,
@@ -158,7 +159,10 @@ export async function getCustomerByToken(token: string) {
     // Fallback: Find unlinked montages by email
     if (customer.email) {
         const montagesByEmail = await db.query.montages.findMany({
-            where: eq(montages.contactEmail, customer.email),
+            where: and(
+                eq(montages.contactEmail, customer.email),
+                isNull(montages.deletedAt)
+            ),
             orderBy: [desc(montages.createdAt)],
             with: {
                 attachments: true,
