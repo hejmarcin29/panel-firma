@@ -79,6 +79,8 @@ export async function updateMontageData(montageId: string, data: MontageUpdateDa
     const isOwner = customer.montages.some(m => m.id === montageId);
     if (!isOwner) throw new Error('Brak uprawnień');
 
+    const currentMontage = customer.montages.find(m => m.id === montageId);
+    
     await db.update(montages)
         .set({
             address: data.address,
@@ -86,9 +88,21 @@ export async function updateMontageData(montageId: string, data: MontageUpdateDa
             installationPostalCode: data.postalCode,
             floorArea: data.floorArea ? parseFloat(data.floorArea.toString()) : null,
             additionalInfo: data.notes,
+            // Auto-advance status if it's a lead
+            status: currentMontage?.status === 'lead' ? 'before_measurement' : undefined,
             updatedAt: new Date()
         })
         .where(eq(montages.id, montageId));
+
+    // Log system event if status changed
+    if (currentMontage?.status === 'lead') {
+        await logSystemEvent(
+            'montage.status_changed',
+            'Klient uzupełnił dane - automatyczna zmiana statusu na Przed Pomiarem',
+            'system',
+            montageId
+        );
+    }
 
     revalidatePath(`/s/${token}`);
     return { success: true };

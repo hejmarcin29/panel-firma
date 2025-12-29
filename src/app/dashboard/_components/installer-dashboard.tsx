@@ -27,9 +27,10 @@ interface DashboardItem {
 interface InstallerDashboardProps {
     leads: DashboardItem[];
     schedule: DashboardItem[];
+    toSchedule?: DashboardItem[];
 }
 
-export function InstallerDashboard({ leads, schedule }: InstallerDashboardProps) {
+export function InstallerDashboard({ leads, schedule, toSchedule = [] }: InstallerDashboardProps) {
     return (
         <div className="space-y-6 p-4 pb-24 max-w-md mx-auto md:max-w-4xl">
             {/* Header */}
@@ -67,6 +68,22 @@ export function InstallerDashboard({ leads, schedule }: InstallerDashboardProps)
                 )}
             </section>
 
+            {/* To Schedule (New Section) */}
+            {toSchedule.length > 0 && (
+                <section className="space-y-3">
+                    <h2 className="font-semibold text-lg flex items-center gap-2 text-orange-600">
+                        <Phone className="h-5 w-5" />
+                        Do umówienia
+                        <Badge variant="destructive" className="ml-2">{toSchedule.length}</Badge>
+                    </h2>
+                    <div className="space-y-3">
+                        {toSchedule.map((item) => (
+                            <ToScheduleCard key={item.id} item={item} />
+                        ))}
+                    </div>
+                </section>
+            )}
+
             {/* Inbox / Leads */}
             <section className="space-y-3">
                 <h2 className="font-semibold text-lg flex items-center gap-2">
@@ -85,6 +102,41 @@ export function InstallerDashboard({ leads, schedule }: InstallerDashboardProps)
                 )}
             </section>
         </div>
+    );
+}
+
+function ToScheduleCard({ item }: { item: DashboardItem }) {
+    return (
+        <Card className="border-l-4 border-l-orange-500">
+            <CardContent className="p-4">
+                <div className="flex justify-between items-start mb-2">
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+                                Czeka na termin
+                            </Badge>
+                            <h3 className="font-semibold text-lg">{item.clientName}</h3>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                            {item.installationCity || item.billingCity || 'Brak lokalizacji'}
+                        </p>
+                    </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2 mt-4">
+                    <Button variant="outline" className="w-full" asChild>
+                        <a href={`tel:${item.contactPhone}`}>
+                            <Phone className="h-4 w-4 mr-2" /> Zadzwoń
+                        </a>
+                    </Button>
+                    <Button className="w-full" asChild>
+                        <Link href={`/dashboard/crm/montaze/${item.id}`}>
+                            <Calendar className="h-4 w-4 mr-2" /> Ustal termin
+                        </Link>
+                    </Button>
+                </div>
+            </CardContent>
+        </Card>
     );
 }
 

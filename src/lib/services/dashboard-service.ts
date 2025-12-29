@@ -512,5 +512,18 @@ export async function getInstallerDashboardData(userId: string) {
         orderBy: (table, { asc }) => [asc(table.measurementDate)]
     });
 
-    return { leads, schedule };
+    const toSchedule = await db.query.montages.findMany({
+        where: (table, { and, eq, or, isNull }) => and(
+            eq(table.status, 'before_measurement'),
+            isNull(table.measurementDate),
+            or(
+                eq(table.measurerId, userId),
+                eq(table.installerId, userId)
+            ),
+            isNull(table.deletedAt)
+        ),
+        orderBy: (table, { desc }) => [desc(table.updatedAt)],
+    });
+
+    return { leads, schedule, toSchedule };
 }

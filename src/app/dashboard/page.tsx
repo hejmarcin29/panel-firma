@@ -54,7 +54,13 @@ export default async function DashboardPage() {
     }
 
     if (installerData) {
-        return <InstallerDashboard leads={installerData.leads} schedule={installerData.schedule} />;
+        return (
+            <InstallerDashboard 
+                leads={installerData.leads} 
+                schedule={installerData.schedule} 
+                toSchedule={installerData.toSchedule} 
+            />
+        );
     }
 
     const r2Config = await tryGetR2Config();
