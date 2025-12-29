@@ -19,6 +19,7 @@ interface DashboardItem {
     billingCity?: string | null;
     measurementDate?: Date | string | null;
     scheduledInstallationAt?: Date | string | null;
+    forecastedInstallationDate?: Date | string | null;
     contactPhone?: string | null;
     contactEmail?: string | null;
     createdAt: Date | string;
@@ -106,15 +107,22 @@ export function InstallerDashboard({ leads, schedule, toSchedule = [] }: Install
 }
 
 function ToScheduleCard({ item }: { item: DashboardItem }) {
+    const forecastedDate = item.forecastedInstallationDate ? new Date(item.forecastedInstallationDate) : null;
+
     return (
         <Card className="border-l-4 border-l-orange-500">
             <CardContent className="p-4">
                 <div className="flex justify-between items-start mb-2">
                     <div>
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
                             <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
                                 Czeka na termin
                             </Badge>
+                            {forecastedDate && (
+                                <Badge variant="secondary" className="text-xs text-muted-foreground bg-gray-100">
+                                    📅 Plan: {format(forecastedDate, 'dd.MM.yyyy')}
+                                </Badge>
+                            )}
                             <h3 className="font-semibold text-lg">{item.clientName}</h3>
                         </div>
                         <p className="text-sm text-muted-foreground">

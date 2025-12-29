@@ -631,16 +631,22 @@ export function MontageClientCard({
             </div>
         </div>
 
-        {montage.floorArea && (
+        {(montage.floorArea || montage.estimatedFloorArea) && (
             <div className="flex items-center gap-3 pt-2 border-t">
                 <Ruler className="h-4 w-4 text-muted-foreground" />
-                <div className="grid gap-0.5">
-                    <span className="text-sm">
-                        {montage.floorArea} m²
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                        Powierzchnia podłogi
-                    </span>
+                <div className="grid gap-2 w-full">
+                    {montage.estimatedFloorArea && (
+                        <div className="flex justify-between items-center">
+                            <span className="text-xs text-muted-foreground">Szacowano:</span>
+                            <span className="text-sm font-medium">{montage.estimatedFloorArea} m²</span>
+                        </div>
+                    )}
+                    {montage.floorArea && (
+                        <div className="flex justify-between items-center">
+                            <span className="text-xs text-muted-foreground">Pomiar:</span>
+                            <span className="text-sm font-bold text-green-600">{montage.floorArea} m²</span>
+                        </div>
+                    )}
                 </div>
             </div>
         )}

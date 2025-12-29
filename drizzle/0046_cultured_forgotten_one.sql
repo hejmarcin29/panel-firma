@@ -1,0 +1,1 @@
+ALTER TABLE "montages" ADD COLUMN "estimated_floor_area" double precision;

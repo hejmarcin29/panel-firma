@@ -16,6 +16,7 @@ interface MontageData {
     installationCity?: string | null;
     installationPostalCode?: string | null;
     floorArea?: number | null;
+    estimatedFloorArea?: number | null;
     additionalInfo?: string | null;
 }
 
@@ -36,7 +37,7 @@ export function DataRequestCard({ montage, token }: DataRequestCardProps) {
         address: montage.address || '',
         city: montage.installationCity || '',
         postalCode: montage.installationPostalCode || '',
-        floorArea: montage.floorArea?.toString() || '',
+        floorArea: montage.estimatedFloorArea?.toString() || montage.floorArea?.toString() || '',
         notes: montage.additionalInfo || ''
     });
 
@@ -79,7 +80,7 @@ export function DataRequestCard({ montage, token }: DataRequestCardProps) {
                         <span className="font-medium">{montage.installationPostalCode || '-'}</span>
                         
                         <span className="text-muted-foreground">Powierzchnia (m²):</span>
-                        <span className="font-medium">{montage.floorArea || '-'}</span>
+                        <span className="font-medium">{montage.estimatedFloorArea || montage.floorArea || '-'}</span>
                     </div>
                     {montage.additionalInfo && (
                         <div className="mt-2 pt-2 border-t text-sm">

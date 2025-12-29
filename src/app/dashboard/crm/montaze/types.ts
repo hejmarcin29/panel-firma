@@ -96,6 +96,7 @@ export type Montage = {
 	materialDetails: string | null;
     clientInfo: string | null;
 	measurementDetails: string | null;
+    estimatedFloorArea?: number | null;
 	floorArea: number | null;
 	floorDetails: string | null;
 	panelModel: string | null;

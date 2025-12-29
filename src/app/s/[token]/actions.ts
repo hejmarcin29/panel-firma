@@ -86,7 +86,8 @@ export async function updateMontageData(montageId: string, data: MontageUpdateDa
             address: data.address,
             installationCity: data.city,
             installationPostalCode: data.postalCode,
-            floorArea: data.floorArea ? parseFloat(data.floorArea.toString()) : null,
+            estimatedFloorArea: data.floorArea ? parseFloat(data.floorArea.toString()) : null,
+            floorArea: null,
             additionalInfo: data.notes,
             // Auto-advance status if it's a lead
             status: currentMontage?.status === 'lead' ? 'before_measurement' : undefined,

@@ -45,6 +45,7 @@ interface Montage {
     attachments: MontageAttachment[];
     quotes: Quote[];
     floorArea: number | null;
+    estimatedFloorArea?: number | null;
     floorDetails: string | null;
     measurementDetails: string | null;
     installationCity: string | null;

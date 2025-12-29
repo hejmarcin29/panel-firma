@@ -587,9 +587,9 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                             <div className="space-y-1">
                                 <Label htmlFor="floorArea" className="text-xs text-muted-foreground flex items-center gap-2">
                                     Wymiar netto (m²)
-                                    {montage.status === 'lead' && montage.floorArea && (
-                                        <span className="text-[10px] font-bold text-orange-600 bg-orange-100 px-1.5 py-0.5 rounded-full">
-                                            (Szacowany)
+                                    {montage.estimatedFloorArea && (
+                                        <span className="text-[10px] font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                                            (Klient: {montage.estimatedFloorArea} m²)
                                         </span>
                                     )}
                                 </Label>

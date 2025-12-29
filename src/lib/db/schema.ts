@@ -521,6 +521,7 @@ export const montages = pgTable(
             supplySide: 'installer' | 'company';
             estimatedCost?: number;
         }[]>(),
+        estimatedFloorArea: doublePrecision('estimated_floor_area'),
 		floorArea: doublePrecision('floor_area'),
 		floorDetails: text('floor_details'),
 		panelModel: text('panel_model'),

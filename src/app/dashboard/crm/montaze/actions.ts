@@ -2075,7 +2075,8 @@ export async function convertLeadToMontage(data: {
             installationCity: data.installationCity,
             installationPostalCode: data.installationPostalCode,
             forecastedInstallationDate: data.forecastedInstallationDate ? new Date(data.forecastedInstallationDate) : null,
-            floorArea: data.floorArea ? parseFloat(data.floorArea) : null,
+            estimatedFloorArea: data.floorArea ? parseFloat(data.floorArea) : null,
+            floorArea: null,
             ...(data.productId !== undefined ? {
                 panelProductId: data.productId && data.productId !== 'none' ? parseInt(data.productId) : null,
             } : {}),
