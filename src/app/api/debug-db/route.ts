@@ -2,7 +2,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sql } from 'drizzle-orm';
-import { montages } from '@/lib/db/schema';
 
 export const dynamic = 'force-dynamic';
 

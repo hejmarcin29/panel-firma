@@ -1,7 +1,7 @@
 
 import { db } from '../src/lib/db';
 import { montages } from '../src/lib/db/schema';
-import { eq, or, isNull, sql } from 'drizzle-orm';
+import { eq, or } from 'drizzle-orm';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -12,7 +12,7 @@ async function migrate() {
     try {
         // Move floorArea to estimatedFloorArea for leads and before_measurement
         // where estimatedFloorArea is null (to avoid double migration)
-        const result = await db.update(montages)
+        await db.update(montages)
             .set({
                 estimatedFloorArea: montages.floorArea,
                 floorArea: null

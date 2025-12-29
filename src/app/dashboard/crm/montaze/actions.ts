@@ -1833,7 +1833,6 @@ export async function createLead(data: {
             message: error instanceof Error ? error.message : 'Wystąpił nieoczekiwany błąd podczas tworzenia leada.' 
         };
     }
-}    return { status: 'success', montageId };
 }
 
 async function addAttachment(montageId: string, file: File, title: string, category?: string) {

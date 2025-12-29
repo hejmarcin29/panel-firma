@@ -87,7 +87,7 @@ export function AddLeadModal({
                 } else {
                     toast.error(result.message);
                 }
-            } catch (error) {
+            } catch {
                 toast.error('Wystąpił nieoczekiwany błąd komunikacji z serwerem.');
             }
         });
