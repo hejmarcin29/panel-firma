@@ -1708,6 +1708,7 @@ export async function createLead(data: {
     description?: string;
     forecastedInstallationDate?: string;
     sampleStatus?: MontageSampleStatus;
+    existingCustomerId?: string;
 }) {
     try {
         const user = await requireUser();
@@ -1726,46 +1727,70 @@ export async function createLead(data: {
 
         const normalizedEmail = data.contactEmail?.trim() || null;
         const normalizedPhone = data.contactPhone?.trim() || null;
+        let customerId = data.existingCustomerId;
 
-        // Check if customer with this email already exists
-        if (normalizedEmail) {
-            const existingCustomer = await db.query.customers.findFirst({
-                where: (table, { eq }) => eq(table.email, normalizedEmail),
-            });
+        // If no existing customer ID provided, check for duplicates
+        if (!customerId) {
+            // Check if customer with this email already exists
+            if (normalizedEmail) {
+                const existingCustomer = await db.query.customers.findFirst({
+                    where: (table, { eq }) => eq(table.email, normalizedEmail),
+                });
 
-            if (existingCustomer) {
-                return { success: false, message: `Klient o adresie email ${normalizedEmail} już istnieje w bazie.` };
+                if (existingCustomer) {
+                    return { 
+                        success: false, 
+                        status: 'duplicate_found',
+                        existingCustomer: {
+                            id: existingCustomer.id,
+                            name: existingCustomer.name,
+                            email: existingCustomer.email,
+                            phone: existingCustomer.phone
+                        },
+                        message: `Klient o adresie email ${normalizedEmail} już istnieje w bazie.` 
+                    };
+                }
             }
-        }
 
-        // Check if customer with this phone already exists
-        if (normalizedPhone) {
-            const existingCustomer = await db.query.customers.findFirst({
-                where: (table, { eq }) => eq(table.phone, normalizedPhone),
-            });
+            // Check if customer with this phone already exists
+            if (normalizedPhone) {
+                const existingCustomer = await db.query.customers.findFirst({
+                    where: (table, { eq }) => eq(table.phone, normalizedPhone),
+                });
 
-            if (existingCustomer) {
-                return { success: false, message: `Klient o numerze telefonu ${normalizedPhone} już istnieje w bazie.` };
+                if (existingCustomer) {
+                    return { 
+                        success: false, 
+                        status: 'duplicate_found',
+                        existingCustomer: {
+                            id: existingCustomer.id,
+                            name: existingCustomer.name,
+                            email: existingCustomer.email,
+                            phone: existingCustomer.phone
+                        },
+                        message: `Klient o numerze telefonu ${normalizedPhone} już istnieje w bazie.` 
+                    };
+                }
             }
-        }
 
-        // Create customer record
-        const customerId = crypto.randomUUID();
-        await db.insert(customers).values({
-            id: customerId,
-            name: trimmedName,
-            phone: normalizedPhone,
-            email: normalizedEmail,
-            source: architectId ? 'architect' : 'other',
-            architectId,
-            createdAt: now,
-            updatedAt: now,
-        });
+            // Create new customer record if no duplicate found
+            customerId = crypto.randomUUID();
+            await db.insert(customers).values({
+                id: customerId,
+                name: trimmedName,
+                phone: normalizedPhone,
+                email: normalizedEmail,
+                source: architectId ? 'architect' : 'other',
+                architectId,
+                createdAt: now,
+                updatedAt: now,
+            });
+        }
 
         await db.insert(montages).values({
             id: montageId,
             displayId,
-            customerId, // Link to customer
+            customerId: customerId!, // Link to customer (new or existing)
             clientName: trimmedName,
             contactPhone: data.contactPhone?.trim() || null,
             contactEmail: data.contactEmail?.trim() || null,

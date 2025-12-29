@@ -143,9 +143,18 @@ export const SYSTEM_NOTIFICATIONS: SystemNotificationDefinition[] = [
         id: 'webhook_woo_order',
         type: 'system',
         trigger: 'Nowe zamówienie w WooCommerce (Webhook)',
-        action: 'Tworzy zamówienie w panelu (Status: Do weryfikacji)',
+        action: 'Tworzy zamówienie i inteligentnie łączy z istniejącym klientem (Silent Match)',
         recipient: 'Moduł Zamówień',
         defaultEnabled: true
+    },
+    {
+        id: 'admin_duplicate_check',
+        type: 'system',
+        trigger: 'Ręczne dodawanie leada (Admin)',
+        action: 'Wykrywa duplikaty (email/tel) i proponuje połączenie z istniejącym klientem',
+        recipient: 'Panel Admina',
+        defaultEnabled: true,
+        locked: true
     },
     {
         id: 'webhook_fluent_lead',
