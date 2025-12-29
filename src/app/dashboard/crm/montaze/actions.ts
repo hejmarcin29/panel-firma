@@ -1709,102 +1709,96 @@ export async function createLead(data: {
     forecastedInstallationDate?: string;
     sampleStatus?: MontageSampleStatus;
 }) {
-    try {
-        const user = await requireUser();
-        
-        const trimmedName = data.clientName.trim();
-        if (!trimmedName) {
-            return { success: false, error: 'Podaj nazwę klienta.' };
-        }
-
-        const displayId = await generateNextMontageId();
-        const montageId = crypto.randomUUID();
-        const now = new Date();
-
-        // Auto-assign architect if the creator has the architect role
-        const architectId = user.roles.includes('architect') ? user.id : null;
-
-        // Create customer record
-        const customerId = crypto.randomUUID();
-        await db.insert(customers).values({
-            id: customerId,
-            name: trimmedName,
-            phone: data.contactPhone?.trim() || null,
-            email: data.contactEmail?.trim() || null,
-            source: architectId ? 'architect' : 'other',
-            architectId,
-            createdAt: now,
-            updatedAt: now,
-        });
-
-        await db.insert(montages).values({
-            id: montageId,
-            displayId,
-            customerId, // Link to customer
-            clientName: trimmedName,
-            contactPhone: data.contactPhone?.trim() || null,
-            contactEmail: data.contactEmail?.trim() || null,
-            installationCity: data.address?.trim() || null,
-            billingCity: data.address?.trim() || null,
-            clientInfo: data.description?.trim() || null,
-            forecastedInstallationDate: data.forecastedInstallationDate ? new Date(data.forecastedInstallationDate) : null,
-            sampleStatus: data.sampleStatus || 'none',
-            status: 'lead',
-            architectId,
-            createdAt: now,
-            updatedAt: now,
-        });
-
-        // Add note if description is provided
-        if (data.description?.trim()) {
-            await db.insert(montageNotes).values({
-                id: crypto.randomUUID(),
-                montageId: montageId,
-                content: `[Info od klienta]: ${data.description.trim()}`,
-                isInternal: false,
-                createdBy: user.id,
-                createdAt: now,
-            });
-        }
-
-        // Initialize checklist items
-        const templates = await getMontageChecklistTemplates();
-        const checklistItems = templates.map((template, index) => {
-            let isCompleted = false;
-            
-            // Smart Checklist Logic for Sample Verification
-            if (template.id === 'sample_verification') {
-                const status = data.sampleStatus || 'none';
-                if (status === 'none' || status === 'delivered') {
-                    isCompleted = true;
-                }
-            }
-
-            return {
-                id: crypto.randomUUID(),
-                montageId: montageId,
-                templateId: template.id,
-                label: template.label,
-                allowAttachment: template.allowAttachment,
-                orderIndex: index,
-                completed: isCompleted,
-                createdAt: now,
-                updatedAt: now,
-            };
-        });
-
-        if (checklistItems.length > 0) {
-            await db.insert(montageChecklistItems).values(checklistItems);
-        }
-
-        await logSystemEvent('create_lead', `Utworzono lead ${displayId} dla ${trimmedName}`, user.id);
-        revalidatePath(MONTAGE_DASHBOARD_PATH);
-        return { success: true };
-    } catch (error) {
-        console.error('createLead Error:', error);
-        return { success: false, error: error instanceof Error ? error.message : 'Wystąpił nieznany błąd serwera' };
+    const user = await requireUser();
+    
+    const trimmedName = data.clientName.trim();
+    if (!trimmedName) {
+        throw new Error('Podaj nazwę klienta.');
     }
-}    return { status: 'success', montageId };
+
+    const displayId = await generateNextMontageId();
+    const montageId = crypto.randomUUID();
+    const now = new Date();
+
+    // Auto-assign architect if the creator has the architect role
+    const architectId = user.roles.includes('architect') ? user.id : null;
+
+    // Create customer record
+    const customerId = crypto.randomUUID();
+    await db.insert(customers).values({
+        id: customerId,
+        name: trimmedName,
+        phone: data.contactPhone?.trim() || null,
+        email: data.contactEmail?.trim() || null,
+        source: architectId ? 'architect' : 'other',
+        architectId,
+        createdAt: now,
+        updatedAt: now,
+    });
+
+    await db.insert(montages).values({
+        id: montageId,
+        displayId,
+        customerId, // Link to customer
+        clientName: trimmedName,
+        contactPhone: data.contactPhone?.trim() || null,
+        contactEmail: data.contactEmail?.trim() || null,
+        installationCity: data.address?.trim() || null,
+        billingCity: data.address?.trim() || null,
+        clientInfo: data.description?.trim() || null,
+        forecastedInstallationDate: data.forecastedInstallationDate ? new Date(data.forecastedInstallationDate) : null,
+        sampleStatus: data.sampleStatus || 'none',
+        status: 'lead',
+        architectId,
+        createdAt: now,
+        updatedAt: now,
+    });
+
+    // Add note if description is provided
+    if (data.description?.trim()) {
+        await db.insert(montageNotes).values({
+            id: crypto.randomUUID(),
+            montageId: montageId,
+            content: `[Info od klienta]: ${data.description.trim()}`,
+            isInternal: false,
+            createdBy: user.id,
+            createdAt: now,
+        });
+    }
+
+    // Initialize checklist items
+    const templates = await getMontageChecklistTemplates();
+    const checklistItems = templates.map((template, index) => {
+        let isCompleted = false;
+        
+        // Smart Checklist Logic for Sample Verification
+        if (template.id === 'sample_verification') {
+            const status = data.sampleStatus || 'none';
+            if (status === 'none' || status === 'delivered') {
+                isCompleted = true;
+            }
+        }
+
+        return {
+            id: crypto.randomUUID(),
+            montageId: montageId,
+            templateId: template.id,
+            label: template.label,
+            allowAttachment: template.allowAttachment,
+            orderIndex: index,
+            completed: isCompleted,
+            createdAt: now,
+            updatedAt: now,
+        };
+    });
+
+    if (checklistItems.length > 0) {
+        await db.insert(montageChecklistItems).values(checklistItems);
+    }
+
+    await logSystemEvent('create_lead', `Utworzono lead ${displayId} dla ${trimmedName}`, user.id);
+    revalidatePath(MONTAGE_DASHBOARD_PATH);
+    return { status: 'success', montageId };
 }
 
 async function addAttachment(montageId: string, file: File, title: string, category?: string) {
