@@ -1700,6 +1700,7 @@ export async function updateMontageRealizationStatus({
 export async function createLead(data: {
     clientName: string;
     contactPhone?: string;
+    contactEmail?: string;
     address?: string;
     description?: string;
     forecastedInstallationDate?: string;
@@ -1725,6 +1726,7 @@ export async function createLead(data: {
         id: customerId,
         name: trimmedName,
         phone: data.contactPhone?.trim() || null,
+        email: data.contactEmail?.trim() || null,
         source: architectId ? 'architect' : 'other',
         architectId,
         createdAt: now,
@@ -1737,6 +1739,7 @@ export async function createLead(data: {
         customerId, // Link to customer
         clientName: trimmedName,
         contactPhone: data.contactPhone?.trim() || null,
+        contactEmail: data.contactEmail?.trim() || null,
         installationCity: data.address?.trim() || null,
         billingCity: data.address?.trim() || null,
         clientInfo: data.description?.trim() || null,

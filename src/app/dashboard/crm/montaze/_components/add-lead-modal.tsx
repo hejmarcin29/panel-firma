@@ -43,6 +43,7 @@ export function AddLeadModal({
     const [formData, setFormData] = useState({
         clientName: '',
         contactPhone: '',
+        contactEmail: '',
         address: '',
         description: '',
         forecastedInstallationDate: '',
@@ -57,6 +58,16 @@ export function AddLeadModal({
             return;
         }
 
+        if (!formData.contactPhone.trim()) {
+            toast.error('Podaj numer telefonu');
+            return;
+        }
+
+        if (!formData.contactEmail.trim()) {
+            toast.error('Podaj adres email');
+            return;
+        }
+
         startTransition(async () => {
             try {
                 await createLead(formData);
@@ -65,6 +76,7 @@ export function AddLeadModal({
                 setFormData({
                     clientName: '',
                     contactPhone: '',
+                    contactEmail: '',
                     address: '',
                     description: '',
                     forecastedInstallationDate: '',
@@ -105,12 +117,23 @@ export function AddLeadModal({
                         />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="contactPhone">Telefon</Label>
+                        <Label htmlFor="contactPhone">Telefon *</Label>
                         <Input
                             id="contactPhone"
                             value={formData.contactPhone}
                             onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
                             placeholder="123 456 789"
+                            disabled={isPending}
+                        />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="contactEmail">Email *</Label>
+                        <Input
+                            id="contactEmail"
+                            type="email"
+                            value={formData.contactEmail}
+                            onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
+                            placeholder="jan@example.com"
                             disabled={isPending}
                         />
                     </div>
