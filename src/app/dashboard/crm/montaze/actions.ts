@@ -1306,7 +1306,7 @@ export async function updateMontageMeasurementDate(montageId: string, date: Date
 
                             try {
                                 await transporter.sendMail({
-                                    from: `"${mailAccount.fromName}" <${mailAccount.fromEmail}>`,
+                                    from: `"${mailAccount.displayName}" <${mailAccount.email}>`,
                                     to: montage.contactEmail,
                                     subject: `Potwierdzenie terminu pomiaru - ${montage.displayId}`,
                                     html: emailHtml,
