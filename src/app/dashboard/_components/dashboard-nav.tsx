@@ -19,7 +19,6 @@ const links = [
     { href: '/dashboard/wallet', label: 'Portfel' },
     { href: '/dashboard/showroom', label: 'Showroom' },
     { href: '/dashboard/partner', label: 'Moje Polecenia' },
-    { href: '/demo/premium-card', label: 'DEMO' },
 ];
 
 export function DashboardNav({ urgentOrdersCount = 0, userRoles = ['admin'] }: { urgentOrdersCount?: number; userRoles?: UserRole[] }) {
@@ -48,7 +47,7 @@ export function DashboardNav({ urgentOrdersCount = 0, userRoles = ['admin'] }: {
              return allowedLinks.includes(link.href);
         }
 
-        const restrictedLinks = ['/dashboard/orders', '/dashboard/products', '/dashboard/mail', '/dashboard/wallet', '/dashboard/erp', '/demo/premium-card'];
+        const restrictedLinks = ['/dashboard/orders', '/dashboard/products', '/dashboard/mail', '/dashboard/wallet', '/dashboard/erp'];
         return !restrictedLinks.includes(link.href);
     });
 

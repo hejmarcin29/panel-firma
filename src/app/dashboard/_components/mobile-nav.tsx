@@ -78,7 +78,6 @@ const menuLinks = [
   { href: "/dashboard/partner", label: "Moje Polecenia", icon: Handshake },
   { href: "/dashboard/mail", label: "Poczta", icon: Mail },
   { href: "/dashboard/settings", label: "Ustawienia", icon: Settings },
-  { href: "/demo/premium-card", label: "DEMO", icon: Monitor },
 ];
 
 export function MobileNav({ user, urgentOrdersCount = 0, userRoles = ['admin'] }: { user: { name?: string | null; email?: string | null; mobileMenuConfig?: string | null }, urgentOrdersCount?: number, userRoles?: UserRole[] }) {
@@ -137,7 +136,7 @@ export function MobileNav({ user, urgentOrdersCount = 0, userRoles = ['admin'] }
            return allowedLinks.includes(href);
       }
 
-      const restrictedLinks = ['/dashboard/orders', '/dashboard/products', '/dashboard/mail', '/dashboard/settings', '/dashboard/wallet', '/dashboard/erp', '/demo/premium-card'];
+      const restrictedLinks = ['/dashboard/orders', '/dashboard/products', '/dashboard/mail', '/dashboard/settings', '/dashboard/wallet', '/dashboard/erp'];
       return !restrictedLinks.includes(href);
   };
 
