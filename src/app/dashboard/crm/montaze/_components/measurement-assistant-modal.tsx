@@ -223,58 +223,10 @@ export function MeasurementAssistantModal({
                         </div>
 
                         <div className="space-y-6">
-                            {/* Product */}
-                            <div className="space-y-2">
-                                <Label>Model paneli</Label>
-                                <div className="flex gap-2">
-                                    <Input
-                                        value={panelModel}
-                                        readOnly
-                                        placeholder="Kliknij Wybierz..."
-                                        className="h-12"
-                                        onClick={() => setIsPanelSelectorOpen(true)}
-                                    />
-                                    <Button 
-                                        className="h-12 px-6" 
-                                        onClick={() => setIsPanelSelectorOpen(true)}
-                                    >
-                                        Wybierz
-                                    </Button>
-                                </div>
-                            </div>
-
-                            {/* Tech */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label>Metoda</Label>
-                                    <Select value={installationMethod} onValueChange={(v: 'click' | 'glue') => setInstallationMethod(v)}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="click">Pływająca (Click)</SelectItem>
-                                            <SelectItem value="glue">Klejona</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Wzór</Label>
-                                    <Select value={floorPattern} onValueChange={(v: 'classic' | 'herringbone') => setFloorPattern(v)}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="classic">Klasycznie</SelectItem>
-                                            <SelectItem value="herringbone">Jodełka</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-
                             {/* Area & Waste */}
                             <div className="p-4 bg-muted/30 rounded-xl space-y-4 border">
                                 <div className="space-y-2">
-                                    <Label>Wymiar z natury (Netto m²)</Label>
+                                    <Label>Pomiar rzeczywisty (Netto m²)</Label>
                                     <Input
                                         type="number"
                                         step="0.01"
@@ -310,6 +262,54 @@ export function MeasurementAssistantModal({
                                     <span className="text-2xl font-bold text-primary">
                                         {floorArea ? (parseFloat(floorArea) * (1 + parseInt(panelWaste)/100)).toFixed(2) : '0.00'} m²
                                     </span>
+                                </div>
+                            </div>
+
+                            {/* Tech */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>Metoda</Label>
+                                    <Select value={installationMethod} onValueChange={(v: 'click' | 'glue') => setInstallationMethod(v)}>
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="click">Pływająca (Click)</SelectItem>
+                                            <SelectItem value="glue">Klejona</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Wzór</Label>
+                                    <Select value={floorPattern} onValueChange={(v: 'classic' | 'herringbone') => setFloorPattern(v)}>
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="classic">Klasycznie</SelectItem>
+                                            <SelectItem value="herringbone">Jodełka</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            {/* Product */}
+                            <div className="space-y-2">
+                                <Label>Model paneli</Label>
+                                <div className="flex gap-2">
+                                    <Input
+                                        value={panelModel}
+                                        readOnly
+                                        placeholder="Kliknij Wybierz..."
+                                        className="h-12"
+                                        onClick={() => setIsPanelSelectorOpen(true)}
+                                    />
+                                    <Button 
+                                        className="h-12 px-6" 
+                                        onClick={() => setIsPanelSelectorOpen(true)}
+                                    >
+                                        Wybierz
+                                    </Button>
                                 </div>
                             </div>
                         </div>
