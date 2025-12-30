@@ -131,7 +131,57 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
         },
     });
 
+    const onSubmit = (values: z.infer<typeof profileSchema>) => {
+        if (!member) return;
+        
+        startTransition(async () => {
+            try {
+                await updateInstallerProfile(member.id, values);
+            } catch (error) {
+                console.error(error);
+            }
+        });
+    };
+
+    const onArchitectSubmit = (values: z.infer<typeof architectProfileSchema>) => {
+        if (!member) return;
+        
+        startTransition(async () => {
+            try {
+                await updateArchitectProfile(member.id, values);
+            } catch (error) {
+                console.error(error);
+            }
+        });
+    };
+
+    const onPartnerSubmit = (values: z.infer<typeof partnerProfileSchema>) => {
+        if (!member) return;
+        
+        startTransition(async () => {
+            try {
+                await updatePartnerProfile(member.id, values);
+            } catch (error) {
+                console.error(error);
+            }
+        });
+    };
+
     const pricing = useWatch({ control: form.control, name: 'pricing' });
+    const installerValues = useWatch({ control: form.control });
+
+    // Debounced auto-save for Installer
+    useEffect(() => {
+        if (!member || !member.roles.includes('installer')) return;
+        if (!form.formState.isDirty) return;
+
+        const handler = setTimeout(() => {
+            form.handleSubmit(onSubmit)();
+        }, 1000);
+
+        return () => clearTimeout(handler);
+    }, [installerValues]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
     useEffect(() => {
         if (member?.installerProfile) {
@@ -181,7 +231,7 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
                 commissionRate: 0,
             });
         }
-    }, [member, form, architectForm, partnerForm]);
+    }, [member?.id, form, architectForm, partnerForm]);
 
     useEffect(() => {
         if (open && member && member.roles.includes('installer') && activeTab === 'history') {
@@ -199,42 +249,6 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
                 .finally(() => setIsLoadingCommissions(false));
         }
     }, [open, member, activeTab]);
-
-    const onSubmit = (values: z.infer<typeof profileSchema>) => {
-        if (!member) return;
-        
-        startTransition(async () => {
-            try {
-                await updateInstallerProfile(member.id, values);
-            } catch (error) {
-                console.error(error);
-            }
-        });
-    };
-
-    const onArchitectSubmit = (values: z.infer<typeof architectProfileSchema>) => {
-        if (!member) return;
-        
-        startTransition(async () => {
-            try {
-                await updateArchitectProfile(member.id, values);
-            } catch (error) {
-                console.error(error);
-            }
-        });
-    };
-
-    const onPartnerSubmit = (values: z.infer<typeof partnerProfileSchema>) => {
-        if (!member) return;
-        
-        startTransition(async () => {
-            try {
-                await updatePartnerProfile(member.id, values);
-            } catch (error) {
-                console.error(error);
-            }
-        });
-    };
 
     if (!member) return null;
 
@@ -289,7 +303,7 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
                     <TabsContent value="profile" className="space-y-4 mt-4">
                         {isInstaller && (
                         <Form {...form}>
-                            <form onChange={form.handleSubmit(onSubmit)} className="space-y-4">
+                            <form className="space-y-4">
                                 <FormField
                                     control={form.control}
                                     name="workScope"

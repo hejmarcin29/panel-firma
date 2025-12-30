@@ -1224,11 +1224,16 @@ export async function updateMontageMeasurementDate(montageId: string, date: Date
     try {
         const montage = await db.query.montages.findFirst({
             where: eq(montages.id, montageId),
+            with: {
+                installer: true,
+                measurer: true,
+            }
         });
 
         if (montage) {
             // Priority: Measurer -> Installer -> Current User
             const targetUserId = montage.measurerId || montage.installerId || user.id;
+            const installerUser = montage.measurer || montage.installer;
 
             if (date) {
                 const city = montage.installationCity || 'Brak miasta';
@@ -1289,6 +1294,13 @@ export async function updateMontageMeasurementDate(montageId: string, date: Date
                                 },
                             });
 
+                            let installerInfoHtml = '';
+                            if (installerUser) {
+                                const name = installerUser.name || 'Pracownik';
+                                const phone = installerUser.installerProfile?.phone;
+                                installerInfoHtml = `<p style="margin: 5px 0;">👷 <strong>Montażysta:</strong> ${name}${phone ? ` <a href="tel:${phone}" style="color: inherit; text-decoration: none;">(${phone})</a>` : ''}</p>`;
+                            }
+
                             const emailHtml = `
                                 <div style="font-family: sans-serif; color: #333;">
                                     <h2>Potwierdzenie terminu pomiaru</h2>
@@ -1298,6 +1310,7 @@ export async function updateMontageMeasurementDate(montageId: string, date: Date
                                         <p style="margin: 5px 0;">📅 <strong>Data:</strong> ${formattedDate}</p>
                                         <p style="margin: 5px 0;">🕒 <strong>Godzina:</strong> ${formattedTime}</p>
                                         <p style="margin: 5px 0;">📍 <strong>Adres:</strong> ${address}</p>
+                                        ${installerInfoHtml}
                                     </div>
                                     <h3>Jak przygotować się do pomiaru?</h3>
                                     <ul>
