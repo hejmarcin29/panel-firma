@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect, useTransition, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { CalendarIcon, Eraser, Plus, Pencil } from 'lucide-react';
+import { CalendarIcon, Eraser, Plus, Pencil, Ruler, Play, Lock, Unlock, Loader2, Check, Trash2 } from 'lucide-react';
+import { MeasurementWizard } from './measurement-wizard';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { DateRange } from 'react-day-picker';
@@ -51,7 +52,7 @@ import { cn } from '@/lib/utils';
 import type { Montage, MeasurementMaterialItem } from '../types';
 import { updateMontageMeasurement, addMontageTask, toggleMontageTask } from '../actions';
 
-import { Loader2, Check, Upload, FileIcon, ExternalLink, Trash2, Info, Search } from 'lucide-react';
+import { Loader2, Check, Upload, FileIcon, ExternalLink, Trash2, Info, Search, Play, Lock, Unlock } from 'lucide-react';
 
 import { ProductSelectorModal } from './product-selector-modal';
 import { ServiceSelector } from './service-selector';
@@ -59,6 +60,7 @@ import { AuditForm } from './technical/audit-form';
 import type { TechnicalAuditData } from '../technical-data';
 import { addMontageAttachment } from '../actions';
 import { MontageSubCategories } from '@/lib/r2/constants';
+import { MeasurementWizard } from './measurement-wizard';
 
 interface MontageMeasurementTabProps {
   montage: Montage;
@@ -69,8 +71,16 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   
+  const isProtocolCompleted = montage.protocolStatus === 'completed';
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+
   const isLockedBySettlement = montage.settlement?.status === 'approved' || montage.settlement?.status === 'paid';
-  const isReadOnly = (!userRoles.includes('admin') && !userRoles.includes('installer')) || isLockedBySettlement;
+  // Read-only if:
+  // 1. User is not admin/installer
+  // 2. Settlement is locked
+  // 3. Protocol is completed AND not in explicit edit mode
+  const isReadOnly = (!userRoles.includes('admin') && !userRoles.includes('installer')) || isLockedBySettlement || (isProtocolCompleted && !isEditMode);
 
   const [isSketchOpen, setIsSketchOpen] = useState(false);
   const [sketchDataUrl, setSketchDataUrl] = useState<string | null>(montage.sketchUrl || null);
@@ -372,12 +382,33 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
       )}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-medium">Karta Pomiarowa</h3>
+          <h3 className="text-lg font-medium flex items-center gap-2">
+            Karta Pomiarowa
+            {isProtocolCompleted && (
+                <span className="text-xs font-normal px-2 py-0.5 bg-green-100 text-green-700 rounded-full border border-green-200">
+                    Zatwierdzona
+                </span>
+            )}
+          </h3>
           <p className="text-sm text-muted-foreground">
-            Wprowadź szczegóły pomiaru, szkice i dodatkowe informacje.
+            {isProtocolCompleted 
+                ? "Protokół został zatwierdzony. Dane są w trybie tylko do odczytu." 
+                : "Wprowadź szczegóły pomiaru, szkice i dodatkowe informacje."}
           </p>
         </div>
         <div className="flex items-center gap-2 text-sm">
+            {isProtocolCompleted && userRoles.includes('admin') && (
+                <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setIsEditMode(!isEditMode)}
+                    className="gap-2"
+                >
+                    {isEditMode ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
+                    {isEditMode ? "Zablokuj edycję" : "Odblokuj edycję"}
+                </Button>
+            )}
+            
             {isSaving ? (
                 <span className="text-muted-foreground flex items-center gap-1">
                     <Loader2 className="h-3 w-3 animate-spin" /> Zapisywanie...
@@ -390,7 +421,35 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
         </div>
       </div>
 
-<Tabs defaultValue="main" className="w-full">
+      {isWizardOpen && (
+        <MeasurementWizard 
+            montage={montage} 
+            onClose={() => setIsWizardOpen(false)} 
+            onComplete={() => {
+                setIsWizardOpen(false);
+                router.refresh();
+            }} 
+        />
+      )}
+
+      {!isProtocolCompleted ? (
+        <div className="flex flex-col items-center justify-center py-16 space-y-6 bg-muted/30 rounded-xl border-2 border-dashed">
+            <div className="p-6 bg-primary/10 rounded-full ring-8 ring-primary/5">
+                <Ruler className="w-12 h-12 text-primary" />
+            </div>
+            <div className="text-center space-y-2 max-w-md px-4">
+                <h3 className="text-xl font-semibold">Protokół Pomiarowy</h3>
+                <p className="text-muted-foreground">
+                    Rozpocznij procedurę pomiarową w trybie kreatora, aby zebrać wszystkie niezbędne dane techniczne i wygenerować protokół.
+                </p>
+            </div>
+            <Button size="lg" onClick={() => setIsWizardOpen(true)} className="gap-2 h-12 px-8 text-base shadow-lg shadow-primary/20">
+                <Play className="w-5 h-5" />
+                Rozpocznij Protokół
+            </Button>
+        </div>
+      ) : (
+        <Tabs defaultValue="main" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="main">Główne Dane</TabsTrigger>
           <TabsTrigger value="additional">Prace i Materiały</TabsTrigger>
@@ -1060,6 +1119,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
             </div>
         </TabsContent>
       </Tabs>
+      )}
 
 
 

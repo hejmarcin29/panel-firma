@@ -360,7 +360,7 @@ export function MontageClientCard({
                             format(dateRange.from, "dd.MM.yyyy", { locale: pl })
                         )
                         ) : (
-                        <span>Wybierz datę</span>
+                        <span>Wybierz termin</span>
                         )}
                     </Button>
                     </PopoverTrigger>

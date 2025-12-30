@@ -172,7 +172,7 @@ function SelectionView({ date, isOpen, setIsOpen, handleDateSelect, isSaving, cl
                             ) : (
                                 <CalendarIcon className="mr-2 h-5 w-5" />
                             )}
-                            {date ? format(date, "dd.MM.yyyy HH:mm", { locale: pl }) : "Wybierz datę"}
+                            {date ? format(date, "dd.MM.yyyy HH:mm", { locale: pl }) : "Wybierz termin"}
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">

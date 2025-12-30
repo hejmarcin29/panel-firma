@@ -1635,6 +1635,20 @@ export async function updateMontageMeasurement({
 	revalidatePath(`${MONTAGE_DASHBOARD_PATH}/${montageId}`);
 }
 
+export async function finishMeasurementProtocol(montageId: string) {
+    await requireUser();
+    
+    await db.update(montages)
+        .set({ 
+            protocolStatus: 'completed',
+            updatedAt: new Date() 
+        })
+        .where(eq(montages.id, montageId));
+        
+    revalidatePath(MONTAGE_DASHBOARD_PATH);
+    revalidatePath(`${MONTAGE_DASHBOARD_PATH}/${montageId}`);
+}
+
 export async function updateMontageRealizationStatus({
     montageId,
     materialStatus,
