@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import {
     Select,
     SelectContent,
@@ -434,7 +435,7 @@ export function MeasurementWizard({ montage, onClose, onComplete }: MeasurementW
                             <Textarea 
                                 placeholder="Wpisz dodatkowe uwagi dotyczące podłoża, wilgotności itp."
                                 value={auditData.notes}
-                                onChange={e => setAuditData({...auditData, notes: e.target.value})}
+                                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setAuditData({...auditData, notes: e.target.value})}
                                 className="min-h-[100px]"
                             />
                         </div>
@@ -456,7 +457,7 @@ export function MeasurementWizard({ montage, onClose, onComplete }: MeasurementW
                                     <Textarea 
                                         placeholder="Opisz jakie prace należy wykonać (np. szlifowanie, gruntowanie)..."
                                         value={additionalWorkDescription}
-                                        onChange={e => setAdditionalWorkDescription(e.target.value)}
+                                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setAdditionalWorkDescription(e.target.value)}
                                     />
                                 </div>
                             )}
@@ -711,7 +712,7 @@ export function MeasurementWizard({ montage, onClose, onComplete }: MeasurementW
                             <Textarea 
                                 placeholder="Wpisz wszelkie dodatkowe ustalenia z klientem..."
                                 value={additionalInfo}
-                                onChange={e => setAdditionalInfo(e.target.value)}
+                                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setAdditionalInfo(e.target.value)}
                                 className="min-h-[100px]"
                             />
                         </div>
