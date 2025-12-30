@@ -196,13 +196,14 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
 
   const technicalAudit = montage.technicalAudit as unknown as TechnicalAuditData | null;
 
-  const saveCostEstimation = useCallback(async () => {
+  const saveCostEstimation = useCallback(async (completed: boolean = false) => {
       setIsSaving(true);
       try {
           await updateMontageCostEstimation({
               montageId: montage.id,
               measurementAdditionalMaterials: additionalMaterials,
-              additionalServices: additionalServices
+              additionalServices: additionalServices,
+              completed
           });
           setLastSaved(new Date());
           router.refresh();
@@ -475,12 +476,17 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
       <CostEstimationModal
         isOpen={isCostEstimationOpen}
         onClose={() => setIsCostEstimationOpen(false)}
-        onSave={() => {
-            saveCostEstimation();
+        onSave={(completed) => {
+            saveCostEstimation(completed);
             setIsCostEstimationOpen(false);
         }}
         measurementDate={measurementDate}
         additionalWorkDescription={additionalWorkDescription}
+        baseService={{
+            name: montage.panelModel || 'Montaż podłogi',
+            quantity: montage.floorArea || 0,
+            unit: 'm2'
+        }}
         additionalMaterials={additionalMaterials}
         setAdditionalMaterials={setAdditionalMaterials}
         additionalServices={additionalServices}

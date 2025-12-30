@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 import { MontageNotesTab } from "./montage-notes-tab";
 import { MontageGalleryTab } from "./montage-gallery-tab";
@@ -168,26 +169,51 @@ export function InstallerMontageView({ montage, logs, userRoles, hasGoogleCalend
                                         />
                                         
                                         {!!montage.floorArea && (
-                                            <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl space-y-3">
+                                            <div className={cn(
+                                                "p-4 border rounded-xl space-y-3",
+                                                montage.costEstimationCompletedAt 
+                                                    ? "bg-green-50 border-green-100" 
+                                                    : "bg-blue-50 border-blue-100"
+                                            )}>
                                                 <div className="flex items-center gap-3">
-                                                    <div className="p-2 bg-blue-100 text-blue-600 rounded-full">
-                                                        <Banknote className="w-5 h-5" />
+                                                    <div className={cn(
+                                                        "p-2 rounded-full",
+                                                        montage.costEstimationCompletedAt 
+                                                            ? "bg-green-100 text-green-600" 
+                                                            : "bg-blue-100 text-blue-600"
+                                                    )}>
+                                                        {montage.costEstimationCompletedAt ? <CheckSquare className="w-5 h-5" /> : <Banknote className="w-5 h-5" />}
                                                     </div>
                                                     <div>
-                                                        <h3 className="font-bold text-base text-blue-900">Wycena Kosztów</h3>
-                                                        <p className="text-sm text-blue-700">
-                                                            Uzupełnij koszty dodatkowe i usługi, aby biuro mogło przygotować ofertę.
+                                                        <h3 className={cn(
+                                                            "font-bold text-base",
+                                                            montage.costEstimationCompletedAt ? "text-green-900" : "text-blue-900"
+                                                        )}>
+                                                            {montage.costEstimationCompletedAt ? "Kosztorys Wysłany" : "Wycena Kosztów"}
+                                                        </h3>
+                                                        <p className={cn(
+                                                            "text-sm",
+                                                            montage.costEstimationCompletedAt ? "text-green-700" : "text-blue-700"
+                                                        )}>
+                                                            {montage.costEstimationCompletedAt 
+                                                                ? "Dane zostały przesłane do biura." 
+                                                                : "Uzupełnij koszty dodatkowe i usługi, aby biuro mogło przygotować ofertę."}
                                                         </p>
                                                     </div>
                                                 </div>
                                                 <Button 
-                                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                                                    className={cn(
+                                                        "w-full",
+                                                        montage.costEstimationCompletedAt 
+                                                            ? "bg-white text-green-700 border border-green-200 hover:bg-green-50" 
+                                                            : "bg-blue-600 hover:bg-blue-700 text-white"
+                                                    )}
                                                     onClick={() => {
                                                         setDefaultOpenModal('costEstimation');
                                                         setActiveTab("measurement");
                                                     }}
                                                 >
-                                                    Uzupełnij Kosztorys
+                                                    {montage.costEstimationCompletedAt ? "Edytuj Kosztorys" : "Uzupełnij Kosztorys"}
                                                 </Button>
                                             </div>
                                         )}

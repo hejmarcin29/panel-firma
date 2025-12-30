@@ -565,6 +565,8 @@ export const montages = pgTable(
         technicalAudit: json('technical_audit').$type<TechnicalAuditData>(),
         materialLog: json('material_log').$type<MaterialLogData>(),
         
+        costEstimationCompletedAt: timestamp('cost_estimation_completed_at'),
+
         // Logistics
         logisticsStatus: text('logistics_status').$type<LogisticsStatus>().default('pending'),
         logisticsNotes: text('logistics_notes'),

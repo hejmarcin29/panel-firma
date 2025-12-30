@@ -1,0 +1,1 @@
+ALTER TABLE "montages" ADD COLUMN "cost_estimation_completed_at" timestamp;

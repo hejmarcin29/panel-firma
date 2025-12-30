@@ -204,6 +204,7 @@ export function mapMontageRow(row: MontageRow, publicBaseUrl: string | null): Mo
         architect: row.architect ? { id: row.architect.id, name: row.architect.name, email: row.architect.email } : null,
         technicalAudit: row.technicalAudit,
         materialLog: row.materialLog,
+        costEstimationCompletedAt: row.costEstimationCompletedAt,
         
         // Protocol Fields
         contractNumber: row.contractNumber,

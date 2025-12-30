@@ -47,7 +47,7 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
         checkpoints: [
             { key: 'measurement_scheduled', label: 'Pomiar umówiony', condition: (m) => !!m.measurementDate },
             { key: 'measurement_done', label: 'Pomiar wykonany', condition: (m) => !!m.floorArea }, // Simplification
-            { key: 'cost_estimation_done', label: 'Kosztorys uzupełniony', condition: (m) => !!m.measurementAdditionalMaterials && m.measurementAdditionalMaterials.length > 0 }, // Check if materials list exists (even if empty array, it means it was touched/saved)
+            { key: 'cost_estimation_done', label: 'Kosztorys uzupełniony', condition: (m) => !!m.costEstimationCompletedAt },
             { key: 'quote_created', label: 'Oferta utworzona', condition: (m) => !!m.quotes && m.quotes.length > 0 }
         ]
     },

@@ -17,11 +17,12 @@ import type { MeasurementMaterialItem } from "../types";
 interface CostEstimationModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: () => void;
+    onSave: (completed?: boolean) => void;
     
     // Data from Stage 1 (Read Only context)
     measurementDate?: string | null;
     additionalWorkDescription?: string | null;
+    baseService?: { name: string; quantity: number; unit: string };
     
     // Data to Edit (Stage 2)
     additionalMaterials: MeasurementMaterialItem[];
@@ -42,6 +43,7 @@ const STEPS = [
 export function CostEstimationModal({
     isOpen, onClose, onSave,
     additionalWorkDescription,
+    baseService,
     additionalMaterials, setAdditionalMaterials,
     additionalServices, setAdditionalServices
 }: CostEstimationModalProps) {
@@ -196,6 +198,29 @@ export function CostEstimationModal({
                         )}
 
                         <div className="space-y-4">
+                            {/* Base Service Card */}
+                            {baseService && (
+                                <div className="p-4 border rounded-xl bg-slate-50 border-slate-200 shadow-sm space-y-3 relative opacity-80">
+                                    <div className="absolute right-2 top-2">
+                                        <span className="text-xs font-medium bg-slate-200 text-slate-600 px-2 py-1 rounded">Usługa Bazowa</span>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-slate-600">Nazwa Usługi</Label>
+                                        <div className="font-medium text-lg">{baseService.name}</div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-1">
+                                            <Label className="text-slate-600">Ilość</Label>
+                                            <div className="font-medium">{baseService.quantity} {baseService.unit}</div>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label className="text-slate-600">Cena jedn.</Label>
+                                            <div className="font-medium text-slate-500">Wycenia Biuro</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             {additionalServices.map((service, index) => (
                                 <div key={service.id} className="p-4 border rounded-xl bg-card shadow-sm space-y-3 relative">
                                     <Button
@@ -390,23 +415,42 @@ export function CostEstimationModal({
                         <ChevronLeft className="h-4 w-4 mr-2" />
                         Wstecz
                     </Button>
-                    <Button
-                        size="lg"
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-                        onClick={handleNext}
-                    >
-                        {currentStep === STEPS.length - 1 ? (
-                            <>
-                                Zapisz Kosztorys
+                    
+                    {currentStep === STEPS.length - 1 ? (
+                        <div className="flex gap-2 flex-1">
+                            <Button
+                                variant="outline"
+                                size="lg"
+                                className="flex-1 border-dashed"
+                                onClick={() => {
+                                    onSave(false); // Draft
+                                    onClose();
+                                }}
+                            >
+                                Zapisz roboczo
+                            </Button>
+                            <Button
+                                size="lg"
+                                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                                onClick={() => {
+                                    onSave(true); // Submit
+                                    onClose();
+                                }}
+                            >
+                                Zatwierdź i Wyślij
                                 <Check className="h-4 w-4 ml-2" />
-                            </>
-                        ) : (
-                            <>
-                                Dalej
-                                <ChevronRight className="h-4 w-4 ml-2" />
-                            </>
-                        )}
-                    </Button>
+                            </Button>
+                        </div>
+                    ) : (
+                        <Button
+                            size="lg"
+                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                            onClick={handleNext}
+                        >
+                            Dalej
+                            <ChevronRight className="h-4 w-4 ml-2" />
+                        </Button>
+                    )}
                 </div>
             </div>
         </div>

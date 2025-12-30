@@ -330,6 +330,13 @@
       "when": 1767026583401,
       "tag": "0046_cultured_forgotten_one",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1767129381665,
+      "tag": "0047_romantic_killraven",
+      "breakpoints": true
     }
   ]
 }

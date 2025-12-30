@@ -1514,7 +1514,8 @@ export async function getMontageProducts(type: 'panel' | 'accessory') {
 export async function updateMontageCostEstimation({
     montageId,
     measurementAdditionalMaterials,
-    additionalServices
+    additionalServices,
+    completed = false
 }: {
     montageId: string;
     measurementAdditionalMaterials: {
@@ -1532,6 +1533,7 @@ export async function updateMontageCostEstimation({
         unit: string;
         price: number;
     }[];
+    completed?: boolean;
 }) {
     await requireUser();
 
@@ -1540,6 +1542,7 @@ export async function updateMontageCostEstimation({
         .update(montages)
         .set({
             measurementAdditionalMaterials,
+            costEstimationCompletedAt: completed ? new Date() : undefined,
             updatedAt: new Date(),
         })
         .where(eq(montages.id, montageId));
