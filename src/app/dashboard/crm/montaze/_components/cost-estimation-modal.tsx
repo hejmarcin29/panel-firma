@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
     X, ChevronLeft, ChevronRight, Check, DollarSign, 
-    Hammer, CheckCircle2, AlertCircle, Plus, Trash2, Calculator 
+    Hammer, CheckCircle2, Plus 
 } from "lucide-react";
-import { format } from "date-fns";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,7 +41,7 @@ const STEPS = [
 
 export function CostEstimationModal({
     isOpen, onClose, onSave,
-    measurementDate, additionalWorkDescription,
+    additionalWorkDescription,
     additionalMaterials, setAdditionalMaterials,
     additionalServices, setAdditionalServices
 }: CostEstimationModalProps) {
@@ -192,7 +191,7 @@ export function CostEstimationModal({
                         {additionalWorkDescription && (
                             <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl text-sm text-amber-800 mb-4">
                                 <span className="font-bold block mb-1">Notatka z pomiaru:</span>
-                                "{additionalWorkDescription}"
+                                &quot;{additionalWorkDescription}&quot;
                             </div>
                         )}
 
