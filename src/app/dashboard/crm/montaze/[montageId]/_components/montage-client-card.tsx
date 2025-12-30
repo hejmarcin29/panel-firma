@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, Phone, Mail, Calendar as CalendarIcon, Edit2, Ruler, Loader2, Check, Hammer, Megaphone, ExternalLink, Copy, Sparkles, Clock } from "lucide-react";
+import { MapPin, Phone, Mail, Calendar as CalendarIcon, Edit2, Ruler, Loader2, Check, Hammer, Megaphone, ExternalLink, Copy, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
@@ -75,9 +75,6 @@ export function MontageClientCard({
     measurementDate: montage.measurementDate
       ? new Date(montage.measurementDate as string | number | Date).toISOString().split("T")[0]
       : "",
-    measurementTime: montage.measurementDate
-      ? format(new Date(montage.measurementDate as string | number | Date), 'HH:mm')
-      : "00:00",
     sampleStatus: montage.sampleStatus || "none",
     estimatedFloorArea: montage.estimatedFloorArea?.toString() || "",
   });
@@ -107,9 +104,6 @@ export function MontageClientCard({
         measurementDate: montage.measurementDate
           ? new Date(montage.measurementDate as string | number | Date).toISOString().split("T")[0]
           : "",
-        measurementTime: montage.measurementDate
-          ? format(new Date(montage.measurementDate as string | number | Date), 'HH:mm')
-          : "00:00",
         sampleStatus: montage.sampleStatus || "none",
         estimatedFloorArea: montage.estimatedFloorArea?.toString() || "",
     });
@@ -123,11 +117,6 @@ export function MontageClientCard({
   const debouncedSave = useDebouncedCallback(async (data: typeof formData) => {
     setIsSaving(true);
     try {
-      let finalMeasurementDate = data.measurementDate;
-      if (data.measurementDate) {
-          finalMeasurementDate = `${data.measurementDate}T${data.measurementTime || '00:00'}:00`;
-      }
-
       await updateMontageContactDetails({
         montageId: montage.id,
         clientName: montage.clientName,
@@ -139,7 +128,7 @@ export function MontageClientCard({
         installationCity: data.installationCity,
         source: data.source,
         forecastedInstallationDate: data.forecastedInstallationDate,
-        measurementDate: finalMeasurementDate,
+        measurementDate: data.measurementDate,
         scheduledInstallationDate: data.scheduledInstallationAt,
         scheduledInstallationEndDate: data.scheduledInstallationEndAt,
         sampleStatus: data.sampleStatus,
@@ -288,26 +277,13 @@ export function MontageClientCard({
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="measurementDate">Data i godzina pomiaru</Label>
-                <div className="flex gap-2">
-                    <Input
-                      id="measurementDate"
-                      type="date"
-                      value={formData.measurementDate}
-                      onChange={(e) => handleChange("measurementDate", e.target.value)}
-                      className="flex-1"
-                    />
-                    <div className="relative w-[120px]">
-                        <Clock className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            id="measurementTime"
-                            type="time"
-                            value={formData.measurementTime}
-                            onChange={(e) => handleChange("measurementTime", e.target.value)}
-                            className="pl-9"
-                        />
-                    </div>
-                </div>
+                <Label htmlFor="measurementDate">Data pomiaru</Label>
+                <Input
+                  id="measurementDate"
+                  type="date"
+                  value={formData.measurementDate}
+                  onChange={(e) => handleChange("measurementDate", e.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="estimatedFloorArea">Szacowana powierzchnia (m²)</Label>

@@ -1557,13 +1557,7 @@ export async function updateMontageMeasurement({
 
     let measurementAt: Date | null = null;
     if (measurementDate) {
-        let parsed: Date;
-        if (measurementDate.includes('T')) {
-             parsed = new Date(measurementDate);
-        } else {
-             parsed = new Date(`${measurementDate}T00:00:00`);
-        }
-        
+        const parsed = new Date(`${measurementDate}T00:00:00`);
         if (!Number.isNaN(parsed.getTime())) {
             measurementAt = parsed;
         }

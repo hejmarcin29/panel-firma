@@ -27,7 +27,6 @@ import { MontageGalleryTab } from "./montage-gallery-tab";
 import { MontageTasksTab } from "./montage-tasks-tab";
 import { MontageMeasurementTab } from "../../_components/montage-measurement-tab";
 import { MontageSettlementTab } from "../../_components/montage-settlement-tab";
-import { MeasurementProtocolDrawer } from "../../_components/measurement-protocol-drawer";
 import { MontageClientCard } from "./montage-client-card"; // Reusing for edit capabilities if needed
 import { MontageMaterialCard } from "./montage-material-card";
 import { MeasurementScheduler } from "./measurement-scheduler";
@@ -43,7 +42,6 @@ interface InstallerMontageViewProps {
 
 export function InstallerMontageView({ montage, logs, userRoles, hasGoogleCalendar = false }: InstallerMontageViewProps) {
     const [activeTab, setActiveTab] = useState("process");
-    const [isProtocolOpen, setIsProtocolOpen] = useState(false);
 
     // Filter logs to show only current user's actions (or system actions relevant to him)
     // In a real scenario, we'd filter by userId, but for now let's show all to keep context, 
@@ -235,11 +233,7 @@ export function InstallerMontageView({ montage, logs, userRoles, hasGoogleCalend
                 {/* TAB: MEASUREMENT (Form) */}
                 {activeTab === 'measurement' && (
                     <div className="space-y-4">
-                        <MontageMeasurementTab 
-                            montage={montage} 
-                            userRoles={userRoles} 
-                            onOpenProtocol={() => setIsProtocolOpen(true)}
-                        />
+                        <MontageMeasurementTab montage={montage} userRoles={userRoles} />
                     </div>
                 )}
 
@@ -271,13 +265,6 @@ export function InstallerMontageView({ montage, logs, userRoles, hasGoogleCalend
                     />
                 )}
             </div>
-
-            <MeasurementProtocolDrawer
-                montage={montage}
-                open={isProtocolOpen}
-                onOpenChange={setIsProtocolOpen}
-                userRoles={userRoles}
-            />
         </div>
     );
 }

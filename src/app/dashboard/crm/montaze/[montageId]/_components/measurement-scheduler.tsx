@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { format, addDays, differenceInCalendarDays, setHours, setMinutes } from "date-fns";
+import { format, addDays, differenceInCalendarDays } from "date-fns";
 import { pl } from "date-fns/locale";
 import { Calendar as CalendarIcon, Phone, Loader2, Check, Clock, CalendarDays, Edit2, Ruler } from "lucide-react";
 import { toast } from "sonner";
@@ -10,8 +10,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
@@ -30,7 +28,6 @@ interface MeasurementSchedulerProps {
 
 export function MeasurementScheduler({ montageId, currentDate, clientPhone, onSuccess, hasGoogleCalendar = false, onStartProtocol }: MeasurementSchedulerProps) {
     const [date, setDate] = useState<Date | undefined>(currentDate || undefined);
-    const [time, setTime] = useState<string>(currentDate ? format(currentDate, "HH:mm") : "09:00");
     const [isSaving, setIsSaving] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
     
@@ -40,15 +37,11 @@ export function MeasurementScheduler({ montageId, currentDate, clientPhone, onSu
     const handleDateSelect = async (newDate: Date | undefined) => {
         if (!newDate) return;
 
-        // Combine date and time
-        const [hours, minutes] = time.split(':').map(Number);
-        const dateTime = setMinutes(setHours(newDate, hours), minutes);
-
-        setDate(dateTime);
+        setDate(newDate);
         setIsSaving(true);
         try {
-            await updateMontageMeasurementDate(montageId, dateTime);
-            toast.success(`Zaplanowano pomiar na ${format(dateTime, "dd.MM.yyyy HH:mm")}`);
+            await updateMontageMeasurementDate(montageId, newDate);
+            toast.success(`Zaplanowano pomiar na ${format(newDate, "dd.MM.yyyy")}`);
             setIsOpen(false);
             setViewMode('confirmed');
             if (onSuccess) onSuccess();
@@ -82,8 +75,6 @@ export function MeasurementScheduler({ montageId, currentDate, clientPhone, onSu
                     <SelectionView 
                         key="selection"
                         date={date}
-                        time={time}
-                        setTime={setTime}
                         isOpen={isOpen}
                         setIsOpen={setIsOpen}
                         handleDateSelect={handleDateSelect}
@@ -107,8 +98,6 @@ export function MeasurementScheduler({ montageId, currentDate, clientPhone, onSu
 
 interface SelectionViewProps {
     date: Date | undefined;
-    time: string;
-    setTime: (time: string) => void;
     isOpen: boolean;
     setIsOpen: (open: boolean) => void;
     handleDateSelect: (date: Date | undefined) => void;
@@ -116,7 +105,7 @@ interface SelectionViewProps {
     clientPhone: string | null;
 }
 
-function SelectionView({ date, time, setTime, isOpen, setIsOpen, handleDateSelect, isSaving, clientPhone }: SelectionViewProps) {
+function SelectionView({ date, isOpen, setIsOpen, handleDateSelect, isSaving, clientPhone }: SelectionViewProps) {
     const quickDates = [
         { label: "Jutro", value: addDays(new Date(), 1) },
         { label: "Pojutrze", value: addDays(new Date(), 2) },
@@ -169,39 +158,24 @@ function SelectionView({ date, time, setTime, isOpen, setIsOpen, handleDateSelec
                             ) : (
                                 <CalendarIcon className="mr-2 h-5 w-5" />
                             )}
-                            {date ? format(date, "dd.MM.yyyy HH:mm", { locale: pl }) : "Wybierz datę i godzinę"}
+                            {date ? format(date, "dd.MM.yyyy", { locale: pl }) : "Wybierz datę"}
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
-                        <div className="p-3 border-b bg-muted/30 space-y-3">
-                            <div>
-                                <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">Godzina wizyty:</Label>
-                                <div className="relative">
-                                    <Clock className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                    <Input 
-                                        type="time" 
-                                        value={time} 
-                                        onChange={(e) => setTime(e.target.value)}
-                                        className="pl-9"
-                                    />
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <p className="text-xs font-medium text-muted-foreground mb-2">Szybki wybór daty:</p>
-                                <div className="flex gap-2 overflow-x-auto pb-1">
-                                    {quickDates.map((qd) => (
-                                        <Button
-                                            key={qd.label}
-                                            variant="outline"
-                                            size="sm"
-                                            className="text-xs h-7 whitespace-nowrap"
-                                            onClick={() => handleDateSelect(qd.value)}
-                                        >
-                                            {qd.label}
-                                        </Button>
-                                    ))}
-                                </div>
+                        <div className="p-3 border-b bg-muted/30">
+                            <p className="text-xs font-medium text-muted-foreground mb-2">Szybki wybór:</p>
+                            <div className="flex gap-2 overflow-x-auto pb-1">
+                                {quickDates.map((qd) => (
+                                    <Button
+                                        key={qd.label}
+                                        variant="outline"
+                                        size="sm"
+                                        className="text-xs h-7 whitespace-nowrap"
+                                        onClick={() => handleDateSelect(qd.value)}
+                                    >
+                                        {qd.label}
+                                    </Button>
+                                ))}
                             </div>
                         </div>
                         <Calendar
@@ -251,10 +225,8 @@ function ConfirmationView({ date, onReschedule, googleCalendarLink, hasGoogleCal
                     <h2 className="text-4xl font-bold text-slate-900 mb-1">
                         {format(date, "d MMM", { locale: pl })}
                     </h2>
-                    <p className="text-lg text-slate-600 font-medium flex items-center gap-2">
+                    <p className="text-lg text-slate-600 font-medium">
                         {format(date, "EEEE", { locale: pl })}
-                        <span className="text-slate-400">|</span>
-                        {format(date, "HH:mm")}
                     </p>
                     
                     <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 bg-white rounded-full text-sm font-medium text-slate-600 shadow-sm border">

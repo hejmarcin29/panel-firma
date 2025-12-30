@@ -10,8 +10,6 @@ import { signQuote } from '../actions';
 import { useState } from 'react';
 import { SignaturePad } from '@/components/ui/signature-pad';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { format } from 'date-fns';
-import { pl } from 'date-fns/locale';
 import { MontageTimeline } from './montage-timeline';
 import { DataRequestCard } from './data-request-card';
 import { InstallationDateCard } from './installation-date-card';
@@ -176,7 +174,7 @@ export function CustomerPortal({ customer, token, bankAccount }: CustomerPortalP
                                             <div className="flex justify-between border-b pb-2">
                                                 <span className="text-muted-foreground">Data pomiaru:</span>
                                                 <span className="font-medium">
-                                                    {format(new Date(activeMontage.measurementDate), 'd MMMM yyyy, HH:mm', { locale: pl })}
+                                                    {new Date(activeMontage.measurementDate).toLocaleDateString('pl-PL')}
                                                 </span>
                                             </div>
                                         )}
