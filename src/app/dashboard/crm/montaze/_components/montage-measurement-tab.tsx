@@ -412,11 +412,14 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
         setInstallationMethod={setInstallationMethod}
         floorPattern={floorPattern}
         setFloorPattern={setFloorPattern}
+        panelWaste={panelWaste}
         setPanelWaste={setPanelWaste}
         floorArea={floorArea}
         setFloorArea={setFloorArea}
         panelModel={panelModel}
         setIsPanelSelectorOpen={setIsPanelSelectorOpen}
+        additionalMaterials={additionalMaterials}
+        setAdditionalMaterials={setAdditionalMaterials}
       />
 
 <Tabs defaultValue="main" className="w-full">
