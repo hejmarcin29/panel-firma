@@ -17,6 +17,7 @@ import {
     type MontageMaterialClaimType,
     type MontageInstallerStatus,
     type MontageSampleStatus,
+	montageServiceItems,
 	montageStatuses,
 	customers,
 	users,
@@ -1570,7 +1571,7 @@ export async function updateMontageCostEstimation({
         
         if (genericService) {
             for (const service of additionalServices) {
-                await db.insert(montage_service_items).values({
+                await db.insert(montageServiceItems).values({
                     id: crypto.randomUUID(),
                     montageId: montageId,
                     serviceId: genericService.id, // Link to a real service ID
