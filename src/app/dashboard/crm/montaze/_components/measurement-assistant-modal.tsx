@@ -200,7 +200,15 @@ export function MeasurementAssistantModal({
                                 <Label className="text-lg">Sposób montażu</Label>
                                 <div className="grid grid-cols-2 gap-4">
                                     <button
-                                        onClick={() => setInstallationMethod('click')}
+                                        onClick={() => {
+                                            setInstallationMethod('click');
+                                            // Click + Herringbone = 15%, Click + Classic = 7%
+                                            if (floorPattern === 'herringbone') {
+                                                setPanelWaste('15');
+                                            } else {
+                                                setPanelWaste('7');
+                                            }
+                                        }}
                                         className={cn(
                                             "p-4 rounded-xl border-2 text-center transition-all",
                                             installationMethod === 'click' ? "border-primary bg-primary/5 font-bold" : "border-muted"
@@ -209,7 +217,11 @@ export function MeasurementAssistantModal({
                                         Pływająca (Click)
                                     </button>
                                     <button
-                                        onClick={() => setInstallationMethod('glue')}
+                                        onClick={() => {
+                                            setInstallationMethod('glue');
+                                            // Glue is always 7%
+                                            setPanelWaste('7');
+                                        }}
                                         className={cn(
                                             "p-4 rounded-xl border-2 text-center transition-all",
                                             installationMethod === 'glue' ? "border-primary bg-primary/5 font-bold" : "border-muted"
@@ -226,7 +238,8 @@ export function MeasurementAssistantModal({
                                     <button
                                         onClick={() => {
                                             setFloorPattern('classic');
-                                            setPanelWaste('5');
+                                            // Classic is always 7%
+                                            setPanelWaste('7');
                                         }}
                                         className={cn(
                                             "p-4 rounded-xl border-2 text-center transition-all",
@@ -238,7 +251,12 @@ export function MeasurementAssistantModal({
                                     <button
                                         onClick={() => {
                                             setFloorPattern('herringbone');
-                                            setPanelWaste('12');
+                                            // Herringbone + Click = 15%, Herringbone + Glue = 7%
+                                            if (installationMethod === 'click') {
+                                                setPanelWaste('15');
+                                            } else {
+                                                setPanelWaste('7');
+                                            }
                                         }}
                                         className={cn(
                                             "p-4 rounded-xl border-2 text-center transition-all",
