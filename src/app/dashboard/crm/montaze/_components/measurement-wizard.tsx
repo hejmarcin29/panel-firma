@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
     CalendarIcon, 
@@ -13,7 +13,9 @@ import {
     Hammer, 
     Package, 
     Save,
-    Loader2
+    Loader2,
+    Pencil,
+    Eraser
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -27,6 +29,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -78,6 +87,9 @@ export function MeasurementWizard({ montage, onClose, onComplete }: MeasurementW
         photos: technicalAudit?.photos ?? [],
     });
 
+    const [additionalWorkNeeded, setAdditionalWorkNeeded] = useState(montage.measurementAdditionalWorkNeeded || false);
+    const [additionalWorkDescription, setAdditionalWorkDescription] = useState(montage.measurementAdditionalWorkDescription || '');
+
     // Floor
     const [floorPattern, setFloorPattern] = useState<'classic' | 'herringbone'>(
         (montage.measurementFloorPattern as 'classic' | 'herringbone') || 'classic'
@@ -88,6 +100,17 @@ export function MeasurementWizard({ montage, onClose, onComplete }: MeasurementW
     const [floorArea, setFloorArea] = useState<string>(montage.floorArea?.toString() || '');
     const [panelWaste, setPanelWaste] = useState<string>(montage.panelWaste?.toString() || '5');
     const [panelModel, setPanelModel] = useState(montage.panelModel || '');
+    const [modelsApproved, setModelsApproved] = useState(montage.modelsApproved || false);
+
+    // Summary
+    const [additionalInfo, setAdditionalInfo] = useState(montage.additionalInfo || '');
+
+    // Sketch
+    const [sketchUrl, setSketchUrl] = useState<string | null>(montage.sketchUrl || null);
+    const [isSketchOpen, setIsSketchOpen] = useState(false);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const [isDrawing, setIsDrawing] = useState(false);
+    const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
 
     // Materials
     const [additionalMaterials, setAdditionalMaterials] = useState<MeasurementMaterialItem[]>(() => {
@@ -98,6 +121,86 @@ export function MeasurementWizard({ montage, onClose, onComplete }: MeasurementW
         }
         return [];
     });
+
+    // --- Canvas Logic ---
+    useEffect(() => {
+        if (isSketchOpen && canvasRef.current) {
+            const canvas = canvasRef.current;
+            // Set canvas size to match display size
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                ctx.lineCap = 'round';
+                ctx.strokeStyle = 'black';
+                ctx.lineWidth = 2;
+                setContext(ctx);
+
+                // Load existing sketch if any
+                if (sketchUrl) {
+                    const img = new Image();
+                    img.onload = () => {
+                        ctx.drawImage(img, 0, 0);
+                    };
+                    img.src = sketchUrl;
+                }
+            }
+        }
+    }, [isSketchOpen, sketchUrl]);
+
+    const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+        if (!context) return;
+        setIsDrawing(true);
+        const { offsetX, offsetY } = getCoordinates(e);
+        context.beginPath();
+        context.moveTo(offsetX, offsetY);
+    };
+
+    const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+        if (!isDrawing || !context) return;
+        const { offsetX, offsetY } = getCoordinates(e);
+        context.lineTo(offsetX, offsetY);
+        context.stroke();
+    };
+
+    const stopDrawing = () => {
+        if (!context) return;
+        context.closePath();
+        setIsDrawing(false);
+    };
+
+    const getCoordinates = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+        const canvas = canvasRef.current;
+        if (!canvas) return { offsetX: 0, offsetY: 0 };
+
+        if ('touches' in e) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                offsetX: e.touches[0].clientX - rect.left,
+                offsetY: e.touches[0].clientY - rect.top
+            };
+        } else {
+            return {
+                offsetX: e.nativeEvent.offsetX,
+                offsetY: e.nativeEvent.offsetY
+            };
+        }
+    };
+
+    const clearCanvas = () => {
+        if (context && canvasRef.current) {
+            context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        }
+    };
+
+    const saveSketch = () => {
+        if (canvasRef.current) {
+            setSketchUrl(canvasRef.current.toDataURL());
+        }
+        setIsSketchOpen(false);
+    };
 
     // --- Validation ---
     const canProceed = () => {
@@ -136,15 +239,17 @@ export function MeasurementWizard({ montage, onClose, onComplete }: MeasurementW
                 floorDetails: montage.floorDetails || '', // Preserve
                 panelModel,
                 panelWaste: parseFloat(panelWaste),
-                modelsApproved: montage.modelsApproved || false,
+                modelsApproved,
                 measurementDate,
                 measurementInstallationMethod: installationMethod,
                 measurementFloorPattern: floorPattern,
                 measurementSubfloorCondition: subfloorCondition,
+                measurementAdditionalWorkNeeded: additionalWorkNeeded,
+                measurementAdditionalWorkDescription: additionalWorkDescription,
                 measurementAdditionalMaterials: additionalMaterials,
                 isHousingVat: isHousingVat === true,
-                additionalInfo: montage.additionalInfo || '',
-                sketchUrl: montage.sketchUrl,
+                additionalInfo,
+                sketchUrl: sketchUrl,
                 scheduledInstallationAt: montage.scheduledInstallationAt ? new Date(montage.scheduledInstallationAt).getTime() : null,
                 scheduledInstallationEndAt: montage.scheduledInstallationEndAt ? new Date(montage.scheduledInstallationEndAt).getTime() : null,
             });
@@ -265,6 +370,24 @@ export function MeasurementWizard({ montage, onClose, onComplete }: MeasurementW
                         </div>
 
                         <div className="space-y-2">
+                            <Label>Rodzaj podłoża</Label>
+                            <Select 
+                                value={auditData.subfloorType || ''} 
+                                onValueChange={(v) => setAuditData({...auditData, subfloorType: v as TechnicalAuditData['subfloorType']})}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Wybierz..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="concrete">Beton / Jastrych</SelectItem>
+                                    <SelectItem value="anhydrite">Anhydryt</SelectItem>
+                                    <SelectItem value="osb">Płyta OSB / Drewno</SelectItem>
+                                    <SelectItem value="other">Inne</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-2">
                             <Label>Równość podłoża</Label>
                             <Select 
                                 value={auditData.flatness || ''} 
@@ -281,15 +404,62 @@ export function MeasurementWizard({ montage, onClose, onComplete }: MeasurementW
                             </Select>
                         </div>
 
-                        <div className="flex items-center justify-between p-4 border rounded-lg">
-                            <div className="space-y-0.5">
-                                <Label>Ogrzewanie podłogowe</Label>
-                                <p className="text-sm text-muted-foreground">Czy występuje w pomieszczeniach?</p>
+                        <div className="space-y-4 pt-2">
+                            <div className="flex items-center justify-between p-4 border rounded-lg">
+                                <div className="space-y-0.5">
+                                    <Label>Ogrzewanie podłogowe</Label>
+                                    <p className="text-sm text-muted-foreground">Czy występuje w pomieszczeniach?</p>
+                                </div>
+                                <Switch 
+                                    checked={auditData.floorHeated}
+                                    onCheckedChange={v => setAuditData({...auditData, floorHeated: v})}
+                                />
                             </div>
-                            <Switch 
-                                checked={auditData.floorHeated}
-                                onCheckedChange={v => setAuditData({...auditData, floorHeated: v})}
+                            {auditData.floorHeated && (
+                                <div className="flex items-center justify-between p-4 border rounded-lg bg-blue-50 border-blue-100">
+                                    <div className="space-y-0.5">
+                                        <Label>Protokół wygrzania</Label>
+                                        <p className="text-sm text-muted-foreground">Czy klient posiada protokół?</p>
+                                    </div>
+                                    <Switch 
+                                        checked={auditData.heatingProtocol} 
+                                        onCheckedChange={v => setAuditData({...auditData, heatingProtocol: v})}
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="space-y-2 pt-4 border-t">
+                            <Label>Uwagi techniczne</Label>
+                            <Textarea 
+                                placeholder="Wpisz dodatkowe uwagi dotyczące podłoża, wilgotności itp."
+                                value={auditData.notes}
+                                onChange={e => setAuditData({...auditData, notes: e.target.value})}
+                                className="min-h-[100px]"
                             />
+                        </div>
+
+                        <div className="space-y-4 pt-4 border-t">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <Label>Prace dodatkowe</Label>
+                                    <p className="text-sm text-muted-foreground">Czy wymagane są dodatkowe prace przygotowawcze?</p>
+                                </div>
+                                <Switch 
+                                    checked={additionalWorkNeeded}
+                                    onCheckedChange={setAdditionalWorkNeeded}
+                                />
+                            </div>
+                            {additionalWorkNeeded && (
+                                <div className="space-y-2">
+                                    <Label>Opis prac dodatkowych</Label>
+                                    <Textarea 
+                                        placeholder="Opisz jakie prace należy wykonać (np. szlifowanie, gruntowanie)..."
+                                        value={additionalWorkDescription}
+                                        onChange={e => setAdditionalWorkDescription(e.target.value)}
+                                    />
+                                </div>
+                            )}
                         </div>
                     </div>
                 );
@@ -311,7 +481,7 @@ export function MeasurementWizard({ montage, onClose, onComplete }: MeasurementW
                                     )}
                                 >
                                     <span className="font-semibold">Klasycznie</span>
-                                    <div className="text-xs text-muted-foreground mt-1">Zapas 5%</div>
+                                    <div className="text-xs text-muted-foreground mt-1">Sugerowany zapas 5%</div>
                                 </button>
                                 <button
                                     onClick={() => {
@@ -324,9 +494,24 @@ export function MeasurementWizard({ montage, onClose, onComplete }: MeasurementW
                                     )}
                                 >
                                     <span className="font-semibold">Jodełka</span>
-                                    <div className="text-xs text-muted-foreground mt-1">Zapas 12%</div>
+                                    <div className="text-xs text-muted-foreground mt-1">Sugerowany zapas 12%</div>
                                 </button>
                             </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>Zapas materiału (%)</Label>
+                            <Input 
+                                type="number" 
+                                step="1"
+                                value={panelWaste}
+                                onChange={e => setPanelWaste(e.target.value)}
+                                className="h-12 text-lg"
+                                placeholder="np. 5"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                Wartość zostanie automatycznie ustawiona po zmianie wzoru, ale możesz ją edytować ręcznie.
+                            </p>
                         </div>
 
                         <div className="space-y-2">
@@ -371,6 +556,17 @@ export function MeasurementWizard({ montage, onClose, onComplete }: MeasurementW
                                 value={panelModel}
                                 onChange={e => setPanelModel(e.target.value)}
                                 placeholder="Wpisz nazwę lub wybierz z listy..."
+                            />
+                        </div>
+
+                        <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/20">
+                            <div className="space-y-0.5">
+                                <Label>Zatwierdzenie modeli</Label>
+                                <p className="text-sm text-muted-foreground">Czy klient zaakceptował wybrane modele?</p>
+                            </div>
+                            <Switch 
+                                checked={modelsApproved}
+                                onCheckedChange={setModelsApproved}
                             />
                         </div>
                     </div>
@@ -483,6 +679,43 @@ export function MeasurementWizard({ montage, onClose, onComplete }: MeasurementW
                             </div>
                         </div>
 
+                        <div className="bg-muted/50 p-4 rounded-lg space-y-4">
+                            <div className="flex items-center justify-between">
+                                <h3 className="font-semibold flex items-center gap-2">
+                                    <Pencil className="w-4 h-4 text-primary" />
+                                    Szkic sytuacyjny
+                                </h3>
+                                <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => setIsSketchOpen(true)}
+                                >
+                                    {sketchUrl ? 'Edytuj szkic' : 'Utwórz szkic'}
+                                </Button>
+                            </div>
+                            
+                            {sketchUrl ? (
+                                <div className="border rounded-lg overflow-hidden bg-white">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={sketchUrl} alt="Szkic" className="w-full h-auto" />
+                                </div>
+                            ) : (
+                                <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
+                                    Brak szkicu
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>Dodatkowe informacje</Label>
+                            <Textarea 
+                                placeholder="Wpisz wszelkie dodatkowe ustalenia z klientem..."
+                                value={additionalInfo}
+                                onChange={e => setAdditionalInfo(e.target.value)}
+                                className="min-h-[100px]"
+                            />
+                        </div>
+
                         <div className="p-4 bg-yellow-50 text-yellow-800 rounded-lg text-sm">
                             <p className="font-semibold mb-1">Uwaga!</p>
                             Po zatwierdzeniu protokołu, edycja będzie możliwa tylko przez administratora. Upewnij się, że wszystkie dane są poprawne.
@@ -583,6 +816,41 @@ export function MeasurementWizard({ montage, onClose, onComplete }: MeasurementW
                     )}
                 </div>
             </div>
+
+            {/* Sketch Dialog */}
+            <Dialog open={isSketchOpen} onOpenChange={setIsSketchOpen}>
+                <DialogContent className="max-w-3xl w-full h-[80vh] flex flex-col" onPointerDownOutside={(e) => e.preventDefault()}>
+                    <DialogHeader>
+                        <DialogTitle>Szkic sytuacyjny</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex-1 border rounded-md overflow-hidden bg-white touch-none relative">
+                        <canvas
+                            ref={canvasRef}
+                            className="w-full h-full cursor-crosshair absolute inset-0"
+                            onMouseDown={startDrawing}
+                            onMouseMove={draw}
+                            onMouseUp={stopDrawing}
+                            onMouseLeave={stopDrawing}
+                            onTouchStart={startDrawing}
+                            onTouchMove={draw}
+                            onTouchEnd={stopDrawing}
+                        />
+                    </div>
+                    <div className="flex justify-between items-center mt-4">
+                        <Button type="button" variant="ghost" size="sm" onClick={clearCanvas}>
+                            <Eraser className="mr-2 h-4 w-4" />
+                            Wyczyść
+                        </Button>
+                        <div className="flex gap-2">
+                            <Button type="button" variant="outline" onClick={() => setIsSketchOpen(false)}>Anuluj</Button>
+                            <Button type="button" onClick={saveSketch}>Zatwierdź</Button>
+                        </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground text-center">
+                        Możesz rysować palcem na urządzeniach mobilnych lub myszką.
+                    </p>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
