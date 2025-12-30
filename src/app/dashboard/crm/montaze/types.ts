@@ -70,6 +70,7 @@ export type MeasurementMaterialItem = {
     id: string;
     name: string;
     quantity: string;
+    unit?: string;
     supplySide: 'installer' | 'company';
     estimatedCost?: number;
 };

@@ -962,16 +962,40 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                                                 <div className="flex gap-2">
                                                     <div className="w-1/3 space-y-1">
                                                         <Label className="text-[10px] text-muted-foreground uppercase">Ilość</Label>
-                                                        <Input
-                                                            placeholder="np. 2 szt"
-                                                            value={item.quantity}
-                                                            disabled={isReadOnly}
-                                                            onChange={(e) => {
-                                                                const newItems = [...additionalMaterials];
-                                                                newItems[index].quantity = e.target.value;
-                                                                setAdditionalMaterials(newItems);
-                                                            }}
-                                                        />
+                                                        <div className="flex gap-1">
+                                                            <Input
+                                                                placeholder="2"
+                                                                value={item.quantity}
+                                                                disabled={isReadOnly}
+                                                                onChange={(e) => {
+                                                                    const newItems = [...additionalMaterials];
+                                                                    newItems[index].quantity = e.target.value;
+                                                                    setAdditionalMaterials(newItems);
+                                                                }}
+                                                                className="flex-1"
+                                                            />
+                                                            <Select
+                                                                disabled={isReadOnly}
+                                                                value={item.unit || 'opak.'}
+                                                                onValueChange={(val) => {
+                                                                    const newItems = [...additionalMaterials];
+                                                                    newItems[index].unit = val;
+                                                                    setAdditionalMaterials(newItems);
+                                                                }}
+                                                            >
+                                                                <SelectTrigger className="w-[65px] px-1">
+                                                                    <SelectValue />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    <SelectItem value="szt">szt</SelectItem>
+                                                                    <SelectItem value="opak.">opak.</SelectItem>
+                                                                    <SelectItem value="mb">mb</SelectItem>
+                                                                    <SelectItem value="m2">m²</SelectItem>
+                                                                    <SelectItem value="kg">kg</SelectItem>
+                                                                    <SelectItem value="l">l</SelectItem>
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
                                                     </div>
                                                     <div className="w-2/3 space-y-1">
                                                         <Label className="text-[10px] text-muted-foreground uppercase">Kto zapewnia?</Label>
@@ -995,19 +1019,61 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                                                     </div>
                                                 </div>
                                                 {item.supplySide === 'installer' && (
-                                                    <div className="relative">
-                                                        <Input
-                                                            type="number"
-                                                            placeholder="Koszt netto (opcjonalne)"
-                                                            value={item.estimatedCost || ''}
-                                                            disabled={isReadOnly}
-                                                            onChange={(e) => {
-                                                                const newItems = [...additionalMaterials];
-                                                                newItems[index].estimatedCost = e.target.value ? parseFloat(e.target.value) : undefined;
-                                                                setAdditionalMaterials(newItems);
-                                                            }}
-                                                        />
-                                                        <span className="absolute right-3 top-2.5 text-xs text-muted-foreground">PLN netto</span>
+                                                    <div className="space-y-1 pt-1">
+                                                        <div className="flex items-center justify-between">
+                                                            <Label className="text-[10px] text-muted-foreground uppercase">Koszt zakupu</Label>
+                                                            <div className="flex items-center gap-1">
+                                                                <Label htmlFor={`tab-gross-${item.id}`} className="text-[10px] cursor-pointer select-none text-muted-foreground">Brutto (23%)</Label>
+                                                                <input 
+                                                                    type="checkbox" 
+                                                                    id={`tab-gross-${item.id}`}
+                                                                    className="accent-blue-600 h-3 w-3"
+                                                                    disabled={isReadOnly}
+                                                                    onChange={(e) => {
+                                                                        const el = document.getElementById(`tab-cost-input-${item.id}`) as HTMLInputElement;
+                                                                        if (el) {
+                                                                            el.dataset.isGross = e.target.checked ? 'true' : 'false';
+                                                                            if (item.estimatedCost) {
+                                                                                if (e.target.checked) {
+                                                                                    el.value = (item.estimatedCost * 1.23).toFixed(2);
+                                                                                } else {
+                                                                                    el.value = item.estimatedCost.toFixed(2);
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div className="relative">
+                                                            <Input
+                                                                id={`tab-cost-input-${item.id}`}
+                                                                type="number"
+                                                                step="0.01"
+                                                                placeholder="0.00"
+                                                                defaultValue={item.estimatedCost?.toFixed(2)}
+                                                                disabled={isReadOnly}
+                                                                onChange={(e) => {
+                                                                    const isGross = e.target.dataset.isGross === 'true';
+                                                                    const val = parseFloat(e.target.value);
+                                                                    
+                                                                    const newItems = [...additionalMaterials];
+                                                                    if (!isNaN(val)) {
+                                                                        newItems[index].estimatedCost = isGross ? val / 1.23 : val;
+                                                                    } else {
+                                                                        newItems[index].estimatedCost = undefined;
+                                                                    }
+                                                                    setAdditionalMaterials(newItems);
+                                                                }}
+                                                                className="pl-8 h-8 text-sm"
+                                                            />
+                                                            <span className="absolute left-2 top-2 text-xs text-muted-foreground">PLN</span>
+                                                            {item.estimatedCost && (
+                                                                <span className="absolute right-8 top-2 text-[10px] text-muted-foreground">
+                                                                    netto: {item.estimatedCost.toFixed(2)}
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 )}
                                             </div>

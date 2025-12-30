@@ -518,6 +518,7 @@ export const montages = pgTable(
             id: string;
             name: string;
             quantity: string;
+            unit?: string;
             supplySide: 'installer' | 'company';
             estimatedCost?: number;
         }[]>(),

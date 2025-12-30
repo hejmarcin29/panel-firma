@@ -1554,6 +1554,7 @@ export async function updateMontageMeasurement({
         id: string;
         name: string;
         quantity: string;
+        unit?: string;
         supplySide: 'installer' | 'company';
         estimatedCost?: number;
     }[] | null;
