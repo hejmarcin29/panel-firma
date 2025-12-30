@@ -3,18 +3,16 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Check, 
   ChevronRight, 
   Droplets, 
   Flame, 
   ShieldCheck, 
   Star, 
   Truck, 
-  Clock,
   MapPin,
-  Info
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 // --- Mock Data ---
 const PRODUCT = {
@@ -37,7 +35,6 @@ const PRODUCT = {
 export default function DemoPage() {
   const [scrolled, setScrolled] = useState(false);
   const [quantity, setQuantity] = useState<number | "">("");
-  const [isFormFocused, setIsFormFocused] = useState(false);
 
   // Handle scroll for sticky header
   useEffect(() => {
@@ -83,10 +80,11 @@ export default function DemoPage() {
       <section className="relative h-[65vh] w-full overflow-hidden">
         <div className="absolute inset-0 bg-neutral-900">
           {/* Placeholder for Product Image */}
-          <img 
+          <Image 
             src="https://images.unsplash.com/photo-1581858726768-758a03093171?q=80&w=2070&auto=format&fit=crop" 
             alt="Podłoga Dąb Naturalny"
-            className="w-full h-full object-cover opacity-90"
+            fill
+            className="object-cover opacity-90"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-transparent to-black/40" />
         </div>

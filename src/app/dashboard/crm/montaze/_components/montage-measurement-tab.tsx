@@ -8,7 +8,6 @@ import {
   Ruler, 
   Info, 
   Check, 
-  X, 
   AlertTriangle,
   Maximize2
 } from 'lucide-react';
@@ -16,7 +15,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 import type { Montage } from '../types';
 import type { TechnicalAuditData } from '../technical-data';
 
