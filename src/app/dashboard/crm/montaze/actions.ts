@@ -1575,12 +1575,11 @@ export async function updateMontageCostEstimation({
                     id: crypto.randomUUID(),
                     montageId: montageId,
                     serviceId: genericService.id, // Link to a real service ID
-                    name: service.name, // Override name
+                    snapshotName: service.name, // Override name
                     quantity: service.quantity,
-                    price: service.price, // Net price
-                    vat: vatRate,
-                    // We don't have 'unit' in montage_service_items schema? Let's check.
-                    // Schema check needed. Assuming standard fields.
+                    clientPrice: service.price, // Net price
+                    installerRate: genericService.baseInstallerRate || 0,
+                    vatRate: vatRate,
                 });
             }
         }
