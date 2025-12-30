@@ -11,7 +11,6 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -49,7 +48,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from '@/lib/utils';
 import type { Montage, MeasurementMaterialItem } from '../types';
-import { updateMontageMeasurement, addMontageTask, toggleMontageTask } from '../actions';
+import { updateMontageMeasurement } from '../actions';
 
 import { Loader2, Check, Upload, FileIcon, ExternalLink, Trash2, Info, Search } from 'lucide-react';
 
@@ -133,7 +132,6 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
 
   const [isPanelSelectorOpen, setIsPanelSelectorOpen] = useState(false);
   const [isAccessorySelectorOpen, setIsAccessorySelectorOpen] = useState(false);
-  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [currentAccessoryIndex, setCurrentAccessoryIndex] = useState<number | null>(null);
 
   useEffect(() => {
@@ -248,27 +246,6 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
 
     return () => clearTimeout(timer);
   }, [saveData, isReadOnly]);
-
-  const [newTaskTitle, setNewTaskTitle] = useState('');
-
-  const handleAddTask = async () => {
-      if (!newTaskTitle.trim() || isReadOnly) return;
-      startTransition(async () => {
-          try {
-              await addMontageTask({
-                  montageId: montage.id,
-                  title: newTaskTitle,
-                  source: 'measurement'
-              });
-              setNewTaskTitle('');
-              router.refresh();
-          } catch (e) {
-              console.error(e);
-          }
-      });
-  };
-
-  const measurementTasks = montage.tasks.filter(t => t.source === 'measurement');
 
   // Canvas state
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -404,6 +381,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
       </div>
 
       <MeasurementAssistantModal
+        key={isAssistantOpen ? 'open' : 'closed'}
         isOpen={isAssistantOpen}
         onClose={() => setIsAssistantOpen(false)}
         onSave={() => {
@@ -426,10 +404,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
         floorArea={floorArea}
         setFloorArea={setFloorArea}
         panelModel={panelModel}
-        setPanelModel={setPanelModel}
         setIsPanelSelectorOpen={setIsPanelSelectorOpen}
-        additionalMaterials={additionalMaterials}
-        setAdditionalMaterials={setAdditionalMaterials}
       />
 
 <Tabs defaultValue="main" className="w-full">

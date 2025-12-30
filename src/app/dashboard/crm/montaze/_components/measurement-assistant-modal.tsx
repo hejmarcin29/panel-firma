@@ -1,24 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-    X, ChevronRight, ChevronLeft, Check, Calendar, FileText, 
+    X, ChevronLeft, ChevronRight, Check, Calendar, FileText, 
     Ruler, Hammer, Package, CheckCircle2, AlertCircle 
 } from "lucide-react";
 import { format } from "date-fns";
-import { pl } from "date-fns/locale";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { AuditForm } from "./technical/audit-form";
 import type { TechnicalAuditData } from "../technical-data";
-import type { MeasurementMaterialItem } from "../types";
 
 interface MeasurementAssistantModalProps {
     isOpen: boolean;
@@ -49,11 +45,7 @@ interface MeasurementAssistantModalProps {
     setFloorArea: (val: string) => void;
     
     panelModel: string;
-    setPanelModel: (val: string) => void;
     setIsPanelSelectorOpen: (val: boolean) => void;
-    
-    additionalMaterials: MeasurementMaterialItem[];
-    setAdditionalMaterials: (val: MeasurementMaterialItem[]) => void;
 }
 
 const STEPS = [
@@ -74,15 +66,9 @@ export function MeasurementAssistantModal({
     installationMethod, setInstallationMethod,
     floorPattern, setFloorPattern, setPanelWaste,
     floorArea, setFloorArea,
-    panelModel, setPanelModel, setIsPanelSelectorOpen,
-    additionalMaterials, setAdditionalMaterials
+    panelModel, setIsPanelSelectorOpen,
 }: MeasurementAssistantModalProps) {
     const [currentStep, setCurrentStep] = useState(0);
-
-    // Reset step on open
-    useEffect(() => {
-        if (isOpen) setCurrentStep(0);
-    }, [isOpen]);
 
     if (!isOpen) return null;
 
@@ -101,7 +87,7 @@ export function MeasurementAssistantModal({
         }
     };
 
-    const StepComponent = () => {
+    const renderStepContent = () => {
         switch (currentStep) {
             case 0: // Start
                 return (
@@ -378,14 +364,14 @@ export function MeasurementAssistantModal({
                             exit={{ opacity: 0, x: -20 }}
                             transition={{ duration: 0.2 }}
                         >
-                            <StepComponent />
+                            {renderStepContent()}
                         </motion.div>
                     </AnimatePresence>
                 </div>
             </div>
 
             {/* Footer */}
-            <div className="fixed bottom-0 left-0 right-0 p-4 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div className="fixed bottom-0 left-0 right-0 p-4 border-t bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
                 <div className="max-w-lg mx-auto flex gap-4">
                     <Button
                         variant="outline"

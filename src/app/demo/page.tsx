@@ -3,16 +3,13 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Check, 
   ChevronRight, 
   Droplets, 
   Flame, 
   ShieldCheck, 
   Star, 
   Truck, 
-  Clock,
-  MapPin,
-  Info
+  MapPin
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -37,7 +34,6 @@ const PRODUCT = {
 export default function DemoPage() {
   const [scrolled, setScrolled] = useState(false);
   const [quantity, setQuantity] = useState<number | "">("");
-  const [isFormFocused, setIsFormFocused] = useState(false);
 
   // Handle scroll for sticky header
   useEffect(() => {
@@ -83,6 +79,7 @@ export default function DemoPage() {
       <section className="relative h-[65vh] w-full overflow-hidden">
         <div className="absolute inset-0 bg-neutral-900">
           {/* Placeholder for Product Image */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img 
             src="https://images.unsplash.com/photo-1581858726768-758a03093171?q=80&w=2070&auto=format&fit=crop" 
             alt="Podłoga Dąb Naturalny"
@@ -196,8 +193,6 @@ export default function DemoPage() {
                     placeholder="50"
                     value={quantity}
                     onChange={(e) => setQuantity(e.target.value === "" ? "" : Number(e.target.value))}
-                    onFocus={() => setIsFormFocused(true)}
-                    onBlur={() => setIsFormFocused(false)}
                     className="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-lg font-bold text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-green-400/50 transition-all"
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 text-sm font-medium">m²</span>
@@ -252,7 +247,6 @@ export default function DemoPage() {
               onClick={() => {
                 const form = document.getElementById('order-form');
                 form?.scrollIntoView({ behavior: 'smooth' });
-                setIsFormFocused(true);
               }}
               className="flex-[2] bg-black text-white h-12 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-black/20 active:scale-95 transition-transform"
             >
