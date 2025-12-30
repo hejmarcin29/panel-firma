@@ -194,8 +194,6 @@ export default function DemoPage() {
                     placeholder="50"
                     value={quantity}
                     onChange={(e) => setQuantity(e.target.value === "" ? "" : Number(e.target.value))}
-                    onFocus={() => setIsFormFocused(true)}
-                    onBlur={() => setIsFormFocused(false)}
                     className="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-lg font-bold text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-green-400/50 transition-all"
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 text-sm font-medium">m²</span>
