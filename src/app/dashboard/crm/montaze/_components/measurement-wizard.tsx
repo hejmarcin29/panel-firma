@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
     CalendarIcon, 
@@ -15,14 +15,11 @@ import {
     Save,
     Loader2
 } from "lucide-react";
-import { format } from "date-fns";
-import { pl } from "date-fns/locale";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
     Select,
     SelectContent,
@@ -30,14 +27,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 import type { Montage, MeasurementMaterialItem } from "../types";
 import type { TechnicalAuditData } from "../technical-data";
-import { updateMontageMeasurement, updateTechnicalAudit, finishMeasurementProtocol } from "../actions";
+import { updateMontageMeasurement, finishMeasurementProtocol } from "../actions";
+import { updateTechnicalAudit } from "../technical-actions";
 
 interface MeasurementWizardProps {
     montage: Montage;
@@ -68,16 +64,18 @@ export function MeasurementWizard({ montage, onClose, onComplete }: MeasurementW
 
     // Technical
     const [subfloorCondition, setSubfloorCondition] = useState(montage.measurementSubfloorCondition || 'good');
+    
+    const technicalAudit = montage.technicalAudit as TechnicalAuditData | undefined;
     const [auditData, setAuditData] = useState<TechnicalAuditData>({
-        humidity: (montage.technicalAudit as any)?.humidity ?? null,
-        humidityMethod: (montage.technicalAudit as any)?.humidityMethod ?? 'CM',
-        flatness: (montage.technicalAudit as any)?.flatness ?? null,
-        subfloorType: (montage.technicalAudit as any)?.subfloorType ?? null,
-        heating: (montage.technicalAudit as any)?.heating ?? false,
-        heatingProtocol: (montage.technicalAudit as any)?.heatingProtocol ?? false,
-        floorHeated: (montage.technicalAudit as any)?.floorHeated ?? false,
-        notes: (montage.technicalAudit as any)?.notes ?? '',
-        photos: (montage.technicalAudit as any)?.photos ?? [],
+        humidity: technicalAudit?.humidity ?? null,
+        humidityMethod: technicalAudit?.humidityMethod ?? 'CM',
+        flatness: technicalAudit?.flatness ?? null,
+        subfloorType: technicalAudit?.subfloorType ?? null,
+        heating: technicalAudit?.heating ?? false,
+        heatingProtocol: technicalAudit?.heatingProtocol ?? false,
+        floorHeated: technicalAudit?.floorHeated ?? false,
+        notes: technicalAudit?.notes ?? '',
+        photos: technicalAudit?.photos ?? [],
     });
 
     // Floor
@@ -93,8 +91,8 @@ export function MeasurementWizard({ montage, onClose, onComplete }: MeasurementW
 
     // Materials
     const [additionalMaterials, setAdditionalMaterials] = useState<MeasurementMaterialItem[]>(() => {
-        const raw = montage.measurementAdditionalMaterials as any;
-        if (Array.isArray(raw)) return raw;
+        const raw = montage.measurementAdditionalMaterials as unknown;
+        if (Array.isArray(raw)) return raw as MeasurementMaterialItem[];
         if (typeof raw === 'string' && raw.trim().length > 0) {
             return [{ id: 'legacy-1', name: raw, quantity: '', supplySide: 'installer' }];
         }
@@ -253,7 +251,7 @@ export function MeasurementWizard({ montage, onClose, onComplete }: MeasurementW
                                 <Label>Metoda pomiaru</Label>
                                 <Select 
                                     value={auditData.humidityMethod} 
-                                    onValueChange={(v: any) => setAuditData({...auditData, humidityMethod: v})}
+                                    onValueChange={(v) => setAuditData({...auditData, humidityMethod: v as TechnicalAuditData['humidityMethod']})}
                                 >
                                     <SelectTrigger>
                                         <SelectValue />
@@ -267,13 +265,20 @@ export function MeasurementWizard({ montage, onClose, onComplete }: MeasurementW
                         </div>
 
                         <div className="space-y-2">
-                            <Label>Równość (mm/2m)</Label>
-                            <Input 
-                                type="number" 
-                                step="0.1"
-                                value={auditData.flatness ?? ''}
-                                onChange={e => setAuditData({...auditData, flatness: parseFloat(e.target.value)})}
-                            />
+                            <Label>Równość podłoża</Label>
+                            <Select 
+                                value={auditData.flatness || ''} 
+                                onValueChange={(v) => setAuditData({...auditData, flatness: v as TechnicalAuditData['flatness']})}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Ocena..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="ok">W normie (gotowe)</SelectItem>
+                                    <SelectItem value="grinding">Wymaga szlifowania</SelectItem>
+                                    <SelectItem value="leveling">Wymaga wylewki</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         <div className="flex items-center justify-between p-4 border rounded-lg">
@@ -516,7 +521,10 @@ export function MeasurementWizard({ montage, onClose, onComplete }: MeasurementW
                 <div className="max-w-lg mx-auto">
                     <div className="mb-6">
                         <h2 className="text-2xl font-bold flex items-center gap-2">
-                            {STEPS[currentStep].icon && <STEPS[currentStep].icon className="w-6 h-6 text-primary" />}
+                            {(() => {
+                                const StepIcon = STEPS[currentStep].icon;
+                                return StepIcon && <StepIcon className="w-6 h-6 text-primary" />;
+                            })()}
                             {STEPS[currentStep].title}
                         </h2>
                     </div>
@@ -550,7 +558,8 @@ export function MeasurementWizard({ montage, onClose, onComplete }: MeasurementW
                     
                     {currentStep === STEPS.length - 1 ? (
                         <Button
-                            className="flex-[2] h-12 bg-green-600 hover:bg-green-700"
+                            className="h-12 bg-green-600 hover:bg-green-700"
+                            style={{ flex: 2 }}
                             onClick={handleFinish}
                             disabled={isSaving}
                         >
@@ -563,7 +572,8 @@ export function MeasurementWizard({ montage, onClose, onComplete }: MeasurementW
                         </Button>
                     ) : (
                         <Button
-                            className="flex-[2] h-12"
+                            className="h-12"
+                            style={{ flex: 2 }}
                             onClick={handleNext}
                             disabled={!canProceed()}
                         >

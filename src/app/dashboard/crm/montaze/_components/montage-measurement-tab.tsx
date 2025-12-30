@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useTransition, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { CalendarIcon, Eraser, Plus, Pencil, Ruler, Play, Lock, Unlock, Loader2, Check, Trash2 } from 'lucide-react';
+import { CalendarIcon, Eraser, Plus, Pencil, Ruler, Play, Lock, Unlock, Loader2, Check, Trash2, Upload, FileIcon, ExternalLink, Info, Search } from 'lucide-react';
 import { MeasurementWizard } from './measurement-wizard';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
@@ -50,17 +50,13 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from '@/lib/utils';
 import type { Montage, MeasurementMaterialItem } from '../types';
-import { updateMontageMeasurement, addMontageTask, toggleMontageTask } from '../actions';
-
-import { Loader2, Check, Upload, FileIcon, ExternalLink, Trash2, Info, Search, Play, Lock, Unlock } from 'lucide-react';
+import { updateMontageMeasurement, addMontageTask, toggleMontageTask, addMontageAttachment } from '../actions';
 
 import { ProductSelectorModal } from './product-selector-modal';
 import { ServiceSelector } from './service-selector';
 import { AuditForm } from './technical/audit-form';
 import type { TechnicalAuditData } from '../technical-data';
-import { addMontageAttachment } from '../actions';
 import { MontageSubCategories } from '@/lib/r2/constants';
-import { MeasurementWizard } from './measurement-wizard';
 
 interface MontageMeasurementTabProps {
   montage: Montage;
