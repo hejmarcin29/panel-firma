@@ -26,9 +26,10 @@ interface MeasurementSchedulerProps {
     onSuccess?: () => void;
     hasGoogleCalendar?: boolean;
     onStartProtocol?: () => void;
+    isMeasurementDone?: boolean;
 }
 
-export function MeasurementScheduler({ montageId, currentDate, clientPhone, onSuccess, hasGoogleCalendar = false, onStartProtocol }: MeasurementSchedulerProps) {
+export function MeasurementScheduler({ montageId, currentDate, clientPhone, onSuccess, hasGoogleCalendar = false, onStartProtocol, isMeasurementDone = false }: MeasurementSchedulerProps) {
     const [date, setDate] = useState<Date | undefined>(currentDate || undefined);
     const [isSaving, setIsSaving] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
@@ -279,39 +280,46 @@ function ConfirmationView({ date, onReschedule, googleCalendarLink, hasGoogleCal
                 <div className="flex flex-col justify-between gap-6">
                     <div className="space-y-4">
                         <h3 className="font-semibold text-lg flex items-center gap-2">
-                            ✅ Termin zapisany! Co dalej?
+                            {isMeasurementDone ? '✅ Pomiar Zakończony!' : '✅ Termin zapisany! Co dalej?'}
                         </h3>
-                        <ul className="space-y-3">
-                            <li className="flex gap-3 text-sm text-muted-foreground">
-                                <div className="shrink-0 w-6 h-6 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold">1</div>
-                                <span>
-                                    W dniu pomiaru ({format(date, "dd.MM")}) w tym miejscu pojawi się przycisk <span className="font-medium text-foreground">&quot;Rozpocznij Protokół&quot;</span>.
-                                </span>
-                            </li>
-                            <li className="flex gap-3 text-sm text-muted-foreground">
-                                <div className="shrink-0 w-6 h-6 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold">2</div>
-                                <span>
-                                    Klient otrzymał automatyczne powiadomienie SMS oraz E-mail z potwierdzeniem terminu.
-                                </span>
-                            </li>
-                            {hasGoogleCalendar && (
+                        {!isMeasurementDone && (
+                            <ul className="space-y-3">
                                 <li className="flex gap-3 text-sm text-muted-foreground">
-                                    <div className="shrink-0 w-6 h-6 rounded-full bg-green-50 text-green-600 flex items-center justify-center text-xs font-bold">
-                                        <CalendarDays className="w-3 h-3" />
-                                    </div>
+                                    <div className="shrink-0 w-6 h-6 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold">1</div>
                                     <span>
-                                        Wydarzenie zostało automatycznie dodane do Twojego kalendarza Google.
+                                        W dniu pomiaru ({format(date, "dd.MM")}) w tym miejscu pojawi się przycisk <span className="font-medium text-foreground">&quot;Rozpocznij Pomiar&quot;</span>.
                                     </span>
                                 </li>
-                            )}
-                        </ul>
+                                <li className="flex gap-3 text-sm text-muted-foreground">
+                                    <div className="shrink-0 w-6 h-6 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold">2</div>
+                                    <span>
+                                        Klient otrzymał automatyczne powiadomienie SMS oraz E-mail z potwierdzeniem terminu.
+                                    </span>
+                                </li>
+                                {hasGoogleCalendar && (
+                                    <li className="flex gap-3 text-sm text-muted-foreground">
+                                        <div className="shrink-0 w-6 h-6 rounded-full bg-green-50 text-green-600 flex items-center justify-center text-xs font-bold">
+                                            <CalendarDays className="w-3 h-3" />
+                                        </div>
+                                        <span>
+                                            Wydarzenie zostało automatycznie dodane do Twojego kalendarza Google.
+                                        </span>
+                                    </li>
+                                )}
+                            </ul>
+                        )}
+                        {isMeasurementDone && (
+                            <div className="p-4 bg-green-50 text-green-800 rounded-md text-sm">
+                                Dane z pomiaru zostały zapisane. Możesz je edytować lub przejść do wyceny (jeśli masz uprawnienia).
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex flex-wrap gap-3 pt-2 border-t">
-                        {(isToday || isPast) && onStartProtocol ? (
-                            <Button onClick={onStartProtocol} className="bg-green-600 hover:bg-green-700 text-white">
+                        {(isToday || isPast || isMeasurementDone) && onStartProtocol ? (
+                            <Button onClick={onStartProtocol} className={cn("text-white", isMeasurementDone ? "bg-blue-600 hover:bg-blue-700" : "bg-green-600 hover:bg-green-700")}>
                                 <Ruler className="w-4 h-4 mr-2" />
-                                Rozpocznij Protokół
+                                {isMeasurementDone ? 'Edytuj Pomiar' : 'Rozpocznij Pomiar'}
                             </Button>
                         ) : (
                             <Button variant="outline" size="sm" onClick={onReschedule} className="text-muted-foreground">

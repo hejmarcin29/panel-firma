@@ -163,6 +163,7 @@ export function InstallerMontageView({ montage, logs, userRoles, hasGoogleCalend
                                             clientPhone={montage.contactPhone}
                                             hasGoogleCalendar={hasGoogleCalendar}
                                             onStartProtocol={() => setActiveTab("measurement")}
+                                            isMeasurementDone={!!montage.floorArea}
                                         />
                                     </div>
                                 )}
