@@ -66,9 +66,10 @@ import { updateMontageCostEstimation } from '../actions';
 interface MontageMeasurementTabProps {
   montage: Montage;
   userRoles?: string[];
+  defaultOpenModal?: 'assistant' | 'costEstimation';
 }
 
-export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasurementTabProps) {
+export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModal }: MontageMeasurementTabProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   
@@ -77,6 +78,15 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
 
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [isCostEstimationOpen, setIsCostEstimationOpen] = useState(false);
+
+  useEffect(() => {
+      if (defaultOpenModal === 'assistant') {
+          setIsAssistantOpen(true);
+      } else if (defaultOpenModal === 'costEstimation') {
+          setIsCostEstimationOpen(true);
+      }
+  }, [defaultOpenModal]);
+
   const [isSketchOpen, setIsSketchOpen] = useState(false);
   const [sketchDataUrl, setSketchDataUrl] = useState<string | null>(montage.sketchUrl || null);
   

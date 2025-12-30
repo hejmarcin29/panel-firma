@@ -42,6 +42,7 @@ interface InstallerMontageViewProps {
 
 export function InstallerMontageView({ montage, logs, userRoles, hasGoogleCalendar = false }: InstallerMontageViewProps) {
     const [activeTab, setActiveTab] = useState("process");
+    const [defaultOpenModal, setDefaultOpenModal] = useState<'assistant' | 'costEstimation' | undefined>(undefined);
 
     // Filter logs to show only current user's actions (or system actions relevant to him)
     // In a real scenario, we'd filter by userId, but for now let's show all to keep context, 
@@ -165,6 +166,31 @@ export function InstallerMontageView({ montage, logs, userRoles, hasGoogleCalend
                                             onStartProtocol={() => setActiveTab("measurement")}
                                             isMeasurementDone={!!montage.floorArea}
                                         />
+                                        
+                                        {!!montage.floorArea && (
+                                            <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl space-y-3">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2 bg-blue-100 text-blue-600 rounded-full">
+                                                        <Banknote className="w-5 h-5" />
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="font-bold text-base text-blue-900">Wycena Kosztów</h3>
+                                                        <p className="text-sm text-blue-700">
+                                                            Uzupełnij koszty dodatkowe i usługi, aby biuro mogło przygotować ofertę.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <Button 
+                                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                                                    onClick={() => {
+                                                        setDefaultOpenModal('costEstimation');
+                                                        setActiveTab("measurement");
+                                                    }}
+                                                >
+                                                    Uzupełnij Kosztorys
+                                                </Button>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 
@@ -234,7 +260,11 @@ export function InstallerMontageView({ montage, logs, userRoles, hasGoogleCalend
                 {/* TAB: MEASUREMENT (Form) */}
                 {activeTab === 'measurement' && (
                     <div className="space-y-4">
-                        <MontageMeasurementTab montage={montage} userRoles={userRoles} />
+                        <MontageMeasurementTab 
+                            montage={montage} 
+                            userRoles={userRoles} 
+                            defaultOpenModal={defaultOpenModal}
+                        />
                     </div>
                 )}
 
