@@ -730,11 +730,17 @@ export async function updateMontageContactDetails({
 
     let measurementAt: Date | null = null;
     if (measurementDate && measurementDate.trim()) {
-        const parsed = new Date(`${measurementDate}T00:00:00`);
-        if (Number.isNaN(parsed.getTime())) {
-            throw new Error('Podaj prawidłową datę pomiaru.');
+        const parsed = new Date(measurementDate);
+        if (!Number.isNaN(parsed.getTime())) {
+            measurementAt = parsed;
+        } else {
+            const parsedDateOnly = new Date(`${measurementDate}T00:00:00`);
+            if (!Number.isNaN(parsedDateOnly.getTime())) {
+                measurementAt = parsedDateOnly;
+            } else {
+                throw new Error('Podaj prawidłową datę pomiaru.');
+            }
         }
-        measurementAt = parsed;
     }
 
     let forecastedInstallationAt: Date | null = null;
@@ -1557,9 +1563,16 @@ export async function updateMontageMeasurement({
 
     let measurementAt: Date | null = null;
     if (measurementDate) {
-        const parsed = new Date(`${measurementDate}T00:00:00`);
+        // Try parsing as full ISO string first
+        const parsed = new Date(measurementDate);
         if (!Number.isNaN(parsed.getTime())) {
             measurementAt = parsed;
+        } else {
+            // Fallback to date-only parsing if needed (though new Date() usually handles YYYY-MM-DD fine)
+            const parsedDateOnly = new Date(`${measurementDate}T00:00:00`);
+            if (!Number.isNaN(parsedDateOnly.getTime())) {
+                measurementAt = parsedDateOnly;
+            }
         }
     }
 

@@ -10,6 +10,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
@@ -112,6 +114,18 @@ function SelectionView({ date, isOpen, setIsOpen, handleDateSelect, isSaving, cl
         { label: "Za tydzień", value: addDays(new Date(), 7) },
     ];
 
+    const [selectedDate, setSelectedDate] = useState<Date | undefined>(date);
+    const [selectedTime, setSelectedTime] = useState(date ? format(date, "HH:mm") : "09:00");
+
+    const handleConfirm = () => {
+        if (selectedDate) {
+            const [hours, minutes] = selectedTime.split(':').map(Number);
+            const finalDate = new Date(selectedDate);
+            finalDate.setHours(hours, minutes);
+            handleDateSelect(finalDate);
+        }
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -158,7 +172,7 @@ function SelectionView({ date, isOpen, setIsOpen, handleDateSelect, isSaving, cl
                             ) : (
                                 <CalendarIcon className="mr-2 h-5 w-5" />
                             )}
-                            {date ? format(date, "dd.MM.yyyy", { locale: pl }) : "Wybierz datę"}
+                            {date ? format(date, "dd.MM.yyyy HH:mm", { locale: pl }) : "Wybierz datę"}
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -171,20 +185,43 @@ function SelectionView({ date, isOpen, setIsOpen, handleDateSelect, isSaving, cl
                                         variant="outline"
                                         size="sm"
                                         className="text-xs h-7 whitespace-nowrap"
-                                        onClick={() => handleDateSelect(qd.value)}
+                                        onClick={() => {
+                                            const newDate = new Date(qd.value);
+                                            const [h, m] = selectedTime.split(':').map(Number);
+                                            newDate.setHours(h, m);
+                                            handleDateSelect(newDate);
+                                        }}
                                     >
                                         {qd.label}
                                     </Button>
                                 ))}
                             </div>
                         </div>
+                        <div className="p-3 border-b flex items-center gap-2">
+                             <Label>Godzina:</Label>
+                             <Input 
+                                type="time" 
+                                value={selectedTime} 
+                                onChange={(e) => setSelectedTime(e.target.value)}
+                                className="w-32"
+                             />
+                        </div>
                         <Calendar
                             mode="single"
-                            selected={date}
-                            onSelect={handleDateSelect}
+                            selected={selectedDate}
+                            onSelect={setSelectedDate}
                             initialFocus
                             locale={pl}
                         />
+                        <div className="p-3 border-t">
+                            <Button 
+                                className="w-full" 
+                                disabled={!selectedDate}
+                                onClick={handleConfirm}
+                            >
+                                Zatwierdź termin
+                            </Button>
+                        </div>
                     </PopoverContent>
                 </Popover>
             </div>
@@ -227,6 +264,9 @@ function ConfirmationView({ date, onReschedule, googleCalendarLink, hasGoogleCal
                     </h2>
                     <p className="text-lg text-slate-600 font-medium">
                         {format(date, "EEEE", { locale: pl })}
+                    </p>
+                    <p className="text-xl font-semibold text-slate-800 mt-1">
+                        {format(date, "HH:mm")}
                     </p>
                     
                     <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 bg-white rounded-full text-sm font-medium text-slate-600 shadow-sm border">

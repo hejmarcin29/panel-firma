@@ -73,7 +73,7 @@ export function MontageClientCard({
       ? new Date(montage.forecastedInstallationDate as string | number | Date).toISOString().split("T")[0]
       : "",
     measurementDate: montage.measurementDate
-      ? new Date(montage.measurementDate as string | number | Date).toISOString().split("T")[0]
+      ? new Date(montage.measurementDate as string | number | Date).toISOString().slice(0, 16)
       : "",
     sampleStatus: montage.sampleStatus || "none",
     estimatedFloorArea: montage.estimatedFloorArea?.toString() || "",
@@ -102,7 +102,7 @@ export function MontageClientCard({
           ? new Date(montage.forecastedInstallationDate as string | number | Date).toISOString().split("T")[0]
           : "",
         measurementDate: montage.measurementDate
-          ? new Date(montage.measurementDate as string | number | Date).toISOString().split("T")[0]
+          ? new Date(montage.measurementDate as string | number | Date).toISOString().slice(0, 16)
           : "",
         sampleStatus: montage.sampleStatus || "none",
         estimatedFloorArea: montage.estimatedFloorArea?.toString() || "",
@@ -280,7 +280,7 @@ export function MontageClientCard({
                 <Label htmlFor="measurementDate">Data pomiaru</Label>
                 <Input
                   id="measurementDate"
-                  type="date"
+                  type="datetime-local"
                   value={formData.measurementDate}
                   onChange={(e) => handleChange("measurementDate", e.target.value)}
                 />

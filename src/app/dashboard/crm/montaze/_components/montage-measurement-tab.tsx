@@ -115,7 +115,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
   
   const [measurementDate, setMeasurementDate] = useState(
     montage.measurementDate 
-      ? new Date(montage.measurementDate as string | number | Date).toISOString().split("T")[0] 
+      ? new Date(montage.measurementDate as string | number | Date).toISOString().slice(0, 16)
       : ""
   );
 
@@ -163,7 +163,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
     setAdditionalInfo(montage.additionalInfo || '');
     setMeasurementDate(
       montage.measurementDate 
-        ? new Date(montage.measurementDate as string | number | Date).toISOString().split("T")[0] 
+        ? new Date(montage.measurementDate as string | number | Date).toISOString().slice(0, 16)
         : ""
     );
     setDateRange({
@@ -408,10 +408,10 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                     <CardContent>
                         <div className="flex items-center gap-4">
                             <div className="grid gap-1.5 flex-1">
-                                <Label htmlFor="measurementDate">Data wizyty</Label>
+                                <Label htmlFor="measurementDate">Data i godzina wizyty</Label>
                                 <Input
                                     id="measurementDate"
-                                    type="date"
+                                    type="datetime-local"
                                     value={measurementDate}
                                     onChange={(e) => setMeasurementDate(e.target.value)}
                                     disabled={isReadOnly}
