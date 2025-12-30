@@ -92,6 +92,7 @@ export function MeasurementScheduler({ montageId, currentDate, clientPhone, onSu
                         googleCalendarLink={date ? generateGoogleCalendarLink(date) : '#'}
                         hasGoogleCalendar={hasGoogleCalendar}
                         onStartProtocol={onStartProtocol}
+                        isMeasurementDone={isMeasurementDone}
                     />
                 )}
             </AnimatePresence>
@@ -230,7 +231,7 @@ function SelectionView({ date, isOpen, setIsOpen, handleDateSelect, isSaving, cl
     );
 }
 
-function ConfirmationView({ date, onReschedule, googleCalendarLink, hasGoogleCalendar, onStartProtocol }: { date: Date, onReschedule: () => void, googleCalendarLink: string, hasGoogleCalendar: boolean, onStartProtocol?: () => void }) {
+function ConfirmationView({ date, onReschedule, googleCalendarLink, hasGoogleCalendar, onStartProtocol, isMeasurementDone = false }: { date: Date, onReschedule: () => void, googleCalendarLink: string, hasGoogleCalendar: boolean, onStartProtocol?: () => void, isMeasurementDone?: boolean }) {
     const daysLeft = differenceInCalendarDays(date, new Date());
     const isToday = daysLeft === 0;
     const isPast = daysLeft < 0;
