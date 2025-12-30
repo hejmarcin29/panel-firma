@@ -274,8 +274,8 @@ export function InstallerMontageView({ montage, logs, userRoles, hasGoogleCalend
 
             <MeasurementProtocolDrawer
                 montage={montage}
-                isOpen={isProtocolOpen}
-                onClose={() => setIsProtocolOpen(false)}
+                open={isProtocolOpen}
+                onOpenChange={setIsProtocolOpen}
                 userRoles={userRoles}
             />
         </div>

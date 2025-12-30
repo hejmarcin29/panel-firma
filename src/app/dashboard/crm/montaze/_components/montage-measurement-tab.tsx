@@ -86,7 +86,7 @@ export function MontageMeasurementTab({ montage, userRoles = [], onOpenProtocol 
             </div>
             <div className="flex justify-between items-center py-2 border-b">
               <span className="text-sm text-muted-foreground">Status modeli</span>
-              <Badge variant={montage.modelsApproved ? "success" : "outline"}>
+              <Badge variant={montage.modelsApproved ? "default" : "outline"} className={montage.modelsApproved ? "bg-green-600 hover:bg-green-700 border-transparent" : ""}>
                 {montage.modelsApproved ? "Zaakceptowane" : "Do ustalenia"}
               </Badge>
             </div>
