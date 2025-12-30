@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useTransition, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { CalendarIcon, Eraser, Plus, Pencil } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { DateRange } from 'react-day-picker';
 
@@ -111,7 +111,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
       }
       return [];
   });
-  const [isHousingVat, setIsHousingVat] = useState(montage.isHousingVat || false);
+  const [isHousingVat, setIsHousingVat] = useState(montage.isHousingVat ?? true);
 
   const [additionalInfo, setAdditionalInfo] = useState(montage.additionalInfo || '');
   
@@ -360,13 +360,25 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
         </div>
         <div className="flex items-center gap-2 text-sm">
             {!isReadOnly && (
-                <Button 
-                    onClick={() => setIsAssistantOpen(true)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white shadow-md"
-                >
-                    <span className="mr-2">🚀</span>
-                    Uruchom Asystenta
-                </Button>
+                <div className="flex flex-col items-end gap-1">
+                    <Button 
+                        onClick={() => setIsAssistantOpen(true)}
+                        className={cn(
+                            "shadow-md transition-all",
+                            ((floorArea && parseFloat(floorArea) > 0) || measurementDate)
+                                ? "bg-amber-500 hover:bg-amber-600 text-white" 
+                                : "bg-blue-600 hover:bg-blue-700 text-white"
+                        )}
+                    >
+                        <span className="mr-2">{((floorArea && parseFloat(floorArea) > 0) || measurementDate) ? "✏️" : "🚀"}</span>
+                        {((floorArea && parseFloat(floorArea) > 0) || measurementDate) ? "Dokończ Szkic" : "Uruchom Asystenta"}
+                    </Button>
+                    {((floorArea && parseFloat(floorArea) > 0) || measurementDate) && montage.updatedAt && (
+                         <span className="text-xs text-muted-foreground">
+                            Ostatnia edycja: {formatDistanceToNow(new Date(montage.updatedAt), { addSuffix: true, locale: pl })}
+                         </span>
+                    )}
+                </div>
             )}
             {isSaving ? (
                 <span className="text-muted-foreground flex items-center gap-1">

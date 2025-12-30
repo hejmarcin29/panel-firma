@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
     X, ChevronLeft, ChevronRight, Check, Calendar, FileText, 
-    Ruler, Hammer, Package, CheckCircle2, AlertCircle 
+    Ruler, Hammer, Package, CheckCircle2, AlertCircle, Plus, Trash2, Search 
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 import { AuditForm } from "./technical/audit-form";
 import type { TechnicalAuditData } from "../technical-data";
+import type { MeasurementMaterialItem } from "../types";
 
 interface MeasurementAssistantModalProps {
     isOpen: boolean;
@@ -39,6 +40,7 @@ interface MeasurementAssistantModalProps {
     
     floorPattern: 'classic' | 'herringbone';
     setFloorPattern: (val: 'classic' | 'herringbone') => void;
+    panelWaste: string;
     setPanelWaste: (val: string) => void;
     
     floorArea: string;
@@ -46,14 +48,17 @@ interface MeasurementAssistantModalProps {
     
     panelModel: string;
     setIsPanelSelectorOpen: (val: boolean) => void;
+
+    additionalMaterials: MeasurementMaterialItem[];
+    setAdditionalMaterials: (val: MeasurementMaterialItem[]) => void;
 }
 
 const STEPS = [
     { id: 'start', title: 'Termin', icon: Calendar },
     { id: 'tax', title: 'Podatki', icon: FileText },
     { id: 'subfloor', title: 'Podłoże', icon: Ruler },
-    { id: 'tech', title: 'Technologia', icon: Hammer },
-    { id: 'floor', title: 'Podłoga', icon: Package },
+    { id: 'floor_tech', title: 'Podłoga', icon: Package },
+    { id: 'materials', title: 'Materiały', icon: Hammer },
     { id: 'finish', title: 'Podsumowanie', icon: CheckCircle2 },
 ];
 
@@ -64,11 +69,26 @@ export function MeasurementAssistantModal({
     subfloorCondition, setSubfloorCondition,
     technicalAudit, montageId,
     installationMethod, setInstallationMethod,
-    floorPattern, setFloorPattern, setPanelWaste,
+    floorPattern, setFloorPattern, panelWaste, setPanelWaste,
     floorArea, setFloorArea,
     panelModel, setIsPanelSelectorOpen,
+    additionalMaterials, setAdditionalMaterials
 }: MeasurementAssistantModalProps) {
     const [currentStep, setCurrentStep] = useState(0);
+
+    // Auto-calculate waste
+    useEffect(() => {
+        if (installationMethod === 'glue') {
+            setPanelWaste('7');
+        } else {
+            // Click
+            if (floorPattern === 'herringbone') {
+                setPanelWaste('15');
+            } else {
+                setPanelWaste('7');
+            }
+        }
+    }, [installationMethod, floorPattern, setPanelWaste]);
 
     if (!isOpen) return null;
 
@@ -76,6 +96,7 @@ export function MeasurementAssistantModal({
         if (currentStep < STEPS.length - 1) {
             setCurrentStep(prev => prev + 1);
         } else {
+            // Confirm action
             onSave();
             onClose();
         }
@@ -85,6 +106,11 @@ export function MeasurementAssistantModal({
         if (currentStep > 0) {
             setCurrentStep(prev => prev - 1);
         }
+    };
+
+    const handleSaveDraft = () => {
+        onSave();
+        onClose();
     };
 
     const renderStepContent = () => {
@@ -183,102 +209,21 @@ export function MeasurementAssistantModal({
                                 montageId={montageId} 
                                 initialData={technicalAudit} 
                                 readOnly={false}
+                                hideSaveButton={true}
                             />
                         </div>
                     </div>
                 );
-            case 3: // Tech
+            case 3: // Floor & Tech (Merged)
                 return (
                     <div className="space-y-6">
                         <div className="text-center space-y-2">
-                            <h2 className="text-2xl font-bold">Technologia</h2>
-                            <p className="text-muted-foreground">Jak będziemy montować?</p>
+                            <h2 className="text-2xl font-bold">Podłoga i Technologia</h2>
+                            <p className="text-muted-foreground">Wybierz produkt i sposób montażu.</p>
                         </div>
 
                         <div className="space-y-6">
-                            <div className="space-y-3">
-                                <Label className="text-lg">Sposób montażu</Label>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <button
-                                        onClick={() => {
-                                            setInstallationMethod('click');
-                                            // Click + Herringbone = 15%, Click + Classic = 7%
-                                            if (floorPattern === 'herringbone') {
-                                                setPanelWaste('15');
-                                            } else {
-                                                setPanelWaste('7');
-                                            }
-                                        }}
-                                        className={cn(
-                                            "p-4 rounded-xl border-2 text-center transition-all",
-                                            installationMethod === 'click' ? "border-primary bg-primary/5 font-bold" : "border-muted"
-                                        )}
-                                    >
-                                        Pływająca (Click)
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            setInstallationMethod('glue');
-                                            // Glue is always 7%
-                                            setPanelWaste('7');
-                                        }}
-                                        className={cn(
-                                            "p-4 rounded-xl border-2 text-center transition-all",
-                                            installationMethod === 'glue' ? "border-primary bg-primary/5 font-bold" : "border-muted"
-                                        )}
-                                    >
-                                        Klejona
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="space-y-3">
-                                <Label className="text-lg">Wzór ułożenia</Label>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <button
-                                        onClick={() => {
-                                            setFloorPattern('classic');
-                                            // Classic is always 7%
-                                            setPanelWaste('7');
-                                        }}
-                                        className={cn(
-                                            "p-4 rounded-xl border-2 text-center transition-all",
-                                            floorPattern === 'classic' ? "border-primary bg-primary/5 font-bold" : "border-muted"
-                                        )}
-                                    >
-                                        Klasycznie
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            setFloorPattern('herringbone');
-                                            // Herringbone + Click = 15%, Herringbone + Glue = 7%
-                                            if (installationMethod === 'click') {
-                                                setPanelWaste('15');
-                                            } else {
-                                                setPanelWaste('7');
-                                            }
-                                        }}
-                                        className={cn(
-                                            "p-4 rounded-xl border-2 text-center transition-all",
-                                            floorPattern === 'herringbone' ? "border-primary bg-primary/5 font-bold" : "border-muted"
-                                        )}
-                                    >
-                                        Jodełka
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                );
-            case 4: // Floor
-                return (
-                    <div className="space-y-6">
-                        <div className="text-center space-y-2">
-                            <h2 className="text-2xl font-bold">Podłoga</h2>
-                            <p className="text-muted-foreground">Wybierz model i wpisz metraż.</p>
-                        </div>
-
-                        <div className="space-y-4">
+                            {/* Product */}
                             <div className="space-y-2">
                                 <Label>Model paneli</Label>
                                 <div className="flex gap-2">
@@ -298,17 +243,168 @@ export function MeasurementAssistantModal({
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <Label>Metraż netto (m²)</Label>
-                                <Input
-                                    type="number"
-                                    step="0.01"
-                                    value={floorArea}
-                                    onChange={(e) => setFloorArea(e.target.value)}
-                                    className="h-12 text-lg"
-                                    placeholder="0.00"
-                                />
+                            {/* Tech */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>Metoda</Label>
+                                    <Select value={installationMethod} onValueChange={(v: 'click' | 'glue') => setInstallationMethod(v)}>
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="click">Pływająca (Click)</SelectItem>
+                                            <SelectItem value="glue">Klejona</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Wzór</Label>
+                                    <Select value={floorPattern} onValueChange={(v: 'classic' | 'herringbone') => setFloorPattern(v)}>
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="classic">Klasycznie</SelectItem>
+                                            <SelectItem value="herringbone">Jodełka</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
+
+                            {/* Area & Waste */}
+                            <div className="p-4 bg-muted/30 rounded-xl space-y-4 border">
+                                <div className="space-y-2">
+                                    <Label>Wymiar z natury (Netto m²)</Label>
+                                    <Input
+                                        type="number"
+                                        step="0.01"
+                                        value={floorArea}
+                                        onChange={(e) => setFloorArea(e.target.value)}
+                                        className="h-12 text-lg font-bold"
+                                        placeholder="0.00"
+                                    />
+                                </div>
+                                
+                                <div className="space-y-2">
+                                    <Label>Zapas na ścinki (%)</Label>
+                                    <div className="flex gap-2">
+                                        {['5', '7', '10', '12', '15'].map((val) => (
+                                            <button
+                                                key={val}
+                                                onClick={() => setPanelWaste(val)}
+                                                className={cn(
+                                                    "flex-1 py-2 rounded-md border text-sm font-medium transition-all",
+                                                    panelWaste === val 
+                                                        ? "bg-primary text-primary-foreground border-primary" 
+                                                        : "bg-background hover:bg-muted"
+                                                )}
+                                            >
+                                                {val}%
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="pt-4 border-t flex justify-between items-center">
+                                    <span className="text-muted-foreground font-medium">Do zamówienia:</span>
+                                    <span className="text-2xl font-bold text-primary">
+                                        {floorArea ? (parseFloat(floorArea) * (1 + parseInt(panelWaste)/100)).toFixed(2) : '0.00'} m²
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            case 4: // Materials
+                return (
+                    <div className="space-y-6">
+                        <div className="text-center space-y-2">
+                            <h2 className="text-2xl font-bold">Materiały Dodatkowe</h2>
+                            <p className="text-muted-foreground">Co trzeba dokupić lub co zużyjesz?</p>
+                        </div>
+
+                        <div className="space-y-4">
+                            {additionalMaterials.map((item, index) => (
+                                <div key={item.id} className="p-4 border rounded-xl bg-card space-y-3 relative">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="absolute top-2 right-2 text-destructive hover:bg-destructive/10"
+                                        onClick={() => {
+                                            const newItems = additionalMaterials.filter((_, i) => i !== index);
+                                            setAdditionalMaterials(newItems);
+                                        }}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                    
+                                    <div className="space-y-2">
+                                        <Label>Nazwa produktu</Label>
+                                        <Input 
+                                            value={item.name}
+                                            onChange={(e) => {
+                                                const newItems = [...additionalMaterials];
+                                                newItems[index].name = e.target.value;
+                                                setAdditionalMaterials(newItems);
+                                            }}
+                                            placeholder="np. Klej montażowy, Listwy"
+                                        />
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label>Ilość</Label>
+                                            <Input 
+                                                value={item.quantity}
+                                                onChange={(e) => {
+                                                    const newItems = [...additionalMaterials];
+                                                    newItems[index].quantity = e.target.value;
+                                                    setAdditionalMaterials(newItems);
+                                                }}
+                                                placeholder="np. 2 szt"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Kto zapewnia?</Label>
+                                            <Select
+                                                value={item.supplySide}
+                                                onValueChange={(val: 'installer' | 'company') => {
+                                                    const newItems = [...additionalMaterials];
+                                                    newItems[index].supplySide = val;
+                                                    setAdditionalMaterials(newItems);
+                                                }}
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="installer">Montażysta (Kupuję)</SelectItem>
+                                                    <SelectItem value="company">Firma (Z magazynu)</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+
+                            <Button
+                                variant="outline"
+                                className="w-full py-6 border-dashed"
+                                onClick={() => {
+                                    setAdditionalMaterials([
+                                        ...additionalMaterials,
+                                        {
+                                            id: crypto.randomUUID(),
+                                            name: '',
+                                            quantity: '',
+                                            supplySide: 'installer'
+                                        }
+                                    ]);
+                                }}
+                            >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Dodaj pozycję
+                            </Button>
                         </div>
                     </div>
                 );
@@ -322,7 +418,7 @@ export function MeasurementAssistantModal({
                         </div>
                         <h2 className="text-3xl font-bold">Gotowe!</h2>
                         <p className="text-muted-foreground text-lg max-w-md mx-auto">
-                            Wprowadziłeś wszystkie kluczowe dane. Możesz teraz zatwierdzić protokół i wysłać go do biura.
+                            Wprowadziłeś wszystkie kluczowe dane.
                         </p>
                         
                         <div className="bg-muted/30 p-4 rounded-xl text-left space-y-2 mt-8">
@@ -337,6 +433,10 @@ export function MeasurementAssistantModal({
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Metraż:</span>
                                 <span className="font-medium">{floorArea} m²</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">Materiały dod.:</span>
+                                <span className="font-medium">{additionalMaterials.length} poz.</span>
                             </div>
                         </div>
                     </div>
@@ -391,34 +491,48 @@ export function MeasurementAssistantModal({
             {/* Footer */}
             <div className="fixed bottom-0 left-0 right-0 p-4 border-t bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
                 <div className="max-w-lg mx-auto flex gap-4">
-                    <Button
-                        variant="outline"
-                        size="lg"
-                        className="flex-1"
-                        onClick={handleBack}
-                        disabled={currentStep === 0}
-                    >
-                        <ChevronLeft className="w-4 h-4 mr-2" />
-                        Wstecz
-                    </Button>
-                    <Button
-                        size="lg"
-                        className={cn("flex-1", currentStep === STEPS.length - 1 && "bg-green-600 hover:bg-green-700")}
-                        onClick={handleNext}
-                        disabled={currentStep === 0 && !measurementDate}
-                    >
-                        {currentStep === STEPS.length - 1 ? (
-                            <>
+                    {currentStep === STEPS.length - 1 ? (
+                        <>
+                            <Button
+                                variant="outline"
+                                size="lg"
+                                className="flex-1"
+                                onClick={handleSaveDraft}
+                            >
+                                Zapisz jako szkic
+                            </Button>
+                            <Button
+                                size="lg"
+                                className="flex-1 bg-green-600 hover:bg-green-700"
+                                onClick={handleNext}
+                            >
                                 Zatwierdź i Wyślij
                                 <Check className="w-4 h-4 ml-2" />
-                            </>
-                        ) : (
-                            <>
+                            </Button>
+                        </>
+                    ) : (
+                        <>
+                            <Button
+                                variant="outline"
+                                size="lg"
+                                className="flex-1"
+                                onClick={handleBack}
+                                disabled={currentStep === 0}
+                            >
+                                <ChevronLeft className="w-4 h-4 mr-2" />
+                                Wstecz
+                            </Button>
+                            <Button
+                                size="lg"
+                                className="flex-1"
+                                onClick={handleNext}
+                                disabled={currentStep === 0 && !measurementDate}
+                            >
                                 Dalej
                                 <ChevronRight className="w-4 h-4 ml-2" />
-                            </>
-                        )}
-                    </Button>
+                            </Button>
+                        </>
+                    )}
                 </div>
             </div>
         </div>

@@ -23,9 +23,10 @@ interface AuditFormProps {
   montageId: string;
   initialData: TechnicalAuditData | null;
   readOnly?: boolean;
+  hideSaveButton?: boolean;
 }
 
-export function AuditForm({ montageId, initialData, readOnly = false }: AuditFormProps) {
+export function AuditForm({ montageId, initialData, readOnly = false, hideSaveButton = false }: AuditFormProps) {
   const [isPending, startTransition] = useTransition();
   
   const defaultValues: TechnicalAuditData = {
@@ -174,6 +175,13 @@ export function AuditForm({ montageId, initialData, readOnly = false }: AuditFor
                 placeholder="Opisz ewentualne pęknięcia, dylatacje itp."
             />
         </div>
+
+        {!readOnly && !hideSaveButton && (
+            <Button onClick={handleSave} disabled={isPending} className="w-full">
+                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Zapisz Audyt
+            </Button>
+        )}
       </div>
     </div>
   );

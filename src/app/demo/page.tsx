@@ -85,7 +85,7 @@ export default function DemoPage() {
             alt="Podłoga Dąb Naturalny"
             className="w-full h-full object-cover opacity-90"
           />
-          <div className="absolute inset-0 bg-linear-to-t from-neutral-900 via-transparent to-black/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-transparent to-black/40" />
         </div>
 
         {/* Floating Badge */}
@@ -125,7 +125,7 @@ export default function DemoPage() {
       </section>
 
       {/* --- The Deal Section --- */}
-      <section className="px-6 py-8 -mt-4 relative z-20 bg-white rounded-t-4xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
+      <section className="px-6 py-8 -mt-4 relative z-20 bg-white rounded-t-[2rem] shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
         <div className="flex items-end justify-between mb-8 border-b border-neutral-100 pb-6">
           <div>
             <p className="text-neutral-400 text-sm line-through font-medium mb-1">
@@ -248,7 +248,7 @@ export default function DemoPage() {
                 const form = document.getElementById('order-form');
                 form?.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="flex-2 bg-black text-white h-12 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-black/20 active:scale-95 transition-transform"
+              className="flex-[2] bg-black text-white h-12 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-black/20 active:scale-95 transition-transform"
             >
               Zamawiam z rabatem
               <ChevronRight className="w-4 h-4" />
