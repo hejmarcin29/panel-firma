@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { format, addDays, differenceInCalendarDays } from "date-fns";
 import { pl } from "date-fns/locale";
-import { Calendar as CalendarIcon, Phone, Loader2, Check, Clock, CalendarDays, Edit2 } from "lucide-react";
+import { Calendar as CalendarIcon, Phone, Loader2, Check, Clock, CalendarDays, Edit2, Ruler } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -23,9 +23,10 @@ interface MeasurementSchedulerProps {
     clientPhone: string | null;
     onSuccess?: () => void;
     hasGoogleCalendar?: boolean;
+    onStartProtocol?: () => void;
 }
 
-export function MeasurementScheduler({ montageId, currentDate, clientPhone, onSuccess, hasGoogleCalendar = false }: MeasurementSchedulerProps) {
+export function MeasurementScheduler({ montageId, currentDate, clientPhone, onSuccess, hasGoogleCalendar = false, onStartProtocol }: MeasurementSchedulerProps) {
     const [date, setDate] = useState<Date | undefined>(currentDate || undefined);
     const [isSaving, setIsSaving] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
@@ -87,6 +88,7 @@ export function MeasurementScheduler({ montageId, currentDate, clientPhone, onSu
                         onReschedule={handleReschedule}
                         googleCalendarLink={date ? generateGoogleCalendarLink(date) : '#'}
                         hasGoogleCalendar={hasGoogleCalendar}
+                        onStartProtocol={onStartProtocol}
                     />
                 )}
             </AnimatePresence>
@@ -190,7 +192,7 @@ function SelectionView({ date, isOpen, setIsOpen, handleDateSelect, isSaving, cl
     );
 }
 
-function ConfirmationView({ date, onReschedule, googleCalendarLink, hasGoogleCalendar }: { date: Date, onReschedule: () => void, googleCalendarLink: string, hasGoogleCalendar: boolean }) {
+function ConfirmationView({ date, onReschedule, googleCalendarLink, hasGoogleCalendar, onStartProtocol }: { date: Date, onReschedule: () => void, googleCalendarLink: string, hasGoogleCalendar: boolean, onStartProtocol?: () => void }) {
     const daysLeft = differenceInCalendarDays(date, new Date());
     const isToday = daysLeft === 0;
     const isPast = daysLeft < 0;
@@ -266,10 +268,18 @@ function ConfirmationView({ date, onReschedule, googleCalendarLink, hasGoogleCal
                     </div>
 
                     <div className="flex flex-wrap gap-3 pt-2 border-t">
-                        <Button variant="outline" size="sm" onClick={onReschedule} className="text-muted-foreground">
-                            <Edit2 className="w-3.5 h-3.5 mr-2" />
-                            Zmień termin
-                        </Button>
+                        {(isToday || isPast) && onStartProtocol ? (
+                            <Button onClick={onStartProtocol} className="bg-green-600 hover:bg-green-700 text-white">
+                                <Ruler className="w-4 h-4 mr-2" />
+                                Rozpocznij Protokół
+                            </Button>
+                        ) : (
+                            <Button variant="outline" size="sm" onClick={onReschedule} className="text-muted-foreground">
+                                <Edit2 className="w-3.5 h-3.5 mr-2" />
+                                Zmień termin
+                            </Button>
+                        )}
+                        
                         {!hasGoogleCalendar && (
                             <Button variant="outline" size="sm" asChild className="text-blue-600 border-blue-100 hover:bg-blue-50">
                                 <a href={googleCalendarLink} target="_blank" rel="noopener noreferrer">

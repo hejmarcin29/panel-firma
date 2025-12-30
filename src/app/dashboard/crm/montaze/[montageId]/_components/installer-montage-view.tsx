@@ -162,6 +162,7 @@ export function InstallerMontageView({ montage, logs, userRoles, hasGoogleCalend
                                             currentDate={montage.measurementDate ? new Date(montage.measurementDate as string | number | Date) : null}
                                             clientPhone={montage.contactPhone}
                                             hasGoogleCalendar={hasGoogleCalendar}
+                                            onStartProtocol={() => setActiveTab("measurement")}
                                         />
                                     </div>
                                 )}
