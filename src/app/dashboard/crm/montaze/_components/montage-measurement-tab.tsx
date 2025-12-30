@@ -60,6 +60,8 @@ import { addMontageAttachment } from '../actions';
 import { MontageSubCategories } from '@/lib/r2/constants';
 
 import { MeasurementAssistantModal } from './measurement-assistant-modal';
+import { CostEstimationModal } from './cost-estimation-modal';
+import { updateMontageCostEstimation } from '../actions';
 
 interface MontageMeasurementTabProps {
   montage: Montage;
@@ -74,6 +76,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
   const isReadOnly = (!userRoles.includes('admin') && !userRoles.includes('installer')) || isLockedBySettlement;
 
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
+  const [isCostEstimationOpen, setIsCostEstimationOpen] = useState(false);
   const [isSketchOpen, setIsSketchOpen] = useState(false);
   const [sketchDataUrl, setSketchDataUrl] = useState<string | null>(montage.sketchUrl || null);
   
@@ -111,6 +114,12 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
       }
       return [];
   });
+  
+  // Additional Services State (for Cost Estimation)
+  // We don't have a direct field in montage for this yet, so we might need to fetch it or assume it's empty initially
+  // For now, let's initialize it as empty array. In a real scenario, we would fetch existing service items linked to this montage.
+  const [additionalServices, setAdditionalServices] = useState<{ id: string; name: string; quantity: number; unit: string; price: number }[]>([]);
+
   const [isHousingVat, setIsHousingVat] = useState(montage.isHousingVat ?? true);
 
   const [additionalInfo, setAdditionalInfo] = useState(montage.additionalInfo || '');
@@ -176,6 +185,23 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
   }, [montage.id]);
 
   const technicalAudit = montage.technicalAudit as unknown as TechnicalAuditData | null;
+
+  const saveCostEstimation = useCallback(async () => {
+      setIsSaving(true);
+      try {
+          await updateMontageCostEstimation({
+              montageId: montage.id,
+              measurementAdditionalMaterials: additionalMaterials,
+              additionalServices: additionalServices
+          });
+          setLastSaved(new Date());
+          router.refresh();
+      } catch (err) {
+          console.error("Cost estimation save failed", err);
+      } finally {
+          setIsSaving(false);
+      }
+  }, [montage.id, additionalMaterials, additionalServices, router]);
 
   const saveData = useCallback(async () => {
       setIsSaving(true);
@@ -360,24 +386,38 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
         </div>
         <div className="flex items-center gap-2 text-sm">
             {!isReadOnly && (
-                <div className="flex flex-col items-end gap-1">
-                    <Button 
-                        onClick={() => setIsAssistantOpen(true)}
-                        className={cn(
-                            "shadow-md transition-all",
-                            ((floorArea && parseFloat(floorArea) > 0) || measurementDate)
-                                ? "bg-amber-500 hover:bg-amber-600 text-white" 
-                                : "bg-blue-600 hover:bg-blue-700 text-white"
-                        )}
-                    >
-                        <span className="mr-2">{((floorArea && parseFloat(floorArea) > 0) || measurementDate) ? "✏️" : "🚀"}</span>
-                        {((floorArea && parseFloat(floorArea) > 0) || measurementDate) ? "Dokończ Szkic" : "Uruchom Asystenta"}
-                    </Button>
-                    {((floorArea && parseFloat(floorArea) > 0) || measurementDate) && montage.updatedAt && (
-                         <span className="text-xs text-muted-foreground">
-                            Ostatnia edycja: {formatDistanceToNow(new Date(montage.updatedAt), { addSuffix: true, locale: pl })}
-                         </span>
+                <div className="flex items-center gap-2">
+                    {/* Stage 2: Cost Estimation Button (Visible only if measurement is started) */}
+                    {((floorArea && parseFloat(floorArea) > 0) || measurementDate) && (
+                        <Button
+                            onClick={() => setIsCostEstimationOpen(true)}
+                            variant="outline"
+                            className="border-green-600 text-green-700 hover:bg-green-50"
+                        >
+                            <span className="mr-2">💰</span>
+                            Uzupełnij Kosztorys
+                        </Button>
                     )}
+
+                    <div className="flex flex-col items-end gap-1">
+                        <Button 
+                            onClick={() => setIsAssistantOpen(true)}
+                            className={cn(
+                                "shadow-md transition-all",
+                                ((floorArea && parseFloat(floorArea) > 0) || measurementDate)
+                                    ? "bg-amber-500 hover:bg-amber-600 text-white" 
+                                    : "bg-blue-600 hover:bg-blue-700 text-white"
+                            )}
+                        >
+                            <span className="mr-2">{((floorArea && parseFloat(floorArea) > 0) || measurementDate) ? "✏️" : "🚀"}</span>
+                            {((floorArea && parseFloat(floorArea) > 0) || measurementDate) ? "Edytuj Pomiar" : "Uruchom Asystenta"}
+                        </Button>
+                        {((floorArea && parseFloat(floorArea) > 0) || measurementDate) && montage.updatedAt && (
+                             <span className="text-xs text-muted-foreground">
+                                Ostatnia edycja: {formatDistanceToNow(new Date(montage.updatedAt), { addSuffix: true, locale: pl })}
+                             </span>
+                        )}
+                    </div>
                 </div>
             )}
             {isSaving ? (
@@ -420,6 +460,21 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
         setIsPanelSelectorOpen={setIsPanelSelectorOpen}
         additionalMaterials={additionalMaterials}
         setAdditionalMaterials={setAdditionalMaterials}
+      />
+
+      <CostEstimationModal
+        isOpen={isCostEstimationOpen}
+        onClose={() => setIsCostEstimationOpen(false)}
+        onSave={() => {
+            saveCostEstimation();
+            setIsCostEstimationOpen(false);
+        }}
+        measurementDate={measurementDate}
+        additionalWorkDescription={additionalWorkDescription}
+        additionalMaterials={additionalMaterials}
+        setAdditionalMaterials={setAdditionalMaterials}
+        additionalServices={additionalServices}
+        setAdditionalServices={setAdditionalServices}
       />
 
 <Tabs defaultValue="main" className="w-full">

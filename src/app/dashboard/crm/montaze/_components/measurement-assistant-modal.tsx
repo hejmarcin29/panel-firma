@@ -408,64 +408,7 @@ export function MeasurementAssistantModal({
                                         </div>
                                     </div>
 
-                                    {item.supplySide === 'installer' && (
-                                        <div className="space-y-2 bg-blue-50/50 p-3 rounded-lg border border-blue-100">
-                                            <div className="flex items-center justify-between">
-                                                <Label className="text-blue-900">Koszt zakupu</Label>
-                                                <div className="flex items-center gap-2">
-                                                    <Label htmlFor={`gross-${item.id}`} className="text-xs cursor-pointer select-none">Kwota z paragonu (Brutto 23%)</Label>
-                                                    <input 
-                                                        type="checkbox" 
-                                                        id={`gross-${item.id}`}
-                                                        className="accent-blue-600 h-4 w-4"
-                                                        onChange={(e) => {
-                                                            // Just a UI toggle, doesn't change stored value directly but affects input behavior
-                                                            const el = document.getElementById(`cost-input-${item.id}`) as HTMLInputElement;
-                                                            if (el) {
-                                                                el.dataset.isGross = e.target.checked ? 'true' : 'false';
-                                                                // Trigger recalculation if value exists
-                                                                if (item.estimatedCost) {
-                                                                    if (e.target.checked) {
-                                                                        el.value = (item.estimatedCost * 1.23).toFixed(2);
-                                                                    } else {
-                                                                        el.value = item.estimatedCost.toFixed(2);
-                                                                    }
-                                                                }
-                                                            }
-                                                        }}
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div className="relative">
-                                                <Input
-                                                    id={`cost-input-${item.id}`}
-                                                    type="number"
-                                                    step="0.01"
-                                                    placeholder="0.00"
-                                                    defaultValue={item.estimatedCost?.toFixed(2)}
-                                                    onChange={(e) => {
-                                                        const isGross = e.target.dataset.isGross === 'true';
-                                                        const val = parseFloat(e.target.value);
-                                                        
-                                                        const newItems = [...additionalMaterials];
-                                                        if (!isNaN(val)) {
-                                                            newItems[index].estimatedCost = isGross ? val / 1.23 : val;
-                                                        } else {
-                                                            newItems[index].estimatedCost = undefined;
-                                                        }
-                                                        setAdditionalMaterials(newItems);
-                                                    }}
-                                                    className="pl-8"
-                                                />
-                                                <span className="absolute left-3 top-2.5 text-muted-foreground">PLN</span>
-                                                {item.estimatedCost && (
-                                                    <span className="absolute right-3 top-2.5 text-xs text-muted-foreground">
-                                                        = {item.estimatedCost.toFixed(2)} PLN netto
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
+                                    {/* Cost inputs removed for Stage 1 - moved to Cost Estimation Stage */}
                                 </div>
                             ))}
 
