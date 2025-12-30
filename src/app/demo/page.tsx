@@ -248,7 +248,6 @@ export default function DemoPage() {
               onClick={() => {
                 const form = document.getElementById('order-form');
                 form?.scrollIntoView({ behavior: 'smooth' });
-                setIsFormFocused(true);
               }}
               className="flex-[2] bg-black text-white h-12 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-black/20 active:scale-95 transition-transform"
             >
