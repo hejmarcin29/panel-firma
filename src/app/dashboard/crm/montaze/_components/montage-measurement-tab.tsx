@@ -2,8 +2,7 @@
 
 import { useState, useRef, useEffect, useTransition, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { CalendarIcon, Eraser, Plus, Pencil, Ruler, Play, Lock, Unlock, Loader2, Check, Trash2, Upload, FileIcon, ExternalLink, Info, Search } from 'lucide-react';
-import { MeasurementWizard } from './measurement-wizard';
+import { CalendarIcon, Eraser, Plus, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { DateRange } from 'react-day-picker';
@@ -50,13 +49,18 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from '@/lib/utils';
 import type { Montage, MeasurementMaterialItem } from '../types';
-import { updateMontageMeasurement, addMontageTask, toggleMontageTask, addMontageAttachment } from '../actions';
+import { updateMontageMeasurement, addMontageTask, toggleMontageTask } from '../actions';
+
+import { Loader2, Check, Upload, FileIcon, ExternalLink, Trash2, Info, Search } from 'lucide-react';
 
 import { ProductSelectorModal } from './product-selector-modal';
 import { ServiceSelector } from './service-selector';
 import { AuditForm } from './technical/audit-form';
 import type { TechnicalAuditData } from '../technical-data';
+import { addMontageAttachment } from '../actions';
 import { MontageSubCategories } from '@/lib/r2/constants';
+
+import { MeasurementAssistantModal } from './measurement-assistant-modal';
 
 interface MontageMeasurementTabProps {
   montage: Montage;
@@ -67,17 +71,10 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   
-  const isProtocolCompleted = montage.protocolStatus === 'completed';
-  const [isWizardOpen, setIsWizardOpen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-
   const isLockedBySettlement = montage.settlement?.status === 'approved' || montage.settlement?.status === 'paid';
-  // Read-only if:
-  // 1. User is not admin/installer
-  // 2. Settlement is locked
-  // 3. Protocol is completed AND not in explicit edit mode
-  const isReadOnly = (!userRoles.includes('admin') && !userRoles.includes('installer')) || isLockedBySettlement || (isProtocolCompleted && !isEditMode);
+  const isReadOnly = (!userRoles.includes('admin') && !userRoles.includes('installer')) || isLockedBySettlement;
 
+  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [isSketchOpen, setIsSketchOpen] = useState(false);
   const [sketchDataUrl, setSketchDataUrl] = useState<string | null>(montage.sketchUrl || null);
   
@@ -136,6 +133,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
 
   const [isPanelSelectorOpen, setIsPanelSelectorOpen] = useState(false);
   const [isAccessorySelectorOpen, setIsAccessorySelectorOpen] = useState(false);
+  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [currentAccessoryIndex, setCurrentAccessoryIndex] = useState<number | null>(null);
 
   useEffect(() => {
@@ -378,33 +376,21 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
       )}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-medium flex items-center gap-2">
-            Karta Pomiarowa
-            {isProtocolCompleted && (
-                <span className="text-xs font-normal px-2 py-0.5 bg-green-100 text-green-700 rounded-full border border-green-200">
-                    Zatwierdzona
-                </span>
-            )}
-          </h3>
+          <h3 className="text-lg font-medium">Karta Pomiarowa</h3>
           <p className="text-sm text-muted-foreground">
-            {isProtocolCompleted 
-                ? "Protokół został zatwierdzony. Dane są w trybie tylko do odczytu." 
-                : "Wprowadź szczegóły pomiaru, szkice i dodatkowe informacje."}
+            Wprowadź szczegóły pomiaru, szkice i dodatkowe informacje.
           </p>
         </div>
         <div className="flex items-center gap-2 text-sm">
-            {isProtocolCompleted && userRoles.includes('admin') && (
+            {!isReadOnly && (
                 <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setIsEditMode(!isEditMode)}
-                    className="gap-2"
+                    onClick={() => setIsAssistantOpen(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white shadow-md"
                 >
-                    {isEditMode ? <Lock className="w-3 h-3" /> : <Unlock className="w-3 h-3" />}
-                    {isEditMode ? "Zablokuj edycję" : "Odblokuj edycję"}
+                    <span className="mr-2">🚀</span>
+                    Uruchom Asystenta
                 </Button>
             )}
-            
             {isSaving ? (
                 <span className="text-muted-foreground flex items-center gap-1">
                     <Loader2 className="h-3 w-3 animate-spin" /> Zapisywanie...
@@ -417,35 +403,36 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
         </div>
       </div>
 
-      {isWizardOpen && (
-        <MeasurementWizard 
-            montage={montage} 
-            onClose={() => setIsWizardOpen(false)} 
-            onComplete={() => {
-                setIsWizardOpen(false);
-                router.refresh();
-            }} 
-        />
-      )}
+      <MeasurementAssistantModal
+        isOpen={isAssistantOpen}
+        onClose={() => setIsAssistantOpen(false)}
+        onSave={() => {
+            saveData();
+            setIsAssistantOpen(false);
+        }}
+        measurementDate={measurementDate}
+        setMeasurementDate={setMeasurementDate}
+        isHousingVat={isHousingVat}
+        setIsHousingVat={setIsHousingVat}
+        subfloorCondition={subfloorCondition}
+        setSubfloorCondition={setSubfloorCondition}
+        technicalAudit={technicalAudit}
+        montageId={montage.id}
+        installationMethod={installationMethod}
+        setInstallationMethod={setInstallationMethod}
+        floorPattern={floorPattern}
+        setFloorPattern={setFloorPattern}
+        setPanelWaste={setPanelWaste}
+        floorArea={floorArea}
+        setFloorArea={setFloorArea}
+        panelModel={panelModel}
+        setPanelModel={setPanelModel}
+        setIsPanelSelectorOpen={setIsPanelSelectorOpen}
+        additionalMaterials={additionalMaterials}
+        setAdditionalMaterials={setAdditionalMaterials}
+      />
 
-      {!isProtocolCompleted ? (
-        <div className="flex flex-col items-center justify-center py-16 space-y-6 bg-muted/30 rounded-xl border-2 border-dashed">
-            <div className="p-6 bg-primary/10 rounded-full ring-8 ring-primary/5">
-                <Ruler className="w-12 h-12 text-primary" />
-            </div>
-            <div className="text-center space-y-2 max-w-md px-4">
-                <h3 className="text-xl font-semibold">Protokół Pomiarowy</h3>
-                <p className="text-muted-foreground">
-                    Rozpocznij procedurę pomiarową w trybie kreatora, aby zebrać wszystkie niezbędne dane techniczne i wygenerować protokół.
-                </p>
-            </div>
-            <Button size="lg" onClick={() => setIsWizardOpen(true)} className="gap-2 h-12 px-8 text-base shadow-lg shadow-primary/20">
-                <Play className="w-5 h-5" />
-                Rozpocznij Protokół
-            </Button>
-        </div>
-      ) : (
-        <Tabs defaultValue="main" className="w-full">
+<Tabs defaultValue="main" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="main">Główne Dane</TabsTrigger>
           <TabsTrigger value="additional">Prace i Materiały</TabsTrigger>
@@ -511,56 +498,15 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
-                {/* Technical Details (Moved Up) */}
+                {/* Technical Audit */}
                     <Card>
                         <CardHeader className="pb-3">
-                            <CardTitle className="text-base font-medium">Szczegóły techniczne</CardTitle>
+                            <CardTitle className="text-base font-medium">Audyt Techniczny Podłoża</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
-                                <Label>Wzór ułożenia</Label>
-                                <RadioGroup 
-                                    value={floorPattern} 
-                                    onValueChange={(v) => {
-                                        const val = v as 'classic' | 'herringbone';
-                                        setFloorPattern(val);
-                                        if (val === 'herringbone') {
-                                            setPanelWaste('12');
-                                        } else {
-                                            setPanelWaste('5');
-                                        }
-                                    }} 
-                                    className="flex gap-4" 
-                                    disabled={isReadOnly}
-                                >
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="classic" id="pattern-classic" />
-                                        <Label htmlFor="pattern-classic">Klasycznie</Label>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="herringbone" id="pattern-herringbone" />
-                                        <Label htmlFor="pattern-herringbone">Jodełka</Label>
-                                    </div>
-                                </RadioGroup>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label>Sposób montażu</Label>
-                                <RadioGroup value={installationMethod} onValueChange={(v) => setInstallationMethod(v as 'click' | 'glue')} className="flex gap-4" disabled={isReadOnly}>
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="click" id="method-click" />
-                                        <Label htmlFor="method-click">Pływająca (Click)</Label>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="glue" id="method-glue" />
-                                        <Label htmlFor="method-glue">Klejona</Label>
-                                    </div>
-                                </RadioGroup>
-                            </div>
-
-                            <div className="space-y-2">
                                 <Label>Stan podłoża (wstępna ocena)</Label>
-                                <Select value={subfloorCondition} onValueChange={setSubfloorCondition}>
+                                <Select value={subfloorCondition} onValueChange={setSubfloorCondition} disabled={isReadOnly}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Wybierz stan podłoża" />
                                     </SelectTrigger>
@@ -628,163 +574,6 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
                             </div>
                         </CardContent>
                     </Card>
-
-                {/* Floor Calculator (Moved Down) */}
-                <Card>
-                    <CardHeader className="pb-3">
-                        <CardTitle className="text-base font-medium flex items-center gap-2">
-                            <span className="h-2 w-2 rounded-full bg-blue-500"></span>
-                            Podłoga
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-1">
-                                <Label htmlFor="floorArea" className="text-xs text-muted-foreground flex items-center gap-2">
-                                    Wymiar netto (m²)
-                                    {montage.estimatedFloorArea && (
-                                        <span className="text-[10px] font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
-                                            (Klient: {montage.estimatedFloorArea} m²)
-                                        </span>
-                                    )}
-                                </Label>
-                                <Input
-                                id="floorArea"
-                                type="number"
-                                step="0.01"
-                                placeholder="0.00"
-                                value={floorArea}
-                                onChange={(e) => setFloorArea(e.target.value)}
-                                disabled={isReadOnly}
-                                />
-                            </div>
-                            <div className="space-y-1">
-                                <Label htmlFor="panelWaste" className="text-xs text-muted-foreground">Zapas (%)</Label>
-                                <Select value={panelWaste} onValueChange={setPanelWaste} disabled={isReadOnly}>
-                                    <SelectTrigger id="panelWaste">
-                                        <SelectValue placeholder="Zapas" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="0">0%</SelectItem>
-                                        <SelectItem value="5">5%</SelectItem>
-                                        <SelectItem value="7">7%</SelectItem>
-                                        <SelectItem value="10">10%</SelectItem>
-                                        <SelectItem value="12">12%</SelectItem>
-                                        <SelectItem value="15">15%</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                        
-                        <div className="space-y-2 pt-2 border-t border-dashed">
-                            <div className="space-y-1">
-                                <Label htmlFor="panelModel" className="text-xs text-muted-foreground">Model paneli</Label>
-                                <div className="flex gap-2">
-                                    <Input
-                                        id="panelModel"
-                                        placeholder="Kliknij aby wybrać z listy..."
-                                        value={panelModel}
-                                        readOnly
-                                        onClick={() => !isReadOnly && setIsPanelSelectorOpen(true)}
-                                        className="h-8 text-sm flex-1 cursor-pointer bg-muted/50"
-                                        disabled={isReadOnly}
-                                    />
-                                    <Button 
-                                        type="button" 
-                                        variant="outline" 
-                                        size="sm" 
-                                        className="h-8 px-2"
-                                        onClick={() => setIsPanelSelectorOpen(true)}
-                                        disabled={isReadOnly}
-                                    >
-                                        Wybierz
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="pt-2 border-t flex justify-between items-center">
-                            <span className="text-sm font-medium text-muted-foreground">Do zamówienia:</span>
-                            <span className="text-lg font-bold">
-                                {floorArea ? (parseFloat(floorArea) * (1 + parseInt(panelWaste)/100)).toFixed(2) : '0.00'} m²
-                            </span>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            <div className="grid gap-6 md:grid-cols-2">
-                {/* Services */}
-                <ServiceSelector 
-                    montageId={montage.id}
-                    floorArea={parseFloat(floorArea) || 0}
-                    isReadOnly={isReadOnly}
-                />
-
-                {/* Measurement Tasks */}
-                <Card>
-                    <CardHeader className="pb-3">
-                        <CardTitle className="text-base font-medium">Zadania z pomiaru</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            {measurementTasks.map(task => (
-                                <div key={task.id} className="flex items-center gap-2 p-2 bg-muted/30 rounded border">
-                                    <Checkbox 
-                                        checked={task.completed} 
-                                        disabled={isReadOnly}
-                                        onCheckedChange={(checked) => {
-                                            startTransition(async () => {
-                                                await toggleMontageTask({
-                                                    taskId: task.id,
-                                                    montageId: montage.id,
-                                                    completed: !!checked
-                                                });
-                                                router.refresh();
-                                            });
-                                        }}
-                                    />
-                                    <span className={cn("text-sm", task.completed && "line-through text-muted-foreground")}>
-                                        {task.title}
-                                    </span>
-                                </div>
-                            ))}
-                            {measurementTasks.length === 0 && (
-                                <p className="text-sm text-muted-foreground italic">Brak zadań z pomiaru.</p>
-                            )}
-                            {!isReadOnly && (
-                                <div className="flex gap-2 mt-2">
-                                    <Input 
-                                        placeholder="Dodaj nowe zadanie..." 
-                                        value={newTaskTitle}
-                                        onChange={(e) => setNewTaskTitle(e.target.value)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter') {
-                                                e.preventDefault();
-                                                handleAddTask();
-                                            }
-                                        }}
-                                    />
-                                    <Button type="button" onClick={handleAddTask} disabled={!newTaskTitle.trim() || isPending} size="icon">
-                                        <Plus className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="space-y-2 pt-4 border-t">
-                            <div className="flex items-center space-x-2">
-                                <Checkbox 
-                                    disabled={isReadOnly}
-                                    id="modelsApproved" 
-                                    checked={modelsApproved} 
-                                    onCheckedChange={(checked) => setModelsApproved(checked as boolean)} 
-                                />
-                                <Label htmlFor="modelsApproved">Wybrane modele zaakceptowane przez klienta</Label>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
             </div>
 
             {/* Sketch */}
@@ -947,6 +736,149 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
         </TabsContent>
 
         <TabsContent value="additional" className="space-y-6 mt-4">
+            <div className="grid gap-6 md:grid-cols-2">
+                {/* Installation Specs */}
+                <Card>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-base font-medium">Specyfikacja Montażu</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <Label>Wzór ułożenia</Label>
+                            <RadioGroup 
+                                value={floorPattern} 
+                                onValueChange={(v) => {
+                                    const val = v as 'classic' | 'herringbone';
+                                    setFloorPattern(val);
+                                    if (val === 'herringbone') {
+                                        setPanelWaste('12');
+                                    } else {
+                                        setPanelWaste('5');
+                                    }
+                                }} 
+                                className="flex gap-4" 
+                                disabled={isReadOnly}
+                            >
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="classic" id="pattern-classic" />
+                                    <Label htmlFor="pattern-classic">Klasycznie</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="herringbone" id="pattern-herringbone" />
+                                    <Label htmlFor="pattern-herringbone">Jodełka</Label>
+                                </div>
+                            </RadioGroup>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>Sposób montażu</Label>
+                            <RadioGroup value={installationMethod} onValueChange={(v) => setInstallationMethod(v as 'click' | 'glue')} className="flex gap-4" disabled={isReadOnly}>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="click" id="method-click" />
+                                    <Label htmlFor="method-click">Pływająca (Click)</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="glue" id="method-glue" />
+                                    <Label htmlFor="method-glue">Klejona</Label>
+                                </div>
+                            </RadioGroup>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Floor Calculator */}
+                <Card>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-base font-medium flex items-center gap-2">
+                            <span className="h-2 w-2 rounded-full bg-blue-500"></span>
+                            Podłoga
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                                <Label htmlFor="floorArea" className="text-xs text-muted-foreground flex items-center gap-2">
+                                    Wymiar netto (m²)
+                                    {montage.estimatedFloorArea && (
+                                        <span className="text-[10px] font-normal text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                                            (Klient: {montage.estimatedFloorArea} m²)
+                                        </span>
+                                    )}
+                                </Label>
+                                <Input
+                                id="floorArea"
+                                type="number"
+                                step="0.01"
+                                placeholder="0.00"
+                                value={floorArea}
+                                onChange={(e) => setFloorArea(e.target.value)}
+                                disabled={isReadOnly}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <Label htmlFor="panelWaste" className="text-xs text-muted-foreground">Zapas (%)</Label>
+                                <Select value={panelWaste} onValueChange={setPanelWaste} disabled={isReadOnly}>
+                                    <SelectTrigger id="panelWaste">
+                                        <SelectValue placeholder="Zapas" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="0">0%</SelectItem>
+                                        <SelectItem value="5">5%</SelectItem>
+                                        <SelectItem value="7">7%</SelectItem>
+                                        <SelectItem value="10">10%</SelectItem>
+                                        <SelectItem value="12">12%</SelectItem>
+                                        <SelectItem value="15">15%</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        
+                        <div className="space-y-2 pt-2 border-t border-dashed">
+                            <div className="space-y-1">
+                                <Label htmlFor="panelModel" className="text-xs text-muted-foreground">Model paneli</Label>
+                                <div className="flex gap-2">
+                                    <Input
+                                        id="panelModel"
+                                        placeholder="Kliknij aby wybrać z listy..."
+                                        value={panelModel}
+                                        readOnly
+                                        onClick={() => !isReadOnly && setIsPanelSelectorOpen(true)}
+                                        className="h-8 text-sm flex-1 cursor-pointer bg-muted/50"
+                                        disabled={isReadOnly}
+                                    />
+                                    <Button 
+                                        type="button" 
+                                        variant="outline" 
+                                        size="sm" 
+                                        className="h-8 px-2"
+                                        onClick={() => setIsPanelSelectorOpen(true)}
+                                        disabled={isReadOnly}
+                                    >
+                                        Wybierz
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="pt-2 border-t flex justify-between items-center">
+                            <span className="text-sm font-medium text-muted-foreground">Do zamówienia:</span>
+                            <span className="text-lg font-bold">
+                                {floorArea ? (parseFloat(floorArea) * (1 + parseInt(panelWaste)/100)).toFixed(2) : '0.00'} m²
+                            </span>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2">
+                {/* Services */}
+                <ServiceSelector 
+                    montageId={montage.id}
+                    floorArea={parseFloat(floorArea) || 0}
+                    isReadOnly={isReadOnly}
+                />
+            </div>
+
             {/* Additional Work */}
             <div className="grid gap-6 md:grid-cols-2">
                 <Card>
@@ -1115,7 +1047,6 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
             </div>
         </TabsContent>
       </Tabs>
-      )}
 
 
 
