@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { Check, Clock, Truck, Ruler, FileText, Hammer, CheckCircle2 } from 'lucide-react';
+import { Check, Clock, Truck, Ruler, FileText, Hammer, CheckCircle2, Calculator } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 
