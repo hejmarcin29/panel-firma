@@ -80,6 +80,7 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [isCostEstimationOpen, setIsCostEstimationOpen] = useState(false);
   const [baseServicePrice, setBaseServicePrice] = useState<number | undefined>(undefined);
+  const [baseServiceName, setBaseServiceName] = useState<string>('Montaż podłogi');
 
   useEffect(() => {
       if (defaultOpenModal === 'assistant') {
@@ -120,6 +121,7 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
                   );
                   if (service) {
                       setBaseServicePrice(service.basePriceNet || 0);
+                      setBaseServiceName(service.name);
                   }
               } catch (e) {
                   console.error("Failed to fetch base service price", e);
@@ -505,7 +507,7 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
         measurementDate={measurementDate}
         additionalWorkDescription={additionalWorkDescription}
         baseService={{
-            name: montage.panelModel || 'Montaż podłogi',
+            name: baseServiceName,
             quantity: montage.floorArea || 0,
             unit: 'm2',
             price: baseServicePrice
