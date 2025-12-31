@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { Check, Clock, Truck, Ruler, FileText, Hammer, CheckCircle2, Calculator } from 'lucide-react';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
+import { PORTAL_STEPS, type PortalStepDefinition } from '@/lib/customer-portal-definitions';
 
 interface MontageTimelineProps {
     montage: {
@@ -27,11 +28,18 @@ type TimelineStep = {
     status: 'completed' | 'current' | 'upcoming';
 };
 
+const ICON_MAP: Record<PortalStepDefinition['iconName'], React.ElementType> = {
+    'FileText': FileText,
+    'Ruler': Ruler,
+    'Calculator': Calculator,
+    'CheckCircle2': CheckCircle2,
+    'Truck': Truck,
+    'Hammer': Hammer,
+    'Check': Check
+};
+
 export function MontageTimeline({ montage }: MontageTimelineProps) {
     const { status, createdAt, scheduledInstallationAt: scheduledDate, forecastedInstallationDate: forecastedDate, installationCity: city, measurementDate, floorArea, quotes } = montage;
-    
-    // Mapowanie statusów z bazy na kroki osi czasu
-    // DB: ['lead', 'before_measurement', 'before_first_payment', 'before_installation', 'before_final_invoice', 'completed']
     
     const getStepState = (targetStatus: string, currentStatus: string): 'completed' | 'current' | 'upcoming' => {
         const statusOrder = ['lead', 'before_measurement', 'before_first_payment', 'before_installation', 'before_final_invoice', 'completed'];
@@ -43,67 +51,62 @@ export function MontageTimeline({ montage }: MontageTimelineProps) {
         return 'upcoming';
     };
 
-    // Check if measurement is actually done (floorArea > 0) even if status is still before_measurement
+    // Logic Helpers
     const isMeasurementDone = (floorArea && floorArea > 0) || getStepState('before_measurement', status) === 'completed';
-    
-    // Check if quote is created
     const hasQuote = quotes && quotes.length > 0;
     const isQuoteAccepted = quotes && quotes.some(q => q.status === 'accepted');
+    const isDepositPaid = getStepState('before_first_payment', status) === 'completed';
 
-    const steps: TimelineStep[] = [
-        {
-            id: 'lead',
-            label: 'Zgłoszenie przyjęte',
-            description: 'Twoje zapytanie trafiło do systemu',
-            icon: FileText,
-            date: createdAt,
-            status: getStepState('lead', status)
-        },
-        {
-            id: 'before_measurement',
-            label: 'Pomiar',
-            description: measurementDate ? 'Zaplanowany termin pomiaru' : 'Weryfikacja wymiarów i warunków',
-            icon: Ruler,
-            date: measurementDate,
-            status: isMeasurementDone ? 'completed' : getStepState('before_measurement', status)
-        },
-        {
-            id: 'quote_preparation',
-            label: 'Przygotowanie Oferty',
-            description: 'Analiza pomiaru i wycena',
-            icon: Calculator,
-            status: hasQuote ? 'completed' : (isMeasurementDone ? 'current' : 'upcoming')
-        },
-        {
-            id: 'quote_acceptance',
-            label: 'Akceptacja Oferty',
-            description: 'Czekamy na Twoją decyzję',
-            icon: CheckCircle2,
-            status: isQuoteAccepted ? 'completed' : (hasQuote ? 'current' : 'upcoming')
-        },
-        {
-            id: 'before_first_payment',
-            label: 'Zaliczka',
-            description: 'Potwierdzenie zamówienia',
-            icon: CheckCircle2,
-            status: getStepState('before_first_payment', status) === 'completed' ? 'completed' : (isQuoteAccepted ? 'current' : 'upcoming')
-        },
-        {
-            id: 'before_installation',
-            label: 'W realizacji',
-            description: 'Kompletowanie materiałów',
-            icon: Truck,
-            status: getStepState('before_installation', status)
-        },
-        {
-            id: 'floor_install',
-            label: 'Montaż',
-            description: scheduledDate ? 'Zaplanowany termin prac' : 'Oczekiwanie na termin',
-            icon: Hammer,
-            date: scheduledDate || forecastedDate,
-            status: getStepState('before_final_invoice', status)
+    // Map definitions to runtime steps
+    const steps: TimelineStep[] = PORTAL_STEPS.map(def => {
+        let stepStatus: 'completed' | 'current' | 'upcoming' = 'upcoming';
+        let date: Date | null | undefined = undefined;
+        let dynamicDescription = def.description;
+
+        switch (def.id) {
+            case 'lead':
+                stepStatus = getStepState('lead', status);
+                date = createdAt;
+                break;
+            case 'before_measurement':
+                stepStatus = isMeasurementDone ? 'completed' : getStepState('before_measurement', status);
+                date = measurementDate;
+                if (measurementDate) dynamicDescription = 'Zaplanowany termin pomiaru';
+                break;
+            case 'quote_preparation':
+                stepStatus = hasQuote ? 'completed' : (isMeasurementDone ? 'current' : 'upcoming');
+                break;
+            case 'quote_acceptance':
+                stepStatus = isQuoteAccepted ? 'completed' : (hasQuote ? 'current' : 'upcoming');
+                break;
+            case 'before_first_payment':
+                stepStatus = isDepositPaid ? 'completed' : (isQuoteAccepted ? 'current' : 'upcoming');
+                break;
+            case 'before_installation':
+                stepStatus = getStepState('before_installation', status);
+                break;
+            case 'floor_install':
+                stepStatus = getStepState('before_final_invoice', status);
+                date = scheduledDate || forecastedDate;
+                if (scheduledDate) dynamicDescription = 'Zaplanowany termin prac';
+                else if (forecastedDate) dynamicDescription = 'Oczekiwanie na termin';
+                break;
+            case 'completed':
+                stepStatus = getStepState('completed', status);
+                break;
         }
-    ];
+
+        return {
+            id: def.id,
+            label: def.label,
+            description: dynamicDescription,
+            icon: ICON_MAP[def.iconName],
+            date: date,
+            status: stepStatus
+        };
+    });
+
+    return (
 
     steps.push({
         id: 'completed',

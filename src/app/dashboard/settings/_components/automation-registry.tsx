@@ -13,6 +13,7 @@ import type { MontageAutomationRule } from '@/lib/montaze/automation';
 import type { StatusOption } from '../../crm/montaze/types';
 import { SYSTEM_NOTIFICATIONS } from '@/lib/montaze/notifications';
 import { updateMontageNotificationsAction } from '../actions';
+import { PortalTimelineDocs } from '../automations/_components/portal-timeline-docs';
 
 interface AutomationRegistryProps {
   templates: MontageChecklistTemplate[];
@@ -149,6 +150,18 @@ export function AutomationRegistry({
                     );
                 })}
             </div>
+        </div>
+        {/* Section 3: Customer Portal Timeline Docs */}
+        <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <div>
+                    <h3 className="text-lg font-medium">Panel Klienta - Oś Czasu</h3>
+                    <p className="text-sm text-muted-foreground">
+                        Dokumentacja logiki wyświetlania postępu w panelu klienta.
+                    </p>
+                </div>
+            </div>
+            <PortalTimelineDocs />
         </div>
     </div>
   );
