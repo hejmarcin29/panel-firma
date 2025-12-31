@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { eq, isNull, and } from 'drizzle-orm';
+import { eq, isNull, and, inArray } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { services, userServiceRates } from '@/lib/db/schema';
 import { requireUser } from '@/lib/auth/session';
@@ -10,8 +10,8 @@ import { generateId } from '@/lib/utils';
 const SETTINGS_PATH = '/dashboard/settings';
 
 const SYSTEM_SERVICES = [
-    { id: 'svc_montaz_deska_klik', name: 'Montaż deski (klik)', unit: 'm2', basePriceNet: 35.00, baseInstallerRate: 25.00, vatRate: 8 },
-    { id: 'svc_montaz_deska_klej', name: 'Montaż deski (klej)', unit: 'm2', basePriceNet: 45.00, baseInstallerRate: 30.00, vatRate: 8 },
+    { id: 'svc_montaz_deska_klik', name: 'Montaż klasyczny (klik)', unit: 'm2', basePriceNet: 35.00, baseInstallerRate: 25.00, vatRate: 8 },
+    { id: 'svc_montaz_deska_klej', name: 'Montaż klasyczny (klej)', unit: 'm2', basePriceNet: 45.00, baseInstallerRate: 30.00, vatRate: 8 },
     { id: 'svc_montaz_jodelka_klik', name: 'Montaż jodełki (klik)', unit: 'm2', basePriceNet: 55.00, baseInstallerRate: 35.00, vatRate: 8 },
     { id: 'svc_montaz_jodelka_klej', name: 'Montaż jodełki (klej)', unit: 'm2', basePriceNet: 65.00, baseInstallerRate: 40.00, vatRate: 8 },
 ];
@@ -20,27 +20,45 @@ export async function getServices() {
     await requireUser();
 
     // Self-healing: Ensure system services exist
-    const allServices = await db.query.services.findMany({
+    const systemIds = SYSTEM_SERVICES.map(s => s.id);
+    
+    // Check all system services in DB (including deleted ones)
+    const existingSystemServices = await db.query.services.findMany({
+        where: inArray(services.id, systemIds),
+    });
+
+    const existingMap = new Map(existingSystemServices.map(s => [s.id, s]));
+    
+    const toInsert = SYSTEM_SERVICES.filter(s => !existingMap.has(s.id));
+    const toRestore = SYSTEM_SERVICES.filter(s => {
+        const existing = existingMap.get(s.id);
+        return existing && existing.deletedAt !== null;
+    });
+
+    let hasChanges = false;
+
+    if (toInsert.length > 0) {
+        console.log('Auto-seeding missing system services:', toInsert.map(s => s.name));
+        await db.insert(services).values(toInsert);
+        hasChanges = true;
+    }
+
+    if (toRestore.length > 0) {
+        console.log('Restoring deleted system services:', toRestore.map(s => s.name));
+        await db.update(services)
+            .set({ deletedAt: null })
+            .where(inArray(services.id, toRestore.map(s => s.id)));
+        hasChanges = true;
+    }
+
+    if (hasChanges) {
+        revalidatePath(SETTINGS_PATH);
+    }
+
+    return db.query.services.findMany({
         where: isNull(services.deletedAt),
         orderBy: (services, { asc }) => [asc(services.name)],
     });
-
-    const existingIds = new Set(allServices.map(s => s.id));
-    const missingServices = SYSTEM_SERVICES.filter(s => !existingIds.has(s.id));
-
-    if (missingServices.length > 0) {
-        console.log('Auto-seeding missing system services:', missingServices.map(s => s.name));
-        await db.insert(services).values(missingServices);
-        revalidatePath(SETTINGS_PATH);
-        
-        // Return updated list
-        return db.query.services.findMany({
-            where: isNull(services.deletedAt),
-            orderBy: (services, { asc }) => [asc(services.name)],
-        });
-    }
-
-    return allServices;
 }
 
 export async function createService(data: {
@@ -73,6 +91,11 @@ export async function updateService(id: string, data: Partial<typeof services.$i
 export async function deleteService(id: string) {
     await requireUser();
     
+    const isSystem = SYSTEM_SERVICES.some(s => s.id === id);
+    if (isSystem) {
+        throw new Error("Nie można usunąć usługi systemowej. Jest ona wymagana do poprawnego działania rozliczeń.");
+    }
+
     // Soft delete to preserve history in montages
     await db.update(services)
         .set({ deletedAt: new Date() })
