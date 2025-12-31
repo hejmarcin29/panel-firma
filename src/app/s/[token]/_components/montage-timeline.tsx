@@ -13,6 +13,8 @@ interface MontageTimelineProps {
         forecastedInstallationDate: Date | null;
         installationCity: string | null;
         measurementDate: Date | null;
+        floorArea: number | null;
+        quotes: { status: string }[];
     }
 }
 
@@ -26,7 +28,7 @@ type TimelineStep = {
 };
 
 export function MontageTimeline({ montage }: MontageTimelineProps) {
-    const { status, createdAt, scheduledInstallationAt: scheduledDate, forecastedInstallationDate: forecastedDate, installationCity: city, measurementDate } = montage;
+    const { status, createdAt, scheduledInstallationAt: scheduledDate, forecastedInstallationDate: forecastedDate, installationCity: city, measurementDate, floorArea, quotes } = montage;
     
     // Mapowanie statusów z bazy na kroki osi czasu
     // DB: ['lead', 'before_measurement', 'before_first_payment', 'before_installation', 'before_final_invoice', 'completed']
@@ -40,6 +42,13 @@ export function MontageTimeline({ montage }: MontageTimelineProps) {
         if (currentIndex === targetIndex) return 'current';
         return 'upcoming';
     };
+
+    // Check if measurement is actually done (floorArea > 0) even if status is still before_measurement
+    const isMeasurementDone = (floorArea && floorArea > 0) || getStepState('before_measurement', status) === 'completed';
+    
+    // Check if quote is created
+    const hasQuote = quotes && quotes.length > 0;
+    const isQuoteAccepted = quotes && quotes.some(q => q.status === 'accepted');
 
     const steps: TimelineStep[] = [
         {
@@ -56,14 +65,28 @@ export function MontageTimeline({ montage }: MontageTimelineProps) {
             description: measurementDate ? 'Zaplanowany termin pomiaru' : 'Weryfikacja wymiarów i warunków',
             icon: Ruler,
             date: measurementDate,
-            status: getStepState('before_measurement', status)
+            status: isMeasurementDone ? 'completed' : getStepState('before_measurement', status)
+        },
+        {
+            id: 'quote_preparation',
+            label: 'Przygotowanie Oferty',
+            description: 'Analiza pomiaru i wycena',
+            icon: Calculator,
+            status: hasQuote ? 'completed' : (isMeasurementDone ? 'current' : 'upcoming')
+        },
+        {
+            id: 'quote_acceptance',
+            label: 'Akceptacja Oferty',
+            description: 'Czekamy na Twoją decyzję',
+            icon: CheckCircle2,
+            status: isQuoteAccepted ? 'completed' : (hasQuote ? 'current' : 'upcoming')
         },
         {
             id: 'before_first_payment',
-            label: 'Wycena i Zamówienie',
-            description: 'Akceptacja oferty i zaliczka',
+            label: 'Zaliczka',
+            description: 'Potwierdzenie zamówienia',
             icon: CheckCircle2,
-            status: getStepState('before_first_payment', status)
+            status: getStepState('before_first_payment', status) === 'completed' ? 'completed' : (isQuoteAccepted ? 'current' : 'upcoming')
         },
         {
             id: 'before_installation',
