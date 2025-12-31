@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { quotes, type QuoteItem, type QuoteStatus, mailAccounts, montages, products } from '@/lib/db/schema';
+import { quotes, type QuoteItem, type QuoteStatus, mailAccounts, montages, products, services } from '@/lib/db/schema';
 import { eq, desc, isNull, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { randomUUID } from 'crypto';
@@ -324,4 +324,153 @@ export async function getProductsForQuote() {
             attributes: true,
         }
     });
+}
+
+type Product = typeof products.$inferSelect;
+
+type ProductAttribute = {
+    id: number;
+    name: string;
+    slug: string;
+    options: string[];
+};
+
+export async function getSmartImportItems(montageId: string, selectedProduct?: Partial<Product>) {
+    const session = await getCurrentSession();
+    if (!session) return { success: false, error: 'Unauthorized' };
+
+    const montage = await db.query.montages.findFirst({
+        where: eq(montages.id, montageId),
+        with: {
+            serviceItems: {
+                with: {
+                    service: true
+                }
+            }
+        }
+    });
+
+    if (!montage) return { success: false, error: 'Montaż nie istnieje' };
+
+    const items: QuoteItem[] = [];
+
+    // 1. Base Service (Floor)
+    if (montage.floorArea && montage.floorArea > 0) {
+        const method = montage.measurementInstallationMethod || 'click';
+        const pattern = montage.measurementFloorPattern || 'classic';
+        
+        let serviceId = '';
+        if (pattern === 'herringbone') {
+            serviceId = method === 'glue' ? 'svc_montaz_jodelka_klej' : 'svc_montaz_jodelka_klik';
+        } else {
+            serviceId = method === 'glue' ? 'svc_montaz_deska_klej' : 'svc_montaz_deska_klik';
+        }
+
+        const service = await db.query.services.findFirst({
+            where: eq(services.id, serviceId)
+        });
+
+        if (service) {
+            const priceNet = service.basePriceNet || 0;
+            const vatRate = montage.isHousingVat ? 0.08 : 0.23;
+            const quantity = montage.floorArea;
+            
+            items.push({
+                id: randomUUID(),
+                name: service.name,
+                quantity: quantity,
+                unit: 'm2',
+                priceNet: priceNet,
+                vatRate: vatRate,
+                priceGross: priceNet * (1 + vatRate),
+                totalNet: quantity * priceNet,
+                totalGross: quantity * priceNet * (1 + vatRate),
+            });
+        }
+    }
+
+    // 2. Additional Services
+    if (montage.serviceItems) {
+        for (const item of montage.serviceItems) {
+            const priceNet = item.clientPrice;
+            const vatRate = item.vatRate || (montage.isHousingVat ? 0.08 : 0.23);
+            const quantity = item.quantity;
+
+            items.push({
+                id: randomUUID(),
+                name: item.snapshotName || item.service.name,
+                quantity: quantity,
+                unit: item.service.unit || 'szt',
+                priceNet: priceNet,
+                vatRate: vatRate,
+                priceGross: priceNet * (1 + vatRate),
+                totalNet: quantity * priceNet,
+                totalGross: quantity * priceNet * (1 + vatRate),
+            });
+        }
+    }
+
+    // 3. Main Product (Panels)
+    if (selectedProduct && montage.floorArea) {
+        const attributes = selectedProduct.attributes as ProductAttribute[];
+        let quantity = montage.floorArea;
+        const unit = 'm2';
+        let notes = '';
+        const wastePercent = montage.panelWaste ?? 5;
+        const quantityWithWaste = quantity * (1 + wastePercent / 100);
+        const packageAttr = attributes?.find((a) => a.slug === 'pa_ilosc_opakowanie');
+        
+        if (packageAttr && packageAttr.options && packageAttr.options.length > 0) {
+            const packageSize = parseFloat(packageAttr.options[0].replace(',', '.'));
+            if (!isNaN(packageSize) && packageSize > 0) {
+                const packagesNeeded = Math.ceil(quantityWithWaste / packageSize);
+                quantity = packagesNeeded * packageSize;
+                notes = `(Pełne opakowania: ${packagesNeeded} op. po ${packageSize} m2 [zapas ${wastePercent}%])`;
+            } else {
+                quantity = quantityWithWaste;
+            }
+        } else {
+            quantity = quantityWithWaste;
+        }
+
+        const priceNet = parseFloat(selectedProduct.price || '0');
+        
+        items.push({
+            id: randomUUID(),
+            productId: selectedProduct.id,
+            name: selectedProduct.name + (notes ? ` ${notes}` : ''),
+            quantity: Number(quantity.toFixed(2)),
+            unit: unit,
+            priceNet: priceNet,
+            vatRate: montage.isHousingVat ? 0.08 : 0.23,
+            priceGross: priceNet * (montage.isHousingVat ? 1.08 : 1.23),
+            totalNet: quantity * priceNet,
+            totalGross: quantity * priceNet * (montage.isHousingVat ? 1.08 : 1.23),
+        });
+    }
+
+    // 4. Additional Materials
+    if (montage.measurementAdditionalMaterials) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const materials = montage.measurementAdditionalMaterials as any[];
+        for (const material of materials) {
+            const quantity = parseFloat(material.quantity) || 0;
+            const priceNet = material.estimatedCost || 0;
+            const vatRate = montage.isHousingVat ? 0.08 : 0.23;
+
+            items.push({
+                id: randomUUID(),
+                name: material.name,
+                quantity: quantity,
+                unit: material.unit || 'szt',
+                priceNet: priceNet,
+                vatRate: vatRate,
+                priceGross: priceNet * (1 + vatRate),
+                totalNet: quantity * priceNet,
+                totalGross: quantity * priceNet * (1 + vatRate),
+            });
+        }
+    }
+
+    return { success: true, items };
 }

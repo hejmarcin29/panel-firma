@@ -46,7 +46,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { updateQuote, sendQuoteEmail, getProductsForQuote, deleteQuote } from '../actions';
+import { updateQuote, sendQuoteEmail, getProductsForQuote, deleteQuote, getSmartImportItems } from '../actions';
 import { FileText as FileTextIcon } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
@@ -225,147 +225,32 @@ export function QuoteEditor({ quote, templates, companyInfo }: QuoteEditorProps)
         }
     };
 
-    const executeSmartImport = (selectedProduct?: Product) => {
-        const audit = quote.montage.technicalAudit as TechnicalAuditData | null;
-        const newItems = [...items];
-        let importedCount = 0;
-
-        // 1. SERVICES (Labor) - New Logic
-        const serviceItems = quote.montage.serviceItems || [];
-        
-        if (serviceItems.length > 0) {
-            // Import specific services selected in Measurement
-            serviceItems.forEach(serviceItem => {
-                const priceNet = serviceItem.clientPrice;
-                const vatRate = serviceItem.vatRate || 0.08;
-                const quantity = serviceItem.quantity;
-                
-                newItems.push({
-                    id: Math.random().toString(36).substr(2, 9),
-                    name: serviceItem.snapshotName || serviceItem.service.name,
-                    quantity: quantity,
-                    unit: serviceItem.service.unit,
-                    priceNet: priceNet,
-                    vatRate: vatRate,
-                    priceGross: priceNet * (1 + vatRate),
-                    totalNet: quantity * priceNet,
-                    totalGross: quantity * priceNet * (1 + vatRate),
-                });
-                importedCount++;
-            });
-        } else {
-            // Fallback: If no services defined, notify user but don't add generic ones
-            if (quote.montage.floorArea) {
-                 toast.info('Brak zdefiniowanych usług w pomiarze. Dodano tylko materiały (jeśli wybrano).');
+    const executeSmartImport = async (selectedProduct?: Product) => {
+        setIsImporting(true);
+        try {
+            const result = await getSmartImportItems(quote.montage.id, selectedProduct);
+            
+            if (!result.success || !result.items) {
+                toast.error(result.error || 'Nie udało się zaimportować pozycji');
+                return;
             }
-        }
 
-        // 2. MATERIALS (Products)
-        if (selectedProduct) {
-            if (quote.montage.floorArea) {
-                // PANEL LOGIC
-                const attributes = selectedProduct.attributes as ProductAttribute[];
-                let quantity = quote.montage.floorArea;
-                const unit = 'm2';
-                let notes = '';
-                const wastePercent = quote.montage.panelWaste ?? 5;
-                const quantityWithWaste = quantity * (1 + wastePercent / 100);
-                const packageAttr = attributes?.find((a) => a.slug === 'pa_ilosc_opakowanie');
-                
-                if (packageAttr && packageAttr.options && packageAttr.options.length > 0) {
-                    const packageSize = parseFloat(packageAttr.options[0].replace(',', '.'));
-                    if (!isNaN(packageSize) && packageSize > 0) {
-                        const packagesNeeded = Math.ceil(quantityWithWaste / packageSize);
-                        quantity = packagesNeeded * packageSize;
-                        notes = `(Pełne opakowania: ${packagesNeeded} op. po ${packageSize} m2 [zapas ${wastePercent}%])`;
-                    } else {
-                        quantity = quantityWithWaste;
-                    }
-                } else {
-                    quantity = quantityWithWaste;
-                }
-
-                const priceNet = parseFloat(selectedProduct.price || '0');
-                
-                newItems.push({
-                    id: Math.random().toString(36).substr(2, 9),
-                    productId: selectedProduct.id,
-                    name: selectedProduct.name + (notes ? ` ${notes}` : ''),
-                    quantity: Number(quantity.toFixed(2)),
-                    unit: unit,
-                    priceNet: priceNet,
-                    vatRate: 0.08,
-                    priceGross: priceNet * 1.08,
-                    totalNet: quantity * priceNet,
-                    totalGross: quantity * priceNet * 1.08,
-                });
-                importedCount++;
-            }
-        }
-
-        // Check for additional work in audit
-        if (audit && audit.flatness === 'leveling') {
-             newItems.push({
-                id: Math.random().toString(36).substr(2, 9),
-                name: 'Wylewka samopoziomująca (robocizna)',
-                quantity: quote.montage.floorArea || 1,
-                unit: 'm2',
-                priceNet: 30,
-                vatRate: 0.08,
-                priceGross: 30 * 1.08,
-                totalNet: (quote.montage.floorArea || 1) * 30,
-                totalGross: (quote.montage.floorArea || 1) * 30 * 1.08,
-            });
-            importedCount++;
-        }
-
-        // 3. ADDITIONAL MATERIALS (From Measurement)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const additionalMaterials = quote.montage.measurementAdditionalMaterials as any[];
-        if (Array.isArray(additionalMaterials) && additionalMaterials.length > 0) {
-            additionalMaterials.forEach(mat => {
-                // Only import materials supplied by company or if we want to charge client for installer's materials
-                // Assuming we want to list everything that costs money to the client
-                // If supplySide is 'company', we definitely add it.
-                // If 'installer', it depends if we re-invoice it. Let's assume we add everything as a proposal.
-                
-                // Parse quantity string "2 szt" -> 2
-                const qty = parseFloat(mat.quantity) || 1;
-                const unit = mat.quantity.replace(/[0-9.,]/g, '').trim() || 'szt';
-                
-                let priceNet = 0;
-                let name = mat.name;
-
-                // If installer buys it, use their estimated cost as base price
-                if (mat.supplySide === 'installer' && mat.estimatedCost) {
-                    priceNet = parseFloat(mat.estimatedCost);
-                    name += ' (Zakup montażysty)';
-                } else if (mat.supplySide === 'company') {
-                    name += ' (Z magazynu)';
-                }
-
-                newItems.push({
-                    id: Math.random().toString(36).substr(2, 9),
-                    name: name,
-                    quantity: qty,
-                    unit: unit,
-                    priceNet: priceNet,
-                    vatRate: 0.23, // Materials usually 23%
-                    priceGross: priceNet * 1.23,
-                    totalNet: qty * priceNet,
-                    totalGross: qty * priceNet * 1.23,
-                });
-                importedCount++;
-            });
-        }
-
-        if (importedCount > 0) {
+            const newItems = [...items, ...result.items];
             setItems(newItems);
-            toast.success(`Zaimportowano ${importedCount} pozycji.`);
-        } else {
-            toast.info('Brak danych do zaimportowania.');
+            
+            if (result.items.length > 0) {
+                toast.success(`Zaimportowano ${result.items.length} pozycji z pomiaru`);
+            } else {
+                toast.info('Brak pozycji do zaimportowania z pomiaru');
+            }
+            
+            setImportDialogOpen(false);
+        } catch (error) {
+            console.error('Smart import error:', error);
+            toast.error('Wystąpił błąd podczas importu');
+        } finally {
+            setIsImporting(false);
         }
-        setImportDialogOpen(false);
     };
 
     const handleSave = async () => {
