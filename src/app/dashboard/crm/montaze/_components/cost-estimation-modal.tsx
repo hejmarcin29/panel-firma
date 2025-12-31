@@ -85,7 +85,13 @@ export function CostEstimationModal({
                                 </div>
                             )}
 
-                            {additionalMaterials.map((item, index) => (
+                            {additionalMaterials.map((item, index) => {
+                                // Skip items without name (garbage data)
+                                if (!item.name || item.name.trim() === '') {
+                                    return null;
+                                }
+
+                                return (
                                 <div key={item.id} className="p-4 border rounded-xl bg-card shadow-sm space-y-3">
                                     <div className="flex justify-between items-start">
                                         <div>
@@ -176,7 +182,8 @@ export function CostEstimationModal({
                                         </div>
                                     )}
                                 </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 );
