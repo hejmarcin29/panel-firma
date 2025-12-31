@@ -107,16 +107,6 @@ export function MontageTimeline({ montage }: MontageTimelineProps) {
     });
 
     return (
-
-    steps.push({
-        id: 'completed',
-        label: 'Zakończono',
-        description: 'Prace odebrane',
-        icon: Check,
-        status: getStepState('completed', status)
-    });
-
-    return (
         <div className="bg-white dark:bg-zinc-950 rounded-xl border shadow-sm p-6">
             {/* Header Section similar to the screenshot */}
             <div className="flex items-center justify-between mb-8 pb-6 border-b">
