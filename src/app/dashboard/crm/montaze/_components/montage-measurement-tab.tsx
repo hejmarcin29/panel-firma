@@ -430,7 +430,7 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
                             className="border-green-600 text-green-700 hover:bg-green-50"
                         >
                             <span className="mr-2">💰</span>
-                            Uzupełnij Kosztorys
+                            Edytuj Kosztorys
                         </Button>
                     )}
 
