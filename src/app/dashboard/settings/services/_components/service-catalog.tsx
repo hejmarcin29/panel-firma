@@ -52,7 +52,7 @@ export function ServiceCatalog({ services }: ServiceCatalogProps) {
             unit: formData.get('unit') as string,
             basePriceNet: parseFloat(formData.get('basePriceNet') as string),
             baseInstallerRate: 0, // Disabled base rate
-            vatRate: parseFloat(formData.get('vatRate') as string) / 100,
+            vatRate: 0, // VAT is determined by montage context (8% or 23%)
         };
 
         try {
@@ -157,21 +157,6 @@ export function ServiceCatalog({ services }: ServiceCatalogProps) {
                                     </SelectContent>
                                 </Select>
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="vatRate">Stawka VAT</Label>
-                                <Select name="vatRate" defaultValue={editingService ? ((editingService.vatRate || 0) * 100).toString() : "23"}>
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="0">bez (0%)</SelectItem>
-                                        <SelectItem value="8">8%</SelectItem>
-                                        <SelectItem value="23">23%</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="basePriceNet">Cena dla Klienta (Netto)</Label>
                                 <Input 

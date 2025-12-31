@@ -10,10 +10,10 @@ import { generateId } from '@/lib/utils';
 const SETTINGS_PATH = '/dashboard/settings';
 
 const SYSTEM_SERVICES = [
-    { id: 'svc_montaz_deska_klik', name: 'Montaż klasyczny (klik)', unit: 'm2', basePriceNet: 35.00, baseInstallerRate: 25.00, vatRate: 8 },
-    { id: 'svc_montaz_deska_klej', name: 'Montaż klasyczny (klej)', unit: 'm2', basePriceNet: 45.00, baseInstallerRate: 30.00, vatRate: 8 },
-    { id: 'svc_montaz_jodelka_klik', name: 'Montaż jodełki (klik)', unit: 'm2', basePriceNet: 55.00, baseInstallerRate: 35.00, vatRate: 8 },
-    { id: 'svc_montaz_jodelka_klej', name: 'Montaż jodełki (klej)', unit: 'm2', basePriceNet: 65.00, baseInstallerRate: 40.00, vatRate: 8 },
+    { id: 'svc_montaz_deska_klik', name: 'Montaż klasyczny (klik)', unit: 'm2', basePriceNet: 35.00, baseInstallerRate: 0, vatRate: 0 },
+    { id: 'svc_montaz_deska_klej', name: 'Montaż klasyczny (klej)', unit: 'm2', basePriceNet: 45.00, baseInstallerRate: 0, vatRate: 0 },
+    { id: 'svc_montaz_jodelka_klik', name: 'Montaż jodełki (klik)', unit: 'm2', basePriceNet: 55.00, baseInstallerRate: 0, vatRate: 0 },
+    { id: 'svc_montaz_jodelka_klej', name: 'Montaż jodełki (klej)', unit: 'm2', basePriceNet: 65.00, baseInstallerRate: 0, vatRate: 0 },
 ];
 
 export async function getServices() {
@@ -38,7 +38,7 @@ export async function getServices() {
     // Check for name updates (enforce system names)
     const toUpdateName = SYSTEM_SERVICES.filter(s => {
         const existing = existingMap.get(s.id);
-        return existing && !existing.deletedAt && existing.name !== s.name;
+        return existing && !existing.deletedAt && (existing.name !== s.name || existing.baseInstallerRate !== 0);
     });
 
     let hasChanges = false;
@@ -58,10 +58,10 @@ export async function getServices() {
     }
 
     if (toUpdateName.length > 0) {
-        console.log('Updating system service names:', toUpdateName.map(s => s.name));
+        console.log('Updating system service names/rates:', toUpdateName.map(s => s.name));
         for (const s of toUpdateName) {
             await db.update(services)
-                .set({ name: s.name })
+                .set({ name: s.name, baseInstallerRate: 0 })
                 .where(eq(services.id, s.id));
         }
         hasChanges = true;

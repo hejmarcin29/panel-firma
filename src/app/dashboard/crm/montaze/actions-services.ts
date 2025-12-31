@@ -40,7 +40,7 @@ export async function addMontageService(montageId: string, serviceId: string, qu
         columns: { installerId: true }
     });
 
-    let installerRate = 0;
+    let installerRate = service.baseInstallerRate || 0;
 
     // 3. If installer is assigned, look for their specific rate
     if (montage?.installerId) {
