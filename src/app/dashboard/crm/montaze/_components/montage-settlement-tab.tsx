@@ -297,7 +297,7 @@ export function MontageSettlementTab({ montage, userRoles }: MontageSettlementTa
                                 {calculation.floor.pattern === 'herringbone' ? 'Jodełka' : 'Deska'} ({calculation.floor.method === 'glue' ? 'Klej' : 'Klik'})
                             </div>
                             <div className="text-sm text-muted-foreground">
-                                {calculation.floor.area.toFixed(2)} m² x {calculation.floor.rate.toFixed(2)} PLN
+                                {calculation.floor.area.toFixed(2)} m² x {calculation.floor.rate.toFixed(2)} PLN (Netto)
                             </div>
                         </div>
                         <div className="text-right">

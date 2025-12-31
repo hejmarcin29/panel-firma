@@ -50,10 +50,10 @@ export function RateMatrix({ services, installers }: RateMatrixProps) {
                     <TableHeader>
                         <TableRow>
                             <TableHead className="w-[200px] sticky left-0 bg-background z-10">Usługa / Jednostka</TableHead>
-                            <TableHead className="w-[100px] bg-muted/50">Bazowa</TableHead>
+                            <TableHead className="w-[100px] bg-muted/50">Bazowa (Netto)</TableHead>
                             {installers.map(installer => (
                                 <TableHead key={installer.id} className="min-w-[120px] text-center">
-                                    {installer.name || installer.email}
+                                    {installer.name || installer.email} <span className="text-xs font-normal text-muted-foreground">(Netto)</span>
                                 </TableHead>
                             ))}
                         </TableRow>

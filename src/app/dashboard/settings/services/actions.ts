@@ -35,6 +35,12 @@ export async function getServices() {
         return existing && existing.deletedAt !== null;
     });
 
+    // Check for name updates (enforce system names)
+    const toUpdateName = SYSTEM_SERVICES.filter(s => {
+        const existing = existingMap.get(s.id);
+        return existing && !existing.deletedAt && existing.name !== s.name;
+    });
+
     let hasChanges = false;
 
     if (toInsert.length > 0) {
@@ -48,6 +54,16 @@ export async function getServices() {
         await db.update(services)
             .set({ deletedAt: null })
             .where(inArray(services.id, toRestore.map(s => s.id)));
+        hasChanges = true;
+    }
+
+    if (toUpdateName.length > 0) {
+        console.log('Updating system service names:', toUpdateName.map(s => s.name));
+        for (const s of toUpdateName) {
+            await db.update(services)
+                .set({ name: s.name })
+                .where(eq(services.id, s.id));
+        }
         hasChanges = true;
     }
 
