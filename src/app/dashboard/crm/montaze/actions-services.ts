@@ -90,7 +90,7 @@ export async function updateMontageServiceQuantity(itemId: string, quantity: num
     revalidatePath(`${MONTAGE_PATH}/${montageId}`);
 }
 
-export async function getEstimatedBaseService(method: string, pattern: string) {
+export async function getEstimatedBaseService(method: string, pattern: string, montageId?: string) {
     await requireUser();
 
     let serviceId = '';
@@ -104,5 +104,34 @@ export async function getEstimatedBaseService(method: string, pattern: string) {
         where: eq(services.id, serviceId)
     });
 
-    return service;
+    if (!service) return null;
+
+    let rate = service.baseInstallerRate || 0;
+
+    // If montageId is provided, try to find specific installer rate
+    if (montageId) {
+        const montage = await db.query.montages.findFirst({
+            where: eq(montages.id, montageId),
+            columns: { installerId: true }
+        });
+
+        if (montage?.installerId) {
+            const userRate = await db.query.userServiceRates.findFirst({
+                where: and(
+                    eq(userServiceRates.userId, montage.installerId),
+                    eq(userServiceRates.serviceId, serviceId)
+                )
+            });
+            
+            if (userRate) {
+                rate = userRate.customRate;
+            }
+        }
+    }
+
+    return {
+        ...service,
+        basePriceNet: rate, // Overwrite with installer rate for the cost estimation context
+        isInstallerRate: true // Flag to indicate this is a cost rate
+    };
 }

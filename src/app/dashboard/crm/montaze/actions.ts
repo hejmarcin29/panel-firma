@@ -1580,8 +1580,8 @@ export async function updateMontageCostEstimation({
                     serviceId: genericService.id, // Link to a real service ID
                     snapshotName: service.name, // Override name
                     quantity: service.quantity,
-                    clientPrice: service.price, // Net price
-                    installerRate: genericService.baseInstallerRate || 0,
+                    clientPrice: service.price, // Net price for client (pass-through)
+                    installerRate: service.price, // Net cost from installer
                     vatRate: vatRate,
                 });
             }

@@ -117,7 +117,8 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
               try {
                   const service = await getEstimatedBaseService(
                       installationMethod || 'click',
-                      floorPattern || 'classic'
+                      floorPattern || 'classic',
+                      montage.id
                   );
                   if (service) {
                       setBaseServicePrice(service.basePriceNet || 0);
@@ -129,7 +130,7 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
           };
           fetchPrice();
       }
-  }, [isCostEstimationOpen, installationMethod, floorPattern]);
+  }, [isCostEstimationOpen, installationMethod, floorPattern, montage.id]);
   const [subfloorCondition, setSubfloorCondition] = useState(montage.measurementSubfloorCondition || 'good');
   const [additionalWorkNeeded, setAdditionalWorkNeeded] = useState(montage.measurementAdditionalWorkNeeded || false);
   const [additionalWorkDescription, setAdditionalWorkDescription] = useState(montage.measurementAdditionalWorkDescription || '');
