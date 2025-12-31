@@ -240,7 +240,7 @@ export function MontageSettlementTab({ montage, userRoles }: MontageSettlementTa
                     <AlertTitle>Brak stawki montażysty!</AlertTitle>
                     <AlertDescription>
                         System nie znalazł stawki dla tego montażysty i policzył 0 PLN. 
-                        Uzupełnij stawkę w Ustawieniach lub użyj opcji "Edytuj bazę", aby wpisać kwotę ręcznie.
+                        Uzupełnij stawkę w Ustawieniach lub użyj opcji &quot;Edytuj bazę&quot;, aby wpisać kwotę ręcznie.
                     </AlertDescription>
                 </Alert>
             )}
