@@ -64,6 +64,7 @@ export function InstallerMontageView({ montage, logs, userRoles, hasGoogleCalend
 
     // Determine the "Current Mission" based on status
     const isMeasurementStage = ['lead', 'before_measurement'].includes(montage.status);
+    const isFormalitiesStage = ['before_first_payment'].includes(montage.status);
     const isInstallationStage = ['before_installation', 'before_final_invoice'].includes(montage.status);
     const isDone = montage.status === 'completed';
 
@@ -217,6 +218,26 @@ export function InstallerMontageView({ montage, logs, userRoles, hasGoogleCalend
                                                 </Button>
                                             </div>
                                         )}
+                                    </div>
+                                )}
+
+                                {isFormalitiesStage && (
+                                    <div className="space-y-4">
+                                        <div className="p-4 border rounded-xl bg-slate-50 border-slate-200 space-y-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-slate-200 text-slate-600 rounded-full">
+                                                    <History className="w-5 h-5" />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-bold text-base text-slate-900">
+                                                        Formalności w toku
+                                                    </h3>
+                                                    <p className="text-sm text-slate-600">
+                                                        Biuro przygotowuje ofertę lub oczekuje na wpłatę zaliczki przez klienta. Poinformujemy Cię, gdy zlecenie będzie gotowe do montażu.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 )}
 
