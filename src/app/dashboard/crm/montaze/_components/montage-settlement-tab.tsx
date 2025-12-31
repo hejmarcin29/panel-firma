@@ -4,7 +4,7 @@ import { useState, useTransition, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
-import { Calculator, Loader2, Edit2, Plus, Trash2, Info, AlertTriangle } from 'lucide-react';
+import { Calculator, Loader2, Edit2, Plus, Trash2, Info, AlertTriangle, Package } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -71,6 +71,8 @@ export function MontageSettlementTab({ montage, userRoles }: MontageSettlementTa
                         setCalculation(prev => prev ? {
                             ...prev,
                             floor: freshCalc.floor, // Update floor details
+                            services: freshCalc.services,
+                            materials: freshCalc.materials,
                             systemTotal: freshCalc.total, // Update system total
                         } : freshCalc);
                     } catch (e) {
@@ -170,8 +172,10 @@ export function MontageSettlementTab({ montage, userRoles }: MontageSettlementTa
         const amount = parseFloat(overrideAmount);
         if (isNaN(amount)) return;
 
-        // Recalculate total: (Override OR Floor) + Corrections
+        // Recalculate total: (Override OR Floor) + Services + Materials + Corrections
         const correctionsTotal = calculation.corrections?.reduce((sum, c) => sum + c.amount, 0) || 0;
+        const servicesTotal = calculation.services?.reduce((sum, s) => sum + s.amount, 0) || 0;
+        const materialsTotal = calculation.materials?.reduce((sum, m) => sum + m.amount, 0) || 0;
         
         setCalculation({
             ...calculation,
@@ -179,7 +183,7 @@ export function MontageSettlementTab({ montage, userRoles }: MontageSettlementTa
                 amount: amount,
                 reason: overrideReason
             },
-            total: amount + correctionsTotal
+            total: amount + servicesTotal + materialsTotal + correctionsTotal
         });
         setIsOverrideOpen(false);
     };
@@ -187,11 +191,13 @@ export function MontageSettlementTab({ montage, userRoles }: MontageSettlementTa
     const removeOverride = () => {
         if (!calculation) return;
         const correctionsTotal = calculation.corrections?.reduce((sum, c) => sum + c.amount, 0) || 0;
+        const servicesTotal = calculation.services?.reduce((sum, s) => sum + s.amount, 0) || 0;
+        const materialsTotal = calculation.materials?.reduce((sum, m) => sum + m.amount, 0) || 0;
         
         setCalculation({
             ...calculation,
             override: undefined,
-            total: calculation.floor.amount + correctionsTotal
+            total: calculation.floor.amount + servicesTotal + materialsTotal + correctionsTotal
         });
     };
 
@@ -206,8 +212,10 @@ export function MontageSettlementTab({ montage, userRoles }: MontageSettlementTa
     }
 
     const baseAmount = calculation.override ? calculation.override.amount : calculation.floor.amount;
+    const servicesTotal = calculation.services?.reduce((sum, s) => sum + s.amount, 0) || 0;
+    const materialsTotal = calculation.materials?.reduce((sum, m) => sum + m.amount, 0) || 0;
     const correctionsTotal = calculation.corrections?.reduce((sum, c) => sum + c.amount, 0) || 0;
-    const totalAmount = baseAmount + correctionsTotal;
+    const totalAmount = baseAmount + servicesTotal + materialsTotal + correctionsTotal;
 
     return (
         <div className="space-y-6">
@@ -251,7 +259,7 @@ export function MontageSettlementTab({ montage, userRoles }: MontageSettlementTa
                     <div className="flex items-center justify-between">
                         <CardTitle className="text-base flex items-center gap-2">
                             <Calculator className="h-4 w-4" />
-                            Baza (Podłoga)
+                            Usługa Bazowa
                         </CardTitle>
                         {!isReadOnly && (
                             <Dialog open={isOverrideOpen} onOpenChange={setIsOverrideOpen}>
@@ -347,6 +355,64 @@ export function MontageSettlementTab({ montage, userRoles }: MontageSettlementTa
                     </div>
                 </CardContent>
             </Card>
+
+            {/* Additional Services Section */}
+            {calculation.services && calculation.services.length > 0 && (
+                <Card>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-base flex items-center gap-2">
+                            <Plus className="h-4 w-4" />
+                            Usługi Dodatkowe
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-2">
+                            {calculation.services.map(service => (
+                                <div key={service.id} className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
+                                    <div className="space-y-1">
+                                        <div className="font-medium">{service.name}</div>
+                                        <div className="text-sm text-muted-foreground">
+                                            {service.quantity} x {service.rate.toFixed(2)} PLN
+                                        </div>
+                                    </div>
+                                    <div className="font-bold">
+                                        {service.amount.toFixed(2)} PLN
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* Additional Materials Section */}
+            {calculation.materials && calculation.materials.length > 0 && (
+                <Card>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-base flex items-center gap-2">
+                            <Package className="h-4 w-4" />
+                            Materiały Montażysty
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-2">
+                            {calculation.materials.map(material => (
+                                <div key={material.id} className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
+                                    <div className="space-y-1">
+                                        <div className="font-medium">{material.name}</div>
+                                        <div className="text-sm text-muted-foreground">
+                                            {material.quantity} x {material.cost.toFixed(2)} PLN
+                                        </div>
+                                    </div>
+                                    <div className="font-bold">
+                                        {material.amount.toFixed(2)} PLN
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
 
             {/* Corrections Section */}
             <Card>

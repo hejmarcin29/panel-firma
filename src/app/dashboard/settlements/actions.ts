@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { eq, desc, and } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { montages, users, settlements, advances, services, userServiceRates, type SettlementStatus } from '@/lib/db/schema';
+import { montages, users, settlements, advances, services, userServiceRates, montageServiceItems, type SettlementStatus } from '@/lib/db/schema';
 import { requireUser } from '@/lib/auth/session';
 import { generateId } from '@/lib/utils';
 import { logSystemEvent } from '@/lib/logging';
@@ -19,6 +19,20 @@ export type SettlementCalculation = {
         pattern: string;
         serviceId?: string;
     };
+    services: {
+        id: string;
+        name: string;
+        quantity: number;
+        rate: number;
+        amount: number;
+    }[];
+    materials: {
+        id: string;
+        name: string;
+        quantity: string;
+        cost: number;
+        amount: number;
+    }[];
     corrections: {
         id: string;
         description: string;
@@ -96,6 +110,41 @@ export async function calculateSettlement(montageId: string) {
     const floorArea = montage.floorArea || 0;
     const floorAmount = floorArea * rate;
 
+    // 3. Additional Services
+    const serviceItems = await db.query.montageServiceItems.findMany({
+        where: eq(montageServiceItems.montageId, montageId)
+    });
+
+    const servicesCalc = serviceItems.map(item => ({
+        id: item.id,
+        name: item.snapshotName || 'Usługa',
+        quantity: item.quantity,
+        rate: item.installerRate,
+        amount: item.quantity * item.installerRate
+    }));
+
+    const servicesTotal = servicesCalc.reduce((sum, item) => sum + item.amount, 0);
+
+    // 4. Additional Materials (Installer supplied)
+    const materials = montage.measurementAdditionalMaterials || [];
+    const installerMaterials = materials.filter(m => m.supplySide === 'installer');
+    
+    const materialsCalc = installerMaterials.map(item => {
+        const qty = parseFloat(item.quantity) || 0;
+        const cost = item.estimatedCost || 0;
+        return {
+            id: item.id,
+            name: item.name,
+            quantity: item.quantity,
+            cost: cost,
+            amount: qty * cost
+        };
+    });
+
+    const materialsTotal = materialsCalc.reduce((sum, item) => sum + item.amount, 0);
+
+    const total = floorAmount + servicesTotal + materialsTotal;
+
     const calculation: SettlementCalculation = {
         floor: {
             area: floorArea,
@@ -105,9 +154,11 @@ export async function calculateSettlement(montageId: string) {
             pattern: pattern,
             serviceId: serviceId
         },
+        services: servicesCalc,
+        materials: materialsCalc,
         corrections: [],
-        total: floorAmount,
-        systemTotal: floorAmount
+        total: total,
+        systemTotal: total
     };
 
     return calculation;
