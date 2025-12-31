@@ -89,26 +89,6 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
       }
   }, [defaultOpenModal]);
 
-  // Fetch base service price when modal opens
-  useEffect(() => {
-      if (isCostEstimationOpen) {
-          const fetchPrice = async () => {
-              try {
-                  const service = await getEstimatedBaseService(
-                      installationMethod || 'click',
-                      floorPattern || 'classic'
-                  );
-                  if (service) {
-                      setBaseServicePrice(service.basePriceNet || 0);
-                  }
-              } catch (e) {
-                  console.error("Failed to fetch base service price", e);
-              }
-          };
-          fetchPrice();
-      }
-  }, [isCostEstimationOpen, installationMethod, floorPattern]);
-
   const [isSketchOpen, setIsSketchOpen] = useState(false);
   const [sketchDataUrl, setSketchDataUrl] = useState<string | null>(montage.sketchUrl || null);
   
@@ -128,6 +108,26 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
   const [floorPattern, setFloorPattern] = useState<'classic' | 'herringbone'>(
     (montage.measurementFloorPattern as 'classic' | 'herringbone') || 'classic'
   );
+
+  // Fetch base service price when modal opens
+  useEffect(() => {
+      if (isCostEstimationOpen) {
+          const fetchPrice = async () => {
+              try {
+                  const service = await getEstimatedBaseService(
+                      installationMethod || 'click',
+                      floorPattern || 'classic'
+                  );
+                  if (service) {
+                      setBaseServicePrice(service.basePriceNet || 0);
+                  }
+              } catch (e) {
+                  console.error("Failed to fetch base service price", e);
+              }
+          };
+          fetchPrice();
+      }
+  }, [isCostEstimationOpen, installationMethod, floorPattern]);
   const [subfloorCondition, setSubfloorCondition] = useState(montage.measurementSubfloorCondition || 'good');
   const [additionalWorkNeeded, setAdditionalWorkNeeded] = useState(montage.measurementAdditionalWorkNeeded || false);
   const [additionalWorkDescription, setAdditionalWorkDescription] = useState(montage.measurementAdditionalWorkDescription || '');
