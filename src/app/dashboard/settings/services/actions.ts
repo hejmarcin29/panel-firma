@@ -9,12 +9,38 @@ import { generateId } from '@/lib/utils';
 
 const SETTINGS_PATH = '/dashboard/settings';
 
+const SYSTEM_SERVICES = [
+    { id: 'svc_montaz_deska_klik', name: 'Montaż deski (klik)', unit: 'm2', basePriceNet: 35.00, baseInstallerRate: 25.00, vatRate: 8 },
+    { id: 'svc_montaz_deska_klej', name: 'Montaż deski (klej)', unit: 'm2', basePriceNet: 45.00, baseInstallerRate: 30.00, vatRate: 8 },
+    { id: 'svc_montaz_jodelka_klik', name: 'Montaż jodełki (klik)', unit: 'm2', basePriceNet: 55.00, baseInstallerRate: 35.00, vatRate: 8 },
+    { id: 'svc_montaz_jodelka_klej', name: 'Montaż jodełki (klej)', unit: 'm2', basePriceNet: 65.00, baseInstallerRate: 40.00, vatRate: 8 },
+];
+
 export async function getServices() {
     await requireUser();
-    return db.query.services.findMany({
+
+    // Self-healing: Ensure system services exist
+    const allServices = await db.query.services.findMany({
         where: isNull(services.deletedAt),
         orderBy: (services, { asc }) => [asc(services.name)],
     });
+
+    const existingIds = new Set(allServices.map(s => s.id));
+    const missingServices = SYSTEM_SERVICES.filter(s => !existingIds.has(s.id));
+
+    if (missingServices.length > 0) {
+        console.log('Auto-seeding missing system services:', missingServices.map(s => s.name));
+        await db.insert(services).values(missingServices);
+        revalidatePath(SETTINGS_PATH);
+        
+        // Return updated list
+        return db.query.services.findMany({
+            where: isNull(services.deletedAt),
+            orderBy: (services, { asc }) => [asc(services.name)],
+        });
+    }
+
+    return allServices;
 }
 
 export async function createService(data: {
