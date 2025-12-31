@@ -22,7 +22,7 @@ interface CostEstimationModalProps {
     // Data from Stage 1 (Read Only context)
     measurementDate?: string | null;
     additionalWorkDescription?: string | null;
-    baseService?: { name: string; quantity: number; unit: string };
+    baseService?: { name: string; quantity: number; unit: string; price?: number };
     
     // Data to Edit (Stage 2)
     additionalMaterials: MeasurementMaterialItem[];
@@ -36,7 +36,8 @@ interface CostEstimationModalProps {
 
 const STEPS = [
     { id: 'materials', title: 'Ceny Materiałów', icon: DollarSign },
-    { id: 'services', title: 'Wycena Usług', icon: Hammer },
+    { id: 'base_service', title: 'Usługa Bazowa', icon: Hammer },
+    { id: 'services', title: 'Usługi Dodatkowe', icon: Plus },
     { id: 'finish', title: 'Podsumowanie', icon: CheckCircle2 },
 ];
 
@@ -187,7 +188,56 @@ export function CostEstimationModal({
                         </div>
                     </div>
                 );
-            case 1: // Services
+            case 1: // Base Service
+                return (
+                    <div className="space-y-6">
+                        <div className="text-center space-y-2">
+                            <h2 className="text-2xl font-bold">Usługa Bazowa</h2>
+                            <p className="text-muted-foreground">
+                                Potwierdź wycenę usługi podstawowej wynikającej z pomiaru.
+                            </p>
+                        </div>
+
+                        {baseService ? (
+                            <div className="p-6 border rounded-xl bg-slate-50 border-slate-200 shadow-sm space-y-4">
+                                <div className="flex justify-between items-start">
+                                    <div className="space-y-1">
+                                        <Label className="text-slate-600">Nazwa Usługi</Label>
+                                        <div className="font-medium text-xl">{baseService.name}</div>
+                                    </div>
+                                    <div className="text-right">
+                                        <span className="text-xs font-medium bg-slate-200 text-slate-600 px-2 py-1 rounded">Automatyczna</span>
+                                    </div>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-6 pt-2">
+                                    <div className="space-y-1">
+                                        <Label className="text-slate-600">Ilość</Label>
+                                        <div className="font-medium text-lg">{baseService.quantity} {baseService.unit}</div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-slate-600">Cena jedn. (Netto)</Label>
+                                        <div className="font-medium text-lg">
+                                            {baseService.price ? `${baseService.price.toFixed(2)} PLN` : 'Brak stawki'}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
+                                    <span className="text-slate-600 font-medium">Wartość całkowita (Netto):</span>
+                                    <span className="text-2xl font-bold text-primary">
+                                        {baseService.price ? (baseService.price * baseService.quantity).toFixed(2) : '0.00'} PLN
+                                    </span>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-center py-8 text-muted-foreground">
+                                Brak zdefiniowanej usługi bazowej.
+                            </div>
+                        )}
+                    </div>
+                );
+            case 2: // Additional Services
                 return (
                     <div className="space-y-6">
                         <div className="text-center space-y-2">
@@ -205,29 +255,6 @@ export function CostEstimationModal({
                         )}
 
                         <div className="space-y-4">
-                            {/* Base Service Card */}
-                            {baseService && (
-                                <div className="p-4 border rounded-xl bg-slate-50 border-slate-200 shadow-sm space-y-3 relative opacity-80">
-                                    <div className="absolute right-2 top-2">
-                                        <span className="text-xs font-medium bg-slate-200 text-slate-600 px-2 py-1 rounded">Usługa Bazowa</span>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <Label className="text-slate-600">Nazwa Usługi</Label>
-                                        <div className="font-medium text-lg">{baseService.name}</div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-1">
-                                            <Label className="text-slate-600">Ilość</Label>
-                                            <div className="font-medium">{baseService.quantity} {baseService.unit}</div>
-                                        </div>
-                                        <div className="space-y-1">
-                                            <Label className="text-slate-600">Cena jedn.</Label>
-                                            <div className="font-medium text-slate-500">Wycenia Biuro</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
                             {additionalServices.map((service, index) => (
                                 <div key={service.id} className="p-4 border rounded-xl bg-card shadow-sm space-y-3 relative">
                                     <Button

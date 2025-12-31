@@ -62,6 +62,7 @@ import { MontageSubCategories } from '@/lib/r2/constants';
 import { MeasurementAssistantModal } from './measurement-assistant-modal';
 import { CostEstimationModal } from './cost-estimation-modal';
 import { updateMontageCostEstimation } from '../actions';
+import { getEstimatedBaseService } from '../actions-services';
 
 interface MontageMeasurementTabProps {
   montage: Montage;
@@ -78,6 +79,7 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
 
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [isCostEstimationOpen, setIsCostEstimationOpen] = useState(false);
+  const [baseServicePrice, setBaseServicePrice] = useState<number | undefined>(undefined);
 
   useEffect(() => {
       if (defaultOpenModal === 'assistant') {
@@ -86,6 +88,26 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
           setIsCostEstimationOpen(true);
       }
   }, [defaultOpenModal]);
+
+  // Fetch base service price when modal opens
+  useEffect(() => {
+      if (isCostEstimationOpen) {
+          const fetchPrice = async () => {
+              try {
+                  const service = await getEstimatedBaseService(
+                      installationMethod || 'click',
+                      floorPattern || 'classic'
+                  );
+                  if (service) {
+                      setBaseServicePrice(service.basePriceNet || 0);
+                  }
+              } catch (e) {
+                  console.error("Failed to fetch base service price", e);
+              }
+          };
+          fetchPrice();
+      }
+  }, [isCostEstimationOpen, installationMethod, floorPattern]);
 
   const [isSketchOpen, setIsSketchOpen] = useState(false);
   const [sketchDataUrl, setSketchDataUrl] = useState<string | null>(montage.sketchUrl || null);
@@ -485,7 +507,8 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
         baseService={{
             name: montage.panelModel || 'Montaż podłogi',
             quantity: montage.floorArea || 0,
-            unit: 'm2'
+            unit: 'm2',
+            price: baseServicePrice
         }}
         additionalMaterials={additionalMaterials}
         setAdditionalMaterials={setAdditionalMaterials}

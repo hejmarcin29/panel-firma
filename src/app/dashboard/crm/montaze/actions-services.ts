@@ -89,3 +89,20 @@ export async function updateMontageServiceQuantity(itemId: string, quantity: num
 
     revalidatePath(`${MONTAGE_PATH}/${montageId}`);
 }
+
+export async function getEstimatedBaseService(method: string, pattern: string) {
+    await requireUser();
+
+    let serviceId = '';
+    if (pattern === 'herringbone') {
+        serviceId = method === 'glue' ? 'svc_montaz_jodelka_klej' : 'svc_montaz_jodelka_klik';
+    } else {
+        serviceId = method === 'glue' ? 'svc_montaz_deska_klej' : 'svc_montaz_deska_klik';
+    }
+
+    const service = await db.query.services.findFirst({
+        where: eq(services.id, serviceId)
+    });
+
+    return service;
+}

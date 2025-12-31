@@ -4,11 +4,12 @@ import { useState, useTransition, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
-import { Calculator, Loader2, Edit2, Plus, Trash2, Info } from 'lucide-react';
+import { Calculator, Loader2, Edit2, Plus, Trash2, Info, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
     Dialog,
     DialogContent,
@@ -231,6 +232,18 @@ export function MontageSettlementTab({ montage, userRoles }: MontageSettlementTa
                     </Badge>
                 )}
             </div>
+
+            {/* Missing Rate Warning */}
+            {calculation.floor.rate === 0 && !calculation.override && (
+                <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Brak stawki montażysty!</AlertTitle>
+                    <AlertDescription>
+                        System nie znalazł stawki dla tego montażysty i policzył 0 PLN. 
+                        Uzupełnij stawkę w Ustawieniach lub użyj opcji "Edytuj bazę", aby wpisać kwotę ręcznie.
+                    </AlertDescription>
+                </Alert>
+            )}
 
             {/* Base Calculation Section */}
             <Card>

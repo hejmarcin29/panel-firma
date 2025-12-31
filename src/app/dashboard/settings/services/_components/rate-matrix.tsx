@@ -71,14 +71,22 @@ export function RateMatrix({ services, installers }: RateMatrixProps) {
                                     const userRate = installer.serviceRates.find(r => r.serviceId === service.id);
                                     const currentRate = userRate ? userRate.customRate : service.baseInstallerRate;
                                     const isCustom = !!userRate;
+                                    const isMissing = !currentRate || currentRate === 0;
 
                                     return (
                                         <TableCell key={installer.id} className="p-2">
                                             <Input 
                                                 type="number" 
                                                 step="0.01"
-                                                className={`h-8 text-center ${isCustom ? 'font-bold bg-primary/5' : 'text-muted-foreground'}`}
+                                                className={`h-8 text-center ${
+                                                    isMissing 
+                                                        ? 'border-red-500 bg-red-50 text-red-900 placeholder:text-red-300' 
+                                                        : isCustom 
+                                                            ? 'font-bold bg-primary/5' 
+                                                            : 'text-muted-foreground'
+                                                }`}
                                                 defaultValue={currentRate || 0}
+                                                placeholder={isMissing ? "Brak!" : ""}
                                                 onBlur={(e) => {
                                                     const val = parseFloat(e.target.value);
                                                     // Only update if value changed and is valid number
