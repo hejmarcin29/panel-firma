@@ -11,7 +11,8 @@ import {
     History, 
     FileText,
     Navigation,
-    Banknote
+    Banknote,
+    Clock
 } from "lucide-react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
@@ -160,63 +161,109 @@ export function InstallerMontageView({ montage, logs, userRoles, hasGoogleCalend
                             <CardContent>
                                 {isMeasurementStage && (
                                     <div className="space-y-4">
-                                        <MeasurementScheduler 
-                                            montageId={montage.id}
-                                            currentDate={montage.measurementDate ? new Date(montage.measurementDate as string | number | Date) : null}
-                                            clientPhone={montage.contactPhone}
-                                            hasGoogleCalendar={hasGoogleCalendar}
-                                            onStartProtocol={() => setActiveTab("measurement")}
-                                            isMeasurementDone={!!montage.floorArea}
-                                        />
-                                        
-                                        {!!montage.floorArea && (
-                                            <div className={cn(
-                                                "p-4 border rounded-xl space-y-3",
-                                                montage.costEstimationCompletedAt 
-                                                    ? "bg-green-50 border-green-100" 
-                                                    : "bg-blue-50 border-blue-100"
-                                            )}>
+                                        {montage.costEstimationCompletedAt ? (
+                                            <div className="p-4 border rounded-xl bg-green-50 border-green-100 space-y-3">
                                                 <div className="flex items-center gap-3">
-                                                    <div className={cn(
-                                                        "p-2 rounded-full",
-                                                        montage.costEstimationCompletedAt 
-                                                            ? "bg-green-100 text-green-600" 
-                                                            : "bg-blue-100 text-blue-600"
-                                                    )}>
-                                                        {montage.costEstimationCompletedAt ? <CheckSquare className="w-5 h-5" /> : <Banknote className="w-5 h-5" />}
+                                                    <div className="p-2 bg-green-100 text-green-600 rounded-full">
+                                                        <Clock className="w-5 h-5" />
                                                     </div>
                                                     <div>
-                                                        <h3 className={cn(
-                                                            "font-bold text-base",
-                                                            montage.costEstimationCompletedAt ? "text-green-900" : "text-blue-900"
-                                                        )}>
-                                                            {montage.costEstimationCompletedAt ? "Kosztorys Wysłany" : "Wycena Kosztów"}
+                                                        <h3 className="font-bold text-base text-green-900">
+                                                            Oczekiwanie na realizację
                                                         </h3>
-                                                        <p className={cn(
-                                                            "text-sm",
-                                                            montage.costEstimationCompletedAt ? "text-green-700" : "text-blue-700"
-                                                        )}>
-                                                            {montage.costEstimationCompletedAt 
-                                                                ? "Dane zostały przesłane do biura." 
-                                                                : "Uzupełnij koszty dodatkowe i usługi, aby biuro mogło przygotować ofertę."}
+                                                        <p className="text-sm text-green-700">
+                                                            Dane z pomiaru i kosztorys zostały przesłane do biura. 
+                                                            {montage.scheduledInstallationAt && (
+                                                                <span className="block mt-1 font-medium">
+                                                                    Planowany termin montażu: {format(new Date(montage.scheduledInstallationAt), "dd.MM.yyyy", { locale: pl })}
+                                                                </span>
+                                                            )}
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <Button 
-                                                    className={cn(
-                                                        "w-full",
-                                                        montage.costEstimationCompletedAt 
-                                                            ? "bg-white text-green-700 border border-green-200 hover:bg-green-50" 
-                                                            : "bg-blue-600 hover:bg-blue-700 text-white"
-                                                    )}
-                                                    onClick={() => {
-                                                        setDefaultOpenModal('costEstimation');
-                                                        setActiveTab("measurement");
-                                                    }}
-                                                >
-                                                    {montage.costEstimationCompletedAt ? "Edytuj Kosztorys" : "Uzupełnij Kosztorys"}
-                                                </Button>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <Button 
+                                                        variant="outline"
+                                                        className="w-full bg-white text-green-700 border-green-200 hover:bg-green-50"
+                                                        onClick={() => {
+                                                            setDefaultOpenModal('costEstimation');
+                                                            setActiveTab("measurement");
+                                                        }}
+                                                    >
+                                                        Edytuj Kosztorys
+                                                    </Button>
+                                                    <Button 
+                                                        variant="outline"
+                                                        className="w-full bg-white text-green-700 border-green-200 hover:bg-green-50"
+                                                        onClick={() => {
+                                                            setActiveTab("measurement");
+                                                        }}
+                                                    >
+                                                        Podgląd Pomiaru
+                                                    </Button>
+                                                </div>
                                             </div>
+                                        ) : (
+                                            <>
+                                                <MeasurementScheduler 
+                                                    montageId={montage.id}
+                                                    currentDate={montage.measurementDate ? new Date(montage.measurementDate as string | number | Date) : null}
+                                                    clientPhone={montage.contactPhone}
+                                                    hasGoogleCalendar={hasGoogleCalendar}
+                                                    onStartProtocol={() => setActiveTab("measurement")}
+                                                    isMeasurementDone={!!montage.floorArea}
+                                                />
+                                                
+                                                {!!montage.floorArea && (
+                                                    <div className={cn(
+                                                        "p-4 border rounded-xl space-y-3",
+                                                        montage.costEstimationCompletedAt 
+                                                            ? "bg-green-50 border-green-100" 
+                                                            : "bg-blue-50 border-blue-100"
+                                                    )}>
+                                                        <div className="flex items-center gap-3">
+                                                            <div className={cn(
+                                                                "p-2 rounded-full",
+                                                                montage.costEstimationCompletedAt 
+                                                                    ? "bg-green-100 text-green-600" 
+                                                                    : "bg-blue-100 text-blue-600"
+                                                            )}>
+                                                                {montage.costEstimationCompletedAt ? <CheckSquare className="w-5 h-5" /> : <Banknote className="w-5 h-5" />}
+                                                            </div>
+                                                            <div>
+                                                                <h3 className={cn(
+                                                                    "font-bold text-base",
+                                                                    montage.costEstimationCompletedAt ? "text-green-900" : "text-blue-900"
+                                                                )}>
+                                                                    {montage.costEstimationCompletedAt ? "Kosztorys Wysłany" : "Wycena Kosztów"}
+                                                                </h3>
+                                                                <p className={cn(
+                                                                    "text-sm",
+                                                                    montage.costEstimationCompletedAt ? "text-green-700" : "text-blue-700"
+                                                                )}>
+                                                                    {montage.costEstimationCompletedAt 
+                                                                        ? "Dane zostały przesłane do biura." 
+                                                                        : "Uzupełnij koszty dodatkowe i usługi, aby biuro mogło przygotować ofertę."}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <Button 
+                                                            className={cn(
+                                                                "w-full",
+                                                                montage.costEstimationCompletedAt 
+                                                                    ? "bg-white text-green-700 border border-green-200 hover:bg-green-50" 
+                                                                    : "bg-blue-600 hover:bg-blue-700 text-white"
+                                                            )}
+                                                            onClick={() => {
+                                                                setDefaultOpenModal('costEstimation');
+                                                                setActiveTab("measurement");
+                                                            }}
+                                                        >
+                                                            {montage.costEstimationCompletedAt ? "Edytuj Kosztorys" : "Uzupełnij Kosztorys"}
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                            </>
                                         )}
                                     </div>
                                 )}

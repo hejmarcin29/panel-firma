@@ -122,6 +122,13 @@ export function MeasurementAssistantModal({
         onClose();
     };
 
+    const isFormValid = () => {
+        const isDateValid = !!measurementDate;
+        const isFloorValid = !!floorArea && parseFloat(floorArea) > 0 && !!panelModel;
+        const isInstallDateValid = !!dateRange?.from;
+        return isDateValid && isFloorValid && isInstallDateValid;
+    };
+
     const renderStepContent = () => {
         switch (currentStep) {
             case 0: // Start
@@ -321,6 +328,15 @@ export function MeasurementAssistantModal({
                                     </Button>
                                 </div>
                             </div>
+                            
+                            {(!floorArea || parseFloat(floorArea) <= 0 || !panelModel) && (
+                                <p className="text-red-500 text-sm font-medium flex items-center gap-2 justify-center pt-2">
+                                    <AlertCircle className="w-4 h-4" />
+                                    {!floorArea || parseFloat(floorArea) <= 0 
+                                        ? "Wpisz metraż, aby kontynuować." 
+                                        : "Wybierz model panela, aby kontynuować."}
+                                </p>
+                            )}
                         </div>
                     </div>
                 );
@@ -478,40 +494,83 @@ export function MeasurementAssistantModal({
                                     )}
                                 </div>
                             </div>
+                            
+                            {!dateRange?.from && (
+                                <p className="text-red-500 text-sm font-medium flex items-center gap-2">
+                                    <AlertCircle className="w-4 h-4" />
+                                    Wybierz termin w kalendarzu, aby kontynuować.
+                                </p>
+                            )}
                         </div>
                     </div>
                 );
             case 6: // Finish
+                const isValid = isFormValid();
                 return (
                     <div className="space-y-6 text-center">
                         <div className="flex justify-center mb-6">
-                            <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center">
-                                <CheckCircle2 className="w-12 h-12 text-green-600" />
+                            <div className={cn(
+                                "w-24 h-24 rounded-full flex items-center justify-center",
+                                isValid ? "bg-green-100" : "bg-red-100"
+                            )}>
+                                {isValid ? (
+                                    <CheckCircle2 className="w-12 h-12 text-green-600" />
+                                ) : (
+                                    <AlertCircle className="w-12 h-12 text-red-600" />
+                                )}
                             </div>
                         </div>
-                        <h2 className="text-3xl font-bold">Gotowe!</h2>
+                        <h2 className="text-3xl font-bold">{isValid ? "Gotowe!" : "Brakuje danych"}</h2>
                         <p className="text-muted-foreground text-lg max-w-md mx-auto">
-                            Wprowadziłeś wszystkie kluczowe dane.
+                            {isValid 
+                                ? "Wprowadziłeś wszystkie kluczowe dane." 
+                                : "Uzupełnij brakujące informacje, aby zatwierdzić pomiar."}
                         </p>
                         
                         <div className="bg-muted/30 p-4 rounded-xl text-left space-y-2 mt-8">
-                            <div className="flex justify-between">
+                            <div className="flex justify-between items-center">
                                 <span className="text-muted-foreground">Data pomiaru:</span>
-                                <span className="font-medium">{measurementDate ? format(new Date(measurementDate), "dd.MM.yyyy HH:mm") : "-"}</span>
+                                {measurementDate ? (
+                                    <span className="font-medium">{format(new Date(measurementDate), "dd.MM.yyyy HH:mm")}</span>
+                                ) : (
+                                    <span className="text-red-500 font-bold text-sm flex items-center gap-1">
+                                        <AlertCircle className="w-3 h-3" /> Brak
+                                    </span>
+                                )}
                             </div>
-                            <div className="flex justify-between">
+                            <div className="flex justify-between items-center">
                                 <span className="text-muted-foreground">Termin montażu:</span>
-                                <span className="font-medium">
-                                    {dateRange?.from ? format(dateRange.from, "dd.MM.yyyy") : "-"}
-                                </span>
+                                {dateRange?.from ? (
+                                    <span className="font-medium">{format(dateRange.from, "dd.MM.yyyy")}</span>
+                                ) : (
+                                    <span className="text-red-500 font-bold text-sm flex items-center gap-1">
+                                        <AlertCircle className="w-3 h-3" /> Brak
+                                    </span>
+                                )}
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-muted-foreground">Metraż:</span>
+                                {floorArea && parseFloat(floorArea) > 0 ? (
+                                    <span className="font-medium">{floorArea} m²</span>
+                                ) : (
+                                    <span className="text-red-500 font-bold text-sm flex items-center gap-1">
+                                        <AlertCircle className="w-3 h-3" /> Brak
+                                    </span>
+                                )}
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-muted-foreground">Model panela:</span>
+                                {panelModel ? (
+                                    <span className="font-medium truncate max-w-[150px]">{panelModel}</span>
+                                ) : (
+                                    <span className="text-red-500 font-bold text-sm flex items-center gap-1">
+                                        <AlertCircle className="w-3 h-3" /> Brak
+                                    </span>
+                                )}
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">VAT:</span>
                                 <span className="font-medium">{isHousingVat ? "8%" : "23%"}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">Metraż:</span>
-                                <span className="font-medium">{floorArea} m²</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Materiały dod.:</span>
@@ -584,6 +643,7 @@ export function MeasurementAssistantModal({
                                 size="lg"
                                 className="flex-1 bg-green-600 hover:bg-green-700"
                                 onClick={handleNext}
+                                disabled={!isFormValid()}
                             >
                                 Zatwierdź i Wyślij
                                 <Check className="w-4 h-4 ml-2" />
@@ -605,7 +665,6 @@ export function MeasurementAssistantModal({
                                 size="lg"
                                 className="flex-1"
                                 onClick={handleNext}
-                                disabled={currentStep === 0 && !measurementDate}
                             >
                                 Dalej
                                 <ChevronRight className="w-4 h-4 ml-2" />
