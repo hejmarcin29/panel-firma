@@ -496,6 +496,8 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
         setIsPanelSelectorOpen={setIsPanelSelectorOpen}
         additionalMaterials={additionalMaterials}
         setAdditionalMaterials={setAdditionalMaterials}
+        dateRange={dateRange}
+        setDateRange={setDateRange}
       />
 
       <CostEstimationModal

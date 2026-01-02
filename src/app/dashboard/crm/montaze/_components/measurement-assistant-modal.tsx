@@ -7,8 +7,11 @@ import {
     Ruler, Hammer, Package, CheckCircle2, AlertCircle, Plus, Trash2 
 } from "lucide-react";
 import { format } from "date-fns";
+import { pl } from "date-fns/locale";
+import { DateRange } from "react-day-picker";
 
 import { Button } from "@/components/ui/button";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -51,6 +54,10 @@ interface MeasurementAssistantModalProps {
 
     additionalMaterials: MeasurementMaterialItem[];
     setAdditionalMaterials: (val: MeasurementMaterialItem[]) => void;
+
+    // Installation Date
+    dateRange: DateRange | undefined;
+    setDateRange: (range: DateRange | undefined) => void;
 }
 
 const STEPS = [
@@ -59,6 +66,7 @@ const STEPS = [
     { id: 'subfloor', title: 'Podłoże', icon: Ruler },
     { id: 'floor_tech', title: 'Podłoga', icon: Package },
     { id: 'materials', title: 'Materiały', icon: Hammer },
+    { id: 'installation', title: 'Realizacja', icon: Calendar },
     { id: 'finish', title: 'Podsumowanie', icon: CheckCircle2 },
 ];
 
@@ -72,7 +80,8 @@ export function MeasurementAssistantModal({
     floorPattern, setFloorPattern, panelWaste, setPanelWaste,
     floorArea, setFloorArea,
     panelModel, setIsPanelSelectorOpen,
-    additionalMaterials, setAdditionalMaterials
+    additionalMaterials, setAdditionalMaterials,
+    dateRange, setDateRange
 }: MeasurementAssistantModalProps) {
     const [currentStep, setCurrentStep] = useState(0);
 
@@ -434,7 +443,45 @@ export function MeasurementAssistantModal({
                         </div>
                     </div>
                 );
-            case 5: // Finish
+            case 5: // Installation Date
+                return (
+                    <div className="space-y-6">
+                        <div className="text-center space-y-2">
+                            <h2 className="text-2xl font-bold">Termin Realizacji</h2>
+                            <p className="text-muted-foreground">Kiedy planujesz wykonać montaż?</p>
+                        </div>
+
+                        <div className="flex flex-col items-center space-y-4">
+                            <div className="p-4 border rounded-xl bg-card">
+                                <CalendarComponent
+                                    mode="range"
+                                    selected={dateRange}
+                                    onSelect={setDateRange}
+                                    numberOfMonths={1}
+                                    locale={pl}
+                                    className="rounded-md border"
+                                />
+                            </div>
+                            
+                            <div className="text-center p-4 bg-muted/30 rounded-xl w-full">
+                                <Label className="text-muted-foreground mb-1 block">Wybrany termin:</Label>
+                                <div className="text-lg font-medium">
+                                    {dateRange?.from ? (
+                                        <>
+                                            {format(dateRange.from, "dd MMMM yyyy", { locale: pl })}
+                                            {dateRange.to && (
+                                                <> - {format(dateRange.to, "dd MMMM yyyy", { locale: pl })}</>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <span className="text-muted-foreground italic">Nie wybrano daty</span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            case 6: // Finish
                 return (
                     <div className="space-y-6 text-center">
                         <div className="flex justify-center mb-6">
@@ -449,8 +496,14 @@ export function MeasurementAssistantModal({
                         
                         <div className="bg-muted/30 p-4 rounded-xl text-left space-y-2 mt-8">
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Data:</span>
+                                <span className="text-muted-foreground">Data pomiaru:</span>
                                 <span className="font-medium">{measurementDate ? format(new Date(measurementDate), "dd.MM.yyyy HH:mm") : "-"}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">Termin montażu:</span>
+                                <span className="font-medium">
+                                    {dateRange?.from ? format(dateRange.from, "dd.MM.yyyy") : "-"}
+                                </span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">VAT:</span>
