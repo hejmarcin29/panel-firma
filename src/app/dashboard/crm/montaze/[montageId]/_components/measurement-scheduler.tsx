@@ -311,7 +311,7 @@ function ConfirmationView({ date, onReschedule, googleCalendarLink, hasGoogleCal
                         )}
                         {isMeasurementDone && (
                             <div className="p-4 bg-green-50 text-green-800 rounded-md text-sm">
-                                Dane z pomiaru zostały zapisane. Możesz je edytować lub przejść do wyceny (jeśli masz uprawnienia).
+                                Dane z pomiaru zostały zapisane. Możesz je edytować lub przejść do uzupełnienia kosztorysu prac (jeśli masz uprawnienia).
                             </div>
                         )}
                     </div>
