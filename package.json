@@ -3,12 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:backup": "pwsh ./scripts/backup_full.ps1",
     "db:studio": "drizzle-kit studio",
     "setup:hooks": "git config core.hooksPath .githooks"
   },
