@@ -126,12 +126,12 @@ export function MontageHeader({ montage, userRoles = ['admin'] }: MontageHeaderP
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        {canEditStatus && montage.status !== 'cancelled' && (
+                        {canEditStatus && montage.status !== 'rejected' && (
                              <DropdownMenuItem 
-                                onClick={() => handleStatusChange('cancelled')}
+                                onClick={() => handleStatusChange('rejected')}
                                 disabled={pending}
                             >
-                                Anuluj montaż
+                                Odrzuć montaż
                             </DropdownMenuItem>
                         )}
                         {canDelete && (
