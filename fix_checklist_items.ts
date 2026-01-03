@@ -9,6 +9,7 @@ type MontageChecklistTemplate = {
 	label: string;
 	allowAttachment: boolean;
     associatedStage?: string;
+    assignedRole?: 'admin' | 'office' | 'measurer' | 'installer' | 'client';
 };
 
 const DEFAULT_MONTAGE_CHECKLIST: readonly MontageChecklistTemplate[] = [
