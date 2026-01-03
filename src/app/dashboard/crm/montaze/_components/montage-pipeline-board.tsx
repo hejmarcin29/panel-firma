@@ -365,7 +365,8 @@ export function MontagePipelineBoard({ montages, statusOptions, threatDays, aler
             <PipelineColumn
               key={status.value}
               status={status}
-              items={board[status.value] ?? []}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              items={board[status.value as any] ?? []}
               statusOptions={statusOptions}
               isPending={isPending}
               threatDays={threatDays}
