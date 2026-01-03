@@ -314,32 +314,30 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
   const [isDrawing, setIsDrawing] = useState(false);
   const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
 
+  // Initialize canvas when modal opens
   useEffect(() => {
-    if (canvasRef.current) {
+    if (isSketchOpen && canvasRef.current) {
       const canvas = canvasRef.current;
+      // Set canvas size to match display size
       canvas.width = canvas.offsetWidth;
-      canvas.height = 300; // Fixed height for now
+      canvas.height = canvas.offsetHeight;
+      
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.lineCap = 'round';
         ctx.strokeStyle = 'black';
         ctx.lineWidth = 2;
         setContext(ctx);
-      }
-    }
-  }, []);
 
-  useEffect(() => {
-    if (isSketchOpen && sketchDataUrl && canvasRef.current) {
-        const canvas = canvasRef.current;
-        const context = canvas.getContext('2d');
-        if (context) {
+        // Load existing sketch if available
+        if (sketchDataUrl) {
             const img = new Image();
             img.onload = () => {
-                context.drawImage(img, 0, 0);
+                ctx.drawImage(img, 0, 0);
             };
             img.src = sketchDataUrl;
         }
+      }
     }
   }, [isSketchOpen, sketchDataUrl]);
 
@@ -676,7 +674,7 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
                                         </Button>
                                     </DialogTrigger>
                                 )}
-                                <DialogContent className="max-w-3xl w-full h-[80vh] flex flex-col" onPointerDownOutside={(e) => e.preventDefault()}>
+                                <DialogContent className="max-w-4xl w-full h-[80vh] flex flex-col" onPointerDownOutside={(e) => e.preventDefault()}>
                                     <DialogHeader>
                                     <DialogTitle>Szkic sytuacyjny</DialogTitle>
                                     </DialogHeader>
@@ -684,8 +682,6 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
                                     <canvas
                                         ref={canvasRef}
                                         className="w-full h-full cursor-crosshair absolute inset-0"
-                                        width={800}
-                                        height={600}
                                         onMouseDown={startDrawing}
                                         onMouseMove={draw}
                                         onMouseUp={stopDrawing}

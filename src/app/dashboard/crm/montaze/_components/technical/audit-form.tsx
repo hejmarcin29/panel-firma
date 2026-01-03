@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { Loader2 } from 'lucide-react';
+import { useState, useTransition, useRef } from 'react';
+import { Loader2, Camera, X, ImagePlus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-import { updateTechnicalAudit } from '../../technical-actions';
+import { updateTechnicalAudit, uploadAuditPhotoAction } from '../../technical-actions';
 import type { TechnicalAuditData } from '../../technical-data';
 
 interface AuditFormProps {
@@ -24,9 +24,10 @@ interface AuditFormProps {
   initialData: TechnicalAuditData | null;
   readOnly?: boolean;
   hideSaveButton?: boolean;
+  onChange?: (data: TechnicalAuditData) => void;
 }
 
-export function AuditForm({ montageId, initialData, readOnly = false, hideSaveButton = false }: AuditFormProps) {
+export function AuditForm({ montageId, initialData, readOnly = false, hideSaveButton = false, onChange }: AuditFormProps) {
   const [isPending, startTransition] = useTransition();
   
   const defaultValues: TechnicalAuditData = {
@@ -42,6 +43,9 @@ export function AuditForm({ montageId, initialData, readOnly = false, hideSaveBu
   };
 
   const [formData, setFormData] = useState<TechnicalAuditData>(defaultValues);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleSave = () => {
     startTransition(async () => {
@@ -49,8 +53,54 @@ export function AuditForm({ montageId, initialData, readOnly = false, hideSaveBu
     });
   };
 
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+        setIsUploading(true);
+        try {
+            const uploadPromises = Array.from(files).map(file => {
+                const formDataUpload = new FormData();
+                formDataUpload.append('montageId', montageId);
+                formDataUpload.append('file', file);
+                return uploadAuditPhotoAction(formDataUpload);
+            });
+            
+            const urls = await Promise.all(uploadPromises);
+            
+            setFormData(prev => {
+                const newData = {
+                    ...prev,
+                    photos: [...(prev.photos || []), ...urls]
+                };
+                onChange?.(newData);
+                return newData;
+            });
+        } catch (error) {
+            console.error('Upload failed', error);
+        } finally {
+            setIsUploading(false);
+            if (e.target) e.target.value = '';
+        }
+    }
+  };
+
+  const removePhoto = (index: number) => {
+    setFormData(prev => {
+        const newData = {
+            ...prev,
+            photos: (prev.photos || []).filter((_, i) => i !== index)
+        };
+        onChange?.(newData);
+        return newData;
+    });
+  };
+
   const handleChange = (field: keyof TechnicalAuditData, value: string | number | boolean | null) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+        const newData = { ...prev, [field]: value };
+        onChange?.(newData);
+        return newData;
+    });
   };
 
   return (
@@ -173,6 +223,74 @@ export function AuditForm({ montageId, initialData, readOnly = false, hideSaveBu
                 onChange={(e) => handleChange('notes', e.target.value)}
                 disabled={readOnly}
                 placeholder="Opisz ewentualne pęknięcia, dylatacje itp."
+            />
+        </div>
+
+        <div className="space-y-2">
+            <Label>Zdjęcia / Dokumentacja</Label>
+            <div className="grid grid-cols-3 gap-2">
+                {formData.photos?.map((url, index) => (
+                    <div key={index} className="relative aspect-square bg-muted rounded-md overflow-hidden group">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={url} alt="Audit" className="w-full h-full object-cover" />
+                        {!readOnly && (
+                            <button 
+                                onClick={() => removePhoto(index)}
+                                className="absolute top-1 right-1 bg-black/50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                                <X className="w-3 h-3" />
+                            </button>
+                        )}
+                    </div>
+                ))}
+                {!readOnly && (
+                    <>
+                        <button 
+                            onClick={() => cameraInputRef.current?.click()}
+                            disabled={isUploading}
+                            className="aspect-square flex flex-col items-center justify-center border-2 border-dashed rounded-md hover:bg-muted/50 transition-colors bg-background"
+                        >
+                            {isUploading ? (
+                                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                            ) : (
+                                <>
+                                    <Camera className="w-6 h-6 text-muted-foreground mb-1" />
+                                    <span className="text-[10px] text-muted-foreground font-medium">Aparat</span>
+                                </>
+                            )}
+                        </button>
+                        <button 
+                            onClick={() => galleryInputRef.current?.click()}
+                            disabled={isUploading}
+                            className="aspect-square flex flex-col items-center justify-center border-2 border-dashed rounded-md hover:bg-muted/50 transition-colors bg-background"
+                        >
+                            {isUploading ? (
+                                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                            ) : (
+                                <>
+                                    <ImagePlus className="w-6 h-6 text-muted-foreground mb-1" />
+                                    <span className="text-[10px] text-muted-foreground font-medium">Galeria</span>
+                                </>
+                            )}
+                        </button>
+                    </>
+                )}
+            </div>
+            <input 
+                type="file" 
+                ref={cameraInputRef} 
+                className="hidden" 
+                accept="image/*"
+                capture="environment"
+                onChange={handleFileSelect}
+            />
+            <input 
+                type="file" 
+                ref={galleryInputRef} 
+                className="hidden" 
+                accept="image/*"
+                multiple
+                onChange={handleFileSelect}
             />
         </div>
 

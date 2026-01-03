@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { AuditForm } from "./technical/audit-form";
+import { updateTechnicalAudit } from "../technical-actions";
 import type { TechnicalAuditData } from "../technical-data";
 import type { MeasurementMaterialItem } from "../types";
 
@@ -84,6 +85,7 @@ export function MeasurementAssistantModal({
     dateRange, setDateRange
 }: MeasurementAssistantModalProps) {
     const [currentStep, setCurrentStep] = useState(0);
+    const [auditData, setAuditData] = useState<TechnicalAuditData | null>(technicalAudit);
 
     // Auto-calculate waste
     useEffect(() => {
@@ -101,11 +103,14 @@ export function MeasurementAssistantModal({
 
     if (!isOpen) return null;
 
-    const handleNext = () => {
+    const handleNext = async () => {
         if (currentStep < STEPS.length - 1) {
             setCurrentStep(prev => prev + 1);
         } else {
             // Confirm action
+            if (auditData) {
+                await updateTechnicalAudit(montageId, auditData);
+            }
             onSave();
             onClose();
         }
@@ -117,7 +122,10 @@ export function MeasurementAssistantModal({
         }
     };
 
-    const handleSaveDraft = () => {
+    const handleSaveDraft = async () => {
+        if (auditData) {
+            await updateTechnicalAudit(montageId, auditData);
+        }
         onSave();
         onClose();
     };
@@ -226,6 +234,7 @@ export function MeasurementAssistantModal({
                                 initialData={technicalAudit} 
                                 readOnly={false}
                                 hideSaveButton={true}
+                                onChange={setAuditData}
                             />
                         </div>
                     </div>
