@@ -168,7 +168,7 @@ function PipelineColumn({
               <DraggableMontageCard
                 key={montage.id}
                 montage={montage}
-                status={status.value}
+                status={status.value as any}
                 statusOptions={statusOptions}
                 disabled={isPending}
                 threatDays={threatDays}
