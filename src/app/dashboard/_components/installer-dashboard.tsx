@@ -29,7 +29,7 @@ interface DashboardItem {
     floorArea?: number | null;
     // Relations
     clientSignatureUrl?: string | null;
-    checklistItems?: { isChecked: boolean }[];
+    checklistItems?: { completed: boolean }[];
     notes?: { attachments?: { id: string }[] }[];
 }
 
@@ -153,7 +153,10 @@ export function InstallerDashboard({ overdue, today, upcoming, backlog, history 
                 <JobCompletionWizard 
                     open={wizardOpen} 
                     onOpenChange={setWizardOpen} 
-                    montage={selectedMontage} 
+                    montage={{
+                        ...selectedMontage,
+                        checklistItems: selectedMontage.checklistItems?.map(i => ({ isChecked: i.completed }))
+                    }} 
                 />
             )}
         </div>
