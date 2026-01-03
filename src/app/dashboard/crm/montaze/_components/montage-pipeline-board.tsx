@@ -295,16 +295,6 @@ export function MontagePipelineBoard({ montages, statusOptions, threatDays, aler
       return;
     }
 
-    // Validation: Cannot move from 'lead' to 'before_measurement' without an assigned installer or measurer
-    if (sourceStatus === 'lead' && targetStatus === 'before_measurement') {
-      if (!movingMontage.installerId && !movingMontage.measurerId) {
-        toast.error("Błąd zmiany statusu", {
-          description: "Aby przejść do etapu 'Przed pomiarem', musisz przypisać montażystę lub pomiarowca."
-        });
-        return;
-      }
-    }
-
     const nextBoard = cloneBoard(board);
 
     nextBoard[sourceStatus] = nextBoard[sourceStatus].filter((item) => item.id !== movingMontage.id);
