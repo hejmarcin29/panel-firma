@@ -168,6 +168,7 @@ function PipelineColumn({
               <DraggableMontageCard
                 key={montage.id}
                 montage={montage}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 status={status.value as any}
                 statusOptions={statusOptions}
                 disabled={isPending}
