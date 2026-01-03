@@ -50,7 +50,7 @@ export function MontagePipelineCard({ montage, threatDays, alertSettings }: Prop
         const dateToCheck = montage.scheduledInstallationAt || montage.forecastedInstallationDate;
         if (!dateToCheck) return false;
         // Ignore completed statuses if needed, but for now just check date
-        if (montage.status === 'completed' || montage.status === 'cancelled') return false;
+        if (montage.status === 'completed' || montage.status === 'rejected') return false;
 
         const now = new Date();
         const scheduled = new Date(dateToCheck);
