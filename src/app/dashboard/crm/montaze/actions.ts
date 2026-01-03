@@ -554,8 +554,8 @@ export async function updateMontageStatus({ montageId, status }: UpdateMontageSt
 
     const montage = await getMontageOrThrow(montageId);
 
-    // Validation: Cannot move to 'before_measurement' without assigned installer/measurer
-    if (status === 'before_measurement' && montage.status === 'lead') {
+    // Validation: Cannot move to 'measurement_scheduled' without assigned installer/measurer
+    if (status === 'measurement_scheduled' && montage.status === 'new_lead') {
         if (!montage.installerId && !montage.measurerId) {
             throw new Error('Aby skierować do pomiaru, musisz przypisać montażystę lub pomiarowca.');
         }
