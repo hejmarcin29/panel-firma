@@ -16,6 +16,7 @@ import {
     customers,
     montages,
     users,
+    type MontageStatus
 } from '@/lib/db/schema';
 import { tryGetR2Config } from '@/lib/r2/config';
 import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
@@ -190,7 +191,7 @@ export async function generateCustomerToken(montageId: string) {
     return token;
 }
 
-export async function updateMontageStatus(montageId: string, newStatus: string) {
+export async function updateMontageStatus(montageId: string, newStatus: MontageStatus) {
     const user = await requireUser();
     
     await db.update(montages)
