@@ -45,7 +45,7 @@ export function InstallerDetailsView({ installer, montages }: InstallerDetailsVi
         ? installer.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
         : installer.email.substring(0, 2).toUpperCase();
 
-    const activeMontages = montages.filter(m => m.status !== 'completed' && m.status !== 'cancelled');
+    const activeMontages = montages.filter(m => m.status !== 'completed' && m.status !== 'rejected');
     const completedMontages = montages.filter(m => m.status === 'completed');
     
     // Stats
