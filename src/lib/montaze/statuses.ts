@@ -80,6 +80,7 @@ export async function getMontageStatusDefinitions(): Promise<MontageStatusDefini
 					description: item.description,
 					order: typeof item.order === 'number' ? item.order : 0,
                     isSystem: Boolean(item.isSystem),
+                    group: typeof item.group === 'string' ? item.group : 'LEJKI',
 				});
 			}
 		}
