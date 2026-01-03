@@ -56,9 +56,11 @@ export default async function DashboardPage() {
     if (installerData) {
         return (
             <InstallerDashboard 
-                leads={installerData.leads} 
-                schedule={installerData.schedule} 
-                toSchedule={installerData.toSchedule} 
+                overdue={installerData.overdue}
+                today={installerData.today}
+                upcoming={installerData.upcoming}
+                backlog={installerData.backlog}
+                history={installerData.history}
             />
         );
     }

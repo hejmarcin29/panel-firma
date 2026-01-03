@@ -554,9 +554,20 @@ export async function updateMontageStatus({ montageId, status }: UpdateMontageSt
 
     const montage = await getMontageOrThrow(montageId);
 
+    // Validation: Cannot move to 'before_measurement' without assigned installer/measurer
+    if (status === 'before_measurement' && montage.status === 'lead') {
+        if (!montage.installerId && !montage.measurerId) {
+            throw new Error('Aby skierować do pomiaru, musisz przypisać montażystę lub pomiarowca.');
+        }
+    }
+
 	await db
 		.update(montages)
-		.set({ status: resolved, updatedAt: new Date() })
+		.set({ 
+            status: resolved, 
+            updatedAt: new Date(),
+            completedAt: resolved === 'completed' ? new Date() : null
+        })
 		.where(eq(montages.id, montageId));
 
     if (resolved === 'completed') {
@@ -2507,6 +2518,24 @@ export async function sendDataRequest(montageId: string) {
         createdAt: new Date(),
     });
 
+    revalidatePath(`${MONTAGE_DASHBOARD_PATH}/${montageId}`);
+    return { success: true };
+}
+
+export async function finishMontage(montageId: string) {
+    const user = await requireUser();
+    
+    // Reuse existing logic which handles commissions etc.
+    await updateMontageStatus({ montageId, status: 'completed' });
+
+    await logSystemEvent(
+        'montage_finished_by_installer', 
+        `Montażysta ${user.name} zakończył wizytę/montaż.`, 
+        user.id,
+        { montageId }
+    );
+
+    revalidatePath(MONTAGE_DASHBOARD_PATH);
     revalidatePath(`${MONTAGE_DASHBOARD_PATH}/${montageId}`);
     return { success: true };
 }

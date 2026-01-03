@@ -114,6 +114,16 @@ export function ProcessStepItem({ step, isLast, onAdvance, nextStatus, isPending
                     </div>
                 )}
 
+                {/* Completed Date Indicator */}
+                {step.completedDate && (
+                    <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-md border border-emerald-100 w-fit">
+                        <Check className="w-3.5 h-3.5" />
+                        <span className="text-xs font-medium">
+                            Zakończono: {format(step.completedDate, "d MMMM yyyy, HH:mm", { locale: pl })}
+                        </span>
+                    </div>
+                )}
+
                 {/* Checkpoints */}
                 {step.checkpointsState.length > 0 && (
                     <div className="space-y-1.5">

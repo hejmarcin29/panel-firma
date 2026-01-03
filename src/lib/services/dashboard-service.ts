@@ -483,46 +483,112 @@ export async function getInstallerDashboardData(userId: string) {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const leads = await db.query.montages.findMany({
-        where: (table, { and, eq, or, isNull }) => and(
-            eq(table.status, 'lead'),
+    // 1. OVERDUE (Zaległe) - Date < Today AND Not Completed
+    const overdue = await db.query.montages.findMany({
+        where: (table, { and, eq, lt, isNull, or, ne }) => and(
             or(
                 eq(table.measurerId, userId),
                 eq(table.installerId, userId)
+            ),
+            ne(table.status, 'completed'),
+            or(
+                and(lt(table.measurementDate, today), isNull(table.scheduledInstallationAt)), // Overdue measurement
+                lt(table.scheduledInstallationAt, today) // Overdue installation
             ),
             isNull(table.deletedAt)
         ),
-        orderBy: (table, { desc }) => [desc(table.createdAt)],
-        limit: 20
+        orderBy: (table, { asc }) => [asc(table.scheduledInstallationAt), asc(table.measurementDate)],
+        with: {
+            checklistItems: true,
+            notes: {
+                with: {
+                    attachments: true
+                }
+            }
+        }
     });
 
-    const schedule = await db.query.montages.findMany({
-        where: (table, { and, eq, gte, lt, isNull, or }) => and(
+    // 2. TODAY (Dziś) - Date == Today AND Not Completed
+    const todaySchedule = await db.query.montages.findMany({
+        where: (table, { and, eq, gte, lt, isNull, or, ne }) => and(
             or(
                 eq(table.measurerId, userId),
                 eq(table.installerId, userId)
             ),
+            ne(table.status, 'completed'),
             or(
                 and(gte(table.measurementDate, today), lt(table.measurementDate, tomorrow)),
                 and(gte(table.scheduledInstallationAt, today), lt(table.scheduledInstallationAt, tomorrow))
             ),
             isNull(table.deletedAt)
         ),
-        orderBy: (table, { asc }) => [asc(table.measurementDate)]
+        orderBy: (table, { asc }) => [asc(table.measurementDate), asc(table.scheduledInstallationAt)],
+        with: {
+            checklistItems: true,
+            notes: {
+                with: {
+                    attachments: true
+                }
+            }
+        }
     });
 
-    const toSchedule = await db.query.montages.findMany({
-        where: (table, { and, eq, or, isNull }) => and(
-            eq(table.status, 'before_measurement'),
-            isNull(table.measurementDate),
+    // 3. UPCOMING (Nadchodzące) - Date > Today AND Not Completed
+    const upcoming = await db.query.montages.findMany({
+        where: (table, { and, eq, gte, isNull, or, ne }) => and(
             or(
                 eq(table.measurerId, userId),
                 eq(table.installerId, userId)
             ),
+            ne(table.status, 'completed'),
+            or(
+                gte(table.measurementDate, tomorrow),
+                gte(table.scheduledInstallationAt, tomorrow)
+            ),
+            isNull(table.deletedAt)
+        ),
+        orderBy: (table, { asc }) => [asc(table.measurementDate), asc(table.scheduledInstallationAt)],
+        limit: 20
+    });
+
+    // 4. BACKLOG (Poczekalnia) - Assigned but no date OR waiting for next step
+    // Includes: Leads, Before Measurement (no date), After Measurement (waiting for offer/deposit), Before Installation (no date)
+    const backlog = await db.query.montages.findMany({
+        where: (table, { and, eq, or, isNull, ne, gt }) => and(
+            or(
+                eq(table.measurerId, userId),
+                eq(table.installerId, userId)
+            ),
+            ne(table.status, 'completed'),
+            // Condition: No active date for the current stage
+            or(
+                eq(table.status, 'lead'),
+                and(eq(table.status, 'before_measurement'), isNull(table.measurementDate)),
+                and(eq(table.status, 'before_measurement'), gt(table.floorArea, 0)), // "Po pomiarze" (waiting for offer)
+                and(eq(table.status, 'before_installation'), isNull(table.scheduledInstallationAt))
+            ),
+            // Exclude those that are already in overdue/today/upcoming (have dates)
+            isNull(table.measurementDate), 
+            isNull(table.scheduledInstallationAt),
             isNull(table.deletedAt)
         ),
         orderBy: (table, { desc }) => [desc(table.updatedAt)],
+        limit: 20
     });
 
-    return { leads, schedule, toSchedule };
+    // 5. HISTORY (Historia) - Completed
+    const history = await db.query.montages.findMany({
+        where: (table, { and, eq, or, isNull }) => and(
+            or(
+                eq(table.measurerId, userId),
+                eq(table.installerId, userId)
+            ),
+            eq(table.status, 'completed'),
+            isNull(table.deletedAt)
+        ),
+        orderBy: (table, { desc }) => [desc(table.updatedAt)],
+        limit: 5
+    });
+
+    return { overdue, today: todaySchedule, upcoming, backlog, history };
 }

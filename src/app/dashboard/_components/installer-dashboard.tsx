@@ -1,18 +1,21 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Phone, Calendar, ArrowRight, Send, Navigation, Plus, Inbox, Loader2, CheckCircle2 } from "lucide-react";
+import { MapPin, Phone, Calendar, ArrowRight, Send, Navigation, Plus, Inbox, Loader2, CheckCircle2, AlertTriangle, Clock, History } from "lucide-react";
 import Link from "next/link";
-import { format, isToday } from "date-fns";
+import { format, isToday, isTomorrow } from "date-fns";
+import { pl } from 'date-fns/locale';
 import { toast } from "sonner";
 import { sendDataRequest } from "../crm/montaze/actions";
+import { JobCompletionWizard } from '../crm/montaze/_components/job-completion-wizard';
 
 interface DashboardItem {
     id: string;
     clientName: string;
+    status: string;
     installationAddress?: string | null;
     address?: string | null;
     installationCity?: string | null;
@@ -23,22 +26,37 @@ interface DashboardItem {
     contactPhone?: string | null;
     contactEmail?: string | null;
     createdAt: Date | string;
+    floorArea?: number | null;
+    // Relations
+    clientSignatureUrl?: string | null;
+    checklistItems?: { isChecked: boolean }[];
+    notes?: { attachments?: { id: string }[] }[];
 }
 
 interface InstallerDashboardProps {
-    leads: DashboardItem[];
-    schedule: DashboardItem[];
-    toSchedule?: DashboardItem[];
+    overdue: DashboardItem[];
+    today: DashboardItem[];
+    upcoming: DashboardItem[];
+    backlog: DashboardItem[];
+    history: DashboardItem[];
 }
 
-export function InstallerDashboard({ leads, schedule, toSchedule = [] }: InstallerDashboardProps) {
+export function InstallerDashboard({ overdue, today, upcoming, backlog, history }: InstallerDashboardProps) {
+    const [wizardOpen, setWizardOpen] = useState(false);
+    const [selectedMontage, setSelectedMontage] = useState<DashboardItem | null>(null);
+
+    const handleFinishClick = (item: DashboardItem) => {
+        setSelectedMontage(item);
+        setWizardOpen(true);
+    };
+
     return (
-        <div className="space-y-6 p-4 pb-24 max-w-md mx-auto md:max-w-4xl">
+        <div className="space-y-8 p-4 pb-32 max-w-md mx-auto md:max-w-4xl">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold">Cześć!</h1>
-                    <p className="text-muted-foreground">Twój plan na dziś</p>
+                    <p className="text-muted-foreground">Twój plan pracy</p>
                 </div>
                 <Button size="icon" variant="outline" asChild>
                     <Link href="/dashboard/crm/montaze/nowy">
@@ -47,99 +65,251 @@ export function InstallerDashboard({ leads, schedule, toSchedule = [] }: Install
                 </Button>
             </div>
 
-            {/* Today's Schedule */}
+            {/* 1. OVERDUE (Zaległe) */}
+            {overdue.length > 0 && (
+                <section className="space-y-3">
+                    <div className="flex items-center gap-2 text-red-600 animate-pulse">
+                        <AlertTriangle className="h-5 w-5" />
+                        <h2 className="font-bold text-lg">Wymaga uwagi ({overdue.length})</h2>
+                    </div>
+                    <div className="space-y-3">
+                        {overdue.map((item) => (
+                            <OverdueCard key={item.id} item={item} onFinish={() => handleFinishClick(item)} />
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {/* 2. TODAY (Dziś) */}
             <section className="space-y-3">
                 <h2 className="font-semibold text-lg flex items-center gap-2">
                     <Calendar className="h-5 w-5 text-primary" />
                     Dzisiejsze wizyty
                 </h2>
-                {schedule.length === 0 ? (
-                    <Card className="bg-muted/50 border-dashed">
+                {today.length === 0 ? (
+                    <Card className="bg-muted/30 border-dashed">
                         <CardContent className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
                             <Calendar className="h-8 w-8 mb-2 opacity-50" />
                             <p>Brak zaplanowanych wizyt na dziś.</p>
                         </CardContent>
                     </Card>
                 ) : (
-                    <div className="space-y-3">
-                        {schedule.map((item) => (
-                            <ScheduleCard key={item.id} item={item} />
+                    <div className="space-y-4">
+                        {today.map((item) => (
+                            <TodayCard key={item.id} item={item} onFinish={() => handleFinishClick(item)} />
                         ))}
                     </div>
                 )}
             </section>
 
-            {/* To Schedule (New Section) */}
-            {toSchedule.length > 0 && (
+            {/* 3. UPCOMING (Nadchodzące) */}
+            {upcoming.length > 0 && (
                 <section className="space-y-3">
-                    <h2 className="font-semibold text-lg flex items-center gap-2 text-orange-600">
-                        <Phone className="h-5 w-5" />
-                        Do umówienia
-                        <Badge variant="destructive" className="ml-2">{toSchedule.length}</Badge>
+                    <h2 className="font-semibold text-lg flex items-center gap-2 text-muted-foreground">
+                        <Calendar className="h-5 w-5" />
+                        Nadchodzące
                     </h2>
-                    <div className="space-y-3">
-                        {toSchedule.map((item) => (
-                            <ToScheduleCard key={item.id} item={item} />
+                    <div className="space-y-2">
+                        {upcoming.map((item) => (
+                            <UpcomingCard key={item.id} item={item} />
                         ))}
                     </div>
                 </section>
             )}
 
-            {/* Inbox / Leads */}
-            <section className="space-y-3">
-                <h2 className="font-semibold text-lg flex items-center gap-2">
-                    <Inbox className="h-5 w-5 text-primary" />
-                    Nowe zgłoszenia
-                    {leads.length > 0 && <Badge variant="secondary" className="ml-2">{leads.length}</Badge>}
-                </h2>
-                {leads.length === 0 ? (
-                    <p className="text-sm text-muted-foreground pl-1">Brak nowych zgłoszeń.</p>
-                ) : (
+            {/* 4. BACKLOG (Poczekalnia) */}
+            {backlog.length > 0 && (
+                <section className="space-y-3">
+                    <h2 className="font-semibold text-lg flex items-center gap-2 text-orange-600">
+                        <Clock className="h-5 w-5" />
+                        Poczekalnia / Do umówienia
+                        <Badge variant="secondary" className="ml-2">{backlog.length}</Badge>
+                    </h2>
                     <div className="space-y-3">
-                        {leads.map((item) => (
-                            <LeadCard key={item.id} item={item} />
+                        {backlog.map((item) => (
+                            <BacklogCard key={item.id} item={item} />
                         ))}
                     </div>
-                )}
-            </section>
+                </section>
+            )}
+
+            {/* 5. HISTORY (Historia) */}
+            {history.length > 0 && (
+                <section className="space-y-3">
+                    <h2 className="font-semibold text-lg flex items-center gap-2 text-muted-foreground">
+                        <History className="h-5 w-5" />
+                        Ostatnio zakończone
+                    </h2>
+                    <div className="space-y-2 opacity-75">
+                        {history.map((item) => (
+                            <HistoryCard key={item.id} item={item} />
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {/* Wizard Modal */}
+            {selectedMontage && (
+                <JobCompletionWizard 
+                    open={wizardOpen} 
+                    onOpenChange={setWizardOpen} 
+                    montage={selectedMontage} 
+                />
+            )}
         </div>
     );
 }
 
-function ToScheduleCard({ item }: { item: DashboardItem }) {
-    const forecastedDate = item.forecastedInstallationDate ? new Date(item.forecastedInstallationDate) : null;
+// --- Subcomponents ---
 
+function OverdueCard({ item, onFinish }: { item: DashboardItem, onFinish: () => void }) {
     return (
-        <Card className="border-l-4 border-l-orange-500">
+        <Card className="border-l-4 border-l-red-500 bg-red-50/50">
             <CardContent className="p-4">
                 <div className="flex justify-between items-start mb-2">
                     <div>
-                        <div className="flex flex-wrap items-center gap-2 mb-1">
-                            <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
-                                Czeka na termin
-                            </Badge>
-                            {forecastedDate && (
-                                <Badge variant="secondary" className="text-xs text-muted-foreground bg-gray-100">
-                                    📅 Plan: {format(forecastedDate, 'dd.MM.yyyy')}
-                                </Badge>
-                            )}
-                            <h3 className="font-semibold text-lg">{item.clientName}</h3>
+                        <Badge variant="destructive" className="mb-2">Zaległe</Badge>
+                        <h3 className="font-bold text-lg">{item.clientName}</h3>
+                        <p className="text-sm text-muted-foreground">
+                            {item.installationCity || item.billingCity || 'Brak lokalizacji'}
+                        </p>
+                    </div>
+                </div>
+                <Button className="w-full mt-2 bg-red-600 hover:bg-red-700 text-white" onClick={onFinish}>
+                    Zakończ / Wyjaśnij
+                </Button>
+            </CardContent>
+        </Card>
+    );
+}
+
+function TodayCard({ item, onFinish }: { item: DashboardItem, onFinish: () => void }) {
+    const address = item.installationAddress || item.address || 'Brak adresu';
+    const city = item.installationCity || item.billingCity || '';
+    const fullAddress = `${address}, ${city}`;
+    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
+
+    const isMeasurement = !!item.measurementDate && isToday(new Date(item.measurementDate));
+    const typeLabel = isMeasurement ? 'Pomiar' : 'Montaż';
+    const typeColor = isMeasurement ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800';
+
+    return (
+        <Card className="overflow-hidden border-l-4 border-l-primary shadow-md">
+            <CardContent className="p-5">
+                <div className="flex justify-between items-start mb-3">
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <Badge variant="secondary" className={typeColor}>{typeLabel}</Badge>
+                            <h3 className="font-bold text-xl">{item.clientName}</h3>
                         </div>
+                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <MapPin className="h-4 w-4" /> {fullAddress}
+                        </p>
+                    </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3 mt-4">
+                    <Button variant="outline" className="w-full h-12" asChild>
+                        <a href={`tel:${item.contactPhone}`}>
+                            <Phone className="h-5 w-5 mr-2" /> Zadzwoń
+                        </a>
+                    </Button>
+                    <Button className="w-full h-12" asChild>
+                        <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer">
+                            <Navigation className="h-5 w-5 mr-2" /> Nawiguj
+                        </a>
+                    </Button>
+                </div>
+                
+                <div className="mt-4 pt-4 border-t">
+                    <Button 
+                        className="w-full h-14 text-lg font-semibold bg-green-600 hover:bg-green-700 text-white shadow-sm"
+                        onClick={onFinish}
+                    >
+                        <CheckCircle2 className="h-6 w-6 mr-2" />
+                        Zakończ wizytę
+                    </Button>
+                </div>
+
+                <div className="mt-3 text-center">
+                    <Link href={`/dashboard/crm/montaze/${item.id}`} className="text-sm text-muted-foreground hover:text-primary underline underline-offset-4">
+                        Zobacz szczegóły zlecenia
+                    </Link>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
+function UpcomingCard({ item }: { item: DashboardItem }) {
+    const date = item.measurementDate ? new Date(item.measurementDate) : (item.scheduledInstallationAt ? new Date(item.scheduledInstallationAt) : new Date());
+    const isMeasurement = !!item.measurementDate;
+    
+    return (
+        <Card className="bg-muted/20">
+            <CardContent className="p-3 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="flex flex-col items-center justify-center w-12 h-12 bg-white rounded-lg border shadow-sm">
+                        <span className="text-xs font-bold text-red-500 uppercase">{format(date, 'MMM', { locale: pl })}</span>
+                        <span className="text-lg font-bold text-foreground">{format(date, 'dd')}</span>
+                    </div>
+                    <div>
+                        <h4 className="font-semibold">{item.clientName}</h4>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Badge variant="outline" className="h-5 px-1.5 text-[10px]">
+                                {isMeasurement ? 'Pomiar' : 'Montaż'}
+                            </Badge>
+                            <span>{item.installationCity || item.billingCity}</span>
+                        </div>
+                    </div>
+                </div>
+                <Button variant="ghost" size="icon" asChild>
+                    <Link href={`/dashboard/crm/montaze/${item.id}`}>
+                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                    </Link>
+                </Button>
+            </CardContent>
+        </Card>
+    );
+}
+
+function BacklogCard({ item }: { item: DashboardItem }) {
+    // Determine sub-status for display
+    let statusLabel = "Do umówienia";
+    let statusColor = "text-orange-600 bg-orange-50 border-orange-200";
+
+    if (item.status === 'lead') {
+        statusLabel = "Nowe zgłoszenie";
+        statusColor = "text-blue-600 bg-blue-50 border-blue-200";
+    } else if (item.status === 'before_measurement' && (item.floorArea || 0) > 0) {
+        statusLabel = "Po pomiarze (Czeka na ofertę)";
+        statusColor = "text-purple-600 bg-purple-50 border-purple-200";
+    }
+
+    return (
+        <Card>
+            <CardContent className="p-4">
+                <div className="flex justify-between items-start mb-2">
+                    <div>
+                        <Badge variant="outline" className={`mb-2 ${statusColor}`}>
+                            {statusLabel}
+                        </Badge>
+                        <h3 className="font-semibold text-lg">{item.clientName}</h3>
                         <p className="text-sm text-muted-foreground">
                             {item.installationCity || item.billingCity || 'Brak lokalizacji'}
                         </p>
                     </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-2 mt-4">
-                    <Button variant="outline" className="w-full" asChild>
+                <div className="grid grid-cols-2 gap-2 mt-3">
+                    <Button variant="outline" size="sm" className="w-full" asChild>
                         <a href={`tel:${item.contactPhone}`}>
                             <Phone className="h-4 w-4 mr-2" /> Zadzwoń
                         </a>
                     </Button>
-                    <Button className="w-full" asChild>
+                    <Button size="sm" className="w-full" asChild>
                         <Link href={`/dashboard/crm/montaze/${item.id}`}>
-                            <Calendar className="h-4 w-4 mr-2" /> Ustal termin
+                            <ArrowRight className="h-4 w-4 mr-2" /> Szczegóły
                         </Link>
                     </Button>
                 </div>
@@ -148,136 +318,25 @@ function ToScheduleCard({ item }: { item: DashboardItem }) {
     );
 }
 
-function ScheduleCard({ item }: { item: DashboardItem }) {
-    const address = item.installationAddress || item.address || 'Brak adresu';
-    const city = item.installationCity || item.billingCity || '';
-    const fullAddress = `${address}, ${city}`;
-    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
-
-    const measurementDate = item.measurementDate ? new Date(item.measurementDate) : null;
-    const installationDate = item.scheduledInstallationAt ? new Date(item.scheduledInstallationAt) : null;
-
-    const isMeasurement = measurementDate && isToday(measurementDate);
-    const isInstallation = installationDate && isToday(installationDate);
-
-    const timeDisplay = isMeasurement && measurementDate 
-        ? format(measurementDate, 'HH:mm') 
-        : isInstallation && installationDate 
-            ? format(installationDate, 'HH:mm') 
-            : '??:??';
-
-    const typeLabel = isMeasurement ? 'Pomiar' : isInstallation ? 'Montaż' : 'Wizyta';
-    const typeColor = isMeasurement ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800';
-
+function HistoryCard({ item }: { item: DashboardItem }) {
     return (
-        <Card className="overflow-hidden border-l-4 border-l-primary">
-            <CardContent className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                    <div>
-                        <div className="flex items-center gap-2 mb-1">
-                            <Badge variant="secondary" className={typeColor}>{typeLabel}</Badge>
-                            <h3 className="font-semibold text-lg">{item.clientName}</h3>
-                        </div>
-                        <p className="text-sm text-muted-foreground flex items-center gap-1">
-                            <MapPin className="h-3 w-3" /> {fullAddress}
-                        </p>
-                    </div>
-                    <Badge variant="outline">
-                        {timeDisplay}
-                    </Badge>
+        <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
+            <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-100 text-green-600 rounded-full">
+                    <CheckCircle2 className="h-4 w-4" />
                 </div>
-                
-                <div className="grid grid-cols-2 gap-2 mt-4">
-                    <Button variant="outline" className="w-full" asChild>
-                        <a href={`tel:${item.contactPhone}`}>
-                            <Phone className="h-4 w-4 mr-2" /> Zadzwoń
-                        </a>
-                    </Button>
-                    <Button className="w-full" asChild>
-                        <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer">
-                            <Navigation className="h-4 w-4 mr-2" /> Nawiguj
-                        </a>
-                    </Button>
+                <div>
+                    <h4 className="font-medium text-sm">{item.clientName}</h4>
+                    <p className="text-xs text-muted-foreground">
+                        Zakończono: {format(new Date(item.createdAt), 'dd.MM.yyyy')} {/* Using createdAt as proxy for now, ideally updatedAt or completedAt */}
+                    </p>
                 </div>
-                
-                <div className="mt-3 pt-3 border-t flex justify-center">
-                    <Link href={`/dashboard/crm/montaze/${item.id}`} className="text-sm font-medium text-primary flex items-center">
-                        Szczegóły zlecenia <ArrowRight className="h-4 w-4 ml-1" />
-                    </Link>
-                </div>
-            </CardContent>
-        </Card>
-    );
-}
-
-function LeadCard({ item }: { item: DashboardItem }) {
-    const [isLoading, setIsLoading] = useState(false);
-    const [isSent, setIsSent] = useState(false);
-
-    const handleSendRequest = async () => {
-        if (!item.contactPhone && !item.contactEmail) {
-            toast.error("Brak numeru telefonu i adresu email!");
-            return;
-        }
-        
-        setIsLoading(true);
-        try {
-            const result = await sendDataRequest(item.id);
-            if (result.success) {
-                toast.success("Wysłano prośbę o dane!");
-                setIsSent(true);
-            } else {
-                toast.error("Błąd wysyłki");
-            }
-        } catch {
-            toast.error("Wystąpił błąd");
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    return (
-        <Card>
-            <CardContent className="p-4">
-                <div className="flex justify-between items-start">
-                    <div>
-                        <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-medium">{item.clientName}</h3>
-                            <Badge variant="secondary" className="text-xs">Lead</Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                            {item.installationCity || item.billingCity || 'Brak lokalizacji'}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Zgłoszono: {format(new Date(item.createdAt), 'dd.MM.yyyy')}
-                        </p>
-                    </div>
-                </div>
-
-                <div className="mt-4 flex flex-col gap-2">
-                    <Button variant="outline" size="sm" className="w-full justify-start" asChild>
-                        <a href={`tel:${item.contactPhone}`}>
-                            <Phone className="h-4 w-4 mr-2" /> {item.contactPhone || 'Brak telefonu'}
-                        </a>
-                    </Button>
-                    
-                    {isSent ? (
-                        <Button variant="secondary" size="sm" className="w-full justify-start text-green-600" disabled>
-                            <CheckCircle2 className="h-4 w-4 mr-2" /> Wysłano prośbę
-                        </Button>
-                    ) : (
-                        <Button 
-                            size="sm" 
-                            className="w-full justify-start" 
-                            onClick={handleSendRequest}
-                            disabled={isLoading || (!item.contactPhone && !item.contactEmail)}
-                        >
-                            {isLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
-                            Wyślij prośbę o dane
-                        </Button>
-                    )}
-                </div>
-            </CardContent>
-        </Card>
+            </div>
+            <Button variant="ghost" size="sm" asChild>
+                <Link href={`/dashboard/crm/montaze/${item.id}`}>
+                    Podgląd
+                </Link>
+            </Button>
+        </div>
     );
 }

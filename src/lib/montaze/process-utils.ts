@@ -14,6 +14,7 @@ export type ProcessStepState = ProcessStepDefinition & {
         isMet: boolean;
     }[];
     scheduledDate?: Date | null;
+    completedDate?: Date | null;
 };
 
 export function getProcessState(montage: Montage): { 
@@ -58,10 +59,14 @@ export function getProcessState(montage: Montage): {
 
         // Determine scheduled date for specific steps
         let scheduledDate: Date | null = null;
+        let completedDate: Date | null = null;
+
         if (step.id === 'measurement_valuation' && montage.measurementDate) {
             scheduledDate = new Date(montage.measurementDate);
         } else if (step.id === 'logistics' && montage.scheduledInstallationAt) {
             scheduledDate = new Date(montage.scheduledInstallationAt);
+        } else if (step.id === 'realization' && montage.completedAt) {
+            completedDate = new Date(montage.completedAt);
         }
 
         return {
@@ -70,7 +75,8 @@ export function getProcessState(montage: Montage): {
             isCompleted: status === 'completed',
             isCurrent: status === 'current',
             checkpointsState,
-            scheduledDate
+            scheduledDate,
+            completedDate
         };
     });
 

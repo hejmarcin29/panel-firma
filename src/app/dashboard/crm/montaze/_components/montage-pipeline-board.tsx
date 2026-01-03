@@ -19,6 +19,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 import type { Montage, StatusOption, AlertSettings } from "../types";
 import { MontagePipelineCard } from "./montage-pipeline-card";
@@ -291,6 +292,16 @@ export function MontagePipelineBoard({ montages, statusOptions, threatDays, aler
 
     if (!movingMontage) {
       return;
+    }
+
+    // Validation: Cannot move from 'lead' to 'before_measurement' without an assigned installer or measurer
+    if (sourceStatus === 'lead' && targetStatus === 'before_measurement') {
+      if (!movingMontage.installerId && !movingMontage.measurerId) {
+        toast.error("Błąd zmiany statusu", {
+          description: "Aby przejść do etapu 'Przed pomiarem', musisz przypisać montażystę lub pomiarowca."
+        });
+        return;
+      }
     }
 
     const nextBoard = cloneBoard(board);

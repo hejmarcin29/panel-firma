@@ -152,6 +152,7 @@ export type Montage = {
     technicalAudit?: unknown;
     materialLog?: unknown;
     costEstimationCompletedAt?: TimestampValue;
+    completedAt?: TimestampValue;
 	createdAt: TimestampValue;
 	updatedAt: TimestampValue;
 	notes: MontageNote[];

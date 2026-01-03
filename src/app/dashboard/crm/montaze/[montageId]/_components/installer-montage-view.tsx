@@ -32,6 +32,7 @@ import { MontageSettlementTab } from "../../_components/montage-settlement-tab";
 import { MontageClientCard } from "./montage-client-card"; // Reusing for edit capabilities if needed
 import { MontageMaterialCard } from "./montage-material-card";
 import { MeasurementScheduler } from "./measurement-scheduler";
+import { JobCompletionWizard } from "../../_components/job-completion-wizard";
 import type { Montage, MontageLog } from "../../types";
 import type { UserRole } from "@/lib/db/schema";
 
@@ -45,6 +46,7 @@ interface InstallerMontageViewProps {
 export function InstallerMontageView({ montage, logs, userRoles, hasGoogleCalendar = false }: InstallerMontageViewProps) {
     const [activeTab, setActiveTab] = useState("process");
     const [defaultOpenModal, setDefaultOpenModal] = useState<'assistant' | 'costEstimation' | undefined>(undefined);
+    const [isWizardOpen, setIsWizardOpen] = useState(false);
 
     // Filter logs to show only current user's actions (or system actions relevant to him)
     // In a real scenario, we'd filter by userId, but for now let's show all to keep context, 
@@ -303,15 +305,34 @@ export function InstallerMontageView({ montage, logs, userRoles, hasGoogleCalend
                                                 </p>
                                             </div>
                                         </div>
+
+                                        <Button 
+                                            className="w-full bg-green-600 hover:bg-green-700 text-white shadow-sm"
+                                            size="lg"
+                                            onClick={() => setIsWizardOpen(true)}
+                                        >
+                                            <CheckSquare className="w-5 h-5 mr-2" />
+                                            Zakończ wizytę
+                                        </Button>
+
+                                        <JobCompletionWizard 
+                                            montageId={montage.id}
+                                            open={isWizardOpen}
+                                            onOpenChange={setIsWizardOpen}
+                                        />
+
                                         <Separator />
+                                        
                                         <div className="space-y-2">
                                             <h4 className="font-medium text-sm">Twoje Zadania:</h4>
                                             <MontageTasksTab montage={montage} />
+                                        </div>
+                                        
                                         <Separator />
+                                        
                                         <div className="space-y-2">
                                             <h4 className="font-medium text-sm">Materiały do zabrania:</h4>
                                             <MontageMaterialCard montage={montage} userRoles={userRoles} />
-                                        </div>
                                         </div>
                                     </div>
                                 )}
