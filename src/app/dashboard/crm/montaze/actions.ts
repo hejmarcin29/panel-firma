@@ -2324,7 +2324,7 @@ export async function convertLeadToMontage(data: {
             ...(data.productId !== undefined ? {
                 panelProductId: data.productId && data.productId !== 'none' ? parseInt(data.productId) : null,
             } : {}),
-            status: 'before_measurement',
+            status: 'new_lead',
             updatedAt: new Date(),
         })
         .where(eq(montages.id, data.montageId));
