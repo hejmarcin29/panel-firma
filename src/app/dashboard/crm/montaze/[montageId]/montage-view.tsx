@@ -72,7 +72,7 @@ export function MontageView({ montageId, initialData, portalEnabled, requireInst
         return <InstallerMontageView montage={montage} logs={logs} userRoles={userRoles} hasGoogleCalendar={hasGoogleCalendar} />;
     }
 
-    if (montage.status === 'lead') {
+    if (montage.status === 'new_lead') {
         return (
              <div className="flex min-h-screen flex-col bg-muted/10">
                 <div className="p-4 md:p-6 space-y-6 max-w-5xl mx-auto w-full">
