@@ -17,8 +17,8 @@ interface InstallerDashboardViewProps {
 }
 
 export function InstallerDashboardView({ montages }: InstallerDashboardViewProps) {
-  const measurements = montages.filter(m => m.status === 'before_measurement');
-  const installations = montages.filter(m => ['before_installation', 'before_final_invoice'].includes(m.status));
+  const measurements = montages.filter(m => ['new_lead', 'contact_attempt', 'contact_established', 'measurement_scheduled'].includes(m.status));
+  const installations = montages.filter(m => ['installation_scheduled', 'installation_in_progress'].includes(m.status));
 
   const missingCostsMontages = montages.filter(m => {
       const materials = m.measurementAdditionalMaterials;
