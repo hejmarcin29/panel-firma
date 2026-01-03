@@ -2530,9 +2530,8 @@ export async function finishMontage(montageId: string) {
 
     await logSystemEvent(
         'montage_finished_by_installer', 
-        `Montażysta ${user.name} zakończył wizytę/montaż.`, 
-        user.id,
-        { montageId }
+        `Montażysta ${user.name} zakończył wizytę/montaż. (ID: ${montageId})`, 
+        user.id
     );
 
     revalidatePath(MONTAGE_DASHBOARD_PATH);
