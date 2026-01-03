@@ -412,7 +412,7 @@ export async function createMontage({
             measurerId: measurerId || null,
             materialDetails: normalizedMaterialDetails,
             measurementDetails: normalizedMaterialDetails,
-            status: 'before_measurement',
+            status: 'new_lead',
             customerId: finalCustomerId,
             updatedAt: now,
         }).where(eq(montages.id, leadId));
@@ -445,7 +445,7 @@ export async function createMontage({
                     measurerId: measurerId || null,
                     materialDetails: normalizedMaterialDetails,
                     measurementDetails: normalizedMaterialDetails,
-                    status: 'before_measurement',
+                    status: 'new_lead',
                     customerId: finalCustomerId,
                     createdAt: now,
                     updatedAt: now,
