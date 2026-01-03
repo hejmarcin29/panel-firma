@@ -18,6 +18,7 @@ import {
     montageNotes,
     montageTasks,
     montages,
+    type MontageStatus,
 } from '@/lib/db/schema';
 import { tryGetR2Config } from '@/lib/r2/config';
 import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
@@ -145,7 +146,7 @@ export default async function MontazePage(props: any) {
         } else if (view === 'done') {
             conditions.push(eq(montages.status, 'completed'));
         } else {
-            const inProgressStatuses = [
+            const inProgressStatuses: MontageStatus[] = [
                 'measurement_scheduled',
                 'waiting_for_deposit',
                 'installation_scheduled',
@@ -160,7 +161,7 @@ export default async function MontazePage(props: any) {
                 if (stage === 'before-invoice') filteredStatuses = ['final_settlement'];
             }
 
-            conditions.push(inArray(montages.status, filteredStatuses as any));
+            conditions.push(inArray(montages.status, filteredStatuses));
         }
     }
 
