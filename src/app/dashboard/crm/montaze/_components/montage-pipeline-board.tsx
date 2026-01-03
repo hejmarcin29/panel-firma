@@ -18,6 +18,7 @@ import { CSS } from "@dnd-kit/utilities";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import type { MontageStatus } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -365,8 +366,7 @@ export function MontagePipelineBoard({ montages, statusOptions, threatDays, aler
             <PipelineColumn
               key={status.value}
               status={status}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              items={board[status.value as any] ?? []}
+              items={board[status.value as MontageStatus] ?? []}
               statusOptions={statusOptions}
               isPending={isPending}
               threatDays={threatDays}
