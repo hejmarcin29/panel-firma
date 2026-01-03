@@ -132,32 +132,32 @@ export default async function MontazePage(props: any) {
             // KPI: Wiszące montaże (bez daty, nie lead, nie zakończone)
             conditions.push(
                 and(
-                    sql`${montages.status} != 'lead'`,
+                    sql`${montages.status} != 'new_lead'`,
                     sql`${montages.status} != 'completed'`,
                     isNull(montages.scheduledInstallationAt)
                 )
             );
         } else if (searchParams?.filter === 'payments') {
             // KPI: Nierozliczone montaże
-            conditions.push(inArray(montages.status, ['before_first_payment', 'before_final_invoice']));
+            conditions.push(inArray(montages.status, ['waiting_for_deposit', 'final_settlement']));
         } else if (view === 'lead') {
-            conditions.push(eq(montages.status, 'lead'));
+            conditions.push(eq(montages.status, 'new_lead'));
         } else if (view === 'done') {
             conditions.push(eq(montages.status, 'completed'));
         } else {
             const inProgressStatuses = [
-                'before_measurement',
-                'before_first_payment',
-                'before_installation',
-                'before_final_invoice',
+                'measurement_scheduled',
+                'waiting_for_deposit',
+                'installation_scheduled',
+                'final_settlement',
             ];
 
             let filteredStatuses = inProgressStatuses;
             if (stage !== 'all') {
-                if (stage === 'before-measure') filteredStatuses = ['before_measurement'];
-                if (stage === 'before-first-payment') filteredStatuses = ['before_first_payment'];
-                if (stage === 'before-install') filteredStatuses = ['before_installation'];
-                if (stage === 'before-invoice') filteredStatuses = ['before_final_invoice'];
+                if (stage === 'before-measure') filteredStatuses = ['measurement_scheduled'];
+                if (stage === 'before-first-payment') filteredStatuses = ['waiting_for_deposit'];
+                if (stage === 'before-install') filteredStatuses = ['installation_scheduled'];
+                if (stage === 'before-invoice') filteredStatuses = ['final_settlement'];
             }
 
             conditions.push(inArray(montages.status, filteredStatuses));
