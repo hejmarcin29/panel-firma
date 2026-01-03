@@ -2202,7 +2202,7 @@ export async function createExtendedLead(formData: FormData) {
         
         additionalInfo,
         
-        status: 'lead',
+        status: 'new_lead',
         sampleStatus: (sampleStatus as MontageSampleStatus) || 'none',
         architectId,
         createdAt: now,
