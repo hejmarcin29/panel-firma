@@ -85,7 +85,7 @@ export async function submitMontageProtocol(data: {
             },
             clientSignatureUrl: data.clientSignatureUrl,
             installerSignatureUrl: data.installerSignatureUrl,
-            ...(shouldUpdateStatus ? { status: 'before_final_invoice' } : {}), // Move to next stage automatically if enabled, but don't revert completed
+            ...(shouldUpdateStatus ? { status: 'protocol_signed' } : {}), // Move to next stage automatically if enabled, but don't revert completed
         }).where(eq(montages.id, data.montageId));
 
         // 2. Generate PDF
