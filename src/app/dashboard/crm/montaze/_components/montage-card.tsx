@@ -755,7 +755,7 @@ disabled={taskPending}
 <Select value={montage.status} onValueChange={handleStatusChange} disabled={statusPending}>
 <SelectTrigger className={cn('w-full transition-colors', {
 'border-emerald-500/50 text-emerald-700 bg-emerald-50/50': montage.status === 'completed',
-'border-blue-500/50 text-blue-700 bg-blue-50/50': montage.status === 'in_progress',
+'border-blue-500/50 text-blue-700 bg-blue-50/50': montage.status === 'installation_in_progress',
 })}>
 <SelectValue />
 </SelectTrigger>
