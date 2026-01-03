@@ -561,16 +561,9 @@ export async function getInstallerDashboardData(userId: string) {
                 eq(table.installerId, userId)
             ),
             ne(table.status, 'completed'),
-            // Condition: No active date for the current stage
-            or(
-                eq(table.status, 'lead'),
-                and(eq(table.status, 'before_measurement'), isNull(table.measurementDate)),
-                and(eq(table.status, 'before_measurement'), gt(table.floorArea, 0)), // "Po pomiarze" (waiting for offer)
-                and(eq(table.status, 'before_installation'), isNull(table.scheduledInstallationAt))
-            ),
-            // Exclude those that are already in overdue/today/upcoming (have dates)
-            isNull(table.measurementDate), 
-            isNull(table.scheduledInstallationAt),
+            ne(table.status, 'rejected'),
+            ne(table.status, 'measurement_scheduled'),
+            ne(table.status, 'installation_scheduled'),
             isNull(table.deletedAt)
         ),
         orderBy: (table, { desc }) => [desc(table.updatedAt)],
