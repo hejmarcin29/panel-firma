@@ -40,13 +40,13 @@ export default async function DashboardPage() {
         where: (table, { or, and, lt }) => or(
             // Status is lead or before_measurement and created more than 7 days ago
             and(
-                or(eq(table.status, 'lead'), eq(table.status, 'before_measurement')),
+                or(eq(table.status, 'new_lead'), eq(table.status, 'measurement_scheduled')),
                 lt(table.createdAt, sevenDaysAgo)
             ),
             // Or scheduled date is in the past and not completed
             and(
                 lt(table.scheduledInstallationAt, new Date()),
-                eq(table.status, 'before_installation')
+                eq(table.status, 'installation_scheduled')
             )
         ),
         limit: 5,
