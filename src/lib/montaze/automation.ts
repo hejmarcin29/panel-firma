@@ -35,5 +35,9 @@ export async function getMontageAutomationRules(): Promise<MontageAutomationRule
 }
 
 export async function setMontageAutomationRules(rules: MontageAutomationRule[], userId: string): Promise<void> {
-    await setAppSetting(appSettingKeys.montageAutomation, rules, userId);
+    await setAppSetting({
+        key: appSettingKeys.montageAutomation,
+        value: JSON.stringify(rules),
+        userId
+    });
 }
