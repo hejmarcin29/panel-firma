@@ -31,7 +31,7 @@ export function getProcessState(montage: Montage): {
 
     // If status not found (e.g. cancelled), default to 0 or handle specifically
     if (currentStepIndex === -1) {
-        if (currentStatus === 'cancelled') {
+        if (currentStatus === 'rejected') {
             // Handle cancelled state if needed, for now show as stuck at 0 or special
             currentStepIndex = 0; 
         } else {
