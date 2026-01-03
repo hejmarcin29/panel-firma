@@ -25,7 +25,6 @@ import { toast } from "sonner";
 import type { Montage, StatusOption, AlertSettings } from "../types";
 import { MontagePipelineCard } from "./montage-pipeline-card";
 import { updateMontageStatus } from "../actions";
-import type { MontageStatus } from "@/lib/db/schema";
 
 function buildBoard(statusOptions: StatusOption[], montages: Montage[]) {
   const board: Record<MontageStatus, Montage[]> = Object.fromEntries(
