@@ -8,7 +8,7 @@ import { montages, type LogisticsStatus } from '@/lib/db/schema';
 export async function getLogisticsMontages() {
     const data = await db.query.montages.findMany({
         where: (table, { and, ne, isNotNull }) => and(
-            ne(table.status, 'cancelled'),
+            ne(table.status, 'rejected'),
             isNotNull(table.scheduledInstallationAt)
         ),
         orderBy: (table, { asc }) => [asc(table.scheduledInstallationAt)],
