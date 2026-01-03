@@ -1119,8 +1119,8 @@ export async function toggleMontageChecklistItem({ itemId, montageId, completed 
                             const autoAdvanceId = step ? `auto_advance_${step.id}` : null;
                             const shouldAutoAdvance = autoAdvanceId ? await isProcessAutomationEnabled(autoAdvanceId) : true;
 
-                            // Special case: 'lead' stage requires manual data entry (ConvertLeadDialog), so we skip auto-advance
-                            if (shouldAutoAdvance && stage !== 'lead') {
+                            // Special case: 'new_lead' stage requires manual data entry (ConvertLeadDialog), so we skip auto-advance
+                            if (shouldAutoAdvance && stage !== 'new_lead') {
                                 await updateMontageStatus({ montageId, status: nextStatus.id });
                             }
                         }
