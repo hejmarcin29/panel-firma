@@ -10,7 +10,8 @@ export type MontageAutomationRule = {
 };
 
 export async function isSystemAutomationEnabled(id: string): Promise<boolean> {
-    const settings = await getAppSetting<Record<string, boolean>>(appSettingKeys.montageNotifications, {});
+    const settingStr = await getAppSetting(appSettingKeys.montageNotifications);
+    const settings = settingStr ? JSON.parse(settingStr) as Record<string, boolean> : {};
     
     // Check if setting exists in DB
     if (id in settings) {
@@ -23,12 +24,14 @@ export async function isSystemAutomationEnabled(id: string): Promise<boolean> {
 }
 
 export async function isProcessAutomationEnabled(id: string): Promise<boolean> {
-    const settings = await getAppSetting<Record<string, boolean>>(appSettingKeys.montageAutomationSettings, {});
+    const settingStr = await getAppSetting(appSettingKeys.montageAutomationSettings);
+    const settings = settingStr ? JSON.parse(settingStr) as Record<string, boolean> : {};
     return settings[id] ?? false;
 }
 
 export async function getMontageAutomationRules(): Promise<MontageAutomationRule[]> {
-    return await getAppSetting<MontageAutomationRule[]>(appSettingKeys.montageAutomation, []);
+    const settingStr = await getAppSetting(appSettingKeys.montageAutomation);
+    return settingStr ? JSON.parse(settingStr) as MontageAutomationRule[] : [];
 }
 
 export async function setMontageAutomationRules(rules: MontageAutomationRule[], userId: string): Promise<void> {
