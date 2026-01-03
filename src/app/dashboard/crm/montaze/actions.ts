@@ -1981,7 +1981,7 @@ export async function createLead(data: {
             clientInfo: data.description?.trim() || null,
             forecastedInstallationDate: data.forecastedInstallationDate ? new Date(data.forecastedInstallationDate) : null,
             sampleStatus: data.sampleStatus || 'none',
-            status: 'lead',
+            status: 'new_lead',
             architectId,
             createdAt: now,
             updatedAt: now,
