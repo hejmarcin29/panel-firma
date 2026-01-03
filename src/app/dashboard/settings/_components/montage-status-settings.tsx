@@ -31,6 +31,7 @@ export function MontageStatusSettings({ initialStatuses }: MontageStatusSettings
         description: '',
         order: statuses.length,
         isSystem: false,
+        group: 'LEJKI',
       },
     ]);
   };
