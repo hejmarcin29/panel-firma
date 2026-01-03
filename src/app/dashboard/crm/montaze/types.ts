@@ -110,6 +110,10 @@ export type Montage = {
 	measurementAdditionalWorkNeeded: boolean;
 	measurementAdditionalWorkDescription: string | null;
 	measurementAdditionalMaterials: MeasurementMaterialItem[] | null;
+    measurementRooms?: {
+        name: string;
+        area: number;
+    }[] | null;
 	finalPanelAmount: number | null;
     
     // Protocol Fields

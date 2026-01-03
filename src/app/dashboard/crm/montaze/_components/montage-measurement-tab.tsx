@@ -150,6 +150,8 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
       return [];
   });
   
+  const [measurementRooms, setMeasurementRooms] = useState<{ name: string; area: number }[]>(montage.measurementRooms || []);
+
   // Additional Services State (for Cost Estimation)
   // We don't have a direct field in montage for this yet, so we might need to fetch it or assume it's empty initially
   // For now, let's initialize it as empty array. In a real scenario, we would fetch existing service items linked to this montage.
@@ -205,6 +207,7 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
     } else {
         setAdditionalMaterials([]);
     }
+    setMeasurementRooms(montage.measurementRooms || []);
 
     setAdditionalInfo(montage.additionalInfo || '');
     setMeasurementDate(
@@ -259,6 +262,7 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
           measurementAdditionalWorkDescription: additionalWorkDescription,
           measurementAdditionalMaterials: additionalMaterials,
           isHousingVat,
+          measurementRooms,
           additionalInfo,
           sketchUrl: sketchDataUrl,
           scheduledInstallationAt: dateRange?.from ? dateRange.from.getTime() : null,
@@ -288,6 +292,7 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
     additionalWorkDescription,
     additionalMaterials,
     isHousingVat,
+    measurementRooms,
     additionalInfo,
     sketchDataUrl,
     dateRange,
@@ -494,6 +499,8 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
         setIsPanelSelectorOpen={setIsPanelSelectorOpen}
         additionalMaterials={additionalMaterials}
         setAdditionalMaterials={setAdditionalMaterials}
+        measurementRooms={measurementRooms}
+        setMeasurementRooms={setMeasurementRooms}
         dateRange={dateRange}
         setDateRange={setDateRange}
       />
@@ -889,15 +896,40 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
                                         </span>
                                     )}
                                 </Label>
-                                <Input
-                                id="floorArea"
-                                type="number"
-                                step="0.01"
-                                placeholder="0.00"
-                                value={floorArea}
-                                onChange={(e) => setFloorArea(e.target.value)}
-                                disabled={isReadOnly}
-                                />
+                                <div className="relative">
+                                    <Input
+                                        id="floorArea"
+                                        type="number"
+                                        step="0.01"
+                                        placeholder="0.00"
+                                        value={floorArea}
+                                        onChange={(e) => setFloorArea(e.target.value)}
+                                        disabled={isReadOnly}
+                                        readOnly={measurementRooms.length > 0}
+                                        className={cn(measurementRooms.length > 0 && "bg-muted text-muted-foreground cursor-not-allowed")}
+                                    />
+                                    {!isReadOnly && (
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="absolute right-0 top-0 h-full px-2 text-muted-foreground hover:text-primary"
+                                            onClick={() => setIsAssistantOpen(true)}
+                                            title="Edytuj pomieszczenia"
+                                        >
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
+                                    )}
+                                </div>
+                                {measurementRooms.length > 0 && (
+                                    <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
+                                        {measurementRooms.map((room, i) => (
+                                            <div key={i} className="flex justify-between">
+                                                <span>{room.name || 'Bez nazwy'}:</span>
+                                                <span>{room.area} m²</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                             <div className="space-y-1">
                                 <Label htmlFor="panelWaste" className="text-xs text-muted-foreground">Zapas (%)</Label>

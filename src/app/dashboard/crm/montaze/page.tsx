@@ -311,14 +311,6 @@ export default async function MontazePage(props: any) {
                     alertSettings={alertSettings}
                     headerAction={
                         <div className="flex gap-2">
-                            {!isOnlyArchitect && (
-                                <Button asChild variant="outline">
-                                    <Link href="/dashboard/crm/montaze/ekipy">
-                                        <Users className="mr-2 h-4 w-4" />
-                                        Baza Ekip
-                                    </Link>
-                                </Button>
-                            )}
                             <AddLeadModal />
                             <Button asChild>
                                 <Link href="/dashboard/crm/montaze/nowy">

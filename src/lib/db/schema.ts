@@ -522,6 +522,10 @@ export const montages = pgTable(
             supplySide: 'installer' | 'company';
             estimatedCost?: number;
         }[]>(),
+        measurementRooms: json('measurement_rooms').$type<{
+            name: string;
+            area: number;
+        }[]>(),
         estimatedFloorArea: doublePrecision('estimated_floor_area'),
 		floorArea: doublePrecision('floor_area'),
 		floorDetails: text('floor_details'),

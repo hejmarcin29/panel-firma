@@ -1613,6 +1613,7 @@ export async function updateMontageMeasurement({
     measurementAdditionalWorkDescription,
     measurementAdditionalMaterials,
     isHousingVat,
+    measurementRooms,
 }: {
 	montageId: string;
 	measurementDetails: string;
@@ -1641,6 +1642,10 @@ export async function updateMontageMeasurement({
         estimatedCost?: number;
     }[] | null;
     isHousingVat?: boolean;
+    measurementRooms?: {
+        name: string;
+        area: number;
+    }[] | null;
 }) {
 	await requireUser();
 
@@ -1678,6 +1683,7 @@ export async function updateMontageMeasurement({
 			scheduledInstallationEndAt: scheduledInstallationEndAt ? new Date(scheduledInstallationEndAt) : null,
             measurementInstallationMethod,
             measurementFloorPattern,
+            measurementRooms,
             measurementSubfloorCondition,
             measurementAdditionalWorkNeeded,
             measurementAdditionalWorkDescription,

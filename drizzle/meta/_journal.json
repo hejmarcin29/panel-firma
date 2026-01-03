@@ -337,6 +337,13 @@
       "when": 1767129381665,
       "tag": "0047_romantic_killraven",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1767432511399,
+      "tag": "0048_chemical_daimon_hellstrom",
+      "breakpoints": true
     }
   ]
 }

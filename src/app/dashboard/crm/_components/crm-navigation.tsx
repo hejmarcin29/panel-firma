@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Users, Hammer, FileText, LayoutDashboard } from 'lucide-react';
+import { Users, Hammer, FileText, LayoutDashboard, Images, HardHat } from 'lucide-react';
 
 export function CRMNavigation() {
     const pathname = usePathname();
@@ -14,7 +14,9 @@ export function CRMNavigation() {
         '/dashboard/crm/customers',
         '/dashboard/crm/montaze',
         '/dashboard/crm/oferty',
-        '/dashboard/crm/logistics'
+        '/dashboard/crm/logistics',
+        '/dashboard/crm/montaze/galeria',
+        '/dashboard/crm/montaze/ekipy'
     ];
 
     // Check if current path is exactly one of the main paths
@@ -75,6 +77,26 @@ export function CRMNavigation() {
                     >
                         <FileText className="h-4 w-4" />
                         Oferty
+                    </Button>
+                </Link>
+                <Link href="/dashboard/crm/montaze/galeria">
+                    <Button 
+                        variant={pathname.startsWith('/dashboard/crm/montaze/galeria') ? "secondary" : "ghost"} 
+                        size="sm" 
+                        className="gap-2"
+                    >
+                        <Images className="h-4 w-4" />
+                        Galeria
+                    </Button>
+                </Link>
+                <Link href="/dashboard/crm/montaze/ekipy">
+                    <Button 
+                        variant={pathname.startsWith('/dashboard/crm/montaze/ekipy') ? "secondary" : "ghost"} 
+                        size="sm" 
+                        className="gap-2"
+                    >
+                        <HardHat className="h-4 w-4" />
+                        Baza Ekip
                     </Button>
                 </Link>
             </div>

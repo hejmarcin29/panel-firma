@@ -56,6 +56,9 @@ interface MeasurementAssistantModalProps {
     additionalMaterials: MeasurementMaterialItem[];
     setAdditionalMaterials: (val: MeasurementMaterialItem[]) => void;
 
+    measurementRooms: { name: string; area: number }[];
+    setMeasurementRooms: (val: { name: string; area: number }[]) => void;
+
     // Installation Date
     dateRange: DateRange | undefined;
     setDateRange: (range: DateRange | undefined) => void;
@@ -82,10 +85,12 @@ export function MeasurementAssistantModal({
     floorArea, setFloorArea,
     panelModel, setIsPanelSelectorOpen,
     additionalMaterials, setAdditionalMaterials,
+    measurementRooms, setMeasurementRooms,
     dateRange, setDateRange
 }: MeasurementAssistantModalProps) {
     const [currentStep, setCurrentStep] = useState(0);
     const [auditData, setAuditData] = useState<TechnicalAuditData | null>(technicalAudit);
+    const [isRoomsExpanded, setIsRoomsExpanded] = useState(measurementRooms.length > 0);
 
     // Auto-calculate waste
     useEffect(() => {
@@ -100,6 +105,14 @@ export function MeasurementAssistantModal({
             }
         }
     }, [installationMethod, floorPattern, setPanelWaste]);
+
+    // Update floor area when rooms change
+    useEffect(() => {
+        if (measurementRooms.length > 0) {
+            const total = measurementRooms.reduce((sum, room) => sum + (room.area || 0), 0);
+            setFloorArea(total.toFixed(2));
+        }
+    }, [measurementRooms, setFloorArea]);
 
     if (!isOpen) return null;
 
@@ -257,9 +270,86 @@ export function MeasurementAssistantModal({
                                         step="0.01"
                                         value={floorArea}
                                         onChange={(e) => setFloorArea(e.target.value)}
-                                        className="h-12 text-lg font-bold"
+                                        className={cn(
+                                            "h-12 text-lg font-bold",
+                                            measurementRooms.length > 0 && "bg-muted text-muted-foreground cursor-not-allowed"
+                                        )}
                                         placeholder="0.00"
+                                        readOnly={measurementRooms.length > 0}
                                     />
+                                </div>
+
+                                {/* Rooms Split */}
+                                <div className="space-y-2">
+                                    <button
+                                        onClick={() => setIsRoomsExpanded(!isRoomsExpanded)}
+                                        className="text-sm text-primary font-medium flex items-center gap-1 hover:underline"
+                                    >
+                                        {isRoomsExpanded ? <ChevronLeft className="w-4 h-4 rotate-[-90deg]" /> : <ChevronRight className="w-4 h-4 rotate-[90deg]" />}
+                                        {isRoomsExpanded ? "Zwiń pomieszczenia" : "Rozpisz na pomieszczenia"}
+                                    </button>
+
+                                    <AnimatePresence>
+                                        {isRoomsExpanded && (
+                                            <motion.div
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: "auto", opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                className="overflow-hidden"
+                                            >
+                                                <div className="space-y-2 pt-2 pb-4">
+                                                    {measurementRooms.map((room, idx) => (
+                                                        <div key={idx} className="flex gap-2 items-center">
+                                                            <Input
+                                                                placeholder="Nazwa (np. Salon)"
+                                                                value={room.name}
+                                                                onChange={(e) => {
+                                                                    const newRooms = [...measurementRooms];
+                                                                    newRooms[idx].name = e.target.value;
+                                                                    setMeasurementRooms(newRooms);
+                                                                }}
+                                                                className="flex-1"
+                                                            />
+                                                            <div className="relative w-32">
+                                                                <Input
+                                                                    type="number"
+                                                                    placeholder="0.00"
+                                                                    value={room.area || ''}
+                                                                    onChange={(e) => {
+                                                                        const newRooms = [...measurementRooms];
+                                                                        newRooms[idx].area = parseFloat(e.target.value) || 0;
+                                                                        setMeasurementRooms(newRooms);
+                                                                    }}
+                                                                    className="pr-8"
+                                                                />
+                                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">m²</span>
+                                                            </div>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={() => {
+                                                                    const newRooms = measurementRooms.filter((_, i) => i !== idx);
+                                                                    setMeasurementRooms(newRooms);
+                                                                }}
+                                                                className="text-muted-foreground hover:text-destructive"
+                                                            >
+                                                                <X className="w-4 h-4" />
+                                                            </Button>
+                                                        </div>
+                                                    ))}
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => setMeasurementRooms([...measurementRooms, { name: '', area: 0 }])}
+                                                        className="w-full border-dashed"
+                                                    >
+                                                        <Plus className="w-4 h-4 mr-2" />
+                                                        Dodaj pomieszczenie
+                                                    </Button>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
                                 </div>
                                 
                                 <div className="space-y-2">
