@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 	const signature = request.headers.get('x-wc-webhook-signature');
 	const rawBody = await request.text();
 
-    const isEnabled = await isSystemAutomationEnabled();
+    const isEnabled = await isSystemAutomationEnabled('webhook_woo_order');
     if (!isEnabled) {
         await logIntegration('warning', 'Webhook ignored (automation disabled)', {});
         return NextResponse.json({ ok: true, ignored: true });

@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic'; // static by default, unless reading the
 
 export async function GET(request: Request) {
     try {
-        const isEnabled = await isSystemAutomationEnabled();
+        const isEnabled = await isSystemAutomationEnabled('cron_sync_products');
         if (!isEnabled) {
             return NextResponse.json({ success: false, error: 'Automation disabled' }, { status: 200 });
         }

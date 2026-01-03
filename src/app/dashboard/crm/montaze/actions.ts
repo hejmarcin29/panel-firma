@@ -823,8 +823,8 @@ export async function updateMontageContactDetails({
     const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') || '';
     const montageUrl = appUrl ? `${appUrl}/dashboard/crm/montaze/${montageId}` : '';
 
-    const isCalendarUpdateEnabled = await isSystemAutomationEnabled();
-    const isCalendarCreateEnabled = await isSystemAutomationEnabled();
+    const isCalendarUpdateEnabled = await isSystemAutomationEnabled('calendar_update');
+    const isCalendarCreateEnabled = await isSystemAutomationEnabled('calendar_create');
 
     if (montage && montage.googleEventId) {
         if (scheduledInstallationAt) {
@@ -1117,7 +1117,7 @@ export async function toggleMontageChecklistItem({ itemId, montageId, completed 
                             // Check automation setting
                             const step = PROCESS_STEPS.find(s => s.relatedStatuses.includes(stage as MontageStatus));
                             const autoAdvanceId = step ? `auto_advance_${step.id}` : null;
-                            const shouldAutoAdvance = autoAdvanceId ? await isProcessAutomationEnabled() : true;
+                            const shouldAutoAdvance = autoAdvanceId ? await isProcessAutomationEnabled(autoAdvanceId) : true;
 
                             // Special case: 'new_lead' stage requires manual data entry (ConvertLeadDialog), so we skip auto-advance
                             if (shouldAutoAdvance && stage !== 'new_lead') {
@@ -1276,14 +1276,14 @@ export async function updateMontageMeasurementDate(montageId: string, date: Date
                 const address = montage.installationAddress || montage.address || 'Brak adresu';
                 
                 // SMS
-                const smsEnabled = await isSystemAutomationEnabled();
+                const smsEnabled = await isSystemAutomationEnabled('measurement_scheduled');
                 if (smsEnabled && montage.contactPhone) {
                     const smsMessage = `Dzień dobry, potwierdzamy termin pomiaru: ${formattedDate} godz. ${formattedTime}. Adres: ${address}. Do zobaczenia!`;
                     await sendSms(montage.contactPhone, smsMessage);
                 }
 
                 // Email
-                const emailEnabled = await isSystemAutomationEnabled();
+                const emailEnabled = await isSystemAutomationEnabled('measurement_scheduled_email');
                 if (emailEnabled && montage.contactEmail) {
                     const accounts = await db.select().from(mailAccounts).where(ne(mailAccounts.status, 'disabled')).limit(1);
                     const mailAccount = accounts[0];
@@ -2448,7 +2448,7 @@ export async function sendDataRequest(montageId: string) {
 
     // Send SMS if phone exists
     if (montage.contactPhone) {
-        const smsEnabled = await isSystemAutomationEnabled();
+        const smsEnabled = await isSystemAutomationEnabled('data_request_sms');
         if (smsEnabled) {
             try {
                 await sendSms(montage.contactPhone, message);
@@ -2462,7 +2462,7 @@ export async function sendDataRequest(montageId: string) {
 
     // Send Email if email exists
     if (montage.contactEmail) {
-        const emailEnabled = await isSystemAutomationEnabled();
+        const emailEnabled = await isSystemAutomationEnabled('data_request_email');
         if (emailEnabled) {
             try {
                 // Find active mail account

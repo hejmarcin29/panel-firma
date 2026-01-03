@@ -202,7 +202,7 @@ export async function updateMontageAutomationRulesAction(_rules: MontageAutomati
 		throw new Error('Tylko administrator może zmieniać reguły automatyzacji.');
 	}
 
-	await setMontageAutomationRules();
+	await setMontageAutomationRules(rules, user.id);
 	
 	await logSystemEvent('update_montage_automation', 'Zaktualizowano reguły automatyzacji montażu', user.id);
 
