@@ -351,7 +351,7 @@ export async function getDashboardStats(publicBaseUrl: string | null): Promise<D
         const daysSinceUpdate = differenceInCalendarDays(today, updatedAt);
 
         // 1. Lead bez pomiarowca (X dni)
-        if (m.status === 'lead' && !m.measurerId && daysSinceCreation >= leadNoMeasurerDays) {
+        if (m.status === 'new_lead' && !m.measurerId && daysSinceCreation >= leadNoMeasurerDays) {
             issues.push(`Lead bez pomiarowca od ${daysSinceCreation} dni`);
         }
 
