@@ -94,7 +94,7 @@ export function MontageTimeline({ montage }: MontageTimelineProps) {
 
     // Map definitions to runtime steps
     const steps: TimelineStep[] = PORTAL_STEPS.map(def => {
-        let stepStatus: 'completed' | 'current' | 'upcoming' = getStepState(def.id, status);
+        const stepStatus: 'completed' | 'current' | 'upcoming' = getStepState(def.id, status);
         let date: Date | null | undefined = undefined;
         let dynamicDescription = def.description;
 

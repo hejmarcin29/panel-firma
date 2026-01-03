@@ -11,8 +11,7 @@ import {
     History, 
     FileText,
     Navigation,
-    Banknote,
-    Clock
+    Banknote
 } from "lucide-react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
@@ -21,21 +20,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { updateMontageStatus } from "../actions";
 
 import { MontageNotesTab } from "./montage-notes-tab";
 import { MontageGalleryTab } from "./montage-gallery-tab";
-import { MontageTasksTab } from "./montage-tasks-tab";
 import { MontageMeasurementTab } from "../../_components/montage-measurement-tab";
 import { MontageSettlementTab } from "../../_components/montage-settlement-tab";
 import { MontageClientCard } from "./montage-client-card"; // Reusing for edit capabilities if needed
 import { MontageMaterialCard } from "./montage-material-card";
-import { MeasurementScheduler } from "./measurement-scheduler";
-import { JobCompletionWizard } from "../../_components/job-completion-wizard";
 import type { Montage, MontageLog } from "../../types";
 import type { UserRole } from "@/lib/db/schema";
 
@@ -46,10 +40,9 @@ interface InstallerMontageViewProps {
     hasGoogleCalendar?: boolean;
 }
 
-export function InstallerMontageView({ montage, logs, userRoles, hasGoogleCalendar = false }: InstallerMontageViewProps) {
+export function InstallerMontageView({ montage, logs, userRoles }: InstallerMontageViewProps) {
     const [activeTab, setActiveTab] = useState("process");
     const [defaultOpenModal, setDefaultOpenModal] = useState<'assistant' | 'costEstimation' | undefined>(undefined);
-    const [isWizardOpen, setIsWizardOpen] = useState(false);
 
     // Filter logs to show only current user's actions (or system actions relevant to him)
     // In a real scenario, we'd filter by userId, but for now let's show all to keep context, 
@@ -68,10 +61,6 @@ export function InstallerMontageView({ montage, logs, userRoles, hasGoogleCalend
     const fullAddress = `${address}, ${city}`;
     const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
 
-    // Determine the "Current Mission" based on status
-    const isMeasurementStage = ['lead', 'before_measurement'].includes(montage.status);
-    const isFormalitiesStage = ['before_first_payment'].includes(montage.status);
-    const isInstallationStage = ['before_installation', 'before_final_invoice'].includes(montage.status);
     const isDone = montage.status === 'completed';
 
     return (
@@ -89,13 +78,13 @@ export function InstallerMontageView({ montage, logs, userRoles, hasGoogleCalend
                                 </div>
                             </div>
                             <Badge variant={isDone ? "default" : "outline"} className="md:hidden">
-                                {isMeasurementStage ? "Pomiar" : isInstallationStage ? "Montaż" : montage.status}
+                                {montage.status}
                             </Badge>
                         </div>
 
                         <div className="hidden md:block">
                              <Badge variant={isDone ? "default" : "outline"} className="text-sm px-3 py-1">
-                                {isMeasurementStage ? "Pomiar" : isInstallationStage ? "Montaż" : montage.status}
+                                {montage.status}
                             </Badge>
                         </div>
 
