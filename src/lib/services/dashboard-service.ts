@@ -9,6 +9,7 @@ import {
 	montageTasks,
 	montages,
     manualOrders,
+    type MontageStatus,
 } from '@/lib/db/schema';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
 import { mapMontageRow, type MontageRow } from '@/app/dashboard/crm/montaze/utils';
