@@ -19,8 +19,8 @@ async function migrate() {
             })
             .where(
                 or(
-                    eq(montages.status, 'lead'),
-                    eq(montages.status, 'before_measurement')
+                    eq(montages.status, 'lead' as any),
+                    eq(montages.status, 'before_measurement' as any)
                 )
             );
 
