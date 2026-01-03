@@ -465,7 +465,7 @@ export async function getArchitectDashboardStats(userId: string) {
         }
     });
 
-    const activeProjects = architectProjects.filter(p => p.status !== 'completed' && p.status !== 'cancelled').length;
+    const activeProjects = architectProjects.filter(p => p.status !== 'completed' && p.status !== 'rejected').length;
     const completedProjects = architectProjects.filter(p => p.status === 'completed').length;
 
     return {
