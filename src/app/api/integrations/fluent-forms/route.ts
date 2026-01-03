@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
             installationCity: city,
             installationPostalCode: postal_code,
             additionalInfo: message, // The message from the form
-            status: 'lead', // Important: This puts it in "Nowy Lead"
+            status: 'new_lead', // Important: This puts it in "Nowy Lead"
             createdAt: new Date(),
             updatedAt: new Date(),
         });
