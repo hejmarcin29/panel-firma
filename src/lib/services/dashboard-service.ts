@@ -555,7 +555,7 @@ export async function getInstallerDashboardData(userId: string) {
     // 4. BACKLOG (Poczekalnia) - Assigned but no date OR waiting for next step
     // Includes: Leads, Before Measurement (no date), After Measurement (waiting for offer/deposit), Before Installation (no date)
     const backlog = await db.query.montages.findMany({
-        where: (table, { and, eq, or, isNull, ne, gt }) => and(
+        where: (table, { and, eq, or, isNull, ne }) => and(
             or(
                 eq(table.measurerId, userId),
                 eq(table.installerId, userId)

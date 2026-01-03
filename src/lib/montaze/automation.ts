@@ -1,20 +1,18 @@
 import 'server-only';
 
-import { appSettingKeys, getAppSetting, setAppSetting } from '@/lib/settings';
-import { type MontageStatus, montageStatuses } from '@/lib/db/schema';
-import { SYSTEM_NOTIFICATIONS } from './notifications';
+import { type MontageStatus } from '@/lib/db/schema';
 
 export type MontageAutomationRule = {
 	checklistItemId: string;
 	targetStatus: MontageStatus;
 };
 
-export async function isSystemAutomationEnabled(id: string): Promise<boolean> {
+export async function isSystemAutomationEnabled(): Promise<boolean> {
     // Disabled by default as per "Manual Control" policy
     return false;
 }
 
-export async function isProcessAutomationEnabled(id: string): Promise<boolean> {
+export async function isProcessAutomationEnabled(): Promise<boolean> {
     // Disabled by default as per "Manual Control" policy
     return false;
 }
@@ -24,6 +22,6 @@ export async function getMontageAutomationRules(): Promise<MontageAutomationRule
 	return [];
 }
 
-export async function setMontageAutomationRules(rules: MontageAutomationRule[], userId: string): Promise<void> {
+export async function setMontageAutomationRules(): Promise<void> {
     // Do nothing
 }

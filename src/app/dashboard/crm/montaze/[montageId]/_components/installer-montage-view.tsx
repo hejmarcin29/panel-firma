@@ -42,7 +42,7 @@ interface InstallerMontageViewProps {
 
 export function InstallerMontageView({ montage, logs, userRoles }: InstallerMontageViewProps) {
     const [activeTab, setActiveTab] = useState("process");
-    const [defaultOpenModal, setDefaultOpenModal] = useState<'assistant' | 'costEstimation' | undefined>(undefined);
+    // const [defaultOpenModal, setDefaultOpenModal] = useState<'assistant' | 'costEstimation' | undefined>(undefined);
 
     // Filter logs to show only current user's actions (or system actions relevant to him)
     // In a real scenario, we'd filter by userId, but for now let's show all to keep context, 

@@ -26,7 +26,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import Link from 'next/link';
 import type { QuoteItem, QuoteStatus } from '@/lib/db/schema';
-import type { TechnicalAuditData } from '@/app/dashboard/crm/montaze/technical-data';
 import {
     Dialog,
     DialogContent,
@@ -58,13 +57,6 @@ const QuotePdfWrapper = dynamic(() => import('./quote-pdf-wrapper'), {
   ssr: false,
   loading: () => <Button variant="outline" size="sm" disabled>Ładowanie PDF...</Button>,
 });
-
-type ProductAttribute = {
-    id: number;
-    name: string;
-    slug: string;
-    options: string[];
-};
 
 type Product = {
     id: number;

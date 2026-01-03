@@ -39,7 +39,7 @@ const ICON_MAP: Record<PortalStepDefinition['iconName'], React.ElementType> = {
 };
 
 export function MontageTimeline({ montage }: MontageTimelineProps) {
-    const { status, createdAt, scheduledInstallationAt: scheduledDate, forecastedInstallationDate: forecastedDate, installationCity: city, measurementDate, floorArea, quotes } = montage;
+    const { status, createdAt, scheduledInstallationAt: scheduledDate, forecastedInstallationDate: forecastedDate, installationCity: city, measurementDate } = montage;
     
     const getStepState = (stepId: string, currentStatus: string): 'completed' | 'current' | 'upcoming' => {
         const statusOrder = [

@@ -20,7 +20,6 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { MontageStatus } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
 
 import type { Montage, StatusOption, AlertSettings } from "../types";
 import { MontagePipelineCard } from "./montage-pipeline-card";

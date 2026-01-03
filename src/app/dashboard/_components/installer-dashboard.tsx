@@ -1,15 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Phone, Calendar, ArrowRight, Send, Navigation, Plus, Inbox, Loader2, CheckCircle2, AlertTriangle, Clock, History } from "lucide-react";
+import { MapPin, Phone, Calendar, ArrowRight, Navigation, Plus, CheckCircle2, AlertTriangle, Clock, History } from "lucide-react";
 import Link from "next/link";
-import { format, isToday, isTomorrow } from "date-fns";
+import { format, isToday } from "date-fns";
 import { pl } from 'date-fns/locale';
-import { toast } from "sonner";
-import { sendDataRequest } from "../crm/montaze/actions";
 import { JobCompletionWizard } from '../crm/montaze/_components/job-completion-wizard';
 
 interface DashboardItem {

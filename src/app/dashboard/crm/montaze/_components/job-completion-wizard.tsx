@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2, AlertTriangle, FileSignature, Camera, X, Loader2, ArrowRight } from 'lucide-react';
+import { CheckCircle2, FileSignature, Camera, Loader2, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,6 @@ import {
     DrawerHeader,
     DrawerTitle,
 } from '@/components/ui/drawer';
-import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { finishMontage } from '../actions';
 

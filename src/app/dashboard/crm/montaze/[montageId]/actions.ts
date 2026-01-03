@@ -192,7 +192,7 @@ export async function generateCustomerToken(montageId: string) {
 }
 
 export async function updateMontageStatus(montageId: string, newStatus: MontageStatus) {
-    const user = await requireUser();
+    await requireUser();
     
     await db.update(montages)
         .set({ status: newStatus })
