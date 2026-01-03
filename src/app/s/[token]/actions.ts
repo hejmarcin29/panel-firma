@@ -90,13 +90,13 @@ export async function updateMontageData(montageId: string, data: MontageUpdateDa
             floorArea: null,
             additionalInfo: data.notes,
             // Auto-advance status if it's a lead
-            status: currentMontage?.status === 'lead' ? 'before_measurement' : undefined,
+            status: currentMontage?.status === 'new_lead' ? 'measurement_scheduled' : undefined,
             updatedAt: new Date()
         })
         .where(eq(montages.id, montageId));
 
     // Log system event if status changed
-    if (currentMontage?.status === 'lead') {
+    if (currentMontage?.status === 'new_lead') {
         await logSystemEvent(
             'montage.status_changed',
             `Klient uzupełnił dane - automatyczna zmiana statusu na Przed Pomiarem (ID: ${montageId})`,
