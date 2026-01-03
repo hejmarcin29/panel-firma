@@ -521,7 +521,10 @@ export function MeasurementAssistantModal({
                             </div>
                         </div>
                         <h2 className="text-3xl font-bold">{isValid ? "Gotowe!" : "Brakuje danych"}</h2>
-                        <p className="text-muted-foreground text-lg max-w-md mx-auto">
+                        <p className={cn(
+                            "text-lg max-w-md mx-auto transition-colors",
+                            isValid ? "text-muted-foreground" : "text-red-600 font-bold bg-red-50 p-3 rounded-xl border border-red-100"
+                        )}>
                             {isValid 
                                 ? "Wprowadziłeś wszystkie kluczowe dane." 
                                 : "Uzupełnij brakujące informacje, aby zatwierdzić pomiar."}
@@ -628,24 +631,33 @@ export function MeasurementAssistantModal({
 
             {/* Footer */}
             <div className="fixed bottom-0 left-0 right-0 p-4 border-t bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-                <div className="max-w-lg mx-auto flex gap-4">
+                <div className="max-w-lg mx-auto flex gap-3">
                     {currentStep === STEPS.length - 1 ? (
                         <>
                             <Button
                                 variant="outline"
                                 size="lg"
                                 className="flex-1"
+                                onClick={handleBack}
+                            >
+                                <ChevronLeft className="w-4 h-4 mr-2" />
+                                Wstecz
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="lg"
+                                className="flex-1"
                                 onClick={handleSaveDraft}
                             >
-                                Zapisz jako szkic
+                                Szkic
                             </Button>
                             <Button
                                 size="lg"
-                                className="flex-1 bg-green-600 hover:bg-green-700"
+                                className="flex-[1.5] bg-green-600 hover:bg-green-700"
                                 onClick={handleNext}
                                 disabled={!isFormValid()}
                             >
-                                Zatwierdź i Wyślij
+                                Zatwierdź
                                 <Check className="w-4 h-4 ml-2" />
                             </Button>
                         </>
