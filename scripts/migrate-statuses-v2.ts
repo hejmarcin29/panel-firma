@@ -21,7 +21,7 @@ async function migrate() {
     for (const [oldStatus, newStatus] of Object.entries(mappings)) {
         console.log(`Migrating ${oldStatus} -> ${newStatus}...`);
         await db.update(montages)
-            .set({ status: newStatus })
+            .set({ status: newStatus as any })
             .where(sql`status = ${oldStatus}`);
     }
 
