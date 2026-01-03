@@ -31,7 +31,7 @@ import { MontageSettlementTab } from "../../_components/montage-settlement-tab";
 import { MontageClientCard } from "./montage-client-card"; // Reusing for edit capabilities if needed
 import { MontageMaterialCard } from "./montage-material-card";
 import type { Montage, MontageLog } from "../../types";
-import type { UserRole } from "@/lib/db/schema";
+import type { UserRole, MontageStatus } from "@/lib/db/schema";
 
 interface InstallerMontageViewProps {
     montage: Montage;
@@ -157,7 +157,7 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
                                     <Select
                                         value={montage.status}
                                         onValueChange={async (val) => {
-                                            toast.promise(updateMontageStatus(montage.id, val), {
+                                            toast.promise(updateMontageStatus(montage.id, val as MontageStatus), {
                                                 loading: 'Aktualizacja statusu...',
                                                 success: 'Status zaktualizowany',
                                                 error: 'Błąd aktualizacji statusu'
