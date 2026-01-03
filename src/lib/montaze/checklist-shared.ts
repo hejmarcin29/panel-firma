@@ -1,8 +1,11 @@
+export type UserRole = 'admin' | 'office' | 'measurer' | 'installer' | 'client';
+
 export type MontageChecklistTemplate = {
 	id: string;
 	label: string;
 	allowAttachment: boolean;
     associatedStage?: string;
+    assignedRole?: UserRole;
 };
 
 export const DEFAULT_MONTAGE_CHECKLIST: readonly MontageChecklistTemplate[] = [

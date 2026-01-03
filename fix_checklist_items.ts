@@ -115,6 +115,7 @@ async function fix() {
                     montageId: m.id,
                     templateId: template.id,
                     label: template.label,
+                    assignedRole: template.assignedRole,
                     allowAttachment: template.allowAttachment,
                     completed: false,
                     orderIndex: index,

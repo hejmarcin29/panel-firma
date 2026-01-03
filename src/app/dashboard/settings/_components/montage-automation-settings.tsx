@@ -7,9 +7,10 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Bot, Zap, Plus, Trash2, Pencil, Check, X, ListTodo } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Bot, Zap, Plus, Trash2, Pencil, Check, X, ListTodo, User } from 'lucide-react';
 
-import type { MontageChecklistTemplate } from '@/lib/montaze/checklist-shared';
+import type { MontageChecklistTemplate, UserRole } from '@/lib/montaze/checklist-shared';
 import type { MontageAutomationRule } from '@/lib/montaze/automation';
 import type { StatusOption } from '../../crm/montaze/types';
 import { PROCESS_STEPS } from '@/lib/montaze/process-definition';
@@ -34,7 +35,9 @@ export function MontageAutomationSettings({ templates: initialTemplates, statusO
   // Checklist Editing State
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editLabel, setEditLabel] = useState('');
+  const [editRole, setEditRole] = useState<UserRole | undefined>(undefined);
   const [newItemLabels, setNewItemLabels] = useState<Record<string, string>>({});
+  const [newItemRoles, setNewItemRoles] = useState<Record<string, UserRole | undefined>>({});
 
   const handleRequireInstallerToggle = (checked: boolean) => {
       setRequireInstaller(checked);
@@ -83,12 +86,14 @@ export function MontageAutomationSettings({ templates: initialTemplates, statusO
           id: crypto.randomUUID(),
           label,
           allowAttachment: false,
-          associatedStage: stageId
+          associatedStage: stageId,
+          assignedRole: newItemRoles[stageId]
       };
 
       const newTemplates = [...templates, newItem];
       saveTemplates(newTemplates);
       setNewItemLabels(prev => ({ ...prev, [stageId]: '' }));
+      setNewItemRoles(prev => ({ ...prev, [stageId]: undefined }));
   };
 
   const handleDeleteItem = (itemId: string) => {
@@ -104,18 +109,20 @@ export function MontageAutomationSettings({ templates: initialTemplates, statusO
   const startEditing = (item: MontageChecklistTemplate) => {
       setEditingId(item.id);
       setEditLabel(item.label);
+      setEditRole(item.assignedRole);
   };
 
   const saveEditing = () => {
       if (!editingId || !editLabel.trim()) return;
       
       const newTemplates = templates.map(t => 
-          t.id === editingId ? { ...t, label: editLabel.trim() } : t
+          t.id === editingId ? { ...t, label: editLabel.trim(), assignedRole: editRole } : t
       );
       
       saveTemplates(newTemplates);
       setEditingId(null);
       setEditLabel('');
+      setEditRole(undefined);
   };
 
   const isEnabled = (id: string) => settings[id] ?? true; // Default to true if not set
@@ -219,10 +226,25 @@ export function MontageAutomationSettings({ templates: initialTemplates, statusO
                                                         <Input 
                                                             value={editLabel} 
                                                             onChange={(e) => setEditLabel(e.target.value)}
-                                                            className="h-8"
+                                                            className="h-8 flex-1"
                                                             autoFocus
                                                             onKeyDown={(e) => e.key === 'Enter' && saveEditing()}
                                                         />
+                                                        <Select 
+                                                            value={editRole || 'all'} 
+                                                            onValueChange={(val) => setEditRole(val === 'all' ? undefined : val as UserRole)}
+                                                        >
+                                                            <SelectTrigger className="h-8 w-[130px] text-xs">
+                                                                <SelectValue placeholder="Rola" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="all">Wszyscy</SelectItem>
+                                                                <SelectItem value="admin">Admin</SelectItem>
+                                                                <SelectItem value="office">Biuro</SelectItem>
+                                                                <SelectItem value="measurer">Pomiarowiec</SelectItem>
+                                                                <SelectItem value="installer">Montażysta</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
                                                         <Button size="icon" variant="ghost" className="h-8 w-8 text-green-600" onClick={saveEditing}>
                                                             <Check className="w-4 h-4" />
                                                         </Button>
@@ -235,6 +257,15 @@ export function MontageAutomationSettings({ templates: initialTemplates, statusO
                                                         <div className="flex-1 text-sm border rounded px-3 py-1.5 bg-white flex items-center justify-between">
                                                             <div className="flex items-center gap-2">
                                                                 <span>{item.label}</span>
+                                                                {item.assignedRole && (
+                                                                    <Badge variant="outline" className="text-[10px] bg-slate-50">
+                                                                        <User className="w-3 h-3 mr-1" />
+                                                                        {item.assignedRole === 'admin' ? 'Admin' :
+                                                                         item.assignedRole === 'office' ? 'Biuro' :
+                                                                         item.assignedRole === 'measurer' ? 'Pomiarowiec' :
+                                                                         item.assignedRole === 'installer' ? 'Montażysta' : item.assignedRole}
+                                                                    </Badge>
+                                                                )}
                                                                 {item.id === 'protocol_signed' && (
                                                                     <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-100 gap-1">
                                                                         <Bot className="w-3 h-3" /> Auto
@@ -264,11 +295,26 @@ export function MontageAutomationSettings({ templates: initialTemplates, statusO
                                         <div className="flex items-center gap-2 mt-2">
                                             <Input 
                                                 placeholder="Dodaj nowe zadanie..." 
-                                                className="h-8 text-sm"
+                                                className="h-8 text-sm flex-1"
                                                 value={newItemLabels[primaryStatus] || ''}
                                                 onChange={(e) => setNewItemLabels(prev => ({ ...prev, [primaryStatus]: e.target.value }))}
                                                 onKeyDown={(e) => e.key === 'Enter' && handleAddItem(primaryStatus)}
                                             />
+                                            <Select 
+                                                value={newItemRoles[primaryStatus] || 'all'} 
+                                                onValueChange={(val) => setNewItemRoles(prev => ({ ...prev, [primaryStatus]: val === 'all' ? undefined : val as UserRole }))}
+                                            >
+                                                <SelectTrigger className="h-8 w-[130px] text-xs">
+                                                    <SelectValue placeholder="Rola" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="all">Wszyscy</SelectItem>
+                                                    <SelectItem value="admin">Admin</SelectItem>
+                                                    <SelectItem value="office">Biuro</SelectItem>
+                                                    <SelectItem value="measurer">Pomiarowiec</SelectItem>
+                                                    <SelectItem value="installer">Montażysta</SelectItem>
+                                                </SelectContent>
+                                            </Select>
                                             <Button size="sm" variant="outline" onClick={() => handleAddItem(primaryStatus)}>
                                                 <Plus className="w-4 h-4 mr-1" /> Dodaj
                                             </Button>

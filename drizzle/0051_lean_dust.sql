@@ -1,0 +1,1 @@
+ALTER TABLE "montage_checklist_items" ADD COLUMN "assigned_role" text;

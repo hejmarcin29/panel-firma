@@ -687,6 +687,7 @@ export const montageChecklistItems = pgTable(
 		completed: boolean('completed')
 			.notNull()
 			.default(false),
+        assignedRole: text('assigned_role'),
 		orderIndex: integer('order_index').notNull(),
 		createdAt: timestamp('created_at').notNull().defaultNow(),
 		updatedAt: timestamp('updated_at').notNull().defaultNow(),
