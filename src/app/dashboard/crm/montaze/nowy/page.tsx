@@ -21,7 +21,7 @@ export default async function NewMontagePage() {
     
     const leads = await db.query.montages.findMany({
         where: and(
-            eq(montages.status, 'lead'),
+            eq(montages.status, 'new_lead'),
             isNull(montages.deletedAt)
         ),
         orderBy: desc(montages.createdAt),
