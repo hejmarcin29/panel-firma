@@ -380,7 +380,7 @@ export async function getDashboardStats(publicBaseUrl: string | null): Promise<D
                 montage: {
                     id: m.id,
                     clientName: m.clientName || 'Klient',
-                    status: m.status,
+                    status: m.status as MontageStatus,
                     createdAt: m.createdAt,
                     updatedAt: m.updatedAt
                 },
