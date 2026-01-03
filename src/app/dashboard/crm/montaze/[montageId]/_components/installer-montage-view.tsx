@@ -255,7 +255,6 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
                         <MontageMeasurementTab 
                             montage={montage} 
                             userRoles={userRoles} 
-                            defaultOpenModal={defaultOpenModal}
                         />
                     </div>
                 )}
