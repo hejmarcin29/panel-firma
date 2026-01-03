@@ -46,7 +46,7 @@ export interface MontageAlertItem {
 export interface MeasurementAlert {
     id: string;
     clientName: string;
-    status: string;
+    status: MontageStatus;
     createdAt: Date;
     updatedAt: Date;
 }
