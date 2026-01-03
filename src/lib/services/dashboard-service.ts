@@ -272,7 +272,7 @@ export async function getDashboardStats(publicBaseUrl: string | null): Promise<D
     // Alerts Logic (Red Statuses & Material Warnings)
     const montageAlerts = allMontages.map(m => {
         // Skip completed or leads
-        if (m.status === 'completed' || m.status === 'lead') return null;
+        if (m.status === 'completed' || m.status === 'new_lead') return null;
 
         const issues: string[] = [];
         
