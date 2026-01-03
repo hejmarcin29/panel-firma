@@ -2277,7 +2277,7 @@ export async function convertLeadToMontage(data: {
     const user = await requireUser();
     const montage = await getMontageOrThrow(data.montageId);
 
-    if (montage.status !== 'lead') {
+    if (montage.status !== 'new_lead') {
         throw new Error('Tylko leady mogą być konwertowane.');
     }
 
