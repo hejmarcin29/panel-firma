@@ -62,7 +62,7 @@ export async function submitMontageProtocol(data: {
     installerName: string;
 }) {
     try {
-        const isAutoStatusEnabled = await isSystemAutomationEnabled('auto_status_protocol');
+        const isAutoStatusEnabled = await isSystemAutomationEnabled();
 
         // Check current status to avoid regression if already completed
         const currentMontage = await db.query.montages.findFirst({

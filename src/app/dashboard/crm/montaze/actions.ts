@@ -823,8 +823,8 @@ export async function updateMontageContactDetails({
     const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') || '';
     const montageUrl = appUrl ? `${appUrl}/dashboard/crm/montaze/${montageId}` : '';
 
-    const isCalendarUpdateEnabled = await isSystemAutomationEnabled('calendar_update');
-    const isCalendarCreateEnabled = await isSystemAutomationEnabled('calendar_create');
+    const isCalendarUpdateEnabled = await isSystemAutomationEnabled();
+    const isCalendarCreateEnabled = await isSystemAutomationEnabled();
 
     if (montage && montage.googleEventId) {
         if (scheduledInstallationAt) {
@@ -1276,14 +1276,14 @@ export async function updateMontageMeasurementDate(montageId: string, date: Date
                 const address = montage.installationAddress || montage.address || 'Brak adresu';
                 
                 // SMS
-                const smsEnabled = await isSystemAutomationEnabled('measurement_scheduled');
+                const smsEnabled = await isSystemAutomationEnabled();
                 if (smsEnabled && montage.contactPhone) {
                     const smsMessage = `Dzień dobry, potwierdzamy termin pomiaru: ${formattedDate} godz. ${formattedTime}. Adres: ${address}. Do zobaczenia!`;
                     await sendSms(montage.contactPhone, smsMessage);
                 }
 
                 // Email
-                const emailEnabled = await isSystemAutomationEnabled('measurement_scheduled_email');
+                const emailEnabled = await isSystemAutomationEnabled();
                 if (emailEnabled && montage.contactEmail) {
                     const accounts = await db.select().from(mailAccounts).where(ne(mailAccounts.status, 'disabled')).limit(1);
                     const mailAccount = accounts[0];
@@ -2448,7 +2448,7 @@ export async function sendDataRequest(montageId: string) {
 
     // Send SMS if phone exists
     if (montage.contactPhone) {
-        const smsEnabled = await isSystemAutomationEnabled('data_request_sms');
+        const smsEnabled = await isSystemAutomationEnabled();
         if (smsEnabled) {
             try {
                 await sendSms(montage.contactPhone, message);
@@ -2462,7 +2462,7 @@ export async function sendDataRequest(montageId: string) {
 
     // Send Email if email exists
     if (montage.contactEmail) {
-        const emailEnabled = await isSystemAutomationEnabled('data_request_email');
+        const emailEnabled = await isSystemAutomationEnabled();
         if (emailEnabled) {
             try {
                 // Find active mail account

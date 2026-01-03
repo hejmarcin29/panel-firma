@@ -7,7 +7,7 @@ import { isSystemAutomationEnabled } from '@/lib/montaze/automation';
 
 export async function POST(req: NextRequest) {
     try {
-        const isEnabled = await isSystemAutomationEnabled('webhook_fluent_lead');
+        const isEnabled = await isSystemAutomationEnabled();
         if (!isEnabled) {
             return NextResponse.json({ error: 'Automation disabled' }, { status: 200 });
         }
