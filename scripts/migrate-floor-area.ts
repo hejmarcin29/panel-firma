@@ -4,6 +4,8 @@ import { montages } from '../src/lib/db/schema';
 import { eq, or } from 'drizzle-orm';
 import * as dotenv from 'dotenv';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 dotenv.config();
 
 async function migrate() {
