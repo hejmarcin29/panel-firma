@@ -160,7 +160,7 @@ export default async function MontazePage(props: any) {
                 if (stage === 'before-invoice') filteredStatuses = ['final_settlement'];
             }
 
-            conditions.push(inArray(montages.status, filteredStatuses));
+            conditions.push(inArray(montages.status, filteredStatuses as any));
         }
     }
 
