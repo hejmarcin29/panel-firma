@@ -527,67 +527,65 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
           <TabsTrigger value="additional">Prace i Materiały</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="main" className="space-y-6 mt-4">
+        <TabsContent value="main" className="mt-4">
             <div className="grid gap-6 md:grid-cols-2">
-                <Card className={cn("border-l-4", measurementDate ? "border-l-green-500" : "border-l-orange-500")}>
-                    <CardHeader className="pb-3">
-                        <CardTitle className="text-base font-medium flex items-center gap-2">
-                            <CalendarIcon className="h-4 w-4" />
-                            Termin Pomiaru
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex items-center gap-4">
-                            <div className="grid gap-1.5 flex-1">
-                                <Label htmlFor="measurementDate">Data i godzina wizyty</Label>
-                                <Input
-                                    id="measurementDate"
-                                    type="datetime-local"
-                                    value={measurementDate}
-                                    onChange={(e) => setMeasurementDate(e.target.value)}
-                                    disabled={isReadOnly}
-                                    className="max-w-[200px]"
-                                />
-                            </div>
-                            {!measurementDate && (
-                                <div className="text-sm text-orange-600 font-medium">
-                                    Nie ustalono terminu!
+                <div className="space-y-6">
+                    <Card className={cn("border-l-4", measurementDate ? "border-l-green-500" : "border-l-orange-500")}>
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-base font-medium flex items-center gap-2">
+                                <CalendarIcon className="h-4 w-4" />
+                                Termin Pomiaru
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="flex items-center gap-4">
+                                <div className="grid gap-1.5 flex-1">
+                                    <Label htmlFor="measurementDate">Data i godzina wizyty</Label>
+                                    <Input
+                                        id="measurementDate"
+                                        type="datetime-local"
+                                        value={measurementDate}
+                                        onChange={(e) => setMeasurementDate(e.target.value)}
+                                        disabled={isReadOnly}
+                                        className="max-w-[200px]"
+                                    />
                                 </div>
-                            )}
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card className={cn("border-l-4", isHousingVat ? "border-l-green-500" : "border-l-gray-300")}>
-                    <CardHeader className="pb-3">
-                        <CardTitle className="text-base font-medium flex items-center gap-2">
-                            <FileIcon className="h-4 w-4" />
-                            Ustalenia Podatkowe
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex items-center space-x-2">
-                            <Switch
-                                id="isHousingVat"
-                                checked={isHousingVat}
-                                onCheckedChange={setIsHousingVat}
-                                disabled={isReadOnly}
-                            />
-                            <div className="grid gap-1.5 leading-none">
-                                <Label htmlFor="isHousingVat" className="text-base font-medium cursor-pointer">
-                                    Budownictwo objęte społecznym programem mieszkaniowym (VAT 8%)
-                                </Label>
-                                <p className="text-sm text-muted-foreground">
-                                    Lokal mieszkalny do 150m² lub dom jednorodzinny do 300m².
-                                </p>
+                                {!measurementDate && (
+                                    <div className="text-sm text-orange-600 font-medium">
+                                        Nie ustalono terminu!
+                                    </div>
+                                )}
                             </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
+                        </CardContent>
+                    </Card>
 
-            <div className="grid gap-6 md:grid-cols-2">
-                {/* Technical Audit */}
+                    <Card className={cn("border-l-4", isHousingVat ? "border-l-green-500" : "border-l-gray-300")}>
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-base font-medium flex items-center gap-2">
+                                <FileIcon className="h-4 w-4" />
+                                Ustalenia Podatkowe
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="flex items-center space-x-2">
+                                <Switch
+                                    id="isHousingVat"
+                                    checked={isHousingVat}
+                                    onCheckedChange={setIsHousingVat}
+                                    disabled={isReadOnly}
+                                />
+                                <div className="grid gap-1.5 leading-none">
+                                    <Label htmlFor="isHousingVat" className="text-base font-medium cursor-pointer">
+                                        Budownictwo objęte społecznym programem mieszkaniowym (VAT 8%)
+                                    </Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Lokal mieszkalny do 150m² lub dom jednorodzinny do 300m².
+                                    </p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
                     <Card>
                         <CardHeader className="pb-3">
                             <CardTitle className="text-base font-medium">Audyt Techniczny Podłoża</CardTitle>
@@ -663,165 +661,166 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
                             </div>
                         </CardContent>
                     </Card>
-            </div>
+                </div>
 
-            {/* Sketch */}
-            <Card>
-                <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
-                    <CardTitle className="text-base font-medium">Szkic sytuacyjny</CardTitle>
-                    <Dialog open={isSketchOpen} onOpenChange={setIsSketchOpen}>
-                        {!isReadOnly && (
-                            <DialogTrigger asChild>
-                                <Button variant="outline" size="sm">
-                                <Pencil className="mr-2 h-4 w-4" />
-                                {sketchDataUrl ? 'Edytuj szkic' : 'Rysuj'}
-                                </Button>
-                            </DialogTrigger>
-                        )}
-                        <DialogContent className="max-w-3xl w-full h-[80vh] flex flex-col" onPointerDownOutside={(e) => e.preventDefault()}>
-                            <DialogHeader>
-                            <DialogTitle>Szkic sytuacyjny</DialogTitle>
-                            </DialogHeader>
-                            <div className="flex-1 border rounded-md overflow-hidden bg-white touch-none relative">
-                            <canvas
-                                ref={canvasRef}
-                                className="w-full h-full cursor-crosshair absolute inset-0"
-                                width={800}
-                                height={600}
-                                onMouseDown={startDrawing}
-                                onMouseMove={draw}
-                                onMouseUp={stopDrawing}
-                                onMouseLeave={stopDrawing}
-                                onTouchStart={startDrawing}
-                                onTouchMove={draw}
-                                onTouchEnd={stopDrawing}
-                            />
-                            </div>
-                            <div className="flex justify-between items-center mt-4">
-                            <Button type="button" variant="ghost" size="sm" onClick={clearCanvas}>
-                                <Eraser className="mr-2 h-4 w-4" />
-                                Wyczyść
-                            </Button>
-                            <div className="flex gap-2">
-                                <Button type="button" variant="outline" onClick={() => setIsSketchOpen(false)}>Anuluj</Button>
-                                <Button type="button" onClick={saveSketch}>Zatwierdź</Button>
-                            </div>
-                            </div>
-                            <p className="text-xs text-muted-foreground text-center">
-                                Możesz rysować palcem na urządzeniach mobilnych lub myszką.
-                            </p>
-                        </DialogContent>
-                    </Dialog>
-                </CardHeader>
-                <CardContent>
-                    <div className="border rounded-md overflow-hidden min-h-[200px] flex items-center justify-center bg-muted/10">
-                        {sketchDataUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={sketchDataUrl} alt="Szkic" className="w-full h-auto max-h-[300px] object-contain" />
-                        ) : (
-                            <div className="flex flex-col items-center gap-2 p-8 text-muted-foreground">
-                                <Pencil className="h-8 w-8 opacity-20" />
-                                <p className="text-sm">Brak szkicu. Kliknij &quot;Rysuj&quot; aby dodać.</p>
-                            </div>
-                        )}
-                    </div>
-                    <div className="space-y-2 mt-4">
-                        <Label htmlFor="additionalInfo">Uwagi z pomiaru</Label>
-                        <Textarea
-                            disabled={isReadOnly}
-                            id="additionalInfo"
-                            placeholder="Inne uwagi, ustalenia z klientem..."
-                            value={additionalInfo}
-                            onChange={(e) => setAdditionalInfo(e.target.value)}
-                            className="min-h-20"
-                        />
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Measurement Attachments */}
-            <Card>
-                <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
-                    <CardTitle className="text-base font-medium flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-purple-500"></span>
-                        Zdjęcia z pomiaru
-                    </CardTitle>
-                    {!isReadOnly && (
-                        <div className="relative">
-                            <input
-                                type="file"
-                                multiple
-                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                onChange={(e) => {
-                                    const files = e.target.files;
-                                    if (!files || files.length === 0) return;
-
-                                    startTransition(async () => {
-                                        try {
-                                            for (let i = 0; i < files.length; i++) {
-                                                const file = files[i];
-                                                const formData = new FormData();
-                                                formData.append("montageId", montage.id);
-                                                formData.append("file", file);
-                                                formData.append("title", file.name);
-                                                formData.append("category", MontageSubCategories.MEASUREMENT_BEFORE);
-                                                
-                                                await addMontageAttachment(formData);
-                                            }
-                                            router.refresh();
-                                        } catch (error) {
-                                            console.error(error);
-                                            alert("Wystąpił błąd podczas przesyłania plików.");
-                                        }
-                                        // Reset input
-                                        e.target.value = "";
-                                    });
-                                }}
-                            />
-                            <Button variant="outline" size="sm" disabled={isPending}>
-                                {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
-                                Dodaj zdjęcia
-                            </Button>
-                        </div>
-                    )}
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {montage.attachments
-                            ?.filter(att => att.url.includes(MontageSubCategories.MEASUREMENT_BEFORE))
-                            .map((att) => (
-                            <div key={att.id} className="group relative aspect-square rounded-lg border bg-background overflow-hidden">
-                                {/\.(jpg|jpeg|png|gif|webp)$/i.test(att.url) ? (
-                                    // eslint-disable-next-line @next/next/no-img-element
-                                    <img 
-                                        src={att.url} 
-                                        alt={att.title || 'Załącznik'} 
-                                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                <div className="space-y-6">
+                    <Card>
+                        <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+                            <CardTitle className="text-base font-medium">Szkic sytuacyjny</CardTitle>
+                            <Dialog open={isSketchOpen} onOpenChange={setIsSketchOpen}>
+                                {!isReadOnly && (
+                                    <DialogTrigger asChild>
+                                        <Button variant="outline" size="sm">
+                                        <Pencil className="mr-2 h-4 w-4" />
+                                        {sketchDataUrl ? 'Edytuj szkic' : 'Rysuj'}
+                                        </Button>
+                                    </DialogTrigger>
+                                )}
+                                <DialogContent className="max-w-3xl w-full h-[80vh] flex flex-col" onPointerDownOutside={(e) => e.preventDefault()}>
+                                    <DialogHeader>
+                                    <DialogTitle>Szkic sytuacyjny</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="flex-1 border rounded-md overflow-hidden bg-white touch-none relative">
+                                    <canvas
+                                        ref={canvasRef}
+                                        className="w-full h-full cursor-crosshair absolute inset-0"
+                                        width={800}
+                                        height={600}
+                                        onMouseDown={startDrawing}
+                                        onMouseMove={draw}
+                                        onMouseUp={stopDrawing}
+                                        onMouseLeave={stopDrawing}
+                                        onTouchStart={startDrawing}
+                                        onTouchMove={draw}
+                                        onTouchEnd={stopDrawing}
                                     />
+                                    </div>
+                                    <div className="flex justify-between items-center mt-4">
+                                    <Button type="button" variant="ghost" size="sm" onClick={clearCanvas}>
+                                        <Eraser className="mr-2 h-4 w-4" />
+                                        Wyczyść
+                                    </Button>
+                                    <div className="flex gap-2">
+                                        <Button type="button" variant="outline" onClick={() => setIsSketchOpen(false)}>Anuluj</Button>
+                                        <Button type="button" onClick={saveSketch}>Zatwierdź</Button>
+                                    </div>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground text-center">
+                                        Możesz rysować palcem na urządzeniach mobilnych lub myszką.
+                                    </p>
+                                </DialogContent>
+                            </Dialog>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="border rounded-md overflow-hidden min-h-[200px] flex items-center justify-center bg-muted/10">
+                                {sketchDataUrl ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={sketchDataUrl} alt="Szkic" className="w-full h-auto max-h-[300px] object-contain" />
                                 ) : (
-                                    <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground p-2">
-                                        <FileIcon className="h-8 w-8 mb-2" />
-                                        <span className="text-xs text-center truncate w-full">{att.title}</span>
+                                    <div className="flex flex-col items-center gap-2 p-8 text-muted-foreground">
+                                        <Pencil className="h-8 w-8 opacity-20" />
+                                        <p className="text-sm">Brak szkicu. Kliknij &quot;Rysuj&quot; aby dodać.</p>
                                     </div>
                                 )}
-                                <a 
-                                    href={att.url} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100"
-                                >
-                                    <ExternalLink className="text-white h-6 w-6 drop-shadow-md" />
-                                </a>
                             </div>
-                        ))}
-                        {(!montage.attachments || !montage.attachments.some(att => att.url.includes(MontageSubCategories.MEASUREMENT_BEFORE))) && (
-                            <div className="col-span-full py-8 text-center text-muted-foreground text-sm">
-                                Brak zdjęć z pomiaru.
+                            <div className="space-y-2 mt-4">
+                                <Label htmlFor="additionalInfo">Uwagi z pomiaru</Label>
+                                <Textarea
+                                    disabled={isReadOnly}
+                                    id="additionalInfo"
+                                    placeholder="Inne uwagi, ustalenia z klientem..."
+                                    value={additionalInfo}
+                                    onChange={(e) => setAdditionalInfo(e.target.value)}
+                                    className="min-h-20"
+                                />
                             </div>
-                        )}
-                    </div>
-                </CardContent>
-            </Card>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+                            <CardTitle className="text-base font-medium flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-purple-500"></span>
+                                Zdjęcia z pomiaru
+                            </CardTitle>
+                            {!isReadOnly && (
+                                <div className="relative">
+                                    <input
+                                        type="file"
+                                        multiple
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                        onChange={(e) => {
+                                            const files = e.target.files;
+                                            if (!files || files.length === 0) return;
+
+                                            startTransition(async () => {
+                                                try {
+                                                    for (let i = 0; i < files.length; i++) {
+                                                        const file = files[i];
+                                                        const formData = new FormData();
+                                                        formData.append("montageId", montage.id);
+                                                        formData.append("file", file);
+                                                        formData.append("title", file.name);
+                                                        formData.append("category", MontageSubCategories.MEASUREMENT_BEFORE);
+                                                        
+                                                        await addMontageAttachment(formData);
+                                                    }
+                                                    router.refresh();
+                                                } catch (error) {
+                                                    console.error(error);
+                                                    alert("Wystąpił błąd podczas przesyłania plików.");
+                                                }
+                                                // Reset input
+                                                e.target.value = "";
+                                            });
+                                        }}
+                                    />
+                                    <Button variant="outline" size="sm" disabled={isPending}>
+                                        {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
+                                        Dodaj zdjęcia
+                                    </Button>
+                                </div>
+                            )}
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                {montage.attachments
+                                    ?.filter(att => att.url.includes(MontageSubCategories.MEASUREMENT_BEFORE))
+                                    .map((att) => (
+                                    <div key={att.id} className="group relative aspect-square rounded-lg border bg-background overflow-hidden">
+                                        {/\.(jpg|jpeg|png|gif|webp)$/i.test(att.url) ? (
+                                            // eslint-disable-next-line @next/next/no-img-element
+                                            <img 
+                                                src={att.url} 
+                                                alt={att.title || 'Załącznik'} 
+                                                className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground p-2">
+                                                <FileIcon className="h-8 w-8 mb-2" />
+                                                <span className="text-xs text-center truncate w-full">{att.title}</span>
+                                            </div>
+                                        )}
+                                        <a 
+                                            href={att.url} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100"
+                                        >
+                                            <ExternalLink className="text-white h-6 w-6 drop-shadow-md" />
+                                        </a>
+                                    </div>
+                                ))}
+                                {(!montage.attachments || !montage.attachments.some(att => att.url.includes(MontageSubCategories.MEASUREMENT_BEFORE))) && (
+                                    <div className="col-span-full py-8 text-center text-muted-foreground text-sm">
+                                        Brak zdjęć z pomiaru.
+                                    </div>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
         </TabsContent>
 
         <TabsContent value="additional" className="space-y-6 mt-4">
