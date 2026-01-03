@@ -196,13 +196,13 @@ export async function updateMontageChecklistTemplatesAction(templates: MontageCh
 	revalidatePath('/dashboard/settings');
 }
 
-export async function updateMontageAutomationRulesAction(rules: MontageAutomationRule[]) {
+export async function updateMontageAutomationRulesAction(_rules: MontageAutomationRule[]) {
 	const user = await requireUser();
 	if (!user.roles.includes('admin')) {
 		throw new Error('Tylko administrator może zmieniać reguły automatyzacji.');
 	}
 
-	await setMontageAutomationRules(rules, user.id);
+	await setMontageAutomationRules();
 	
 	await logSystemEvent('update_montage_automation', 'Zaktualizowano reguły automatyzacji montażu', user.id);
 
