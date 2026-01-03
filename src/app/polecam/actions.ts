@@ -68,7 +68,7 @@ export async function submitReferralLead(formData: FormData) {
         contactPhone: phone,
         installationCity: city,
         additionalInfo: `**Partner:** ${partner.name} (${partner.email})\n${description ? `**Opis:** ${description}` : ''}`,
-        status: 'lead',
+        status: 'new_lead',
         partnerId: partner.id, // Explicit partner field
         createdAt: now,
         updatedAt: now,
