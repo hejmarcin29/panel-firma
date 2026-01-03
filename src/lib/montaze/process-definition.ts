@@ -25,80 +25,40 @@ export type ProcessStepDefinition = {
 };
 
 export const PROCESS_STEPS: ProcessStepDefinition[] = [
-    {
-        id: 'lead_verification',
-        label: 'Zgłoszenie i Weryfikacja',
-        description: 'Wstępna weryfikacja klienta i ustalenie potrzeb.',
-        relatedStatuses: ['lead'],
-        actor: 'office',
-        automations: [],
-        checkpoints: [
-            { key: 'contact_established', label: 'Kontakt nawiązany', condition: (m) => !!m.contactPhone || !!m.contactEmail },
-            { key: 'address_verified', label: 'Adres zweryfikowany', condition: (m) => !!m.installationAddress }
-        ]
-    },
-    {
-        id: 'measurement_valuation',
-        label: 'Pomiar i Wycena',
-        description: 'Realizacja pomiaru u klienta i przygotowanie oferty.',
-        relatedStatuses: ['before_measurement'],
-        actor: 'installer',
-        automations: [],
-        checkpoints: [
-            { key: 'measurement_scheduled', label: 'Pomiar umówiony', condition: (m) => !!m.measurementDate },
-            { key: 'measurement_done', label: 'Pomiar wykonany', condition: (m) => !!m.floorArea }, // Simplification
-            { key: 'cost_estimation_done', label: 'Kosztorys uzupełniony', condition: (m) => !!m.costEstimationCompletedAt },
-            { key: 'quote_created', label: 'Oferta utworzona', condition: (m) => !!m.quotes && m.quotes.length > 0 }
-        ]
-    },
-    {
-        id: 'formalities',
-        label: 'Formalności i Zaliczka',
-        description: 'Podpisanie umowy i wpłata zaliczki przez klienta.',
-        relatedStatuses: ['before_first_payment'],
-        actor: 'client',
-        automations: [],
-        checkpoints: [
-            { key: 'quote_accepted', label: 'Oferta zaakceptowana', condition: (m) => m.quotes?.some((q) => q.status === 'accepted') ?? false },
-            { key: 'contract_signed', label: 'Umowa podpisana', condition: (m) => !!m.contractDate || (m.quotes?.some((q) => !!q.signedAt) ?? false) },
-            { key: 'advance_paid', label: 'Zaliczka opłacona', condition: () => false } // Placeholder logic for now
-        ]
-    },
-    {
-        id: 'logistics',
-        label: 'Logistyka i Planowanie',
-        description: 'Zamówienie materiałów i ustalenie terminu montażu.',
-        relatedStatuses: ['before_installation'],
-        actor: 'office',
-        automations: [],
-        checkpoints: [
-            { key: 'materials_ordered', label: 'Materiały zamówione', condition: (m) => m.materialStatus === 'ordered' || m.materialStatus === 'in_stock' || m.materialStatus === 'delivered' },
-            { key: 'installation_scheduled', label: 'Montaż zaplanowany', condition: (m) => !!m.scheduledInstallationAt }
-        ]
-    },
-    {
-        id: 'realization',
-        label: 'Realizacja i Odbiór',
-        description: 'Fizyczny montaż, odbiór prac i rozliczenie końcowe.',
-        relatedStatuses: ['before_final_invoice'],
-        actor: 'installer',
-        automations: [
-            { id: 'auto_status_protocol', label: 'Automatyczne zakończenie', description: 'Wymusza status "Realizacja i Odbiór" po podpisaniu protokołu (jeśli montaż utknął w planowaniu). Nie cofa statusu, jeśli montaż jest już zakończony.' }
-        ],
-        checkpoints: [
-            { key: 'installation_done', label: 'Prace zakończone', condition: () => false }, // Manual check usually
-            { key: 'protocol_signed', label: 'Protokół podpisany', condition: (m) => !!m.clientSignatureUrl }
-        ]
-    },
-    {
-        id: 'completed',
-        label: 'Zakończone',
-        description: 'Zlecenie zamknięte i zarchiwizowane.',
-        relatedStatuses: ['completed'],
-        actor: 'system',
-        automations: [],
-        checkpoints: [
-            { key: 'final_payment', label: 'Rozliczenie końcowe', condition: () => true }
-        ]
-    }
+    // 1. LEJKI
+    { id: 'new_lead', label: 'Nowe Zgłoszenie', description: 'Wpadło, nikt nie dzwonił.', relatedStatuses: ['new_lead'], actor: 'office', automations: [], checkpoints: [] },
+    { id: 'contact_attempt', label: 'Próba Kontaktu', description: 'Dzwoniłem, nie odbiera.', relatedStatuses: ['contact_attempt'], actor: 'office', automations: [], checkpoints: [] },
+    { id: 'contact_established', label: 'Kontakt Nawiązany', description: 'Rozmawialiśmy, ustalamy co dalej.', relatedStatuses: ['contact_established'], actor: 'office', automations: [], checkpoints: [] },
+    { id: 'measurement_scheduled', label: 'Pomiar Umówiony', description: 'Jest data w kalendarzu.', relatedStatuses: ['measurement_scheduled'], actor: 'office', automations: [], checkpoints: [] },
+
+    // 2. WYCENA
+    { id: 'measurement_done', label: 'Po Pomiarze', description: 'Montażysta był, ale brak wyceny.', relatedStatuses: ['measurement_done'], actor: 'installer', automations: [], checkpoints: [] },
+    { id: 'quote_in_progress', label: 'Wycena w Toku', description: 'Liczymy, sprawdzamy dostępność.', relatedStatuses: ['quote_in_progress'], actor: 'office', automations: [], checkpoints: [] },
+    { id: 'quote_sent', label: 'Oferta Wysłana', description: 'Klient ma maila, czekamy.', relatedStatuses: ['quote_sent'], actor: 'office', automations: [], checkpoints: [] },
+    { id: 'quote_accepted', label: 'Oferta Zaakceptowana', description: 'Klient powiedział TAK, ale brak papierów.', relatedStatuses: ['quote_accepted'], actor: 'client', automations: [], checkpoints: [] },
+
+    // 3. FORMALNOŚCI
+    { id: 'contract_signed', label: 'Umowa Podpisana', description: 'Jest podpis na umowie.', relatedStatuses: ['contract_signed'], actor: 'office', automations: [], checkpoints: [] },
+    { id: 'waiting_for_deposit', label: 'Oczekiwanie na Zaliczkę', description: 'Faktura zaliczkowa wysłana.', relatedStatuses: ['waiting_for_deposit'], actor: 'office', automations: [], checkpoints: [] },
+    { id: 'deposit_paid', label: 'Zaliczka Opłacona', description: 'Kasa na koncie -> Startujemy.', relatedStatuses: ['deposit_paid'], actor: 'office', automations: [], checkpoints: [] },
+
+    // 4. LOGISTYKA
+    { id: 'materials_ordered', label: 'Materiały Zamówione', description: 'Poszło zamówienie do producenta.', relatedStatuses: ['materials_ordered'], actor: 'office', automations: [], checkpoints: [] },
+    { id: 'materials_pickup_ready', label: 'Gotowe do Odbioru', description: 'Towar czeka w magazynie/hurtowni.', relatedStatuses: ['materials_pickup_ready'], actor: 'office', automations: [], checkpoints: [] },
+    { id: 'installation_scheduled', label: 'Montaż Zaplanowany', description: 'Ekipa ma termin startu.', relatedStatuses: ['installation_scheduled'], actor: 'office', automations: [], checkpoints: [] },
+    { id: 'materials_delivered', label: 'Materiały u Klienta', description: 'Towar dostarczony na budowę.', relatedStatuses: ['materials_delivered'], actor: 'office', automations: [], checkpoints: [] },
+
+    // 5. REALIZACJA
+    { id: 'installation_in_progress', label: 'Montaż w Toku', description: 'Prace trwają.', relatedStatuses: ['installation_in_progress'], actor: 'installer', automations: [], checkpoints: [] },
+    { id: 'protocol_signed', label: 'Protokół Podpisany', description: 'Koniec prac, odbiór techniczny.', relatedStatuses: ['protocol_signed'], actor: 'installer', automations: [], checkpoints: [] },
+
+    // 6. FINISZ
+    { id: 'final_invoice_issued', label: 'Faktura Końcowa', description: 'Wystawiona, wysłana.', relatedStatuses: ['final_invoice_issued'], actor: 'office', automations: [], checkpoints: [] },
+    { id: 'final_settlement', label: 'Rozliczenie Końcowe', description: 'Czekamy na dopłatę.', relatedStatuses: ['final_settlement'], actor: 'office', automations: [], checkpoints: [] },
+    { id: 'completed', label: 'Zakończone', description: 'Wszystko na czysto, archiwum.', relatedStatuses: ['completed'], actor: 'system', automations: [], checkpoints: [] },
+
+    // 7. STANY SPECJALNE
+    { id: 'on_hold', label: 'Wstrzymane', description: 'Klient buduje dom, wróci za pół roku.', relatedStatuses: ['on_hold'], actor: 'system', automations: [], checkpoints: [] },
+    { id: 'rejected', label: 'Odrzucone', description: 'Za drogo / konkurencja.', relatedStatuses: ['rejected'], actor: 'system', automations: [], checkpoints: [] },
+    { id: 'complaint', label: 'Reklamacja', description: 'Coś poszło nie tak po montażu.', relatedStatuses: ['complaint'], actor: 'system', automations: [], checkpoints: [] },
 ];

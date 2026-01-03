@@ -47,7 +47,6 @@ export const supplierMessageMediums = ['email', 'phone', 'note'] as const;
 
 export const mailFolderKinds = ['inbox', 'sent', 'drafts', 'spam', 'trash', 'archive', 'custom'] as const;
 export const mailAccountStatuses = ['disabled', 'connected', 'disconnected', 'error'] as const;
-export const montageStatuses = ['lead', 'before_measurement', 'before_first_payment', 'before_installation', 'before_final_invoice', 'completed'] as const;
 export const montageSampleStatuses = ['none', 'to_send', 'sent', 'delivered', 'returned'] as const;
 export const logisticsStatuses = ['pending', 'ready', 'loaded', 'delivered'] as const;
 export const customerSources = ['internet', 'social_media', 'recommendation', 'architect', 'event', 'drive_by', 'phone', 'other'] as const;
@@ -65,7 +64,41 @@ export type SupplierMessageDirection = (typeof supplierMessageDirections)[number
 export type SupplierMessageMedium = (typeof supplierMessageMediums)[number];
 export type MailFolderKind = (typeof mailFolderKinds)[number];
 export type MailAccountStatus = (typeof mailAccountStatuses)[number];
-export type MontageStatus = string;
+
+export const montageStatuses = [
+    // 1. LEJKI
+    'new_lead',
+    'contact_attempt',
+    'contact_established',
+    'measurement_scheduled',
+    // 2. WYCENA
+    'measurement_done',
+    'quote_in_progress',
+    'quote_sent',
+    'quote_accepted',
+    // 3. FORMALNOŚCI
+    'contract_signed',
+    'waiting_for_deposit',
+    'deposit_paid',
+    // 4. LOGISTYKA
+    'materials_ordered',
+    'materials_pickup_ready',
+    'installation_scheduled',
+    'materials_delivered',
+    // 5. REALIZACJA
+    'installation_in_progress',
+    'protocol_signed',
+    // 6. FINISZ
+    'final_invoice_issued',
+    'final_settlement',
+    'completed',
+    // 7. STANY SPECJALNE
+    'on_hold',
+    'rejected',
+    'complaint'
+] as const;
+
+export type MontageStatus = (typeof montageStatuses)[number];
 export type MontageSampleStatus = (typeof montageSampleStatuses)[number];
 export type LogisticsStatus = (typeof logisticsStatuses)[number];
 export type CustomerSource = (typeof customerSources)[number];
@@ -539,7 +572,7 @@ export const montages = pgTable(
         clientInfo: text('client_info'),
 		sketchUrl: text('sketch_url'),
 		forecastedInstallationDate: timestamp('forecasted_installation_date'),
-		status: text('status').$type<MontageStatus>().notNull().default('lead'),
+		status: text('status').$type<MontageStatus>().notNull().default('new_lead'),
         sampleStatus: text('sample_status').$type<MontageSampleStatus>().default('none'),
 		displayId: text('display_id'),
 		materialStatus: text('material_status').$type<MontageMaterialStatus>().notNull().default('none'),

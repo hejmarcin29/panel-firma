@@ -10,76 +10,20 @@ export type MontageAutomationRule = {
 };
 
 export async function isSystemAutomationEnabled(id: string): Promise<boolean> {
-    const rawValue = await getAppSetting(appSettingKeys.montageNotifications);
-    const definition = SYSTEM_NOTIFICATIONS.find(n => n.id === id);
-    const defaultEnabled = definition?.defaultEnabled ?? true;
-
-    if (!rawValue) {
-        return defaultEnabled;
-    }
-    try {
-        const settings = JSON.parse(rawValue) as Record<string, boolean>;
-        return settings[id] ?? defaultEnabled;
-    } catch {
-        return defaultEnabled;
-    }
+    // Disabled by default as per "Manual Control" policy
+    return false;
 }
 
 export async function isProcessAutomationEnabled(id: string): Promise<boolean> {
-    const rawValue = await getAppSetting(appSettingKeys.montageAutomationSettings);
-    // Default to true if not set, as we want features to be enabled by default
-    const defaultEnabled = true;
-
-    if (!rawValue) {
-        return defaultEnabled;
-    }
-    try {
-        const settings = JSON.parse(rawValue) as Record<string, boolean>;
-        return settings[id] ?? defaultEnabled;
-    } catch {
-        return defaultEnabled;
-    }
+    // Disabled by default as per "Manual Control" policy
+    return false;
 }
 
 export async function getMontageAutomationRules(): Promise<MontageAutomationRule[]> {
-	const rawValue = await getAppSetting(appSettingKeys.montageAutomation);
-	if (!rawValue) {
-		return [];
-	}
-
-	try {
-		const parsed = JSON.parse(rawValue) as unknown;
-		if (!Array.isArray(parsed)) {
-			return [];
-		}
-
-		const rules: MontageAutomationRule[] = [];
-		for (const item of parsed) {
-			if (
-				typeof item === 'object' &&
-				item !== null &&
-				'checklistItemId' in item &&
-				'targetStatus' in item &&
-				typeof item.checklistItemId === 'string' &&
-				typeof item.targetStatus === 'string' &&
-				(montageStatuses as readonly string[]).includes(item.targetStatus)
-			) {
-				rules.push({
-					checklistItemId: item.checklistItemId,
-					targetStatus: item.targetStatus as MontageStatus,
-				});
-			}
-		}
-		return rules;
-	} catch {
-		return [];
-	}
+    // No automation rules
+	return [];
 }
 
 export async function setMontageAutomationRules(rules: MontageAutomationRule[], userId: string): Promise<void> {
-	await setAppSetting({
-		key: appSettingKeys.montageAutomation,
-		value: JSON.stringify(rules),
-		userId,
-	});
+    // Do nothing
 }

@@ -41,58 +41,75 @@ const ICON_MAP: Record<PortalStepDefinition['iconName'], React.ElementType> = {
 export function MontageTimeline({ montage }: MontageTimelineProps) {
     const { status, createdAt, scheduledInstallationAt: scheduledDate, forecastedInstallationDate: forecastedDate, installationCity: city, measurementDate, floorArea, quotes } = montage;
     
-    const getStepState = (targetStatus: string, currentStatus: string): 'completed' | 'current' | 'upcoming' => {
-        const statusOrder = ['lead', 'before_measurement', 'before_first_payment', 'before_installation', 'before_final_invoice', 'completed'];
-        const currentIndex = statusOrder.indexOf(currentStatus);
-        const targetIndex = statusOrder.indexOf(targetStatus);
+    const getStepState = (stepId: string, currentStatus: string): 'completed' | 'current' | 'upcoming' => {
+        const statusOrder = [
+            'new_lead', 'contact_attempt', 'contact_established', 'measurement_scheduled', // Lead
+            'measurement_done', 'quote_in_progress', 'quote_sent', 'quote_accepted', // Quote
+            'contract_signed', 'waiting_for_deposit', 'deposit_paid', // Formalities
+            'materials_ordered', 'materials_pickup_ready', 'installation_scheduled', 'materials_delivered', // Logistics
+            'installation_in_progress', 'protocol_signed', // Realization
+            'final_invoice_issued', 'final_settlement', 'completed', // Finish
+            'on_hold', 'rejected', 'complaint' // Special
+        ];
 
-        if (currentIndex > targetIndex) return 'completed';
-        if (currentIndex === targetIndex) return 'current';
+        const currentIndex = statusOrder.indexOf(currentStatus);
+        if (currentIndex === -1) return 'upcoming';
+
+        // Define start indices for each step
+        const stepStartIndices: Record<string, number> = {
+            'lead': 0,
+            'before_measurement': statusOrder.indexOf('measurement_scheduled'),
+            'quote_preparation': statusOrder.indexOf('measurement_done'),
+            'quote_acceptance': statusOrder.indexOf('quote_sent'),
+            'before_first_payment': statusOrder.indexOf('quote_accepted'),
+            'before_installation': statusOrder.indexOf('deposit_paid'),
+            'floor_install': statusOrder.indexOf('installation_in_progress'),
+            'completed': statusOrder.indexOf('protocol_signed')
+        };
+
+        // Define completion indices (inclusive)
+        // If current index is >= completion index, the step is completed.
+        // Note: Some steps overlap in logic (e.g. quote acceptance starts when quote is sent).
+        const stepCompletionIndices: Record<string, number> = {
+            'lead': statusOrder.indexOf('measurement_scheduled'), // Completed when measurement is scheduled? Or done? Let's say scheduled.
+            'before_measurement': statusOrder.indexOf('measurement_done'),
+            'quote_preparation': statusOrder.indexOf('quote_sent'),
+            'quote_acceptance': statusOrder.indexOf('quote_accepted'),
+            'before_first_payment': statusOrder.indexOf('deposit_paid'),
+            'before_installation': statusOrder.indexOf('installation_in_progress'), // Completed when installation starts
+            'floor_install': statusOrder.indexOf('protocol_signed'),
+            'completed': statusOrder.indexOf('completed')
+        };
+
+        const startIndex = stepStartIndices[stepId];
+        const completionIndex = stepCompletionIndices[stepId];
+
+        if (startIndex === undefined || completionIndex === undefined) return 'upcoming';
+
+        if (currentIndex >= completionIndex) return 'completed';
+        if (currentIndex >= startIndex) return 'current';
+        
         return 'upcoming';
     };
 
-    // Logic Helpers
-    const isMeasurementDone = (floorArea && floorArea > 0) || getStepState('before_measurement', status) === 'completed';
-    const hasQuote = quotes && quotes.length > 0;
-    const isQuoteAccepted = quotes && quotes.some(q => q.status === 'accepted');
-    const isDepositPaid = getStepState('before_first_payment', status) === 'completed';
-
     // Map definitions to runtime steps
     const steps: TimelineStep[] = PORTAL_STEPS.map(def => {
-        let stepStatus: 'completed' | 'current' | 'upcoming' = 'upcoming';
+        let stepStatus: 'completed' | 'current' | 'upcoming' = getStepState(def.id, status);
         let date: Date | null | undefined = undefined;
         let dynamicDescription = def.description;
 
         switch (def.id) {
             case 'lead':
-                stepStatus = getStepState('lead', status);
                 date = createdAt;
                 break;
             case 'before_measurement':
-                stepStatus = isMeasurementDone ? 'completed' : getStepState('before_measurement', status);
                 date = measurementDate;
                 if (measurementDate) dynamicDescription = 'Zaplanowany termin pomiaru';
                 break;
-            case 'quote_preparation':
-                stepStatus = hasQuote ? 'completed' : (isMeasurementDone ? 'current' : 'upcoming');
-                break;
-            case 'quote_acceptance':
-                stepStatus = isQuoteAccepted ? 'completed' : (hasQuote ? 'current' : 'upcoming');
-                break;
-            case 'before_first_payment':
-                stepStatus = isDepositPaid ? 'completed' : (isQuoteAccepted ? 'current' : 'upcoming');
-                break;
-            case 'before_installation':
-                stepStatus = getStepState('before_installation', status);
-                break;
             case 'floor_install':
-                stepStatus = getStepState('before_final_invoice', status);
                 date = scheduledDate || forecastedDate;
                 if (scheduledDate) dynamicDescription = 'Zaplanowany termin prac';
                 else if (forecastedDate) dynamicDescription = 'Oczekiwanie na termin';
-                break;
-            case 'completed':
-                stepStatus = getStepState('completed', status);
                 break;
         }
 

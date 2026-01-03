@@ -31,15 +31,14 @@ export function MontageProcessHub({ montage, stages }: MontageProcessHubProps) {
   const currentStageIndex = visibleStages.findIndex(s => s.value === montage.status);
 
   const getStageIcon = (statusId: string) => {
-    switch (statusId) {
-      case 'lead': return FileText;
-      case 'before_measurement': return Ruler;
-      case 'before_first_payment': return ClipboardCheck;
-      case 'before_installation': return Truck;
-      case 'before_final_invoice': return Hammer;
-      case 'completed': return CheckCircle2;
-      default: return Check;
-    }
+    if (['new_lead', 'contact_attempt', 'contact_established'].includes(statusId)) return FileText;
+    if (['measurement_scheduled', 'measurement_done'].includes(statusId)) return Ruler;
+    if (['quote_in_progress', 'quote_sent', 'quote_accepted'].includes(statusId)) return ClipboardCheck;
+    if (['contract_signed', 'waiting_for_deposit', 'deposit_paid'].includes(statusId)) return FileText;
+    if (['materials_ordered', 'materials_pickup_ready', 'materials_delivered'].includes(statusId)) return Truck;
+    if (['installation_scheduled', 'installation_in_progress', 'protocol_signed'].includes(statusId)) return Hammer;
+    if (['final_invoice_issued', 'final_settlement', 'completed'].includes(statusId)) return CheckCircle2;
+    return Check;
   };
 
   const handleStageClick = () => {

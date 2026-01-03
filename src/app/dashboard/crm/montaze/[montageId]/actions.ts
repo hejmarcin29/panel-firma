@@ -189,3 +189,13 @@ export async function generateCustomerToken(montageId: string) {
     revalidatePath(`/dashboard/crm/montaze/${montageId}`);
     return token;
 }
+
+export async function updateMontageStatus(montageId: string, newStatus: string) {
+    const user = await requireUser();
+    
+    await db.update(montages)
+        .set({ status: newStatus })
+        .where(eq(montages.id, montageId));
+
+    revalidatePath(`/dashboard/crm/montaze/${montageId}`);
+}

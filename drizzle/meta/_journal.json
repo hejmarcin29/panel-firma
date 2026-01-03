@@ -351,6 +351,13 @@
       "when": 1767435607777,
       "tag": "0049_friendly_night_nurse",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1767441032658,
+      "tag": "0050_cute_ted_forrester",
+      "breakpoints": true
     }
   ]
 }

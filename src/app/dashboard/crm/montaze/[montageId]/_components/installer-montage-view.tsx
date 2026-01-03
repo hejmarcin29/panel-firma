@@ -23,6 +23,9 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
+import { updateMontageStatus } from "../actions";
 
 import { MontageNotesTab } from "./montage-notes-tab";
 import { MontageGalleryTab } from "./montage-gallery-tab";
@@ -153,207 +156,86 @@ export function InstallerMontageView({ montage, logs, userRoles, hasGoogleCalend
                 {/* TAB: PROCESS (The Hub) */}
                 {activeTab === 'process' && (
                     <div className="space-y-6">
-                        {/* Current Mission Card */}
+                        {/* Status Selector Card */}
                         <Card className="border-l-4 border-l-primary shadow-md">
                             <CardHeader className="pb-2">
                                 <CardTitle className="text-base font-medium text-muted-foreground uppercase tracking-wider">
-                                    Aktualny Cel
+                                    Status Zlecenia (Sterowanie Ręczne)
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                {isMeasurementStage && (
-                                    <div className="space-y-4">
-                                        {montage.costEstimationCompletedAt ? (
-                                            <div className="p-4 border rounded-xl bg-green-50 border-green-100 space-y-3">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="p-2 bg-green-100 text-green-600 rounded-full">
-                                                        <Clock className="w-5 h-5" />
-                                                    </div>
-                                                    <div>
-                                                        <h3 className="font-bold text-base text-green-900">
-                                                            Oczekiwanie na realizację
-                                                        </h3>
-                                                        <p className="text-sm text-green-700">
-                                                            Dane z pomiaru i kosztorys zostały przesłane do biura. 
-                                                            {montage.scheduledInstallationAt && (
-                                                                <span className="block mt-1 font-medium">
-                                                                    Planowany termin montażu: {format(new Date(montage.scheduledInstallationAt), "dd.MM.yyyy", { locale: pl })}
-                                                                </span>
-                                                            )}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-2">
-                                                    <Button 
-                                                        variant="outline"
-                                                        className="w-full bg-white text-green-700 border-green-200 hover:bg-green-50"
-                                                        onClick={() => {
-                                                            setDefaultOpenModal('costEstimation');
-                                                            setActiveTab("measurement");
-                                                        }}
-                                                    >
-                                                        Edytuj Kosztorys
-                                                    </Button>
-                                                    <Button 
-                                                        variant="outline"
-                                                        className="w-full bg-white text-green-700 border-green-200 hover:bg-green-50"
-                                                        onClick={() => {
-                                                            setActiveTab("measurement");
-                                                        }}
-                                                    >
-                                                        Podgląd Pomiaru
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <>
-                                                <MeasurementScheduler 
-                                                    montageId={montage.id}
-                                                    currentDate={montage.measurementDate ? new Date(montage.measurementDate as string | number | Date) : null}
-                                                    clientPhone={montage.contactPhone}
-                                                    hasGoogleCalendar={hasGoogleCalendar}
-                                                    onStartProtocol={() => setActiveTab("measurement")}
-                                                    isMeasurementDone={!!montage.floorArea}
-                                                />
-                                                
-                                                {!!montage.floorArea && (
-                                                    <div className={cn(
-                                                        "p-4 border rounded-xl space-y-3",
-                                                        montage.costEstimationCompletedAt 
-                                                            ? "bg-green-50 border-green-100" 
-                                                            : "bg-blue-50 border-blue-100"
-                                                    )}>
-                                                        <div className="flex items-center gap-3">
-                                                            <div className={cn(
-                                                                "p-2 rounded-full",
-                                                                montage.costEstimationCompletedAt 
-                                                                    ? "bg-green-100 text-green-600" 
-                                                                    : "bg-blue-100 text-blue-600"
-                                                            )}>
-                                                                {montage.costEstimationCompletedAt ? <CheckSquare className="w-5 h-5" /> : <Banknote className="w-5 h-5" />}
-                                                            </div>
-                                                            <div>
-                                                                <h3 className={cn(
-                                                                    "font-bold text-base",
-                                                                    montage.costEstimationCompletedAt ? "text-green-900" : "text-blue-900"
-                                                                )}>
-                                                                    {montage.costEstimationCompletedAt ? "Kosztorys Wysłany" : "Wycena Kosztów"}
-                                                                </h3>
-                                                                <p className={cn(
-                                                                    "text-sm",
-                                                                    montage.costEstimationCompletedAt ? "text-green-700" : "text-blue-700"
-                                                                )}>
-                                                                    {montage.costEstimationCompletedAt 
-                                                                        ? "Dane zostały przesłane do biura." 
-                                                                        : "Uzupełnij koszty dodatkowe i usługi, aby biuro mogło przygotować ofertę."}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                        <Button 
-                                                            className={cn(
-                                                                "w-full",
-                                                                montage.costEstimationCompletedAt 
-                                                                    ? "bg-white text-green-700 border border-green-200 hover:bg-green-50" 
-                                                                    : "bg-blue-600 hover:bg-blue-700 text-white"
-                                                            )}
-                                                            onClick={() => {
-                                                                setDefaultOpenModal('costEstimation');
-                                                                setActiveTab("measurement");
-                                                            }}
-                                                        >
-                                                            {montage.costEstimationCompletedAt ? "Edytuj Kosztorys" : "Uzupełnij Kosztorys"}
-                                                        </Button>
-                                                    </div>
-                                                )}
-                                            </>
-                                        )}
-                                    </div>
-                                )}
-
-                                {isFormalitiesStage && (
-                                    <div className="space-y-4">
-                                        <div className="p-4 border rounded-xl bg-slate-50 border-slate-200 space-y-3">
-                                            <div className="flex items-center gap-3">
-                                                <div className="p-2 bg-slate-200 text-slate-600 rounded-full">
-                                                    <History className="w-5 h-5" />
-                                                </div>
-                                                <div>
-                                                    <h3 className="font-bold text-base text-slate-900">
-                                                        Formalności w toku
-                                                    </h3>
-                                                    <p className="text-sm text-slate-600">
-                                                        Biuro przygotowuje ofertę lub oczekuje na wpłatę zaliczki przez klienta. Poinformujemy Cię, gdy zlecenie będzie gotowe do montażu.
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {isInstallationStage && (
-                                    <div className="space-y-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-green-100 text-green-600 rounded-full">
-                                                <CheckSquare className="w-6 h-6" />
-                                            </div>
-                                            <div>
-                                                <h3 className="font-bold text-lg">Realizacja Montażu</h3>
-                                                <p className="text-sm text-muted-foreground">
-                                                    {montage.scheduledInstallationAt 
-                                                        ? `Start: ${format(new Date(montage.scheduledInstallationAt), "dd.MM.yyyy", { locale: pl })}`
-                                                        : "Czeka na termin"}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <Button 
-                                            className="w-full bg-green-600 hover:bg-green-700 text-white shadow-sm"
-                                            size="lg"
-                                            onClick={() => setIsWizardOpen(true)}
-                                        >
-                                            <CheckSquare className="w-5 h-5 mr-2" />
-                                            Zakończ wizytę
-                                        </Button>
-
-                                        <JobCompletionWizard 
-                                            montage={{
-                                                id: montage.id,
-                                                clientName: montage.clientName,
-                                                clientSignatureUrl: montage.clientSignatureUrl,
-                                                checklistItems: montage.checklistItems.map(i => ({ isChecked: i.completed })),
-                                                notes: montage.notes
-                                            }}
-                                            open={isWizardOpen}
-                                            onOpenChange={setIsWizardOpen}
-                                        />
-
-                                        <Separator />
-                                        
-                                        <div className="space-y-2">
-                                            <h4 className="font-medium text-sm">Twoje Zadania:</h4>
-                                            <MontageTasksTab montage={montage} />
-                                        </div>
-                                        
-                                        <Separator />
-                                        
-                                        <div className="space-y-2">
-                                            <h4 className="font-medium text-sm">Materiały do zabrania:</h4>
-                                            <MontageMaterialCard montage={montage} userRoles={userRoles} />
-                                        </div>
-                                    </div>
-                                )}
-
-                                {isDone && (
-                                    <div className="text-center py-4">
-                                        <div className="inline-flex p-3 bg-green-100 text-green-600 rounded-full mb-3">
-                                            <CheckSquare className="w-8 h-8" />
-                                        </div>
-                                        <h3 className="font-bold text-lg">Zlecenie Zakończone</h3>
-                                        <p className="text-sm text-muted-foreground">Dobra robota!</p>
-                                    </div>
-                                )}
+                                <div className="space-y-4">
+                                    <Select
+                                        value={montage.status}
+                                        onValueChange={async (val) => {
+                                            toast.promise(updateMontageStatus(montage.id, val), {
+                                                loading: 'Aktualizacja statusu...',
+                                                success: 'Status zaktualizowany',
+                                                error: 'Błąd aktualizacji statusu'
+                                            });
+                                        }}
+                                    >
+                                        <SelectTrigger className="w-full h-12 text-lg font-medium">
+                                            <SelectValue placeholder="Wybierz status" />
+                                        </SelectTrigger>
+                                        <SelectContent className="max-h-[400px]">
+                                            <SelectGroup>
+                                                <SelectLabel>1. Lejki</SelectLabel>
+                                                <SelectItem value="new_lead">Nowe Zgłoszenie</SelectItem>
+                                                <SelectItem value="contact_attempt">Próba Kontaktu</SelectItem>
+                                                <SelectItem value="contact_established">Kontakt Nawiązany</SelectItem>
+                                                <SelectItem value="measurement_scheduled">Pomiar Umówiony</SelectItem>
+                                            </SelectGroup>
+                                            <SelectGroup>
+                                                <SelectLabel>2. Wycena</SelectLabel>
+                                                <SelectItem value="measurement_done">Po Pomiarze</SelectItem>
+                                                <SelectItem value="quote_in_progress">Wycena w Toku</SelectItem>
+                                                <SelectItem value="quote_sent">Oferta Wysłana</SelectItem>
+                                                <SelectItem value="quote_accepted">Oferta Zaakceptowana</SelectItem>
+                                            </SelectGroup>
+                                            <SelectGroup>
+                                                <SelectLabel>3. Formalności</SelectLabel>
+                                                <SelectItem value="contract_signed">Umowa Podpisana</SelectItem>
+                                                <SelectItem value="waiting_for_deposit">Oczekiwanie na Zaliczkę</SelectItem>
+                                                <SelectItem value="deposit_paid">Zaliczka Opłacona</SelectItem>
+                                            </SelectGroup>
+                                            <SelectGroup>
+                                                <SelectLabel>4. Logistyka</SelectLabel>
+                                                <SelectItem value="materials_ordered">Materiały Zamówione</SelectItem>
+                                                <SelectItem value="materials_pickup_ready">Gotowe do Odbioru</SelectItem>
+                                                <SelectItem value="installation_scheduled">Montaż Zaplanowany</SelectItem>
+                                                <SelectItem value="materials_delivered">Materiały u Klienta</SelectItem>
+                                            </SelectGroup>
+                                            <SelectGroup>
+                                                <SelectLabel>5. Realizacja</SelectLabel>
+                                                <SelectItem value="installation_in_progress">Montaż w Toku</SelectItem>
+                                                <SelectItem value="protocol_signed">Protokół Podpisany</SelectItem>
+                                            </SelectGroup>
+                                            <SelectGroup>
+                                                <SelectLabel>6. Finisz</SelectLabel>
+                                                <SelectItem value="final_invoice_issued">Faktura Końcowa</SelectItem>
+                                                <SelectItem value="final_settlement">Rozliczenie Końcowe</SelectItem>
+                                                <SelectItem value="completed">Zakończone</SelectItem>
+                                            </SelectGroup>
+                                            <SelectGroup>
+                                                <SelectLabel>7. Specjalne</SelectLabel>
+                                                <SelectItem value="on_hold">Wstrzymane</SelectItem>
+                                                <SelectItem value="rejected">Odrzucone</SelectItem>
+                                                <SelectItem value="complaint">Reklamacja</SelectItem>
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                    <p className="text-sm text-muted-foreground">
+                                        Wybierz aktualny etap, aby zaktualizować oś czasu.
+                                    </p>
+                                </div>
                             </CardContent>
                         </Card>
+
+                        <div className="space-y-2">
+                            <h4 className="font-medium text-sm">Materiały do zabrania:</h4>
+                            <MontageMaterialCard montage={montage} userRoles={userRoles} />
+                        </div>
 
                         {/* Recent History (Simplified) */}
                         <div className="space-y-3">

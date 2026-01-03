@@ -1,0 +1,1 @@
+ALTER TABLE "montages" ALTER COLUMN "status" SET DEFAULT 'new_lead';
