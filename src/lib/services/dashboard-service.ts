@@ -183,7 +183,7 @@ export async function getDashboardStats(publicBaseUrl: string | null): Promise<D
     const montagesInProgress: { id: string; clientName: string; scheduledInstallationAt: Date | string | number | null; status: string }[] = [];
 
     for (const m of allMontages) {
-        if (m.status === 'completed' || m.status === 'lead') continue;
+        if (m.status === 'completed' || m.status === 'new_lead') continue;
 
         const simpleMontage = {
             id: m.id,
