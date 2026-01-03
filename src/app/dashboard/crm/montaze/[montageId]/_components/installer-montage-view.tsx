@@ -316,7 +316,13 @@ export function InstallerMontageView({ montage, logs, userRoles, hasGoogleCalend
                                         </Button>
 
                                         <JobCompletionWizard 
-                                            montageId={montage.id}
+                                            montage={{
+                                                id: montage.id,
+                                                clientName: montage.clientName,
+                                                clientSignatureUrl: montage.clientSignatureUrl,
+                                                checklistItems: montage.checklistItems.map(i => ({ isChecked: i.completed })),
+                                                notes: montage.notes
+                                            }}
                                             open={isWizardOpen}
                                             onOpenChange={setIsWizardOpen}
                                         />
