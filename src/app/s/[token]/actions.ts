@@ -318,12 +318,6 @@ export async function getCustomerByToken(token: string) {
                 attachments: true,
                 quotes: {
                     orderBy: [desc(quotes.createdAt)],
-                    with: {
-                        items: true
-                    }
-                    with: {
-                        items: true
-                    }
                 }
             }
         });
