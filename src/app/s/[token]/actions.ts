@@ -1,13 +1,15 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { customers, montages, quotes, mailAccounts } from '@/lib/db/schema';
+import { customers, montages, quotes, mailAccounts, montageAttachments } from '@/lib/db/schema';
 import { eq, desc, isNull, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { logSystemEvent } from '@/lib/logging';
 import { createTransport } from 'nodemailer';
 import { formatCurrency } from '@/lib/utils';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
+import { uploadSignedContract } from '@/lib/r2/storage';
+import { nanoid } from 'nanoid';
 
 function decodeSecret(secret: string | null | undefined): string | null {
     if (!secret) {
@@ -368,5 +370,91 @@ export async function getCustomerByToken(token: string) {
 
     return customer;
 }
+
+async function sendContractEmail(montageId: string, file: File) {
+    const montage = await db.query.montages.findFirst({
+        where: eq(montages.id, montageId),
+    });
+
+    if (!montage || !montage.contactEmail) return;
+
+    const account = await db.query.mailAccounts.findFirst({
+        where: eq(mailAccounts.status, 'connected'),
+    });
+
+    if (!account || !account.smtpHost || !account.smtpPort) return;
+
+    const password = decodeSecret(account.passwordSecret);
+    if (!password) return;
+
+    const transporter = createTransport({
+        host: account.smtpHost,
+        port: account.smtpPort,
+        secure: Boolean(account.smtpSecure),
+        auth: {
+            user: account.username,
+            pass: password,
+        },
+    });
+
+    const companyName = await getAppSetting(appSettingKeys.companyName);
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    await transporter.sendMail({
+        from: `"${companyName}" <${account.username}>`,
+        to: montage.contactEmail,
+        subject: `Podpisana umowa - ${companyName}`,
+        html: `
+            <div style="font-family: sans-serif;">
+                <p>Dzień dobry,</p>
+                <p>W załączniku przesyłamy podpisaną umowę.</p>
+                <p>Pozdrawiamy,<br>${companyName}</p>
+            </div>
+        `,
+        attachments: [
+            {
+                filename: file.name,
+                content: buffer,
+            },
+        ],
+    });
+}
+
+export async function saveSignedContract(token: string, formData: FormData) {
+    const customer = await getCustomerByToken(token);
+    if (!customer) throw new Error('Nieprawidłowy token');
+    
+    const file = formData.get('file') as File;
+    const sendEmail = formData.get('sendEmail') === 'true';
+    const montageId = formData.get('montageId') as string;
+
+    if (!file || !montageId) throw new Error('Brak pliku lub ID montażu');
+
+    // Verify ownership
+    const isOwner = customer.montages.some(m => m.id === montageId);
+    if (!isOwner) throw new Error('Brak uprawnień do tego montażu');
+
+    // Upload to R2
+    const url = await uploadSignedContract({ montageId, file });
+
+    // Save to DB
+    await db.insert(montageAttachments).values({
+        id: nanoid(),
+        montageId,
+        type: 'contract',
+        title: 'Podpisana umowa',
+        url,
+        uploadedBy: null, // System/Customer uploaded
+    });
+
+    if (sendEmail) {
+        await sendContractEmail(montageId, file);
+    }
+
+    revalidatePath(`/s/${token}`);
+    return { success: true };
+}
+
 
 

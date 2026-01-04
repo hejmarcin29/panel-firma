@@ -6,16 +6,18 @@ import { cn, formatCurrency } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { signQuote, sendQuoteEmailToCustomer } from '../actions';
-import { useState } from 'react';
+import { signQuote, sendQuoteEmailToCustomer, saveSignedContract } from '../actions';
+import { useState, useRef } from 'react';
 import { SignaturePad } from '@/components/ui/signature-pad';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { MontageTimeline } from './montage-timeline';
 import { DataRequestCard } from './data-request-card';
 import { InstallationDateCard } from './installation-date-card';
 import { PaymentCard } from './payment-card';
 import type { QuoteItem } from '@/lib/db/schema';
 import dynamic from 'next/dynamic';
+import { pdf } from '@react-pdf/renderer';
+import { QuotePdf } from '@/app/dashboard/crm/oferty/_components/quote-pdf';
 
 const QuotePdfWrapper = dynamic(() => import('@/app/dashboard/crm/oferty/_components/quote-pdf-wrapper'), {
   ssr: false,
@@ -96,6 +98,9 @@ export function CustomerPortal({ customer, token, bankAccount, companyInfo }: Cu
     const activeMontage = customer.montages[0]; // For now, just take the latest one
     const [contractDialogOpen, setContractDialogOpen] = useState(false);
     const [isSendingEmail, setIsSendingEmail] = useState(false);
+    const [emailConfirmOpen, setEmailConfirmOpen] = useState(false);
+    const [pendingSignature, setPendingSignature] = useState<string | null>(null);
+    const [isSavingContract, setIsSavingContract] = useState(false);
 
     const isImage = (url: string) => {
         return /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(url);
@@ -162,19 +167,64 @@ export function CustomerPortal({ customer, token, bankAccount, companyInfo }: Cu
         return text;
     };
 
-    const handleSignQuote = async (signatureData: string) => {
+    const handleSignQuote = (signatureData: string) => {
         if (!activeQuote) {
             toast.error('Błąd: Nie znaleziono aktywnej oferty.');
             return;
         }
+        setPendingSignature(signatureData);
+        setEmailConfirmOpen(true);
+    };
+
+    const finalizeSignature = async (sendEmail: boolean) => {
+        if (!activeQuote || !pendingSignature || !activeMontage) return;
         
+        setIsSavingContract(true);
+        setEmailConfirmOpen(false);
+        // Keep contract dialog open while saving to show progress if we wanted, 
+        // but for now let's close it or keep it open with a loading state.
+        // We'll close it after success.
+
         try {
-            await signQuote(activeQuote.id, signatureData, token);
+            const quoteForPdf = {
+                ...activeQuote,
+                signatureData: pendingSignature,
+                signedAt: new Date(),
+                montage: {
+                    clientName: activeMontage.clientName,
+                    address: activeMontage.installationAddress || activeMontage.address || activeMontage.installationCity || '',
+                    contactEmail: activeMontage.contactEmail,
+                    contactPhone: activeMontage.contactPhone,
+                    isHousingVat: activeMontage.isHousingVat,
+                },
+                totalNet: activeQuote.items.reduce((acc, item) => acc + item.priceNet * item.quantity, 0),
+            };
+
+            const blob = await pdf(
+                <QuotePdf quote={quoteForPdf} companyInfo={companyInfo} />
+            ).toBlob();
+
+            const file = new File([blob], `umowa_${activeQuote.number || 'podpisana'}.pdf`, { type: 'application/pdf' });
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('montageId', activeMontage.id);
+            formData.append('sendEmail', String(sendEmail));
+
+            // 1. Save contract (upload + email)
+            await saveSignedContract(token, formData);
+
+            // 2. Sign quote (update status)
+            await signQuote(activeQuote.id, pendingSignature, token);
+
             toast.success('Oferta została zaakceptowana i podpisana! Dziękujemy.');
             setContractDialogOpen(false);
+            
         } catch (error) {
-            toast.error('Wystąpił błąd podczas podpisywania oferty.');
+            toast.error('Wystąpił błąd podczas zapisywania umowy.');
             console.error(error);
+        } finally {
+            setIsSavingContract(false);
+            setPendingSignature(null);
         }
     };
 
@@ -621,6 +671,32 @@ export function CustomerPortal({ customer, token, bankAccount, companyInfo }: Cu
                                                                 <SignaturePad onSave={handleSignQuote} />
                                                             </div>
                                                         </div>
+                                                    </DialogContent>
+                                                </Dialog>
+
+                                                <Dialog open={emailConfirmOpen} onOpenChange={setEmailConfirmOpen}>
+                                                    <DialogContent>
+                                                        <DialogHeader>
+                                                            <DialogTitle>Potwierdzenie podpisu</DialogTitle>
+                                                            <DialogDescription>
+                                                                Czy chcesz otrzymać kopię podpisanej umowy na swój adres email?
+                                                            </DialogDescription>
+                                                        </DialogHeader>
+                                                        <DialogFooter className="flex gap-2 sm:justify-end">
+                                                            <Button 
+                                                                variant="outline" 
+                                                                onClick={() => finalizeSignature(false)}
+                                                                disabled={isSavingContract}
+                                                            >
+                                                                Nie, dziękuję
+                                                            </Button>
+                                                            <Button 
+                                                                onClick={() => finalizeSignature(true)}
+                                                                disabled={isSavingContract}
+                                                            >
+                                                                {isSavingContract ? 'Zapisywanie...' : 'Tak, wyślij kopię'}
+                                                            </Button>
+                                                        </DialogFooter>
                                                     </DialogContent>
                                                 </Dialog>
                                             </div>

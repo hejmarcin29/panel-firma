@@ -346,3 +346,31 @@ export async function listMontageObjects(): Promise<GalleryObject[]> {
 
 	return results;
 }
+
+export async function uploadSignedContract({
+    montageId,
+    file,
+}: {
+    montageId: string;
+    file: File;
+}): Promise<string> {
+    const config = await getR2Config();
+    const client = createR2Client(config);
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const filename = `umowa_podpisana_${new Date().toISOString().split('T')[0]}.pdf`;
+    // Store in montaze/{montageId}/umowy/
+    const key = `${MONTAGE_ROOT_PREFIX}/${montageId}/umowy/${Date.now()}_${filename}`;
+
+    const command = new PutObjectCommand({
+        Bucket: config.bucketName,
+        Key: key,
+        Body: buffer,
+        ContentType: 'application/pdf',
+    });
+
+    await client.send(command);
+
+    return `${config.publicBaseUrl}/${key}`;
+}
+
