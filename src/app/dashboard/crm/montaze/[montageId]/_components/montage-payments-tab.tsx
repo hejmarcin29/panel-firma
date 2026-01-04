@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -112,7 +112,7 @@ export function MontagePaymentsTab({ montageId, payments }: MontagePaymentsTabPr
         try {
             await deletePayment(paymentId);
             toast.success('Płatność usunięta');
-        } catch (error) {
+        } catch {
             toast.error('Błąd usuwania');
         }
     };
@@ -140,7 +140,7 @@ export function MontagePaymentsTab({ montageId, payments }: MontagePaymentsTabPr
                         <div className="space-y-4 py-4">
                             <div className="space-y-2">
                                 <Label>Typ płatności</Label>
-                                <Select value={newType} onValueChange={(v: any) => setNewType(v)}>
+                                <Select value={newType} onValueChange={(v) => setNewType(v as 'advance' | 'final' | 'other')}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Wybierz typ" />
                                     </SelectTrigger>
