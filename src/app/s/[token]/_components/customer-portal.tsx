@@ -95,6 +95,36 @@ export function CustomerPortal({ customer, token, bankAccount, companyInfo }: Cu
     const documents = activeMontage?.attachments.filter(att => !isImage(att.url)) || [];
     const activeQuote = activeMontage?.quotes.find(q => q.status === 'sent' || q.status === 'accepted');
 
+    const replaceVariables = (content: string) => {
+        if (!content) return '';
+        let text = content;
+        
+        const replacements: Record<string, string> = {
+            '{{klient_nazwa}}': activeMontage?.clientName || '',
+            '{{klient_adres}}': activeMontage?.address || '',
+            '{{klient_email}}': activeMontage?.contactEmail || '',
+            '{{klient_telefon}}': activeMontage?.contactPhone || '',
+            '{{numer_wyceny}}': activeQuote?.number || '',
+            '{{data_wyceny}}': activeQuote ? new Date(activeQuote.createdAt).toLocaleDateString('pl-PL') : '',
+            '{{kwota_netto}}': activeQuote ? formatCurrency(activeQuote.items.reduce((acc, item) => acc + item.priceNet * item.quantity, 0)) : '',
+            '{{kwota_brutto}}': activeQuote ? formatCurrency(activeQuote.totalGross) : '',
+            '{{adres_montazu}}': activeMontage?.installationAddress || activeMontage?.address || activeMontage?.installationCity || '',
+            '{{data_rozpoczecia}}': activeMontage?.scheduledInstallationAt ? new Date(activeMontage.scheduledInstallationAt).toLocaleDateString('pl-PL') : 'Do ustalenia',
+            '{{termin_zakonczenia}}': 'Do ustalenia',
+            '{{oswiadczenie_vat}}': activeMontage?.isHousingVat ? 'Zamawiający oświadcza, że lokal mieszkalny, w którym wykonywana jest usługa, spełnia warunki art. 41 ust. 12 ustawy o VAT.' : '',
+            '{{firma_nazwa}}': companyInfo.name,
+            '{{firma_adres}}': companyInfo.address,
+            '{{firma_nip}}': companyInfo.nip,
+            '{{logo_firmy}}': '', 
+        };
+
+        Object.entries(replacements).forEach(([key, value]) => {
+            text = text.replace(new RegExp(key, 'g'), value);
+        });
+        
+        return text;
+    };
+
     const handleSignQuote = async (signatureData: string) => {
         if (!activeQuote) return;
         
@@ -330,7 +360,7 @@ export function CustomerPortal({ customer, token, bankAccount, companyInfo }: Cu
                                         <div className="flex items-baseline justify-between">
                                             <span className="text-muted-foreground">Wartość zamówienia (brutto):</span>
                                             <span className="text-2xl font-bold">
-                                                {(activeQuote.totalGross / 100).toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' })}
+                                                {activeQuote.totalGross.toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' })}
                                             </span>
                                         </div>
                                         {activeQuote.status === 'sent' && (
@@ -374,7 +404,7 @@ export function CustomerPortal({ customer, token, bankAccount, companyInfo }: Cu
                                                                 Podgląd i podpisanie umowy
                                                             </Button>
                                                         </DialogTrigger>
-                                                        <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
+                                                        <DialogContent className="w-[95vw] max-w-5xl h-[90vh] flex flex-col sm:max-w-5xl">
                                                             <DialogHeader>
                                                                 <DialogTitle>Umowa / Warunki Współpracy</DialogTitle>
                                                             </DialogHeader>
@@ -543,7 +573,7 @@ export function CustomerPortal({ customer, token, bankAccount, companyInfo }: Cu
                                                                 {/* Terms Content */}
                                                                 <div className="mb-8">
                                                                     <h2 className="text-lg font-bold font-sans border-b pb-2 mb-4">Warunki Współpracy</h2>
-                                                                    <div dangerouslySetInnerHTML={{ __html: activeQuote.termsContent || '' }} />
+                                                                    <div dangerouslySetInnerHTML={{ __html: replaceVariables(activeQuote.termsContent || '') }} />
                                                                 </div>
                                                             </div>
                                                         </div>

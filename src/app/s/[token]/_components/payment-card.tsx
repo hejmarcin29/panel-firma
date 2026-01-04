@@ -10,7 +10,7 @@ import { Separator } from '@/components/ui/separator';
 
 interface PaymentCardProps {
   quoteNumber: string;
-  totalAmount: number; // in grosz
+  totalAmount: number; // in PLN
   isPaid: boolean;
   bankAccount?: string;
 }
@@ -27,7 +27,7 @@ export function PaymentCard({
     return new Intl.NumberFormat('pl-PL', {
       style: 'currency',
       currency: 'PLN',
-    }).format(amount / 100);
+    }).format(amount);
   };
 
   const handleCopy = () => {
