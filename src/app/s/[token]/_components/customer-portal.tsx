@@ -1,12 +1,12 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, Calendar, Image as ImageIcon, Ruler, Calculator, Check } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { FileText, Calendar, Image as ImageIcon, Ruler, Calculator, Check, Mail } from 'lucide-react';
+import { cn, formatCurrency } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { signQuote } from '../actions';
+import { signQuote, sendQuoteEmailToCustomer } from '../actions';
 import { useState } from 'react';
 import { SignaturePad } from '@/components/ui/signature-pad';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -14,6 +14,13 @@ import { MontageTimeline } from './montage-timeline';
 import { DataRequestCard } from './data-request-card';
 import { InstallationDateCard } from './installation-date-card';
 import { PaymentCard } from './payment-card';
+import type { QuoteItem } from '@/lib/db/schema';
+import dynamic from 'next/dynamic';
+
+const QuotePdfWrapper = dynamic(() => import('@/app/dashboard/crm/oferty/_components/quote-pdf-wrapper'), {
+  ssr: false,
+  loading: () => <Button variant="outline" size="sm" disabled>Ładowanie PDF...</Button>,
+});
 
 interface MontageAttachment {
     id: string;
@@ -31,6 +38,7 @@ interface Quote {
     termsContent: string | null;
     signedAt: Date | null;
     signatureData: string | null;
+    items: QuoteItem[];
 }
 
 interface Montage {
@@ -61,11 +69,18 @@ interface CustomerPortalProps {
     customer: Customer;
     token: string;
     bankAccount?: string;
+    companyInfo: {
+        name: string;
+        address: string;
+        nip: string;
+        logoUrl?: string;
+    };
 }
 
-export function CustomerPortal({ customer, token, bankAccount }: CustomerPortalProps) {
+export function CustomerPortal({ customer, token, bankAccount, companyInfo }: CustomerPortalProps) {
     const activeMontage = customer.montages[0]; // For now, just take the latest one
     const [contractDialogOpen, setContractDialogOpen] = useState(false);
+    const [isSendingEmail, setIsSendingEmail] = useState(false);
 
     const isImage = (url: string) => {
         return /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(url);
@@ -87,6 +102,37 @@ export function CustomerPortal({ customer, token, bankAccount }: CustomerPortalP
             console.error(error);
         }
     };
+
+    const handleSendEmail = async () => {
+        if (!activeQuote) return;
+        setIsSendingEmail(true);
+        try {
+            await sendQuoteEmailToCustomer(activeQuote.id, token);
+            toast.success('Potwierdzenie zostało wysłane na Twój adres email.');
+        } catch (error) {
+            toast.error('Wystąpił błąd podczas wysyłania emaila.');
+            console.error(error);
+        } finally {
+            setIsSendingEmail(false);
+        }
+    };
+
+    const pdfQuoteData = activeQuote && activeMontage ? {
+        number: activeQuote.number,
+        createdAt: activeQuote.createdAt,
+        montage: {
+            clientName: activeMontage.clientName,
+            address: activeMontage.installationCity || '', // Fallback
+            contactEmail: null, // Not available in frontend model yet, but needed for PDF
+            contactPhone: null, // Not available in frontend model yet
+        },
+        items: activeQuote.items,
+        totalNet: activeQuote.items.reduce((acc, item) => acc + item.priceNet * item.quantity, 0),
+        totalGross: activeQuote.totalGross,
+        termsContent: activeQuote.termsContent,
+        signatureData: activeQuote.signatureData,
+        signedAt: activeQuote.signedAt,
+    } : null;
 
     const containerVariants = {
         hidden: { opacity: 0, y: 20 },
@@ -287,9 +333,24 @@ export function CustomerPortal({ customer, token, bankAccount }: CustomerPortalP
                                             </div>
                                         )}
                                         {activeQuote.status === 'accepted' && (
-                                            <div className="rounded-md bg-green-50 p-4 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-300 flex items-center gap-2">
-                                                <Check className="h-4 w-4" />
-                                                <p>Wycena została zaakceptowana i podpisana {activeQuote.signedAt ? new Date(activeQuote.signedAt).toLocaleDateString('pl-PL') : ''}. Dziękujemy!</p>
+                                            <div className="space-y-4">
+                                                <div className="rounded-md bg-green-50 p-4 text-sm text-green-700 dark:bg-green-900/20 dark:text-green-300 flex items-center gap-2">
+                                                    <Check className="h-4 w-4" />
+                                                    <p>Wycena została zaakceptowana i podpisana {activeQuote.signedAt ? new Date(activeQuote.signedAt).toLocaleDateString('pl-PL') : ''}. Dziękujemy!</p>
+                                                </div>
+                                                
+                                                <div className="flex flex-wrap gap-2">
+                                                    {pdfQuoteData && (
+                                                        <QuotePdfWrapper 
+                                                            quote={pdfQuoteData} 
+                                                            companyInfo={companyInfo}
+                                                        />
+                                                    )}
+                                                    <Button variant="outline" onClick={handleSendEmail} disabled={isSendingEmail}>
+                                                        <Mail className="w-4 h-4 mr-2" />
+                                                        {isSendingEmail ? 'Wysyłanie...' : 'Wyślij na Email'}
+                                                    </Button>
+                                                </div>
                                             </div>
                                         )}
 
@@ -311,7 +372,7 @@ export function CustomerPortal({ customer, token, bankAccount }: CustomerPortalP
                                                             <DialogHeader>
                                                                 <DialogTitle>Umowa / Warunki Współpracy</DialogTitle>
                                                             </DialogHeader>
-                                                            <div className="flex-1 overflow-y-auto border rounded-md p-4 bg-white text-black">
+                                                            <div className="flex-1 overflow-y-auto border rounded-md p-8 bg-white text-black shadow-inner">
                                                                 <style jsx global>{`
                                                                     @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&family=Open+Sans:wght@400;600&display=swap');
                                                                     
@@ -433,11 +494,58 @@ export function CustomerPortal({ customer, token, bankAccount }: CustomerPortalP
                                                                     max-width: 100%;
                                                                 }
                                                             `}</style>
-                                                            <div className="contract-preview-content" dangerouslySetInnerHTML={{ __html: activeQuote.termsContent }} />
+                                                            
+                                                            <div className="contract-preview-content">
+                                                                <div className="text-center mb-8">
+                                                                    <h1 className="text-2xl font-bold uppercase tracking-wider mb-2">Wycena / Umowa</h1>
+                                                                    <p className="text-gray-500 font-sans">{activeQuote.number}</p>
+                                                                </div>
+
+                                                                {/* Quote Items Table */}
+                                                                <div className="mb-12">
+                                                                    <h2 className="text-lg font-bold font-sans border-b pb-2 mb-4">Specyfikacja Zamówienia</h2>
+                                                                    <table className="w-full border-collapse text-sm font-sans">
+                                                                        <thead>
+                                                                            <tr className="bg-gray-50 border-b-2 border-gray-200">
+                                                                                <th className="text-left py-3 px-2 font-semibold text-gray-700">Nazwa / Opis</th>
+                                                                                <th className="text-right py-3 px-2 font-semibold text-gray-700">Ilość</th>
+                                                                                <th className="text-right py-3 px-2 font-semibold text-gray-700">Cena Netto</th>
+                                                                                <th className="text-right py-3 px-2 font-semibold text-gray-700">VAT</th>
+                                                                                <th className="text-right py-3 px-2 font-semibold text-gray-700">Wartość Brutto</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            {activeQuote.items?.map((item, i) => (
+                                                                                <tr key={i} className="border-b border-gray-100 hover:bg-gray-50/50">
+                                                                                    <td className="py-3 px-2">{item.name}</td>
+                                                                                    <td className="text-right py-3 px-2">{item.quantity} {item.unit}</td>
+                                                                                    <td className="text-right py-3 px-2">{formatCurrency(item.priceNet)}</td>
+                                                                                    <td className="text-right py-3 px-2">{item.vatRate * 100}%</td>
+                                                                                    <td className="text-right py-3 px-2 font-medium">{formatCurrency(item.totalGross)}</td>
+                                                                                </tr>
+                                                                            ))}
+                                                                        </tbody>
+                                                                        <tfoot>
+                                                                            <tr className="border-t-2 border-gray-300">
+                                                                                <td colSpan={4} className="text-right py-4 px-2 font-bold text-gray-800">Razem do zapłaty:</td>
+                                                                                <td className="text-right py-4 px-2 font-bold text-xl text-primary">{formatCurrency(activeQuote.totalGross)}</td>
+                                                                            </tr>
+                                                                        </tfoot>
+                                                                    </table>
+                                                                </div>
+
+                                                                {/* Terms Content */}
+                                                                <div className="mb-8">
+                                                                    <h2 className="text-lg font-bold font-sans border-b pb-2 mb-4">Warunki Współpracy</h2>
+                                                                    <div dangerouslySetInnerHTML={{ __html: activeQuote.termsContent || '' }} />
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                        <div className="pt-4 border-t">
-                                                            <h4 className="font-semibold mb-2">Podpis</h4>
-                                                            <SignaturePad onSave={handleSignQuote} />
+                                                        <div className="pt-4 border-t bg-gray-50 p-4 -mx-6 -mb-6 mt-0">
+                                                            <div className="max-w-md mx-auto">
+                                                                <h4 className="font-semibold mb-2 text-center">Podpisz tutaj</h4>
+                                                                <SignaturePad onSave={handleSignQuote} />
+                                                            </div>
                                                         </div>
                                                     </DialogContent>
                                                 </Dialog>

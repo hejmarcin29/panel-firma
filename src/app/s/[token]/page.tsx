@@ -20,7 +20,25 @@ export default async function ReferralPage({ params }: PageProps) {
         notFound();
     }
 
-    const bankAccount = await getAppSetting(appSettingKeys.companyBankAccount);
+    const [bankAccount, companyName, companyAddress, companyNip, companyLogoUrl] = await Promise.all([
+        getAppSetting(appSettingKeys.companyBankAccount),
+        getAppSetting(appSettingKeys.companyName),
+        getAppSetting(appSettingKeys.companyAddress),
+        getAppSetting(appSettingKeys.companyNip),
+        getAppSetting(appSettingKeys.companyLogoUrl),
+    ]);
 
-    return <CustomerPortal customer={customer} token={token} bankAccount={bankAccount || undefined} />;
+    const companyInfo = {
+        name: companyName || 'Moja Firma',
+        address: companyAddress || '',
+        nip: companyNip || '',
+        logoUrl: companyLogoUrl || undefined,
+    };
+
+    return <CustomerPortal 
+        customer={customer} 
+        token={token} 
+        bankAccount={bankAccount || undefined} 
+        companyInfo={companyInfo}
+    />;
 }
