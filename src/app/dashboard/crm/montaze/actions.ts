@@ -677,12 +677,17 @@ type UpdateMontageContactDetailsInput = {
     measurementDate?: string;
 	billingAddress?: string;
 	billingCity?: string;
+    billingPostalCode?: string;
 	installationAddress?: string;
 	installationCity?: string;
     source?: string;
     forecastedInstallationDate?: string;
     sampleStatus?: string;
     estimatedFloorArea?: number;
+    isCompany?: boolean;
+    companyName?: string;
+    nip?: string;
+    isHousingVat?: boolean;
 };
 
 export async function updateMontageContactDetails({
@@ -695,12 +700,17 @@ export async function updateMontageContactDetails({
     measurementDate,
 	billingAddress,
 	billingCity,
+    billingPostalCode,
 	installationAddress,
 	installationCity,
     source,
     forecastedInstallationDate,
     sampleStatus,
     estimatedFloorArea,
+    isCompany,
+    companyName,
+    nip,
+    isHousingVat,
 }: UpdateMontageContactDetailsInput) {
 	await requireUser();
 
@@ -797,10 +807,15 @@ export async function updateMontageContactDetails({
             measurementDate: measurementAt,
 			billingAddress: normalizedBillingAddress,
 			billingCity: normalizedBillingCity,
+            billingPostalCode: billingPostalCode || null,
 			installationAddress: normalizedInstallationAddress,
 			installationCity: normalizedInstallationCity,
             sampleStatus: sampleStatus ? (sampleStatus as MontageSampleStatus) : undefined,
             estimatedFloorArea: estimatedFloorArea,
+            isCompany: isCompany ?? false,
+            companyName: companyName || null,
+            nip: nip || null,
+            isHousingVat: isHousingVat ?? false,
 			updatedAt: new Date(),
 		})
 		.where(eq(montages.id, montageId));

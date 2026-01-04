@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, Phone, Mail, Calendar as CalendarIcon, Edit2, Ruler, Loader2, Check, Hammer, Megaphone, ExternalLink, Copy, Sparkles } from "lucide-react";
+import { MapPin, Phone, Mail, Calendar as CalendarIcon, Edit2, Ruler, Loader2, Check, Hammer, Megaphone, ExternalLink, Copy, Sparkles, Building2, FileText } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Dialog,
@@ -77,6 +78,13 @@ export function MontageClientCard({
       : "",
     sampleStatus: montage.sampleStatus || "none",
     estimatedFloorArea: montage.estimatedFloorArea?.toString() || "",
+    isCompany: montage.isCompany || false,
+    companyName: montage.companyName || "",
+    nip: montage.nip || "",
+    billingAddress: montage.billingAddress || "",
+    billingCity: montage.billingCity || "",
+    billingPostalCode: montage.billingPostalCode || "",
+    isHousingVat: montage.isHousingVat || false,
   });
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -106,6 +114,13 @@ export function MontageClientCard({
           : "",
         sampleStatus: montage.sampleStatus || "none",
         estimatedFloorArea: montage.estimatedFloorArea?.toString() || "",
+        isCompany: montage.isCompany || false,
+        companyName: montage.companyName || "",
+        nip: montage.nip || "",
+        billingAddress: montage.billingAddress || "",
+        billingCity: montage.billingCity || "",
+        billingPostalCode: montage.billingPostalCode || "",
+        isHousingVat: montage.isHousingVat || false,
     });
     setDateRange({
         from: montage.scheduledInstallationAt ? new Date(montage.scheduledInstallationAt) : undefined,
@@ -122,9 +137,10 @@ export function MontageClientCard({
         clientName: montage.clientName,
         contactEmail: data.contactEmail,
         contactPhone: data.contactPhone,
-        billingAddress: montage.billingAddress || "", // Preserve existing if not edited here
+        billingAddress: data.billingAddress,
         installationAddress: data.installationAddress,
-        billingCity: montage.billingCity || "", // Preserve existing
+        billingCity: data.billingCity,
+        billingPostalCode: data.billingPostalCode,
         installationCity: data.installationCity,
         source: data.source,
         forecastedInstallationDate: data.forecastedInstallationDate,
@@ -133,6 +149,10 @@ export function MontageClientCard({
         scheduledInstallationEndDate: data.scheduledInstallationEndAt,
         sampleStatus: data.sampleStatus,
         estimatedFloorArea: data.estimatedFloorArea ? parseFloat(data.estimatedFloorArea) : undefined,
+        isCompany: data.isCompany,
+        companyName: data.companyName,
+        nip: data.nip,
+        isHousingVat: data.isHousingVat,
       });
       router.refresh();
     } catch {
@@ -142,7 +162,7 @@ export function MontageClientCard({
     }
   }, 1000);
 
-  const handleChange = (field: keyof typeof formData, value: string) => {
+  const handleChange = (field: keyof typeof formData, value: string | boolean) => {
     const newData = { ...formData, [field]: value };
     setFormData(newData);
     debouncedSave(newData);
@@ -338,6 +358,68 @@ export function MontageClientCard({
                   onChange={(e) => handleChange("installationCity", e.target.value)}
                 />
               </div>
+
+              <Separator />
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                    id="isCompany" 
+                    checked={formData.isCompany}
+                    onCheckedChange={(checked) => handleChange("isCompany", checked as boolean)}
+                />
+                <Label htmlFor="isCompany">Firma (Faktura VAT)</Label>
+              </div>
+
+              {formData.isCompany && (
+                <>
+                    <div className="space-y-2">
+                        <Label htmlFor="companyName">Nazwa firmy</Label>
+                        <Input
+                        id="companyName"
+                        value={formData.companyName}
+                        onChange={(e) => handleChange("companyName", e.target.value)}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="nip">NIP</Label>
+                        <Input
+                        id="nip"
+                        value={formData.nip}
+                        onChange={(e) => handleChange("nip", e.target.value)}
+                        />
+                    </div>
+                </>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="billingAddress">Adres do faktury</Label>
+                <Input
+                  id="billingAddress"
+                  value={formData.billingAddress}
+                  onChange={(e) => handleChange("billingAddress", e.target.value)}
+                  placeholder="Ulica i numer"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-2">
+                    <Label htmlFor="billingPostalCode">Kod pocztowy</Label>
+                    <Input
+                    id="billingPostalCode"
+                    value={formData.billingPostalCode}
+                    onChange={(e) => handleChange("billingPostalCode", e.target.value)}
+                    />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="billingCity">Miasto</Label>
+                    <Input
+                    id="billingCity"
+                    value={formData.billingCity}
+                    onChange={(e) => handleChange("billingCity", e.target.value)}
+                    />
+                </div>
+              </div>
+
+              <Separator />
+
                <div className="space-y-2">
                 <Label>Data montażu (zakres)</Label>
                 <Popover>
@@ -547,6 +629,49 @@ export function MontageClientCard({
         </div>
 
         <Separator />
+
+        {/* Section: Billing Data */}
+        {(montage.isCompany || montage.billingAddress || montage.nip) && (
+            <>
+                <div className="space-y-3">
+                    <h4 className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wider flex items-center gap-2">
+                        <FileText className="h-3 w-3" />
+                        Dane do faktury
+                    </h4>
+                    
+                    {montage.isCompany && (
+                        <div className="flex items-start gap-3">
+                            <Building2 className="mt-0.5 h-4 w-4 text-muted-foreground" />
+                            <div className="grid gap-0.5">
+                                <p className="text-sm font-medium leading-none">
+                                    {montage.companyName || "Brak nazwy firmy"}
+                                </p>
+                                {montage.nip && (
+                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                        NIP: {montage.nip}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {(montage.billingAddress || montage.billingCity) && (
+                        <div className="flex items-start gap-3">
+                            <MapPin className="mt-0.5 h-4 w-4 text-muted-foreground" />
+                            <div className="grid gap-0.5">
+                                <p className="text-sm font-medium leading-none">
+                                    {montage.billingAddress || "Brak ulicy"}
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                    {montage.billingPostalCode} {montage.billingCity}
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                </div>
+                <Separator />
+            </>
+        )}
 
         {/* Section 2: Dates (Grid) */}
         <div>

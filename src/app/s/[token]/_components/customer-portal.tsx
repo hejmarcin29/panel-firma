@@ -62,7 +62,17 @@ interface Montage {
     contactPhone: string | null;
     address: string | null;
     installationAddress: string | null;
+    installationPostalCode: string | null;
+    additionalInfo: string | null;
+    
+    // Billing
     isHousingVat: boolean | null;
+    isCompany: boolean | null;
+    companyName: string | null;
+    nip: string | null;
+    billingAddress: string | null;
+    billingCity: string | null;
+    billingPostalCode: string | null;
 }
 
 interface Customer {
@@ -204,11 +214,9 @@ export function CustomerPortal({ customer, token, bankAccount, companyInfo }: Cu
                     <motion.div variants={containerVariants} className="space-y-6">
                         
                         {/* Action First: Data Request at the top */}
-                        {(activeMontage.status === 'lead' || activeMontage.status === 'before_measurement') && (
-                            <motion.div variants={itemVariants}>
-                                <DataRequestCard montage={activeMontage} token={token} />
-                            </motion.div>
-                        )}
+                        <motion.div variants={itemVariants}>
+                            <DataRequestCard montage={activeMontage} token={token} />
+                        </motion.div>
 
                         <motion.div variants={itemVariants}>
                             <MontageTimeline montage={activeMontage} />

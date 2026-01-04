@@ -220,6 +220,14 @@ interface MontageUpdateData {
     postalCode?: string;
     floorArea?: string | number;
     notes?: string;
+    // Billing Data
+    isCompany?: boolean;
+    companyName?: string;
+    nip?: string;
+    billingAddress?: string;
+    billingCity?: string;
+    billingPostalCode?: string;
+    isHousingVat?: boolean;
 }
 
 export async function updateMontageData(montageId: string, data: MontageUpdateData, token: string) {
@@ -234,11 +242,21 @@ export async function updateMontageData(montageId: string, data: MontageUpdateDa
     await db.update(montages)
         .set({
             address: data.address,
+            installationAddress: data.address, // Sync with Admin Panel
             installationCity: data.city,
             installationPostalCode: data.postalCode,
             estimatedFloorArea: data.floorArea ? parseFloat(data.floorArea.toString()) : null,
-            floorArea: null,
             additionalInfo: data.notes,
+            
+            // Billing
+            isCompany: data.isCompany ?? false,
+            companyName: data.companyName,
+            nip: data.nip,
+            billingAddress: data.billingAddress,
+            billingCity: data.billingCity,
+            billingPostalCode: data.billingPostalCode,
+            isHousingVat: data.isHousingVat ?? false,
+
             // Auto-advance status if it's a lead
             status: currentMontage?.status === 'new_lead' ? 'measurement_scheduled' : undefined,
             updatedAt: new Date()
