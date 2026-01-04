@@ -22,6 +22,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
 import { updateMontageStatus, updateMontageMeasurementDate } from "../../actions";
@@ -212,36 +214,19 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
                                             <h4 className="font-semibold text-base">Umów Termin Pomiaru</h4>
                                             <p className="text-sm text-muted-foreground">Wybierz datę ustaloną z klientem.</p>
                                         </div>
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <Button variant="outline" className={cn(
-                                                    "w-[240px] justify-start text-left font-normal",
-                                                    !montage.measurementDate && "text-muted-foreground"
-                                                )}>
-                                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                                    {montage.measurementDate ? format(new Date(montage.measurementDate), "PPP", { locale: pl }) : <span>Wybierz datę</span>}
-                                                </Button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-auto p-0" align="start">
-                                                <Calendar
-                                                    mode="single"
-                                                    selected={montage.measurementDate ? new Date(montage.measurementDate) : undefined}
-                                                    onSelect={async (date) => {
-                                                        if (date) {
-                                                            toast.promise(async () => {
-                                                                await updateMontageMeasurementDate(montage.id, date);
-                                                                await updateMontageStatus({ montageId: montage.id, status: 'measurement_scheduled' });
-                                                            }, {
-                                                                loading: 'Zapisywanie terminu...',
-                                                                success: 'Termin zapisany! Przechodzę do etapu pomiaru.',
-                                                                error: 'Błąd zapisu'
-                                                            });
-                                                        }
-                                                    }}
-                                                    initialFocus
-                                                />
-                                            </PopoverContent>
-                                        </Popover>
+                                        <MeasurementDateSelector 
+                                            currentDate={montage.measurementDate ? new Date(montage.measurementDate) : null}
+                                            onSelect={async (date) => {
+                                                toast.promise(async () => {
+                                                    await updateMontageMeasurementDate(montage.id, date);
+                                                    await updateMontageStatus({ montageId: montage.id, status: 'measurement_scheduled' });
+                                                }, {
+                                                    loading: 'Zapisywanie terminu...',
+                                                    success: 'Termin zapisany! Przechodzę do etapu pomiaru.',
+                                                    error: 'Błąd zapisu'
+                                                });
+                                            }}
+                                        />
                                     </div>
                                 </CardContent>
                             </Card>
@@ -382,5 +367,93 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
                 )}
             </div>
         </div>
+    );
+}
+
+function MeasurementDateSelector({ 
+    currentDate, 
+    onSelect 
+}: { 
+    currentDate: Date | null, 
+    onSelect: (date: Date) => Promise<void> 
+}) {
+    const [date, setDate] = useState<Date | undefined>(currentDate || undefined);
+    const [time, setTime] = useState(currentDate ? format(currentDate, "HH:mm") : "09:00");
+    const [isOpen, setIsOpen] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+
+    const handleConfirm = async () => {
+        if (!date) return;
+        
+        setIsSaving(true);
+        try {
+            const [hours, minutes] = time.split(':').map(Number);
+            const finalDate = new Date(date);
+            finalDate.setHours(hours, minutes);
+            
+            await onSelect(finalDate);
+            setIsOpen(false);
+        } catch (error) {
+            console.error(error);
+            toast.error("Błąd zapisu daty");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    return (
+        <Popover open={isOpen} onOpenChange={setIsOpen}>
+            <PopoverTrigger asChild>
+                <Button variant="outline" className={cn(
+                    "w-[240px] justify-start text-left font-normal",
+                    !currentDate && "text-muted-foreground"
+                )}>
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {currentDate ? format(currentDate, "dd.MM.yyyy HH:mm", { locale: pl }) : <span>Wybierz datę</span>}
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+                <div className="p-3 border-b space-y-3">
+                        <div className="flex items-center justify-between">
+                        <Label className="text-sm font-medium">Godzina:</Label>
+                        <Input 
+                            type="time" 
+                            value={time} 
+                            onChange={(e) => setTime(e.target.value)}
+                            className="w-32 font-mono"
+                        />
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                        {["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"].map(t => (
+                            <Button
+                                key={t}
+                                variant={time === t ? "default" : "outline"}
+                                size="sm"
+                                className="h-7 px-2 text-xs"
+                                onClick={() => setTime(t)}
+                            >
+                                {t}
+                            </Button>
+                        ))}
+                        </div>
+                </div>
+                <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={setDate}
+                    initialFocus
+                    locale={pl}
+                />
+                <div className="p-3 border-t">
+                    <Button 
+                        className="w-full" 
+                        disabled={!date || isSaving}
+                        onClick={handleConfirm}
+                    >
+                        {isSaving ? "Zapisywanie..." : "Zatwierdź termin"}
+                    </Button>
+                </div>
+            </PopoverContent>
+        </Popover>
     );
 }
