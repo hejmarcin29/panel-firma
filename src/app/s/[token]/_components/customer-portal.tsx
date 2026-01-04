@@ -108,6 +108,29 @@ export function CustomerPortal({ customer, token, bankAccount, companyInfo }: Cu
     const replaceVariables = (content: string) => {
         if (!content) return '';
         let text = content;
+
+        const itemsTableHtml = activeQuote ? `
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 12px;">
+            <thead>
+                <tr style="background-color: #f9fafb;">
+                    <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: left;">Nazwa</th>
+                    <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">Ilość</th>
+                    <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">Cena Netto</th>
+                    <th style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">Wartość Brutto</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${activeQuote.items.map(item => `
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #e5e7eb;">${item.name}</td>
+                        <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">${item.quantity} ${item.unit}</td>
+                        <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">${formatCurrency(item.priceNet)}</td>
+                        <td style="padding: 8px; border: 1px solid #e5e7eb; text-align: right;">${formatCurrency(item.totalGross)}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+        ` : '';
         
         const replacements: Record<string, string> = {
             '{{klient_nazwa}}': activeMontage?.clientName || '',
@@ -121,11 +144,15 @@ export function CustomerPortal({ customer, token, bankAccount, companyInfo }: Cu
             '{{adres_montazu}}': activeMontage?.installationAddress || activeMontage?.address || activeMontage?.installationCity || '',
             '{{data_rozpoczecia}}': activeMontage?.scheduledInstallationAt ? new Date(activeMontage.scheduledInstallationAt).toLocaleDateString('pl-PL') : 'Do ustalenia',
             '{{termin_zakonczenia}}': 'Do ustalenia',
-            '{{oswiadczenie_vat}}': activeMontage?.isHousingVat ? 'Zamawiający oświadcza, że lokal mieszkalny, w którym wykonywana jest usługa, spełnia warunki art. 41 ust. 12 ustawy o VAT.' : '',
+            '{{oswiadczenie_vat}}': '', // Removed as per request - VAT 8% is handled by installer in protocol
             '{{firma_nazwa}}': companyInfo.name,
             '{{firma_adres}}': companyInfo.address,
             '{{firma_nip}}': companyInfo.nip,
             '{{logo_firmy}}': '', 
+            '{{tabela_produktow}}': itemsTableHtml,
+            '{{podpis_wykonawcy}}': '', // Removed as per request
+            '{{firma_bank}}': bankAccount || '',
+            '{{firma_konto}}': '', // Duplicate of bankAccount usually
         };
 
         Object.entries(replacements).forEach(([key, value]) => {
@@ -136,7 +163,10 @@ export function CustomerPortal({ customer, token, bankAccount, companyInfo }: Cu
     };
 
     const handleSignQuote = async (signatureData: string) => {
-        if (!activeQuote) return;
+        if (!activeQuote) {
+            toast.error('Błąd: Nie znaleziono aktywnej oferty.');
+            return;
+        }
         
         try {
             await signQuote(activeQuote.id, signatureData, token);

@@ -195,6 +195,14 @@ export async function signQuote(quoteId: string, signatureData: string, token: s
             .where(eq(montages.id, quote.montageId));
     }
 
+    // Automation: Move to 'contract_signed' if in valid previous stage
+    const allowedPreviousStatuses = ['measurement_done', 'quote_in_progress', 'quote_sent', 'quote_accepted'];
+    if (allowedPreviousStatuses.includes(quote.montage.status)) {
+        await db.update(montages)
+            .set({ status: 'contract_signed' })
+            .where(eq(montages.id, quote.montageId));
+    }
+
     // Log system event
     await logSystemEvent(
         'quote_signed',

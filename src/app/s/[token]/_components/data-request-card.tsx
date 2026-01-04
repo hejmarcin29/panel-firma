@@ -20,7 +20,7 @@ interface MontageData {
     estimatedFloorArea?: number | null;
     additionalInfo?: string | null;
     // Billing
-    isCompany?: boolean;
+    isCompany?: boolean | null;
     companyName?: string | null;
     nip?: string | null;
     billingAddress?: string | null;

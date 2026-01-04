@@ -157,6 +157,13 @@ export async function sendQuoteEmail(quoteId: string) {
         .set({ status: 'sent' })
         .where(eq(quotes.id, quoteId));
 
+    // Automation: Move to 'quote_sent' if currently 'quote_in_progress' or 'measurement_done'
+    if (['quote_in_progress', 'measurement_done'].includes(quote.montage.status)) {
+        await db.update(montages)
+            .set({ status: 'quote_sent' })
+            .where(eq(montages.id, quote.montageId));
+    }
+
     revalidatePath(`/dashboard/crm/oferty/${quoteId}`);
     revalidatePath('/dashboard/crm/oferty');
 }
@@ -216,6 +223,7 @@ export async function createQuote(montageId: string) {
         where: eq(montages.id, montageId),
         columns: {
             displayId: true,
+            status: true,
         }
     });
 
@@ -236,6 +244,14 @@ export async function createQuote(montageId: string) {
         status: 'draft',
         items: [],
     });
+
+    // Automation: Move to 'quote_in_progress' if currently 'measurement_done'
+    if (montage.status === 'measurement_done') {
+        await db.update(montages)
+            .set({ status: 'quote_in_progress' })
+            .where(eq(montages.id, montageId));
+    }
+
     revalidatePath('/dashboard/crm/oferty');
     revalidatePath(`/dashboard/crm/montaze/${montageId}`);
     return id;

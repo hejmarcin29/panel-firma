@@ -7,23 +7,29 @@ import { Eraser, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SignaturePadProps {
-    onSave: (signatureData: string) => void;
+    onSave: (signatureData: string) => Promise<void> | void;
     className?: string;
 }
 
 export function SignaturePad({ onSave, className }: SignaturePadProps) {
     const sigCanvas = useRef<SignatureCanvas>(null);
     const [hasSignature, setHasSignature] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
 
     const clear = () => {
         sigCanvas.current?.clear();
         setHasSignature(false);
     };
 
-    const save = () => {
+    const save = async () => {
         if (sigCanvas.current) {
-            const dataUrl = sigCanvas.current.getTrimmedCanvas().toDataURL('image/png');
-            onSave(dataUrl);
+            setIsSaving(true);
+            try {
+                const dataUrl = sigCanvas.current.getTrimmedCanvas().toDataURL('image/png');
+                await onSave(dataUrl);
+            } finally {
+                setIsSaving(false);
+            }
         }
     };
 
@@ -48,13 +54,21 @@ export function SignaturePad({ onSave, className }: SignaturePadProps) {
             <div className="flex justify-between text-sm text-muted-foreground px-1">
                 <span>Podpisz w ramce powyżej</span>
                 <div className="flex gap-2">
-                    <Button variant="ghost" size="sm" onClick={clear} disabled={!hasSignature}>
+                    <Button variant="ghost" size="sm" onClick={clear} disabled={!hasSignature || isSaving}>
                         <Eraser className="w-4 h-4 mr-2" />
                         Wyczyść
                     </Button>
-                    <Button size="sm" onClick={save} disabled={!hasSignature}>
-                        <Check className="w-4 h-4 mr-2" />
-                        Zatwierdź podpis
+                    <Button size="sm" onClick={save} disabled={!hasSignature || isSaving}>
+                        {isSaving ? (
+                            <>
+                                <span className="animate-spin mr-2">⏳</span> Zapisywanie...
+                            </>
+                        ) : (
+                            <>
+                                <Check className="w-4 h-4 mr-2" />
+                                Zatwierdź podpis
+                            </>
+                        )}
                     </Button>
                 </div>
             </div>

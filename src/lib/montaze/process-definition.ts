@@ -44,10 +44,52 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
     },
 
     // 2. WYCENA
-    { id: 'measurement_done', label: 'Po Pomiarze', description: 'Montażysta był, ale brak wyceny.', relatedStatuses: ['measurement_done'], actor: 'installer', automations: [], checkpoints: [] },
-    { id: 'quote_in_progress', label: 'Wycena w Toku', description: 'Liczymy, sprawdzamy dostępność.', relatedStatuses: ['quote_in_progress'], actor: 'office', automations: [], checkpoints: [] },
-    { id: 'quote_sent', label: 'Oferta Wysłana', description: 'Klient ma maila, czekamy.', relatedStatuses: ['quote_sent'], actor: 'office', automations: [], checkpoints: [] },
-    { id: 'quote_accepted', label: 'Oferta Zaakceptowana', description: 'Klient powiedział TAK, ale brak papierów.', relatedStatuses: ['quote_accepted'], actor: 'client', automations: [], checkpoints: [] },
+    { 
+        id: 'measurement_done', 
+        label: 'Po Pomiarze', 
+        description: 'Montażysta był, ale brak wyceny.', 
+        relatedStatuses: ['measurement_done'], 
+        actor: 'installer', 
+        automations: [
+            { id: 'auto_quote_start', label: 'Start Wyceny', description: 'Utworzenie oferty zmienia status na "Wycena w Toku"', trigger: 'Utworzenie oferty' },
+            { id: 'auto_contract_signed', label: 'Podpis Klienta', description: 'Podpisanie umowy w panelu zmienia status na "Umowa Podpisana"', trigger: 'Podpis w panelu' }
+        ], 
+        checkpoints: [] 
+    },
+    { 
+        id: 'quote_in_progress', 
+        label: 'Wycena w Toku', 
+        description: 'Liczymy, sprawdzamy dostępność.', 
+        relatedStatuses: ['quote_in_progress'], 
+        actor: 'office', 
+        automations: [
+            { id: 'auto_quote_sent', label: 'Wysłanie Oferty', description: 'Wysłanie maila zmienia status na "Oferta Wysłana"', trigger: 'Wysłanie maila' },
+            { id: 'auto_contract_signed', label: 'Podpis Klienta', description: 'Podpisanie umowy w panelu zmienia status na "Umowa Podpisana"', trigger: 'Podpis w panelu' }
+        ], 
+        checkpoints: [] 
+    },
+    { 
+        id: 'quote_sent', 
+        label: 'Oferta Wysłana', 
+        description: 'Klient ma maila, czekamy.', 
+        relatedStatuses: ['quote_sent'], 
+        actor: 'office', 
+        automations: [
+            { id: 'auto_contract_signed', label: 'Podpis Klienta', description: 'Podpisanie umowy w panelu zmienia status na "Umowa Podpisana"', trigger: 'Podpis w panelu' }
+        ], 
+        checkpoints: [] 
+    },
+    { 
+        id: 'quote_accepted', 
+        label: 'Oferta Zaakceptowana', 
+        description: 'Klient powiedział TAK, ale brak papierów.', 
+        relatedStatuses: ['quote_accepted'], 
+        actor: 'client', 
+        automations: [
+            { id: 'auto_contract_signed', label: 'Podpis Klienta', description: 'Podpisanie umowy w panelu zmienia status na "Umowa Podpisana"', trigger: 'Podpis w panelu' }
+        ], 
+        checkpoints: [] 
+    },
 
     // 3. FORMALNOŚCI
     { id: 'contract_signed', label: 'Umowa Podpisana', description: 'Jest podpis na umowie.', relatedStatuses: ['contract_signed'], actor: 'office', automations: [], checkpoints: [] },
