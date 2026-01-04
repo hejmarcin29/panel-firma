@@ -1130,8 +1130,8 @@ export const quotes = pgTable(
             .references(() => montages.id, { onDelete: 'cascade' }),
         status: text('status').$type<QuoteStatus>().notNull().default('draft'),
         items: json('items').$type<QuoteItem[]>().notNull().default([]),
-        totalNet: integer('total_net').notNull().default(0),
-        totalGross: integer('total_gross').notNull().default(0),
+        totalNet: doublePrecision('total_net').notNull().default(0),
+        totalGross: doublePrecision('total_gross').notNull().default(0),
         validUntil: timestamp('valid_until'),
         notes: text('notes'),
         // Contract fields
