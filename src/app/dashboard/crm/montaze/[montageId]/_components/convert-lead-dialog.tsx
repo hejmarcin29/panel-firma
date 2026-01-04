@@ -32,15 +32,17 @@ import {
 
 import { assignMeasurerAndAdvance } from '../../actions';
 import type { Montage } from '../../types';
-import type { User } from '@/lib/db/schema';
+import { users } from '@/lib/db/schema';
+
+type Measurer = Pick<typeof users.$inferSelect, 'id' | 'name' | 'email' | 'roles'>;
 
 interface ConvertLeadDialogProps {
     montage: Montage;
     requireInstallerForMeasurement?: boolean;
-    measurers?: User[];
+    measurers?: Measurer[];
 }
 
-export function ConvertLeadDialog({ montage, requireInstallerForMeasurement, measurers = [] }: ConvertLeadDialogProps) {
+export function ConvertLeadDialog({ montage, measurers = [] }: ConvertLeadDialogProps) {
     const [open, setOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
     const [selectedMeasurerId, setSelectedMeasurerId] = useState<string>('');
