@@ -7,12 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, FileText, CheckCircle2, Trash2, Upload, Download } from 'lucide-react';
+import { Plus, FileText, CheckCircle2, Trash2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 import { createPayment, markPaymentAsPaid, deletePayment } from '../actions';
-import { FileUpload } from '@/components/ui/file-upload';
-import { useUpload } from '@/hooks/use-upload';
+import { useUpload } from '../../../../../../hooks/use-upload';
 import { Badge } from '@/components/ui/badge';
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';

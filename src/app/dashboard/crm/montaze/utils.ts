@@ -86,6 +86,7 @@ function mapAttachment(
 		url: normalizeAttachmentUrl(String(attachment.url), publicBaseUrl),
 		createdAt: attachment.createdAt,
 		noteId: attachment.noteId ? String(attachment.noteId) : null,
+        type: attachment.type,
 		uploader: attachment.uploader
 			? {
 				id: String(attachment.uploader.id),

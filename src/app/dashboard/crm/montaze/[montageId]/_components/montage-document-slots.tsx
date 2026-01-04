@@ -19,41 +19,14 @@ interface DocumentSlotProps {
 }
 
 function DocumentSlot({ title, type, description, montageId, existingAttachment, required }: DocumentSlotProps) {
-    const router = useRouter();
-    const [isPending, startTransition] = useTransition();
-
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        startTransition(async () => {
-            try {
-                const formData = new FormData();
-                formData.append("montageId", montageId);
-                formData.append("file", file);
-                formData.append("title", title);
-                formData.append("category", MontageCategories.DOCUMENTS);
-                formData.append("type", type);
-
-                await addMontageAttachment(formData);
-                router.refresh();
-            } catch (error) {
-                console.error(error);
-                alert("Błąd przesyłania pliku");
-            }
-        });
-    };
-
     return (
-        <Card className={existingAttachment ? "border-green-500/50 bg-green-500/5" : required ? "border-orange-500/50" : ""}>
+        <Card className={existingAttachment ? "border-green-500/50 bg-green-500/5" : ""}>
             <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium flex items-center justify-between">
                     {title}
-                    {existingAttachment ? (
+                    {existingAttachment && (
                         <CheckCircle className="h-4 w-4 text-green-500" />
-                    ) : required ? (
-                        <AlertCircle className="h-4 w-4 text-orange-500" />
-                    ) : null}
+                    )}
                 </CardTitle>
             </CardHeader>
             <CardContent>
@@ -65,21 +38,13 @@ function DocumentSlot({ title, type, description, montageId, existingAttachment,
                         </a>
                     </div>
                 ) : (
-                    <div className="relative">
-                        <input
-                            type="file"
-                            className="absolute inset-0 opacity-0 cursor-pointer"
-                            onChange={handleFileChange}
-                            disabled={isPending}
-                            accept=".pdf,.jpg,.jpeg,.png"
-                        />
-                        <Button variant="outline" className="w-full border-dashed" disabled={isPending}>
-                            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
-                            {isPending ? "Wgraj dokument" : "Wgraj dokument"}
-                        </Button>
+                    <div className="flex items-center justify-center p-4 border border-dashed rounded-md text-muted-foreground text-sm bg-muted/50">
+                        Brak dokumentu
                     </div>
                 )}
-                <p className="text-xs text-muted-foreground mt-2">{description}</p>
+                <p className="text-xs text-muted-foreground mt-2">
+                    {existingAttachment ? description : "Dodaj ten dokument w zakładce Płatności."}
+                </p>
             </CardContent>
         </Card>
     );
@@ -107,7 +72,6 @@ export function MontageDocumentSlots({ montage }: { montage: Montage }) {
                 description="Wymagana do statusu 'Zaliczka Opłacona'."
                 montageId={montage.id}
                 existingAttachment={advance}
-                required
             />
             <DocumentSlot 
                 title="Faktura Końcowa" 
@@ -115,7 +79,6 @@ export function MontageDocumentSlots({ montage }: { montage: Montage }) {
                 description="Wymagana do zakończenia montażu."
                 montageId={montage.id}
                 existingAttachment={final}
-                required
             />
         </div>
     );

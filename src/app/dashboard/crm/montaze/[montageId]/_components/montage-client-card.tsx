@@ -614,7 +614,7 @@ export function MontageClientCard({
                     value={montage.sampleStatus || "none"}
                     onValueChange={handleSampleStatusChange}
                 >
-                    <SelectTrigger className="h-auto p-0 border-0 shadow-none bg-transparent text-sm hover:bg-transparent focus:ring-0 w-auto data-[placeholder]:text-foreground">
+                    <SelectTrigger className="h-auto p-0 border-0 shadow-none bg-transparent text-sm hover:bg-transparent focus:ring-0 w-auto data-placeholder:text-foreground">
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

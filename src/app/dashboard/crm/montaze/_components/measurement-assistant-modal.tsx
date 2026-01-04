@@ -285,7 +285,7 @@ export function MeasurementAssistantModal({
                                         onClick={() => setIsRoomsExpanded(!isRoomsExpanded)}
                                         className="text-sm text-primary font-medium flex items-center gap-1 hover:underline"
                                     >
-                                        {isRoomsExpanded ? <ChevronLeft className="w-4 h-4 rotate-[-90deg]" /> : <ChevronRight className="w-4 h-4 rotate-[90deg]" />}
+                                        {isRoomsExpanded ? <ChevronLeft className="w-4 h-4 -rotate-90" /> : <ChevronRight className="w-4 h-4 rotate-90" />}
                                         {isRoomsExpanded ? "Zwiń pomieszczenia" : "Rozpisz na pomieszczenia"}
                                     </button>
 
@@ -497,7 +497,7 @@ export function MeasurementAssistantModal({
                                                         setAdditionalMaterials(newItems);
                                                     }}
                                                 >
-                                                    <SelectTrigger className="w-[80px]">
+                                                    <SelectTrigger className="w-20">
                                                         <SelectValue />
                                                     </SelectTrigger>
                                                     <SelectContent>
