@@ -21,6 +21,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { updateMontageStatus, updateMontageMeasurementDate } from "../actions";
+import { toast } from "sonner";
 
 import { MontageNotesTab } from "./montage-notes-tab";
 import { MontageGalleryTab } from "./montage-gallery-tab";
@@ -144,14 +149,109 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
                 {/* TAB: PROCESS (The Hub) */}
                 {activeTab === 'process' && (
                     <div className="space-y-6">
-                        {/* 1. Read-Only Timeline */}
-                        <MontageProcessTimeline montage={montage} readOnly={true} />
+                        {/* 1. Task-Driven Actions (Top Priority) */}
+                        
+                        {/* SCENARIO A: New Lead / Contact Attempt */}
+                        {(montage.status === 'new_lead' || montage.status === 'contact_attempt') && (
+                            <Card className="border-l-4 border-l-orange-500 shadow-md bg-orange-50/50">
+                                <CardHeader>
+                                    <CardTitle className="text-lg text-orange-900">Wymagane Akcje: Kontakt</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex items-center justify-center w-10 h-10 rounded-full border-2 bg-white border-orange-500 text-orange-700">
+                                            <Phone className="w-5 h-5" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <h4 className="font-semibold text-base">Skontaktuj się z Klientem</h4>
+                                            <p className="text-sm text-muted-foreground">Zadzwoń, aby umówić termin pomiaru.</p>
+                                        </div>
+                                        <div className="flex flex-col gap-2 sm:flex-row">
+                                            <Button 
+                                                variant="outline" 
+                                                onClick={async () => {
+                                                    toast.promise(updateMontageStatus({ montageId: montage.id, status: 'contact_attempt' }), {
+                                                        loading: 'Zapisywanie...',
+                                                        success: 'Zanotowano próbę kontaktu',
+                                                        error: 'Błąd'
+                                                    });
+                                                }}
+                                            >
+                                                Nie odbiera
+                                            </Button>
+                                            <Button 
+                                                className="bg-orange-600 hover:bg-orange-700 text-white"
+                                                onClick={async () => {
+                                                    toast.promise(updateMontageStatus({ montageId: montage.id, status: 'contact_established' }), {
+                                                        loading: 'Zapisywanie...',
+                                                        success: 'Kontakt nawiązany!',
+                                                        error: 'Błąd'
+                                                    });
+                                                }}
+                                            >
+                                                Kontakt Nawiązany
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
 
-                        {/* 2. Task-Driven Actions */}
+                        {/* SCENARIO B: Contact Established -> Schedule Measurement */}
+                        {montage.status === 'contact_established' && (
+                            <Card className="border-l-4 border-l-blue-500 shadow-md bg-blue-50/50">
+                                <CardHeader>
+                                    <CardTitle className="text-lg text-blue-900">Wymagane Akcje: Termin</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex items-center justify-center w-10 h-10 rounded-full border-2 bg-white border-blue-500 text-blue-700">
+                                            <CalendarIcon className="w-5 h-5" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <h4 className="font-semibold text-base">Umów Termin Pomiaru</h4>
+                                            <p className="text-sm text-muted-foreground">Wybierz datę ustaloną z klientem.</p>
+                                        </div>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button variant="outline" className={cn(
+                                                    "w-[240px] justify-start text-left font-normal",
+                                                    !montage.measurementDate && "text-muted-foreground"
+                                                )}>
+                                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                                    {montage.measurementDate ? format(new Date(montage.measurementDate), "PPP", { locale: pl }) : <span>Wybierz datę</span>}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={montage.measurementDate ? new Date(montage.measurementDate) : undefined}
+                                                    onSelect={async (date) => {
+                                                        if (date) {
+                                                            toast.promise(async () => {
+                                                                await updateMontageMeasurementDate(montage.id, date);
+                                                                await updateMontageStatus({ montageId: montage.id, status: 'measurement_scheduled' });
+                                                            }, {
+                                                                loading: 'Zapisywanie terminu...',
+                                                                success: 'Termin zapisany! Przechodzę do etapu pomiaru.',
+                                                                error: 'Błąd zapisu'
+                                                            });
+                                                        }
+                                                    }}
+                                                    initialFocus
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {/* SCENARIO C: Measurement Scheduled (Existing) */}
                         {montage.status === 'measurement_scheduled' && (
                             <Card className="border-l-4 border-l-blue-500 shadow-md bg-blue-50/50">
                                 <CardHeader>
-                                    <CardTitle className="text-lg text-blue-900">Wymagane Akcje</CardTitle>
+                                    <CardTitle className="text-lg text-blue-900">Wymagane Akcje: Pomiar</CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     {/* Step 1: Measurement Assistant */}
@@ -211,6 +311,9 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
                                 </CardContent>
                             </Card>
                         )}
+
+                        {/* 2. Read-Only Timeline */}
+                        <MontageProcessTimeline montage={montage} readOnly={true} />
 
                         <div className="space-y-2">
                             <h4 className="font-medium text-sm">Materiały do zabrania:</h4>
