@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { updateMontageData } from '../actions';
 import { Loader2, Edit2 } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface MontageData {
     id: string;
@@ -58,10 +59,28 @@ export function DataRequestCard({ montage, token }: DataRequestCardProps) {
         isHousingVat: montage.isHousingVat || false,
     });
 
+    const [hasDifferentBilling, setHasDifferentBilling] = useState(
+        montage.isCompany || 
+        (!!montage.billingAddress && montage.billingAddress !== montage.address)
+    );
+
     const handleSave = async () => {
         setIsSaving(true);
+        // If not different billing, clear billing fields to match installation (or keep empty/null in DB logic)
+        // But for UI consistency, if user unchecks "Different Billing", we should probably clear them or set them to null in the backend.
+        // The backend updateMontageData takes partial data. 
+        // Let's ensure we send what we see.
+        
+        const dataToSend = {
+            ...formData,
+            // If hasDifferentBilling is false, we might want to clear billing fields or set them to match installation?
+            // Usually backend handles "if not isCompany and not billingAddress provided, use installation address".
+            // But here we have explicit fields.
+            // Let's just send formData. If user unchecked hasDifferentBilling, we should have cleared formData in the UI handler.
+        };
+
         try {
-            await updateMontageData(montage.id, formData, token);
+            await updateMontageData(montage.id, dataToSend, token);
             toast.success('Dane zostały zaktualizowane!');
             setIsEditing(false);
         } catch {
@@ -111,6 +130,21 @@ export function DataRequestCard({ montage, token }: DataRequestCardProps) {
                                     <span className="font-medium">{montage.nip || '-'}</span>
                                     <span className="text-muted-foreground">Adres:</span>
                                     <span className="font-medium">{montage.billingAddress || '-'}</span>
+                                    <span className="text-muted-foreground">Miasto:</span>
+                                    <span className="font-medium">{montage.billingCity || '-'}</span>
+                                    <span className="text-muted-foreground">Kod:</span>
+                                    <span className="font-medium">{montage.billingPostalCode || '-'}</span>
+                                </div>
+                            ) : (formData.billingAddress && formData.billingAddress !== formData.address) ? (
+                                <div className="grid grid-cols-[100px_1fr] gap-1">
+                                    <span className="text-muted-foreground">Typ:</span>
+                                    <span className="font-medium">Osoba Prywatna (inny adres)</span>
+                                    <span className="text-muted-foreground">Adres:</span>
+                                    <span className="font-medium">{montage.billingAddress || '-'}</span>
+                                    <span className="text-muted-foreground">Miasto:</span>
+                                    <span className="font-medium">{montage.billingCity || '-'}</span>
+                                    <span className="text-muted-foreground">Kod:</span>
+                                    <span className="font-medium">{montage.billingPostalCode || '-'}</span>
                                 </div>
                             ) : (
                                 <p className="text-muted-foreground">Osoba prywatna (dane jak do montażu)</p>
@@ -173,31 +207,65 @@ export function DataRequestCard({ montage, token }: DataRequestCardProps) {
                     
                     <div className="flex items-center space-x-2">
                         <Checkbox 
-                            id="isCompany" 
-                            checked={formData.isCompany}
-                            onCheckedChange={(checked) => setFormData({...formData, isCompany: checked as boolean})}
+                            id="hasDifferentBilling" 
+                            checked={hasDifferentBilling}
+                            onCheckedChange={(checked) => {
+                                const isChecked = checked as boolean;
+                                setHasDifferentBilling(isChecked);
+                                if (!isChecked) {
+                                    setFormData({
+                                        ...formData,
+                                        isCompany: false,
+                                        companyName: '',
+                                        nip: '',
+                                        billingAddress: '',
+                                        billingCity: '',
+                                        billingPostalCode: ''
+                                    });
+                                }
+                            }}
                         />
-                        <Label htmlFor="isCompany">Chcę fakturę na firmę</Label>
+                        <Label htmlFor="hasDifferentBilling">Inne dane do faktury / Firma</Label>
                     </div>
 
-                    {formData.isCompany && (
+                    {hasDifferentBilling && (
                         <div className="space-y-4 pl-4 border-l-2 border-muted animate-in fade-in slide-in-from-top-2">
+                            <RadioGroup 
+                                value={formData.isCompany ? 'company' : 'private'} 
+                                onValueChange={(val) => setFormData({...formData, isCompany: val === 'company'})}
+                                className="flex gap-4 mb-4"
+                            >
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="private" id="r1" />
+                                    <Label htmlFor="r1">Osoba Prywatna</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="company" id="r2" />
+                                    <Label htmlFor="r2">Firma</Label>
+                                </div>
+                            </RadioGroup>
+
+                            {formData.isCompany && (
+                                <>
+                                    <div className="space-y-2">
+                                        <Label>Nazwa Firmy</Label>
+                                        <Input 
+                                            value={formData.companyName} 
+                                            onChange={(e) => setFormData({...formData, companyName: e.target.value})}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>NIP</Label>
+                                        <Input 
+                                            value={formData.nip} 
+                                            onChange={(e) => setFormData({...formData, nip: e.target.value})}
+                                        />
+                                    </div>
+                                </>
+                            )}
+
                             <div className="space-y-2">
-                                <Label>Nazwa Firmy</Label>
-                                <Input 
-                                    value={formData.companyName} 
-                                    onChange={(e) => setFormData({...formData, companyName: e.target.value})}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>NIP</Label>
-                                <Input 
-                                    value={formData.nip} 
-                                    onChange={(e) => setFormData({...formData, nip: e.target.value})}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Adres siedziby</Label>
+                                <Label>Adres {formData.isCompany ? 'siedziby' : 'zamieszkania'}</Label>
                                 <Input 
                                     value={formData.billingAddress} 
                                     onChange={(e) => setFormData({...formData, billingAddress: e.target.value})}
