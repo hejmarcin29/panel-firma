@@ -341,6 +341,12 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
                             montage={montage} 
                             userRoles={userRoles} 
                             defaultOpenModal={defaultOpenModal}
+                            onAssistantSave={() => {
+                                if (defaultOpenModal === 'assistant') {
+                                    setActiveTab('process');
+                                    setDefaultOpenModal(undefined);
+                                }
+                            }}
                         />
                     </div>
                 )}

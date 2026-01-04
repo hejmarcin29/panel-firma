@@ -22,21 +22,13 @@ Ten plik służy jako "Single Source of Truth" dla zasad działania systemu. Ka�
 2. **Przed pomiarem** - Zlecenie zaakceptowane, oczekuje na wizytę pomiarowca.
 3. **Przed zaliczką** - Pomiar wykonany, oferta wysłana, czekamy na wpłatę.
 4. **Przed montażem** - Zaliczka zaksięgowana, materiał zamówiony/skompletowany, czekamy na termin montażu.
-5. **Przed montażem listew** - (Opcjonalny) Montaż podłogi zakończony, oczekiwanie na osobny termin montażu listew.
-6. **Przed końcową fakturą** - Montaż zakończony, czekamy na rozliczenie końcowe.
-7. **Zakończony** - Wszystko opłacone i zamknięte.
+5. **Przed końcową fakturą** - Montaż zakończony, czekamy na rozliczenie końcowe.
+6. **Zakończony** - Wszystko opłacone i zamknięte.
 
 ### Logistyka Materiałowa (Nowość)
 System obsługuje dwa tryby dostawy materiałów, definiowane przez montażystę na etapie pomiaru lub przez biuro:
 - **Dostawa Firmowa (Domyślna):** Magazyn/Kierowca dostarcza towar do klienta. Montażysta nie otrzymuje powiadomień o odbiorze.
 - **Odbiór Własny (Installer Pickup):** Montażysta zobowiązany jest pobrać towar z magazynu. Aplikacja wyświetla alert "ZABIERZ TOWAR", jeśli status materiału to "Na magazynie".
-
-### Rozdzielony Montaż (Podłoga + Listwy)
-Jeśli w zleceniu zaznaczono `measurementSeparateSkirting = true`:
-1. Po podpisaniu protokołu podłogi, system automatycznie zmienia status na `before_skirting_installation`.
-2. Montażysta widzi zlecenie w osobnej zakładce "Listwy".
-3. Wymagany jest osobny protokół odbioru dla listew.
-4. Logistyka listew (dostawa/odbiór) jest zarządzana niezależnie od podłogi.
 
 ## 3. Automatyzacje (Planowane/Obecne)
 

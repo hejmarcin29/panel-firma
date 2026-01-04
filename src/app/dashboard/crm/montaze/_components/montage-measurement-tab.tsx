@@ -68,9 +68,10 @@ interface MontageMeasurementTabProps {
   montage: Montage;
   userRoles?: string[];
   defaultOpenModal?: 'assistant' | 'costEstimation';
+  onAssistantSave?: () => void;
 }
 
-export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModal }: MontageMeasurementTabProps) {
+export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModal, onAssistantSave }: MontageMeasurementTabProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   
@@ -478,6 +479,7 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
         onSave={() => {
             saveData();
             setIsAssistantOpen(false);
+            if (onAssistantSave) onAssistantSave();
         }}
         measurementDate={measurementDate}
         setMeasurementDate={setMeasurementDate}
