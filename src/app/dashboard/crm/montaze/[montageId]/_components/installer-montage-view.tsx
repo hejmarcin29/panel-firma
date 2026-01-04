@@ -299,6 +299,32 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
                                             {!!montage.costEstimationCompletedAt ? "Edytuj / Podgląd" : "Wypełnij"}
                                         </Button>
                                     </div>
+
+                                    {/* Step 3: Finish Measurement */}
+                                    <div className="pt-4 mt-2 border-t">
+                                        <Button 
+                                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                                            size="lg"
+                                            disabled={!((!!montage.measurementDate || !!montage.measurementDetails) && !!montage.costEstimationCompletedAt)}
+                                            onClick={() => {
+                                                toast.promise(async () => {
+                                                    await updateMontageStatus({ montageId: montage.id, status: 'measurement_done' });
+                                                }, {
+                                                    loading: 'Zamykanie etapu pomiaru...',
+                                                    success: 'Pomiar zakończony! Przekazano do biura.',
+                                                    error: 'Wystąpił błąd'
+                                                });
+                                            }}
+                                        >
+                                            <CheckSquare className="w-5 h-5 mr-2" />
+                                            Zakończ Pomiar
+                                        </Button>
+                                        {(!((!!montage.measurementDate || !!montage.measurementDetails) && !!montage.costEstimationCompletedAt)) && (
+                                            <p className="text-xs text-center text-muted-foreground mt-2">
+                                                Uzupełnij dane pomiarowe i kosztorys, aby zakończyć.
+                                            </p>
+                                        )}
+                                    </div>
                                 </CardContent>
                             </Card>
                         )}
