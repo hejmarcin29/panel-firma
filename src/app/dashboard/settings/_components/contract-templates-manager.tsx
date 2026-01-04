@@ -195,7 +195,7 @@ export function ContractTemplatesManager({ templates }: { templates: Template[] 
                         <DialogHeader className="p-6 pb-2 shrink-0">
                             <DialogTitle>{editingTemplate ? 'Edytuj Szablon' : 'Nowy Szablon'}</DialogTitle>
                             <DialogDescription>
-                                Dostępne zmienne: {'{{klient_nazwa}}'}, {'{{klient_adres}}'}, {'{{klient_email}}'}, {'{{klient_telefon}}'}, {'{{numer_wyceny}}'}, {'{{data_wyceny}}'}, {'{{kwota_netto}}'}, {'{{kwota_brutto}}'}, {'{{adres_montazu}}'}, {'{{data_rozpoczecia}}'}, {'{{termin_zakonczenia}}'}, {'{{opis_terminow_listew}}'}, {'{{oswiadczenie_vat}}'}, {'{{kwota_zaliczki}}'}, {'{{podpis_wykonawcy}}'}, {'{{logo_firmy}}'}, {'{{tabela_produktow}}'}, {'{{uwagi_wyceny}}'}, {'{{firma_nazwa}}'}, {'{{firma_adres}}'}, {'{{firma_nip}}'}, {'{{firma_bank}}'}, {'{{firma_konto}}'}
+                                Dostępne zmienne: {'{{klient_nazwa}}'}, {'{{klient_adres}}'}, {'{{klient_email}}'}, {'{{klient_telefon}}'}, {'{{numer_wyceny}}'}, {'{{data_wyceny}}'}, {'{{kwota_netto}}'}, {'{{kwota_brutto}}'}, {'{{adres_montazu}}'}, {'{{data_rozpoczecia}}'}, {'{{termin_zakonczenia}}'}, {'{{oswiadczenie_vat}}'}, {'{{logo_firmy}}'}, {'{{tabela_produktow}}'}, {'{{uwagi_wyceny}}'}, {'{{firma_nazwa}}'}, {'{{firma_adres}}'}, {'{{firma_nip}}'}, {'{{firma_bank}}'}, {'{{firma_konto}}'}
                             </DialogDescription>
                         </DialogHeader>
                         <Form {...form}>

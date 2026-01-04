@@ -170,19 +170,111 @@ interface QuotePdfProps {
     };
 }
 
-// Simple HTML stripper for PDF text
-const stripHtml = (html: string) => {
-    if (!html) return '';
-    // Replace block tags with newlines
-    let text = html.replace(/<\/p>/g, '\n').replace(/<br\s*\/?>/g, '\n').replace(/<\/div>/g, '\n');
-    // Remove all other tags
-    text = text.replace(/<[^>]+>/g, '');
-    // Decode entities (basic ones)
-    text = text.replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
-    return text.trim();
+// Simple HTML parser for React-PDF
+const HtmlContent = ({ html }: { html: string }) => {
+    if (!html) return null;
+
+    // 1. Pre-process: Replace <br> with newlines, handle lists
+    let processed = html
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/p>/gi, '\n\n') // Double newline for paragraphs
+        .replace(/<\/div>/gi, '\n')
+        .replace(/<ul[^>]*>/gi, '\n')
+        .replace(/<\/ul>/gi, '\n')
+        .replace(/<ol[^>]*>/gi, '\n')
+        .replace(/<\/ol>/gi, '\n')
+        .replace(/<li[^>]*>/gi, '• ')     // Bullet points
+        .replace(/<\/li>/gi, '\n');  // Newline after list item
+
+    // Remove other block tags that we handled via newlines (opening tags)
+    processed = processed
+        .replace(/<p[^>]*>/gi, '')
+        .replace(/<div[^>]*>/gi, '');
+
+    // Now we have a string with newlines and inline tags (<b>, <strong>).
+    // We can split by newlines to get "lines" or "paragraphs".
+    const paragraphs = processed.split('\n');
+
+    return (
+        <View>
+            {paragraphs.map((paragraph, i) => {
+                // If line is empty, it might be a spacer from double newline
+                if (!paragraph) return <View key={i} style={{ height: 5 }} />;
+
+                // Parse inline bold tags
+                // Split by tags, keeping the tags in the array
+                const parts = paragraph.split(/(<\/?(?:b|strong)[^>]*>)/gi);
+                let isBold = false;
+
+                return (
+                    <Text key={i} style={{ marginBottom: 2, lineHeight: 1.4, fontSize: 9 }}>
+                        {parts.map((part, j) => {
+                            if (part.match(/<(?:b|strong)[^>]*>/i)) {
+                                isBold = true;
+                                return null;
+                            }
+                            if (part.match(/<\/(?:b|strong)>/i)) {
+                                isBold = false;
+                                return null;
+                            }
+                            
+                            // Remove any other remaining tags (like span, i, etc for now)
+                            let text = part.replace(/<[^>]+>/g, '');
+
+                            // Decode entities (basic ones)
+                            text = text
+                                .replace(/&nbsp;/g, ' ')
+                                .replace(/&amp;/g, '&')
+                                .replace(/&lt;/g, '<')
+                                .replace(/&gt;/g, '>')
+                                .replace(/&quot;/g, '"');
+                                
+                            if (!text) return null;
+
+                            return (
+                                <Text key={j} style={isBold ? { fontWeight: 700 } : {}}>
+                                    {text}
+                                </Text>
+                            );
+                        })}
+                    </Text>
+                );
+            })}
+        </View>
+    );
 };
 
-export const QuotePdf = ({ quote, companyInfo }: QuotePdfProps) => (
+const replaceVariables = (text: string, quote: QuotePdfProps['quote'], companyInfo: QuotePdfProps['companyInfo']) => {
+    if (!text) return '';
+    let content = text;
+    
+    const replacements: Record<string, string> = {
+        '{{klient_nazwa}}': quote.montage.clientName || '',
+        '{{klient_adres}}': quote.montage.address || '',
+        '{{klient_email}}': quote.montage.contactEmail || '',
+        '{{klient_telefon}}': quote.montage.contactPhone || '',
+        '{{oferta_numer}}': quote.number || 'DRAFT',
+        '{{data_wystawienia}}': new Date(quote.createdAt).toLocaleDateString('pl-PL'),
+        '{{firma_nazwa}}': companyInfo.name,
+        '{{firma_adres}}': companyInfo.address,
+        '{{firma_nip}}': companyInfo.nip,
+        '{{logo_firmy}}': '', // Logo is in header, remove placeholder
+    };
+
+    Object.entries(replacements).forEach(([key, value]) => {
+        // Escape special regex chars in key if needed (not needed for {{...}})
+        content = content.replace(new RegExp(key, 'g'), value);
+    });
+
+    return content;
+};
+
+export const QuotePdf = ({ quote, companyInfo }: QuotePdfProps) => {
+    const processedTerms = quote.termsContent 
+        ? replaceVariables(quote.termsContent, quote, companyInfo) 
+        : null;
+
+    return (
     <Document>
         <Page size="A4" style={styles.page}>
             {/* Header */}
@@ -263,10 +355,10 @@ export const QuotePdf = ({ quote, companyInfo }: QuotePdfProps) => (
             </View>
 
             {/* Terms */}
-            {quote.termsContent && (
+            {processedTerms && (
                 <View style={styles.terms}>
                     <Text style={styles.sectionTitle}>Warunki Współpracy</Text>
-                    <Text style={styles.termsText}>{stripHtml(quote.termsContent)}</Text>
+                    <HtmlContent html={processedTerms} />
                 </View>
             )}
 
@@ -290,4 +382,5 @@ export const QuotePdf = ({ quote, companyInfo }: QuotePdfProps) => (
             </View>
         </Page>
     </Document>
-);
+    );
+};

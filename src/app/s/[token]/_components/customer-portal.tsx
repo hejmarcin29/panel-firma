@@ -58,6 +58,10 @@ interface Montage {
     measurementDetails: string | null;
     installationCity: string | null;
     measurementDate: Date | null;
+    contactEmail: string | null;
+    contactPhone: string | null;
+    address: string | null;
+    installationAddress: string | null;
 }
 
 interface Customer {
@@ -122,9 +126,9 @@ export function CustomerPortal({ customer, token, bankAccount, companyInfo }: Cu
         createdAt: activeQuote.createdAt,
         montage: {
             clientName: activeMontage.clientName,
-            address: activeMontage.installationCity || '', // Fallback
-            contactEmail: null, // Not available in frontend model yet, but needed for PDF
-            contactPhone: null, // Not available in frontend model yet
+            address: activeMontage.installationAddress || activeMontage.address || activeMontage.installationCity || '',
+            contactEmail: activeMontage.contactEmail,
+            contactPhone: activeMontage.contactPhone,
         },
         items: activeQuote.items,
         totalNet: activeQuote.items.reduce((acc, item) => acc + item.priceNet * item.quantity, 0),
