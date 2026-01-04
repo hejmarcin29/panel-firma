@@ -36,6 +36,7 @@ import { ConvertLeadDialog } from './_components/convert-lead-dialog';
 import { RequestDataButton } from './_components/request-data-button';
 import { InstallerMontageView } from './_components/installer-montage-view';
 import { MontageProcessHub } from './_components/montage-process-hub';
+import { MontagePaymentsTab } from './_components/montage-payments-tab';
 
 interface MontageViewProps {
     montageId: string;
@@ -171,6 +172,7 @@ export function MontageView({ montageId, initialData, portalEnabled, requireInst
                     workflow: <MontageWorkflowTab montage={montage} statusOptions={statusOptions} installers={installers} measurers={measurers} userRoles={userRoles} />,
                     measurement: <MontageMeasurementTab montage={montage} userRoles={userRoles} />,
                     quotes: !isInstaller ? <MontageQuotes montageId={montage.id} quotes={montage.quotes} montage={montage} userRoles={userRoles} /> : undefined,
+                    payments: !isInstaller ? <MontagePaymentsTab montageId={montage.id} payments={montage.payments} /> : undefined,
                     settlement: <MontageSettlementTab montage={montage} userRoles={userRoles} />,
                     tasks: <MontageTasksTab montage={montage} />,
                     gallery: <MontageGalleryTab montage={montage} userRoles={userRoles} />,

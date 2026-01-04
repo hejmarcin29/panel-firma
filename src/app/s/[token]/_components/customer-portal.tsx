@@ -13,7 +13,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { MontageTimeline } from './montage-timeline';
 import { DataRequestCard } from './data-request-card';
 import { InstallationDateCard } from './installation-date-card';
-import { PaymentCard } from './payment-card';
 import type { QuoteItem } from '@/lib/db/schema';
 import dynamic from 'next/dynamic';
 import { pdf } from '@react-pdf/renderer';
@@ -75,6 +74,17 @@ interface Montage {
     billingAddress: string | null;
     billingCity: string | null;
     billingPostalCode: string | null;
+    payments: {
+        id: string;
+        name: string;
+        amount: string;
+        status: 'pending' | 'paid';
+        invoiceNumber: string;
+        proformaUrl: string | null;
+        invoiceUrl: string | null;
+        paidAt: Date | null;
+        createdAt: Date;
+    }[];
 }
 
 interface Customer {
@@ -314,14 +324,72 @@ export function CustomerPortal({ customer, token, bankAccount, companyInfo }: Cu
                         )}
 
                         {/* Payment Info */}
-                        {activeQuote && activeQuote.status === 'accepted' && (
+                        {activeMontage.payments && activeMontage.payments.length > 0 && (
                             <motion.div variants={itemVariants}>
-                                <PaymentCard 
-                                    quoteNumber={activeQuote.number || activeMontage.displayId || 'ZAMÓWIENIE'}
-                                    totalAmount={activeQuote.totalGross}
-                                    isPaid={false} 
-                                    bankAccount={bankAccount}
-                                />
+                                <Card className="hover:shadow-md transition-shadow duration-300">
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <Calculator className="h-5 w-5 text-primary" /> Płatności
+                                        </CardTitle>
+                                        <CardDescription>
+                                            Historia płatności i dokumenty
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        {activeMontage.payments.map((payment) => (
+                                            <div key={payment.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg bg-card hover:bg-accent/5 transition-colors gap-4">
+                                                <div className="space-y-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-medium">{payment.name}</span>
+                                                        {payment.status === 'paid' ? (
+                                                            <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-green-100 text-green-800 hover:bg-green-200">
+                                                                Opłacona
+                                                            </span>
+                                                        ) : (
+                                                            <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-yellow-100 text-yellow-800 hover:bg-yellow-200">
+                                                                Do zapłaty
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        Kwota: <span className="font-medium text-foreground">{formatCurrency(parseFloat(payment.amount))}</span>
+                                                    </p>
+                                                    {payment.invoiceNumber && (
+                                                        <p className="text-xs text-muted-foreground">
+                                                            Tytuł przelewu: <span className="font-mono select-all">{payment.invoiceNumber}</span>
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <div className="flex flex-col sm:flex-row gap-2">
+                                                    {payment.proformaUrl && (
+                                                        <Button variant="outline" size="sm" asChild>
+                                                            <a href={payment.proformaUrl} target="_blank" rel="noopener noreferrer">
+                                                                <FileText className="w-4 h-4 mr-2" />
+                                                                Proforma
+                                                            </a>
+                                                        </Button>
+                                                    )}
+                                                    {payment.invoiceUrl && (
+                                                        <Button variant="outline" size="sm" className="text-green-600 border-green-200 hover:bg-green-50" asChild>
+                                                            <a href={payment.invoiceUrl} target="_blank" rel="noopener noreferrer">
+                                                                <FileText className="w-4 h-4 mr-2" />
+                                                                Faktura
+                                                            </a>
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                        
+                                        {bankAccount && (
+                                            <div className="mt-6 pt-4 border-t text-sm text-muted-foreground">
+                                                <p className="font-medium text-foreground mb-1">Dane do przelewu:</p>
+                                                <p>{companyInfo.name}</p>
+                                                <p className="font-mono select-all">{bankAccount}</p>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
                             </motion.div>
                         )}
 

@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { customers, montages, quotes, mailAccounts, montageAttachments } from '@/lib/db/schema';
+import { customers, montages, quotes, mailAccounts, montageAttachments, montagePayments } from '@/lib/db/schema';
 import { eq, desc, isNull, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { logSystemEvent } from '@/lib/logging';
@@ -324,6 +324,9 @@ export async function getCustomerByToken(token: string) {
                 orderBy: [desc(montages.createdAt)],
                 with: {
                     attachments: true,
+                    payments: {
+                        orderBy: [desc(montagePayments.createdAt)],
+                    },
                     quotes: {
                         orderBy: [desc(quotes.createdAt)],
                     }
@@ -344,6 +347,9 @@ export async function getCustomerByToken(token: string) {
             orderBy: [desc(montages.createdAt)],
             with: {
                 attachments: true,
+                payments: {
+                    orderBy: [desc(montagePayments.createdAt)],
+                },
                 quotes: {
                     orderBy: [desc(quotes.createdAt)],
                 }

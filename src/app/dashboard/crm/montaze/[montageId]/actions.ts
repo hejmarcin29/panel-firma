@@ -11,6 +11,7 @@ import {
     montageChecklistItems,
     montageNotes,
     montageTasks,
+    montagePayments,
     systemLogs,
     quotes,
     customers,
@@ -93,6 +94,9 @@ export async function getMontageDetails(montageId: string) {
             quotes: {
                 where: isNull(quotes.deletedAt),
                 orderBy: desc(quotes.createdAt),
+            },
+            payments: {
+                orderBy: desc(montagePayments.createdAt),
             },
             settlement: true,
         },
@@ -222,3 +226,133 @@ export async function updateMontageStatus(montageId: string, newStatus: MontageS
 
     revalidatePath(`/dashboard/crm/montaze/${montageId}`);
 }
+
+export async function createPayment(montageId: string, data: {
+    name: string;
+    amount: number;
+    invoiceNumber: string;
+    proformaUrl?: string;
+    type: 'advance' | 'final' | 'other';
+}) {
+    const user = await requireUser();
+
+    await db.insert(montagePayments).values({
+        id: randomUUID(),
+        montageId,
+        name: data.name,
+        amount: data.amount.toString(),
+        invoiceNumber: data.invoiceNumber,
+        proformaUrl: data.proformaUrl,
+        status: 'pending',
+        type: data.type,
+    });
+
+    // If proforma is uploaded, add it to attachments
+    if (data.proformaUrl) {
+        await db.insert(montageAttachments).values({
+            id: randomUUID(),
+            montageId,
+            type: 'proforma',
+            title: `Proforma - ${data.name}`,
+            url: data.proformaUrl,
+            uploadedBy: user.id,
+        });
+    }
+
+    // Auto-update status if it's an Advance payment
+    // Logic: If current status is 'contract_signed', move to 'waiting_for_deposit'
+    if (data.type === 'advance') {
+        const montage = await db.query.montages.findFirst({
+            where: eq(montages.id, montageId),
+            columns: { status: true }
+        });
+
+        if (montage?.status === 'contract_signed') {
+            await db.update(montages)
+                .set({ status: 'waiting_for_deposit' })
+                .where(eq(montages.id, montageId));
+        }
+    }
+
+    revalidatePath(`/dashboard/crm/montaze/${montageId}`);
+    return { success: true };
+}
+
+export async function markPaymentAsPaid(paymentId: string, data: {
+    invoiceUrl?: string;
+}) {
+    const user = await requireUser();
+
+    const payment = await db.query.montagePayments.findFirst({
+        where: eq(montagePayments.id, paymentId),
+    });
+
+    if (!payment) throw new Error('Płatność nie znaleziona');
+
+    await db.update(montagePayments)
+        .set({
+            status: 'paid',
+            paidAt: new Date(),
+            invoiceUrl: data.invoiceUrl,
+        })
+        .where(eq(montagePayments.id, paymentId));
+
+    // If invoice is uploaded, add it to attachments with correct type
+    if (data.invoiceUrl) {
+        let attachmentType = 'general';
+        if (payment.type === 'advance') attachmentType = 'invoice_advance';
+        if (payment.type === 'final') attachmentType = 'invoice_final';
+
+        await db.insert(montageAttachments).values({
+            id: randomUUID(),
+            montageId: payment.montageId,
+            type: attachmentType,
+            title: `Faktura - ${payment.name}`,
+            url: data.invoiceUrl,
+            uploadedBy: user.id,
+        });
+    }
+
+    // Auto-update status logic
+    // If status is 'waiting_for_deposit' AND it is an ADVANCE payment, move to 'deposit_paid'
+    if (payment.type === 'advance') {
+        const montage = await db.query.montages.findFirst({
+            where: eq(montages.id, payment.montageId),
+            columns: { status: true }
+        });
+
+        if (montage?.status === 'waiting_for_deposit') {
+            await db.update(montages)
+                .set({ status: 'deposit_paid' })
+                .where(eq(montages.id, payment.montageId));
+                
+            if (!data.invoiceUrl) {
+                 await db.insert(montageTasks).values({
+                    id: randomUUID(),
+                    montageId: payment.montageId,
+                    content: `Wystaw Fakturę Zaliczkową do płatności: ${payment.name}`,
+                    completed: false,
+                    orderIndex: 0,
+                });
+            }
+        }
+    }
+
+    revalidatePath(`/dashboard/crm/montaze/${payment.montageId}`);
+    return { success: true };
+}
+
+export async function deletePayment(paymentId: string) {
+    await requireUser();
+    
+    const payment = await db.query.montagePayments.findFirst({
+        where: eq(montagePayments.id, paymentId),
+    });
+    
+    if (!payment) return;
+
+    await db.delete(montagePayments).where(eq(montagePayments.id, paymentId));
+    revalidatePath(`/dashboard/crm/montaze/${payment.montageId}`);
+    return { success: true };
+}
+

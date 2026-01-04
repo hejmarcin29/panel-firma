@@ -8,7 +8,8 @@ import {
     boolean,
     timestamp,
     json,
-    doublePrecision
+    doublePrecision,
+    decimal
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
@@ -698,6 +699,32 @@ export const montageChecklistItems = pgTable(
 	})
 );
 
+export const montagePayments = pgTable(
+    'montage_payments',
+    {
+        id: text('id').primaryKey(),
+        montageId: text('montage_id')
+            .notNull()
+            .references(() => montages.id, { onDelete: 'cascade' }),
+        type: text('type', { enum: ['advance', 'final', 'other'] }).default('other').notNull(),
+        name: text('name').notNull(), // "Zaliczka", "II Rata", etc.
+        amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
+        status: text('status', { enum: ['pending', 'paid'] }).default('pending').notNull(),
+        invoiceNumber: text('invoice_number').notNull(), // The number for the transfer title
+        proformaUrl: text('proforma_url'), // URL to the uploaded Proforma
+        invoiceUrl: text('invoice_url'), // URL to the uploaded Final Invoice
+        dueDate: timestamp('due_date'),
+        paidAt: timestamp('paid_at'),
+        createdAt: timestamp('created_at').notNull().defaultNow(),
+        updatedAt: timestamp('updated_at').notNull().defaultNow(),
+    },
+    (table) => ({
+        montageIdx: index('montage_payments_montage_id_idx').on(table.montageId),
+        statusIdx: index('montage_payments_status_idx').on(table.status),
+    })
+);
+
+
 export const montageTasks = pgTable(
 	'montage_tasks',
 	{
@@ -780,6 +807,13 @@ export const montageAttachmentsRelations = relations(montageAttachments, ({ one 
 		fields: [montageAttachments.taskId],
 		references: [montageTasks.id],
 	}),
+}));
+
+export const montagePaymentsRelations = relations(montagePayments, ({ one }) => ({
+    montage: one(montages, {
+        fields: [montagePayments.montageId],
+        references: [montages.id],
+    }),
 }));
 
 export const montageChecklistItemsRelations = relations(montageChecklistItems, ({ one }) => ({
