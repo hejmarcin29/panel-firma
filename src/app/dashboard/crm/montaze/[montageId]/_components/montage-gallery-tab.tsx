@@ -17,6 +17,7 @@ import {
 import { addMontageAttachment } from "../../actions";
 import type { Montage } from "../../types";
 import { MontageCategories, MontageSubCategories } from "@/lib/r2/constants";
+import { MontageDocumentSlots } from "./montage-document-slots";
 
 function isImage(url: string) {
   return /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
@@ -70,8 +71,10 @@ export function MontageGalleryTab({ montage, userRoles = [] }: { montage: Montag
 
   return (
     <div className="space-y-8">
+        {!isInstaller && <MontageDocumentSlots montage={montage} />}
+
         <div className="flex items-center justify-between flex-wrap gap-4">
-            <h3 className="text-lg font-semibold">Załączniki</h3>
+            <h3 className="text-lg font-semibold">Pozostałe Załączniki</h3>
             <div className="flex items-center gap-2">
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                     <SelectTrigger className="w-[180px]">

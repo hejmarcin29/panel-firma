@@ -8,6 +8,7 @@ export type MontageAttachment = {
 	url: string;
 	createdAt: TimestampValue;
 	noteId: string | null;
+    type?: string;
 	uploader: {
 		id: string;
 		name: string | null;

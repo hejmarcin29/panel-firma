@@ -81,7 +81,6 @@ export async function submitReferralLead(formData: FormData) {
         templateId: template.id,
         label: template.label,
         allowAttachment: template.allowAttachment,
-        assignedRole: template.assignedRole,
         orderIndex: index,
         completed: false,
         createdAt: now,

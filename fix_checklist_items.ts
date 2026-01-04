@@ -9,7 +9,6 @@ type MontageChecklistTemplate = {
 	label: string;
 	allowAttachment: boolean;
     associatedStage?: string;
-    assignedRole?: 'admin' | 'office' | 'measurer' | 'installer' | 'client';
 };
 
 const DEFAULT_MONTAGE_CHECKLIST: readonly MontageChecklistTemplate[] = [
@@ -116,7 +115,6 @@ async function fix() {
                     montageId: m.id,
                     templateId: template.id,
                     label: template.label,
-                    assignedRole: template.assignedRole,
                     allowAttachment: template.allowAttachment,
                     completed: false,
                     orderIndex: index,

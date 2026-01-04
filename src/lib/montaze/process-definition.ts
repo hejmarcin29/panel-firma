@@ -22,6 +22,7 @@ export type ProcessStepDefinition = {
         label: string;
         condition: (montage: Montage) => boolean;
     }[];
+    requiredDocuments?: ('proforma' | 'invoice_advance' | 'invoice_final')[];
 };
 
 export const PROCESS_STEPS: ProcessStepDefinition[] = [
@@ -29,7 +30,18 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
     { id: 'new_lead', label: 'Nowe Zgłoszenie', description: 'Wpadło, nikt nie dzwonił.', relatedStatuses: ['new_lead'], actor: 'office', automations: [], checkpoints: [] },
     { id: 'contact_attempt', label: 'Próba Kontaktu', description: 'Dzwoniłem, nie odbiera.', relatedStatuses: ['contact_attempt'], actor: 'office', automations: [], checkpoints: [] },
     { id: 'contact_established', label: 'Kontakt Nawiązany', description: 'Rozmawialiśmy, ustalamy co dalej.', relatedStatuses: ['contact_established'], actor: 'office', automations: [], checkpoints: [] },
-    { id: 'measurement_scheduled', label: 'Pomiar Umówiony', description: 'Jest data w kalendarzu.', relatedStatuses: ['measurement_scheduled'], actor: 'office', automations: [], checkpoints: [] },
+    { 
+        id: 'measurement_scheduled', 
+        label: 'Pomiar Umówiony', 
+        description: 'Jest data w kalendarzu.', 
+        relatedStatuses: ['measurement_scheduled'], 
+        actor: 'office', 
+        automations: [], 
+        checkpoints: [
+            { key: 'measurement_data', label: 'Dane pomiarowe', condition: (m) => !!m.measurementDate || !!m.measurementDetails },
+            { key: 'labor_cost', label: 'Kosztorys robocizny', condition: (m) => !!m.costEstimationCompletedAt }
+        ] 
+    },
 
     // 2. WYCENA
     { id: 'measurement_done', label: 'Po Pomiarze', description: 'Montażysta był, ale brak wyceny.', relatedStatuses: ['measurement_done'], actor: 'installer', automations: [], checkpoints: [] },
@@ -40,7 +52,7 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
     // 3. FORMALNOŚCI
     { id: 'contract_signed', label: 'Umowa Podpisana', description: 'Jest podpis na umowie.', relatedStatuses: ['contract_signed'], actor: 'office', automations: [], checkpoints: [] },
     { id: 'waiting_for_deposit', label: 'Oczekiwanie na Zaliczkę', description: 'Faktura zaliczkowa wysłana.', relatedStatuses: ['waiting_for_deposit'], actor: 'office', automations: [], checkpoints: [] },
-    { id: 'deposit_paid', label: 'Zaliczka Opłacona', description: 'Kasa na koncie -> Startujemy.', relatedStatuses: ['deposit_paid'], actor: 'office', automations: [], checkpoints: [] },
+    { id: 'deposit_paid', label: 'Zaliczka Opłacona', description: 'Kasa na koncie -> Startujemy.', relatedStatuses: ['deposit_paid'], actor: 'office', automations: [], checkpoints: [], requiredDocuments: ['invoice_advance'] },
 
     // 4. LOGISTYKA
     { id: 'materials_ordered', label: 'Materiały Zamówione', description: 'Poszło zamówienie do producenta.', relatedStatuses: ['materials_ordered'], actor: 'office', automations: [], checkpoints: [] },
@@ -55,7 +67,7 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
     // 6. FINISZ
     { id: 'final_invoice_issued', label: 'Faktura Końcowa', description: 'Wystawiona, wysłana.', relatedStatuses: ['final_invoice_issued'], actor: 'office', automations: [], checkpoints: [] },
     { id: 'final_settlement', label: 'Rozliczenie Końcowe', description: 'Czekamy na dopłatę.', relatedStatuses: ['final_settlement'], actor: 'office', automations: [], checkpoints: [] },
-    { id: 'completed', label: 'Zakończone', description: 'Wszystko na czysto, archiwum.', relatedStatuses: ['completed'], actor: 'system', automations: [], checkpoints: [] },
+    { id: 'completed', label: 'Zakończone', description: 'Wszystko na czysto, archiwum.', relatedStatuses: ['completed'], actor: 'system', automations: [], checkpoints: [], requiredDocuments: ['invoice_final'] },
 
     // 7. STANY SPECJALNE
     { id: 'on_hold', label: 'Wstrzymane', description: 'Klient buduje dom, wróci za pół roku.', relatedStatuses: ['on_hold'], actor: 'system', automations: [], checkpoints: [] },

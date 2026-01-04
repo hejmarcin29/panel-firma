@@ -657,6 +657,7 @@ export const montageAttachments = pgTable(
 		taskId: text('task_id').references(() => montageTasks.id, {
 			onDelete: 'set null',
 		}),
+		type: text('type').default('general').notNull(),
 		title: text('title'),
 		url: text('url').notNull(),
 		uploadedBy: text('uploaded_by').references(() => users.id, { onDelete: 'set null' }),
@@ -687,7 +688,6 @@ export const montageChecklistItems = pgTable(
 		completed: boolean('completed')
 			.notNull()
 			.default(false),
-        assignedRole: text('assigned_role'),
 		orderIndex: integer('order_index').notNull(),
 		createdAt: timestamp('created_at').notNull().defaultNow(),
 		updatedAt: timestamp('updated_at').notNull().defaultNow(),

@@ -23,7 +23,6 @@ function sanitizeTemplate(item: unknown, fallbackId: string): MontageChecklistTe
 
 	const id = typeof candidate.id === 'string' && candidate.id.trim() ? candidate.id.trim() : fallbackId;
 	const allowAttachment = Boolean(candidate.allowAttachment);
-    const assignedRole = candidate.assignedRole;
     
     // Try to recover associatedStage from default if missing
     let associatedStage = typeof candidate.associatedStage === 'string' ? candidate.associatedStage : undefined;
@@ -34,7 +33,7 @@ function sanitizeTemplate(item: unknown, fallbackId: string): MontageChecklistTe
         }
     }
 
-	return { id, label, allowAttachment, associatedStage, assignedRole };
+	return { id, label, allowAttachment, associatedStage };
 }
 
 function parseChecklistSetting(rawValue: string | null): MontageChecklistTemplate[] {

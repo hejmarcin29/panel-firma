@@ -119,6 +119,7 @@ async function createMontageAttachment({
 	noteId?: string | null;
 	taskId?: string | null;
     category?: string;
+    type?: string;
 }): Promise<string> {
 	ensureValidAttachmentFile(file);
 
@@ -142,6 +143,7 @@ async function createMontageAttachment({
 		url: uploaded.url,
 		uploadedBy,
 		createdAt: now,
+        type: type || 'general',
 	});
 
 	return attachmentId;
@@ -458,7 +460,6 @@ export async function createMontage({
                     templateId: template.id,
                     label: template.label,
                     allowAttachment: template.allowAttachment,
-                    assignedRole: template.assignedRole,
                     orderIndex: index,
                     completed: false,
                     createdAt: now,
@@ -529,7 +530,6 @@ export async function createMontage({
                     templateId: template.id,
                     label: template.label,
                     allowAttachment: template.allowAttachment,
-                    assignedRole: template.assignedRole,
                     completed: false,
                     orderIndex: index,
                     createdAt: now,
@@ -992,6 +992,7 @@ export async function addMontageAttachment(formData: FormData) {
 	const noteIdRaw = formData.get('noteId');
 	const taskIdRaw = formData.get('taskId');
     const categoryRaw = formData.get('category');
+    const typeRaw = formData.get('type');
 	const fileField = formData.get('file');
 
 	const montageId = typeof montageIdRaw === 'string' ? montageIdRaw.trim() : '';
@@ -999,6 +1000,7 @@ export async function addMontageAttachment(formData: FormData) {
 	const noteId = typeof noteIdRaw === 'string' ? noteIdRaw.trim() : '';
 	const taskId = typeof taskIdRaw === 'string' ? taskIdRaw.trim() : '';
     const category = typeof categoryRaw === 'string' ? categoryRaw.trim() : undefined;
+    const type = typeof typeRaw === 'string' ? typeRaw.trim() : undefined;
 
 	if (!montageId) {
 		throw new Error('Brakuje identyfikatora montaży.');
@@ -1018,6 +1020,7 @@ export async function addMontageAttachment(formData: FormData) {
 		noteId: noteId || null,
 		taskId: taskId || null,
         category,
+        type,
 	});
 
 	await touchMontage(montageRecord.id);
@@ -1431,7 +1434,6 @@ export async function initializeMontageChecklist(montageId: string) {
 			templateId: template.id,
 			label: template.label,
 			allowAttachment: template.allowAttachment,
-            assignedRole: template.assignedRole,
 			completed: false,
 			orderIndex: index,
 			createdAt: now,
@@ -2021,7 +2023,6 @@ export async function createLead(data: {
                 templateId: template.id,
                 label: template.label,
                 allowAttachment: template.allowAttachment,
-                assignedRole: template.assignedRole,
                 orderIndex: index,
                 completed: isCompleted,
                 createdAt: now,
@@ -2220,7 +2221,6 @@ export async function createExtendedLead(formData: FormData) {
         templateId: template.id,
         label: template.label,
         allowAttachment: template.allowAttachment,
-        assignedRole: template.assignedRole,
         orderIndex: index,
         completed: false,
         createdAt: now,
@@ -2345,7 +2345,6 @@ export async function convertLeadToMontage(data: {
                 templateId: template.id,
                 label: template.label,
                 allowAttachment: template.allowAttachment,
-                assignedRole: template.assignedRole,
                 completed: false,
                 orderIndex: index,
                 createdAt: now,

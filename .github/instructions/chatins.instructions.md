@@ -41,6 +41,13 @@ System posiada 3 główne role użytkowników:
 
 Przy tworzeniu nowych funkcjonalności dla Montażysty, pamiętaj o tych ograniczeniach.
 
+## Task-Driven UI (Installer Role)
+Dla roli Montażysty (`installer`) stosujemy interfejs zorientowany na zadania (Task-Driven UI), a nie na statusy.
+- **Brak Dropdownów Statusu:** Montażysta nie wybiera statusu z listy. Widzi jedynie pasek postępu (read-only).
+- **Jeden Przycisk Akcji:** System podpowiada jedną, główną akcję do wykonania w danym momencie (np. "Uruchom Asystenta Pomiaru").
+- **Sekwencyjność:** Kolejne akcje (np. "Kosztorys") odblokowują się dopiero po wykonaniu poprzednich (np. "Zapisanie Pomiaru").
+- **Cel:** Minimalizacja błędów i uproszczenie pracy w terenie.
+
 ## Dokumentacja Logiki Biznesowej
 **WAŻNE:** Wszelkie zmiany w logice biznesowej, automatyzacjach, rolach czy przepływach pracy (workflows) muszą być odzwierciedlone w pliku:
 `docs/business-logic.md`

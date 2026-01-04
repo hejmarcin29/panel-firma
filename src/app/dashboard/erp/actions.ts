@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { suppliers, purchaseOrders, products, documents, montageChecklistItems } from '@/lib/db/schema';
+import { suppliers, purchaseOrders, products, documents, montageChecklistItems, montageAttachments } from '@/lib/db/schema';
 import { desc, isNull, ilike, or, inArray, and, not } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { requireUser } from '@/lib/auth/session';
@@ -57,6 +57,30 @@ export async function getInvoices() {
         orderBy: [desc(documents.createdAt)],
         limit: 50,
     });
+}
+
+export async function getInvoiceAttachments() {
+    await requireUser();
+
+    const attachments = await db.query.montageAttachments.findMany({
+        where: (table, { inArray }) => inArray(table.type, ['proforma', 'invoice_advance', 'invoice_final']),
+        with: {
+            montage: {
+                columns: {
+                    id: true,
+                    clientName: true,
+                    displayId: true,
+                    status: true,
+                    deletedAt: true,
+                }
+            },
+            uploader: true,
+        },
+        orderBy: [desc(montageAttachments.createdAt)],
+        limit: 50,
+    });
+
+    return attachments.filter(a => a.montage && !a.montage.deletedAt);
 }
 
 export async function getPendingInvoiceChecklistItems() {

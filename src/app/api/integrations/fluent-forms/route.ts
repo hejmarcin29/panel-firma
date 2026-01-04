@@ -85,7 +85,6 @@ export async function POST(req: NextRequest) {
             templateId: template.id,
             label: template.label,
             allowAttachment: template.allowAttachment,
-            assignedRole: template.assignedRole,
             orderIndex: index,
             completed: false,
             createdAt: new Date(),

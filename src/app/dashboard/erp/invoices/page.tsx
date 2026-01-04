@@ -1,11 +1,11 @@
-import { getInvoices, getPendingInvoiceChecklistItems } from '../actions';
+import { getInvoices, getInvoiceAttachments } from '../actions';
 import { InvoicesList } from './invoices-list';
 import { PendingInvoicesList } from './pending-invoices-list';
 
 export default async function InvoicesPage() {
-  const [invoices, pendingInvoices] = await Promise.all([
+  const [invoices, invoiceAttachments] = await Promise.all([
     getInvoices(),
-    getPendingInvoiceChecklistItems()
+    getInvoiceAttachments()
   ]);
 
   return (
@@ -14,7 +14,7 @@ export default async function InvoicesPage() {
         <h1 className="text-3xl font-bold tracking-tight">Faktury</h1>
       </div>
 
-      <PendingInvoicesList data={pendingInvoices} />
+      <PendingInvoicesList data={invoiceAttachments} />
       <InvoicesList data={invoices} />
     </div>
   );

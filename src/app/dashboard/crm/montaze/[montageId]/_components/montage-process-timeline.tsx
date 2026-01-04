@@ -23,9 +23,10 @@ import {
 
 interface MontageProcessTimelineProps {
     montage: Montage;
+    readOnly?: boolean;
 }
 
-export function MontageProcessTimeline({ montage }: MontageProcessTimelineProps) {
+export function MontageProcessTimeline({ montage, readOnly = false }: MontageProcessTimelineProps) {
     const router = useRouter();
     const [pending, startTransition] = useTransition();
     const { steps, progress, currentStepIndex } = useMemo(() => getProcessState(montage), [montage]);
@@ -99,7 +100,7 @@ export function MontageProcessTimeline({ montage }: MontageProcessTimelineProps)
                                     <ProcessStepItem 
                                         step={step} 
                                         isLast={index === steps.length - 1}
-                                        onAdvance={handleAdvance}
+                                        onAdvance={readOnly ? undefined : handleAdvance}
                                         nextStatus={nextStatus}
                                         isPending={pending}
                                     />

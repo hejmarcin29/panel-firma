@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { updateMontageStatus } from "../actions";
+import { cn } from "@/lib/utils";
 
 import { MontageNotesTab } from "./montage-notes-tab";
 import { MontageGalleryTab } from "./montage-gallery-tab";
@@ -30,6 +31,7 @@ import { MontageMeasurementTab } from "../../_components/montage-measurement-tab
 import { MontageSettlementTab } from "../../_components/montage-settlement-tab";
 import { MontageClientCard } from "./montage-client-card"; // Reusing for edit capabilities if needed
 import { MontageMaterialCard } from "./montage-material-card";
+import { MontageProcessTimeline } from "./montage-process-timeline";
 import type { Montage, MontageLog } from "../../types";
 import type { UserRole, MontageStatus } from "@/lib/db/schema";
 
@@ -145,81 +147,73 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
                 {/* TAB: PROCESS (The Hub) */}
                 {activeTab === 'process' && (
                     <div className="space-y-6">
-                        {/* Status Selector Card */}
-                        <Card className="border-l-4 border-l-primary shadow-md">
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-base font-medium text-muted-foreground uppercase tracking-wider">
-                                    Status Zlecenia (Sterowanie Ręczne)
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-4">
-                                    <Select
-                                        value={montage.status}
-                                        onValueChange={async (val) => {
-                                            toast.promise(updateMontageStatus(montage.id, val as MontageStatus), {
-                                                loading: 'Aktualizacja statusu...',
-                                                success: 'Status zaktualizowany',
-                                                error: 'Błąd aktualizacji statusu'
-                                            });
-                                        }}
-                                    >
-                                        <SelectTrigger className="w-full h-12 text-lg font-medium">
-                                            <SelectValue placeholder="Wybierz status" />
-                                        </SelectTrigger>
-                                        <SelectContent className="max-h-[400px]">
-                                            <SelectGroup>
-                                                <SelectLabel>1. Lejki</SelectLabel>
-                                                <SelectItem value="new_lead">Nowe Zgłoszenie</SelectItem>
-                                                <SelectItem value="contact_attempt">Próba Kontaktu</SelectItem>
-                                                <SelectItem value="contact_established">Kontakt Nawiązany</SelectItem>
-                                                <SelectItem value="measurement_scheduled">Pomiar Umówiony</SelectItem>
-                                            </SelectGroup>
-                                            <SelectGroup>
-                                                <SelectLabel>2. Wycena</SelectLabel>
-                                                <SelectItem value="measurement_done">Po Pomiarze</SelectItem>
-                                                <SelectItem value="quote_in_progress">Wycena w Toku</SelectItem>
-                                                <SelectItem value="quote_sent">Oferta Wysłana</SelectItem>
-                                                <SelectItem value="quote_accepted">Oferta Zaakceptowana</SelectItem>
-                                            </SelectGroup>
-                                            <SelectGroup>
-                                                <SelectLabel>3. Formalności</SelectLabel>
-                                                <SelectItem value="contract_signed">Umowa Podpisana</SelectItem>
-                                                <SelectItem value="waiting_for_deposit">Oczekiwanie na Zaliczkę</SelectItem>
-                                                <SelectItem value="deposit_paid">Zaliczka Opłacona</SelectItem>
-                                            </SelectGroup>
-                                            <SelectGroup>
-                                                <SelectLabel>4. Logistyka</SelectLabel>
-                                                <SelectItem value="materials_ordered">Materiały Zamówione</SelectItem>
-                                                <SelectItem value="materials_pickup_ready">Gotowe do Odbioru</SelectItem>
-                                                <SelectItem value="installation_scheduled">Montaż Zaplanowany</SelectItem>
-                                                <SelectItem value="materials_delivered">Materiały u Klienta</SelectItem>
-                                            </SelectGroup>
-                                            <SelectGroup>
-                                                <SelectLabel>5. Realizacja</SelectLabel>
-                                                <SelectItem value="installation_in_progress">Montaż w Toku</SelectItem>
-                                                <SelectItem value="protocol_signed">Protokół Podpisany</SelectItem>
-                                            </SelectGroup>
-                                            <SelectGroup>
-                                                <SelectLabel>6. Finisz</SelectLabel>
-                                                <SelectItem value="final_invoice_issued">Faktura Końcowa</SelectItem>
-                                                <SelectItem value="final_settlement">Rozliczenie Końcowe</SelectItem>
-                                                <SelectItem value="completed">Zakończone</SelectItem>
-                                            </SelectGroup>
-                                            <SelectGroup>
-                                                <SelectLabel>7. Specjalne</SelectLabel>
-                                                <SelectItem value="on_hold">Wstrzymane</SelectItem>
-                                                <SelectItem value="rejected">Odrzucone</SelectItem>
-                                                <SelectItem value="complaint">Reklamacja</SelectItem>
-                                            </SelectGroup>
-                                        </SelectContent>
-                                    </Select>
-                                    <p className="text-sm text-muted-foreground">
-                                        Wybierz aktualny etap, aby zaktualizować oś czasu.
-                                    </p>
-                                </div>
-                            </CardContent>
-                        </Card>
+                        {/* 1. Read-Only Timeline */}
+                        <MontageProcessTimeline montage={montage} readOnly={true} />
+
+                        {/* 2. Task-Driven Actions */}
+                        {montage.status === 'measurement_scheduled' && (
+                            <Card className="border-l-4 border-l-blue-500 shadow-md bg-blue-50/50">
+                                <CardHeader>
+                                    <CardTitle className="text-lg text-blue-900">Wymagane Akcje</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    {/* Step 1: Measurement Assistant */}
+                                    <div className="flex items-center gap-4">
+                                        <div className={cn(
+                                            "flex items-center justify-center w-10 h-10 rounded-full border-2",
+                                            (!!montage.measurementDate || !!montage.measurementDetails) 
+                                                ? "bg-emerald-100 border-emerald-500 text-emerald-700" 
+                                                : "bg-white border-blue-500 text-blue-700"
+                                        )}>
+                                            {(!!montage.measurementDate || !!montage.measurementDetails) ? <CheckSquare className="w-6 h-6" /> : <span className="font-bold">1</span>}
+                                        </div>
+                                        <div className="flex-1">
+                                            <h4 className="font-semibold text-base">Asystent Pomiaru</h4>
+                                            <p className="text-sm text-muted-foreground">Wprowadź wymiary, wilgotność i zdjęcia.</p>
+                                        </div>
+                                        <Button 
+                                            onClick={() => setActiveTab('measurement')}
+                                            variant={(!!montage.measurementDate || !!montage.measurementDetails) ? "outline" : "default"}
+                                            className={cn(
+                                                (!!montage.measurementDate || !!montage.measurementDetails) 
+                                                    ? "border-emerald-500 text-emerald-700 hover:bg-emerald-50" 
+                                                    : "bg-blue-600 hover:bg-blue-700"
+                                            )}
+                                        >
+                                            {(!!montage.measurementDate || !!montage.measurementDetails) ? "Edytuj / Podgląd" : "Uruchom"}
+                                        </Button>
+                                    </div>
+
+                                    {/* Step 2: Labor Cost Estimate */}
+                                    <div className={cn("flex items-center gap-4 transition-opacity", !(!!montage.measurementDate || !!montage.measurementDetails) && "opacity-50")}>
+                                        <div className={cn(
+                                            "flex items-center justify-center w-10 h-10 rounded-full border-2",
+                                            !!montage.costEstimationCompletedAt 
+                                                ? "bg-emerald-100 border-emerald-500 text-emerald-700" 
+                                                : "bg-white border-gray-300 text-gray-500"
+                                        )}>
+                                            {!!montage.costEstimationCompletedAt ? <CheckSquare className="w-6 h-6" /> : <span className="font-bold">2</span>}
+                                        </div>
+                                        <div className="flex-1">
+                                            <h4 className="font-semibold text-base">Kosztorys Robocizny</h4>
+                                            <p className="text-sm text-muted-foreground">Wyceń swoją pracę na podstawie pomiaru.</p>
+                                        </div>
+                                        <Button 
+                                            onClick={() => setActiveTab('settlement')}
+                                            disabled={!(!!montage.measurementDate || !!montage.measurementDetails)}
+                                            variant={!!montage.costEstimationCompletedAt ? "outline" : "secondary"}
+                                            className={cn(
+                                                !!montage.costEstimationCompletedAt 
+                                                    ? "border-emerald-500 text-emerald-700 hover:bg-emerald-50" 
+                                                    : ""
+                                            )}
+                                        >
+                                            {!!montage.costEstimationCompletedAt ? "Edytuj / Podgląd" : "Wypełnij"}
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
 
                         <div className="space-y-2">
                             <h4 className="font-medium text-sm">Materiały do zabrania:</h4>

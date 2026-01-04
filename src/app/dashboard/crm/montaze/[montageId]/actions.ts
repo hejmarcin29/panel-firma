@@ -20,6 +20,7 @@ import {
 } from '@/lib/db/schema';
 import { tryGetR2Config } from '@/lib/r2/config';
 import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
+import { PROCESS_STEPS } from '@/lib/montaze/process-definition';
 import { mapMontageRow, type MontageRow } from '../utils';
 
 export async function getMontageDetails(montageId: string) {
@@ -193,6 +194,27 @@ export async function generateCustomerToken(montageId: string) {
 
 export async function updateMontageStatus(montageId: string, newStatus: MontageStatus) {
     await requireUser();
+
+    // Check requirements
+    const stepDef = PROCESS_STEPS.find(s => s.relatedStatuses.includes(newStatus));
+    if (stepDef?.requiredDocuments && stepDef.requiredDocuments.length > 0) {
+        const attachments = await db.query.montageAttachments.findMany({
+            where: (table, { eq }) => eq(table.montageId, montageId),
+        });
+
+        const docLabels: Record<string, string> = {
+            'proforma': 'Faktura Proforma',
+            'invoice_advance': 'Faktura Zaliczkowa',
+            'invoice_final': 'Faktura Końcowa'
+        };
+
+        for (const reqDoc of stepDef.requiredDocuments) {
+            const hasDoc = attachments.some(a => a.type === reqDoc);
+            if (!hasDoc) {
+                throw new Error(`Wymagany dokument: ${docLabels[reqDoc] || reqDoc} nie został wgrany.`);
+            }
+        }
+    }
     
     await db.update(montages)
         .set({ status: newStatus })
