@@ -255,7 +255,9 @@ export default async function MontazePage(props: any) {
             const targetStatus = statusMap[stage];
             filteredStatusOptions = statusOptions.filter(s => s.value === targetStatus);
         } else {
-            filteredStatusOptions = statusOptions.filter(s => s.value !== 'lead' && s.value !== 'completed');
+            filteredStatusOptions = statusOptions.filter(s => 
+                !['new_lead', 'contact_attempt', 'contact_established', 'completed'].includes(s.value)
+            );
         }
     }
 
