@@ -148,8 +148,20 @@ export default async function MontazePage(props: any) {
         } else {
             const inProgressStatuses: MontageStatus[] = [
                 'measurement_scheduled',
+                'measurement_done',
+                'quote_in_progress',
+                'quote_sent',
+                'quote_accepted',
+                'contract_signed',
                 'waiting_for_deposit',
+                'deposit_paid',
+                'materials_ordered',
+                'materials_pickup_ready',
                 'installation_scheduled',
+                'materials_delivered',
+                'installation_in_progress',
+                'protocol_signed',
+                'final_invoice_issued',
                 'final_settlement',
             ];
 

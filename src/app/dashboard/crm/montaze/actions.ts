@@ -1698,6 +1698,7 @@ export async function updateMontageMeasurement({
 			sketchUrl,
 			scheduledInstallationAt: scheduledInstallationAt ? new Date(scheduledInstallationAt) : null,
 			scheduledInstallationEndAt: scheduledInstallationEndAt ? new Date(scheduledInstallationEndAt) : null,
+            installationDateConfirmed: !!scheduledInstallationAt,
             measurementInstallationMethod,
             measurementFloorPattern,
             measurementRooms,
