@@ -109,7 +109,7 @@ export function ProcessStepItem({ step, isLast, onAdvance, nextStatus, isPending
                     <div className="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-md border border-blue-100 w-fit">
                         <Clock className="w-3.5 h-3.5" />
                         <span className="text-xs font-medium">
-                            Zaplanowano: {format(step.scheduledDate, "d MMMM yyyy", { locale: pl })}
+                            Zaplanowano: {format(step.scheduledDate, "d MMMM yyyy, HH:mm", { locale: pl })}
                         </span>
                     </div>
                 )}

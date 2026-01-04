@@ -61,11 +61,11 @@ export function getProcessState(montage: Montage): {
         let scheduledDate: Date | null = null;
         let completedDate: Date | null = null;
 
-        if (step.id === 'measurement_valuation' && montage.measurementDate) {
+        if (step.id === 'measurement_scheduled' && montage.measurementDate) {
             scheduledDate = new Date(montage.measurementDate);
-        } else if (step.id === 'logistics' && montage.scheduledInstallationAt) {
+        } else if (step.id === 'installation_scheduled' && montage.scheduledInstallationAt) {
             scheduledDate = new Date(montage.scheduledInstallationAt);
-        } else if (step.id === 'realization' && montage.completedAt) {
+        } else if (step.id === 'completed' && montage.completedAt) {
             completedDate = new Date(montage.completedAt);
         }
 

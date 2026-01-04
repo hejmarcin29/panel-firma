@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { format, addDays, differenceInCalendarDays } from "date-fns";
+import { format, differenceInCalendarDays } from "date-fns";
 import { pl } from "date-fns/locale";
 import { Calendar as CalendarIcon, Phone, Loader2, Check, Clock, CalendarDays, Edit2, Ruler } from "lucide-react";
 import { toast } from "sonner";
@@ -110,12 +110,6 @@ interface SelectionViewProps {
 }
 
 function SelectionView({ date, isOpen, setIsOpen, handleDateSelect, isSaving, clientPhone }: SelectionViewProps) {
-    const quickDates = [
-        { label: "Jutro", value: addDays(new Date(), 1) },
-        { label: "Pojutrze", value: addDays(new Date(), 2) },
-        { label: "Za tydzień", value: addDays(new Date(), 7) },
-    ];
-
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(date);
     const [selectedTime, setSelectedTime] = useState(date ? format(date, "HH:mm") : "09:00");
 
@@ -178,36 +172,31 @@ function SelectionView({ date, isOpen, setIsOpen, handleDateSelect, isSaving, cl
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
-                        <div className="p-3 border-b bg-muted/30">
-                            <p className="text-xs font-medium text-muted-foreground mb-2">Szybki wybór:</p>
-                            <div className="flex gap-2 overflow-x-auto pb-1">
-                                {quickDates.map((qd) => (
+                        <div className="p-3 border-b space-y-3">
+                             <div className="flex items-center justify-between">
+                                <Label className="text-sm font-medium">Godzina rozpoczęcia:</Label>
+                                <Input 
+                                    type="time" 
+                                    value={selectedTime} 
+                                    onChange={(e) => setSelectedTime(e.target.value)}
+                                    className="w-32 font-mono"
+                                />
+                             </div>
+                             <div className="flex flex-wrap gap-1.5">
+                                {["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"].map(time => (
                                     <Button
-                                        key={qd.label}
-                                        variant="outline"
+                                        key={time}
+                                        variant={selectedTime === time ? "default" : "outline"}
                                         size="sm"
-                                        className="text-xs h-7 whitespace-nowrap"
-                                        onClick={() => {
-                                            const newDate = new Date(qd.value);
-                                            const [h, m] = selectedTime.split(':').map(Number);
-                                            newDate.setHours(h, m);
-                                            handleDateSelect(newDate);
-                                        }}
+                                        className="h-7 px-2 text-xs"
+                                        onClick={() => setSelectedTime(time)}
                                     >
-                                        {qd.label}
+                                        {time}
                                     </Button>
                                 ))}
-                            </div>
+                             </div>
                         </div>
-                        <div className="p-3 border-b flex items-center gap-2">
-                             <Label>Godzina:</Label>
-                             <Input 
-                                type="time" 
-                                value={selectedTime} 
-                                onChange={(e) => setSelectedTime(e.target.value)}
-                                className="w-32"
-                             />
-                        </div>
+
                         <Calendar
                             mode="single"
                             selected={selectedDate}
