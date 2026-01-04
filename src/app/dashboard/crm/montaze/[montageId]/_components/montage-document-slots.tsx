@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { FileIcon, Upload, Loader2, CheckCircle, AlertCircle, Trash2 } from "lucide-react";
+import { FileIcon, Upload, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { addMontageAttachment } from "../../actions";
-import type { Montage } from "../../types";
+import type { Montage, MontageAttachment } from "../../types";
 import { MontageCategories } from "@/lib/r2/constants";
 
 interface DocumentSlotProps {
@@ -14,7 +14,7 @@ interface DocumentSlotProps {
     type: string;
     description: string;
     montageId: string;
-    existingAttachment?: any;
+    existingAttachment?: MontageAttachment;
     required?: boolean;
 }
 

@@ -111,6 +111,7 @@ async function createMontageAttachment({
 	noteId,
 	taskId,
     category,
+    type,
 }: {
 	montage: typeof montages.$inferSelect;
 	file: File;

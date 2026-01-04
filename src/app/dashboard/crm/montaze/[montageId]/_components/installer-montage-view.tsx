@@ -20,9 +20,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "sonner";
-import { updateMontageStatus } from "../actions";
 import { cn } from "@/lib/utils";
 
 import { MontageNotesTab } from "./montage-notes-tab";
@@ -33,7 +30,7 @@ import { MontageClientCard } from "./montage-client-card"; // Reusing for edit c
 import { MontageMaterialCard } from "./montage-material-card";
 import { MontageProcessTimeline } from "./montage-process-timeline";
 import type { Montage, MontageLog } from "../../types";
-import type { UserRole, MontageStatus } from "@/lib/db/schema";
+import type { UserRole } from "@/lib/db/schema";
 
 interface InstallerMontageViewProps {
     montage: Montage;
