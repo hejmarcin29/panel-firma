@@ -142,7 +142,7 @@ export default async function MontazePage(props: any) {
             // KPI: Nierozliczone montaże
             conditions.push(inArray(montages.status, ['waiting_for_deposit', 'final_settlement']));
         } else if (view === 'lead') {
-            conditions.push(eq(montages.status, 'new_lead'));
+            conditions.push(inArray(montages.status, ['new_lead', 'contact_attempt', 'contact_established']));
         } else if (view === 'done') {
             conditions.push(eq(montages.status, 'completed'));
         } else {
@@ -238,7 +238,9 @@ export default async function MontazePage(props: any) {
     // Filter status options based on view to show only relevant columns on the board
     let filteredStatusOptions = statusOptions;
     if (view === 'lead') {
-        filteredStatusOptions = statusOptions.filter(s => s.value === 'lead');
+        filteredStatusOptions = statusOptions.filter(s => 
+            ['new_lead', 'contact_attempt', 'contact_established'].includes(s.value)
+        );
     } else if (view === 'done') {
         filteredStatusOptions = statusOptions.filter(s => s.value === 'completed');
     } else {
