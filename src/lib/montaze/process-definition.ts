@@ -28,7 +28,7 @@ export type ProcessStepDefinition = {
 export const PROCESS_STEPS: ProcessStepDefinition[] = [
     // 1. LEJKI
     { id: 'new_lead', label: 'Nowe Zgłoszenie', description: 'Wpadło, nikt nie dzwonił.', relatedStatuses: ['new_lead'], actor: 'office', automations: [], checkpoints: [] },
-    { id: 'contact_attempt', label: 'Próba Kontaktu', description: 'Dzwoniłem, nie odbiera.', relatedStatuses: ['contact_attempt'], actor: 'office', automations: [], checkpoints: [] },
+    { id: 'contact_attempt', label: 'Do umówienia', description: 'Oczekiwanie na kontakt telefoniczny i ustalenie terminu.', relatedStatuses: ['contact_attempt'], actor: 'installer', automations: [], checkpoints: [] },
     { id: 'contact_established', label: 'Kontakt Nawiązany', description: 'Rozmawialiśmy, ustalamy co dalej.', relatedStatuses: ['contact_established'], actor: 'office', automations: [], checkpoints: [] },
     { 
         id: 'measurement_scheduled', 

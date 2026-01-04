@@ -2544,3 +2544,48 @@ export async function finishMontage(montageId: string) {
     revalidatePath(`${MONTAGE_DASHBOARD_PATH}/${montageId}`);
     return { success: true };
 }
+
+export async function assignMeasurerAndAdvance(montageId: string, measurerId: string) {
+    const user = await requireUser();
+    const montage = await getMontageOrThrow(montageId);
+
+    if (montage.status !== 'new_lead') {
+        throw new Error('Tylko leady mogą być przekazywane do pomiaru.');
+    }
+
+    // Update measurer and status
+    await db.update(montages)
+        .set({
+            measurerId: measurerId,
+            status: 'contact_attempt', // "Do umówienia"
+            updatedAt: new Date(),
+        })
+        .where(eq(montages.id, montageId));
+
+    // Log event
+    const measurer = await db.query.users.findFirst({
+        where: (table, { eq }) => eq(table.id, measurerId),
+    });
+
+    await logSystemEvent(
+        'montage.measurer_assigned',
+        `Zlecono pomiar do: ${measurer?.name || measurerId}`,
+        user.id
+    );
+
+    // Add note
+    await db.insert(montageNotes).values({
+        id: crypto.randomUUID(),
+        montageId: montageId,
+        content: `[System]: Zlecono pomiar do: ${measurer?.name || measurerId}. Oczekuje na kontakt z klientem.`,
+        isInternal: false,
+        createdBy: user.id,
+        createdAt: new Date(),
+    });
+
+    // TODO: Send notification to measurer (if implemented)
+
+    revalidatePath(MONTAGE_DASHBOARD_PATH);
+    revalidatePath(`${MONTAGE_DASHBOARD_PATH}/${montageId}`);
+    return { success: true };
+}

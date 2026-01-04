@@ -111,6 +111,7 @@ export function MontageView({ montageId, initialData, portalEnabled, requireInst
                             <ConvertLeadDialog 
                                 montage={montage} 
                                 requireInstallerForMeasurement={requireInstallerForMeasurement}
+                                measurers={measurers}
                             />
                         </div>
                     </div>

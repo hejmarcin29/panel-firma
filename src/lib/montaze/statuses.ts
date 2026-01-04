@@ -14,7 +14,7 @@ export type MontageStatusDefinition = {
 const DEFAULT_STATUSES: MontageStatusDefinition[] = [
     // 1. LEJKI
     { id: 'new_lead', label: 'Nowe Zgłoszenie', description: 'Wpadło, nikt nie dzwonił.', order: 1, group: 'Lejki', isSystem: true },
-    { id: 'contact_attempt', label: 'Próba Kontaktu', description: 'Dzwoniłem, nie odbiera.', order: 2, group: 'Lejki', isSystem: true },
+    { id: 'contact_attempt', label: 'Do umówienia', description: 'Zlecono pomiar, oczekuje na kontakt z klientem.', order: 2, group: 'Lejki', isSystem: true },
     { id: 'contact_established', label: 'Kontakt Nawiązany', description: 'Rozmawialiśmy, ustalamy co dalej.', order: 3, group: 'Lejki', isSystem: true },
     { id: 'measurement_scheduled', label: 'Pomiar Umówiony', description: 'Jest data w kalendarzu.', order: 4, group: 'Lejki', isSystem: true },
 
