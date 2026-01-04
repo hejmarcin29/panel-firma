@@ -67,7 +67,6 @@ export function SignaturePad({ onSave, className }: SignaturePadProps) {
             } catch (e) {
                 console.warn("Failed to get trimmed canvas, falling back to full canvas", e);
                 // Fallback to full canvas if trimming fails
-                // @ts-expect-error - getCanvas() might not be in type definition but exists on ref
                 const canvas = sigCanvas.current.getCanvas(); 
                 dataUrl = canvas.toDataURL('image/png');
             }
