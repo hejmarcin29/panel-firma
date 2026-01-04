@@ -154,6 +154,7 @@ interface QuotePdfProps {
             address: string | null;
             contactEmail: string | null;
             contactPhone: string | null;
+            isHousingVat?: boolean | null;
         };
         items: QuoteItem[];
         totalNet: number;
@@ -174,65 +175,98 @@ interface QuotePdfProps {
 const HtmlContent = ({ html }: { html: string }) => {
     if (!html) return null;
 
-    // 1. Pre-process: Replace <br> with newlines, handle lists
+    // 1. Pre-process: Replace block tags with newlines
     let processed = html
         .replace(/<br\s*\/?>/gi, '\n')
-        .replace(/<\/p>/gi, '\n\n') // Double newline for paragraphs
+        .replace(/<\/p>/gi, '\n\n')
         .replace(/<\/div>/gi, '\n')
+        .replace(/<h[1-6][^>]*>/gi, '\n\n') // Headers
+        .replace(/<\/h[1-6]>/gi, '\n')
         .replace(/<ul[^>]*>/gi, '\n')
         .replace(/<\/ul>/gi, '\n')
         .replace(/<ol[^>]*>/gi, '\n')
         .replace(/<\/ol>/gi, '\n')
-        .replace(/<li[^>]*>/gi, '• ')     // Bullet points
-        .replace(/<\/li>/gi, '\n');  // Newline after list item
+        .replace(/<li[^>]*>/gi, '• ')
+        .replace(/<\/li>/gi, '\n')
+        .replace(/<tr[^>]*>/gi, '\n') // Simple table handling (rows as lines)
+        .replace(/<\/td>/gi, ' | ')   // Cells separated by pipe
+        .replace(/<\/th>/gi, ' | ');
 
-    // Remove other block tags that we handled via newlines (opening tags)
+    // Remove opening block tags
     processed = processed
         .replace(/<p[^>]*>/gi, '')
-        .replace(/<div[^>]*>/gi, '');
+        .replace(/<div[^>]*>/gi, '')
+        .replace(/<table[^>]*>/gi, '')
+        .replace(/<\/table>/gi, '')
+        .replace(/<tbody[^>]*>/gi, '')
+        .replace(/<\/tbody>/gi, '')
+        .replace(/<thead[^>]*>/gi, '')
+        .replace(/<\/thead>/gi, '')
+        .replace(/<td[^>]*>/gi, '')
+        .replace(/<th[^>]*>/gi, '');
 
-    // Now we have a string with newlines and inline tags (<b>, <strong>).
-    // We can split by newlines to get "lines" or "paragraphs".
+    // Split by newlines
     const paragraphs = processed.split('\n');
 
     return (
         <View>
             {paragraphs.map((paragraph, i) => {
-                // If line is empty, it might be a spacer from double newline
-                if (!paragraph) return <View key={i} style={{ height: 5 }} />;
+                if (!paragraph.trim()) return <View key={i} style={{ height: 4 }} />;
 
-                // Parse inline bold tags
-                // Split by tags, keeping the tags in the array
-                const parts = paragraph.split(/(<\/?(?:b|strong)[^>]*>)/gi);
+                // Split by formatting tags
+                const parts = paragraph.split(/(<\/?(?:b|strong|i|em|u)[^>]*>)/gi);
+                
                 let isBold = false;
+                let isItalic = false;
+                let isUnderline = false;
 
                 return (
                     <Text key={i} style={{ marginBottom: 2, lineHeight: 1.4, fontSize: 9 }}>
                         {parts.map((part, j) => {
-                            if (part.match(/<(?:b|strong)[^>]*>/i)) {
-                                isBold = true;
-                                return null;
-                            }
-                            if (part.match(/<\/(?:b|strong)>/i)) {
-                                isBold = false;
-                                return null;
-                            }
+                            if (part.match(/<(?:b|strong)[^>]*>/i)) { isBold = true; return null; }
+                            if (part.match(/<\/(?:b|strong)>/i)) { isBold = false; return null; }
+                            if (part.match(/<(?:i|em)[^>]*>/i)) { isItalic = true; return null; }
+                            if (part.match(/<\/(?:i|em)>/i)) { isItalic = false; return null; }
+                            if (part.match(/<u[^>]*>/i)) { isUnderline = true; return null; }
+                            if (part.match(/<\/u>/i)) { isUnderline = false; return null; }
                             
-                            // Remove any other remaining tags (like span, i, etc for now)
+                            // Remove any other remaining tags
                             let text = part.replace(/<[^>]+>/g, '');
 
-                            // Decode entities (basic ones)
+                            // Decode entities
                             text = text
                                 .replace(/&nbsp;/g, ' ')
                                 .replace(/&amp;/g, '&')
                                 .replace(/&lt;/g, '<')
                                 .replace(/&gt;/g, '>')
-                                .replace(/&quot;/g, '"');
+                                .replace(/&quot;/g, '"')
+                                .replace(/&oacute;/g, 'ó')
+                                .replace(/&Oacute;/g, 'Ó')
+                                .replace(/&lz;/g, 'ł')
+                                .replace(/&Lz;/g, 'Ł')
+                                .replace(/&zdot;/g, 'ż')
+                                .replace(/&Zdot;/g, 'Ż')
+                                .replace(/&acute;/g, 'ź')
+                                .replace(/&Acute;/g, 'Ź')
+                                .replace(/&cw;/g, 'ć')
+                                .replace(/&Cw;/g, 'Ć')
+                                .replace(/&ew;/g, 'ę')
+                                .replace(/&Ew;/g, 'Ę')
+                                .replace(/&sw;/g, 'ś')
+                                .replace(/&Sw;/g, 'Ś')
+                                .replace(/&aw;/g, 'ą')
+                                .replace(/&Aw;/g, 'Ą')
+                                .replace(/&nw;/g, 'ń')
+                                .replace(/&Nw;/g, 'Ń');
                                 
                             if (!text) return null;
 
                             return (
-                                <Text key={j} style={isBold ? { fontWeight: 700 } : {}}>
+                                <Text key={j} style={{
+                                    fontWeight: isBold ? 700 : 400,
+                                    fontStyle: isItalic ? 'italic' : 'normal',
+                                    textDecoration: isUnderline ? 'underline' : 'none',
+                                }}>
                                     {text}
                                 </Text>
                             );
@@ -248,21 +282,35 @@ const replaceVariables = (text: string, quote: QuotePdfProps['quote'], companyIn
     if (!text) return '';
     let content = text;
     
+    // Housing VAT clause logic (simplified for PDF)
+    const housingVatClause = quote.montage.isHousingVat 
+        ? 'Zamawiający oświadcza, że lokal mieszkalny, w którym wykonywana jest usługa, spełnia warunki art. 41 ust. 12 ustawy o VAT.' 
+        : '';
+
     const replacements: Record<string, string> = {
         '{{klient_nazwa}}': quote.montage.clientName || '',
         '{{klient_adres}}': quote.montage.address || '',
         '{{klient_email}}': quote.montage.contactEmail || '',
         '{{klient_telefon}}': quote.montage.contactPhone || '',
-        '{{oferta_numer}}': quote.number || 'DRAFT',
-        '{{data_wystawienia}}': new Date(quote.createdAt).toLocaleDateString('pl-PL'),
+        '{{numer_wyceny}}': quote.number || 'DRAFT',
+        '{{data_wyceny}}': new Date(quote.createdAt).toLocaleDateString('pl-PL'),
+        '{{kwota_netto}}': formatCurrency(quote.totalNet),
+        '{{kwota_brutto}}': formatCurrency(quote.totalGross),
+        '{{adres_montazu}}': quote.montage.address || '', // Fallback if installationAddress is missing in props
+        '{{data_rozpoczecia}}': 'Do ustalenia', // Not passed in props currently
+        '{{termin_zakonczenia}}': 'Do ustalenia',
+        '{{oswiadczenie_vat}}': housingVatClause,
+        '{{logo_firmy}}': '', // Logo is in header
+        '{{tabela_produktow}}': '', // Table is rendered natively at the top
+        '{{uwagi_wyceny}}': '', // Not passed in props
         '{{firma_nazwa}}': companyInfo.name,
         '{{firma_adres}}': companyInfo.address,
         '{{firma_nip}}': companyInfo.nip,
-        '{{logo_firmy}}': '', // Logo is in header, remove placeholder
+        '{{firma_bank}}': '', // Not passed in props
+        '{{firma_konto}}': '', // Not passed in props
     };
 
     Object.entries(replacements).forEach(([key, value]) => {
-        // Escape special regex chars in key if needed (not needed for {{...}})
         content = content.replace(new RegExp(key, 'g'), value);
     });
 

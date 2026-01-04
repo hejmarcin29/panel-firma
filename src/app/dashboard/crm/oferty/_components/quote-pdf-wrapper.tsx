@@ -16,6 +16,7 @@ interface QuotePdfWrapperProps {
             address: string | null;
             contactEmail: string | null;
             contactPhone: string | null;
+            isHousingVat?: boolean | null;
         };
         items: QuoteItem[];
         totalNet: number;

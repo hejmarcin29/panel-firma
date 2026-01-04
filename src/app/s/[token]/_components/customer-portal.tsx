@@ -62,6 +62,7 @@ interface Montage {
     contactPhone: string | null;
     address: string | null;
     installationAddress: string | null;
+    isHousingVat: boolean | null;
 }
 
 interface Customer {
@@ -129,6 +130,7 @@ export function CustomerPortal({ customer, token, bankAccount, companyInfo }: Cu
             address: activeMontage.installationAddress || activeMontage.address || activeMontage.installationCity || '',
             contactEmail: activeMontage.contactEmail,
             contactPhone: activeMontage.contactPhone,
+            isHousingVat: activeMontage.isHousingVat,
         },
         items: activeQuote.items,
         totalNet: activeQuote.items.reduce((acc, item) => acc + item.priceNet * item.quantity, 0),
