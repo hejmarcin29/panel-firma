@@ -48,7 +48,7 @@ interface InstallerMontageViewProps {
 
 export function InstallerMontageView({ montage, logs, userRoles }: InstallerMontageViewProps) {
     const [activeTab, setActiveTab] = useState("process");
-    // const [defaultOpenModal, setDefaultOpenModal] = useState<'assistant' | 'costEstimation' | undefined>(undefined);
+    const [defaultOpenModal, setDefaultOpenModal] = useState<'assistant' | 'costEstimation' | undefined>(undefined);
 
     // Filter logs to show only current user's actions (or system actions relevant to him)
     // In a real scenario, we'd filter by userId, but for now let's show all to keep context, 
@@ -113,7 +113,10 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
                     
                     {/* TABS NAVIGATION */}
                     <div className="px-2 overflow-x-auto scrollbar-hide md:px-4">
-                        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                        <Tabs value={activeTab} onValueChange={(val) => {
+                            setActiveTab(val);
+                            setDefaultOpenModal(undefined);
+                        }} className="w-full">
                             <TabsList className="w-full justify-start h-12 bg-transparent p-0 md:w-auto md:inline-flex">
                                 <TabsTrigger value="process" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-4">
                                     <CheckSquare className="w-4 h-4 mr-2" />
@@ -254,7 +257,10 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
                                             <p className="text-sm text-muted-foreground">Wprowadź wymiary, wilgotność i zdjęcia.</p>
                                         </div>
                                         <Button 
-                                            onClick={() => setActiveTab('measurement')}
+                                            onClick={() => {
+                                                setActiveTab('measurement');
+                                                setDefaultOpenModal('assistant');
+                                            }}
                                             variant={(!!montage.measurementDate || !!montage.measurementDetails) ? "outline" : "default"}
                                             className={cn(
                                                 (!!montage.measurementDate || !!montage.measurementDetails) 
@@ -334,6 +340,7 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
                         <MontageMeasurementTab 
                             montage={montage} 
                             userRoles={userRoles} 
+                            defaultOpenModal={defaultOpenModal}
                         />
                     </div>
                 )}

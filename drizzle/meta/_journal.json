@@ -372,6 +372,13 @@
       "when": 1767467997996,
       "tag": "0052_natural_clint_barton",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1767537726137,
+      "tag": "0053_salty_hex",
+      "breakpoints": true
     }
   ]
 }
