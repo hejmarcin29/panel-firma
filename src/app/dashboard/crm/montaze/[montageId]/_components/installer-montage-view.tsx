@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
-import { updateMontageStatus, updateMontageMeasurementDate } from "../actions";
+import { updateMontageStatus, updateMontageMeasurementDate } from "../../actions";
 import { toast } from "sonner";
 
 import { MontageNotesTab } from "./montage-notes-tab";
