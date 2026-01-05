@@ -34,13 +34,14 @@ interface Payment {
     id: string;
     type: 'advance' | 'final' | 'other';
     name: string;
-    amount: number;
+    amount: string;
     status: 'pending' | 'paid';
     invoiceNumber: string;
     proformaUrl: string | null;
     invoiceUrl: string | null;
     dueDate: Date | null;
     paidAt: Date | null;
+    createdAt: Date;
 }
 
 interface Quote {
@@ -89,17 +90,6 @@ interface Montage {
     billingAddress: string | null;
     billingCity: string | null;
     billingPostalCode: string | null;
-    payments: {
-        id: string;
-        name: string;
-        amount: string;
-        status: 'pending' | 'paid';
-        invoiceNumber: string;
-        proformaUrl: string | null;
-        invoiceUrl: string | null;
-        paidAt: Date | null;
-        createdAt: Date;
-    }[];
 }
 
 interface Customer {
