@@ -7,10 +7,11 @@ import type { Montage, MontageAttachment } from "../../types";
 interface DocumentSlotProps {
     title: string;
     description: string;
+    missingLabel?: string;
     existingAttachment?: MontageAttachment;
 }
 
-function DocumentSlot({ title, description, existingAttachment }: DocumentSlotProps) {
+function DocumentSlot({ title, description, missingLabel, existingAttachment }: DocumentSlotProps) {
     return (
         <Card className={existingAttachment ? "border-green-500/50 bg-green-500/5" : ""}>
             <CardHeader className="pb-2">
@@ -35,7 +36,7 @@ function DocumentSlot({ title, description, existingAttachment }: DocumentSlotPr
                     </div>
                 )}
                 <p className="text-xs text-muted-foreground mt-2">
-                    {existingAttachment ? description : "Dodaj ten dokument w zakładce Płatności."}
+                    {existingAttachment ? description : (missingLabel || "Dodaj ten dokument w zakładce Płatności.")}
                 </p>
             </CardContent>
         </Card>
@@ -45,27 +46,45 @@ function DocumentSlot({ title, description, existingAttachment }: DocumentSlotPr
 export function MontageDocumentSlots({ montage }: { montage: Montage }) {
     const attachments = montage.attachments || [];
     
+    const contract = attachments.find(a => a.type === 'contract' || a.title?.toLowerCase().includes('umowa'));
     const proforma = attachments.find(a => a.type === 'proforma');
     const advance = attachments.find(a => a.type === 'invoice_advance');
+    const protocol = attachments.find(a => a.type === 'protocol' || a.title?.toLowerCase().includes('protokół'));
     const final = attachments.find(a => a.type === 'invoice_final');
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <DocumentSlot 
-                title="Faktura Proforma" 
-                description="Wymagana do akceptacji oferty (opcjonalnie)."
-                existingAttachment={proforma}
-            />
-            <DocumentSlot 
-                title="Faktura Zaliczkowa" 
-                description="Wymagana do statusu 'Zaliczka Opłacona'."
-                existingAttachment={advance}
-            />
-            <DocumentSlot 
-                title="Faktura Końcowa" 
-                description="Wymagana do zakończenia montażu."
-                existingAttachment={final}
-            />
+        <div className="space-y-4 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <DocumentSlot 
+                    title="Umowa" 
+                    description="Podpisana umowa z klientem."
+                    missingLabel="Umowa generowana jest po akceptacji oferty."
+                    existingAttachment={contract}
+                />
+                <DocumentSlot 
+                    title="Faktura Proforma" 
+                    description="Wymagana do akceptacji oferty (opcjonalnie)."
+                    existingAttachment={proforma}
+                />
+                <DocumentSlot 
+                    title="Faktura Zaliczkowa" 
+                    description="Wymagana do statusu 'Zaliczka Opłacona'."
+                    existingAttachment={advance}
+                />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <DocumentSlot 
+                    title="Protokół Odbioru" 
+                    description="Potwierdzenie wykonania prac."
+                    missingLabel="Wygeneruj protokół w zakładce Oferty."
+                    existingAttachment={protocol}
+                />
+                <DocumentSlot 
+                    title="Faktura Końcowa" 
+                    description="Wymagana do zakończenia montażu."
+                    existingAttachment={final}
+                />
+            </div>
         </div>
     );
 }

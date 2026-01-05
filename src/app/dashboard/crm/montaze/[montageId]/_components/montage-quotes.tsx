@@ -2,11 +2,12 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Plus, FileText } from 'lucide-react';
+import { Plus, FileText, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { createQuote } from '@/app/dashboard/crm/oferty/actions';
+import { deleteMontageAttachment } from '../../actions';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import type { Montage } from '../../types';
@@ -30,6 +31,20 @@ export function MontageQuotes({ montageId, quotes, montage, userRoles }: { monta
         ? acceptedQuote.items.some(i => i.vatRate === 8) 
         : true;
 
+    const protocols = montage.attachments?.filter(a => a.type === 'protocol' || a.title?.includes('Protokół Odbioru')) || [];
+
+    const handleDeleteProtocol = async (id: string) => {
+        if (confirm('Czy na pewno chcesz usunąć ten protokół?')) {
+            try {
+                await deleteMontageAttachment(id);
+                toast.success('Protokół usunięty');
+                router.refresh();
+            } catch {
+                toast.error('Błąd usuwania protokołu');
+            }
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -51,6 +66,41 @@ export function MontageQuotes({ montageId, quotes, montage, userRoles }: { monta
                     </Button>
                 </div>
             </div>
+
+            {protocols.length > 0 && (
+                <div className="space-y-4">
+                    <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Podpisane Protokoły</h4>
+                    <div className="grid gap-4">
+                        {protocols.map(protocol => (
+                            <Card key={protocol.id}>
+                                <CardContent className="p-6 flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="p-2 bg-green-100 rounded-full">
+                                            <FileText className="w-6 h-6 text-green-600" />
+                                        </div>
+                                        <div>
+                                            <div className="font-medium">{protocol.title || 'Protokół Odbioru'}</div>
+                                            <div className="text-sm text-muted-foreground">
+                                                {new Date(protocol.createdAt).toLocaleDateString('pl-PL')}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Button variant="outline" size="sm" asChild>
+                                            <a href={protocol.url} target="_blank" rel="noopener noreferrer">
+                                                Pobierz
+                                            </a>
+                                        </Button>
+                                        <Button variant="ghost" size="icon" onClick={() => handleDeleteProtocol(protocol.id)}>
+                                            <Trash2 className="w-4 h-4 text-destructive" />
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             <div className="grid gap-4">
                 {quotes.map((quote) => (

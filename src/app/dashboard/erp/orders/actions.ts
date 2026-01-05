@@ -8,10 +8,8 @@ import {
     purchaseOrderItems, 
     erpSuppliers, 
     quotes, 
-    quoteItems,
-    users
 } from '@/lib/db/schema';
-import { eq, and, inArray, desc, isNull } from 'drizzle-orm';
+import { eq, and, inArray, desc } from 'drizzle-orm';
 import { requireUser } from '@/lib/auth/session';
 import { randomUUID } from 'crypto';
 

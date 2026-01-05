@@ -2626,3 +2626,10 @@ export async function assignMeasurerAndAdvance(montageId: string, measurerId: st
     revalidatePath(`${MONTAGE_DASHBOARD_PATH}/${montageId}`);
     return { success: true };
 }
+
+export async function deleteMontageAttachment(attachmentId: string) {
+    await requireUser();
+    
+    await db.delete(montageAttachments).where(eq(montageAttachments.id, attachmentId));
+    revalidatePath(MONTAGE_DASHBOARD_PATH);
+}

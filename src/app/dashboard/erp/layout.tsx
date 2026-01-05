@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Package, Users, Warehouse, ArrowLeftRight, FileText } from 'lucide-react';
+import { Package, Users, Warehouse, FileText } from 'lucide-react';
 
 export default function ERPLayout({ children }: { children: ReactNode }) {
     return (

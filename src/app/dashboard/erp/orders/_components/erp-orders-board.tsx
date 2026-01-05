@@ -20,12 +20,51 @@ import { createPurchaseOrder, receivePurchaseOrder, issueMaterialsToCrew } from 
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 
+interface MontageToOrder {
+    id: string;
+    clientName: string;
+    createdAt: Date;
+    floorArea: number | null;
+    quotes: {
+        items: {
+            name: string;
+        }[];
+    }[];
+}
+
+interface OrderInTransit {
+    id: string;
+    orderDate: Date | null;
+    supplier: {
+        name: string;
+    } | null;
+    items: {
+        montage: {
+            clientName: string;
+        } | null;
+    }[];
+}
+
+interface MontageReady {
+    id: string;
+    clientName: string;
+    installationAddress: string | null;
+    installer: {
+        name: string;
+    } | null;
+}
+
+interface Supplier {
+    id: string;
+    name: string;
+}
+
 interface ERPOrdersBoardProps {
     data: {
-        toOrder: any[];
-        inTransit: any[];
-        ready: any[];
-        suppliers: any[];
+        toOrder: MontageToOrder[];
+        inTransit: OrderInTransit[];
+        ready: MontageReady[];
+        suppliers: Supplier[];
     };
 }
 
@@ -60,7 +99,7 @@ export function ERPOrdersBoard({ data }: ERPOrdersBoardProps) {
                 } else {
                     toast.error("Błąd: " + result.error);
                 }
-            } catch (e) {
+            } catch {
                 toast.error("Wystąpił błąd");
             }
         });
@@ -71,7 +110,7 @@ export function ERPOrdersBoard({ data }: ERPOrdersBoardProps) {
             try {
                 await receivePurchaseOrder(poId);
                 toast.success("Dostawa przyjęta na stan!");
-            } catch (e) {
+            } catch {
                 toast.error("Wystąpił błąd");
             }
         });
@@ -82,7 +121,7 @@ export function ERPOrdersBoard({ data }: ERPOrdersBoardProps) {
             try {
                 await issueMaterialsToCrew(montageId);
                 toast.success("Materiały wydane ekipie!");
-            } catch (e) {
+            } catch {
                 toast.error("Wystąpił błąd");
             }
         });
@@ -114,7 +153,7 @@ export function ERPOrdersBoard({ data }: ERPOrdersBoardProps) {
                                     <SelectValue placeholder="Wybierz..." />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {data.suppliers.map((s: any) => (
+                                    {data.suppliers.map((s) => (
                                         <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                                     ))}
                                 </SelectContent>
@@ -132,7 +171,7 @@ export function ERPOrdersBoard({ data }: ERPOrdersBoardProps) {
 
                     <ScrollArea className="flex-1 -mx-4 px-4">
                         <div className="space-y-3 pb-4">
-                            {data.toOrder.map((montage: any) => (
+                            {data.toOrder.map((montage) => (
                                 <div key={montage.id} className="bg-white p-3 rounded-md border shadow-sm hover:shadow-md transition-shadow">
                                     <div className="flex items-start gap-3">
                                         <Checkbox 
@@ -148,7 +187,7 @@ export function ERPOrdersBoard({ data }: ERPOrdersBoardProps) {
                                                 </span>
                                             </div>
                                             <p className="text-xs text-muted-foreground line-clamp-2">
-                                                {montage.quotes?.[0]?.items?.map((i: any) => i.name).join(', ') || "Brak szczegółów produktu"}
+                                                {montage.quotes?.[0]?.items?.map((i) => i.name).join(', ') || "Brak szczegółów produktu"}
                                             </p>
                                             <div className="pt-1 flex gap-2">
                                                 <Badge variant="outline" className="text-[10px] h-5">
@@ -186,13 +225,13 @@ export function ERPOrdersBoard({ data }: ERPOrdersBoardProps) {
                 <CardContent className="flex-1 min-h-0">
                     <ScrollArea className="h-full -mx-4 px-4">
                         <div className="space-y-3 pb-4">
-                            {data.inTransit.map((po: any) => (
+                            {data.inTransit.map((po) => (
                                 <div key={po.id} className="bg-white p-3 rounded-md border shadow-sm hover:shadow-md transition-shadow space-y-3">
                                     <div className="flex justify-between items-start">
                                         <div>
                                             <h4 className="font-medium text-sm">{po.supplier?.name || "Nieznany dostawca"}</h4>
                                             <p className="text-xs text-muted-foreground">
-                                                Zamówiono: {format(new Date(po.orderDate), 'dd.MM.yyyy', { locale: pl })}
+                                                Zamówiono: {po.orderDate ? format(new Date(po.orderDate), 'dd.MM.yyyy', { locale: pl }) : '-'}
                                             </p>
                                         </div>
                                         <Badge variant="secondary" className="text-[10px]">PO #{po.id.slice(0,4)}</Badge>
@@ -203,7 +242,7 @@ export function ERPOrdersBoard({ data }: ERPOrdersBoardProps) {
                                     <div className="space-y-1">
                                         <p className="text-xs font-medium text-muted-foreground">Zawiera materiały dla:</p>
                                         <ul className="text-xs space-y-1">
-                                            {[...new Set(po.items.map((i: any) => i.montage?.clientName).filter(Boolean))].map((name: any, idx) => (
+                                            {[...new Set(po.items.map((i) => i.montage?.clientName).filter(Boolean))].map((name, idx) => (
                                                 <li key={idx} className="flex items-center gap-1">
                                                     <span className="w-1 h-1 rounded-full bg-blue-400" />
                                                     {name}
@@ -251,7 +290,7 @@ export function ERPOrdersBoard({ data }: ERPOrdersBoardProps) {
                 <CardContent className="flex-1 min-h-0">
                     <ScrollArea className="h-full -mx-4 px-4">
                         <div className="space-y-3 pb-4">
-                            {data.ready.map((montage: any) => (
+                            {data.ready.map((montage) => (
                                 <div key={montage.id} className="bg-white p-3 rounded-md border shadow-sm hover:shadow-md transition-shadow space-y-3">
                                     <div className="flex justify-between items-start">
                                         <div>

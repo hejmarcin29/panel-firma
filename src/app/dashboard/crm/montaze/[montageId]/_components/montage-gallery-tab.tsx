@@ -1,6 +1,6 @@
 "use client";
 
-import { FileIcon, ExternalLink, Upload, Plus } from "lucide-react";
+import { FileIcon, ExternalLink, Upload, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useTransition, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { addMontageAttachment } from "../../actions";
+import { addMontageAttachment, deleteMontageAttachment } from "../../actions";
 import type { Montage } from "../../types";
 import { MontageCategories, MontageSubCategories } from "@/lib/r2/constants";
 import { MontageDocumentSlots } from "./montage-document-slots";
@@ -120,6 +120,23 @@ export function MontageGalleryTab({ montage, userRoles = [] }: { montage: Montag
                             return (
                                 <Card key={attachment.id} className="overflow-hidden group relative aspect-[0.75]">
                                     <div className="flex h-full w-full flex-col items-center justify-center bg-muted p-4 text-center hover:bg-muted/80 transition-colors">
+                                        <Button
+                                            variant="destructive"
+                                            size="icon"
+                                            className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                if (confirm('Czy na pewno chcesz usunąć ten plik?')) {
+                                                    startTransition(async () => {
+                                                        await deleteMontageAttachment(attachment.id);
+                                                        router.refresh();
+                                                    });
+                                                }
+                                            }}
+                                        >
+                                            <Trash2 className="h-3 w-3" />
+                                        </Button>
                                         <FileIcon className="mb-3 h-10 w-10 text-muted-foreground" />
                                         <p className="line-clamp-2 text-xs font-medium">
                                             {attachment.title || "Dokument"}
@@ -152,6 +169,23 @@ export function MontageGalleryTab({ montage, userRoles = [] }: { montage: Montag
                         return (
                             <Card key={attachment.id} className="overflow-hidden group relative aspect-square">
                                 <div className="relative h-full w-full">
+                                    <Button
+                                        variant="destructive"
+                                        size="icon"
+                                        className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            if (confirm('Czy na pewno chcesz usunąć to zdjęcie?')) {
+                                                startTransition(async () => {
+                                                    await deleteMontageAttachment(attachment.id);
+                                                    router.refresh();
+                                                });
+                                            }
+                                        }}
+                                    >
+                                        <Trash2 className="h-3 w-3" />
+                                    </Button>
                                     <Image
                                         src={attachment.url}
                                         alt={attachment.title || "Załącznik"}

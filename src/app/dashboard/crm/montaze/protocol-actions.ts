@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
-import { montages, montageChecklistItems } from '@/lib/db/schema';
+import { montages, montageChecklistItems, montageAttachments } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { createR2Client } from '@/lib/r2/client';
@@ -13,6 +13,8 @@ import { ProtocolDocument } from '@/components/documents/protocol-pdf';
 import { format } from 'date-fns';
 import { isSystemAutomationEnabled } from '@/lib/montaze/automation';
 import { toggleMontageChecklistItem } from './actions';
+import { randomUUID } from 'crypto';
+import { requireUser } from '@/lib/auth/session';
 // import { sendEmail } from '@/lib/email'; // Placeholder if email exists
 
 export async function uploadSignature(montageId: string, base64Data: string, type: 'client' | 'installer') {
@@ -62,6 +64,7 @@ export async function submitMontageProtocol(data: {
     installerName: string;
 }) {
     try {
+        const user = await requireUser();
         const isAutoStatusEnabled = await isSystemAutomationEnabled('auto_status_protocol');
 
         // Check current status to avoid regression if already completed
@@ -124,6 +127,17 @@ export async function submitMontageProtocol(data: {
         }));
 
         const pdfUrl = `${config.publicBaseUrl}/${pdfKey}`;
+
+        // Insert into montageAttachments
+        await db.insert(montageAttachments).values({
+            id: randomUUID(),
+            montageId: data.montageId,
+            title: `Protokół Odbioru ${format(new Date(), 'dd.MM.yyyy')}`,
+            url: pdfUrl,
+            type: 'protocol',
+            uploadedBy: user.id,
+            createdAt: new Date(),
+        });
 
         // 3. Update Checklist (Auto-check "protocol_signed")
         // Find the checklist item with templateId 'protocol_signed'

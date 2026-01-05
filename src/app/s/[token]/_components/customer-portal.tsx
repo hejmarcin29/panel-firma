@@ -1,11 +1,10 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, Calendar, Image as ImageIcon, Ruler, Calculator, Check, Mail, Banknote, AlertCircle } from 'lucide-react';
+import { FileText, Calendar, Image as ImageIcon, Ruler, Calculator, Check, Mail, AlertCircle } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { signQuote, sendQuoteEmailToCustomer, saveSignedContract } from '../actions';
