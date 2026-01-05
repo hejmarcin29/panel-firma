@@ -10,15 +10,9 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, MoreHorizontal } from "lucide-react";
-import Link from "next/link";
+import { Edit } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { SupplierSheet } from "./supplier-sheet";
 
 interface Supplier {
     id: string;
@@ -27,6 +21,13 @@ interface Supplier {
     email: string | null;
     phone: string | null;
     status: string | null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    address?: any;
+    nip?: string | null;
+    website?: string | null;
+    bankAccount?: string | null;
+    paymentTerms?: number | null;
+    description?: string | null;
 }
 
 interface SuppliersTableProps {
@@ -69,11 +70,14 @@ export function SuppliersTable({ data }: SuppliersTableProps) {
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <Link href={`/dashboard/erp/suppliers/${supplier.id}`}>
-                                            <Button variant="ghost" size="icon">
-                                                <Edit className="h-4 w-4" />
-                                            </Button>
-                                        </Link>
+                                        <SupplierSheet 
+                                            supplier={supplier}
+                                            trigger={
+                                                <Button variant="ghost" size="icon">
+                                                    <Edit className="h-4 w-4" />
+                                                </Button>
+                                            }
+                                        />
                                     </TableCell>
                                 </TableRow>
                             ))
@@ -100,20 +104,14 @@ export function SuppliersTable({ data }: SuppliersTableProps) {
                                         {supplier.name}
                                     </p>
                                 </div>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
+                                <SupplierSheet 
+                                    supplier={supplier}
+                                    trigger={
                                         <Button variant="ghost" size="icon" className="-mr-2 h-8 w-8">
-                                            <MoreHorizontal className="h-4 w-4" />
+                                            <Edit className="h-4 w-4" />
                                         </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <Link href={`/dashboard/erp/suppliers/${supplier.id}`}>
-                                            <DropdownMenuItem>
-                                                Edytuj
-                                            </DropdownMenuItem>
-                                        </Link>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                    }
+                                />
                             </CardHeader>
                             <CardContent>
                                 <div className="flex flex-col gap-2 text-sm">

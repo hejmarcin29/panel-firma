@@ -340,16 +340,6 @@ export async function markPaymentAsPaid(paymentId: string, data: {
             await db.update(montages)
                 .set({ status: 'deposit_paid' })
                 .where(eq(montages.id, payment.montageId));
-                
-            if (!data.invoiceUrl) {
-                 await db.insert(montageTasks).values({
-                    id: randomUUID(),
-                    montageId: payment.montageId,
-                    title: `Wystaw Fakturę Zaliczkową do płatności: ${payment.name}`,
-                    completed: false,
-                    orderIndex: 0,
-                });
-            }
         }
     }
 

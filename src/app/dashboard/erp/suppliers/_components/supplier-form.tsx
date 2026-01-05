@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { createSupplier } from "../actions";
+import { createSupplier, updateSupplier } from "../actions";
 import { toast } from "sonner";
 
 const formSchema = z.object({
@@ -37,29 +37,49 @@ const formSchema = z.object({
 
 interface SupplierFormProps {
     onSuccess?: () => void;
+    initialData?: any;
 }
 
-export function SupplierForm({ onSuccess }: SupplierFormProps) {
+export function SupplierForm({ onSuccess, initialData }: SupplierFormProps) {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            name: "",
-            paymentTerms: "14",
-            country: "Polska",
+            name: initialData?.name || "",
+            shortName: initialData?.shortName || "",
+            nip: initialData?.nip || "",
+            email: initialData?.email || "",
+            phone: initialData?.phone || "",
+            website: initialData?.website || "",
+            bankAccount: initialData?.bankAccount || "",
+            paymentTerms: initialData?.paymentTerms?.toString() || "14",
+            description: initialData?.description || "",
+            street: initialData?.address?.street || "",
+            city: initialData?.address?.city || "",
+            zip: initialData?.address?.zip || "",
+            country: initialData?.address?.country || "Polska",
         },
     });
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setIsLoading(true);
         try {
-            await createSupplier({
-                ...values,
-                paymentTerms: parseInt(values.paymentTerms),
-            });
-            toast.success("Dostawca utworzony");
+            if (initialData) {
+                await updateSupplier(initialData.id, {
+                    ...values,
+                    paymentTerms: parseInt(values.paymentTerms),
+                });
+                toast.success("Dostawca zaktualizowany");
+            } else {
+                await createSupplier({
+                    ...values,
+                    paymentTerms: parseInt(values.paymentTerms),
+                });
+                toast.success("Dostawca utworzony");
+            }
+            
             if (onSuccess) {
                 onSuccess();
             } else {
@@ -67,7 +87,7 @@ export function SupplierForm({ onSuccess }: SupplierFormProps) {
             }
             router.refresh();
         } catch (error) {
-            toast.error("Błąd podczas tworzenia dostawcy");
+            toast.error("Błąd podczas zapisu dostawcy");
             console.error(error);
         } finally {
             setIsLoading(false);

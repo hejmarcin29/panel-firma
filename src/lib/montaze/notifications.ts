@@ -59,14 +59,6 @@ export const SYSTEM_NOTIFICATIONS: SystemNotificationDefinition[] = [
         locked: true
     },
     {
-        id: 'commission_architect',
-        type: 'system',
-        trigger: 'Zmiana statusu na "Zakończono" (jeśli jest architekt)',
-        action: '(Planowane) Nalicza prowizję dla architekta',
-        recipient: 'Portfel Architekta',
-        defaultEnabled: false
-    },
-    {
         id: 'quote_signed',
         type: 'system',
         trigger: 'Podpisanie wyceny przez klienta (Portal)',
@@ -235,14 +227,6 @@ export const SYSTEM_NOTIFICATIONS: SystemNotificationDefinition[] = [
         trigger: 'Zmiana statusu na "Formalności"',
         action: 'Wysyła link do umowy i zaliczki',
         recipient: 'Klient',
-        defaultEnabled: true
-    },
-    {
-        id: 'generate_supplier_order',
-        type: 'system',
-        trigger: 'Zatwierdzenie listy materiałów',
-        action: 'Generuje zamówienie PDF do dostawcy',
-        recipient: 'System / Dostawca',
         defaultEnabled: true
     },
     {

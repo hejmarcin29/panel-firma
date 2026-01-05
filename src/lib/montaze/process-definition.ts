@@ -27,7 +27,17 @@ export type ProcessStepDefinition = {
 
 export const PROCESS_STEPS: ProcessStepDefinition[] = [
     // 1. LEJKI
-    { id: 'new_lead', label: 'Nowe Zgłoszenie', description: 'Wpadło, nikt nie dzwonił.', relatedStatuses: ['new_lead'], actor: 'office', automations: [], checkpoints: [] },
+    { 
+        id: 'new_lead', 
+        label: 'Nowe Zgłoszenie', 
+        description: 'Wpadło, nikt nie dzwonił.', 
+        relatedStatuses: ['new_lead'], 
+        actor: 'office', 
+        automations: [
+            { id: 'auto_lead_notification', label: 'Powiadomienie Biura', description: 'Email/SMS do biura o nowym leadzie', trigger: 'Nowy rekord' }
+        ], 
+        checkpoints: [] 
+    },
     { id: 'contact_attempt', label: 'Do umówienia', description: 'Oczekiwanie na kontakt telefoniczny i ustalenie terminu.', relatedStatuses: ['contact_attempt'], actor: 'installer', automations: [], checkpoints: [] },
     { id: 'contact_established', label: 'Kontakt Nawiązany', description: 'Rozmawialiśmy, ustalamy co dalej.', relatedStatuses: ['contact_established'], actor: 'office', automations: [], checkpoints: [] },
     { 
@@ -36,7 +46,10 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
         description: 'Jest data w kalendarzu.', 
         relatedStatuses: ['measurement_scheduled'], 
         actor: 'office', 
-        automations: [], 
+        automations: [
+            { id: 'auto_calendar_sync', label: 'Synchronizacja Kalendarza', description: 'Dodanie wydarzenia do Google Calendar', trigger: 'Zapisanie daty' },
+            { id: 'auto_sms_reminder', label: 'Przypomnienie SMS', description: 'Wysłanie SMS do klienta 24h przed', trigger: 'Cron 24h przed' }
+        ], 
         checkpoints: [
             { key: 'measurement_data', label: 'Dane pomiarowe', condition: (m) => !!m.measurementDate || !!m.measurementDetails },
             { key: 'labor_cost', label: 'Kosztorys robocizny', condition: (m) => !!m.costEstimationCompletedAt }
@@ -92,24 +105,96 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
     },
 
     // 3. FORMALNOŚCI
-    { id: 'contract_signed', label: 'Umowa Podpisana', description: 'Jest podpis na umowie.', relatedStatuses: ['contract_signed'], actor: 'office', automations: [], checkpoints: [] },
+    { 
+        id: 'contract_signed', 
+        label: 'Umowa Podpisana', 
+        description: 'Jest podpis na umowie.', 
+        relatedStatuses: ['contract_signed'], 
+        actor: 'office', 
+        automations: [
+            { id: 'auto_proforma', label: 'Generowanie Proformy', description: 'Utworzenie faktury zaliczkowej', trigger: 'Zmiana statusu' }
+        ], 
+        checkpoints: [] 
+    },
     { id: 'waiting_for_deposit', label: 'Oczekiwanie na Zaliczkę', description: 'Faktura zaliczkowa wysłana.', relatedStatuses: ['waiting_for_deposit'], actor: 'office', automations: [], checkpoints: [] },
-    { id: 'deposit_paid', label: 'Zaliczka Opłacona', description: 'Kasa na koncie -> Startujemy.', relatedStatuses: ['deposit_paid'], actor: 'office', automations: [], checkpoints: [], requiredDocuments: ['invoice_advance'] },
+    { 
+        id: 'deposit_paid', 
+        label: 'Zaliczka Opłacona', 
+        description: 'Kasa na koncie -> Startujemy.', 
+        relatedStatuses: ['deposit_paid'], 
+        actor: 'office', 
+        automations: [
+            { id: 'auto_erp_order', label: 'Zapotrzebowanie ERP', description: 'Utworzenie draftu zamówienia do dostawcy', trigger: 'Zaksięgowanie wpłaty' }
+        ], 
+        checkpoints: [], 
+        requiredDocuments: ['invoice_advance'] 
+    },
 
     // 4. LOGISTYKA
-    { id: 'materials_ordered', label: 'Materiały Zamówione', description: 'Poszło zamówienie do producenta.', relatedStatuses: ['materials_ordered'], actor: 'office', automations: [], checkpoints: [] },
-    { id: 'materials_pickup_ready', label: 'Gotowe do Odbioru', description: 'Towar czeka w magazynie/hurtowni.', relatedStatuses: ['materials_pickup_ready'], actor: 'office', automations: [], checkpoints: [] },
-    { id: 'installation_scheduled', label: 'Montaż Zaplanowany', description: 'Ekipa ma termin startu.', relatedStatuses: ['installation_scheduled'], actor: 'office', automations: [], checkpoints: [] },
+    { 
+        id: 'materials_ordered', 
+        label: 'Materiały Zamówione', 
+        description: 'Poszło zamówienie do producenta.', 
+        relatedStatuses: ['materials_ordered'], 
+        actor: 'office', 
+        automations: [
+            { id: 'auto_supplier_mail', label: 'Mail do Dostawcy', description: 'Wysłanie zamówienia PDF', trigger: 'Zatwierdzenie zamówienia' }
+        ], 
+        checkpoints: [] 
+    },
+    { 
+        id: 'materials_pickup_ready', 
+        label: 'Gotowe do Odbioru', 
+        description: 'Towar czeka w magazynie/hurtowni.', 
+        relatedStatuses: ['materials_pickup_ready'], 
+        actor: 'office', 
+        automations: [
+            { id: 'auto_pickup_notification', label: 'Powiadomienie o Odbiorze', description: 'SMS/Mail do klienta lub montażysty', trigger: 'Zmiana statusu magazynowego' }
+        ], 
+        checkpoints: [] 
+    },
+    { 
+        id: 'installation_scheduled', 
+        label: 'Montaż Zaplanowany', 
+        description: 'Ekipa ma termin startu.', 
+        relatedStatuses: ['installation_scheduled'], 
+        actor: 'office', 
+        automations: [
+            { id: 'auto_installation_reminder', label: 'Przypomnienie o Montażu', description: 'SMS do klienta 48h przed startem', trigger: 'Cron 48h przed' }
+        ], 
+        checkpoints: [] 
+    },
     { id: 'materials_delivered', label: 'Materiały u Klienta', description: 'Towar dostarczony na budowę.', relatedStatuses: ['materials_delivered'], actor: 'office', automations: [], checkpoints: [] },
 
     // 5. REALIZACJA
     { id: 'installation_in_progress', label: 'Montaż w Toku', description: 'Prace trwają.', relatedStatuses: ['installation_in_progress'], actor: 'installer', automations: [], checkpoints: [] },
-    { id: 'protocol_signed', label: 'Protokół Podpisany', description: 'Koniec prac, odbiór techniczny.', relatedStatuses: ['protocol_signed'], actor: 'installer', automations: [], checkpoints: [] },
+    { 
+        id: 'protocol_signed', 
+        label: 'Protokół Podpisany', 
+        description: 'Koniec prac, odbiór techniczny.', 
+        relatedStatuses: ['protocol_signed'], 
+        actor: 'installer', 
+        automations: [
+            { id: 'auto_final_invoice', label: 'Faktura Końcowa', description: 'Generowanie draftu faktury końcowej', trigger: 'Podpis protokołu' }
+        ], 
+        checkpoints: [] 
+    },
 
     // 6. FINISZ
     { id: 'final_invoice_issued', label: 'Faktura Końcowa', description: 'Wystawiona, wysłana.', relatedStatuses: ['final_invoice_issued'], actor: 'office', automations: [], checkpoints: [] },
     { id: 'final_settlement', label: 'Rozliczenie Końcowe', description: 'Czekamy na dopłatę.', relatedStatuses: ['final_settlement'], actor: 'office', automations: [], checkpoints: [] },
-    { id: 'completed', label: 'Zakończone', description: 'Wszystko na czysto, archiwum.', relatedStatuses: ['completed'], actor: 'system', automations: [], checkpoints: [], requiredDocuments: ['invoice_final'] },
+    { 
+        id: 'completed', 
+        label: 'Zakończone', 
+        description: 'Wszystko na czysto, archiwum.', 
+        relatedStatuses: ['completed'], 
+        actor: 'system', 
+        automations: [
+            { id: 'auto_review_request', label: 'Prośba o Opinię', description: 'Mail z linkiem do Google Maps', trigger: 'Zamknięcie zlecenia' }
+        ], 
+        checkpoints: [], 
+        requiredDocuments: ['invoice_final'] 
+    },
 
     // 7. STANY SPECJALNE
     { id: 'on_hold', label: 'Wstrzymane', description: 'Klient buduje dom, wróci za pół roku.', relatedStatuses: ['on_hold'], actor: 'system', automations: [], checkpoints: [] },

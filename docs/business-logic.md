@@ -63,3 +63,29 @@ System obsługuje dwa tryby dostawy materiałów, definiowane przez montażystę
 - **Stan Potwierdzenia:** Po wybraniu daty, montażysta widzi "Kartę Oczekiwania" z odliczaniem dni i instrukcją "Co dalej".
 - **Integracja Kalendarza:** System generuje linki do Google Calendar.
 - **Oś Czasu:** Wizualizacja zaplanowanego terminu na osi czasu procesu.
+
+## 6. Automatyzacje w Procesie (Process Hub)
+
+Zdefiniowane automatyzacje widoczne na osi czasu procesu:
+
+### Lejki i Umawianie
+- **Nowe Zgłoszenie:** Powiadomienie Biura (Email/SMS) o nowym leadzie.
+- **Pomiar Umówiony:**
+  - Synchronizacja Kalendarza (Google Calendar).
+  - Przypomnienie SMS dla klienta (24h przed).
+
+### Wycena i Umowa
+- **Po Pomiarze:** Start Wyceny (zmiana statusu po utworzeniu oferty).
+- **Wycena w Toku:** Wysłanie Oferty (zmiana statusu po wysłaniu maila).
+- **Podpis Klienta:** Automatyczna zmiana statusu na "Umowa Podpisana" po podpisie w panelu.
+- **Umowa Podpisana:** Generowanie Proformy (faktura zaliczkowa).
+
+### Realizacja i Logistyka
+- **Zaliczka Opłacona:** Zapotrzebowanie ERP (utworzenie draftu zamówienia do dostawcy).
+- **Materiały Zamówione:** Mail do Dostawcy (wysłanie zamówienia PDF).
+- **Gotowe do Odbioru:** Powiadomienie o Odbiorze (SMS/Mail do klienta/montażysty).
+- **Montaż Zaplanowany:** Przypomnienie o Montażu (SMS do klienta 48h przed).
+
+### Finisz
+- **Protokół Podpisany:** Generowanie draftu Faktury Końcowej.
+- **Zakończone:** Prośba o Opinię (Mail z linkiem do Google Maps).

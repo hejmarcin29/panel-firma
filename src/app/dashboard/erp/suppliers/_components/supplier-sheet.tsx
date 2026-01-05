@@ -13,26 +13,33 @@ import { Plus } from "lucide-react";
 import { SupplierForm } from "./supplier-form";
 import { useState } from "react";
 
-export function SupplierSheet() {
+interface SupplierSheetProps {
+    supplier?: any;
+    trigger?: React.ReactNode;
+}
+
+export function SupplierSheet({ supplier, trigger }: SupplierSheetProps) {
     const [open, setOpen] = useState(false);
 
     return (
         <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
-                <Button>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Dodaj Dostawcę
-                </Button>
+                {trigger || (
+                    <Button>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Dodaj Dostawcę
+                    </Button>
+                )}
             </SheetTrigger>
             <SheetContent className="sm:max-w-[600px] overflow-y-auto">
                 <SheetHeader>
-                    <SheetTitle>Nowy Dostawca</SheetTitle>
+                    <SheetTitle>{supplier ? "Edytuj Dostawcę" : "Nowy Dostawca"}</SheetTitle>
                     <SheetDescription>
-                        Dodaj nowego dostawcę do bazy.
+                        {supplier ? "Edytuj dane dostawcy." : "Dodaj nowego dostawcę do bazy."}
                     </SheetDescription>
                 </SheetHeader>
                 <div className="mt-6 px-4">
-                    <SupplierForm onSuccess={() => setOpen(false)} />
+                    <SupplierForm onSuccess={() => setOpen(false)} initialData={supplier} />
                 </div>
             </SheetContent>
         </Sheet>
