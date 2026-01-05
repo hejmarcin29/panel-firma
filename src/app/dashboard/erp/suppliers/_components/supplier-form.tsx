@@ -85,7 +85,7 @@ export function SupplierForm({ onSuccess, initialData }: SupplierFormProps) {
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setIsLoading(true);
         try {
-            if (initialData) {
+            if (initialData && initialData.id) {
                 await updateSupplier(initialData.id, {
                     ...values,
                     paymentTerms: parseInt(values.paymentTerms),
