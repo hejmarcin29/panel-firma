@@ -1436,6 +1436,7 @@ export async function uploadChecklistAttachment(formData: FormData) {
 		.select({
 			id: montageChecklistItems.id,
 			allowAttachment: montageChecklistItems.allowAttachment,
+            label: montageChecklistItems.label,
 		})
 		.from(montageChecklistItems)
 		.where(and(eq(montageChecklistItems.id, itemId), eq(montageChecklistItems.montageId, montageId)))
