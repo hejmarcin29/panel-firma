@@ -1,11 +1,12 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, Calendar, Image as ImageIcon, Ruler, Calculator, Check, Mail, Banknote } from 'lucide-react';
+import { FileText, Calendar, Image as ImageIcon, Ruler, Calculator, Check, Mail, Banknote, AlertCircle } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { signQuote, sendQuoteEmailToCustomer, saveSignedContract } from '../actions';
 import { useState } from 'react';
@@ -308,6 +309,40 @@ export function CustomerPortal({ customer, token, bankAccount, companyInfo }: Cu
                 {activeMontage ? (
                     <motion.div variants={containerVariants} className="space-y-6">
                         
+                        {/* Action Banner */}
+                        {(activeQuote?.status === 'sent' || activeMontage.payments?.some(p => p.status === 'pending')) && (
+                            <motion.div variants={itemVariants}>
+                                <Alert variant="destructive" className="border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+                                    <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                                    <AlertTitle className="mb-2 font-semibold">Wymagane działanie</AlertTitle>
+                                    <AlertDescription className="flex flex-col gap-2">
+                                        {activeQuote?.status === 'sent' && (
+                                            <div className="flex items-center justify-between gap-4">
+                                                <span>Otrzymałeś nową wycenę. Prosimy o jej akceptację i podpisanie umowy.</span>
+                                                <Button size="sm" variant="outline" className="whitespace-nowrap bg-white hover:bg-amber-100 text-amber-900 border-amber-200" onClick={() => {
+                                                    const element = document.getElementById('quote-card');
+                                                    element?.scrollIntoView({ behavior: 'smooth' });
+                                                }}>
+                                                    Przejdź do wyceny
+                                                </Button>
+                                            </div>
+                                        )}
+                                        {activeMontage.payments?.some(p => p.status === 'pending') && (
+                                            <div className="flex items-center justify-between gap-4">
+                                                <span>Masz nieopłacone płatności ({activeMontage.payments.filter(p => p.status === 'pending').length}).</span>
+                                                <Button size="sm" variant="outline" className="whitespace-nowrap bg-white hover:bg-amber-100 text-amber-900 border-amber-200" onClick={() => {
+                                                    const element = document.getElementById('payments-card');
+                                                    element?.scrollIntoView({ behavior: 'smooth' });
+                                                }}>
+                                                    Przejdź do płatności
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </AlertDescription>
+                                </Alert>
+                            </motion.div>
+                        )}
+
                         {/* Action First: Data Request at the top */}
                         <motion.div variants={itemVariants}>
                             <DataRequestCard montage={activeMontage} token={token} />
@@ -330,7 +365,7 @@ export function CustomerPortal({ customer, token, bankAccount, companyInfo }: Cu
 
                         {/* Payment Info */}
                         {activeMontage.payments && activeMontage.payments.length > 0 && (
-                            <motion.div variants={itemVariants}>
+                            <motion.div variants={itemVariants} id="payments-card">
                                 <Card className="hover:shadow-md transition-shadow duration-300">
                                     <CardHeader>
                                         <CardTitle className="flex items-center gap-2">
@@ -341,7 +376,13 @@ export function CustomerPortal({ customer, token, bankAccount, companyInfo }: Cu
                                         </CardDescription>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
-                                        {activeMontage.payments.map((payment) => (
+                                        {[...activeMontage.payments]
+                                            .sort((a, b) => {
+                                                if (a.status === 'pending' && b.status === 'paid') return -1;
+                                                if (a.status === 'paid' && b.status === 'pending') return 1;
+                                                return 0;
+                                            })
+                                            .map((payment) => (
                                             <div key={payment.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg bg-card hover:bg-accent/5 transition-colors gap-4">
                                                 <div className="space-y-1">
                                                     <div className="flex items-center gap-2">
@@ -504,7 +545,7 @@ export function CustomerPortal({ customer, token, bankAccount, companyInfo }: Cu
 
                         {/* Quote Acceptance */}
                         {activeQuote && (
-                            <motion.div variants={itemVariants}>
+                            <motion.div variants={itemVariants} id="quote-card">
                                 <Card className={cn(
                                     "hover:shadow-md transition-shadow duration-300 border-l-4",
                                     activeQuote.status === 'accepted' ? "border-l-green-500" : "border-l-primary"
@@ -775,60 +816,6 @@ export function CustomerPortal({ customer, token, bankAccount, companyInfo }: Cu
                                             </div>
                                         </div>
                                         )}
-                                    </CardContent>
-                                </Card>
-                            </motion.div>
-                        )}
-
-                        {activeMontage.payments && activeMontage.payments.length > 0 && (
-                            <motion.div variants={itemVariants}>
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle className="flex items-center gap-2">
-                                            <Banknote className="h-5 w-5 text-primary" /> Płatności
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="space-y-4">
-                                            {activeMontage.payments.map(payment => (
-                                                <div key={payment.id} className="border rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                                                    <div>
-                                                        <div className="flex items-center gap-2 mb-1">
-                                                            <h4 className="font-semibold">{payment.name}</h4>
-                                                            <Badge variant={payment.status === 'paid' ? 'default' : 'secondary'} className={payment.status === 'paid' ? 'bg-green-600 hover:bg-green-700' : ''}>
-                                                                {payment.status === 'paid' ? 'Opłacona' : 'Do zapłaty'}
-                                                            </Badge>
-                                                        </div>
-                                                        <p className="text-sm text-muted-foreground">
-                                                            Kwota: <span className="font-medium text-foreground">{formatCurrency(Number(payment.amount))}</span>
-                                                        </p>
-                                                        {payment.invoiceNumber && (
-                                                            <p className="text-xs text-muted-foreground mt-1">
-                                                                Nr dok: {payment.invoiceNumber}
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                    <div className="flex gap-2 w-full md:w-auto">
-                                                        {payment.proformaUrl && (
-                                                            <Button variant="outline" size="sm" className="flex-1 md:flex-none" asChild>
-                                                                <a href={payment.proformaUrl} target="_blank" rel="noopener noreferrer">
-                                                                    <FileText className="h-4 w-4 mr-2" />
-                                                                    Proforma
-                                                                </a>
-                                                            </Button>
-                                                        )}
-                                                        {payment.invoiceUrl && (
-                                                            <Button variant="outline" size="sm" className="flex-1 md:flex-none" asChild>
-                                                                <a href={payment.invoiceUrl} target="_blank" rel="noopener noreferrer">
-                                                                    <FileText className="h-4 w-4 mr-2" />
-                                                                    Faktura
-                                                                </a>
-                                                            </Button>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
                                     </CardContent>
                                 </Card>
                             </motion.div>
