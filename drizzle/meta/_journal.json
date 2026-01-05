@@ -393,6 +393,13 @@
       "when": 1767559410073,
       "tag": "0055_stiff_goblin_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1767595511271,
+      "tag": "0056_quick_violations",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,1 @@
+ALTER TABLE "montage_payments" ADD COLUMN "type" text DEFAULT 'other' NOT NULL;
