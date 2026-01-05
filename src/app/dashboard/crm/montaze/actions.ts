@@ -564,6 +564,27 @@ export async function updateMontageStatus({ montageId, status }: UpdateMontageSt
         }
     }
 
+    // Validation: Check required documents from PROCESS_STEPS
+    const stepDef = PROCESS_STEPS.find(s => s.relatedStatuses.includes(resolved));
+    if (stepDef?.requiredDocuments && stepDef.requiredDocuments.length > 0) {
+        const attachments = await db.query.montageAttachments.findMany({
+            where: (table, { eq }) => eq(table.montageId, montageId),
+        });
+
+        const docLabels: Record<string, string> = {
+            'proforma': 'Faktura Proforma',
+            'invoice_advance': 'Faktura Zaliczkowa',
+            'invoice_final': 'Faktura Końcowa'
+        };
+
+        for (const reqDoc of stepDef.requiredDocuments) {
+            const hasDoc = attachments.some(a => a.type === reqDoc);
+            if (!hasDoc) {
+                throw new Error(`Wymagany dokument: ${docLabels[reqDoc] || reqDoc} nie został wgrany.`);
+            }
+        }
+    }
+
 	await db
 		.update(montages)
 		.set({ 

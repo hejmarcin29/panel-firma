@@ -38,7 +38,11 @@ export function MontageProcessTimeline({ montage, readOnly = false }: MontagePro
                 toast.success('Status został zaktualizowany');
                 router.refresh();
             } catch (error) {
-                toast.error('Wystąpił błąd podczas aktualizacji statusu');
+                if (error instanceof Error) {
+                    toast.error(error.message);
+                } else {
+                    toast.error('Wystąpił błąd podczas aktualizacji statusu');
+                }
                 console.error(error);
             }
         });

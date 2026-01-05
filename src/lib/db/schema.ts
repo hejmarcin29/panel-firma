@@ -1440,6 +1440,7 @@ export const purchaseOrderItems = pgTable('purchase_order_items', {
     vatRate: integer('vat_rate').notNull(),
     totalNet: integer('total_net').notNull(),
     totalGross: integer('total_gross').notNull(),
+    montageId: text('montage_id').references(() => montages.id, { onDelete: 'set null' }),
 });
 
 export const warehouseMovementTypes = ['in_purchase', 'out_sale', 'out_montage', 'adjustment', 'return'] as const;
@@ -1476,6 +1477,10 @@ export const purchaseOrderItemsRelations = relations(purchaseOrderItems, ({ one 
     product: one(products, {
         fields: [purchaseOrderItems.productId],
         references: [products.id],
+    }),
+    montage: one(montages, {
+        fields: [purchaseOrderItems.montageId],
+        references: [montages.id],
     }),
 }));
 

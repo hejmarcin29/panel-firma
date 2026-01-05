@@ -34,28 +34,10 @@ export default function ERPLayout({ children }: { children: ReactNode }) {
                         Magazyn
                     </Button>
                 </Link>
-                 <Link href="/dashboard/erp/movements">
-                    <Button variant="ghost" size="sm" className="gap-2">
-                        <ArrowLeftRight className="h-4 w-4" />
-                        Ruchy (PZ/WZ)
-                    </Button>
-                </Link>
                  <Link href="/dashboard/erp/orders">
                     <Button variant="ghost" size="sm" className="gap-2">
                         <FileText className="h-4 w-4" />
                         Zamówienia (PO)
-                    </Button>
-                </Link>
-                 <Link href="/dashboard/erp/invoices">
-                    <Button variant="ghost" size="sm" className="gap-2">
-                        <FileText className="h-4 w-4" />
-                        Faktury
-                    </Button>
-                </Link>
-                 <Link href="/dashboard/erp/zespol">
-                    <Button variant="ghost" size="sm" className="gap-2">
-                        <Users className="h-4 w-4" />
-                        Zespół
                     </Button>
                 </Link>
             </div>
