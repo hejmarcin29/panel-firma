@@ -35,9 +35,28 @@ const formSchema = z.object({
     country: z.string(),
 });
 
+export interface SupplierData {
+    id?: string;
+    name?: string;
+    shortName?: string | null;
+    nip?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    website?: string | null;
+    bankAccount?: string | null;
+    paymentTerms?: number | null;
+    description?: string | null;
+    address?: {
+        street?: string;
+        city?: string;
+        zip?: string;
+        country?: string;
+    } | null;
+}
+
 interface SupplierFormProps {
     onSuccess?: () => void;
-    initialData?: any;
+    initialData?: SupplierData;
 }
 
 export function SupplierForm({ onSuccess, initialData }: SupplierFormProps) {

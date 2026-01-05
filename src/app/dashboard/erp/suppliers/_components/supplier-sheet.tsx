@@ -10,11 +10,11 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { SupplierForm } from "./supplier-form";
+import { SupplierForm, type SupplierData } from "./supplier-form";
 import { useState } from "react";
 
 interface SupplierSheetProps {
-    supplier?: any;
+    supplier?: SupplierData;
     trigger?: React.ReactNode;
 }
 

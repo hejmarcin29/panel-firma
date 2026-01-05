@@ -75,7 +75,7 @@ export async function getERPOrdersData() {
 }
 
 export async function createPurchaseOrder(montageIds: string[], supplierId: string) {
-    const user = await requireUser();
+    await requireUser();
 
     if (!montageIds.length) return { success: false, error: 'No montages selected' };
 
