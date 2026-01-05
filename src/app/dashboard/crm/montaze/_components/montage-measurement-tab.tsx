@@ -1239,10 +1239,17 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
                 onClose={() => setIsPanelSelectorOpen(false)}
                 onSelect={(product) => {
                     setPanelModel(product.name);
-                    setPanelProductId(product.id);
+                    if (product.wooId) {
+                        setPanelProductId(product.wooId);
+                    }
                     setIsPanelSelectorOpen(false);
                 }}
                 type="panel"
+                category={
+                    installationMethod === 'click' 
+                        ? (floorPattern === 'herringbone' ? 'Panele - Click - Jodełka' : 'Panele - Click - Klasyczne')
+                        : (floorPattern === 'herringbone' ? 'Panele - Klejone - Jodełka' : 'Panele - Klejone - Klasyczne')
+                }
             />
 
             <ProductSelectorModal

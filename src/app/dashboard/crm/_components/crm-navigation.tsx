@@ -5,8 +5,9 @@ import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Users, Hammer, FileText, LayoutDashboard, Images, HardHat } from 'lucide-react';
 
-export function CRMNavigation() {
+export function CRMNavigation({ userRoles = [] }: { userRoles?: string[] }) {
     const pathname = usePathname();
+    const isInstaller = userRoles.includes('installer') && !userRoles.includes('admin');
 
     // Define paths where the header should be visible
     const mainPaths = [
@@ -39,26 +40,30 @@ export function CRMNavigation() {
             </div>
 
             <div className="hidden md:flex space-x-2 border-b pb-2 overflow-x-auto">
-                <Link href="/dashboard/crm">
-                    <Button 
-                        variant={pathname === '/dashboard/crm' ? "secondary" : "ghost"} 
-                        size="sm" 
-                        className="gap-2"
-                    >
-                        <LayoutDashboard className="h-4 w-4" />
-                        Przegląd
-                    </Button>
-                </Link>
-                <Link href="/dashboard/crm/customers">
-                    <Button 
-                        variant={pathname.startsWith('/dashboard/crm/customers') ? "secondary" : "ghost"} 
-                        size="sm" 
-                        className="gap-2"
-                    >
-                        <Users className="h-4 w-4" />
-                        Klienci
-                    </Button>
-                </Link>
+                {!isInstaller && (
+                    <Link href="/dashboard/crm">
+                        <Button 
+                            variant={pathname === '/dashboard/crm' ? "secondary" : "ghost"} 
+                            size="sm" 
+                            className="gap-2"
+                        >
+                            <LayoutDashboard className="h-4 w-4" />
+                            Przegląd
+                        </Button>
+                    </Link>
+                )}
+                {!isInstaller && (
+                    <Link href="/dashboard/crm/customers">
+                        <Button 
+                            variant={pathname.startsWith('/dashboard/crm/customers') ? "secondary" : "ghost"} 
+                            size="sm" 
+                            className="gap-2"
+                        >
+                            <Users className="h-4 w-4" />
+                            Klienci
+                        </Button>
+                    </Link>
+                )}
                 <Link href="/dashboard/crm/montaze">
                     <Button 
                         variant={pathname.startsWith('/dashboard/crm/montaze') ? "secondary" : "ghost"} 
@@ -69,36 +74,42 @@ export function CRMNavigation() {
                         Realizacje
                     </Button>
                 </Link>
-                <Link href="/dashboard/crm/oferty">
-                    <Button 
-                        variant={pathname.startsWith('/dashboard/crm/oferty') ? "secondary" : "ghost"} 
-                        size="sm" 
-                        className="gap-2"
-                    >
-                        <FileText className="h-4 w-4" />
-                        Oferty
-                    </Button>
-                </Link>
-                <Link href="/dashboard/crm/montaze/galeria">
-                    <Button 
-                        variant={pathname.startsWith('/dashboard/crm/montaze/galeria') ? "secondary" : "ghost"} 
-                        size="sm" 
-                        className="gap-2"
-                    >
-                        <Images className="h-4 w-4" />
-                        Galeria
-                    </Button>
-                </Link>
-                <Link href="/dashboard/crm/montaze/ekipy">
-                    <Button 
-                        variant={pathname.startsWith('/dashboard/crm/montaze/ekipy') ? "secondary" : "ghost"} 
-                        size="sm" 
-                        className="gap-2"
-                    >
-                        <HardHat className="h-4 w-4" />
-                        Baza Ekip
-                    </Button>
-                </Link>
+                {!isInstaller && (
+                    <Link href="/dashboard/crm/oferty">
+                        <Button 
+                            variant={pathname.startsWith('/dashboard/crm/oferty') ? "secondary" : "ghost"} 
+                            size="sm" 
+                            className="gap-2"
+                        >
+                            <FileText className="h-4 w-4" />
+                            Oferty
+                        </Button>
+                    </Link>
+                )}
+                {!isInstaller && (
+                    <Link href="/dashboard/crm/montaze/galeria">
+                        <Button 
+                            variant={pathname.startsWith('/dashboard/crm/montaze/galeria') ? "secondary" : "ghost"} 
+                            size="sm" 
+                            className="gap-2"
+                        >
+                            <Images className="h-4 w-4" />
+                            Galeria
+                        </Button>
+                    </Link>
+                )}
+                {!isInstaller && (
+                    <Link href="/dashboard/crm/montaze/ekipy">
+                        <Button 
+                            variant={pathname.startsWith('/dashboard/crm/montaze/ekipy') ? "secondary" : "ghost"} 
+                            size="sm" 
+                            className="gap-2"
+                        >
+                            <HardHat className="h-4 w-4" />
+                            Baza Ekip
+                        </Button>
+                    </Link>
+                )}
             </div>
         </>
     );

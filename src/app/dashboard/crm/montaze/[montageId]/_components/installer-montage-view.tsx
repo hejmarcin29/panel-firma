@@ -11,7 +11,10 @@ import {
     History, 
     FileText,
     Navigation,
-    Banknote
+    Banknote,
+    Play,
+    AlertTriangle,
+    Flag
 } from "lucide-react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
@@ -36,6 +39,8 @@ import { MontageSettlementTab } from "../../_components/montage-settlement-tab";
 import { MontageClientCard } from "./montage-client-card"; // Reusing for edit capabilities if needed
 import { MontageMaterialCard } from "./montage-material-card";
 import { MontageProcessTimeline } from "./montage-process-timeline";
+import { StartWorkDialog } from "./start-work-dialog";
+import { FinishWorkDialog } from "./finish-work-dialog";
 import type { Montage, MontageLog } from "../../types";
 import type { UserRole } from "@/lib/db/schema";
 
@@ -49,6 +54,8 @@ interface InstallerMontageViewProps {
 export function InstallerMontageView({ montage, logs, userRoles }: InstallerMontageViewProps) {
     const [activeTab, setActiveTab] = useState("process");
     const [defaultOpenModal, setDefaultOpenModal] = useState<'assistant' | 'costEstimation' | undefined>(undefined);
+    const [startWorkOpen, setStartWorkOpen] = useState(false);
+    const [finishWorkOpen, setFinishWorkOpen] = useState(false);
 
     // Filter logs to show only current user's actions (or system actions relevant to him)
     // In a real scenario, we'd filter by userId, but for now let's show all to keep context, 
@@ -328,6 +335,88 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
                                 </CardContent>
                             </Card>
                         )}
+
+                        {/* SCENARIO D: Ready to Start */}
+                        {(montage.status === 'installation_scheduled' || montage.status === 'materials_delivered') && (
+                            <Card className="border-l-4 border-l-green-500 shadow-md bg-green-50/50">
+                                <CardHeader>
+                                    <CardTitle className="text-lg text-green-900">Wymagane Akcje: Rozpoczęcie</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex items-center justify-center w-10 h-10 rounded-full border-2 bg-white border-green-500 text-green-700">
+                                            <Play className="w-5 h-5 ml-1" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <h4 className="font-semibold text-base">Rozpocznij Montaż</h4>
+                                            <p className="text-sm text-muted-foreground">Jesteś na miejscu? Zrób zdjęcie i zaczynamy.</p>
+                                        </div>
+                                        <Button 
+                                            className="bg-green-600 hover:bg-green-700 text-white"
+                                            onClick={() => setStartWorkOpen(true)}
+                                        >
+                                            Rozpocznij Pracę
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {/* SCENARIO E: In Progress */}
+                        {montage.status === 'installation_in_progress' && (
+                            <Card className="border-l-4 border-l-indigo-500 shadow-md bg-indigo-50/50">
+                                <CardHeader>
+                                    <CardTitle className="text-lg text-indigo-900">Panel Realizacji</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                        <Button 
+                                            variant="outline" 
+                                            className="h-auto py-4 flex flex-col gap-2"
+                                            onClick={() => setActiveTab('gallery')}
+                                        >
+                                            <Camera className="w-6 h-6 text-indigo-600" />
+                                            <span className="font-semibold">Dokumentuj</span>
+                                            <span className="text-xs text-muted-foreground font-normal">Dodaj zdjęcie z postępu</span>
+                                        </Button>
+
+                                        <Button 
+                                            variant="outline" 
+                                            className="h-auto py-4 flex flex-col gap-2 border-red-200 hover:bg-red-50"
+                                            onClick={() => {
+                                                // TODO: Open problem dialog
+                                                toast.info("Funkcja zgłaszania problemów wkrótce.");
+                                            }}
+                                        >
+                                            <AlertTriangle className="w-6 h-6 text-red-600" />
+                                            <span className="font-semibold text-red-700">Zgłoś Problem</span>
+                                            <span className="text-xs text-red-600/80 font-normal">Coś nie tak?</span>
+                                        </Button>
+
+                                        <Button 
+                                            className="h-auto py-4 flex flex-col gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+                                            onClick={() => setFinishWorkOpen(true)}
+                                        >
+                                            <Flag className="w-6 h-6" />
+                                            <span className="font-semibold">Zakończ</span>
+                                            <span className="text-xs text-indigo-100 font-normal">Protokół i odbiór</span>
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        <StartWorkDialog 
+                            montageId={montage.id} 
+                            open={startWorkOpen} 
+                            onOpenChange={setStartWorkOpen} 
+                        />
+
+                        <FinishWorkDialog 
+                            montageId={montage.id} 
+                            open={finishWorkOpen} 
+                            onOpenChange={setFinishWorkOpen} 
+                        />
 
                         {/* 2. Read-Only Timeline */}
                         <MontageProcessTimeline montage={montage} readOnly={true} />

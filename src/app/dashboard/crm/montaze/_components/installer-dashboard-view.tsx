@@ -1,14 +1,13 @@
 "use client";
 
-import { format, isToday, isFuture } from "date-fns";
+import { format, isToday, startOfWeek, endOfWeek, addWeeks, isWithinInterval } from "date-fns";
 import { pl } from "date-fns/locale";
-import { MapPin, Calendar, Clock, AlertTriangle } from "lucide-react";
+import { MapPin, Calendar, Clock, AlertTriangle, Ruler, Hammer, Phone, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import type { Montage, MeasurementMaterialItem } from "../types";
 
@@ -16,22 +15,89 @@ interface InstallerDashboardViewProps {
   montages: Montage[];
 }
 
+type SectionType = 'IN_PROGRESS' | 'THIS_WEEK' | 'NEXT_WEEK' | 'FUTURE' | 'BACKLOG' | 'PENDING';
+
 export function InstallerDashboardView({ montages }: InstallerDashboardViewProps) {
-  const measurements = montages.filter(m => ['new_lead', 'contact_attempt', 'contact_established', 'measurement_scheduled'].includes(m.status));
-  const installations = montages.filter(m => ['installation_scheduled', 'installation_in_progress'].includes(m.status));
+  const today = new Date();
+  const currentWeekStart = startOfWeek(today, { weekStartsOn: 1 });
+  const currentWeekEnd = endOfWeek(today, { weekStartsOn: 1 });
+  const nextWeekStart = startOfWeek(addWeeks(today, 1), { weekStartsOn: 1 });
+  const nextWeekEnd = endOfWeek(addWeeks(today, 1), { weekStartsOn: 1 });
+
+  const getActionDate = (m: Montage) => {
+    const isMeasurement = ['new_lead', 'contact_attempt', 'contact_established', 'measurement_scheduled', 'measurement_done'].includes(m.status);
+    const dateVal = isMeasurement ? m.measurementDate : m.scheduledInstallationAt;
+    return dateVal ? new Date(dateVal) : null;
+  };
+
+  const getSection = (m: Montage): SectionType => {
+    if (m.status === 'installation_in_progress') return 'IN_PROGRESS';
+    
+    // Completed or Cancelled - hide or put in separate list (not handled here based on requirements)
+    if (['completed', 'rejected', 'protocol_signed'].includes(m.status)) return 'PENDING';
+
+    const date = getActionDate(m);
+
+    if (!date) {
+        // If no date, but it's a status that implies waiting for office, maybe PENDING?
+        // But user said "Do ustalenia" for assigned but no date.
+        // Let's put everything without date in BACKLOG for now, unless it's clearly office side.
+        if (['quote_in_progress', 'quote_sent', 'quote_accepted', 'order_processing', 'materials_ordered', 'measurement_done'].includes(m.status)) {
+            return 'PENDING'; // Office side
+        }
+        return 'BACKLOG';
+    }
+
+    if (isWithinInterval(date, { start: currentWeekStart, end: currentWeekEnd })) return 'THIS_WEEK';
+    if (isWithinInterval(date, { start: nextWeekStart, end: nextWeekEnd })) return 'NEXT_WEEK';
+    if (date > nextWeekEnd) return 'FUTURE';
+    
+    // Past dates that are not completed -> BACKLOG (Overdue) or THIS_WEEK (if we want to show them as urgent)
+    // Let's put them in THIS_WEEK but marked as overdue visually, or IN_PROGRESS if we want to force attention.
+    // User said "W TOKU / PILNE" -> "Zlecenia, które mają status 'W toku' LUB są przeterminowane."
+    if (date < currentWeekStart) return 'IN_PROGRESS'; 
+
+    return 'BACKLOG';
+  };
+
+  const sections: Record<SectionType, Montage[]> = {
+    IN_PROGRESS: [],
+    THIS_WEEK: [],
+    NEXT_WEEK: [],
+    FUTURE: [],
+    BACKLOG: [],
+    PENDING: []
+  };
+
+  montages.forEach(m => {
+    const section = getSection(m);
+    sections[section].push(m);
+  });
+
+  // Sort each section
+  const sortByDate = (a: Montage, b: Montage) => {
+    const dateA = getActionDate(a)?.getTime() || 0;
+    const dateB = getActionDate(b)?.getTime() || 0;
+    return dateA - dateB;
+  };
+
+  sections.IN_PROGRESS.sort(sortByDate);
+  sections.THIS_WEEK.sort(sortByDate);
+  sections.NEXT_WEEK.sort(sortByDate);
+  sections.FUTURE.sort(sortByDate);
+  sections.BACKLOG.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()); // Newest first
 
   const missingCostsMontages = montages.filter(m => {
       const materials = m.measurementAdditionalMaterials;
       if (!Array.isArray(materials)) return false;
-      // Check if any item is supplied by installer but has no cost
       return materials.some((item: MeasurementMaterialItem) => item.supplySide === 'installer' && (!item.estimatedCost || item.estimatedCost <= 0));
   });
 
   return (
     <div className="flex flex-col gap-6 pb-20 max-w-md mx-auto w-full">
       <div className="px-4 pt-4">
-        <h1 className="text-2xl font-bold tracking-tight">Cześć! 👋</h1>
-        <p className="text-muted-foreground">Twoje zlecenia na najbliższy czas.</p>
+        <h1 className="text-2xl font-bold tracking-tight">Moje Zlecenia</h1>
+        <p className="text-muted-foreground">Plan pracy na najbliższy czas.</p>
       </div>
 
       {missingCostsMontages.length > 0 && (
@@ -45,7 +111,7 @@ export function InstallerDashboardView({ montages }: InstallerDashboardViewProps
                         <div className="space-y-1 w-full">
                             <h3 className="font-medium text-amber-900">Uzupełnij koszty zakupów</h3>
                             <p className="text-sm text-amber-700">
-                                Masz {missingCostsMontages.length} zleceń z nieuzupełnionymi kosztami materiałów.
+                                Masz {missingCostsMontages.length} zleceń z nieuzupełnionymi kosztami.
                             </p>
                             <div className="pt-2 flex flex-col gap-2">
                                 {missingCostsMontages.map(m => (
@@ -63,149 +129,139 @@ export function InstallerDashboardView({ montages }: InstallerDashboardViewProps
         </div>
       )}
 
-      <Tabs defaultValue="measurements" className="w-full">
-        <div className="px-4">
-            <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="measurements">Pomiary</TabsTrigger>
-                <TabsTrigger value="installations">Montaże</TabsTrigger>
-            </TabsList>
+      <div className="space-y-8">
+        {/* 1. IN PROGRESS / URGENT */}
+        {sections.IN_PROGRESS.length > 0 && (
+            <div className="px-4 space-y-3">
+                <h2 className="text-sm font-bold text-red-600 uppercase tracking-wider flex items-center gap-2">
+                    <span className="relative flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                    </span>
+                    W toku / Pilne
+                </h2>
+                {sections.IN_PROGRESS.map(m => (
+                    <UnifiedMontageCard key={m.id} montage={m} date={getActionDate(m)} highlight />
+                ))}
+            </div>
+        )}
+
+        {/* 2. THIS WEEK */}
+        <div className="px-4 space-y-3">
+            <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                W tym tygodniu
+            </h2>
+            {sections.THIS_WEEK.length === 0 ? (
+                <p className="text-sm text-muted-foreground italic pl-1">Brak zadań na ten tydzień.</p>
+            ) : (
+                sections.THIS_WEEK.map(m => (
+                    <UnifiedMontageCard key={m.id} montage={m} date={getActionDate(m)} />
+                ))
+            )}
         </div>
 
-        <TabsContent value="measurements" className="mt-4">
-            <MontageList montages={measurements} dateField="measurementDate" fallbackDateField="forecastedInstallationDate" />
-        </TabsContent>
-        
-        <TabsContent value="installations" className="mt-4">
-            <MontageList montages={installations} dateField="scheduledInstallationAt" />
-        </TabsContent>
-      </Tabs>
+        {/* 3. NEXT WEEK */}
+        {sections.NEXT_WEEK.length > 0 && (
+            <div className="px-4 space-y-3">
+                <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                    <ArrowRight className="w-4 h-4" />
+                    W przyszłym tygodniu
+                </h2>
+                {sections.NEXT_WEEK.map(m => (
+                    <UnifiedMontageCard key={m.id} montage={m} date={getActionDate(m)} compact />
+                ))}
+            </div>
+        )}
+
+        {/* 4. FUTURE */}
+        {sections.FUTURE.length > 0 && (
+            <div className="px-4 space-y-3">
+                <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                    Dalsze terminy
+                </h2>
+                {sections.FUTURE.map(m => (
+                    <UnifiedMontageCard key={m.id} montage={m} date={getActionDate(m)} compact />
+                ))}
+            </div>
+        )}
+
+        {/* 5. BACKLOG */}
+        {sections.BACKLOG.length > 0 && (
+            <div className="px-4 space-y-3">
+                <h2 className="text-sm font-medium text-orange-600 uppercase tracking-wider flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4" />
+                    Do ustalenia / Akcja wymagana
+                </h2>
+                {sections.BACKLOG.map(m => (
+                    <UnifiedMontageCard key={m.id} montage={m} date={null} compact />
+                ))}
+            </div>
+        )}
+      </div>
     </div>
   );
 }
 
-function MontageList({ montages, dateField, fallbackDateField }: { montages: Montage[], dateField: keyof Montage, fallbackDateField?: keyof Montage }) {
-  const sortedMontages = [...montages].sort((a, b) => {
-    const dateAVal = a[dateField] || (fallbackDateField ? a[fallbackDateField] : null);
-    const dateBVal = b[dateField] || (fallbackDateField ? b[fallbackDateField] : null);
-    
-    const dateA = dateAVal ? new Date(dateAVal as string | number | Date).getTime() : 0;
-    const dateB = dateBVal ? new Date(dateBVal as string | number | Date).getTime() : 0;
-    
-    if (!dateA) return 1;
-    if (!dateB) return -1;
-    return dateA - dateB;
-  });
-  
-  const getDate = (m: Montage) => {
-      const val = m[dateField] || (fallbackDateField ? m[fallbackDateField] : null);
-      return val ? new Date(val as string | number | Date) : null;
-  };
+function UnifiedMontageCard({ montage, date, highlight = false, compact = false }: { montage: Montage, date: Date | null, highlight?: boolean, compact?: boolean }) {
+  const isMeasurement = ['new_lead', 'contact_attempt', 'contact_established', 'measurement_scheduled', 'measurement_done'].includes(montage.status);
+  const isTodayDate = date && isToday(date);
 
-  const todayMontages = sortedMontages.filter(m => {
-    const d = getDate(m);
-    return d && isToday(d);
-  });
-
-  const upcomingMontages = sortedMontages.filter(m => {
-    const d = getDate(m);
-    return d && isFuture(d) && !isToday(d);
-  });
-
-  const unscheduledMontages = sortedMontages.filter(m => !getDate(m) && m.status !== 'completed');
-
-  return (
-      <>
-      {/* TODAY SECTION */}
-      <div className="space-y-3 px-4">
-        <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          Dziś
-        </h2>
-        
-        {todayMontages.length === 0 ? (
-          <Card className="bg-muted/30 border-dashed">
-            <CardContent className="flex flex-col items-center justify-center py-8 text-center">
-              <Calendar className="h-8 w-8 text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground">Brak zaplanowanych zadań na dziś.</p>
-            </CardContent>
-          </Card>
-        ) : (
-          todayMontages.map(montage => (
-            <MontageCard key={montage.id} montage={montage} date={getDate(montage)} isToday={true} />
-          ))
-        )}
-      </div>
-
-      {/* UPCOMING SECTION */}
-      {upcomingMontages.length > 0 && (
-        <div className="space-y-3 px-4 mt-6">
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-            Nadchodzące
-          </h2>
-          {upcomingMontages.map(montage => (
-            <MontageCard key={montage.id} montage={montage} date={getDate(montage)} />
-          ))}
-        </div>
-      )}
-
-      {/* UNSCHEDULED SECTION */}
-      {unscheduledMontages.length > 0 && (
-        <div className="space-y-3 px-4 mt-6">
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-            Do ustalenia / Inne
-          </h2>
-          {unscheduledMontages.map(montage => (
-            <MontageCard key={montage.id} montage={montage} date={null} compact />
-          ))}
-        </div>
-      )}
-      </>
-  );
-}
-
-function MontageCard({ montage, date, isToday = false }: { montage: Montage, date: Date | null, isToday?: boolean, compact?: boolean }) {
-  
   return (
     <Link href={`/dashboard/crm/montaze/${montage.id}`} className="block group">
       <Card className={cn(
         "transition-all duration-200 hover:shadow-md active:scale-[0.98]",
-        isToday ? "border-green-500/50 bg-green-50/10 dark:bg-green-950/10" : "hover:border-primary/50"
+        highlight ? "border-red-200 bg-red-50/30" : "hover:border-primary/50",
+        isTodayDate && !highlight ? "border-green-500/50 bg-green-50/10" : ""
       )}>
-        <CardContent className="p-4">
-          <div className="flex justify-between items-start gap-4">
+        <CardContent className={cn("p-4", compact && "py-3")}>
+          <div className="flex justify-between items-start gap-3">
             <div className="space-y-1.5 flex-1">
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold leading-none group-hover:text-primary transition-colors">
+              <div className="flex items-center gap-2 flex-wrap">
+                {isMeasurement ? (
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200 border-blue-200 gap-1 px-1.5 h-5 text-[10px]">
+                        <Ruler className="w-3 h-3" />
+                        POMIAR
+                    </Badge>
+                ) : (
+                    <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-emerald-200 gap-1 px-1.5 h-5 text-[10px]">
+                        <Hammer className="w-3 h-3" />
+                        MONTAŻ
+                    </Badge>
+                )}
+                
+                <h3 className={cn("font-semibold leading-tight group-hover:text-primary transition-colors", compact ? "text-sm" : "text-base")}>
                   {montage.clientName}
                 </h3>
-                {montage.isCompany && (
-                  <Badge variant="outline" className="text-[10px] h-5 px-1.5">Firma</Badge>
-                )}
               </div>
               
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <MapPin className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate max-w-[200px]">
-                  {montage.installationCity || montage.installationAddress || "Brak adresu"}
-                </span>
-              </div>
+              {!compact && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <MapPin className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate max-w-[200px]">
+                    {montage.installationCity || montage.installationAddress || "Brak adresu"}
+                    </span>
+                </div>
+              )}
 
-              {date && (
+              {date ? (
                 <div className={cn(
                   "flex items-center gap-2 text-sm",
-                  isToday ? "text-green-600 dark:text-green-400 font-medium" : "text-muted-foreground"
+                  isTodayDate ? "text-green-600 font-medium" : "text-muted-foreground",
+                  highlight ? "text-red-600 font-medium" : ""
                 )}>
                   <Clock className="h-3.5 w-3.5 shrink-0" />
                   <span>
                     {format(date, "EEEE, d MMMM", { locale: pl })}
-                    {isToday && " (Dziś)"}
+                    {isTodayDate && " (Dziś)"}
                   </span>
                 </div>
+              ) : (
+                  <div className="flex items-center gap-2 text-sm text-orange-600/80">
+                      <Phone className="h-3.5 w-3.5 shrink-0" />
+                      <span>Do ustalenia</span>
+                  </div>
               )}
-            </div>
-
-            <div className="flex flex-col items-end gap-2">
-               {/* Status Badge or other info */}
             </div>
           </div>
         </CardContent>

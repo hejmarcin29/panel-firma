@@ -564,6 +564,9 @@ export async function getInstallerDashboardData(userId: string) {
             ne(table.status, 'rejected'),
             ne(table.status, 'measurement_scheduled'),
             ne(table.status, 'installation_scheduled'),
+            ne(table.status, 'materials_delivered'),
+            ne(table.status, 'installation_in_progress'),
+            ne(table.status, 'protocol_signed'),
             isNull(table.deletedAt)
         ),
         orderBy: (table, { desc }) => [desc(table.updatedAt)],

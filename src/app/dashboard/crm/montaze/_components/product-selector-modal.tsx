@@ -13,7 +13,8 @@ import { getMontageProducts } from '../actions';
 import { cn } from '@/lib/utils';
 
 interface Product {
-    id: number;
+    id: number | string;
+    wooId?: number | null;
     name: string;
     sku: string | null;
     imageUrl: string | null;
@@ -26,6 +27,7 @@ interface ProductSelectorModalProps {
   onClose: () => void;
   onSelect: (product: Product) => void;
   type: 'panel' | 'accessory';
+  category?: string;
   currentValue?: string;
 }
 
@@ -34,6 +36,7 @@ export function ProductSelectorModal({
   onClose,
   onSelect,
   type,
+  category,
   currentValue
 }: ProductSelectorModalProps) {
   const [products, setProducts] = useState<Product[]>([]);
@@ -44,12 +47,12 @@ export function ProductSelectorModal({
     if (isOpen) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsLoading(true);
-      getMontageProducts(type)
+      getMontageProducts({ type, category })
         .then(setProducts)
         .catch(console.error)
         .finally(() => setIsLoading(false));
     }
-  }, [isOpen, type]);
+  }, [isOpen, type, category]);
 
   const filteredProducts = products.filter(p => 
     p.name.toLowerCase().includes(search.toLowerCase()) || 

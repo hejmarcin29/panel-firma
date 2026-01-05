@@ -5,6 +5,7 @@ import { ProductsTable } from "./_components/products-table";
 import { ProductSheet } from "./_components/product-sheet";
 import { getAttributes } from "../attributes/actions";
 import { ImportWizard } from "./_components/import-wizard";
+import { ProductTools } from "./_components/product-tools";
 import { requireUser } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 
@@ -37,12 +38,13 @@ export default async function ProductsPage() {
                     </p>
                 </div>
                 <div className="flex gap-2">
+                    <ProductTools />
                     <ImportWizard existingAttributes={attributes} />
                     <ProductSheet attributes={attributes} categories={categories} />
                 </div>
             </div>
 
-            <ProductsTable data={products} />
+            <ProductsTable data={products} categories={categories} />
         </div>
     );
 }

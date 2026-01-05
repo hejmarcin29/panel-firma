@@ -21,8 +21,9 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { bulkUpdateSyncStatus } from "../actions";
+import { bulkUpdateSyncStatus, bulkAssignCategory, bulkDeleteProducts } from "../actions";
 import { toast } from "sonner";
+import { FolderInput, Trash2 } from "lucide-react";
 
 interface Product {
     id: string;
@@ -36,11 +37,17 @@ interface Product {
     isSyncEnabled: boolean | null;
 }
 
-interface ProductsTableProps {
-    data: Product[];
+interface Category {
+    id: string;
+    name: string;
 }
 
-export function ProductsTable({ data }: ProductsTableProps) {
+interface ProductsTableProps {
+    data: Product[];
+    categories: Category[];
+}
+
+export function ProductsTable({ data, categories }: ProductsTableProps) {
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
     const handleSelectAll = (checked: boolean) => {
@@ -69,16 +76,59 @@ export function ProductsTable({ data }: ProductsTableProps) {
         }
     };
 
+    const handleBulkAssign = async (categoryId: string) => {
+        try {
+            await bulkAssignCategory(selectedIds, categoryId);
+            toast.success("Przypisano kategorię");
+            setSelectedIds([]);
+        } catch {
+            toast.error("Błąd przypisywania kategorii");
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (!confirm("Czy na pewno usunąć zaznaczone produkty?")) return;
+        try {
+            await bulkDeleteProducts(selectedIds);
+            toast.success("Usunięto produkty");
+            setSelectedIds([]);
+        } catch {
+            toast.error("Błąd usuwania");
+        }
+    };
+
     return (
         <div className="space-y-4">
             {selectedIds.length > 0 && (
-                <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                <div className="flex items-center gap-2 p-2 bg-muted rounded-md flex-wrap">
                     <span className="text-sm font-medium px-2">Zaznaczono: {selectedIds.length}</span>
+                    
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button size="sm" variant="outline">
+                                <FolderInput className="mr-2 h-4 w-4" /> Przypisz kategorię
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="max-h-[300px] overflow-y-auto">
+                            {categories.map(cat => (
+                                <DropdownMenuItem key={cat.id} onClick={() => handleBulkAssign(cat.id)}>
+                                    {cat.name}
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
                     <Button size="sm" variant="outline" onClick={() => handleBulkSync(true)}>
                         <RefreshCw className="mr-2 h-4 w-4" /> Włącz Sync
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => handleBulkSync(false)}>
                         <Ban className="mr-2 h-4 w-4" /> Wyłącz Sync
+                    </Button>
+                    
+                    <div className="flex-1" />
+                    
+                    <Button size="sm" variant="destructive" onClick={handleBulkDelete}>
+                        <Trash2 className="mr-2 h-4 w-4" /> Usuń zaznaczone
                     </Button>
                 </div>
             )}

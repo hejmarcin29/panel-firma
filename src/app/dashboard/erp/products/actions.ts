@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from "@/lib/db";
-import { erpProducts, erpPurchasePrices, erpProductAttributes, products } from "@/lib/db/schema";
+import { erpProducts, erpPurchasePrices, erpProductAttributes, products, erpCategories } from "@/lib/db/schema";
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { requireUser } from "@/lib/auth/session";
@@ -19,6 +19,70 @@ export async function bulkUpdateSyncStatus(ids: string[], enabled: boolean) {
 
     await db.update(erpProducts)
         .set({ isSyncEnabled: enabled, updatedAt: new Date() })
+        .where(inArray(erpProducts.id, ids));
+
+    revalidatePath('/dashboard/erp/products');
+}
+
+export async function seedSystemCategories() {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) throw new Error('Unauthorized');
+
+    const categories = [
+        { name: 'Panele - Click - Klasyczne' },
+        { name: 'Panele - Click - Jodełka' },
+        { name: 'Panele - Klejone - Klasyczne' },
+        { name: 'Panele - Klejone - Jodełka' },
+        { name: 'Chemia / Kleje' },
+        { name: 'Listwy' },
+        { name: 'Podkłady' },
+    ];
+
+    for (const cat of categories) {
+        const existing = await db.query.erpCategories.findFirst({
+            where: eq(erpCategories.name, cat.name)
+        });
+
+        if (!existing) {
+            await db.insert(erpCategories).values({
+                name: cat.name,
+            });
+        }
+    }
+    
+    revalidatePath('/dashboard/erp/products');
+}
+
+export async function deleteAllProducts() {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) throw new Error('Unauthorized');
+
+    // Delete all from erpProducts
+    await db.delete(erpProducts);
+    
+    revalidatePath('/dashboard/erp/products');
+}
+
+export async function bulkAssignCategory(ids: string[], categoryId: string) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) throw new Error('Unauthorized');
+
+    if (ids.length === 0) return;
+
+    await db.update(erpProducts)
+        .set({ categoryId: categoryId, updatedAt: new Date() })
+        .where(inArray(erpProducts.id, ids));
+
+    revalidatePath('/dashboard/erp/products');
+}
+
+export async function bulkDeleteProducts(ids: string[]) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) throw new Error('Unauthorized');
+
+    if (ids.length === 0) return;
+
+    await db.delete(erpProducts)
         .where(inArray(erpProducts.id, ids));
 
     revalidatePath('/dashboard/erp/products');
