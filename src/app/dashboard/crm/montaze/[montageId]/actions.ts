@@ -235,7 +235,7 @@ export async function createPayment(montageId: string, data: {
     proformaUrl?: string;
     type: 'advance' | 'final' | 'other';
 }) {
-    const user = await requireUser();
+    await requireUser();
 
     await db.insert(montagePayments).values({
         id: randomUUID(),
@@ -247,18 +247,6 @@ export async function createPayment(montageId: string, data: {
         status: 'pending',
         type: data.type,
     });
-
-    // If proforma is uploaded, add it to attachments
-    if (data.proformaUrl) {
-        await db.insert(montageAttachments).values({
-            id: randomUUID(),
-            montageId,
-            type: 'proforma',
-            title: `Proforma - ${data.name}`,
-            url: data.proformaUrl,
-            uploadedBy: user.id,
-        });
-    }
 
     // Auto-update status if it's an Advance payment
     // Logic: If current status is 'contract_signed', move to 'waiting_for_deposit'
@@ -282,7 +270,7 @@ export async function createPayment(montageId: string, data: {
 export async function markPaymentAsPaid(paymentId: string, data: {
     invoiceUrl?: string;
 }) {
-    const user = await requireUser();
+    await requireUser();
 
     const payment = await db.query.montagePayments.findFirst({
         where: eq(montagePayments.id, paymentId),
@@ -297,22 +285,6 @@ export async function markPaymentAsPaid(paymentId: string, data: {
             invoiceUrl: data.invoiceUrl,
         })
         .where(eq(montagePayments.id, paymentId));
-
-    // If invoice is uploaded, add it to attachments with correct type
-    if (data.invoiceUrl) {
-        let attachmentType = 'general';
-        if (payment.type === 'advance') attachmentType = 'invoice_advance';
-        if (payment.type === 'final') attachmentType = 'invoice_final';
-
-        await db.insert(montageAttachments).values({
-            id: randomUUID(),
-            montageId: payment.montageId,
-            type: attachmentType,
-            title: `Faktura - ${payment.name}`,
-            url: data.invoiceUrl,
-            uploadedBy: user.id,
-        });
-    }
 
     // Auto-update status logic
     // If status is 'waiting_for_deposit' AND it is an ADVANCE payment, move to 'deposit_paid'

@@ -60,7 +60,9 @@ export function MontagePaymentsTab({ montageId, payments }: MontagePaymentsTabPr
         try {
             let proformaUrl = undefined;
             if (newProformaFile) {
-                proformaUrl = await upload(newProformaFile, montageId, 'documents');
+                // Determine category based on payment type
+                const category = newType === 'final' ? 'invoice_final' : 'proforma';
+                proformaUrl = await upload(newProformaFile, montageId, category);
             }
 
             await createPayment(montageId, {
@@ -89,9 +91,12 @@ export function MontagePaymentsTab({ montageId, payments }: MontagePaymentsTabPr
     const handleMarkAsPaid = async (paymentId: string) => {
         setIsSubmitting(true);
         try {
+            const payment = payments.find(p => p.id === paymentId);
             let invoiceUrl = undefined;
+            
             if (finalInvoiceFile) {
-                invoiceUrl = await upload(finalInvoiceFile, montageId, 'documents');
+                const category = payment?.type === 'final' ? 'invoice_final' : 'invoice_advance';
+                invoiceUrl = await upload(finalInvoiceFile, montageId, category);
             }
 
             await markPaymentAsPaid(paymentId, { invoiceUrl });
@@ -181,7 +186,11 @@ export function MontagePaymentsTab({ montageId, payments }: MontagePaymentsTabPr
                                 </p>
                             </div>
                             <div className="space-y-2">
-                                <Label>Plik Proformy (PDF)</Label>
+                                <Label>
+                                    {newType === 'advance' ? 'Plik Proformy (Zaliczka)' : 
+                                     newType === 'final' ? 'Plik Proformy / Faktury (Końcowa)' : 
+                                     'Dokument płatności'}
+                                </Label>
                                 <Input 
                                     type="file" 
                                     accept=".pdf"
