@@ -50,7 +50,7 @@ interface MontageReady {
     clientName: string;
     installationAddress: string | null;
     installer: {
-        name: string;
+        name: string | null;
     } | null;
 }
 

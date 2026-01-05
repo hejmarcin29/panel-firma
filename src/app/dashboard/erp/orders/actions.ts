@@ -28,9 +28,6 @@ export async function getERPOrdersData() {
             customer: true,
             quotes: {
                 where: eq(quotes.status, 'accepted'),
-                with: {
-                    items: true
-                }
             }
         },
         orderBy: desc(montages.createdAt)
@@ -90,8 +87,6 @@ export async function createPurchaseOrder(montageIds: string[], supplierId: stri
         supplierId,
         status: 'ordered',
         orderDate: new Date(),
-        createdBy: user.id, // Assuming we might want to track who created it, but schema doesn't have createdBy on PO yet. It has createdAt.
-        // We can add createdBy later if needed.
     });
 
     // 2. Add items from accepted quotes of these montages
@@ -101,9 +96,6 @@ export async function createPurchaseOrder(montageIds: string[], supplierId: stri
             with: {
                 quotes: {
                     where: eq(quotes.status, 'accepted'),
-                    with: {
-                        items: true
-                    }
                 }
             }
         });
@@ -117,10 +109,10 @@ export async function createPurchaseOrder(montageIds: string[], supplierId: stri
                     purchaseOrderId: poId,
                     productName: item.name,
                     quantity: item.quantity,
-                    unitPrice: item.price, // Assuming price is net
+                    unitPrice: item.priceNet,
                     vatRate: item.vatRate,
-                    totalNet: item.amount, // Assuming amount is net total
-                    totalGross: Math.round(item.amount * (1 + item.vatRate / 100)),
+                    totalNet: item.totalNet,
+                    totalGross: item.totalGross,
                     montageId: montageId,
                 });
             }

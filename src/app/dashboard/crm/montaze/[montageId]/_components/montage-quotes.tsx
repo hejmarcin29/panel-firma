@@ -81,7 +81,7 @@ export function MontageQuotes({ montageId, quotes, montage, userRoles }: { monta
                                         <div>
                                             <div className="font-medium">{protocol.title || 'Protokół Odbioru'}</div>
                                             <div className="text-sm text-muted-foreground">
-                                                {new Date(protocol.createdAt).toLocaleDateString('pl-PL')}
+                                                {protocol.createdAt ? new Date(protocol.createdAt).toLocaleDateString('pl-PL') : ''}
                                             </div>
                                         </div>
                                     </div>
