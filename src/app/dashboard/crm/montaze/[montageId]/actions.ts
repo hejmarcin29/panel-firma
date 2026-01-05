@@ -285,22 +285,14 @@ export async function createPayment(montageId: string, data: {
             columns: { status: true }
         });
 
-        if (montage?.status === 'waiting_for_deposit') {
+        if (montage?.status === 'waiting_for_deposit' || montage?.status === 'contract_signed') {
             await db.update(montages)
                 .set({ status: 'deposit_paid' })
                 .where(eq(montages.id, montageId));
         }
     }
-
-    revalidatePath(`/dashboard/crm/montaze/${montageId}`);
-}
-
-    revalidatePath(`/dashboard/crm/montaze/${montageId}`);
-}
-
-    // Auto-update status if it's an Advance payment
-    // Logic: If current status is 'contract_signed', move to 'waiting_for_deposit'
-    if (data.type === 'advance') {
+    // Auto-update status if it's an Advance payment (PENDING)
+    else if (data.type === 'advance') {
         const montage = await db.query.montages.findFirst({
             where: eq(montages.id, montageId),
             columns: { status: true }
