@@ -979,7 +979,7 @@ type AddMontageTaskInput = {
 };
 
 export async function addMontageTask({ montageId, title, source }: AddMontageTaskInput) {
-	await requireUser();
+	const user = await requireUser();
 	const trimmedTitle = title.trim();
 
 	if (!trimmedTitle) {
