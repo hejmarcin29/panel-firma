@@ -6,6 +6,7 @@ import type {
 	MontageTask,
 	MaterialsEditHistoryEntry,
     QuoteItem,
+    MontagePayment,
 } from './types';
 import {
 	montageAttachments,
@@ -13,6 +14,7 @@ import {
 	montageNotes,
 	montageTasks,
 	montages,
+    montagePayments,
     quotes,
 	type MontageStatus,
 	users,
@@ -70,6 +72,7 @@ export type MontageRow = typeof montages.$inferSelect & {
 		}
 	>;
     quotes: Array<typeof quotes.$inferSelect>;
+    payments: Array<typeof montagePayments.$inferSelect>;
     installer?: typeof users.$inferSelect | null;
     measurer?: typeof users.$inferSelect | null;
     architect?: typeof users.$inferSelect | null;
@@ -139,6 +142,21 @@ function mapTask(task: MontageRow['tasks'][number]): MontageTask {
 		completed: Boolean(task.completed),
 		updatedAt: task.updatedAt,
 	};
+}
+
+function mapPayment(payment: MontageRow['payments'][number]): MontagePayment {
+    return {
+        id: payment.id,
+        name: payment.name,
+        amount: payment.amount,
+        status: payment.status as 'pending' | 'paid',
+        invoiceNumber: payment.invoiceNumber,
+        proformaUrl: payment.proformaUrl,
+        invoiceUrl: payment.invoiceUrl,
+        paidAt: payment.paidAt,
+        createdAt: payment.createdAt,
+        type: payment.type as 'advance' | 'final' | 'other',
+    };
 }
 
 export function mapMontageRow(row: MontageRow, publicBaseUrl: string | null): Montage {
@@ -224,6 +242,7 @@ export function mapMontageRow(row: MontageRow, publicBaseUrl: string | null): Mo
             items: (q.items as unknown as QuoteItem[]) || [],
             signedAt: q.signedAt,
         })),
+        payments: row.payments ? row.payments.map(mapPayment) : [],
 		notes: row.notes.map((note) => mapNote(note, publicBaseUrl)),
 		attachments: row.attachments.map((attachment) => mapAttachment(attachment, publicBaseUrl)),
 		tasks: row.tasks.map(mapTask),

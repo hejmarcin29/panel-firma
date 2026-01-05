@@ -76,6 +76,19 @@ export type MeasurementMaterialItem = {
     estimatedCost?: number;
 };
 
+export type MontagePayment = {
+    id: string;
+    name: string;
+    amount: string;
+    status: 'pending' | 'paid';
+    invoiceNumber: string;
+    proformaUrl: string | null;
+    invoiceUrl: string | null;
+    paidAt: Date | null;
+    createdAt: Date;
+    type: 'advance' | 'final' | 'other';
+};
+
 export type Montage = {
 	id: string;
 	clientName: string;
@@ -135,6 +148,7 @@ export type Montage = {
 	materialStatus: MontageMaterialStatus;
     materialClaimType?: MontageMaterialClaimType | null;
 	installerStatus: MontageInstallerStatus;
+    payments: MontagePayment[];
 	installerId?: string | null;
 	measurerId?: string | null;
 	architectId?: string | null;

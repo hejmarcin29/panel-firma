@@ -771,6 +771,7 @@ export const montagesRelations = relations(montages, ({ one, many }) => ({
         references: [customers.id],
     }),
     quotes: many(quotes),
+    payments: many(montagePayments),
     serviceItems: many(montageServiceItems),
     settlement: one(settlements, {
         fields: [montages.id],

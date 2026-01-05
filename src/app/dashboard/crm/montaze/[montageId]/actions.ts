@@ -23,6 +23,7 @@ import { tryGetR2Config } from '@/lib/r2/config';
 import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
 import { PROCESS_STEPS } from '@/lib/montaze/process-definition';
 import { mapMontageRow, type MontageRow } from '../utils';
+import { uploadMontageObject } from '@/lib/r2/storage';
 
 export async function getMontageDetails(montageId: string) {
     const user = await requireUser();
@@ -330,7 +331,7 @@ export async function markPaymentAsPaid(paymentId: string, data: {
                  await db.insert(montageTasks).values({
                     id: randomUUID(),
                     montageId: payment.montageId,
-                    content: `Wystaw Fakturę Zaliczkową do płatności: ${payment.name}`,
+                    title: `Wystaw Fakturę Zaliczkową do płatności: ${payment.name}`,
                     completed: false,
                     orderIndex: 0,
                 });
@@ -354,5 +355,34 @@ export async function deletePayment(paymentId: string) {
     await db.delete(montagePayments).where(eq(montagePayments.id, paymentId));
     revalidatePath(`/dashboard/crm/montaze/${payment.montageId}`);
     return { success: true };
+}
+
+export async function addMontageAttachment(formData: FormData) {
+    const user = await requireUser();
+    const file = formData.get('file') as File;
+    const montageId = formData.get('montageId') as string;
+    const title = formData.get('title') as string;
+    const category = formData.get('category') as string;
+
+    if (!file || !montageId) throw new Error('Missing file or montageId');
+
+    const { url } = await uploadMontageObject({
+        clientName: 'unknown',
+        montageId,
+        file: file,
+        category: category || 'documents'
+    });
+
+    await db.insert(montageAttachments).values({
+        id: randomUUID(),
+        montageId,
+        type: category === 'proforma' ? 'proforma' : (category === 'invoice_final' ? 'invoice_final' : 'general'),
+        title: title || file.name,
+        url: url,
+        uploadedBy: user.id,
+    });
+
+    revalidatePath(`/dashboard/crm/montaze/${montageId}`);
+    return { success: true, url };
 }
 
