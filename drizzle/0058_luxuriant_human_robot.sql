@@ -1,0 +1,1 @@
+ALTER TABLE "montages" ALTER COLUMN "panel_product_id" SET DATA TYPE text;
