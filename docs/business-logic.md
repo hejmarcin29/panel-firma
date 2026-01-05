@@ -69,7 +69,10 @@ System obsługuje dwa tryby dostawy materiałów, definiowane przez montażystę
 Zdefiniowane automatyzacje widoczne na osi czasu procesu:
 
 ### Lejki i Umawianie
-- **Nowe Zgłoszenie:** Powiadomienie Biura (Email/SMS) o nowym leadzie.
+- **Nowe Zgłoszenie:**
+  - Powiadomienie Biura (Email/SMS) o nowym leadzie.
+  - Przypisanie Pomiarowca (zmiana statusu na "Do umówienia").
+  - Uzupełnienie Danych (zmiana statusu na "Pomiar Umówiony" - Self-service).
 - **Pomiar Umówiony:**
   - Synchronizacja Kalendarza (Google Calendar).
   - Przypomnienie SMS dla klienta (24h przed).
@@ -78,10 +81,15 @@ Zdefiniowane automatyzacje widoczne na osi czasu procesu:
 - **Po Pomiarze:** Start Wyceny (zmiana statusu po utworzeniu oferty).
 - **Wycena w Toku:** Wysłanie Oferty (zmiana statusu po wysłaniu maila).
 - **Podpis Klienta:** Automatyczna zmiana statusu na "Umowa Podpisana" po podpisie w panelu.
-- **Umowa Podpisana:** Generowanie Proformy (faktura zaliczkowa).
+- **Umowa Podpisana:** Wystawienie Proformy (zmiana statusu na "Oczekiwanie na Zaliczkę" po dodaniu płatności).
+- **Oczekiwanie na Zaliczkę:**
+  - Przypomnienie o Płatności (SMS/Mail przypominający o braku wpłaty).
+  - Zaksięgowanie Wpłaty (zmiana statusu na "Zaliczka Opłacona").
 
 ### Realizacja i Logistyka
-- **Zaliczka Opłacona:** Zapotrzebowanie ERP (utworzenie draftu zamówienia do dostawcy).
+- **Zaliczka Opłacona:**
+  - Potwierdzenie Wpłaty (SMS/Mail do klienta).
+  - Zapotrzebowanie ERP (utworzenie draftu zamówienia do dostawcy).
 - **Materiały Zamówione:** Mail do Dostawcy (wysłanie zamówienia PDF).
 - **Gotowe do Odbioru:** Powiadomienie o Odbiorze (SMS/Mail do klienta/montażysty).
 - **Montaż Zaplanowany:** Przypomnienie o Montażu (SMS do klienta 48h przed).

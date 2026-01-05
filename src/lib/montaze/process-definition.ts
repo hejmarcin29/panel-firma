@@ -34,7 +34,9 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
         relatedStatuses: ['new_lead'], 
         actor: 'office', 
         automations: [
-            { id: 'auto_lead_notification', label: 'Powiadomienie Biura', description: 'Email/SMS do biura o nowym leadzie', trigger: 'Nowy rekord' }
+            { id: 'auto_lead_notification', label: 'Powiadomienie Biura', description: 'Email/SMS do biura o nowym leadzie', trigger: 'Nowy rekord' },
+            { id: 'auto_assign_measurer', label: 'Przypisanie Pomiarowca', description: 'Przypisanie osoby zmienia status na "Do umówienia"', trigger: 'Przypisanie w panelu' },
+            { id: 'auto_client_data', label: 'Uzupełnienie Danych', description: 'Klient wpisał adres -> zmiana na "Pomiar Umówiony" (Self-service)', trigger: 'Formularz w panelu' }
         ], 
         checkpoints: [] 
     },
@@ -112,11 +114,22 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
         relatedStatuses: ['contract_signed'], 
         actor: 'office', 
         automations: [
-            { id: 'auto_proforma', label: 'Generowanie Proformy', description: 'Utworzenie faktury zaliczkowej', trigger: 'Zmiana statusu' }
+            { id: 'auto_status_waiting_deposit', label: 'Wystawienie Proformy', description: 'Dodanie płatności zaliczkowej zmienia status na "Oczekiwanie na Zaliczkę"', trigger: 'Utworzenie płatności' }
         ], 
         checkpoints: [] 
     },
-    { id: 'waiting_for_deposit', label: 'Oczekiwanie na Zaliczkę', description: 'Faktura zaliczkowa wysłana.', relatedStatuses: ['waiting_for_deposit'], actor: 'office', automations: [], checkpoints: [] },
+    { 
+        id: 'waiting_for_deposit', 
+        label: 'Oczekiwanie na Zaliczkę', 
+        description: 'Faktura zaliczkowa wysłana.', 
+        relatedStatuses: ['waiting_for_deposit'], 
+        actor: 'office', 
+        automations: [
+            { id: 'auto_payment_reminder', label: 'Przypomnienie o Płatności', description: 'SMS/Mail przypominający o braku wpłaty', trigger: 'Cron 3 dni' },
+            { id: 'auto_status_deposit_paid', label: 'Zaksięgowanie Wpłaty', description: 'Oznaczenie płatności jako opłaconej zmienia status na "Zaliczka Opłacona"', trigger: 'Zaksięgowanie wpłaty' }
+        ], 
+        checkpoints: [] 
+    },
     { 
         id: 'deposit_paid', 
         label: 'Zaliczka Opłacona', 
@@ -124,6 +137,7 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
         relatedStatuses: ['deposit_paid'], 
         actor: 'office', 
         automations: [
+            { id: 'auto_payment_confirmation', label: 'Potwierdzenie Wpłaty', description: 'SMS/Mail do klienta z potwierdzeniem', trigger: 'Zaksięgowanie wpłaty' },
             { id: 'auto_erp_order', label: 'Zapotrzebowanie ERP', description: 'Utworzenie draftu zamówienia do dostawcy', trigger: 'Zaksięgowanie wpłaty' }
         ], 
         checkpoints: [], 
@@ -164,7 +178,17 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
         ], 
         checkpoints: [] 
     },
-    { id: 'materials_delivered', label: 'Materiały u Klienta', description: 'Towar dostarczony na budowę.', relatedStatuses: ['materials_delivered'], actor: 'office', automations: [], checkpoints: [] },
+    { 
+        id: 'materials_delivered', 
+        label: 'Materiały u Klienta', 
+        description: 'Towar dostarczony na budowę.', 
+        relatedStatuses: ['materials_delivered'], 
+        actor: 'office', 
+        automations: [
+            { id: 'auto_erp_issue', label: 'Wydanie z ERP', description: 'Automatyczna zmiana statusu po wydaniu towaru w module ERP', trigger: 'Wydanie towaru' }
+        ], 
+        checkpoints: [] 
+    },
 
     // 5. REALIZACJA
     { id: 'installation_in_progress', label: 'Montaż w Toku', description: 'Prace trwają.', relatedStatuses: ['installation_in_progress'], actor: 'installer', automations: [], checkpoints: [] },
