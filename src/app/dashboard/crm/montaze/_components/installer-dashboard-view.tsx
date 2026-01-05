@@ -85,7 +85,11 @@ export function InstallerDashboardView({ montages }: InstallerDashboardViewProps
   sections.THIS_WEEK.sort(sortByDate);
   sections.NEXT_WEEK.sort(sortByDate);
   sections.FUTURE.sort(sortByDate);
-  sections.BACKLOG.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()); // Newest first
+  sections.BACKLOG.sort((a, b) => {
+    const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+    const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+    return dateB - dateA;
+  }); // Newest first
 
   const missingCostsMontages = montages.filter(m => {
       const materials = m.measurementAdditionalMaterials;

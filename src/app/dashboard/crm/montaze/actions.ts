@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { eq, and, sql, ne } from 'drizzle-orm';
+import { eq, and, sql, ne, inArray, type SQL } from 'drizzle-orm';
 import { createTransport } from 'nodemailer';
 
 import { requireUser } from '@/lib/auth/session';
@@ -1537,7 +1537,7 @@ import { products, erpProducts, erpCategories } from '@/lib/db/schema';
 export async function getMontageProducts(options: { type: 'panel' | 'accessory', category?: string }) {
     await requireUser();
     
-    let whereClause = eq(erpProducts.status, 'active');
+    let whereClause: SQL | undefined = eq(erpProducts.status, 'active');
 
     if (options.category) {
         const category = await db.query.erpCategories.findFirst({
