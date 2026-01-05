@@ -24,7 +24,7 @@ export function CRMNavigation({ userRoles = [] }: { userRoles?: string[] }) {
     // We also want to show it if there are query params, but pathname doesn't include them.
     const shouldShow = mainPaths.includes(pathname);
 
-    if (!shouldShow) {
+    if (!shouldShow || isInstaller) {
         return null;
     }
 

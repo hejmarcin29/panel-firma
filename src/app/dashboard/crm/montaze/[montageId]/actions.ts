@@ -24,6 +24,7 @@ import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
 import { PROCESS_STEPS } from '@/lib/montaze/process-definition';
 import { mapMontageRow, type MontageRow } from '../utils';
 import { uploadMontageObject } from '@/lib/r2/storage';
+import { logSystemEvent } from '@/lib/logging';
 
 export async function getMontageDetails(montageId: string) {
     const user = await requireUser();
@@ -198,7 +199,7 @@ export async function generateCustomerToken(montageId: string) {
 }
 
 export async function updateMontageStatus(montageId: string, newStatus: MontageStatus) {
-    await requireUser();
+    const user = await requireUser();
 
     // Check requirements
     const stepDef = PROCESS_STEPS.find(s => s.relatedStatuses.includes(newStatus));
@@ -225,6 +226,10 @@ export async function updateMontageStatus(montageId: string, newStatus: MontageS
         .set({ status: newStatus })
         .where(eq(montages.id, montageId));
 
+    const statusDefinitions = await getMontageStatusDefinitions();
+    const statusLabel = statusDefinitions.find(d => d.id === newStatus)?.label || newStatus;
+    await logSystemEvent('update_montage_status', `Zmiana statusu na: ${statusLabel}`, user.id);
+
     revalidatePath(`/dashboard/crm/montaze/${montageId}`);
 }
 
@@ -237,7 +242,7 @@ export async function createPayment(montageId: string, data: {
     status?: 'pending' | 'paid';
     type: 'advance' | 'final' | 'other';
 }) {
-    await requireUser();
+    const user = await requireUser();
 
     const paymentId = randomUUID();
 
@@ -253,6 +258,8 @@ export async function createPayment(montageId: string, data: {
         paidAt: data.status === 'paid' ? new Date() : null,
         type: data.type,
     });
+
+    await logSystemEvent('create_payment', `Utworzono płatność: ${data.name} (${data.amount} PLN)`, user.id);
 
     // If we have files, we should also add them to the main attachments list for visibility
     if (data.proformaUrl) {
@@ -312,7 +319,7 @@ export async function createPayment(montageId: string, data: {
 export async function markPaymentAsPaid(paymentId: string, data: {
     invoiceUrl?: string;
 }) {
-    await requireUser();
+    const user = await requireUser();
 
     const payment = await db.query.montagePayments.findFirst({
         where: eq(montagePayments.id, paymentId),
@@ -327,6 +334,8 @@ export async function markPaymentAsPaid(paymentId: string, data: {
             invoiceUrl: data.invoiceUrl,
         })
         .where(eq(montagePayments.id, paymentId));
+
+    await logSystemEvent('mark_payment_paid', `Oznaczono płatność jako opłaconą: ${payment.name} (${payment.amount} PLN)`, user.id);
 
     // Auto-update status logic
     // If status is 'waiting_for_deposit' AND it is an ADVANCE payment, move to 'deposit_paid'
@@ -348,7 +357,7 @@ export async function markPaymentAsPaid(paymentId: string, data: {
 }
 
 export async function deletePayment(paymentId: string) {
-    await requireUser();
+    const user = await requireUser();
     
     const payment = await db.query.montagePayments.findFirst({
         where: eq(montagePayments.id, paymentId),
@@ -357,6 +366,9 @@ export async function deletePayment(paymentId: string) {
     if (!payment) return;
 
     await db.delete(montagePayments).where(eq(montagePayments.id, paymentId));
+    
+    await logSystemEvent('delete_payment', `Usunięto płatność: ${payment.name} (${payment.amount} PLN)`, user.id);
+
     revalidatePath(`/dashboard/crm/montaze/${payment.montageId}`);
     return { success: true };
 }
@@ -385,6 +397,8 @@ export async function addMontageAttachment(formData: FormData) {
         url: url,
         uploadedBy: user.id,
     });
+
+    await logSystemEvent('add_attachment', `Dodano załącznik: ${title || file.name}`, user.id);
 
     revalidatePath(`/dashboard/crm/montaze/${montageId}`);
     return { success: true, url };

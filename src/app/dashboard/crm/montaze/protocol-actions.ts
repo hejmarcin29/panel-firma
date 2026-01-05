@@ -15,6 +15,7 @@ import { isSystemAutomationEnabled } from '@/lib/montaze/automation';
 import { toggleMontageChecklistItem } from './actions';
 import { randomUUID } from 'crypto';
 import { requireUser } from '@/lib/auth/session';
+import { logSystemEvent } from '@/lib/logging';
 // import { sendEmail } from '@/lib/email'; // Placeholder if email exists
 
 export async function uploadSignature(montageId: string, base64Data: string, type: 'client' | 'installer') {
@@ -90,6 +91,8 @@ export async function submitMontageProtocol(data: {
             installerSignatureUrl: data.installerSignatureUrl,
             ...(shouldUpdateStatus ? { status: 'protocol_signed' } : {}), // Move to next stage automatically if enabled, but don't revert completed
         }).where(eq(montages.id, data.montageId));
+
+        await logSystemEvent('submit_protocol', `Podpisano protokół odbioru (Nr umowy: ${data.contractNumber})`, user.id);
 
         // 2. Generate PDF
         const config = await getR2Config();

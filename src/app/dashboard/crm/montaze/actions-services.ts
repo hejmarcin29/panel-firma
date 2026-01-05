@@ -6,6 +6,7 @@ import { db } from '@/lib/db';
 import { montageServiceItems, services, montages, userServiceRates } from '@/lib/db/schema';
 import { requireUser } from '@/lib/auth/session';
 import { generateId } from '@/lib/utils';
+import { logSystemEvent } from '@/lib/logging';
 
 const MONTAGE_PATH = '/dashboard/crm/montaze';
 
@@ -68,24 +69,43 @@ export async function addMontageService(montageId: string, serviceId: string, qu
         vatRate: service.vatRate || 0.08, // Default to 8% if not set
     });
 
+    const user = await requireUser();
+    await logSystemEvent('add_service', `Dodano usługę: ${service.name} (${quantity} szt.)`, user.id);
+
     revalidatePath(`${MONTAGE_PATH}/${montageId}`);
 }
 
 export async function removeMontageService(itemId: string, montageId: string) {
-    await requireUser();
+    const user = await requireUser();
+
+    const item = await db.query.montageServiceItems.findFirst({
+        where: eq(montageServiceItems.id, itemId),
+    });
 
     await db.delete(montageServiceItems)
         .where(eq(montageServiceItems.id, itemId));
+
+    if (item) {
+        await logSystemEvent('remove_service', `Usunięto usługę: ${item.snapshotName}`, user.id);
+    }
 
     revalidatePath(`${MONTAGE_PATH}/${montageId}`);
 }
 
 export async function updateMontageServiceQuantity(itemId: string, quantity: number, montageId: string) {
-    await requireUser();
+    const user = await requireUser();
+
+    const item = await db.query.montageServiceItems.findFirst({
+        where: eq(montageServiceItems.id, itemId),
+    });
 
     await db.update(montageServiceItems)
         .set({ quantity })
         .where(eq(montageServiceItems.id, itemId));
+
+    if (item) {
+        await logSystemEvent('update_service_quantity', `Zmieniono ilość usługi ${item.snapshotName} z ${item.quantity} na ${quantity}`, user.id);
+    }
 
     revalidatePath(`${MONTAGE_PATH}/${montageId}`);
 }

@@ -243,8 +243,32 @@ function TodayCard({ item, onFinish }: { item: DashboardItem, onFinish: () => vo
 }
 
 function UpcomingCard({ item }: { item: DashboardItem }) {
-    const date = item.measurementDate ? new Date(item.measurementDate) : (item.scheduledInstallationAt ? new Date(item.scheduledInstallationAt) : new Date());
-    const isMeasurement = !!item.measurementDate;
+    const mDate = item.measurementDate ? new Date(item.measurementDate) : null;
+    const iDate = item.scheduledInstallationAt ? new Date(item.scheduledInstallationAt) : null;
+    
+    const now = new Date();
+    now.setHours(0,0,0,0);
+    
+    let date = iDate || new Date();
+    let isMeasurement = false;
+    
+    if (mDate && mDate > now) {
+        // Measurement is in future.
+        // Check if Installation is also in future and earlier
+        if (iDate && iDate > now && iDate < mDate) {
+             date = iDate;
+             isMeasurement = false;
+        } else {
+             date = mDate;
+             isMeasurement = true;
+        }
+    } else {
+        // Measurement is past or null. Must be installation.
+        if (iDate) {
+            date = iDate;
+            isMeasurement = false;
+        }
+    }
     
     return (
         <Card className="bg-muted/20">

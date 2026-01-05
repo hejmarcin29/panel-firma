@@ -999,6 +999,8 @@ export async function addMontageTask({ montageId, title, source }: AddMontageTas
 		updatedAt: now,
 	});
 
+    await logSystemEvent('add_task', `Dodano zadanie: ${trimmedTitle}`, user.id);
+
 	await touchMontage(montageId);
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
@@ -1016,6 +1018,19 @@ export async function toggleMontageTask({ taskId, montageId, completed }: Toggle
 		.update(montageTasks)
 		.set({ completed, updatedAt: new Date() })
 		.where(and(eq(montageTasks.id, taskId), eq(montageTasks.montageId, montageId)));
+
+    const task = await db.query.montageTasks.findFirst({
+        where: eq(montageTasks.id, taskId),
+        columns: { title: true }
+    });
+    
+    if (task) {
+        await logSystemEvent(
+            completed ? 'complete_task' : 'reopen_task', 
+            `${completed ? 'Wykonano' : 'Wznowiono'} zadanie: ${task.title}`, 
+            await requireUser().then(u => u.id)
+        );
+    }
 
 	await touchMontage(montageId);
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
@@ -1059,6 +1074,8 @@ export async function addMontageAttachment(formData: FormData) {
         category,
         type,
 	});
+
+    await logSystemEvent('add_attachment', `Dodano załącznik: ${title || fileField.name}`, user.id);
 
 	await touchMontage(montageRecord.id);
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
@@ -1254,13 +1271,16 @@ export async function updateMontageMaterialDetails({
 }
 
 export async function updateMontageClientInfo(montageId: string, clientInfo: string) {
-    await requireUser();
+    const user = await requireUser();
     await db.update(montages)
         .set({ 
             clientInfo: clientInfo,
             updatedAt: new Date() 
         })
         .where(eq(montages.id, montageId));
+    
+    await logSystemEvent('update_client_info', 'Zaktualizowano wymagania klienta (Lead)', user.id);
+
     revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
 
@@ -1273,6 +1293,12 @@ export async function updateMontageMeasurementDate(montageId: string, date: Date
             updatedAt: new Date() 
         })
         .where(eq(montages.id, montageId));
+
+    if (date) {
+        await logSystemEvent('update_measurement_date', `Ustawiono datę pomiaru na: ${date.toLocaleDateString()}`, user.id);
+    } else {
+        await logSystemEvent('update_measurement_date', `Usunięto datę pomiaru`, user.id);
+    }
 
     // Calendar Sync
     try {
@@ -1437,6 +1463,8 @@ export async function uploadChecklistAttachment(formData: FormData) {
 		.set({ attachmentId, updatedAt: new Date() })
 		.where(eq(montageChecklistItems.id, itemId));
 
+    await logSystemEvent('upload_checklist_attachment', `Dodano załącznik do elementu listy: ${item.label || 'Element listy'}`, user.id);
+
 	await touchMontage(montageId);
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
@@ -1478,12 +1506,15 @@ export async function initializeMontageChecklist(montageId: string) {
 		}))
 	);
 
+    const user = await requireUser();
+    await logSystemEvent('init_checklist', 'Zainicjalizowano listę kontrolną', user.id);
+
 	await touchMontage(montageId);
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
 
 export async function addMontageChecklistItem({ montageId, label, allowAttachment }: { montageId: string; label: string; allowAttachment: boolean }) {
-	await requireUser();
+	const user = await requireUser();
 	await getMontageOrThrow(montageId);
 
 	// Get max order index
@@ -1505,28 +1536,46 @@ export async function addMontageChecklistItem({ montageId, label, allowAttachmen
 		updatedAt: new Date(),
 	});
 
+    await logSystemEvent('add_checklist_item', `Dodano element listy: ${label}`, user.id);
+
 	await touchMontage(montageId);
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
 
 export async function deleteMontageChecklistItem({ montageId, itemId }: { montageId: string; itemId: string }) {
-	await requireUser();
+	const user = await requireUser();
 	await getMontageOrThrow(montageId);
+
+    const item = await db.query.montageChecklistItems.findFirst({
+        where: and(eq(montageChecklistItems.id, itemId), eq(montageChecklistItems.montageId, montageId)),
+    });
 
 	await db.delete(montageChecklistItems)
 		.where(and(eq(montageChecklistItems.id, itemId), eq(montageChecklistItems.montageId, montageId)));
+
+    if (item) {
+        await logSystemEvent('delete_checklist_item', `Usunięto element listy: ${item.label}`, user.id);
+    }
 
 	await touchMontage(montageId);
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
 
 export async function updateMontageChecklistItemLabel({ montageId, itemId, label }: { montageId: string; itemId: string; label: string }) {
-	await requireUser();
+	const user = await requireUser();
 	await getMontageOrThrow(montageId);
+
+    const item = await db.query.montageChecklistItems.findFirst({
+        where: and(eq(montageChecklistItems.id, itemId), eq(montageChecklistItems.montageId, montageId)),
+    });
 
 	await db.update(montageChecklistItems)
 		.set({ label, updatedAt: new Date() })
 		.where(and(eq(montageChecklistItems.id, itemId), eq(montageChecklistItems.montageId, montageId)));
+
+    if (item && item.label !== label) {
+        await logSystemEvent('update_checklist_item', `Zmieniono nazwę elementu listy z "${item.label}" na "${label}"`, user.id);
+    }
 
 	await touchMontage(montageId);
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
@@ -1618,7 +1667,7 @@ export async function updateMontageCostEstimation({
     }[];
     completed?: boolean;
 }) {
-    await requireUser();
+    const user = await requireUser();
 
     // 1. Update Materials (with costs)
     await db
@@ -1629,6 +1678,8 @@ export async function updateMontageCostEstimation({
             updatedAt: new Date(),
         })
         .where(eq(montages.id, montageId));
+
+    await logSystemEvent('update_cost_estimation', `Zaktualizowano kosztorys (Status: ${completed ? 'Zakończony' : 'W trakcie'})`, user.id);
 
     // 2. Update Services (Add new items)
     // First, we might want to clear existing "estimated" services if we want a full overwrite, 
@@ -2658,8 +2709,16 @@ export async function assignMeasurerAndAdvance(montageId: string, measurerId: st
 }
 
 export async function deleteMontageAttachment(attachmentId: string) {
-    await requireUser();
+    const user = await requireUser();
     
-    await db.delete(montageAttachments).where(eq(montageAttachments.id, attachmentId));
+    const attachment = await db.query.montageAttachments.findFirst({
+        where: eq(montageAttachments.id, attachmentId),
+    });
+
+    if (attachment) {
+        await db.delete(montageAttachments).where(eq(montageAttachments.id, attachmentId));
+        await logSystemEvent('delete_attachment', `Usunięto załącznik: ${attachment.title || 'Bez tytułu'}`, user.id);
+    }
+
     revalidatePath(MONTAGE_DASHBOARD_PATH);
 }

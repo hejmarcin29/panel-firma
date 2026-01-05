@@ -8,6 +8,7 @@ import { requireUser } from '@/lib/auth/session';
 import { uploadMontageObject } from '@/lib/r2/storage';
 import { MontageCategories } from '@/lib/r2/constants';
 import type { TechnicalAuditData, MaterialLogData } from './technical-data';
+import { logSystemEvent } from '@/lib/logging';
 
 export async function uploadAuditPhotoAction(formData: FormData) {
     const user = await requireUser();
@@ -43,25 +44,31 @@ export async function uploadAuditPhotoAction(formData: FormData) {
         createdAt: new Date(),
     });
 
+    await logSystemEvent('upload_audit_photo', 'Dodano zdjęcie do audytu technicznego', user.id);
+
     return uploaded.url;
 }
 
 export async function updateTechnicalAudit(montageId: string, data: TechnicalAuditData) {
-    await requireUser();
+    const user = await requireUser();
     
     await db.update(montages)
         .set({ technicalAudit: data })
         .where(eq(montages.id, montageId));
 
+    await logSystemEvent('update_technical_audit', 'Zaktualizowano dane audytu technicznego (Asystent Pomiaru)', user.id);
+
     revalidatePath(`/dashboard/crm/montaze/${montageId}`);
 }
 
 export async function updateMaterialLog(montageId: string, data: MaterialLogData) {
-    await requireUser();
+    const user = await requireUser();
     
     await db.update(montages)
         .set({ materialLog: data })
         .where(eq(montages.id, montageId));
+
+    await logSystemEvent('update_material_log', 'Zaktualizowano dziennik materiałowy', user.id);
 
     revalidatePath(`/dashboard/crm/montaze/${montageId}`);
 }

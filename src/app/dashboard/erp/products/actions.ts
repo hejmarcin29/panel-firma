@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from "@/lib/db";
-import { erpProducts, erpPurchasePrices, erpProductAttributes, products, erpCategories } from "@/lib/db/schema";
+import { erpProducts, erpPurchasePrices, erpProductAttributes, products, erpCategories, erpInventory } from "@/lib/db/schema";
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { requireUser } from "@/lib/auth/session";
@@ -57,6 +57,11 @@ export async function deleteAllProducts() {
     const user = await requireUser();
     if (!user.roles.includes('admin')) throw new Error('Unauthorized');
 
+    // Delete related records first
+    await db.delete(erpPurchasePrices);
+    await db.delete(erpProductAttributes);
+    await db.delete(erpInventory);
+
     // Delete all from erpProducts
     await db.delete(erpProducts);
     
@@ -81,6 +86,11 @@ export async function bulkDeleteProducts(ids: string[]) {
     if (!user.roles.includes('admin')) throw new Error('Unauthorized');
 
     if (ids.length === 0) return;
+
+    // Delete related records first
+    await db.delete(erpPurchasePrices).where(inArray(erpPurchasePrices.productId, ids));
+    await db.delete(erpProductAttributes).where(inArray(erpProductAttributes.productId, ids));
+    await db.delete(erpInventory).where(inArray(erpInventory.productId, ids));
 
     await db.delete(erpProducts)
         .where(inArray(erpProducts.id, ids));
