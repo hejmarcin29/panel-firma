@@ -115,7 +115,7 @@ export type Montage = {
 	floorArea: number | null;
 	floorDetails: string | null;
 	panelModel: string | null;
-    panelProductId?: number | null;
+    panelProductId?: number | string | null;
 	panelWaste: number | null;
 	modelsApproved: boolean;
 	measurementInstallationMethod: 'click' | 'glue' | null;

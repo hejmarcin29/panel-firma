@@ -100,7 +100,7 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
   const [panelAdditionalMaterials, setPanelAdditionalMaterials] = useState(montage.floorDetails || '');
   
   const [panelModel, setPanelModel] = useState(montage.panelModel || '');
-  const [panelProductId, setPanelProductId] = useState<number | null>(montage.panelProductId || null);
+  const [panelProductId, setPanelProductId] = useState<number | string | null>(montage.panelProductId || null);
   const [panelWaste, setPanelWaste] = useState<string>(montage.panelWaste?.toString() || '5');
   const [modelsApproved, setModelsApproved] = useState(montage.modelsApproved || false);
 

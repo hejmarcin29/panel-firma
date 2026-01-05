@@ -564,7 +564,7 @@ export const montages = pgTable(
 		floorArea: doublePrecision('floor_area'),
 		floorDetails: text('floor_details'),
 		panelModel: text('panel_model'),
-		panelProductId: integer('panel_product_id'),
+		panelProductId: text('panel_product_id'),
 		panelWaste: doublePrecision('panel_waste'),
 		modelsApproved: boolean('models_approved').notNull().default(false),
 		finalPanelAmount: doublePrecision('final_panel_amount'),

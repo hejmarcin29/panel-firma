@@ -117,6 +117,7 @@ export function FinishWorkDialog({ montageId, trigger, open, onOpenChange }: Fin
               >
                 {file ? (
                   <div className="relative w-full h-full p-2">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img 
                       src={URL.createObjectURL(file)} 
                       alt="Preview" 

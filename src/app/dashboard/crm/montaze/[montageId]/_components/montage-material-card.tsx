@@ -278,17 +278,16 @@ export function MontageMaterialCard({ montage, userRoles = ['admin'] }: { montag
         isOpen={isPanelSelectorOpen}
         onClose={() => setIsPanelSelectorOpen(false)}
         onSelect={(product) => {
-            const pid = Number(product.id);
             setFormData(prev => ({
                 ...prev,
                 panelModel: product.name,
-                panelProductId: pid
+                panelProductId: product.id
             }));
             setIsPanelSelectorOpen(false);
             debouncedSave({
                 ...formData,
                 panelModel: product.name,
-                panelProductId: pid
+                panelProductId: product.id
             });
         }}
         type="panel"

@@ -1215,7 +1215,7 @@ type UpdateMontageMaterialsInput = {
 	materialDetails: string;
 	finalPanelAmount?: number | null;
 	panelModel?: string | null;
-    panelProductId?: number | null;
+    panelProductId?: number | string | null;
 	floorDetails?: string | null;
 	materialsEditHistory?: MaterialsEditHistoryEntry[];
 };
@@ -1240,7 +1240,7 @@ export async function updateMontageMaterialDetails({
 			measurementDetails: sanitized ? sanitized : null, // Sync with measurementDetails
 			finalPanelAmount,
 			panelModel,
-            panelProductId,
+            panelProductId: panelProductId?.toString(),
 			floorDetails,
 			materialsEditHistory,
 			updatedAt: new Date(),
@@ -1532,7 +1532,7 @@ export async function updateMontageChecklistItemLabel({ montageId, itemId, label
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
 
-import { products, erpProducts, erpCategories } from '@/lib/db/schema';
+import { erpProducts, erpCategories } from '@/lib/db/schema';
 
 export async function getMontageProducts(options: { type: 'panel' | 'accessory', category?: string }) {
     await requireUser();
@@ -1590,7 +1590,7 @@ export async function getMontageProducts(options: { type: 'panel' | 'accessory',
 
     return results.map(p => ({
         ...p,
-        id: p.id as any // Cast to any to bypass type check for now, will fix frontend
+        id: p.id
     }));
 }
 
@@ -1703,7 +1703,7 @@ export async function updateMontageMeasurement({
 	floorArea: number | null;
 	floorDetails: string;
 	panelModel: string;
-    panelProductId?: number | null;
+    panelProductId?: number | string | null;
 	panelWaste: number;
 	modelsApproved: boolean;
 	additionalInfo: string;
@@ -1757,7 +1757,7 @@ export async function updateMontageMeasurement({
 			floorDetails,
             isHousingVat,
 			panelModel,
-            panelProductId,
+            panelProductId: panelProductId?.toString(),
 			panelWaste,
 			modelsApproved,
 			additionalInfo,
@@ -2269,7 +2269,7 @@ export async function createExtendedLead(formData: FormData) {
         installationCity: shippingCity?.trim() || null,
         installationPostalCode: shippingPostalCode?.trim() || null,
         
-        panelProductId: productId && productId !== 'none' ? parseInt(productId) : null,
+        panelProductId: productId && productId !== 'none' ? productId : null,
         floorArea: floorArea ? parseFloat(floorArea) : null,
         forecastedInstallationDate: estimatedDate ? new Date(estimatedDate) : null,
         
@@ -2395,7 +2395,7 @@ export async function convertLeadToMontage(data: {
             estimatedFloorArea: data.floorArea ? parseFloat(data.floorArea) : null,
             floorArea: null,
             ...(data.productId !== undefined ? {
-                panelProductId: data.productId && data.productId !== 'none' ? parseInt(data.productId) : null,
+                panelProductId: data.productId && data.productId !== 'none' ? data.productId : null,
             } : {}),
             status: 'new_lead',
             updatedAt: new Date(),

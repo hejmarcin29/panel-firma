@@ -87,6 +87,7 @@ export function StartWorkDialog({ montageId, trigger, open, onOpenChange }: Star
               >
                 {file ? (
                   <div className="relative w-full h-full p-2">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img 
                       src={URL.createObjectURL(file)} 
                       alt="Preview" 
@@ -131,7 +132,7 @@ export function StartWorkDialog({ montageId, trigger, open, onOpenChange }: Star
               <div>
                 <h3 className="font-semibold text-lg">Gotowy do startu?</h3>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Zdjęcie zostało dodane. Kliknij poniżej, aby zmienić status na "W toku" i rozpocząć licznik czasu.
+                  Zdjęcie zostało dodane. Kliknij poniżej, aby zmienić status na &quot;W toku&quot; i rozpocząć licznik czasu.
                 </p>
               </div>
             </div>
