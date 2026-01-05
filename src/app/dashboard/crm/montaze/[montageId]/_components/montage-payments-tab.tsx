@@ -44,8 +44,11 @@ export function MontagePaymentsTab({ montageId, payments }: MontagePaymentsTabPr
     const [newName, setNewName] = useState('');
     const [newAmount, setNewAmount] = useState('');
     const [newInvoiceNumber, setNewInvoiceNumber] = useState('');
-    const [newType, setNewType] = useState<'advance' | 'final' | 'other'>('other');
-    const [newProformaFile, setNewProformaFile] = useState<File | null>(null);
+    
+    type PaymentScenario = 'advance_proforma' | 'advance_invoice' | 'final_invoice' | 'other';
+    const [paymentScenario, setPaymentScenario] = useState<PaymentScenario>('advance_proforma');
+    
+    const [newFile, setNewFile] = useState<File | null>(null);
 
     // Mark Paid Form State
     const [finalInvoiceFile, setFinalInvoiceFile] = useState<File | null>(null);
@@ -59,10 +62,31 @@ export function MontagePaymentsTab({ montageId, payments }: MontagePaymentsTabPr
         setIsSubmitting(true);
         try {
             let proformaUrl = undefined;
-            if (newProformaFile) {
-                // Determine category based on payment type
-                const category = newType === 'final' ? 'invoice_final' : 'proforma';
-                proformaUrl = await upload(newProformaFile, montageId, category);
+            let invoiceUrl = undefined;
+            let status: 'pending' | 'paid' = 'pending';
+            let type: 'advance' | 'final' | 'other' = 'other';
+
+            if (paymentScenario === 'advance_proforma') {
+                type = 'advance';
+                status = 'pending';
+                if (newFile) {
+                    proformaUrl = await upload(newFile, montageId, 'proforma');
+                }
+            } else if (paymentScenario === 'advance_invoice') {
+                type = 'advance';
+                status = 'paid';
+                if (newFile) {
+                    invoiceUrl = await upload(newFile, montageId, 'invoice_advance');
+                }
+            } else if (paymentScenario === 'final_invoice') {
+                type = 'final';
+                status = 'pending'; // Usually final invoice is issued before payment
+                if (newFile) {
+                    invoiceUrl = await upload(newFile, montageId, 'invoice_final');
+                }
+            } else {
+                type = 'other';
+                status = 'pending';
             }
 
             await createPayment(montageId, {
@@ -70,7 +94,9 @@ export function MontagePaymentsTab({ montageId, payments }: MontagePaymentsTabPr
                 amount: parseFloat(newAmount),
                 invoiceNumber: newInvoiceNumber,
                 proformaUrl,
-                type: newType,
+                invoiceUrl,
+                status,
+                type,
             });
 
             toast.success('Płatność dodana');
@@ -78,8 +104,8 @@ export function MontagePaymentsTab({ montageId, payments }: MontagePaymentsTabPr
             setNewName('');
             setNewAmount('');
             setNewInvoiceNumber('');
-            setNewType('other');
-            setNewProformaFile(null);
+            setPaymentScenario('advance_proforma');
+            setNewFile(null);
         } catch (error) {
             console.error(error);
             toast.error('Błąd podczas dodawania płatności');
@@ -144,14 +170,15 @@ export function MontagePaymentsTab({ montageId, payments }: MontagePaymentsTabPr
                         </DialogHeader>
                         <div className="space-y-4 py-4">
                             <div className="space-y-2">
-                                <Label>Typ płatności</Label>
-                                <Select value={newType} onValueChange={(v) => setNewType(v as 'advance' | 'final' | 'other')}>
+                                <Label>Rodzaj dokumentu / płatności</Label>
+                                <Select value={paymentScenario} onValueChange={(v) => setPaymentScenario(v as PaymentScenario)}>
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Wybierz typ" />
+                                        <SelectValue placeholder="Wybierz rodzaj" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="advance">Zaliczka</SelectItem>
-                                        <SelectItem value="final">Końcowa</SelectItem>
+                                        <SelectItem value="advance_proforma">Zaliczka - Proforma (Do zapłaty)</SelectItem>
+                                        <SelectItem value="advance_invoice">Zaliczka - Faktura VAT (Opłacona)</SelectItem>
+                                        <SelectItem value="final_invoice">Faktura Końcowa</SelectItem>
                                         <SelectItem value="other">Inna</SelectItem>
                                     </SelectContent>
                                 </Select>
@@ -187,14 +214,15 @@ export function MontagePaymentsTab({ montageId, payments }: MontagePaymentsTabPr
                             </div>
                             <div className="space-y-2">
                                 <Label>
-                                    {newType === 'advance' ? 'Plik Proformy (Zaliczka)' : 
-                                     newType === 'final' ? 'Plik Proformy / Faktury (Końcowa)' : 
-                                     'Dokument płatności'}
+                                    {paymentScenario === 'advance_proforma' && 'Plik Proformy (PDF)'}
+                                    {paymentScenario === 'advance_invoice' && 'Plik Faktury Zaliczkowej (PDF)'}
+                                    {paymentScenario === 'final_invoice' && 'Plik Faktury Końcowej (PDF)'}
+                                    {paymentScenario === 'other' && 'Plik (opcjonalnie)'}
                                 </Label>
                                 <Input 
                                     type="file" 
                                     accept=".pdf"
-                                    onChange={(e) => setNewProformaFile(e.target.files?.[0] || null)}
+                                    onChange={(e) => setNewFile(e.target.files?.[0] || null)}
                                 />
                             </div>
                         </div>

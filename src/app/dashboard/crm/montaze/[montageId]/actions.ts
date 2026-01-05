@@ -233,20 +233,70 @@ export async function createPayment(montageId: string, data: {
     amount: number;
     invoiceNumber: string;
     proformaUrl?: string;
+    invoiceUrl?: string;
+    status?: 'pending' | 'paid';
     type: 'advance' | 'final' | 'other';
 }) {
     await requireUser();
 
+    const paymentId = randomUUID();
+
     await db.insert(montagePayments).values({
-        id: randomUUID(),
+        id: paymentId,
         montageId,
         name: data.name,
         amount: data.amount.toString(),
         invoiceNumber: data.invoiceNumber,
         proformaUrl: data.proformaUrl,
-        status: 'pending',
+        invoiceUrl: data.invoiceUrl,
+        status: data.status || 'pending',
+        paidAt: data.status === 'paid' ? new Date() : null,
         type: data.type,
     });
+
+    // If we have files, we should also add them to the main attachments list for visibility
+    if (data.proformaUrl) {
+        await db.insert(montageAttachments).values({
+            id: randomUUID(),
+            montageId,
+            type: 'proforma',
+            title: `Proforma - ${data.name}`,
+            url: data.proformaUrl,
+            uploadedBy: null, // System action
+        });
+    }
+
+    if (data.invoiceUrl) {
+        const attachmentType = data.type === 'final' ? 'invoice_final' : 'invoice_advance';
+        await db.insert(montageAttachments).values({
+            id: randomUUID(),
+            montageId,
+            type: attachmentType,
+            title: `Faktura - ${data.name}`,
+            url: data.invoiceUrl,
+            uploadedBy: null, // System action
+        });
+    }
+
+    // Auto-update status logic for paid advance
+    if (data.type === 'advance' && data.status === 'paid') {
+        const montage = await db.query.montages.findFirst({
+            where: eq(montages.id, montageId),
+            columns: { status: true }
+        });
+
+        if (montage?.status === 'waiting_for_deposit') {
+            await db.update(montages)
+                .set({ status: 'deposit_paid' })
+                .where(eq(montages.id, montageId));
+        }
+    }
+
+    revalidatePath(`/dashboard/crm/montaze/${montageId}`);
+}
+
+    revalidatePath(`/dashboard/crm/montaze/${montageId}`);
+}
 
     // Auto-update status if it's an Advance payment
     // Logic: If current status is 'contract_signed', move to 'waiting_for_deposit'

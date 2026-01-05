@@ -1,10 +1,11 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, Calendar, Image as ImageIcon, Ruler, Calculator, Check, Mail } from 'lucide-react';
+import { FileText, Calendar, Image as ImageIcon, Ruler, Calculator, Check, Mail, Banknote } from 'lucide-react';
 import { cn, formatCurrency } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { signQuote, sendQuoteEmailToCustomer, saveSignedContract } from '../actions';
 import { useState } from 'react';
@@ -27,6 +28,19 @@ interface MontageAttachment {
     id: string;
     url: string;
     title: string | null;
+}
+
+interface Payment {
+    id: string;
+    type: 'advance' | 'final' | 'other';
+    name: string;
+    amount: number;
+    status: 'pending' | 'paid';
+    invoiceNumber: string;
+    proformaUrl: string | null;
+    invoiceUrl: string | null;
+    dueDate: Date | null;
+    paidAt: Date | null;
 }
 
 interface Quote {
@@ -52,6 +66,7 @@ interface Montage {
     scheduledInstallationAt: Date | null;
     installationDateConfirmed: boolean | null;
     attachments: MontageAttachment[];
+    payments: Payment[];
     quotes: Quote[];
     floorArea: number | null;
     estimatedFloorArea?: number | null;
@@ -770,6 +785,60 @@ export function CustomerPortal({ customer, token, bankAccount, companyInfo }: Cu
                                             </div>
                                         </div>
                                         )}
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
+                        )}
+
+                        {activeMontage.payments && activeMontage.payments.length > 0 && (
+                            <motion.div variants={itemVariants}>
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <Banknote className="h-5 w-5 text-primary" /> Płatności
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="space-y-4">
+                                            {activeMontage.payments.map(payment => (
+                                                <div key={payment.id} className="border rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                                    <div>
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <h4 className="font-semibold">{payment.name}</h4>
+                                                            <Badge variant={payment.status === 'paid' ? 'default' : 'secondary'} className={payment.status === 'paid' ? 'bg-green-600 hover:bg-green-700' : ''}>
+                                                                {payment.status === 'paid' ? 'Opłacona' : 'Do zapłaty'}
+                                                            </Badge>
+                                                        </div>
+                                                        <p className="text-sm text-muted-foreground">
+                                                            Kwota: <span className="font-medium text-foreground">{formatCurrency(Number(payment.amount))}</span>
+                                                        </p>
+                                                        {payment.invoiceNumber && (
+                                                            <p className="text-xs text-muted-foreground mt-1">
+                                                                Nr dok: {payment.invoiceNumber}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex gap-2 w-full md:w-auto">
+                                                        {payment.proformaUrl && (
+                                                            <Button variant="outline" size="sm" className="flex-1 md:flex-none" asChild>
+                                                                <a href={payment.proformaUrl} target="_blank" rel="noopener noreferrer">
+                                                                    <FileText className="h-4 w-4 mr-2" />
+                                                                    Proforma
+                                                                </a>
+                                                            </Button>
+                                                        )}
+                                                        {payment.invoiceUrl && (
+                                                            <Button variant="outline" size="sm" className="flex-1 md:flex-none" asChild>
+                                                                <a href={payment.invoiceUrl} target="_blank" rel="noopener noreferrer">
+                                                                    <FileText className="h-4 w-4 mr-2" />
+                                                                    Faktura
+                                                                </a>
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </CardContent>
                                 </Card>
                             </motion.div>
