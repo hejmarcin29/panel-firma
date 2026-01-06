@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { syncProducts } from '@/lib/sync/products';
-import { isSystemAutomationEnabled } from '@/lib/montaze/automation';
 
 export const dynamic = 'force-dynamic'; // static by default, unless reading the request
 

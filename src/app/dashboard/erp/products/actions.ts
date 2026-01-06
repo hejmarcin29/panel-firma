@@ -126,11 +126,8 @@ export async function bulkAddPrice(data: {
     if (data.productIds.length === 0) return { success: false, message: "No products selected" };
 
     try {
-        // Prepare updates
-        const priceInserts = [];
-
         // Fetch products to get SKUs if needed
-        let productMap = new Map<string, string>(); // id -> sku
+        const productMap = new Map<string, string>(); // id -> sku
         if (data.useProductSku) {
             const products = await db.query.erpProducts.findMany({
                 where: inArray(erpProducts.id, data.productIds),
