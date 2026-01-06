@@ -12,14 +12,42 @@ import { Badge } from '@/components/ui/badge';
 // Lista statusów ręcznie skopiowana lub importowana, dla UI wystarczy uproszczona
 // W idealnym świecie importowalibyśmy to z shared, ale tu zróbmy to bezpiecznie
 const TARGET_STATUSES = [
+    // 1. LEJKI
     { value: 'new_lead', label: 'Nowe Zgłoszenie' },
     { value: 'contact_attempt', label: 'Do umówienia' },
+    { value: 'contact_established', label: 'Kontakt Nawiązany' },
     { value: 'measurement_scheduled', label: 'Pomiar Umówiony' },
-    { value: 'quote_in_progress', label: 'Wycena w toku' },
-    { value: 'quote_sent', label: 'Oferta wysłana' },
-    { value: 'contract_signed', label: 'Umowa podpisana' },
-    { value: 'installation_scheduled', label: 'Montaż zaplanowany' },
+
+    // 2. WYCENA
+    { value: 'measurement_done', label: 'Po Pomiarze' },
+    { value: 'quote_in_progress', label: 'Wycena w Toku' },
+    { value: 'quote_sent', label: 'Oferta Wysłana' },
+    { value: 'quote_accepted', label: 'Oferta Zaakceptowana' },
+
+    // 3. FORMALNOŚCI
+    { value: 'contract_signed', label: 'Umowa Podpisana' },
+    { value: 'waiting_for_deposit', label: 'Oczekiwanie na Zaliczkę' },
+    { value: 'deposit_paid', label: 'Zaliczka Opłacona' },
+
+    // 4. LOGISTYKA
+    { value: 'materials_ordered', label: 'Materiały Zamówione' },
+    { value: 'materials_pickup_ready', label: 'Gotowe do Odbioru' },
+    { value: 'installation_scheduled', label: 'Montaż Zaplanowany' },
+    { value: 'materials_delivered', label: 'Materiały u Klienta' },
+
+    // 5. REALIZACJA
+    { value: 'installation_in_progress', label: 'Montaż w Toku' },
+    { value: 'protocol_signed', label: 'Protokół Podpisany' },
+
+    // 6. FINISZ
+    { value: 'final_invoice_issued', label: 'Faktura Końcowa' },
+    { value: 'final_settlement', label: 'Rozliczenie Końcowe' },
     { value: 'completed', label: 'Zakończone' },
+
+    // 7. STANY SPECJALNE
+    { value: 'on_hold', label: 'Wstrzymane' },
+    { value: 'rejected', label: 'Odrzucone' },
+    { value: 'complaint', label: 'Reklamacja' },
 ];
 
 interface MontageWithStatus {
