@@ -3,7 +3,7 @@
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
 import { montages, montageStatuses } from '@/lib/db/schema';
-import { eq, inArray, isNull, not } from 'drizzle-orm';
+import { eq, isNull } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
 export async function getBrokenMontages() {
@@ -24,7 +24,7 @@ export async function getBrokenMontages() {
     // Filtruj w JS, bo SQL może mieć problem z porównaniem enum vs text jeśli typy się nie zgadzają,
     // a status jest text w bazie, ale w kodzie mamy listę valid values.
     const brokenMontages = allMontages.filter(m => {
-        // @ts-ignore - sprawdzamy czy wartość stringa jest w tablicy
+        // @ts-expect-error - sprawdzamy czy wartość stringa jest w tablicy
         return !montageStatuses.includes(m.status);
     });
 
@@ -37,13 +37,13 @@ export async function fixMontageStatus(montageId: string, newStatus: string) {
         throw new Error('Unauthorized');
     }
 
-    // @ts-ignore
+    // @ts-expect-error - sprawdzamy string vs enum array
     if (!montageStatuses.includes(newStatus)) {
         throw new Error('Nieprawidłowy status docelowy');
     }
 
     await db.update(montages)
-        // @ts-ignore
+        // @ts-expect-error - nadpisujemy typ pola ograniczony enumem
         .set({ status: newStatus, updatedAt: new Date() })
         .where(eq(montages.id, montageId));
 

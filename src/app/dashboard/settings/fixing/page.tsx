@@ -2,11 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { getBrokenMontages, fixMontageStatus } from './actions';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Loader2, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 
@@ -23,9 +22,19 @@ const TARGET_STATUSES = [
     { value: 'completed', label: 'Zakończone' },
 ];
 
+interface MontageWithStatus {
+    id: string;
+    clientName: string | null;
+    installationCity: string | null;
+    city: string | null;
+    status: string;
+    createdAt: Date;
+    customer: { email: string } | null;
+}
+
 export default function FixingPage() {
     const [loading, setLoading] = useState(true);
-    const [montages, setMontages] = useState<any[]>([]);
+    const [montages, setMontages] = useState<MontageWithStatus[]>([]);
 
     useEffect(() => {
         loadData();
@@ -34,8 +43,9 @@ export default function FixingPage() {
     const loadData = async () => {
         try {
             const data = await getBrokenMontages();
+            // @ts-expect-error - casting DB result to local interface
             setMontages(data);
-        } catch (error) {
+        } catch {
             toast.error('Błąd ładowania danych');
         } finally {
             setLoading(false);
@@ -48,7 +58,7 @@ export default function FixingPage() {
             toast.success('Naprawiono status');
             // Usuń z listy lokalnie
             setMontages(prev => prev.filter(m => m.id !== id));
-        } catch (error) {
+        } catch {
             toast.error('Błąd zapisu');
         }
     };
