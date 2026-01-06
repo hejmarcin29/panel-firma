@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { Trash2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
-import { getStatusLabel } from "@/lib/montaze/statuses";
+import { getStatusLabel } from "@/lib/montaze/statuses-shared";
 
 import { Button } from '@/components/ui/button';
 import {

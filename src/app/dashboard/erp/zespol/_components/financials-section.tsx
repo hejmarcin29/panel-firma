@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
-import { getStatusLabel } from "@/lib/montaze/statuses";
+import { getStatusLabel } from "@/lib/montaze/statuses-shared";
 import { 
     Table, 
     TableBody, 

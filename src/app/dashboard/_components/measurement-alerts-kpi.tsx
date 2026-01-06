@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { getStatusLabel } from "@/lib/montaze/statuses";
+import { getStatusLabel } from "@/lib/montaze/statuses-shared";
 
 export interface MeasurementAlert {
     id: string;

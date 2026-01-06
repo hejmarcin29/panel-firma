@@ -5,7 +5,7 @@ import { useForm, useWatch, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Loader2, Plus, Trash2 } from 'lucide-react';
-import { getStatusLabel } from "@/lib/montaze/statuses";
+import { getStatusLabel } from "@/lib/montaze/statuses-shared";
 
 import { Button } from '@/components/ui/button';
 import {
