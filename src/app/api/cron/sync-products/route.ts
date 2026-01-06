@@ -6,11 +6,6 @@ export const dynamic = 'force-dynamic'; // static by default, unless reading the
 
 export async function GET(request: Request) {
     try {
-        const isEnabled = await isSystemAutomationEnabled('cron_sync_products');
-        if (!isEnabled) {
-            return NextResponse.json({ success: false, error: 'Automation disabled' }, { status: 200 });
-        }
-
         const authHeader = request.headers.get('authorization');
         if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
             // You can set CRON_SECRET in .env.local

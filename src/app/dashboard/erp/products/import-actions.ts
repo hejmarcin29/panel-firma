@@ -111,6 +111,7 @@ export async function importProductsFromWoo(mapping: AttributeMapping = {}) {
                     sku: wooProduct.sku || `WOO-${wooProduct.id}`,
                     wooId: wooProduct.id,
                     isSyncEnabled: true,
+                    source: 'woocommerce',
                     price: wooProduct.price,
                     regularPrice: wooProduct.regular_price,
                     salePrice: wooProduct.sale_price,
@@ -129,6 +130,7 @@ export async function importProductsFromWoo(mapping: AttributeMapping = {}) {
                     set: {
                         name: wooProduct.name,
                         wooId: wooProduct.id,
+                        source: 'woocommerce',
                         price: wooProduct.price,
                         regularPrice: wooProduct.regular_price,
                         salePrice: wooProduct.sale_price,

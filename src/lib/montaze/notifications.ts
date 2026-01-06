@@ -132,14 +132,6 @@ export const SYSTEM_NOTIFICATIONS: SystemNotificationDefinition[] = [
         defaultEnabled: false
     },
     {
-        id: 'cron_sync_products',
-        type: 'system',
-        trigger: 'Harmonogram (Cron) / Ręczne wywołanie',
-        action: 'Aktualizuje ceny, stany magazynowe oraz zdjęcia TYLKO dla produktów z włączoną synchronizacją',
-        recipient: 'Baza Danych',
-        defaultEnabled: true
-    },
-    {
         id: 'webhook_woo_order',
         type: 'system',
         trigger: 'Nowe zamówienie w WooCommerce (Webhook)',

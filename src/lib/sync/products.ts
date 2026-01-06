@@ -1,7 +1,7 @@
 import { db } from '@/lib/db';
 import { erpProducts } from '@/lib/db/schema';
 import { getAppSettings, appSettingKeys } from '@/lib/settings';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, isNotNull } from 'drizzle-orm';
 
 interface WooCommerceProduct {
     id: number;
@@ -41,30 +41,15 @@ async function getWooCredentials() {
 }
 
 export async function syncProducts() {
-    // Check if global sync automation is enabled
-    const settings = await getAppSettings([appSettingKeys.montageNotifications]);
-    const notificationsJson = settings[appSettingKeys.montageNotifications];
-    if (notificationsJson) {
-        try {
-            const notifications = JSON.parse(notificationsJson);
-            if (notifications['cron_sync_products'] === false) {
-                console.log('Sync products cron is disabled in settings');
-                return { count: 0 };
-            }
-        } catch (e) {
-            console.error('Failed to parse notifications settings', e);
-        }
-    }
-
     const creds = await getWooCredentials();
     if (!creds) {
         throw new Error('WooCommerce settings are missing');
     }
 
-    // 1. Get all local products that have sync enabled and are from woo
+    // 1. Get all local products that have sync enabled and are from woo (check by wooId)
     const localProducts = await db.query.erpProducts.findMany({
         where: and(
-            eq(erpProducts.source, 'woocommerce'),
+            isNotNull(erpProducts.wooId),
             eq(erpProducts.isSyncEnabled, true)
         )
     });
