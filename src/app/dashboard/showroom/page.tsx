@@ -190,8 +190,8 @@ export default function ShowroomPage() {
                             favoriteProducts.map(p => (
                                 <div key={p.id} className="flex gap-4 items-center p-3 bg-zinc-50 rounded-lg border">
                                     <div className="relative h-16 w-16 rounded-md overflow-hidden bg-zinc-200 shrink-0">
-                                        {p.images[0] && (
-                                            <Image src={p.images[0].src} alt={p.name} fill className="object-cover" />
+                                        {p.imageUrl && (
+                                            <Image src={p.imageUrl} alt={p.name} fill className="object-cover" />
                                         )}
                                     </div>
                                     <div className="flex-1 min-w-0">
