@@ -108,6 +108,71 @@ export async function bulkDeleteProducts(ids: string[]) {
     revalidatePath('/dashboard/erp/products');
 }
 
+
+export async function bulkAddPrice(data: {
+    productIds: string[];
+    supplierId: string;
+    netPrice: number;
+    vatRate?: number;
+    leadTime?: string;
+    isDefault?: boolean;
+    useProductSku?: boolean;
+}) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) {
+        throw new Error('Unauthorized');
+    }
+
+    if (data.productIds.length === 0) return { success: false, message: "No products selected" };
+
+    try {
+        // Prepare updates
+        const priceInserts = [];
+
+        // Fetch products to get SKUs if needed
+        let productMap = new Map<string, string>(); // id -> sku
+        if (data.useProductSku) {
+            const products = await db.query.erpProducts.findMany({
+                where: inArray(erpProducts.id, data.productIds),
+                columns: { id: true, sku: true }
+            });
+            products.forEach(p => productMap.set(p.id, p.sku));
+        }
+
+        for (const productId of data.productIds) {
+             // If setting as default, unset others for this product
+            if (data.isDefault) {
+                await db.update(erpPurchasePrices)
+                    .set({ isDefault: false })
+                    .where(eq(erpPurchasePrices.productId, productId));
+            }
+
+            // Insert new price
+            await db.insert(erpPurchasePrices).values({
+                productId: productId,
+                supplierId: data.supplierId,
+                netPrice: data.netPrice,
+                vatRate: data.vatRate || 0.23,
+                supplierSku: data.useProductSku ? productMap.get(productId) : undefined,
+                isDefault: data.isDefault || false,
+            });
+
+            // Update lead time if provided
+            if (data.leadTime) {
+                await db.update(erpProducts)
+                    .set({ leadTime: data.leadTime, updatedAt: new Date() })
+                    .where(eq(erpProducts.id, productId));
+            }
+        }
+
+        revalidatePath('/dashboard/erp/products');
+        return { success: true };
+    } catch (error) {
+        console.error("Error in bulkAddPrice:", error);
+        return { success: false, error: "Failed to add bulk prices" };
+    }
+}
+
 export async function toggleProductSync(id: string, enabled: boolean) {
     const user = await requireUser();
     if (user.roles.includes('installer') && !user.roles.includes('admin')) {

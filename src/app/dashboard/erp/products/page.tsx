@@ -15,7 +15,7 @@ export default async function ProductsPage() {
         redirect('/dashboard');
     }
 
-    const [products, attributes, categories] = await Promise.all([
+    const [products, attributes, categories, suppliers] = await Promise.all([
         db.query.erpProducts.findMany({
             orderBy: [desc(erpProducts.createdAt)],
             with: {
@@ -25,6 +25,14 @@ export default async function ProductsPage() {
         getAttributes(),
         db.query.erpCategories.findMany({
             orderBy: [desc(erpCategories.name)],
+        }),
+        db.query.erpSuppliers.findMany({
+            orderBy: [desc(erpProducts.createdAt)], // Re-using createdAt sort or just name
+            columns: {
+                id: true,
+                name: true,
+                shortName: true,
+            }
         })
     ]);
 
@@ -44,7 +52,7 @@ export default async function ProductsPage() {
                 </div>
             </div>
 
-            <ProductsTable data={products} categories={categories} />
+            <ProductsTable data={products} categories={categories} suppliers={suppliers} />
         </div>
     );
 }

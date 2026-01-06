@@ -31,7 +31,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { bulkUpdateSyncStatus, bulkAssignCategory, bulkDeleteProducts } from "../actions";
 import { toast } from "sonner";
-import { FolderInput, Trash2 } from "lucide-react";
+import { FolderInput, Trash2, DollarSign } from "lucide-react";
+import { BulkPriceDialog } from "./bulk-price-dialog";
 
 interface Product {
     id: string;
@@ -51,12 +52,18 @@ interface Category {
     name: string;
 }
 
+interface Supplier {
+    id: string;
+    name: string;
+}
+
 interface ProductsTableProps {
     data: Product[];
     categories: Category[];
+    suppliers: Supplier[];
 }
 
-export function ProductsTable({ data, categories }: ProductsTableProps) {
+export function ProductsTable({ data, categories, suppliers = [] }: ProductsTableProps) {
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
@@ -195,6 +202,17 @@ export function ProductsTable({ data, categories }: ProductsTableProps) {
                             ))}
                         </DropdownMenuContent>
                     </DropdownMenu>
+
+                    <BulkPriceDialog 
+                        selectedIds={selectedIds} 
+                        suppliers={suppliers} 
+                        onSuccess={() => setSelectedIds([])}
+                        trigger={
+                            <Button size="sm" variant="outline">
+                                <DollarSign className="mr-2 h-4 w-4" /> Dodaj Cenę
+                            </Button>
+                        } 
+                    />
 
                     <Button size="sm" variant="outline" onClick={() => handleBulkSync(true)}>
                         <RefreshCw className="mr-2 h-4 w-4" /> Włącz Sync
