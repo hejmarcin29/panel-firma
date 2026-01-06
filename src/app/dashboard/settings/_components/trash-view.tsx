@@ -49,7 +49,7 @@ import {
     bulkRestoreCustomers,
     bulkDeleteCustomers
 } from '../actions';
-import { restoreProduct, permanentDeleteProduct } from '../../erp/products/actions';
+
 
 interface DeletedQuote {
     id: string;
@@ -79,22 +79,13 @@ interface DeletedMontage {
     deletedAt: Date | null;
 }
 
-interface DeletedProduct {
-    id: number;
-    name: string;
-    sku: string | null;
-    price: string | null;
-    deletedAt: Date | null;
-}
-
 interface TrashViewProps {
     deletedQuotes: DeletedQuote[];
     deletedCustomers: DeletedCustomer[];
     deletedMontages: DeletedMontage[];
-    deletedProducts: DeletedProduct[];
 }
 
-export function TrashView({ deletedQuotes, deletedCustomers, deletedMontages, deletedProducts }: TrashViewProps) {
+export function TrashView({ deletedQuotes, deletedCustomers, deletedMontages }: TrashViewProps) {
     const [isProcessing, setIsProcessing] = useState<string | null>(null);
     const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
 
@@ -170,29 +161,7 @@ export function TrashView({ deletedQuotes, deletedCustomers, deletedMontages, de
         }
     };
 
-    const handleRestoreProduct = async (id: number) => {
-        setIsProcessing(id.toString());
-        try {
-            await restoreProduct(id);
-            toast.success('Produkt został przywrócony');
-        } catch {
-            toast.error('Błąd podczas przywracania produktu');
-        } finally {
-            setIsProcessing(null);
-        }
-    };
 
-    const handleDeleteProduct = async (id: number) => {
-        setIsProcessing(id.toString());
-        try {
-            await permanentDeleteProduct(id);
-            toast.success('Produkt został trwale usunięty');
-        } catch {
-            toast.error('Błąd podczas usuwania produktu');
-        } finally {
-            setIsProcessing(null);
-        }
-    };
 
     const toggleSelectAllCustomers = () => {
         if (selectedCustomers.length === deletedCustomers.length) {
@@ -253,7 +222,6 @@ export function TrashView({ deletedQuotes, deletedCustomers, deletedMontages, de
                         <TabsTrigger value="quotes">Wyceny ({deletedQuotes.length})</TabsTrigger>
                         <TabsTrigger value="customers">Klienci ({deletedCustomers.length})</TabsTrigger>
                         <TabsTrigger value="montages">Montaże ({deletedMontages.length})</TabsTrigger>
-                        <TabsTrigger value="products">Produkty ({deletedProducts.length})</TabsTrigger>
                     </TabsList>
                     
                     <TabsContent value="quotes">
@@ -571,88 +539,7 @@ export function TrashView({ deletedQuotes, deletedCustomers, deletedMontages, de
                         </div>
                     </TabsContent>
 
-                    <TabsContent value="products">
-                        <div className="rounded-md border">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Nazwa</TableHead>
-                                        <TableHead>SKU</TableHead>
-                                        <TableHead>Cena</TableHead>
-                                        <TableHead>Data usunięcia</TableHead>
-                                        <TableHead className="text-right">Akcje</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {deletedProducts.length === 0 ? (
-                                        <TableRow>
-                                            <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                                                Kosz jest pusty
-                                            </TableCell>
-                                        </TableRow>
-                                    ) : (
-                                        deletedProducts.map((product) => (
-                                            <TableRow key={product.id}>
-                                                <TableCell className="font-medium">
-                                                    {product.name}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {product.sku || '-'}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {product.price ? formatCurrency(parseFloat(product.price) * 100) : '-'}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {product.deletedAt && format(new Date(product.deletedAt), 'dd MMM yyyy HH:mm', { locale: pl })}
-                                                </TableCell>
-                                                <TableCell className="text-right space-x-2">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => handleRestoreProduct(product.id)}
-                                                        disabled={isProcessing === product.id.toString()}
-                                                    >
-                                                        <RefreshCw className="mr-2 h-4 w-4" />
-                                                        Przywróć
-                                                    </Button>
 
-                                                    <AlertDialog>
-                                                        <AlertDialogTrigger asChild>
-                                                            <Button
-                                                                variant="destructive"
-                                                                size="sm"
-                                                                disabled={isProcessing === product.id.toString()}
-                                                            >
-                                                                <Trash2 className="mr-2 h-4 w-4" />
-                                                                Usuń trwale
-                                                            </Button>
-                                                        </AlertDialogTrigger>
-                                                        <AlertDialogContent>
-                                                            <AlertDialogHeader>
-                                                                <AlertDialogTitle>Czy na pewno?</AlertDialogTitle>
-                                                                <AlertDialogDescription>
-                                                                    Tej operacji nie można cofnąć. Produkt zostanie trwale usunięty z bazy danych.
-                                                                </AlertDialogDescription>
-                                                            </AlertDialogHeader>
-                                                            <AlertDialogFooter>
-                                                                <AlertDialogCancel>Anuluj</AlertDialogCancel>
-                                                                <AlertDialogAction
-                                                                    onClick={() => handleDeleteProduct(product.id)}
-                                                                    className="bg-red-600 hover:bg-red-700"
-                                                                >
-                                                                    Usuń trwale
-                                                                </AlertDialogAction>
-                                                            </AlertDialogFooter>
-                                                        </AlertDialogContent>
-                                                    </AlertDialog>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    </TabsContent>
                 </Tabs>
             </CardContent>
         </Card>

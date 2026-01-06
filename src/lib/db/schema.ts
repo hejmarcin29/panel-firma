@@ -132,9 +132,9 @@ export type ArchitectProfile = {
 	nip?: string;
 	bankAccount?: string;
 	commissionRate?: number; // PLN per m2
-    assignedProductIds?: number[]; // Legacy or for specific manual adds
-    assignedCategories?: { id: number; name: string }[];
-    excludedProductIds?: number[]; // IDs of products to hide even if category is assigned
+    assignedProductIds?: (number | string)[]; // Legacy or for specific manual adds
+    assignedCategories?: { id: number | string; name: string }[];
+    excludedProductIds?: (number | string)[]; // IDs of products to hide even if category is assigned
 };
 
 export type PartnerProfile = {
@@ -1147,7 +1147,7 @@ export type QuoteStatus = (typeof quoteStatuses)[number];
 
 export type QuoteItem = {
     id: string;
-    productId?: number;
+    productId?: string | number;
     name: string;
     quantity: number;
     unit: string;
@@ -1190,35 +1190,8 @@ export const quotes = pgTable(
 
 
 
-export const products = pgTable('products', {
-	id: integer('id').primaryKey(), // WooCommerce ID
-	name: text('name').notNull(),
-	slug: text('slug').notNull(),
-	sku: text('sku'),
-	price: text('price'),
-	regularPrice: text('regular_price'),
-	salePrice: text('sale_price'),
-	status: text('status').notNull(),
-	stockStatus: text('stock_status'),
-	stockQuantity: integer('stock_quantity'),
-	imageUrl: text('image_url'),
-	categories: json('categories'), // JSON array of category IDs
-	attributes: json('attributes'), // JSON array of attributes
-	isForMontage: boolean('is_for_montage').default(false),
-	montageType: text('montage_type').$type<'panel' | 'other'>(),
-    // ERP Fields
-    source: text('source').$type<'woocommerce' | 'local'>().notNull().default('woocommerce'),
-    wooId: integer('woo_id'), // ID from WooCommerce
-    isSyncEnabled: boolean('is_sync_enabled').default(true), // Auto-sync switch
-    unit: text('unit').default('szt'),
-    vatRate: integer('vat_rate').default(23),
-    purchasePrice: integer('purchase_price'), // Netto in grosz
-    description: text('description'),
-    leadTime: text('lead_time'), // e.g. "3-5 dni", "24h"
-	deletedAt: timestamp('deleted_at'),
-	updatedAt: timestamp('updated_at').notNull().defaultNow(),
-	syncedAt: timestamp('synced_at').notNull().defaultNow(),
-});
+// Legacy products table removed
+
 
 export const ordersRelations = relations(orders, ({ one, many }) => ({
 	customer: one(customers, {

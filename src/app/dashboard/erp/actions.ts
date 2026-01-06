@@ -1,8 +1,8 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { suppliers, purchaseOrders, products, documents, montageChecklistItems, montageAttachments } from '@/lib/db/schema';
-import { desc, isNull, ilike, or, inArray, and, not } from 'drizzle-orm';
+import { suppliers, purchaseOrders, documents, montageChecklistItems, montageAttachments, erpProducts } from '@/lib/db/schema';
+import { desc, isNull, ilike, or, inArray, and, not, eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { requireUser } from '@/lib/auth/session';
 import { nanoid } from 'nanoid';
@@ -44,9 +44,9 @@ export async function getPurchaseOrders() {
 
 export async function getWarehouseStock() {
     await requireUser();
-    return await db.query.products.findMany({
-        where: isNull(products.deletedAt),
-        orderBy: [desc(products.updatedAt)],
+    return await db.query.erpProducts.findMany({
+        where: eq(erpProducts.status, 'active'),
+        orderBy: [desc(erpProducts.updatedAt)],
         limit: 50,
     });
 }

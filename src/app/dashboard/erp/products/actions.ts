@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from "@/lib/db";
-import { erpProducts, erpPurchasePrices, erpProductAttributes, products, erpCategories, erpInventory } from "@/lib/db/schema";
+import { erpProducts, erpPurchasePrices, erpProductAttributes, erpCategories, erpInventory } from "@/lib/db/schema";
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { requireUser } from "@/lib/auth/session";
@@ -286,33 +286,6 @@ export async function setMainSupplier(priceId: string, productId: string) {
     revalidatePath(`/dashboard/erp/products/${productId}`);
 }
 
-// --- LEGACY ACTIONS (To be migrated) ---
-
-export async function restoreProduct(id: number) {
-    const user = await requireUser();
-    if (!user.roles.includes('admin')) {
-        throw new Error('Brak uprawnień');
-    }
-
-    await db.update(products)
-        .set({ deletedAt: null })
-        .where(eq(products.id, id));
-    
-    await logSystemEvent('restore_product', `Przywrócono produkt ${id}`, user.id);
-    revalidatePath('/dashboard/settings');
-}
-
-export async function permanentDeleteProduct(id: number) {
-    const user = await requireUser();
-    if (!user.roles.includes('admin')) {
-        throw new Error('Brak uprawnień');
-    }
-
-    await db.delete(products).where(eq(products.id, id));
-    
-    await logSystemEvent('permanent_delete_product', `Trwale usunięto produkt ${id}`, user.id);
-    revalidatePath('/dashboard/settings');
-}
 
 export async function getAssignedProducts() {
     const user = await requireUser();
@@ -321,18 +294,14 @@ export async function getAssignedProducts() {
     if (user.roles.includes('architect')) {
         const assignedIds = user.architectProfile?.assignedProductIds;
         
-        // Strict Mode: If the array defines the access list.
-        // If check is triggered (array exists), we return ONLY properly assigned items.
-        // If array is empty keys -> return empty.
-        if (Array.isArray(assignedIds)) {
-            if (assignedIds.length === 0) {
-                return [];
-            }
-            return await db.query.products.findMany({
-                where: (table, { isNull, eq, and, inArray }) => and(
-                    isNull(table.deletedAt),
-                    eq(table.status, 'publish'),
-                    inArray(table.id, assignedIds)
+        if (Array.isArray(assignedIds) && assignedIds.length > 0) {
+            const validIds = assignedIds.map(String);
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const products: any[] = await db.query.erpProducts.findMany({
+                where: (table, { eq, and, inArray }) => and(
+                    eq(table.status, 'active'),
+                    inArray(table.id, validIds)
                 ),
                 columns: {
                     id: true,
@@ -340,27 +309,34 @@ export async function getAssignedProducts() {
                     sku: true,
                     price: true,
                     imageUrl: true,
-                    categories: true, // Useful for filters in showroom
+                },
+                with: {
+                    category: true
                 }
             });
+            return products;
+        } else if (Array.isArray(assignedIds) && assignedIds.length === 0) {
+             return [];
         }
     }
 
-    // Default (Admin or Architect without config): Return all active
-    return await db.query.products.findMany({
-        where: (table, { isNull, eq, and }) => and(
-            isNull(table.deletedAt),
-            eq(table.status, 'publish')
-        ),
+    // Default: Return all active ERP products
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const products: any[] = await db.query.erpProducts.findMany({
+        where: (table, { eq }) => eq(table.status, 'active'),
         columns: {
             id: true,
             name: true,
             sku: true,
             price: true,
             imageUrl: true,
-            categories: true,
+        },
+        with: {
+            category: true
         }
     });
+
+    return products;
 }
 
 export async function syncProductsAction() {

@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { quotes, type QuoteItem, type QuoteStatus, mailAccounts, montages, products, services } from '@/lib/db/schema';
+import { quotes, type QuoteItem, type QuoteStatus, mailAccounts, montages, erpProducts, services } from '@/lib/db/schema';
 import { eq, desc, isNull, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { randomUUID } from 'crypto';
@@ -328,26 +328,52 @@ export async function getMontagesForQuoteSelection() {
 }
 
 export async function getProductsForQuote() {
-    return await db.query.products.findMany({
-        where: and(
-            eq(products.status, 'publish'),
-            isNull(products.deletedAt)
-        ),
+    const rawProducts = await db.query.erpProducts.findMany({
+        where: (table, { eq }) => eq(table.status, 'active'),
         columns: {
             id: true,
             name: true,
             price: true,
-            attributes: true,
+        },
+        with: {
+            attributes: {
+                with: {
+                    attribute: true,
+                    option: true,
+                }
+            }
         }
     });
+
+    return rawProducts.map(p => ({
+        id: p.id,
+        name: p.name,
+        price: p.price,
+        attributes: p.attributes.map(attr => ({
+            id: attr.attribute.id,
+            name: attr.attribute.name,
+            slug: attr.attribute.slug,
+            options: attr.option ? [attr.option.name] : (attr.value ? [attr.value] : [])
+        }))
+    }));
 }
 
-type Product = typeof products.$inferSelect;
+type Product = {
+    id: string;
+    name: string;
+    price: string | null;
+    attributes: {
+        id: string;
+        name: string;
+        slug: string | null;
+        options: string[];
+    }[];
+};
 
 type ProductAttribute = {
-    id: number;
+    id: string;
     name: string;
-    slug: string;
+    slug: string | null;
     options: string[];
 };
 

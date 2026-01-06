@@ -8,6 +8,7 @@ import { Users, Hammer, FileText, LayoutDashboard, Images, HardHat } from 'lucid
 export function CRMNavigation({ userRoles = [] }: { userRoles?: string[] }) {
     const pathname = usePathname();
     const isInstaller = userRoles.includes('installer') && !userRoles.includes('admin');
+    const isArchitect = userRoles.includes('architect') && !userRoles.includes('admin');
 
     // Define paths where the header should be visible
     const mainPaths = [
@@ -71,10 +72,10 @@ export function CRMNavigation({ userRoles = [] }: { userRoles?: string[] }) {
                         className="gap-2"
                     >
                         <Hammer className="h-4 w-4" />
-                        Realizacje
+                        {isArchitect ? 'Moje Projekty' : 'Realizacje'}
                     </Button>
                 </Link>
-                {!isInstaller && (
+                {!isInstaller && !isArchitect && (
                     <Link href="/dashboard/crm/oferty">
                         <Button 
                             variant={pathname.startsWith('/dashboard/crm/oferty') ? "secondary" : "ghost"} 
@@ -98,7 +99,7 @@ export function CRMNavigation({ userRoles = [] }: { userRoles?: string[] }) {
                         </Button>
                     </Link>
                 )}
-                {!isInstaller && (
+                {!isInstaller && !isArchitect && (
                     <Link href="/dashboard/crm/montaze/ekipy">
                         <Button 
                             variant={pathname.startsWith('/dashboard/crm/montaze/ekipy') ? "secondary" : "ghost"} 

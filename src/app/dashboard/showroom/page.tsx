@@ -21,13 +21,14 @@ import { useUser } from '@/lib/auth/client';
 import { cn } from '@/lib/utils';
 
 interface Product {
-    id: number;
+    id: string;
     name: string;
     sku: string;
     price: string;
     imageUrl: string | null;
     attributes?: { name: string; options: string[] }[];
-    categories?: { id: number; name: string }[];
+    category?: { id: string; name: string };
+    categories?: { id: number; name: string }[]; // Keep for legacy compat or map it
 }
 
 export default function ShowroomPage() {
@@ -35,7 +36,7 @@ export default function ShowroomPage() {
     const [products, setProducts] = useState<Product[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    const [favorites, setFavorites] = useState<number[]>([]);
+    const [favorites, setFavorites] = useState<string[]>([]); // id is string now
     const [isMoodboardOpen, setIsMoodboardOpen] = useState(false);
 
     useEffect(() => {
@@ -43,7 +44,7 @@ export default function ShowroomPage() {
             getAssignedProducts()
                 .then((data) => {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    setProducts(data as any[]); // Casting because of type mismatch in action return vs interface
+                    setProducts(data as any[]); 
                 })
                 .finally(() => setIsLoading(false));
         }
@@ -53,26 +54,24 @@ export default function ShowroomPage() {
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.sku.toLowerCase().includes(searchQuery.toLowerCase())
         // Also check category names for search
+        || (p.category?.name || '').toLowerCase().includes(searchQuery.toLowerCase())
         || p.categories?.some(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
     // Grouping Logic
     const groupedProducts = filteredProducts.reduce((acc, product) => {
-        const productCategories = product.categories && product.categories.length > 0 
-            ? product.categories 
-            : [{ id: -1, name: 'Pozostałe' }];
+        // Try new single category first, then legacy array
+        let catName = 'Pozostałe';
+        if (product.category) {
+            catName = product.category.name;
+        } else if (product.categories && product.categories.length > 0) {
+            catName = product.categories[0].name;
+        }
         
-        productCategories.forEach(cat => {
-            // Logic to verify if this category is relevant? 
-            // For now, list product in ALL its categories.
-            if (!acc[cat.name]) {
-                acc[cat.name] = [];
-            }
-            // Avoid duplicates if product has multiple categories with same name (unlikely but safe)
-            if (!acc[cat.name].find(p => p.id === product.id)) {
-                acc[cat.name].push(product);
-            }
-        });
+        if (!acc[catName]) {
+            acc[catName] = [];
+        }
+        acc[catName].push(product);
         return acc;
     }, {} as Record<string, Product[]>);
 
@@ -83,7 +82,7 @@ export default function ShowroomPage() {
         return a.localeCompare(b);
     });
 
-    const toggleFavorite = (id: number) => {
+    const toggleFavorite = (id: string) => {
         setFavorites(prev => 
             prev.includes(id) ? prev.filter(fid => fid !== id) : [...prev, id]
         );

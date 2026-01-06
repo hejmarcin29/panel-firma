@@ -11,13 +11,13 @@ import { Label } from '@/components/ui/label';
 import { updateArchitectProfile } from '../../actions';
 
 interface Product {
-    id: number;
+    id: string;
     name: string;
     sku: string;
 }
 
 interface CategoryWithProducts {
-    id: number;
+    id: string;
     name: string;
     products: Product[];
 }
@@ -26,9 +26,9 @@ interface CategoryAssignmentProps {
     user: {
         id: string;
         architectProfile: {
-            assignedCategories?: { id: number; name: string }[];
-            assignedProductIds?: number[];
-            excludedProductIds?: number[];
+            assignedCategories?: { id: number | string; name: string }[];
+            assignedProductIds?: (number | string)[];
+            excludedProductIds?: (number | string)[];
         } | null;
     };
     data: CategoryWithProducts[];
@@ -37,23 +37,18 @@ interface CategoryAssignmentProps {
 export function CategoryAssignment({ user, data }: CategoryAssignmentProps) {
     const [isPending, startTransition] = useTransition();
     const [searchQuery, setSearchQuery] = useState('');
-    const [expandedCategories, setExpandedCategories] = useState<number[]>([]);
+    const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
     
     // State: We only track explicitly selected Product IDs
-    const [selectedProductIds, setSelectedProductIds] = useState<number[]>(
+    // We cast to string[] because we are now using string UUIDs from ERP
+    const [selectedProductIds, setSelectedProductIds] = useState<(string | number)[]>(
         user.architectProfile?.assignedProductIds || []
     );
 
     // Helper: Which categories are "active" (have at least one product selected, OR were explicitly enabled in UI)
-    // Actually, following user request: "Check category -> 0 products selected".
-    // So we need a separate state for "Enabled Categories" to handle the UI state of "Category Checked but Empty".
-    // However, saving "Enabled Category with 0 products" is useless for the goal "Showroom". 
-    // If 0 products are selected, the category is effectively hidden in Showroom (usually).
-    // So "Enabled Categories" is purely a UI state to allow expanding/selecting.
-    // Let's infer "Category Checked" from "Has any product selected OR is manually toggled on".
-    const [manuallyEnabledCategories, setManuallyEnabledCategories] = useState<number[]>(() => {
+    const [manuallyEnabledCategories, setManuallyEnabledCategories] = useState<string[]>(() => {
         // Init: Categories that have products selected are enabled.
-        const activeIds = new Set<number>();
+        const activeIds = new Set<string>();
         data.forEach(cat => {
             if (cat.products.some(p => (user.architectProfile?.assignedProductIds || []).includes(p.id))) {
                 activeIds.add(cat.id);
@@ -67,11 +62,11 @@ export function CategoryAssignment({ user, data }: CategoryAssignmentProps) {
         c.products.some(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
-    const isCategoryChecked = (catId: number) => {
+    const isCategoryChecked = (catId: string) => {
         return manuallyEnabledCategories.includes(catId);
     };
 
-    const toggleCategory = (catId: number, products: Product[]) => {
+    const toggleCategory = (catId: string, products: Product[]) => {
         if (manuallyEnabledCategories.includes(catId)) {
             // Unchecking: Remove from enabled list AND deselect all its products
             setManuallyEnabledCategories(prev => prev.filter(id => id !== catId));
@@ -88,7 +83,7 @@ export function CategoryAssignment({ user, data }: CategoryAssignmentProps) {
         }
     };
 
-    const toggleProduct = (productId: number, catId: number) => {
+    const toggleProduct = (productId: string, catId: string) => {
         setSelectedProductIds(prev => {
             if (prev.includes(productId)) {
                 return prev.filter(id => id !== productId);
@@ -110,7 +105,7 @@ export function CategoryAssignment({ user, data }: CategoryAssignmentProps) {
         });
     };
 
-    const toggleExpand = (catId: number) => {
+    const toggleExpand = (catId: string) => {
         setExpandedCategories(prev => 
             prev.includes(catId) ? prev.filter(id => id !== catId) : [...prev, catId]
         );
@@ -239,8 +234,13 @@ export function CategoryAssignment({ user, data }: CategoryAssignmentProps) {
                         })}
                         
                         {filteredData.length === 0 && (
-                            <div className="p-4 text-center text-muted-foreground">
-                                Brak wyników.
+                            <div className="p-8 text-center text-muted-foreground flex flex-col items-center gap-2">
+                                <p>Brak dostępnych kategorii produktów.</p>
+                                <p className="text-sm">
+                                    Upewnij się, że produkty zostały zsynchronizowane z WooCommerce i mają status &quot;Opublikowane&quot;.
+                                    <br />
+                                    Możesz to sprawdzić w zakładce <strong>ERP &gt; Produkty</strong>.
+                                </p>
                             </div>
                         )}
                     </div>

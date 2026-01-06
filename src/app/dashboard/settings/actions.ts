@@ -7,7 +7,7 @@ import { HeadBucketCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
-import { users, quotes, customers, montages, products } from '@/lib/db/schema';
+import { users, quotes, customers, montages } from '@/lib/db/schema';
 import { appSettingKeys, getAppSetting, setAppSetting } from '@/lib/settings';
 import { createR2Client } from '@/lib/r2/client';
 import { getR2Config } from '@/lib/r2/config';
@@ -515,15 +515,7 @@ export async function permanentDeleteMontage(id: string) {
     revalidatePath('/dashboard/settings');
 }
 
-export async function getDeletedProducts() {
-    const user = await requireUser();
-    if (!user.roles.includes('admin')) return [];
 
-    return await db.query.products.findMany({
-        where: isNotNull(products.deletedAt),
-        orderBy: [desc(products.deletedAt)],
-    });
-}
 
 export async function updateCompanySettings(data: {
     name: string;

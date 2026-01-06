@@ -53,7 +53,7 @@ export async function updateArchitectProfile(userId: string, profile: ArchitectP
     revalidatePath(TEAM_SETTINGS_PATH);
 }
 
-export async function updateArchitectAssignedProducts(userId: string, productIds: number[]) {
+export async function updateArchitectAssignedProducts(userId: string, productIds: (number | string)[]) {
     const currentUser = await requireUser();
     
     if (!currentUser.roles.includes('admin')) {
@@ -67,7 +67,7 @@ export async function updateArchitectAssignedProducts(userId: string, productIds
     if (!user) throw new Error('User not found');
 
     const currentProfile = user.architectProfile || {};
-    const newProfile = {
+    const newProfile: ArchitectProfile = {
         ...currentProfile,
         assignedProductIds: productIds
     };
@@ -148,10 +148,10 @@ export async function getTeamMembers() {
 
 
 export interface CategoryWithProducts {
-    id: number;
+    id: string;
     name: string;
     products: {
-        id: number;
+        id: string;
         name: string;
         sku: string;
     }[];
@@ -160,54 +160,45 @@ export interface CategoryWithProducts {
 export async function getOfferConfigurationData() {
     await requireUser();
     
-    // Fetch all published products
-    const allProducts = await db.query.products.findMany({
-        where: (table, { isNull, eq, and }) => and(
-            isNull(table.deletedAt),
-            eq(table.status, 'publish')
-        ),
+    // Fetch all active ERP products with categories
+    const allProducts = await db.query.erpProducts.findMany({
+        where: (table, { eq }) => eq(table.status, 'active'),
         columns: {
             id: true,
             name: true,
             sku: true,
-            categories: true,
+        },
+        with: {
+            category: true,
         },
         orderBy: (table, { asc }) => [asc(table.name)],
     });
 
-    const categoryMap = new Map<number, CategoryWithProducts>();
+    const categoryMap = new Map<string, CategoryWithProducts>();
 
     allProducts.forEach(product => {
-        if (Array.isArray(product.categories)) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            product.categories.forEach((cat: any) => {
-                let catId: number | undefined;
-                let catName: string | undefined;
+        const cat = product.category;
+        
+        // Skip products without category or with invalid category
+        if (!cat) return;
 
-                if (typeof cat === 'object' && cat !== null) {
-                    catId = cat.id;
-                    catName = cat.name;
-                }
-                
-                // If data is corrupted or missing ID/Name, skip or use fallback
-                if (catId === undefined || !catName) return;
+        const catId = cat.id;
+        const catName = cat.name;
 
-                if (!categoryMap.has(catId)) {
-                    categoryMap.set(catId, {
-                        id: catId,
-                        name: catName,
-                        products: []
-                    });
-                }
-                
-                const categoryEntry = categoryMap.get(catId)!;
-                categoryEntry.products.push({
-                    id: product.id,
-                    name: product.name,
-                    sku: product.sku || '',
-                });
+        if (!categoryMap.has(catId)) {
+            categoryMap.set(catId, {
+                id: catId,
+                name: catName,
+                products: []
             });
         }
+        
+        const categoryEntry = categoryMap.get(catId)!;
+        categoryEntry.products.push({
+            id: product.id,
+            name: product.name,
+            sku: product.sku || '',
+        });
     });
 
     // Sort categories by name

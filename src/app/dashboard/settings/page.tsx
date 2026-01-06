@@ -39,7 +39,7 @@ import { IntegrationLogs } from './integrations/_components/integration-logs';
 import { WpChangesSettings } from './_components/wp-changes-settings';
 import { DocumentationView } from './_components/documentation-view';
 import { TrashView } from './_components/trash-view';
-import { getDeletedQuotes, getDeletedCustomers, getDeletedMontages, getDeletedProducts } from './actions';
+import { getDeletedQuotes, getDeletedCustomers, getDeletedMontages } from './actions';
 
 import { LogoSettings } from './_components/logo-settings';
 import { CompanySettingsForm } from './_components/company-settings-form';
@@ -223,7 +223,7 @@ export default async function SettingsPage() {
         getDeletedQuotes(),
         getDeletedCustomers(),
         getDeletedMontages(),
-        getDeletedProducts(),
+        Promise.resolve([]),
         getAppSetting(appSettingKeys.companyName),
         getAppSetting(appSettingKeys.companyAddress),
         getAppSetting(appSettingKeys.companyNip),
@@ -630,7 +630,7 @@ export default async function SettingsPage() {
                     deletedQuotes={deletedQuotes} 
                     deletedCustomers={deletedCustomers}
                     deletedMontages={deletedMontages}
-                    deletedProducts={deletedProducts}
+
                 />
             }
             portalSettings={

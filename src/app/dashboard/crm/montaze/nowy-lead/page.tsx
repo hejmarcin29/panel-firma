@@ -8,9 +8,11 @@ export default async function NewLeadPage() {
     const user = await requireUser();
     
     // Fetch assigned products if user is an architect
-    let assignedProducts: { id: number; name: string }[] = [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let assignedProducts: { id: string; name: string }[] = [];
     if (user.roles.includes('architect')) {
-        assignedProducts = await getAssignedProducts();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        assignedProducts = await getAssignedProducts() as any;
     }
 
     return (

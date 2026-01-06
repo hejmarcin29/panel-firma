@@ -59,10 +59,15 @@ const QuotePdfWrapper = dynamic(() => import('./quote-pdf-wrapper'), {
 });
 
 type Product = {
-    id: number;
+    id: string;
     name: string;
     price: string | null;
-    attributes: unknown;
+    attributes: {
+        id: string;
+        name: string;
+        slug: string | null;
+        options: string[];
+    }[];
 };
 
 type QuoteEditorProps = {

@@ -28,7 +28,7 @@ import { toast } from 'sonner';
 import { createExtendedLead } from '../../actions';
 
 interface Product {
-    id: number;
+    id: string;
     name: string;
 }
 
