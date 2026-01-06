@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { getStatusLabel } from "@/lib/montaze/statuses";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -250,7 +251,7 @@ function MontageCard({ montage, isHistory = false }: { montage: Montage, isHisto
                             <p className="text-sm text-muted-foreground">{montage.installationCity || "Brak adresu"}</p>
                         </div>
                         <Badge variant={isHistory ? "secondary" : "outline"}>
-                            {montage.status}
+                            {getStatusLabel(montage.status)}
                         </Badge>
                     </div>
                     

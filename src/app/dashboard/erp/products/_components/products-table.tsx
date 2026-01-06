@@ -37,6 +37,7 @@ interface Product {
     id: string;
     name: string;
     sku: string;
+    imageUrl: string | null;
     unit: string | null;
     type: string | null;
     status: string | null;
@@ -221,6 +222,7 @@ export function ProductsTable({ data, categories }: ProductsTableProps) {
                                     onCheckedChange={(checked) => handleSelectAll(!!checked)}
                                 />
                             </TableHead>
+                            <TableHead className="w-[60px]">Img</TableHead>
                             <TableHead>SKU</TableHead>
                             <TableHead>Nazwa</TableHead>
                             <TableHead>Kategoria</TableHead>
@@ -248,6 +250,22 @@ export function ProductsTable({ data, categories }: ProductsTableProps) {
                                             checked={selectedIds.includes(product.id)}
                                             onCheckedChange={(checked) => handleSelectOne(product.id, !!checked)}
                                         />
+                                    </TableCell>
+                                    <TableCell>
+                                        {product.imageUrl ? (
+                                            <div className="h-10 w-10 relative overflow-hidden rounded-md border bg-muted">
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img 
+                                                    src={product.imageUrl} 
+                                                    alt="Product" 
+                                                    className="h-full w-full object-cover"
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div className="h-10 w-10 bg-muted rounded-md border flex items-center justify-center text-xs text-muted-foreground">
+                                                -
+                                            </div>
+                                        )}
                                     </TableCell>
                                     <TableCell className="font-medium">
                                         <div className="flex items-center gap-2">
@@ -303,19 +321,31 @@ export function ProductsTable({ data, categories }: ProductsTableProps) {
                     filteredData.map((product) => (
                         <Card key={product.id} className={product.source === 'woocommerce' ? 'bg-blue-50/50 dark:bg-blue-950/20' : ''}>
                             <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-                                <div className="space-y-1">
-                                    <div className="flex items-center gap-2">
+                                <div className="flex gap-3">
+                                    <div className="mt-1">
                                         <Checkbox 
                                             checked={selectedIds.includes(product.id)}
                                             onCheckedChange={(checked) => handleSelectOne(product.id, !!checked)}
                                         />
+                                    </div>
+                                    {product.imageUrl && (
+                                        <div className="h-12 w-12 relative overflow-hidden rounded-md border bg-muted flex-shrink-0">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img 
+                                                src={product.imageUrl} 
+                                                alt="Product" 
+                                                className="h-full w-full object-cover"
+                                            />
+                                        </div>
+                                    )}
+                                    <div className="space-y-1">
                                         <CardTitle className="text-base font-medium leading-none">
                                             {product.name}
                                         </CardTitle>
+                                        <p className="text-sm text-muted-foreground">
+                                            {product.sku}
+                                        </p>
                                     </div>
-                                    <p className="text-sm text-muted-foreground pl-6">
-                                        {product.sku}
-                                    </p>
                                 </div>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>

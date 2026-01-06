@@ -50,6 +50,11 @@ const DEFAULT_STATUSES: MontageStatusDefinition[] = [
     { id: 'complaint', label: 'Reklamacja', description: 'Coś poszło nie tak po montażu.', order: 23, group: 'Specjalne', isSystem: true },
 ];
 
+export const getStatusLabel = (statusId: string): string => {
+    const status = DEFAULT_STATUSES.find(s => s.id === statusId);
+    return status ? status.label : statusId;
+};
+
 export async function getMontageStatusDefinitions(): Promise<MontageStatusDefinition[]> {
 	const rawValue = await getAppSetting(appSettingKeys.montageStatuses);
 	if (!rawValue) {

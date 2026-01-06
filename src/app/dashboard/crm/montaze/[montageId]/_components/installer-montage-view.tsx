@@ -19,6 +19,7 @@ import {
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 
+import { getStatusLabel } from "@/lib/montaze/statuses";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -91,13 +92,13 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
                                 </div>
                             </div>
                             <Badge variant={isDone ? "default" : "outline"} className="md:hidden">
-                                {montage.status}
+                                {getStatusLabel(montage.status)}
                             </Badge>
                         </div>
 
                         <div className="hidden md:block">
                              <Badge variant={isDone ? "default" : "outline"} className="text-sm px-3 py-1">
-                                {montage.status}
+                                {getStatusLabel(montage.status)}
                             </Badge>
                         </div>
 

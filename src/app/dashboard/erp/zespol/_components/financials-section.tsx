@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/utils";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
+import { getStatusLabel } from "@/lib/montaze/statuses";
 import { 
     Table, 
     TableBody, 
@@ -213,7 +214,7 @@ export function FinancialsSection({ data, roles }: FinancialsSectionProps) {
                                             {montage.scheduledInstallationAt ? format(new Date(montage.scheduledInstallationAt), 'd MMM', { locale: pl }) : '-'}
                                         </TableCell>
                                         <TableCell>
-                                            <Badge variant="outline">{montage.status}</Badge>
+                                            <Badge variant="outline">{getStatusLabel(montage.status)}</Badge>
                                         </TableCell>
                                     </TableRow>
                                 ))}

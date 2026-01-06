@@ -5,6 +5,7 @@ import { useForm, useWatch, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Loader2, Plus, Trash2 } from 'lucide-react';
+import { getStatusLabel } from "@/lib/montaze/statuses";
 
 import { Button } from '@/components/ui/button';
 import {
@@ -611,7 +612,7 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
                                                     </TableCell>
                                                     <TableCell>{montage.clientName}</TableCell>
                                                     <TableCell>
-                                                        <Badge variant="outline">{montage.status}</Badge>
+                                                        <Badge variant="outline">{getStatusLabel(montage.status)}</Badge>
                                                     </TableCell>
                                                 </TableRow>
                                             ))

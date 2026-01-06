@@ -8,8 +8,8 @@ import {
     DropdownMenuTrigger,
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Settings2, Trash2, Layers } from "lucide-react";
-import { seedSystemCategories, deleteAllProducts } from "../actions";
+import { Settings2, Trash2, Layers, RefreshCw } from "lucide-react";
+import { seedSystemCategories, deleteAllProducts, runGlobalSync } from "../actions";
 import { toast } from "sonner";
 import { useState } from "react";
 import {
@@ -25,6 +25,16 @@ import {
 
 export function ProductTools() {
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
+    const handleSync = async () => {
+        try {
+            toast.info("Rozpoczęto synchronizację...");
+            const result = await runGlobalSync();
+            toast.success(`Zsynchronizowano ${result.count} produktów`);
+        } catch (e) {
+            toast.error("Błąd synchronizacji: " + (e instanceof Error ? e.message : "Nieznany błąd"));
+        }
+    };
 
     const handleSeed = async () => {
         try {
@@ -54,6 +64,11 @@ export function ProductTools() {
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={handleSync}>
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Synchronizuj wszystko (CRON)
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSeed}>
                         <Layers className="mr-2 h-4 w-4" />
                         Utwórz kategorie systemowe

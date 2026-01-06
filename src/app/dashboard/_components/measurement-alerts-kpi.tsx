@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { getStatusLabel } from "@/lib/montaze/statuses";
 
 export interface MeasurementAlert {
     id: string;
@@ -102,7 +103,7 @@ export function MeasurementAlertsKPI({ alerts }: { alerts: MeasurementAlertItem[
                                                 {montage.clientName}
                                             </Link>
                                             <div className="text-sm text-muted-foreground">
-                                                Status: {montage.status}
+                                                Status: {getStatusLabel(montage.status)}
                                             </div>
                                         </div>
                                         <Link 

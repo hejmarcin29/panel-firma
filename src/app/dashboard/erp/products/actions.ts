@@ -8,6 +8,16 @@ import { requireUser } from "@/lib/auth/session";
 import { logSystemEvent } from "@/lib/logging";
 import { inArray } from "drizzle-orm";
 import { getWooCredentials } from "./import-actions";
+import { syncProducts } from "@/lib/sync/products";
+
+export async function runGlobalSync() {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) throw new Error('Unauthorized');
+
+    const result = await syncProducts();
+    revalidatePath('/dashboard/erp/products');
+    return result;
+}
 
 export async function bulkUpdateSyncStatus(ids: string[], enabled: boolean) {
     const user = await requireUser();
@@ -251,7 +261,10 @@ export async function getAssignedProducts() {
         ),
         columns: {
             id: true,
-            name: true
+            name: true,
+            sku: true,
+            price: true,
+            imageUrl: true,
         }
     });
 }

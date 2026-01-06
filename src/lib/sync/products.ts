@@ -113,6 +113,7 @@ export async function syncProducts() {
                     salePrice: wooProduct.sale_price,
                     stockQuantity: wooProduct.stock_quantity,
                     status: wooProduct.status === 'publish' ? 'active' : 'archived',
+                    imageUrl: wooProduct.images?.[0]?.src || null,
                     updatedAt: new Date(),
                 }).where(eq(erpProducts.id, localProduct.id));
                 updatedCount++;

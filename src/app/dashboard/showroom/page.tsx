@@ -25,8 +25,7 @@ interface Product {
     name: string;
     sku: string;
     price: string;
-    images: { src: string }[];
-    attributes: { name: string; options: string[] }[];
+    imageUrl: string | null;
 }
 
 export default function ShowroomPage() {
@@ -119,9 +118,9 @@ export default function ShowroomPage() {
                                 transition={{ duration: 0.4 }}
                             >
                                 <div className="group relative aspect-4/5 overflow-hidden rounded-xl bg-zinc-100 mb-4">
-                                    {product.images[0] ? (
+                                    {product.imageUrl ? (
                                         <Image
-                                            src={product.images[0].src}
+                                            src={product.imageUrl}
                                             alt={product.name}
                                             fill
                                             className="object-cover transition-transform duration-700 group-hover:scale-105"

@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { Trash2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { getStatusLabel } from "@/lib/montaze/statuses";
 
 import { Button } from '@/components/ui/button';
 import {
@@ -516,7 +517,7 @@ export function TrashView({ deletedQuotes, deletedCustomers, deletedMontages, de
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <Badge variant="outline">{montage.status}</Badge>
+                                                    <Badge variant="outline">{getStatusLabel(montage.status)}</Badge>
                                                 </TableCell>
                                                 <TableCell>
                                                     {montage.deletedAt && format(new Date(montage.deletedAt), 'dd MMM yyyy HH:mm', { locale: pl })}

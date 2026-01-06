@@ -164,12 +164,22 @@ export function InstallerDashboard({ overdue, today, upcoming, backlog, history 
 // --- Subcomponents ---
 
 function OverdueCard({ item, onFinish }: { item: DashboardItem, onFinish: () => void }) {
+    let reason = "Zaległe";
+    
+    // Determine specific reason based on available dates
+    if (item.scheduledInstallationAt) {
+        const date = new Date(item.scheduledInstallationAt).toLocaleDateString('pl-PL');
+        reason = `Niezamknięta wizyta z dn. ${date}`;
+    } else if (item.measurementDate) {
+        reason = "Po pomiarze: Brak ustalonego terminu";
+    }
+
     return (
         <Card className="border-l-4 border-l-red-500 bg-red-50/50">
             <CardContent className="p-4">
                 <div className="flex justify-between items-start mb-2">
                     <div>
-                        <Badge variant="destructive" className="mb-2">Zaległe</Badge>
+                        <Badge variant="destructive" className="mb-2">{reason}</Badge>
                         <h3 className="font-bold text-lg">{item.clientName}</h3>
                         <p className="text-sm text-muted-foreground">
                             {item.installationCity || item.billingCity || 'Brak lokalizacji'}

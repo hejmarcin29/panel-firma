@@ -135,7 +135,7 @@ export const SYSTEM_NOTIFICATIONS: SystemNotificationDefinition[] = [
         id: 'cron_sync_products',
         type: 'system',
         trigger: 'Harmonogram (Cron) / Ręczne wywołanie',
-        action: 'Aktualizuje ceny i stany magazynowe TYLKO dla produktów z włączoną synchronizacją',
+        action: 'Aktualizuje ceny, stany magazynowe oraz zdjęcia TYLKO dla produktów z włączoną synchronizacją',
         recipient: 'Baza Danych',
         defaultEnabled: true
     },

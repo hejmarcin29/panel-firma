@@ -123,6 +123,7 @@ export async function importProductsFromWoo(mapping: AttributeMapping = {}) {
                     length: wooProduct.dimensions.length ? parseFloat(wooProduct.dimensions.length) : null,
                     weight: wooProduct.weight ? parseFloat(wooProduct.weight) : null,
                     status: wooProduct.status === 'publish' ? 'active' : 'archived',
+                    imageUrl: wooProduct.images?.[0]?.src || null,
                 }).onConflictDoUpdate({
                     target: erpProducts.sku, // Assuming SKU is unique and we want to update by SKU
                     set: {
@@ -134,6 +135,7 @@ export async function importProductsFromWoo(mapping: AttributeMapping = {}) {
                         stockQuantity: wooProduct.stock_quantity,
                         description: wooProduct.description.replace(/<[^>]*>?/gm, ''),
                         status: wooProduct.status === 'publish' ? 'active' : 'archived',
+                        imageUrl: wooProduct.images?.[0]?.src || null,
                         updatedAt: new Date(),
                     }
                 }).returning({ id: erpProducts.id });
