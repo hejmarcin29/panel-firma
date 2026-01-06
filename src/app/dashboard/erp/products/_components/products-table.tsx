@@ -229,13 +229,12 @@ export function ProductsTable({ data, categories }: ProductsTableProps) {
                             <TableHead>Typ</TableHead>
                             <TableHead>Jednostka</TableHead>
                             <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Akcje</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {filteredData.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={8} className="h-24 text-center">
+                                <TableCell colSpan={7} className="h-24 text-center">
                                     Brak produktów spełniających kryteria.
                                 </TableCell>
                             </TableRow>
@@ -277,7 +276,12 @@ export function ProductsTable({ data, categories }: ProductsTableProps) {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-col">
-                                            <span>{product.name}</span>
+                                            <Link 
+                                                href={`/dashboard/erp/products/${product.id}`}
+                                                className="font-medium hover:underline text-primary"
+                                            >
+                                                {product.name}
+                                            </Link>
                                             {product.source === 'woocommerce' && (
                                                 <span className="text-[10px] text-muted-foreground">
                                                     Sync: {product.isSyncEnabled ? 'ON' : 'OFF'}
@@ -296,13 +300,6 @@ export function ProductsTable({ data, categories }: ProductsTableProps) {
                                         <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>
                                             {product.status === 'active' ? 'Aktywny' : 'Archiwum'}
                                         </Badge>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <Link href={`/dashboard/erp/products/${product.id}`}>
-                                            <Button variant="ghost" size="icon">
-                                                <Edit className="h-4 w-4" />
-                                            </Button>
-                                        </Link>
                                     </TableCell>
                                 </TableRow>
                             ))
@@ -339,9 +336,11 @@ export function ProductsTable({ data, categories }: ProductsTableProps) {
                                         </div>
                                     )}
                                     <div className="space-y-1">
-                                        <CardTitle className="text-base font-medium leading-none">
-                                            {product.name}
-                                        </CardTitle>
+                                        <Link href={`/dashboard/erp/products/${product.id}`}>
+                                            <CardTitle className="text-base font-medium leading-none hover:underline text-primary">
+                                                {product.name}
+                                            </CardTitle>
+                                        </Link>
                                         <p className="text-sm text-muted-foreground">
                                             {product.sku}
                                         </p>

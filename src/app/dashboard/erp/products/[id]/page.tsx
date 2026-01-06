@@ -34,6 +34,16 @@ export default async function ProductDetailsPage({ params }: PageProps) {
                 </Link>
                 <div className="flex-1">
                     <div className="flex items-center gap-3">
+                        {product.imageUrl && (
+                            <div className="h-16 w-16 relative overflow-hidden rounded-md border bg-muted">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img 
+                                    src={product.imageUrl} 
+                                    alt={product.name} 
+                                    className="h-full w-full object-cover" 
+                                />
+                            </div>
+                        )}
                         <h1 className="text-2xl font-bold tracking-tight">{product.name}</h1>
                         <Badge variant={product.type === 'service' ? 'secondary' : 'outline'}>
                             {product.type === 'service' ? 'Usługa' : 'Towar'}
@@ -62,6 +72,10 @@ export default async function ProductDetailsPage({ params }: PageProps) {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span className="text-muted-foreground">Czas realizacji:</span>
+                                <div className="font-medium text-blue-600">{product.leadTime || "Nie określono"}</div>
+                            </div>
                             <div>
                                 <span className="text-muted-foreground">Jednostka:</span>
                                 <div className="font-medium">{product.unit}</div>

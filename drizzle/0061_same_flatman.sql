@@ -1,0 +1,1 @@
+ALTER TABLE "erp_products" ADD COLUMN "lead_time" text;

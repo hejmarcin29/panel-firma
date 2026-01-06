@@ -146,6 +146,7 @@ export async function createProduct(data: any) {
         length: data.length,
         weight: data.weight,
         categoryId: data.categoryId || null,
+        leadTime: data.leadTime,
     }).returning({ id: erpProducts.id });
 
     if (data.attributes && Array.isArray(data.attributes)) {

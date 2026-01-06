@@ -1211,6 +1211,7 @@ export const products = pgTable('products', {
     vatRate: integer('vat_rate').default(23),
     purchasePrice: integer('purchase_price'), // Netto in grosz
     description: text('description'),
+    leadTime: text('lead_time'), // e.g. "3-5 dni", "24h"
 	deletedAt: timestamp('deleted_at'),
 	updatedAt: timestamp('updated_at').notNull().defaultNow(),
 	syncedAt: timestamp('synced_at').notNull().defaultNow(),
@@ -1676,6 +1677,8 @@ export const erpProducts = pgTable('erp_products', {
     source: text('source').default('local'), // local, woocommerce
     isSyncEnabled: boolean('is_sync_enabled').default(false),
     wooId: integer('woo_id'),
+
+    leadTime: text('lead_time'), // e.g. "3-5 dni"
 
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),

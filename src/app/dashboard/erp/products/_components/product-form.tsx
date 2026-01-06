@@ -35,6 +35,7 @@ const formSchema = z.object({
     type: z.enum(["product", "service"]),
     categoryId: z.string().optional(),
     description: z.string().optional(),
+    leadTime: z.string().optional(),
     width: z.string().optional(),
     height: z.string().optional(),
     length: z.string().optional(),
@@ -145,8 +146,20 @@ export function ProductForm({ onSuccess, availableAttributes = [], availableCate
                     />
 
                     <FormField
-                        control={form.control}
-                        name="unit"
+                        control={form.control}                        name="leadTime"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Czas realizacji</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="np. 3-5 dni, 24h" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    <FormField
+                        control={form.control}                        name="unit"
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Jednostka</FormLabel>
