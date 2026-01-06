@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db';
 import { montages } from '@/lib/db/schema';
-import { desc, not, eq } from 'drizzle-orm';
+import { desc, not, eq, isNull, and } from 'drizzle-orm';
 import { requireUser } from '@/lib/auth/session';
 import type { Montage } from '@/app/dashboard/crm/montaze/types';
 
@@ -12,7 +12,10 @@ export async function getTvData(): Promise<Montage[]> {
     // Fetch all active montages + recently completed
     // We need full data for the process engine
     const allMontages = await db.query.montages.findMany({
-        where: not(eq(montages.status, 'completed')), // We filter completed later or show them differently
+        where: and(
+            not(eq(montages.status, 'completed')), // We filter completed later or show them differently
+            isNull(montages.deletedAt)
+        ),
         with: {
             installer: true,
             measurer: true,

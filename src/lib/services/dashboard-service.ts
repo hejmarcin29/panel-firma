@@ -227,18 +227,33 @@ export async function getDashboardStats(publicBaseUrl: string | null): Promise<D
             floorArea: m.floorArea
         }));
 
-    const newLeadsCount = allMontages.filter(m => m.status === 'new_lead').length;
-    const pendingPaymentsCount = allMontages.filter(m => m.status === 'waiting_for_deposit' || m.status === 'final_settlement').length;
+    const newLeadsCount = allMontages.filter(m => 
+        m.status === 'new_lead' || 
+        m.status === 'contact_attempt'
+    ).length;
+    const pendingPaymentsCount = allMontages.filter(m => 
+        m.status === 'waiting_for_deposit' || 
+        m.status === 'final_settlement' ||
+        m.status === 'final_invoice_issued'
+    ).length;
     
     const pendingContractsCount = allMontages.filter(m => {
-        if (m.status === 'new_lead' || m.status === 'completed') return false;
+        if (m.status === 'new_lead' || m.status === 'completed' || m.status === 'rejected') return false;
         // In new model: 'sent' quote means waiting for signature (contract)
         const activeQuote = m.quotes.find(q => q.status === 'sent');
         return !!activeQuote;
     }).length;
 
-    // Urgent tasks: Montages that are not completed/lead but have no date, or maybe just a placeholder logic for now.
-    const urgentTasksCount = allMontages.filter(m => m.status !== 'new_lead' && m.status !== 'completed' && !m.scheduledInstallationAt).length;
+    // Urgent tasks: Montages that are not completed/lead but have no date
+    // We exclude 'rejected', 'on_hold' and 'complaint' as they have their own flows
+    const urgentTasksCount = allMontages.filter(m => 
+        m.status !== 'new_lead' && 
+        m.status !== 'completed' && 
+        m.status !== 'rejected' && 
+        m.status !== 'on_hold' && 
+        m.status !== 'complaint' && 
+        !m.scheduledInstallationAt
+    ).length;
 
     // Fetch New Orders Count
     const newOrders = await db.query.manualOrders.findMany({

@@ -1821,3 +1821,17 @@ export const erpInventoryRelations = relations(erpInventory, ({ one }) => ({
 }));
 
 
+
+export const smartDeviceTypes = ['switchBox', 'shutterBox', 'gateBox', 'wLightBox', 'other'] as const;
+export type SmartDeviceType = (typeof smartDeviceTypes)[number];
+
+export const smartDevices = pgTable('smart_devices', {
+    id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+    name: text('name').notNull(),
+    ipAddress: text('ip_address').notNull(),
+    type: text('type', { enum: smartDeviceTypes }).notNull(),
+    room: text('room'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
