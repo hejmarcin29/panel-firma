@@ -315,8 +315,38 @@ export async function permanentDeleteProduct(id: number) {
 }
 
 export async function getAssignedProducts() {
-    // For now, return all active products from legacy table
-    // In future, this should filter by user permissions if needed
+    const user = await requireUser();
+
+    // If architect, check for assigned products
+    if (user.roles.includes('architect')) {
+        const assignedIds = user.architectProfile?.assignedProductIds;
+        
+        // Strict Mode: If the array defines the access list.
+        // If check is triggered (array exists), we return ONLY properly assigned items.
+        // If array is empty keys -> return empty.
+        if (Array.isArray(assignedIds)) {
+            if (assignedIds.length === 0) {
+                return [];
+            }
+            return await db.query.products.findMany({
+                where: (table, { isNull, eq, and, inArray }) => and(
+                    isNull(table.deletedAt),
+                    eq(table.status, 'publish'),
+                    inArray(table.id, assignedIds)
+                ),
+                columns: {
+                    id: true,
+                    name: true,
+                    sku: true,
+                    price: true,
+                    imageUrl: true,
+                    categories: true, // Useful for filters in showroom
+                }
+            });
+        }
+    }
+
+    // Default (Admin or Architect without config): Return all active
     return await db.query.products.findMany({
         where: (table, { isNull, eq, and }) => and(
             isNull(table.deletedAt),
@@ -328,6 +358,7 @@ export async function getAssignedProducts() {
             sku: true,
             price: true,
             imageUrl: true,
+            categories: true,
         }
     });
 }

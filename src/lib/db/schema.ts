@@ -132,6 +132,9 @@ export type ArchitectProfile = {
 	nip?: string;
 	bankAccount?: string;
 	commissionRate?: number; // PLN per m2
+    assignedProductIds?: number[]; // Legacy or for specific manual adds
+    assignedCategories?: { id: number; name: string }[];
+    excludedProductIds?: number[]; // IDs of products to hide even if category is assigned
 };
 
 export type PartnerProfile = {

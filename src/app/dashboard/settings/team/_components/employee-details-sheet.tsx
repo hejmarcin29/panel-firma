@@ -40,8 +40,10 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Checkbox } from '@/components/ui/checkbox';
 
-import { updateInstallerProfile, getInstallerMontages, updateArchitectProfile, getArchitectCommissions, updatePartnerProfile, updateEmployeeCredentials } from '../actions';
+import { updateInstallerProfile, getInstallerMontages, updateArchitectProfile, getArchitectCommissions, updatePartnerProfile, updateEmployeeCredentials, getMinimalProducts } from '../actions';
 import type { UserRole, InstallerProfile, ArchitectProfile, PartnerProfile } from '@/lib/db/schema';
 
 interface TeamMember {
@@ -83,6 +85,7 @@ const architectProfileSchema = z.object({
     nip: z.string().optional(),
     bankAccount: z.string().optional(),
     commissionRate: z.coerce.number().min(0, "Stawka musi być dodatnia").optional(),
+    assignedProductIds: z.array(z.number()).optional(),
 });
 
 const partnerProfileSchema = z.object({
@@ -106,7 +109,15 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [commissions, setCommissions] = useState<any[]>([]);
     const [isLoadingCommissions, setIsLoadingCommissions] = useState(false);
+    const [availableProducts, setAvailableProducts] = useState<{id: number, name: string, sku: string}[]>([]);
+    const [productSearch, setProductSearch] = useState('');
     const [isPending, startTransition] = useTransition();
+
+    useEffect(() => {
+        if (open && member && (member.roles.includes('architect') || member.roles.includes('partner'))) {
+            getMinimalProducts().then(setAvailableProducts);
+        }
+    }, [open, member]);
 
     const form = useForm<z.infer<typeof profileSchema>>({
         resolver: zodResolver(profileSchema) as Resolver<z.infer<typeof profileSchema>>,
@@ -125,6 +136,7 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
             nip: '',
             bankAccount: '',
             commissionRate: 0,
+            assignedProductIds: [],
         },
     });
 
@@ -180,6 +192,7 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
                 nip: member.architectProfile.nip || '',
                 bankAccount: member.architectProfile.bankAccount || '',
                 commissionRate: member.architectProfile.commissionRate || 0,
+                assignedProductIds: member.architectProfile.assignedProductIds || [],
             });
         } else {
             architectForm.reset({
@@ -187,6 +200,7 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
                 nip: '',
                 bankAccount: '',
                 commissionRate: 0,
+                assignedProductIds: [],
             });
         }
 
@@ -606,6 +620,64 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
                                             </FormItem>
                                         )}
                                     />
+                                    
+                                    <div className="space-y-3 pt-4 border-t">
+                                        <div className="flex items-center justify-between">
+                                            <FormLabel>Dostępne produkty (Showroom)</FormLabel>
+                                            <div className="text-xs text-muted-foreground">
+                                                {architectForm.watch('assignedProductIds')?.length || 0} wybranych
+                                            </div>
+                                        </div>
+                                        
+                                        <Input 
+                                            placeholder="Szukaj produktu..." 
+                                            value={productSearch}
+                                            onChange={(e) => setProductSearch(e.target.value)}
+                                            className="h-8 text-xs"
+                                        />
+
+                                        <ScrollArea className="h-[200px] border rounded-md p-2">
+                                            <div className="space-y-2">
+                                                {availableProducts
+                                                    .filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase()) || p.sku.toLowerCase().includes(productSearch.toLowerCase()))
+                                                    .map((product) => (
+                                                        <div key={product.id} className="flex items-start gap-2 max-w-full overflow-hidden">
+                                                            <Checkbox 
+                                                                id={`prod-${product.id}`}
+                                                                checked={architectForm.watch('assignedProductIds')?.includes(product.id)}
+                                                                onCheckedChange={(checked) => {
+                                                                    const currentIds = architectForm.getValues('assignedProductIds') || [];
+                                                                    let newIds;
+                                                                    if (checked) {
+                                                                        newIds = [...currentIds, product.id];
+                                                                    } else {
+                                                                        newIds = currentIds.filter(id => id !== product.id);
+                                                                    }
+                                                                    architectForm.setValue('assignedProductIds', newIds, { shouldDirty: true });
+                                                                    architectForm.handleSubmit(onArchitectSubmit)();
+                                                                }}
+                                                                className="mt-0.5"
+                                                            />
+                                                            <label 
+                                                                htmlFor={`prod-${product.id}`} 
+                                                                className="text-sm leading-normal peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer break-words flex-1"
+                                                            >
+                                                                <span className="font-medium block">{product.name}</span>
+                                                                <span className="text-xs text-muted-foreground">{product.sku}</span>
+                                                            </label>
+                                                        </div>
+                                                    ))
+                                                }
+                                                {availableProducts.length === 0 && (
+                                                    <div className="text-xs text-muted-foreground text-center py-4">Brak produktów lub trwa ładowanie...</div>
+                                                )}
+                                            </div>
+                                        </ScrollArea>
+                                        <p className="text-[10px] text-muted-foreground">
+                                            Zaznacz produkty, które mają być widoczne dla tego architekta. Pusta lista oznacza dostęp do wszystkich produktów.
+                                        </p>
+                                    </div>
+
                                     {isPending && <div className="text-xs text-muted-foreground">Zapisywanie...</div>}
                                 </form>
                             </Form>

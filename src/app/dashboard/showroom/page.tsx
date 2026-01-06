@@ -27,6 +27,7 @@ interface Product {
     price: string;
     imageUrl: string | null;
     attributes?: { name: string; options: string[] }[];
+    categories?: { id: number; name: string }[];
 }
 
 export default function ShowroomPage() {
@@ -51,7 +52,36 @@ export default function ShowroomPage() {
     const filteredProducts = products.filter(p => 
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         p.sku.toLowerCase().includes(searchQuery.toLowerCase())
+        // Also check category names for search
+        || p.categories?.some(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
     );
+
+    // Grouping Logic
+    const groupedProducts = filteredProducts.reduce((acc, product) => {
+        const productCategories = product.categories && product.categories.length > 0 
+            ? product.categories 
+            : [{ id: -1, name: 'Pozostałe' }];
+        
+        productCategories.forEach(cat => {
+            // Logic to verify if this category is relevant? 
+            // For now, list product in ALL its categories.
+            if (!acc[cat.name]) {
+                acc[cat.name] = [];
+            }
+            // Avoid duplicates if product has multiple categories with same name (unlikely but safe)
+            if (!acc[cat.name].find(p => p.id === product.id)) {
+                acc[cat.name].push(product);
+            }
+        });
+        return acc;
+    }, {} as Record<string, Product[]>);
+
+    // Sort categories: "Pozostałe" last, others alphabetical
+    const sortedCategories = Object.keys(groupedProducts).sort((a, b) => {
+        if (a === 'Pozostałe') return 1;
+        if (b === 'Pozostałe') return -1;
+        return a.localeCompare(b);
+    });
 
     const toggleFavorite = (id: number) => {
         setFavorites(prev => 
@@ -65,18 +95,33 @@ export default function ShowroomPage() {
     const favoriteProducts = products.filter(p => favorites.includes(p.id));
 
     return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 font-serif">
+        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 font-serif pb-20 md:pb-0">
             {/* Header */}
             <div className="sticky top-0 z-40 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-b">
-                <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
-                    <h1 className="text-2xl font-medium tracking-tight">Wirtualny Showroom</h1>
+                <div className="max-w-7xl mx-auto px-4 h-auto py-4 md:py-0 md:h-20 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="w-full md:w-auto flex items-center justify-between">
+                        <h1 className="text-2xl font-medium tracking-tight">Wirtualny Showroom</h1>
+                        <Button 
+                            variant="outline" 
+                            size="icon"
+                            className="rounded-full relative md:hidden"
+                            onClick={() => setIsMoodboardOpen(true)}
+                        >
+                            <ShoppingBag className="h-4 w-4" />
+                            {favorites.length > 0 && (
+                                <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 rounded-full">
+                                    {favorites.length}
+                                </Badge>
+                            )}
+                        </Button>
+                    </div>
                     
-                    <div className="flex items-center gap-4">
-                        <div className="relative hidden md:block">
+                    <div className="flex items-center gap-4 w-full md:w-auto">
+                        <div className="relative w-full md:w-auto">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input 
                                 placeholder="Szukaj dekoru..." 
-                                className="pl-9 w-64 bg-zinc-100 border-none rounded-full"
+                                className="pl-9 w-full md:w-64 bg-zinc-100 border-none rounded-full"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
@@ -84,7 +129,7 @@ export default function ShowroomPage() {
 
                         <Button 
                             variant="outline" 
-                            className="rounded-full relative"
+                            className="rounded-full relative hidden md:flex"
                             onClick={() => setIsMoodboardOpen(true)}
                         >
                             <ShoppingBag className="h-4 w-4 mr-2" />
@@ -100,7 +145,7 @@ export default function ShowroomPage() {
             </div>
 
             {/* Content */}
-            <div className="max-w-7xl mx-auto px-4 py-8">
+            <div className="max-w-7xl mx-auto px-4 py-8 space-y-12">
                 {isLoading ? (
                     <div className="flex items-center justify-center h-64">
                         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -110,64 +155,87 @@ export default function ShowroomPage() {
                         <p className="text-muted-foreground text-lg">Brak produktów spełniających kryteria.</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                        {filteredProducts.map((product) => (
-                            <motion.div
-                                key={product.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.4 }}
-                            >
-                                <div className="group relative aspect-4/5 overflow-hidden rounded-xl bg-zinc-100 mb-4">
-                                    {product.imageUrl ? (
-                                        <Image
-                                            src={product.imageUrl}
-                                            alt={product.name}
-                                            fill
-                                            className="object-cover transition-transform duration-700 group-hover:scale-105"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                                            Brak zdjęcia
-                                        </div>
-                                    )}
-                                    
-                                    {/* Overlay Actions */}
-                                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                                        <Button
-                                            size="icon"
-                                            variant="secondary"
-                                            className="rounded-full h-12 w-12 bg-white/90 hover:bg-white"
-                                            onClick={() => toggleFavorite(product.id)}
-                                        >
-                                            <Heart className={cn("h-5 w-5", favorites.includes(product.id) && "fill-red-500 text-red-500")} />
-                                        </Button>
-                                        <Button
-                                            size="icon"
-                                            variant="secondary"
-                                            className="rounded-full h-12 w-12 bg-white/90 hover:bg-white"
-                                            onClick={() => toast.success('Pobieranie tekstur...')}
-                                        >
-                                            <Download className="h-5 w-5" />
-                                        </Button>
-                                    </div>
-                                </div>
+                    sortedCategories.map(categoryName => (
+                        <div key={categoryName} className="space-y-6">
+                            <h2 className="text-xl font-medium border-b pb-2 text-zinc-800 dark:text-zinc-200">
+                                {categoryName}
+                                <span className="ml-2 text-sm text-muted-foreground font-normal">
+                                    ({groupedProducts[categoryName].length})
+                                </span>
+                            </h2>
+                            
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-10">
+                                {groupedProducts[categoryName].map((product) => (
+                                    <motion.div
+                                        key={`${categoryName}-${product.id}`}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.4 }}
+                                        className="h-full flex flex-col"
+                                    >
+                                        <div className="group relative aspect-4/5 overflow-hidden rounded-xl bg-zinc-100 mb-4 shadow-sm hover:shadow-md transition-all">
+                                            {product.imageUrl ? (
+                                                <Image
+                                                    src={product.imageUrl}
+                                                    alt={product.name}
+                                                    fill
+                                                    className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-zinc-50">
+                                                    Brak zdjęcia
+                                                </div>
+                                            )}
+                                            
+                                            {/* Overlay Actions */}
+                                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                                                <Button
+                                                    size="icon"
+                                                    variant="secondary"
+                                                    className="rounded-full h-10 w-10 sm:h-12 sm:w-12 bg-white/90 hover:bg-white shadow-lg font-sans"
+                                                    onClick={() => toggleFavorite(product.id)}
+                                                    title={favorites.includes(product.id) ? "Usuń z moodboardu" : "Dodaj do moodboardu"}
+                                                >
+                                                    <Heart className={cn("h-5 w-5 transition-colors", favorites.includes(product.id) && "fill-red-500 text-red-500")} />
+                                                </Button>
+                                                {/* <Button
+                                                    size="icon"
+                                                    variant="secondary"
+                                                    className="rounded-full h-12 w-12 bg-white/90 hover:bg-white shadow-lg"
+                                                    onClick={() => toast.success('Pobieranie tekstur...')}
+                                                >
+                                                    <Download className="h-5 w-5" />
+                                                </Button> */}
+                                            </div>
 
-                                <div className="space-y-1">
-                                    <h3 className="font-medium text-lg leading-tight">{product.name}</h3>
-                                    <p className="text-sm text-muted-foreground font-sans">SKU: {product.sku}</p>
-                                    {/* Attributes pills */}
-                                    <div className="flex flex-wrap gap-1 mt-2">
-                                        {product.attributes?.slice(0, 2).map(attr => (
-                                            <span key={attr.name} className="text-[10px] uppercase tracking-wider bg-zinc-100 px-2 py-1 rounded-sm text-zinc-600 font-sans">
-                                                {attr.options[0]}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
+                                            {/* Mobile Favorite Indicator (always visible if favorite) */}
+                                            {favorites.includes(product.id) && (
+                                                <div className="absolute top-2 right-2 md:hidden">
+                                                    <div className="bg-white/90 rounded-full p-1.5 shadow-sm">
+                                                        <Heart className="h-3 w-3 fill-red-500 text-red-500" />
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="mt-auto space-y-1">
+                                            <h3 className="font-medium text-lg leading-tight line-clamp-2" title={product.name}>{product.name}</h3>
+                                            <p className="text-sm text-muted-foreground font-sans truncate">SKU: {product.sku}</p>
+                                            {/* Attributes pills */}
+                                            {/* <div className="flex flex-wrap gap-1 mt-2">
+                                                {product.attributes?.slice(0, 2).map(attr => (
+                                                    <span key={attr.name} className="text-[10px] uppercase tracking-wider bg-zinc-100 px-2 py-1 rounded-sm text-zinc-600 font-sans">
+                                                        {attr.options[0]}
+                                                    </span>
+                                                ))}
+                                            </div> */}
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </div>
+                    ))
                 )}
             </div>
 

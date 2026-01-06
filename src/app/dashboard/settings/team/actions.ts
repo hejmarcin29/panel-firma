@@ -5,7 +5,7 @@ import { eq, desc } from 'drizzle-orm';
 import { hash } from 'bcryptjs';
 
 import { db } from '@/lib/db';
-import { users, montages, commissions, type UserRole, type InstallerProfile, type ArchitectProfile, type PartnerProfile } from '@/lib/db/schema';
+import { users, montages, commissions, products, type UserRole, type InstallerProfile, type ArchitectProfile, type PartnerProfile } from '@/lib/db/schema';
 import { requireUser, impersonateUser } from '@/lib/auth/session';
 import { generatePortalToken } from '@/lib/utils';
 
@@ -51,6 +51,32 @@ export async function updateArchitectProfile(userId: string, profile: ArchitectP
         .where(eq(users.id, userId));
 
     revalidatePath(TEAM_SETTINGS_PATH);
+}
+
+export async function updateArchitectAssignedProducts(userId: string, productIds: number[]) {
+    const currentUser = await requireUser();
+    
+    if (!currentUser.roles.includes('admin')) {
+        throw new Error('Brak uprawnień.');
+    }
+
+    const user = await db.query.users.findFirst({
+        where: eq(users.id, userId),
+    });
+
+    if (!user) throw new Error('User not found');
+
+    const currentProfile = user.architectProfile || {};
+    const newProfile = {
+        ...currentProfile,
+        assignedProductIds: productIds
+    };
+
+    await db.update(users)
+        .set({ architectProfile: newProfile, updatedAt: new Date() })
+        .where(eq(users.id, userId));
+
+    revalidatePath(`/dashboard/settings/team/${userId}`);
 }
 
 export async function updatePartnerProfile(userId: string, profile: PartnerProfile) {
@@ -118,6 +144,100 @@ export async function getTeamMembers() {
     })
     .from(users)
     .orderBy(desc(users.createdAt));
+}
+
+
+export async function getMinimalProducts() {
+    await requireUser();
+    
+    return db.query.products.findMany({
+        where: (table, { isNull, eq, and }) => and(
+            isNull(table.deletedAt),
+            eq(table.status, 'publish')
+        ),
+        columns: {
+            id: true,
+            name: true,
+            sku: true,
+            categories: true,
+        },
+        orderBy: (table, { asc }) => [asc(table.name)],
+    });
+}
+
+export interface CategoryWithProducts {
+    id: number;
+    name: string;
+    products: {
+        id: number;
+        name: string;
+        sku: string;
+    }[];
+}
+
+export async function getOfferConfigurationData() {
+    await requireUser();
+    
+    // Fetch all published products
+    const allProducts = await db.query.products.findMany({
+        where: (table, { isNull, eq, and }) => and(
+            isNull(table.deletedAt),
+            eq(table.status, 'publish')
+        ),
+        columns: {
+            id: true,
+            name: true,
+            sku: true,
+            categories: true,
+        },
+        orderBy: (table, { asc }) => [asc(table.name)],
+    });
+
+    const categoryMap = new Map<number, CategoryWithProducts>();
+
+    allProducts.forEach(product => {
+        if (Array.isArray(product.categories)) {
+            product.categories.forEach((cat: { id: number; name: string }) => {
+                if (!categoryMap.has(cat.id)) {
+                    categoryMap.set(cat.id, {
+                        id: cat.id,
+                        name: cat.name,
+                        products: []
+                    });
+                }
+                
+                const categoryEntry = categoryMap.get(cat.id)!;
+                categoryEntry.products.push({
+                    id: product.id,
+                    name: product.name,
+                    sku: product.sku || '',
+                });
+            });
+        }
+    });
+
+    // Sort categories by name
+    return Array.from(categoryMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+
+export async function getUser(userId: string) {
+    const currentUser = await requireUser();
+    
+    // Only admin can see other users detailed info, or the user themselves (handled by session mainly, but here restricted to admin for management)
+    if (!currentUser.roles.includes('admin')) {
+        throw new Error('Brak uprawnień.');
+    }
+
+    const user = await db.query.users.findFirst({
+        where: eq(users.id, userId),
+    });
+
+    if (!user) {
+        throw new Error('Użytkownik nie znaleziony');
+    }
+
+    return user;
 }
 
 export async function createEmployee({

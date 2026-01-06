@@ -40,8 +40,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { toggleEmployeeStatus, updateEmployeeRoles, impersonateUserAction } from '../actions';
 import type { UserRole, InstallerProfile, ArchitectProfile } from '@/lib/db/schema';
-import { EmployeeDetailsSheet } from './employee-details-sheet';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 interface TeamMember {
     id: string;
@@ -85,8 +85,7 @@ function getInitials(name: string | null) {
 
 export function TeamList({ members, currentUserId }: TeamListProps) {
   const [isPending, startTransition] = useTransition();
-  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
+
 
 
 
@@ -190,12 +189,11 @@ export function TeamList({ members, currentUserId }: TeamListProps) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Akcje</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => {
-                            setSelectedMember(member);
-                            setIsSheetOpen(true);
-                        }}>
-                            <Settings2 className="mr-2 h-4 w-4" />
-                            Szczegóły
+                        <DropdownMenuItem asChild>
+                            <Link href={`/dashboard/settings/team/${member.id}`}>
+                                <Settings2 className="mr-2 h-4 w-4" />
+                                Edytuj
+                            </Link>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => handleStatusToggle(member.id, member.isActive)}>
@@ -275,13 +273,12 @@ export function TeamList({ members, currentUserId }: TeamListProps) {
                 variant="outline" 
                 size="sm" 
                 className="h-8 text-xs"
-                onClick={() => {
-                    setSelectedMember(member);
-                    setIsSheetOpen(true);
-                }}
+                asChild
             >
-                <Settings2 className="mr-2 h-3 w-3" />
-                Edytuj
+                <Link href={`/dashboard/settings/team/${member.id}`}>
+                    <Settings2 className="mr-2 h-3 w-3" />
+                    Edytuj
+                </Link>
             </Button>
             <Button 
                 variant="default" 
@@ -325,12 +322,6 @@ export function TeamList({ members, currentUserId }: TeamListProps) {
                {renderMobileSection('Wszyscy użytkownicy', members, 'text-foreground')}
             </div>
         </div>
-
-        <EmployeeDetailsSheet 
-            member={selectedMember}
-            open={isSheetOpen} 
-            onOpenChange={setIsSheetOpen} 
-        />
     </>
   );
 }
