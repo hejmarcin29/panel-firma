@@ -147,24 +147,6 @@ export async function getTeamMembers() {
 }
 
 
-export async function getMinimalProducts() {
-    await requireUser();
-    
-    return db.query.products.findMany({
-        where: (table, { isNull, eq, and }) => and(
-            isNull(table.deletedAt),
-            eq(table.status, 'publish')
-        ),
-        columns: {
-            id: true,
-            name: true,
-            sku: true,
-            categories: true,
-        },
-        orderBy: (table, { asc }) => [asc(table.name)],
-    });
-}
-
 export interface CategoryWithProducts {
     id: number;
     name: string;

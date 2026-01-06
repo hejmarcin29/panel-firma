@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getUser, getOfferConfigurationData } from '../actions';
+import { getUser, getOfferConfigurationData, type CategoryWithProducts } from '../actions';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { AccountForm } from './_components/account-form';
@@ -14,20 +14,16 @@ import { ProfileForm } from './_components/profile-form';
 export default async function EmployeeDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     let user;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let products: any[] = [];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let offerData: any[] = [];
+    let offerData: CategoryWithProducts[] = [];
     
     try {
         user = await getUser(id);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const anyUser = user as any;
         if (anyUser.roles.includes('architect') || anyUser.roles.includes('partner')) {
-            // products = await getMinimalProducts();
             offerData = await getOfferConfigurationData();
         }
-    } catch (e) {
+    } catch {
         notFound();
     }
 
