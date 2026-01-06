@@ -5,7 +5,7 @@ import { eq, desc } from 'drizzle-orm';
 import { hash } from 'bcryptjs';
 
 import { db } from '@/lib/db';
-import { users, montages, commissions, products, type UserRole, type InstallerProfile, type ArchitectProfile, type PartnerProfile } from '@/lib/db/schema';
+import { users, montages, commissions, type UserRole, type InstallerProfile, type ArchitectProfile, type PartnerProfile } from '@/lib/db/schema';
 import { requireUser, impersonateUser } from '@/lib/auth/session';
 import { generatePortalToken } from '@/lib/utils';
 

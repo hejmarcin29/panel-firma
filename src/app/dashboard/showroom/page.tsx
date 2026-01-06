@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Heart, Download, ShoppingBag, Search, X, Loader2 } from 'lucide-react';
+import { Heart, ShoppingBag, Search, X, Loader2 } from 'lucide-react';
 import { getAssignedProducts } from '../erp/products/actions';
 import { toast } from 'sonner';
 import Image from 'next/image';

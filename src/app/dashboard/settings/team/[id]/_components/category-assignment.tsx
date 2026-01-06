@@ -165,7 +165,6 @@ export function CategoryAssignment({ user, data }: CategoryAssignmentProps) {
                             const isExpanded = expandedCategories.includes(category.id) || searchQuery.length > 0;
                             
                             // Check count for display
-                            const categoryProductIds = category.products.map(p => p.id);
                             const selectedCount = category.products.filter(p => selectedProductIds.includes(p.id)).length;
                             const totalProducts = category.products.length;
                             
