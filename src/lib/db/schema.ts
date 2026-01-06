@@ -1323,42 +1323,14 @@ export const partnerCommissionsRelations = relations(partnerCommissions, ({ one 
 export const usersRelations = relations(users, ({ many }) => ({
 	commissions: many(commissions, { relationName: 'commission_architect' }),
 	architectMontages: many(montages, { relationName: 'montage_architect' }),
-    assignedProducts: many(architectProducts),
+    // assignedProducts: many(architectProducts),
     partnerPayouts: many(partnerPayouts),
     partnerCommissions: many(partnerCommissions),
     serviceRates: many(userServiceRates),
 }));
 
-export const architectProducts = pgTable(
-    'architect_products',
-    {
-        id: text('id').primaryKey(),
-        architectId: text('architect_id')
-            .notNull()
-            .references(() => users.id, { onDelete: 'cascade' }),
-        productId: integer('product_id')
-            .notNull()
-            .references(() => products.id, { onDelete: 'cascade' }),
-        isExclusive: boolean('is_exclusive').default(false),
-        createdAt: timestamp('created_at').notNull().defaultNow(),
-    },
-    (table) => ({
-        architectIdx: index('architect_products_architect_id_idx').on(table.architectId),
-        productIdx: index('architect_products_product_id_idx').on(table.productId),
-        uniqueAssignment: uniqueIndex('architect_products_unique_idx').on(table.architectId, table.productId),
-    })
-);
+// Legacy architect products removed
 
-export const architectProductsRelations = relations(architectProducts, ({ one }) => ({
-    architect: one(users, {
-        fields: [architectProducts.architectId],
-        references: [users.id],
-    }),
-    product: one(products, {
-        fields: [architectProducts.productId],
-        references: [products.id],
-    }),
-}));
 
 export const contractTemplates = pgTable('contract_templates', {
     id: text('id').primaryKey(),
@@ -1410,7 +1382,7 @@ export const purchaseOrders = pgTable('purchase_orders', {
 export const purchaseOrderItems = pgTable('purchase_order_items', {
     id: text('id').primaryKey(),
     purchaseOrderId: text('purchase_order_id').notNull().references(() => purchaseOrders.id, { onDelete: 'cascade' }),
-    productId: integer('product_id').references(() => products.id), // Link to existing products
+    productId: integer('product_id'), // Link to existing products (Legacy)
     productName: text('product_name').notNull(), // Snapshot or manual item
     quantity: integer('quantity').notNull(),
     unitPrice: integer('unit_price').notNull(), // Net price
@@ -1425,7 +1397,7 @@ export type WarehouseMovementType = (typeof warehouseMovementTypes)[number];
 
 export const warehouseMovements = pgTable('warehouse_movements', {
     id: text('id').primaryKey(),
-    productId: integer('product_id').notNull().references(() => products.id),
+    productId: integer('product_id').notNull(),
     type: text('type').$type<WarehouseMovementType>().notNull(),
     quantity: integer('quantity').notNull(), // Positive for IN, Negative for OUT
     referenceId: text('reference_id'), // ID of PO, Order, or Montage
@@ -1451,10 +1423,10 @@ export const purchaseOrderItemsRelations = relations(purchaseOrderItems, ({ one 
         fields: [purchaseOrderItems.purchaseOrderId],
         references: [purchaseOrders.id],
     }),
-    product: one(products, {
-        fields: [purchaseOrderItems.productId],
-        references: [products.id],
-    }),
+    // product: one(products, {
+    //     fields: [purchaseOrderItems.productId],
+    //     references: [products.id],
+    // }),
     montage: one(montages, {
         fields: [purchaseOrderItems.montageId],
         references: [montages.id],
@@ -1462,10 +1434,10 @@ export const purchaseOrderItemsRelations = relations(purchaseOrderItems, ({ one 
 }));
 
 export const warehouseMovementsRelations = relations(warehouseMovements, ({ one }) => ({
-    product: one(products, {
-        fields: [warehouseMovements.productId],
-        references: [products.id],
-    }),
+    // product: one(products, {
+    //     fields: [warehouseMovements.productId],
+    //     references: [products.id],
+    // }),
     user: one(users, {
         fields: [warehouseMovements.createdBy],
         references: [users.id],

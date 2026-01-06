@@ -88,7 +88,7 @@ type QuoteEditorProps = {
             contactPhone: string | null;
             floorArea: number | null;
             panelModel: string | null;
-            panelProductId?: number | null;
+            panelProductId?: string | null;
             panelWaste: number | null;
             technicalAudit: unknown;
             measurementAdditionalMaterials?: unknown;

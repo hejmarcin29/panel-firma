@@ -71,7 +71,7 @@ export function CategoryAssignment({ user, data }: CategoryAssignmentProps) {
             // Unchecking: Remove from enabled list AND deselect all its products
             setManuallyEnabledCategories(prev => prev.filter(id => id !== catId));
             const productIdsToRemove = products.map(p => p.id);
-            setSelectedProductIds(prev => prev.filter(id => !productIdsToRemove.includes(id)));
+            setSelectedProductIds(prev => prev.filter(id => !productIdsToRemove.includes(id as string)));
             // Also collapse? Optional.
         } else {
             // Checking: Add to enabled list. DO NOT SELECT ANY PRODUCTS (User requirement: "zero jest zaznaczonych").

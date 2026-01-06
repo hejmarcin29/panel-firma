@@ -1,8 +1,8 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { quotes, type QuoteItem, type QuoteStatus, mailAccounts, montages, erpProducts, services } from '@/lib/db/schema';
-import { eq, desc, isNull, and } from 'drizzle-orm';
+import { quotes, type QuoteItem, type QuoteStatus, mailAccounts, montages, services } from '@/lib/db/schema';
+import { eq, desc, isNull } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { randomUUID } from 'crypto';
 import { createTransport } from 'nodemailer';
@@ -352,8 +352,8 @@ export async function getProductsForQuote() {
         attributes: p.attributes.map(attr => ({
             id: attr.attribute.id,
             name: attr.attribute.name,
-            slug: attr.attribute.slug,
-            options: attr.option ? [attr.option.name] : (attr.value ? [attr.value] : [])
+            slug: null, // ERP attributes don't have slugs yet
+            options: attr.option ? [attr.option.value] : (attr.value ? [attr.value] : [])
         }))
     }));
 }
