@@ -1,6 +1,7 @@
 'use client';
 
 import { useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { MoreHorizontal, ShieldAlert, UserCog, LogIn, Settings2, Hammer, PenTool, Users } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -84,6 +85,7 @@ function getInitials(name: string | null) {
 }
 
 export function TeamList({ members, currentUserId }: TeamListProps) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
 
@@ -154,7 +156,11 @@ export function TeamList({ members, currentUserId }: TeamListProps) {
             </TableHeader>
             <TableBody>
             {list.map((member) => (
-                <TableRow key={member.id}>
+                <TableRow 
+                    key={member.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => router.push(`/dashboard/settings/team/${member.id}`)}
+                >
                 <TableCell>
                     <div className="flex flex-col">
                         <span className="font-medium">{member.name}</span>
@@ -181,7 +187,7 @@ export function TeamList({ members, currentUserId }: TeamListProps) {
                 </TableCell>
                 <TableCell>
                     <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
+                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                         <Button variant="ghost" className="h-8 w-8 p-0" disabled={member.id === currentUserId || isPending}>
                         <span className="sr-only">Otwórz menu</span>
                         <MoreHorizontal className="h-4 w-4" />
