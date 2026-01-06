@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
     Table,
     TableBody,
@@ -11,7 +11,15 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, MoreHorizontal, RefreshCw, Ban } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Edit, MoreHorizontal, RefreshCw, Ban, Search, X } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -32,7 +40,7 @@ interface Product {
     unit: string | null;
     type: string | null;
     status: string | null;
-    category: { name: string } | null;
+    category: { id: string; name: string } | null;
     source: string | null;
     isSyncEnabled: boolean | null;
 }
@@ -49,10 +57,31 @@ interface ProductsTableProps {
 
 export function ProductsTable({ data, categories }: ProductsTableProps) {
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [statusFilter, setStatusFilter] = useState("all");
+    const [categoryFilter, setCategoryFilter] = useState("all");
+
+    const filteredData = useMemo(() => {
+        return data.filter((product) => {
+            const matchesSearch = 
+                product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                product.sku.toLowerCase().includes(searchQuery.toLowerCase());
+            
+            const matchesStatus = statusFilter === "all" || product.status === statusFilter;
+            
+            const matchesCategory = categoryFilter === "all" || (
+                categoryFilter === "none" 
+                    ? !product.category 
+                    : product.category?.id === categoryFilter
+            );
+
+            return matchesSearch && matchesStatus && matchesCategory;
+        });
+    }, [data, searchQuery, statusFilter, categoryFilter]);
 
     const handleSelectAll = (checked: boolean) => {
         if (checked) {
-            setSelectedIds(data.map(p => p.id));
+            setSelectedIds(filteredData.map(p => p.id));
         } else {
             setSelectedIds([]);
         }
@@ -99,6 +128,54 @@ export function ProductsTable({ data, categories }: ProductsTableProps) {
 
     return (
         <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center bg-card p-4 rounded-lg border">
+                <div className="relative w-full sm:w-72">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Szukaj (SKU, Nazwa)..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-8"
+                    />
+                    {searchQuery && (
+                        <button 
+                            onClick={() => setSearchQuery("")}
+                            className="absolute right-2 top-2.5 text-muted-foreground hover:text-foreground"
+                        >
+                            <X className="h-4 w-4" />
+                        </button>
+                    )}
+                </div>
+
+                <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger className="w-[140px]">
+                            <SelectValue placeholder="Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Wszystkie statusy</SelectItem>
+                            <SelectItem value="active">Aktywne</SelectItem>
+                            <SelectItem value="archived">Archiwum</SelectItem>
+                        </SelectContent>
+                    </Select>
+
+                    <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Kategoria" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Wszystkie kategorie</SelectItem>
+                            <SelectItem value="none">Bez kategorii</SelectItem>
+                            {categories.map((cat) => (
+                                <SelectItem key={cat.id} value={cat.id}>
+                                    {cat.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+
             {selectedIds.length > 0 && (
                 <div className="flex items-center gap-2 p-2 bg-muted rounded-md flex-wrap">
                     <span className="text-sm font-medium px-2">Zaznaczono: {selectedIds.length}</span>
@@ -140,7 +217,7 @@ export function ProductsTable({ data, categories }: ProductsTableProps) {
                         <TableRow>
                             <TableHead className="w-10">
                                 <Checkbox 
-                                    checked={data.length > 0 && selectedIds.length === data.length}
+                                    checked={filteredData.length > 0 && selectedIds.length === filteredData.length}
                                     onCheckedChange={(checked) => handleSelectAll(!!checked)}
                                 />
                             </TableHead>
@@ -154,14 +231,14 @@ export function ProductsTable({ data, categories }: ProductsTableProps) {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {data.length === 0 ? (
+                        {filteredData.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={8} className="h-24 text-center">
-                                    Brak produktów.
+                                    Brak produktów spełniających kryteria.
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            data.map((product) => (
+                            filteredData.map((product) => (
                                 <TableRow 
                                     key={product.id}
                                     className={product.source === 'woocommerce' ? 'bg-blue-50/50 hover:bg-blue-50/80 dark:bg-blue-950/20 dark:hover:bg-blue-950/30' : ''}
@@ -218,19 +295,25 @@ export function ProductsTable({ data, categories }: ProductsTableProps) {
 
             {/* Mobile View */}
             <div className="md:hidden space-y-4">
-                {data.length === 0 ? (
+                {filteredData.length === 0 ? (
                     <div className="text-center p-8 border rounded-md text-muted-foreground">
-                        Brak produktów.
+                        Brak produktów spełniających kryteria.
                     </div>
                 ) : (
-                    data.map((product) => (
+                    filteredData.map((product) => (
                         <Card key={product.id} className={product.source === 'woocommerce' ? 'bg-blue-50/50 dark:bg-blue-950/20' : ''}>
                             <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
                                 <div className="space-y-1">
-                                    <CardTitle className="text-base font-medium leading-none">
-                                        {product.name}
-                                    </CardTitle>
-                                    <p className="text-sm text-muted-foreground">
+                                    <div className="flex items-center gap-2">
+                                        <Checkbox 
+                                            checked={selectedIds.includes(product.id)}
+                                            onCheckedChange={(checked) => handleSelectOne(product.id, !!checked)}
+                                        />
+                                        <CardTitle className="text-base font-medium leading-none">
+                                            {product.name}
+                                        </CardTitle>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground pl-6">
                                         {product.sku}
                                     </p>
                                 </div>
@@ -249,7 +332,7 @@ export function ProductsTable({ data, categories }: ProductsTableProps) {
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="pl-6">
                                 <div className="flex items-center justify-between text-sm">
                                     <div className="flex gap-2">
                                         <Badge variant={product.type === 'service' ? 'secondary' : 'outline'}>
