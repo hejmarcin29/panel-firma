@@ -8,7 +8,6 @@ import { getUser, getMinimalProducts, getOfferConfigurationData } from '../actio
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { AccountForm } from './_components/account-form';
-import { ProductAssignment } from './_components/product-assignment';
 import { CategoryAssignment } from './_components/category-assignment';
 import { ProfileForm } from './_components/profile-form';
 

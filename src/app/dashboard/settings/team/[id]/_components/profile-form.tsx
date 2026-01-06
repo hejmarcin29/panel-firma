@@ -153,7 +153,17 @@ function ArchitectForm({ user }: { user: any }) {
                     <FormItem><FormLabel>Nr konta</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
                 )} />
                  <FormField control={form.control} name="commissionRate" render={({ field }) => (
-                    <FormItem><FormLabel>Stawka prowizji (PLN/m2)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>
+                    <FormItem>
+                        <FormLabel>Stawka prowizji (PLN/m2)</FormLabel>
+                        <FormControl>
+                            <Input 
+                                type="number" 
+                                {...field} 
+                                value={(field.value as number) ?? ''} 
+                                onChange={(e) => field.onChange(e.target.value)}
+                            />
+                        </FormControl>
+                    </FormItem>
                 )} />
                 <Button disabled={isPending}>{isPending ? <Loader2 className="animate-spin" /> : 'Zapisz'}</Button>
             </form>
@@ -197,7 +207,17 @@ function PartnerForm({ user }: { user: any }) {
                     <FormItem><FormLabel>Nr konta</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
                 )} />
                  <FormField control={form.control} name="commissionRate" render={({ field }) => (
-                    <FormItem><FormLabel>Prowizja (%)</FormLabel><FormControl><Input type="number" {...field} /></FormControl></FormItem>
+                    <FormItem>
+                        <FormLabel>Prowizja (%)</FormLabel>
+                        <FormControl>
+                            <Input 
+                                type="number" 
+                                {...field} 
+                                value={(field.value as number) ?? ''}
+                                onChange={(e) => field.onChange(e.target.value)}
+                            />
+                        </FormControl>
+                    </FormItem>
                 )} />
                 <Button disabled={isPending}>{isPending ? <Loader2 className="animate-spin" /> : 'Zapisz'}</Button>
             </form>

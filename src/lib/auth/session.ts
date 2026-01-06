@@ -6,7 +6,7 @@ import { randomBytes, randomUUID, createHash } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
-import { sessions, users, type UserRole } from '@/lib/db/schema';
+import { sessions, users, type UserRole, type ArchitectProfile } from '@/lib/db/schema';
 
 const SESSION_COOKIE = 'panel_session';
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 14; // 14 days
@@ -45,6 +45,7 @@ type SessionRecord = {
 		email: string;
 		name: string | null;
 		roles: UserRole[];
+        architectProfile: ArchitectProfile | null;
 	};
 };
 
@@ -64,6 +65,7 @@ async function findSession(token: string): Promise<SessionRecord | null> {
 			email: users.email,
 			name: users.name,
 			roles: users.roles,
+            architectProfile: users.architectProfile,
 		})
 		.from(sessions)
 		.innerJoin(users, eq(users.id, sessions.userId))
@@ -83,6 +85,7 @@ async function findSession(token: string): Promise<SessionRecord | null> {
 			email: row.email,
 			name: row.name,
 			roles: row.roles,
+            architectProfile: row.architectProfile,
 		},
 	};
 }
