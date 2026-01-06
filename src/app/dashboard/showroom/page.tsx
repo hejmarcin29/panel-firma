@@ -26,6 +26,7 @@ interface Product {
     sku: string;
     price: string;
     imageUrl: string | null;
+    attributes?: { name: string; options: string[] }[];
 }
 
 export default function ShowroomPage() {
@@ -157,7 +158,7 @@ export default function ShowroomPage() {
                                     <p className="text-sm text-muted-foreground font-sans">SKU: {product.sku}</p>
                                     {/* Attributes pills */}
                                     <div className="flex flex-wrap gap-1 mt-2">
-                                        {product.attributes.slice(0, 2).map(attr => (
+                                        {product.attributes?.slice(0, 2).map(attr => (
                                             <span key={attr.name} className="text-[10px] uppercase tracking-wider bg-zinc-100 px-2 py-1 rounded-sm text-zinc-600 font-sans">
                                                 {attr.options[0]}
                                             </span>
