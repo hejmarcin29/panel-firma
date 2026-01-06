@@ -16,12 +16,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuCheckboxItem,
 } from '@/components/ui/dropdown-menu';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
+
 import {
   Table,
   TableBody,
@@ -93,16 +88,7 @@ export function TeamList({ members, currentUserId }: TeamListProps) {
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  // Desktop Grouping
-  const employees = members.filter(m => !m.roles.includes('architect'));
-  const architects = members.filter(m => m.roles.includes('architect'));
 
-  // Mobile Grouping
-  const mobileGroups = {
-    architects: members.filter(m => m.roles.includes('architect')),
-    installers: members.filter(m => m.roles.includes('installer')),
-    admins: members.filter(m => m.roles.includes('admin')),
-  };
 
   const handleStatusToggle = (userId: string, currentStatus: boolean) => {
     startTransition(async () => {
@@ -330,32 +316,13 @@ export function TeamList({ members, currentUserId }: TeamListProps) {
     <>
         {/* Desktop View */}
         <div className="hidden md:block">
-            <Tabs defaultValue="employees" className="w-full">
-                <TabsList>
-                    <TabsTrigger value="employees">Pracownicy ({employees.length})</TabsTrigger>
-                    <TabsTrigger value="architects">Architekci ({architects.length})</TabsTrigger>
-                </TabsList>
-                <TabsContent value="employees" className="mt-4">
-                    {renderMembersTable(employees)}
-                </TabsContent>
-                <TabsContent value="architects" className="mt-4">
-                    {renderMembersTable(architects)}
-                </TabsContent>
-            </Tabs>
+            {renderMembersTable(members)}
         </div>
 
-        {/* Mobile View - Horizontal Slider */}
-        <div className="md:hidden -mx-4">
-            <div className="px-4 mb-2">
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <MoreHorizontal className="h-3 w-3" />
-                    Przesuwaj w bok, aby zobaczyć inne grupy
-                </p>
-            </div>
-            <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 px-4 pb-6 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
-                {renderMobileSection('Architekci', mobileGroups.architects, 'text-purple-600')}
-                {renderMobileSection('Montażyści', mobileGroups.installers, 'text-green-600')}
-                {renderMobileSection('Administratorzy', mobileGroups.admins, 'text-red-600')}
+        {/* Mobile View */}
+        <div className="md:hidden -mx-4 h-[calc(100vh-12rem)]">
+            <div className="px-4 h-full">
+               {renderMobileSection('Wszyscy użytkownicy', members, 'text-foreground')}
             </div>
         </div>
 

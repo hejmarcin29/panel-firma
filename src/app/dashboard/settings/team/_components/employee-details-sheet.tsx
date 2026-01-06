@@ -41,7 +41,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 
-import { updateInstallerProfile, getInstallerMontages, updateArchitectProfile, getArchitectCommissions, updatePartnerProfile } from '../actions';
+import { updateInstallerProfile, getInstallerMontages, updateArchitectProfile, getArchitectCommissions, updatePartnerProfile, updateEmployeeCredentials } from '../actions';
 import type { UserRole, InstallerProfile, ArchitectProfile, PartnerProfile } from '@/lib/db/schema';
 
 interface TeamMember {
@@ -92,6 +92,12 @@ const partnerProfileSchema = z.object({
     commissionRate: z.coerce.number().min(0, "Prowizja musi być dodatnia").max(100, "Prowizja max 100%").optional(),
 });
 
+const accountSchema = z.object({
+    name: z.string().min(2, "Nazwa musi mieć min. 2 znaki"),
+    email: z.string().email("Nieprawidłowy adres email"),
+    password: z.string().min(8, "Hasło musi mieć min. 8 znaków").optional().or(z.literal('')),
+});
+
 export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDetailsSheetProps) {
     const [activeTab, setActiveTab] = useState('general');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -132,9 +138,26 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
         },
     });
 
+    const accountForm = useForm<z.infer<typeof accountSchema>>({
+        resolver: zodResolver(accountSchema) as Resolver<z.infer<typeof accountSchema>>,
+        defaultValues: {
+            name: '',
+            email: '',
+            password: '',
+        },
+    });
+
     const pricing = useWatch({ control: form.control, name: 'pricing' });
 
     useEffect(() => {
+        if (member) {
+            accountForm.reset({
+                name: member.name || '',
+                email: member.email || '',
+                password: '',
+            });
+        }
+
         if (member?.installerProfile) {
             form.reset({
                 workScope: member.installerProfile.workScope || '',
@@ -237,6 +260,24 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
         });
     };
 
+    const onAccountSubmit = (values: z.infer<typeof accountSchema>) => {
+        if (!member) return;
+        
+        startTransition(async () => {
+            try {
+                await updateEmployeeCredentials(member.id, {
+                    name: values.name,
+                    email: values.email,
+                    password: values.password || undefined,
+                });
+                alert('Dane konta zostały zaktualizowane.');
+            } catch (error) {
+                console.error(error);
+                alert('Wystąpił błąd podczas aktualizacji danych konta.');
+            }
+        });
+    };
+
     if (!member) return null;
 
     const isInstaller = member.roles.includes('installer');
@@ -254,8 +295,9 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
                 </SheetHeader>
 
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6 px-4">
-                    <TabsList className="grid w-full grid-cols-3">
+                    <TabsList className="grid w-full grid-cols-4">
                         <TabsTrigger value="general">Ogólne</TabsTrigger>
+                        <TabsTrigger value="account">Konto</TabsTrigger>
                         <TabsTrigger value="profile" disabled={!isInstaller && !isArchitect && !isPartner}>
                             Profil
                         </TabsTrigger>
@@ -285,6 +327,56 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
                                 </Badge>
                             </div>
                         </div>
+                    </TabsContent>
+
+                    <TabsContent value="account" className="space-y-4 mt-4">
+                        <Form {...accountForm}>
+                            <form onSubmit={accountForm.handleSubmit(onAccountSubmit)} className="space-y-4">
+                                <FormField
+                                    control={accountForm.control}
+                                    name="name"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Imię i nazwisko</FormLabel>
+                                            <FormControl>
+                                                <Input {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={accountForm.control}
+                                    name="email"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Adres email</FormLabel>
+                                            <FormControl>
+                                                <Input {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={accountForm.control}
+                                    name="password"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Nowe hasło (opcjonalnie)</FormLabel>
+                                            <FormControl>
+                                                <Input type="password" placeholder="Pozostaw puste, aby nie zmieniać" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <Button type="submit" disabled={isPending}>
+                                    {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    Zapisz zmiany
+                                </Button>
+                            </form>
+                        </Form>
                     </TabsContent>
 
                     <TabsContent value="profile" className="space-y-4 mt-4">

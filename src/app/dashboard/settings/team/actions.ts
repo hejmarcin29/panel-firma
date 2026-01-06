@@ -67,6 +67,30 @@ export async function updatePartnerProfile(userId: string, profile: PartnerProfi
     revalidatePath(TEAM_SETTINGS_PATH);
 }
 
+export async function updateEmployeeCredentials(userId: string, data: { name?: string; email?: string; password?: string }) {
+    const currentUser = await requireUser();
+    
+    if (!currentUser.roles.includes('admin')) {
+        throw new Error('Brak uprawnień.');
+    }
+
+    const updateData: { name?: string; email?: string; passwordHash?: string; updatedAt: Date } = {
+        updatedAt: new Date(),
+    };
+
+    if (data.name) updateData.name = data.name;
+    if (data.email) updateData.email = data.email;
+    if (data.password) {
+        updateData.passwordHash = await hash(data.password, 12);
+    }
+
+    await db.update(users)
+        .set(updateData)
+        .where(eq(users.id, userId));
+
+    revalidatePath(TEAM_SETTINGS_PATH);
+}
+
 export async function getArchitectCommissions(architectId: string) {
     await requireUser();
     
