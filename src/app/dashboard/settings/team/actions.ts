@@ -179,16 +179,28 @@ export async function getOfferConfigurationData() {
 
     allProducts.forEach(product => {
         if (Array.isArray(product.categories)) {
-            product.categories.forEach((cat: { id: number; name: string }) => {
-                if (!categoryMap.has(cat.id)) {
-                    categoryMap.set(cat.id, {
-                        id: cat.id,
-                        name: cat.name,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            product.categories.forEach((cat: any) => {
+                let catId: number | undefined;
+                let catName: string | undefined;
+
+                if (typeof cat === 'object' && cat !== null) {
+                    catId = cat.id;
+                    catName = cat.name;
+                }
+                
+                // If data is corrupted or missing ID/Name, skip or use fallback
+                if (catId === undefined || !catName) return;
+
+                if (!categoryMap.has(catId)) {
+                    categoryMap.set(catId, {
+                        id: catId,
+                        name: catName,
                         products: []
                     });
                 }
                 
-                const categoryEntry = categoryMap.get(cat.id)!;
+                const categoryEntry = categoryMap.get(catId)!;
                 categoryEntry.products.push({
                     id: product.id,
                     name: product.name,
