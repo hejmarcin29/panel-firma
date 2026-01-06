@@ -48,6 +48,7 @@ import { ContractTemplatesManager } from './_components/contract-templates-manag
 import { getContractTemplates } from './contracts/actions';
 import { InstallerSettingsView } from './_components/installer-settings-view';
 import ServicesSettingsPage from './services/page';
+import TeamSettingsPage from './team/page';
 
 type LogLevel = 'info' | 'warning' | 'error';
 
@@ -623,7 +624,7 @@ export default async function SettingsPage() {
 			wpChanges={
 				<WpChangesSettings />
 			}
-            teamSettings={null}
+            teamSettings={<TeamSettingsPage />}
             trash={
                 <TrashView 
                     deletedQuotes={deletedQuotes} 

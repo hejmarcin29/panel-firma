@@ -209,7 +209,7 @@ export function ProductsTable({ data, categories, suppliers = [] }: ProductsTabl
                         onSuccess={() => setSelectedIds([])}
                         trigger={
                             <Button size="sm" variant="outline">
-                                <DollarSign className="mr-2 h-4 w-4" /> Dodaj Cenę
+                                <DollarSign className="mr-2 h-4 w-4" /> Ustaw cenę zakupu
                             </Button>
                         } 
                     />

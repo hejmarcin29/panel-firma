@@ -16,6 +16,7 @@ import {
   FileText,
   Bot,
   Banknote,
+  Users,
 } from "lucide-react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -119,6 +120,20 @@ export function SettingsView({
           <span className="flex flex-col text-left">
             <span className="text-sm font-medium">Ogólne</span>
             <span className="text-xs text-muted-foreground">Podstawowe ustawienia systemu.</span>
+          </span>
+        </Button>
+
+        <Button
+          variant="ghost"
+          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3 bg-card border shadow-sm"
+          onClick={() => handleTabChange("team")}
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
+            <Users className="h-4 w-4" />
+          </span>
+          <span className="flex flex-col text-left">
+            <span className="text-sm font-medium">Zespół</span>
+            <span className="text-xs text-muted-foreground">Pracownicy i uprawnienia.</span>
           </span>
         </Button>
 
@@ -297,6 +312,13 @@ export function SettingsView({
             >
               <Settings className="h-4 w-4" />
               Ogólne
+            </TabsTrigger>
+            <TabsTrigger 
+              value="team" 
+              className="w-full justify-start gap-2 px-3 py-2 h-9 data-[state=active]:bg-muted data-[state=active]:shadow-none ring-offset-background transition-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <Users className="h-4 w-4" />
+              Zespół
             </TabsTrigger>
             <TabsTrigger 
               value="services" 
