@@ -24,8 +24,7 @@ export async function getBrokenMontages() {
     // Filtruj w JS, bo SQL może mieć problem z porównaniem enum vs text jeśli typy się nie zgadzają,
     // a status jest text w bazie, ale w kodzie mamy listę valid values.
     const brokenMontages = allMontages.filter(m => {
-        // @ts-expect-error - sprawdzamy czy wartość stringa jest w tablicy
-        return !montageStatuses.includes(m.status);
+        return !montageStatuses.includes(m.status as any);
     });
 
     return brokenMontages;
