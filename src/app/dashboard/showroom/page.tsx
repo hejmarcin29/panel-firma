@@ -28,6 +28,7 @@ interface Product {
     regularPrice: string | null;
     salePrice: string | null;
     imageUrl: string | null;
+    unit: string | null;
     attributes?: { name: string; options: string[] }[];
     category?: { id: string; name: string };
     categories?: { id: number; name: string }[]; // Keep for legacy compat or map it
@@ -260,7 +261,7 @@ export default function ShowroomPage() {
                                                                     {formatCurrency(currentBrutto)}
                                                                 </span>
                                                             )}
-                                                            <span className="text-[10px] text-muted-foreground ml-1">brutto / szt</span>
+                                                            <span className="text-[10px] text-muted-foreground ml-1">brutto / {product.unit || 'szt'}</span>
                                                         </div>
                                                     );
                                                 })()}

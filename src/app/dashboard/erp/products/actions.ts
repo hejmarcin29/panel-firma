@@ -333,6 +333,9 @@ export async function getAssignedProducts() {
                     sku: true,
                     price: true,
                     imageUrl: true,
+                    regularPrice: true,
+                    salePrice: true,
+                    unit: true,
                 },
                 with: {
                     category: true
@@ -354,6 +357,9 @@ export async function getAssignedProducts() {
             sku: true,
             price: true,
             imageUrl: true,
+            regularPrice: true,
+            salePrice: true,
+            unit: true,
         },
         with: {
             category: true

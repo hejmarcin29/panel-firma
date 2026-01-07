@@ -105,7 +105,7 @@ const PriceDisplay = ({ price, salePrice, regularPrice }: { price: string | null
 export function ProductsTable({ data, categories, suppliers = [] }: ProductsTableProps) {
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
-    const [statusFilter, setStatusFilter] = useState("all");
+    const [statusFilter, setStatusFilter] = useState("active");
     const [categoryFilter, setCategoryFilter] = useState("all");
 
     const filteredData = useMemo(() => {
