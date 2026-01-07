@@ -1606,6 +1606,7 @@ export const erpProducts = pgTable('erp_products', {
     name: text('name').notNull(),
     description: text('description'),
     categoryId: text('category_id').references(() => erpCategories.id),
+    supplierId: text('supplier_id').references(() => erpSuppliers.id), // Główny dostawca
     unit: text('unit').default('szt'), // szt, m2, mb, kpl, opak
     
     // Dimensions & Weight
@@ -1622,6 +1623,11 @@ export const erpProducts = pgTable('erp_products', {
     
     // Media
     imageUrl: text('image_url'),
+    
+    // Supplier Info
+    supplierSku: text('supplier_sku'), // Kod u dostawcy
+    purchasePriceNet: doublePrecision('purchase_price_net'), // Ostatnia znana cena zakupu
+    purchasePriceUpdated: timestamp('purchase_price_updated'), // Data aktualizacji ceny
 
     // Woo Data
     price: text('price'),
@@ -1709,6 +1715,10 @@ export const erpProductsRelations = relations(erpProducts, ({ one, many }) => ({
         fields: [erpProducts.categoryId],
         references: [erpCategories.id],
     }),
+    supplier: one(erpSuppliers, {
+        fields: [erpProducts.supplierId],
+        references: [erpSuppliers.id],
+    }),
     purchasePrices: many(erpPurchasePrices),
     inventory: many(erpInventory),
     attributes: many(erpProductAttributes),
@@ -1746,6 +1756,7 @@ export const erpProductAttributesRelations = relations(erpProductAttributes, ({ 
 
 export const erpSuppliersRelations = relations(erpSuppliers, ({ many }) => ({
     purchasePrices: many(erpPurchasePrices),
+    products: many(erpProducts),
 }));
 
 export const erpCategoriesRelations = relations(erpCategories, ({ one, many }) => ({

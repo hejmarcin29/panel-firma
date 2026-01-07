@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Package, Users, Warehouse, FileText } from 'lucide-react';
+import { Package, Users, Warehouse, FileText, UserCog } from 'lucide-react';
 
 export default function ERPLayout({ children }: { children: ReactNode }) {
     return (
@@ -26,6 +26,12 @@ export default function ERPLayout({ children }: { children: ReactNode }) {
                     <Button variant="ghost" size="sm" className="gap-2">
                         <Users className="h-4 w-4" />
                         Dostawcy
+                    </Button>
+                </Link>
+                <Link href="/dashboard/erp/zespol">
+                    <Button variant="ghost" size="sm" className="gap-2">
+                        <UserCog className="h-4 w-4" />
+                        Zespół
                     </Button>
                 </Link>
                 <Link href="/dashboard/erp/inventory">

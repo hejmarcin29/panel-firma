@@ -10,9 +10,10 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit } from "lucide-react";
+import { Edit, Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SupplierSheet } from "./supplier-sheet";
+import Link from "next/link";
 
 interface Supplier {
     id: string;
@@ -60,7 +61,11 @@ export function SuppliersTable({ data }: SuppliersTableProps) {
                         ) : (
                             data.map((supplier) => (
                                 <TableRow key={supplier.id}>
-                                    <TableCell className="font-medium">{supplier.name}</TableCell>
+                                    <TableCell className="font-medium">
+                                        <Link href={`/dashboard/erp/suppliers/${supplier.id}`} className="hover:underline">
+                                            {supplier.name}
+                                        </Link>
+                                    </TableCell>
                                     <TableCell>{supplier.shortName}</TableCell>
                                     <TableCell>{supplier.email}</TableCell>
                                     <TableCell>{supplier.phone}</TableCell>
@@ -69,7 +74,12 @@ export function SuppliersTable({ data }: SuppliersTableProps) {
                                             {supplier.status === 'active' ? 'Aktywny' : 'Nieaktywny'}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell className="text-right">
+                                    <TableCell className="text-right flex justify-end gap-1">
+                                        <Link href={`/dashboard/erp/suppliers/${supplier.id}`}>
+                                            <Button variant="ghost" size="icon">
+                                                <Eye className="h-4 w-4" />
+                                            </Button>
+                                        </Link>
                                         <SupplierSheet 
                                             supplier={supplier}
                                             trigger={

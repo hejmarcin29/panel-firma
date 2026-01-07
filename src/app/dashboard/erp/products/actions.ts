@@ -102,6 +102,19 @@ export async function bulkUpdateUnit(ids: string[], unit: string) {
     revalidatePath('/dashboard/erp/products');
 }
 
+export async function bulkAssignSupplier(ids: string[], supplierId: string) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) throw new Error('Unauthorized');
+
+    if (ids.length === 0) return;
+
+    await db.update(erpProducts)
+        .set({ supplierId: supplierId, updatedAt: new Date() })
+        .where(inArray(erpProducts.id, ids));
+
+    revalidatePath('/dashboard/erp/products');
+}
+
 export async function updateProductUnit(id: string, unit: string) {
     const user = await requireUser();
     if (!user.roles.includes('admin')) throw new Error('Unauthorized');

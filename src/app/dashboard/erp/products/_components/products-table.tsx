@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import { FolderInput, Trash2, DollarSign, Scale } from "lucide-react";
 import { BulkPriceDialog } from "./bulk-price-dialog";
 import { BulkUnitDialog } from "./bulk-unit-dialog";
+import { BulkSupplierDialog } from "./bulk-supplier-dialog";
 
 interface Product {
     id: string;
@@ -261,6 +262,12 @@ export function ProductsTable({ data, categories, suppliers = [] }: ProductsTabl
                                 <Scale className="mr-2 h-4 w-4" /> Zmień Jm
                             </Button>
                         }
+                    />
+
+                    <BulkSupplierDialog 
+                        selectedIds={selectedIds}
+                        suppliers={suppliers}
+                        onSuccess={() => setSelectedIds([])}
                     />
 
                     <Button size="sm" variant="outline" onClick={() => handleBulkSync(true)}>
