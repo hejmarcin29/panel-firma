@@ -17,7 +17,16 @@ const formatPrice = (price?: string | null) => {
     if (!price) return "-";
     const val = parseFloat(price);
     if (isNaN(val)) return "-";
-    return new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(val);
+    const grossVal = val * 1.23;
+    
+    const fmt = new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' });
+
+    return (
+        <span className="flex items-baseline gap-2">
+            <span>{fmt.format(val)} <span className="text-xs text-muted-foreground font-normal">netto</span></span>
+            <span className="text-sm text-muted-foreground font-normal">({fmt.format(grossVal)} brutto)</span>
+        </span>
+    );
 };
 
 export default async function ProductDetailsPage({ params }: PageProps) {
@@ -84,11 +93,11 @@ export default async function ProductDetailsPage({ params }: PageProps) {
                                 <div className="flex flex-col">
                                      {product.salePrice ? (
                                         <>
-                                            <span className="font-bold text-red-600 text-lg">{formatPrice(product.salePrice)}</span>
-                                            <span className="text-sm text-muted-foreground line-through">{formatPrice(product.regularPrice || product.price)}</span>
+                                            <div className="font-bold text-red-600 text-lg">{formatPrice(product.salePrice)}</div>
+                                            <div className="text-sm text-muted-foreground line-through">{formatPrice(product.regularPrice || product.price)}</div>
                                         </>
                                      ) : (
-                                        <span className="font-medium text-lg">{formatPrice(product.price)}</span>
+                                        <div className="font-medium text-lg">{formatPrice(product.price)}</div>
                                      )}
                                 </div>
                             </div>

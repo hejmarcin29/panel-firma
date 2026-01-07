@@ -14,6 +14,9 @@ interface Product {
     id: string;
     name: string;
     sku: string;
+    price: string | null;
+    regularPrice: string | null;
+    salePrice: string | null;
 }
 
 interface CategoryWithProducts {
@@ -33,6 +36,18 @@ interface CategoryAssignmentProps {
     };
     data: CategoryWithProducts[];
 }
+
+const formatPrice = (p: Product) => {
+    if (!p.price) return null;
+    const priceVal = parseFloat(p.salePrice || p.price);
+    
+    if (isNaN(priceVal)) return null;
+
+    const formatted = new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(priceVal);
+    
+    // Simple display for list view: "129,00 zł" (if sale, maybe add indicator? keeping it simple for now)
+    return formatted;
+};
 
 export function CategoryAssignment({ user, data }: CategoryAssignmentProps) {
     const [isPending, startTransition] = useTransition();
@@ -209,6 +224,7 @@ export function CategoryAssignment({ user, data }: CategoryAssignmentProps) {
                                         <div className="mt-2 pl-9 space-y-1 border-l-2 ml-2 border-muted animate-in fade-in slide-in-from-top-2 duration-200">
                                             {category.products.map(product => {
                                                  const isProdSelected = selectedProductIds.includes(product.id);
+                                                 const priceDisplay = formatPrice(product);
 
                                                  return (
                                                     <div key={product.id} className="flex items-center gap-2 py-1">
@@ -219,10 +235,17 @@ export function CategoryAssignment({ user, data }: CategoryAssignmentProps) {
                                                         />
                                                         <Label 
                                                             htmlFor={`prod-${product.id}`}
-                                                            className={`text-sm cursor-pointer font-normal ${isProdSelected ? '' : 'text-muted-foreground'}`}
+                                                            className={`text-sm cursor-pointer font-normal flex-1 flex justify-between ${isProdSelected ? '' : 'text-muted-foreground'}`}
                                                         >
-                                                            {product.name}
-                                                            <span className="text-xs text-muted-foreground ml-2">({product.sku})</span>
+                                                            <span>
+                                                                {product.name}
+                                                                <span className="text-xs text-muted-foreground ml-2">({product.sku})</span>
+                                                            </span>
+                                                            {priceDisplay && (
+                                                                <span className="text-xs font-medium text-muted-foreground">
+                                                                    {priceDisplay}
+                                                                </span>
+                                                            )}
                                                         </Label>
                                                     </div>
                                                  );

@@ -24,11 +24,24 @@ interface Product {
     id: string;
     name: string;
     sku: string;
-    price: string;
+    price: string | null;
+    regularPrice: string | null;
+    salePrice: string | null;
     imageUrl: string | null;
     attributes?: { name: string; options: string[] }[];
     category?: { id: string; name: string };
     categories?: { id: number; name: string }[]; // Keep for legacy compat or map it
+}
+
+const calculateBrutto = (priceStr?: string | null) => {
+    if (!priceStr) return null;
+    const val = parseFloat(priceStr);
+    if (isNaN(val)) return null;
+    return val * 1.23;
+}
+
+const formatCurrency = (val: number) => {
+     return new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(val);
 }
 
 export default function ShowroomPage() {
@@ -221,6 +234,38 @@ export default function ShowroomPage() {
                                         <div className="mt-auto space-y-1">
                                             <h3 className="font-medium text-lg leading-tight line-clamp-2" title={product.name}>{product.name}</h3>
                                             <p className="text-sm text-muted-foreground font-sans truncate">SKU: {product.sku}</p>
+                                            
+                                            {/* Price Display */}
+                                            <div className="pt-1">
+                                                {(() => {
+                                                    const currentBrutto = calculateBrutto(product.price);
+                                                    const oldBrutto = calculateBrutto(product.regularPrice);
+                                                    const isPromo = product.salePrice && product.price !== product.regularPrice;
+
+                                                    if (!currentBrutto) return null;
+
+                                                    return (
+                                                        <div className="font-sans">
+                                                            {isPromo && oldBrutto ? (
+                                                                <div className="flex items-baseline gap-2">
+                                                                     <span className="font-bold text-zinc-900 dark:text-zinc-100">
+                                                                        {formatCurrency(currentBrutto)}
+                                                                    </span>
+                                                                    <span className="text-xs text-muted-foreground line-through">
+                                                                        {formatCurrency(oldBrutto)}
+                                                                    </span>
+                                                                </div>
+                                                            ) : (
+                                                                <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                                                                    {formatCurrency(currentBrutto)}
+                                                                </span>
+                                                            )}
+                                                            <span className="text-[10px] text-muted-foreground ml-1">brutto / szt</span>
+                                                        </div>
+                                                    );
+                                                })()}
+                                            </div>
+
                                             {/* Attributes pills */}
                                             {/* <div className="flex flex-wrap gap-1 mt-2">
                                                 {product.attributes?.slice(0, 2).map(attr => (

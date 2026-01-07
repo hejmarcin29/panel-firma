@@ -154,6 +154,9 @@ export interface CategoryWithProducts {
         id: string;
         name: string;
         sku: string;
+        price: string | null;
+        regularPrice: string | null;
+        salePrice: string | null;
     }[];
 }
 
@@ -167,6 +170,9 @@ export async function getOfferConfigurationData() {
             id: true,
             name: true,
             sku: true,
+            price: true,
+            regularPrice: true,
+            salePrice: true,
         },
         with: {
             category: true,
@@ -198,6 +204,9 @@ export async function getOfferConfigurationData() {
             id: product.id,
             name: product.name,
             sku: product.sku || '',
+            price: product.price,
+            regularPrice: product.regularPrice,
+            salePrice: product.salePrice,
         });
     });
 
