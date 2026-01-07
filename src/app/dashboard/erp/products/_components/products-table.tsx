@@ -66,19 +66,37 @@ interface ProductsTableProps {
     suppliers: Supplier[];
 }
 
-const formatPrice = (price?: string | null) => {
-    if (!price) return "-";
-    // Price comes as string "129.00" (dot decimal)
-    const val = parseFloat(price);
-    if (isNaN(val)) return "-";
-    const formatted = new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(val);
-    const grossVal = val * 1.23;
-    const formattedGross = new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(grossVal);
+const PriceDisplay = ({ price, salePrice, regularPrice }: { price: string | null, salePrice: string | null, regularPrice?: string | null }) => {
+    // Determine effective price
+    const effectivePriceStr = salePrice || price;
+    if (!effectivePriceStr) return <span className="text-muted-foreground">-</span>;
     
+    const val = parseFloat(effectivePriceStr);
+    if (isNaN(val)) return <span className="text-muted-foreground">-</span>;
+
+    const grossVal = val * 1.23;
+    const fmt = new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' });
+
+    const isPromo = !!salePrice;
+
     return (
-        <div className="flex flex-col text-right">
-            <span>{formatted} <span className="text-[10px] text-muted-foreground">netto</span></span>
-            <span className="text-xs text-muted-foreground">{formattedGross} <span className="text-[9px]">brutto</span></span>
+        <div className="flex flex-col items-end">
+            {/* Old Price (if promo) - subtle above */}
+            {isPromo && regularPrice && (
+                 <span className="text-[10px] text-muted-foreground line-through opacity-70">
+                    {fmt.format(parseFloat(regularPrice))}
+                 </span>
+            )}
+            
+            {/* Main Price (Netto) */}
+            <span className={`font-medium ${isPromo ? 'text-orange-700 dark:text-orange-500 font-bold' : ''}`}>
+                {fmt.format(val)} <span className="text-[10px] font-normal text-muted-foreground">netto</span>
+            </span>
+
+            {/* Gross Price */}
+            <span className="text-xs text-muted-foreground">
+                {fmt.format(grossVal)} <span className="text-[9px]">brutto</span>
+            </span>
         </div>
     );
 };
@@ -336,20 +354,11 @@ export function ProductsTable({ data, categories, suppliers = [] }: ProductsTabl
                                     </TableCell>
                                     <TableCell>{product.unit}</TableCell>
                                     <TableCell className="text-right font-medium">
-                                        <div className="flex flex-col items-end">
-                                            {product.salePrice ? (
-                                                <>
-                                                    <div className="text-red-600 dark:text-red-400 font-bold">
-                                                        {formatPrice(product.salePrice)}
-                                                    </div>
-                                                    <div className="text-xs text-muted-foreground line-through opacity-70 mt-1">
-                                                        {formatPrice(product.regularPrice || product.price)}
-                                                    </div>
-                                                </>
-                                            ) : (
-                                                <div>{formatPrice(product.price)}</div>
-                                            )}
-                                        </div>
+                                        <PriceDisplay 
+                                            price={product.price} 
+                                            salePrice={product.salePrice} 
+                                            regularPrice={product.regularPrice} 
+                                        />
                                     </TableCell>
                                     <TableCell>
                                         <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>
