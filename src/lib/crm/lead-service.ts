@@ -143,7 +143,7 @@ export async function createLeadCore(data: CreateLeadData): Promise<LeadCreation
             displayId,
             customerId: customerId!, 
             clientName: trimmedName,
-            status: 'lead',
+            status: 'new_lead',
             contactPhone: normalizedPhone,
             contactEmail: normalizedEmail,
             installationCity: data.address?.trim() || null,

@@ -114,7 +114,7 @@ async function submitCrmLead(e) {
                 </CardTitle>
                 <CardDescription>
                     Skopiuj poniższy kod HTML i wklej go na swojej stronie WordPress (np. w bloku "Własny HTML").
-                    Formularz automatycznie prześle zgłoszenia do zakładki Montaże > Leady.
+                    Formularz automatycznie prześle zgłoszenia do zakładki Montaże {'>'} Leady.
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
