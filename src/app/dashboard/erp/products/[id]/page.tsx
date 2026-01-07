@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getProductDetails, getSuppliersList } from "../actions";
 import { ProductPrices } from "../_components/product-prices";
 import { ProductSyncToggle } from "../_components/product-sync-toggle";
+import { UnitEditableField } from "../_components/unit-editable-field";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -107,7 +108,7 @@ export default async function ProductDetailsPage({ params }: PageProps) {
                             </div>
                             <div>
                                 <span className="text-muted-foreground">Jednostka:</span>
-                                <div className="font-medium">{product.unit}</div>
+                                <UnitEditableField productId={product.id} initialUnit={product.unit} />
                             </div>
                             <div>
                                 <span className="text-muted-foreground">Wymiary (D x S x W):</span>

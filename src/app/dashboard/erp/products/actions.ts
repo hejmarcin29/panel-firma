@@ -89,6 +89,32 @@ export async function bulkAssignCategory(ids: string[], categoryId: string) {
     revalidatePath('/dashboard/erp/products');
 }
 
+export async function bulkUpdateUnit(ids: string[], unit: string) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) throw new Error('Unauthorized');
+
+    if (ids.length === 0) return;
+
+    await db.update(erpProducts)
+        .set({ unit: unit, updatedAt: new Date() })
+        .where(inArray(erpProducts.id, ids));
+
+    revalidatePath('/dashboard/erp/products');
+}
+
+export async function updateProductUnit(id: string, unit: string) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) throw new Error('Unauthorized');
+
+    await db.update(erpProducts)
+        .set({ unit: unit, updatedAt: new Date() })
+        .where(eq(erpProducts.id, id));
+
+    revalidatePath(`/dashboard/erp/products/${id}`);
+    revalidatePath('/dashboard/erp/products');
+    return { success: true };
+}
+
 export async function bulkDeleteProducts(ids: string[]) {
     const user = await requireUser();
     if (!user.roles.includes('admin')) throw new Error('Unauthorized');

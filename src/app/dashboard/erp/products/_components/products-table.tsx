@@ -31,8 +31,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { bulkUpdateSyncStatus, bulkAssignCategory, bulkDeleteProducts } from "../actions";
 import { toast } from "sonner";
-import { FolderInput, Trash2, DollarSign } from "lucide-react";
+import { FolderInput, Trash2, DollarSign, Scale } from "lucide-react";
 import { BulkPriceDialog } from "./bulk-price-dialog";
+import { BulkUnitDialog } from "./bulk-unit-dialog";
 
 interface Product {
     id: string;
@@ -250,6 +251,16 @@ export function ProductsTable({ data, categories, suppliers = [] }: ProductsTabl
                                 <DollarSign className="mr-2 h-4 w-4" /> Ustaw cenę zakupu
                             </Button>
                         } 
+                    />
+
+                    <BulkUnitDialog 
+                        selectedIds={selectedIds}
+                        onSuccess={() => setSelectedIds([])}
+                        trigger={
+                            <Button size="sm" variant="outline">
+                                <Scale className="mr-2 h-4 w-4" /> Zmień Jm
+                            </Button>
+                        }
                     />
 
                     <Button size="sm" variant="outline" onClick={() => handleBulkSync(true)}>
