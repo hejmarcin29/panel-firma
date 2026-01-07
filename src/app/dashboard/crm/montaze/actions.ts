@@ -47,35 +47,17 @@ import {
 import { generatePortalToken } from '@/lib/utils';
 import { sendSms } from '@/lib/sms';
 
+import { generateNextMontageId as serviceGenerateNextMontageId, createLeadCore } from '@/lib/crm/lead-service';
+
 const MONTAGE_DASHBOARD_PATH = '/dashboard/crm/montaze';
 const MAX_ATTACHMENT_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
 
 function normalizePhone(phone: string): string {
-	return phone.replace(/\D/g, '');
+    return phone.replace(/\D/g, '');
 }
 
 export async function generateNextMontageId(): Promise<string> {
-    const now = new Date();
-    const year = now.getFullYear();
-    const prefix = `M/${year}/`;
-
-    const lastMontage = await db.query.montages.findFirst({
-        where: (table, { like }) => like(table.displayId, `${prefix}%`),
-        orderBy: (table, { desc }) => [desc(table.displayId)],
-    });
-
-    let nextNumber = 1;
-    if (lastMontage && lastMontage.displayId) {
-        const parts = lastMontage.displayId.split('/');
-        if (parts.length === 3) {
-            const lastNumber = parseInt(parts[2], 10);
-            if (!isNaN(lastNumber)) {
-                nextNumber = lastNumber + 1;
-            }
-        }
-    }
-
-    return `${prefix}${nextNumber.toString().padStart(3, '0')}`;
+    return serviceGenerateNextMontageId();
 }
 
 async function getMontageOrThrow(montageId: string) {
@@ -2055,21 +2037,10 @@ export async function createLead(data: {
     try {
         const user = await requireUser();
         
-        const trimmedName = data.clientName.trim();
-        if (!trimmedName) {
-            return { success: false, message: 'Podaj nazwę klienta.' };
-        }
-
-        const displayId = await generateNextMontageId();
-        const montageId = crypto.randomUUID();
-        const now = new Date();
-
         // Determine architect/partner logic
-        // If Admin passed an ID, use it.
-        // If User IS an architect/partner, use their ID (self-service).
-        let finalArchitectId = data.architectId || null;
-        let finalPartnerId = data.partnerId || null;
-        let finalSource = data.source || 'other';
+        let finalArchitectId = data.architectId || undefined;
+        let finalPartnerId = data.partnerId || undefined;
+        let finalSource = data.source;
 
         if (user.roles.includes('architect') && !user.roles.includes('admin')) {
              finalArchitectId = user.id;
@@ -2077,147 +2048,32 @@ export async function createLead(data: {
         }
         if (user.roles.includes('partner') && !user.roles.includes('admin')) {
              finalPartnerId = user.id;
-             finalSource = 'recommendation'; // Or 'partner' if we add it to enum later? For now 'recommendation' or 'other' or logic. 
-             // schema says: 'internet', 'social_media', 'recommendation', 'architect', 'event', 'drive_by', 'phone', 'other'
-             // 'partner' is not in customerSources enum in schema.ts yet?
-             // User confusingly asked about Partner B2B. Schema has 'architect' but not 'partner' in customerSources. 
-             // Let's assume 'recommendation' or 'other' effectively, BUT in the future we might want 'partner'.
-             // For now, I will trust the current schema literals.
+             finalSource = 'recommendation'; 
         }
         
-        // If data.source is explicitly 'architect', ensure we have an ID if provided
         if (data.source === 'architect' && data.architectId) {
             finalArchitectId = data.architectId;
             finalSource = 'architect';
         }
 
-        const normalizedEmail = data.contactEmail?.trim() || null;
-        const normalizedPhone = data.contactPhone?.trim() || null;
-        let customerId = data.existingCustomerId;
-
-        // If no existing customer ID provided, check for duplicates
-        if (!customerId) {
-            // Check if customer with this email already exists
-            if (normalizedEmail) {
-                const existingCustomer = await db.query.customers.findFirst({
-                    where: (table, { eq }) => eq(table.email, normalizedEmail),
-                });
-
-                if (existingCustomer) {
-                    return { 
-                        success: false, 
-                        status: 'duplicate_found',
-                        existingCustomer: {
-                            id: existingCustomer.id,
-                            name: existingCustomer.name,
-                            email: existingCustomer.email,
-                            phone: existingCustomer.phone
-                        },
-                        message: `Klient o adresie email ${normalizedEmail} już istnieje w bazie.` 
-                    };
-                }
-            }
-
-            // Check if customer with this phone already exists
-            if (normalizedPhone) {
-                const existingCustomer = await db.query.customers.findFirst({
-                    where: (table, { eq }) => eq(table.phone, normalizedPhone),
-                });
-
-                if (existingCustomer) {
-                    return { 
-                        success: false, 
-                        status: 'duplicate_found',
-                        existingCustomer: {
-                            id: existingCustomer.id,
-                            name: existingCustomer.name,
-                            email: existingCustomer.email,
-                            phone: existingCustomer.phone
-                        },
-                        message: `Klient o numerze telefonu ${normalizedPhone} już istnieje w bazie.` 
-                    };
-                }
-            }
-
-            // Create new customer record if no duplicate found
-            customerId = crypto.randomUUID();
-            await db.insert(customers).values({
-                id: customerId,
-                name: trimmedName,
-                phone: normalizedPhone,
-                email: normalizedEmail,
-                source: finalSource,
-                architectId: finalArchitectId,
-                createdAt: now,
-                updatedAt: now,
-            });
-        }
-
-        await db.insert(montages).values({
-            id: montageId,
-            displayId,
-            customerId: customerId!, // Link to customer (new or existing)
-            clientName: trimmedName,
-            contactPhone: data.contactPhone?.trim() || null,
-            contactEmail: data.contactEmail?.trim() || null,
-            installationCity: data.address?.trim() || null,
-            billingCity: data.address?.trim() || null,
-            clientInfo: data.description?.trim() || null,
-            forecastedInstallationDate: data.forecastedInstallationDate ? new Date(data.forecastedInstallationDate) : null,
-            sampleStatus: data.sampleStatus || 'none',
-            status: 'new_lead',
+        const result = await createLeadCore({
+            ...data,
+            source: finalSource,
             architectId: finalArchitectId,
             partnerId: finalPartnerId,
-            createdAt: now,
-            updatedAt: now,
         });
 
-        // Add note if description is provided
-        if (data.description?.trim()) {
-            await db.insert(montageNotes).values({
-                id: crypto.randomUUID(),
-                montageId: montageId,
-                content: `[Info od klienta / Źródło: ${finalSource}]: ${data.description.trim()}`,
-                isInternal: false,
-                createdBy: user.id,
-                createdAt: now,
-            });
-        }
-
-        // Initialize checklist items
-        const templates = await getMontageChecklistTemplates();
-        const checklistItems = templates.map((template, index) => {
-            let isCompleted = false;
-            
-            // Smart Checklist Logic for Sample Verification
-            if (template.id === 'sample_verification') {
-                const status = data.sampleStatus || 'none';
-                if (status === 'none' || status === 'delivered') {
-                    isCompleted = true;
-                }
+        if (result.success) {
+            if (result.montageId && result.status !== 'duplicate_found') {
+                 // Log event if new lead (optional, keeping it simple as ID is inside result)
+                 // We don't have displayId here unless we return it from createLeadCore. 
+                 // It's not critical for logging.
+                 await logSystemEvent('create_lead', `Utworzono lead dla ${data.clientName}`, user.id);
             }
-
-            return {
-                id: crypto.randomUUID(),
-                montageId: montageId,
-                templateId: template.id,
-                label: template.label,
-                allowAttachment: template.allowAttachment,
-                orderIndex: index,
-                completed: isCompleted,
-                createdAt: now,
-                updatedAt: now,
-            };
-        });
-
-        if (checklistItems.length > 0) {
-            await db.insert(montageChecklistItems).values(checklistItems);
+            revalidatePath(MONTAGE_DASHBOARD_PATH);
         }
 
-        await logSystemEvent('create_lead', `Utworzono lead ${displayId} dla ${trimmedName}`, user.id);
-        revalidatePath(MONTAGE_DASHBOARD_PATH);
-        
-        return { success: true, message: 'Lead został dodany' };
+        return result;
     } catch (error) {
         console.error('Error creating lead:', error);
         return { 

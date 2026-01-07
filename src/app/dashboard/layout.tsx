@@ -14,8 +14,8 @@ import { logoutAction } from './actions';
 import { getCurrentSession } from '@/lib/auth/session';
 import { getUrgentOrdersCount } from './orders/queries';
 import { db } from '@/lib/db';
-import { users } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { users, montages } from '@/lib/db/schema';
+import { eq, sql } from 'drizzle-orm';
 import { ImpersonationBanner } from './_components/impersonation-banner';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
 
@@ -56,6 +56,17 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         urgentOrdersCount = await getUrgentOrdersCount();
     } catch (error) {
         console.error('Failed to fetch urgent orders count:', error);
+    }
+
+    let newLeadsCount = 0;
+    try {
+        const leadsRes = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(montages)
+            .where(eq(montages.status, 'new_lead'));
+        newLeadsCount = Number(leadsRes[0]?.count ?? 0);
+    } catch (e) {
+        console.error('Failed to fetch leads count:', e);
     }
 
     let systemLogoUrl = await getAppSetting(appSettingKeys.systemLogoUrl);
@@ -114,12 +125,12 @@ export default async function DashboardLayout({ children }: { children: ReactNod
                 </header>
                 <main className="mx-auto w-full max-w-[1600px] p-0 md:px-5 md:py-8">
                     <div className="hidden md:block px-4 py-4 md:p-0 sticky top-[65px] z-40 bg-transparent">
-                        <DashboardNav urgentOrdersCount={urgentOrdersCount} userRoles={userRoles} />
+                        <DashboardNav urgentOrdersCount={urgentOrdersCount} leadsCount={newLeadsCount} userRoles={userRoles} />
                     </div>
                     {children}
                 </main>
             </div>
-            <MobileNav user={user} urgentOrdersCount={urgentOrdersCount} userRoles={userRoles} />
+            <MobileNav user={user} urgentOrdersCount={urgentOrdersCount} leadsCount={newLeadsCount} userRoles={userRoles} />
         </>
 	);
 }

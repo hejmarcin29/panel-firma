@@ -34,6 +34,7 @@ import { MobileMenuItem } from './actions';
 import { WooSettingsForm } from './integrations/_components/woo-settings-form';
 import { GoogleCalendarSettingsForm } from './integrations/_components/google-calendar-settings-form';
 import { FluentFormsSettings } from './integrations/_components/fluent-forms-settings';
+import { WebFormsSettings } from './integrations/_components/web-forms-settings';
 import { getFluentFormsSecret } from './integrations/fluent-actions';
 import { IntegrationLogs } from './integrations/_components/integration-logs';
 import { WpChangesSettings } from './_components/wp-changes-settings';
@@ -520,6 +521,7 @@ export default async function SettingsPage() {
 								<TabsTrigger value="mail">Poczta</TabsTrigger>
 								<TabsTrigger value="storage">Magazyn plików</TabsTrigger>
                                 <TabsTrigger value="fluent">Fluent Forms</TabsTrigger>
+                                <TabsTrigger value="web-forms">Formularze WWW</TabsTrigger>
 							</TabsList>
 						</div>
 					</div>
@@ -598,6 +600,9 @@ export default async function SettingsPage() {
                             initialSecret={fluentFormsSecret} 
                             baseUrl={process.env.NEXT_PUBLIC_APP_URL ?? 'https://twoja-domena.pl'} 
                         />
+                    </TabsContent>
+                    <TabsContent value="web-forms">
+                        <WebFormsSettings />
                     </TabsContent>
 				</Tabs>
 			}

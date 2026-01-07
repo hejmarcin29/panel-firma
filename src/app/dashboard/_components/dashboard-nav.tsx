@@ -21,7 +21,7 @@ const links = [
     { href: '/dashboard/partner', label: 'Moje Polecenia' },
 ];
 
-export function DashboardNav({ urgentOrdersCount = 0, userRoles = ['admin'] }: { urgentOrdersCount?: number; userRoles?: UserRole[] }) {
+export function DashboardNav({ urgentOrdersCount = 0, leadsCount = 0, userRoles = ['admin'] }: { urgentOrdersCount?: number; leadsCount?: number; userRoles?: UserRole[] }) {
 	const pathname = usePathname();
 
     const filteredLinks = links.filter(link => {
@@ -98,6 +98,12 @@ export function DashboardNav({ urgentOrdersCount = 0, userRoles = ['admin'] }: {
 							>
 								{getLabel(link)}
                                 {link.href === '/dashboard/orders' && urgentOrdersCount > 0 && (
+                                    <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                                    </span>
+                                )}
+                                {link.href === '/dashboard/crm' && leadsCount > 0 && (
                                     <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                                         <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
