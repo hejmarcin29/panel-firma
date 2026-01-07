@@ -89,6 +89,15 @@ export type MontagePayment = {
     type: 'advance' | 'final' | 'other';
 };
 
+export interface AlertSettings {
+    missingMaterialStatusDays: number;
+    missingInstallerStatusDays: number;
+    missingMeasurerDays: number;
+    missingInstallerDays: number;
+    materialOrderedDays: number;
+    materialInstockDays: number;
+}
+
 export type Montage = {
 	id: string;
 	clientName: string;

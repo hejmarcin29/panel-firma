@@ -1,15 +1,22 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Phone, Mail, MapPin, Calendar, CheckSquare, MessageSquare } from 'lucide-react';
+import { Phone, Mail, MapPin, Calendar, CheckSquare, MessageSquare, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import type { Montage, StatusOption, AlertSettings } from '../types';
 import { formatScheduleRange } from '../utils';
+import { getMontageThreats } from '../utils';
 
 function countCompleted(tasks: Montage['tasks']): number {
 	return tasks.filter((task) => task.completed).length;
@@ -46,40 +53,12 @@ export function MontagePipelineCard({ montage, threatDays, alertSettings }: Prop
 
     const pendingTasksCount = totalTasks - completedTasks;
 
-    const isThreatened = useMemo(() => {
-        const dateToCheck = montage.scheduledInstallationAt || montage.forecastedInstallationDate;
-        if (!dateToCheck) return false;
-        // Ignore completed statuses if needed, but for now just check date
-        if (montage.status === 'completed' || montage.status === 'rejected') return false;
-
-        const now = new Date();
-        const scheduled = new Date(dateToCheck);
-        const diffTime = scheduled.getTime() - now.getTime();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        
-        // Check specific alerts if settings are provided
-        if (alertSettings) {
-             if (diffDays <= alertSettings.missingMaterialStatusDays && montage.materialStatus === 'none') return true;
-             if (diffDays <= alertSettings.missingInstallerStatusDays && montage.installerStatus === 'none') return true;
-             if (diffDays <= alertSettings.missingMeasurerDays && !montage.measurerId) return true;
-             if (diffDays <= alertSettings.missingInstallerDays && !montage.installerId) return true;
-             
-             if (diffDays >= 0) {
-                if (diffDays <= alertSettings.materialOrderedDays && montage.materialStatus === 'ordered') return true;
-                if (diffDays <= alertSettings.materialInstockDays && montage.materialStatus === 'in_stock') {
-                    const isPickup = montage.materialClaimType === 'installer_pickup' || montage.materialClaimType === 'client_pickup';
-                    if (!isPickup) return true;
-                }
-             }
-        } else {
-            // Fallback if no settings provided
-            if (diffDays >= 0 && diffDays <= threatDays) return true;
-        }
-
-        return false;
-    }, [montage, threatDays, alertSettings]);
+    const threats = useMemo(() => getMontageThreats(montage, threatDays, alertSettings), [montage, threatDays, alertSettings]);
+    const isThreatened = threats.length > 0;
 
     return (
+        <TooltipProvider>
+        <TooltipProvider>
         <Link href={`/dashboard/crm/montaze/${montage.id}`} className="block group relative">
              <Card className={cn(
                 "w-full transition-all duration-200 border-border/50 shadow-sm hover:shadow-md hover:border-primary/30 overflow-hidden",
@@ -87,7 +66,23 @@ export function MontagePipelineCard({ montage, threatDays, alertSettings }: Prop
             )}>
                 {/* Status Strip for Threatened */}
                 {isThreatened && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500" />
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                             <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500 cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent side="left" className="bg-red-600 text-white border-red-700">
+                            <div className="flex flex-col gap-1">
+                                <span className="font-bold flex items-center gap-2">
+                                    <AlertCircle className="h-4 w-4" /> Wymaga uwagi:
+                                </span>
+                                <ul className="list-disc pl-4 text-xs space-y-0.5">
+                                    {threats.map((t, i) => (
+                                        <li key={i}>{t}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </TooltipContent>
+                    </Tooltip>
                 )}
 
                 <div className={cn("p-3 space-y-3", isThreatened && "pl-4")}>
@@ -212,5 +207,6 @@ export function MontagePipelineCard({ montage, threatDays, alertSettings }: Prop
                 </div>
             </Card>
         </Link>
+        </TooltipProvider>
     );
 }

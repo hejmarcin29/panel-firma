@@ -20,6 +20,54 @@ import {
 	users,
     customers,
 } from '@/lib/db/schema';
+import type { AlertSettings } from './types';
+
+export function getMontageThreats(montage: Montage,  threatDays: number = 14, alertSettings?: AlertSettings): string[] {
+    const threats: string[] = [];
+    const dateToCheck = montage.scheduledInstallationAt || montage.forecastedInstallationDate;
+    
+    if (montage.status === 'completed' || montage.status === 'rejected') return [];
+    if (!dateToCheck) return [];
+
+    const now = new Date();
+    const scheduled = new Date(dateToCheck);
+    const diffTime = scheduled.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (alertSettings) {
+        if (diffDays <= alertSettings.missingMaterialStatusDays && montage.materialStatus === 'none') {
+            threats.push(`Brak statusu materiału (${diffDays} dni do montażu)`);
+        }
+        if (diffDays <= alertSettings.missingInstallerStatusDays && montage.installerStatus === 'none') {
+            threats.push(`Brak potwierdzenia ekipy (${diffDays} dni do montażu)`);
+        }
+        if (diffDays <= alertSettings.missingMeasurerDays && !montage.measurerId) {
+            threats.push('Brak przypisanego pomiarowca');
+        }
+        if (diffDays <= alertSettings.missingInstallerDays && !montage.installerId) {
+            threats.push('Brak przypisanej ekipy monterskiej');
+        }
+        
+        if (diffDays >= 0) {
+            if (diffDays <= alertSettings.materialOrderedDays && montage.materialStatus === 'ordered') {
+                threats.push('Materiał wciąż tylko "Zamówiony" (bliski termin)');
+            }
+            if (diffDays <= alertSettings.materialInstockDays && montage.materialStatus === 'in_stock') {
+                const isPickup = montage.materialClaimType === 'installer_pickup' || montage.materialClaimType === 'client_pickup';
+                if (!isPickup) {
+                    threats.push('Materiał na stanie - brak logistyki (odbiór/wysyłka)');
+                }
+            }
+        }
+    } else {
+        // Fallback
+        if (diffDays >= 0 && diffDays <= threatDays) {
+            threats.push(`Bliski termin realizacji (${diffDays} dni)`);
+        }
+    }
+
+    return threats;
+}
 
 function normalizeAttachmentUrl(rawUrl: string, publicBaseUrl: string | null): string {
 	if (!publicBaseUrl) {

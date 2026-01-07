@@ -3,9 +3,12 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import { getMontageDetails } from './actions';
 import { deleteMontage } from '../actions';
-import { Trash2 } from 'lucide-react';
+import { Trash2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { getMontageThreats } from '../utils';
+import type { AlertSettings } from '../types';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -43,9 +46,11 @@ interface MontageViewProps {
     initialData: NonNullable<Awaited<ReturnType<typeof getMontageDetails>>>;
     portalEnabled: boolean;
     requireInstallerForMeasurement: boolean;
+    threatDays: number;
+    alertSettings: AlertSettings;
 }
 
-export function MontageView({ montageId, initialData, portalEnabled, requireInstallerForMeasurement }: MontageViewProps) {
+export function MontageView({ montageId, initialData, portalEnabled, requireInstallerForMeasurement, threatDays, alertSettings }: MontageViewProps) {
     const searchParams = useSearchParams();
     const router = useRouter();
     const tab = searchParams.get('tab');
@@ -69,6 +74,8 @@ export function MontageView({ montageId, initialData, portalEnabled, requireInst
 
     const isInstaller = userRoles.includes('installer') && !userRoles.includes('admin');
 
+    const threats = getMontageThreats(montage, threatDays, alertSettings);
+
     if (isInstaller) {
         return <InstallerMontageView montage={montage} logs={logs} userRoles={userRoles} hasGoogleCalendar={hasGoogleCalendar} />;
     }
@@ -77,6 +84,19 @@ export function MontageView({ montageId, initialData, portalEnabled, requireInst
         return (
              <div className="flex min-h-screen flex-col bg-muted/10">
                 <div className="p-4 md:p-6 space-y-6 max-w-5xl mx-auto w-full">
+                    {threats.length > 0 && (
+                        <Alert variant="destructive">
+                            <AlertTriangle className="h-4 w-4" />
+                            <AlertTitle>Wykryto problemy ({threats.length})</AlertTitle>
+                            <AlertDescription>
+                                <ul className="list-disc list-inside">
+                                    {threats.map((threat, index) => (
+                                        <li key={index}>{threat}</li>
+                                    ))}
+                                </ul>
+                            </AlertDescription>
+                        </Alert>
+                    )}
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
                             <h1 className="text-2xl font-bold">{montage.clientName}</h1>
@@ -140,6 +160,19 @@ export function MontageView({ montageId, initialData, portalEnabled, requireInst
             <MontageDetailsLayout 
                 header={
                     <div className="space-y-4 pb-4 px-4 md:px-6 pt-4 md:pt-6">
+                        {threats.length > 0 && (
+                            <Alert variant="destructive">
+                                <AlertTriangle className="h-4 w-4" />
+                                <AlertTitle>Wykryto problemy ({threats.length})</AlertTitle>
+                                <AlertDescription>
+                                    <ul className="list-disc list-inside">
+                                        {threats.map((threat, index) => (
+                                            <li key={index}>{threat}</li>
+                                        ))}
+                                    </ul>
+                                </AlertDescription>
+                            </Alert>
+                        )}
                         <MontageHeader montage={montage} statusOptions={statusOptions} userRoles={userRoles} />
                         <MontageProcessHub montage={montage} stages={statusOptions} />
                     </div>
