@@ -160,6 +160,7 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
     });
 
     const pricing = useWatch({ control: form.control, name: 'pricing' });
+    const architectAssignedProductIds = useWatch({ control: architectForm.control, name: 'assignedProductIds' });
 
     useEffect(() => {
         if (member) {
@@ -219,7 +220,7 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
                 commissionRate: 0,
             });
         }
-    }, [member, form, architectForm, partnerForm]);
+    }, [member, form, architectForm, partnerForm, accountForm]);
 
     useEffect(() => {
         if (open && member && member.roles.includes('installer') && activeTab === 'history') {
@@ -625,7 +626,7 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
                                         <div className="flex items-center justify-between">
                                             <FormLabel>Dostępne produkty (Showroom)</FormLabel>
                                             <div className="text-xs text-muted-foreground">
-                                                {architectForm.watch('assignedProductIds')?.length || 0} wybranych
+                                                {architectAssignedProductIds?.length || 0} wybranych
                                             </div>
                                         </div>
                                         
@@ -644,7 +645,7 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
                                                         <div key={product.id} className="flex items-start gap-2 max-w-full overflow-hidden">
                                                             <Checkbox 
                                                                 id={`prod-${product.id}`}
-                                                                checked={architectForm.watch('assignedProductIds')?.includes(product.id)}
+                                                                checked={architectAssignedProductIds?.includes(product.id)}
                                                                 onCheckedChange={(checked) => {
                                                                     const currentIds = architectForm.getValues('assignedProductIds') || [];
                                                                     let newIds;

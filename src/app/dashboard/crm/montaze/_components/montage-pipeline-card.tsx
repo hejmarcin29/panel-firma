@@ -58,7 +58,6 @@ export function MontagePipelineCard({ montage, threatDays, alertSettings }: Prop
 
     return (
         <TooltipProvider>
-        <TooltipProvider>
         <Link href={`/dashboard/crm/montaze/${montage.id}`} className="block group relative">
              <Card className={cn(
                 "w-full transition-all duration-200 border-border/50 shadow-sm hover:shadow-md hover:border-primary/30 overflow-hidden",
