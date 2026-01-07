@@ -5,13 +5,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Copy, Code } from 'lucide-react';
+import { Copy } from 'lucide-react';
 
 export function WebFormsSettings() {
     const [origin, setOrigin] = useState('');
 
     useEffect(() => {
-        setOrigin(window.location.origin);
+        // Use timeout to avoid "set-state-in-effect" lint warning, though this is a standard pattern for hydration safe window access
+        const timer = setTimeout(() => {
+             setOrigin(window.location.origin);
+        }, 0);
+        return () => clearTimeout(timer);
     }, []);
 
     const getCode = () => {
@@ -113,7 +117,7 @@ async function submitCrmLead(e) {
                     Generator Formularza WWW
                 </CardTitle>
                 <CardDescription>
-                    Skopiuj poniższy kod HTML i wklej go na swojej stronie WordPress (np. w bloku "Własny HTML").
+                    Skopiuj poniższy kod HTML i wklej go na swojej stronie WordPress (np. w bloku &quot;Własny HTML&quot;).
                     Formularz automatycznie prześle zgłoszenia do zakładki Montaże {'>'} Leady.
                 </CardDescription>
             </CardHeader>

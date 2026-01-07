@@ -8,7 +8,6 @@ import {
     type MontageSampleStatus 
 } from '@/lib/db/schema';
 import { getMontageChecklistTemplates } from '@/lib/montaze/checklist';
-import { eq, like, desc } from 'drizzle-orm';
 
 export type CreateLeadData = {
     clientName: string;

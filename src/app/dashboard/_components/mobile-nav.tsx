@@ -80,7 +80,7 @@ const menuLinks = [
   { href: "/dashboard/settings", label: "Ustawienia", icon: Settings },
 ];
 
-export function MobileNav({ user, urgentOrdersCount = 0, userRoles = ['admin'] }: { user: { name?: string | null; email?: string | null; mobileMenuConfig?: string | null }, urgentOrdersCount?: number, userRoles?: UserRole[] }) {
+export function MobileNav({ user, urgentOrdersCount = 0, leadsCount = 0, userRoles = ['admin'] }: { user: { name?: string | null; email?: string | null; mobileMenuConfig?: string | null }, urgentOrdersCount?: number, leadsCount?: number, userRoles?: UserRole[] }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -247,6 +247,12 @@ export function MobileNav({ user, urgentOrdersCount = 0, userRoles = ['admin'] }
                                 <Icon className="h-4 w-4" />
                                 {displayLabel}
                                 {href === '/dashboard/orders' && urgentOrdersCount > 0 && (
+                                    <span className="ml-auto flex h-2.5 w-2.5">
+                                        <span className="animate-ping absolute inline-flex h-2.5 w-2.5 rounded-full bg-red-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                                    </span>
+                                )}
+                                {href === '/dashboard/crm' && leadsCount > 0 && (
                                     <span className="ml-auto flex h-2.5 w-2.5">
                                         <span className="animate-ping absolute inline-flex h-2.5 w-2.5 rounded-full bg-red-400 opacity-75"></span>
                                         <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
