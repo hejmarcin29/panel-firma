@@ -22,6 +22,7 @@ import {
 	customers,
 	users,
     commissions,
+    partnerCommissions,
     mailAccounts,
     // referralCommissions,
     type CustomerSource,
@@ -2783,14 +2784,9 @@ export async function deleteMontageAttachment(attachmentId: string) {
     revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
 
-export async function getReferrers(role: 'architect' | 'partner') {
+export async function getReferrers() {
     await requireUser();
     
-    // Safety check - only allow fetching architects and partners
-    if (role !== 'architect' && role !== 'partner') {
-        return [];
-    }
-
     // Get all users who have this role in their roles array
     const allUsers = await db.query.users.findMany({
         where: (table, { eq }) => eq(table.isActive, true),
@@ -2803,5 +2799,8 @@ export async function getReferrers(role: 'architect' | 'partner') {
         orderBy: (table, { asc }) => [asc(table.name)],
     });
 
-    return allUsers.filter(u => u.roles.includes(role));
+    return {
+        architects: allUsers.filter(u => u.roles.includes('architect')),
+        partners: allUsers.filter(u => u.roles.includes('partner')),
+    };
 }

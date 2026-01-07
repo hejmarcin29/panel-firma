@@ -57,12 +57,15 @@ export function AddLeadModal({
     const setOpen = isControlled ? controlledOnOpenChange! : setInternalOpen;
 
     const [referrers, setReferrers] = useState<{
-        architects: { id: string, name: string }[];
-        partners: { id: string, name: string }[];
+        architects: { id: string, name: string | null }[];
+        partners: { id: string, name: string | null }[];
     }>({ architects: [], partners: [] });
 
     useEffect(() => {
-        getReferrers().then(setReferrers).catch(console.error);
+        getReferrers().then((data) => {
+            // Ensure compatibility with state
+            setReferrers(data);
+        }).catch(console.error);
     }, []);
 
     const [formData, setFormData] = useState({
@@ -264,7 +267,7 @@ export function AddLeadModal({
                                     </SelectTrigger>
                                     <SelectContent>
                                         {referrers.architects.map((arch) => (
-                                            <SelectItem key={arch.id} value={arch.id}>{arch.name}</SelectItem>
+                                            <SelectItem key={arch.id} value={arch.id}>{arch.name || 'Brak nazwy'}</SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
@@ -284,7 +287,7 @@ export function AddLeadModal({
                                     </SelectTrigger>
                                     <SelectContent>
                                         {referrers.partners.map((p) => (
-                                            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                                            <SelectItem key={p.id} value={p.id}>{p.name || 'Brak nazwy'}</SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>

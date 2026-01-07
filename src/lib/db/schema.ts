@@ -769,6 +769,11 @@ export const montagesRelations = relations(montages, ({ one, many }) => ({
 		references: [users.id],
 		relationName: 'montage_architect',
 	}),
+    partner: one(users, {
+        fields: [montages.partnerId],
+        references: [users.id],
+        relationName: 'montage_partner',
+    }),
     customer: one(customers, {
         fields: [montages.customerId],
         references: [customers.id],
