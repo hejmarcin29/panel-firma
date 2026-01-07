@@ -13,6 +13,13 @@ interface PageProps {
     params: Promise<{ id: string }>;
 }
 
+const formatPrice = (price?: string | null) => {
+    if (!price) return "-";
+    const val = parseFloat(price);
+    if (isNaN(val)) return "-";
+    return new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(val);
+};
+
 export default async function ProductDetailsPage({ params }: PageProps) {
     const { id } = await params;
     const [product, suppliers] = await Promise.all([
@@ -72,6 +79,19 @@ export default async function ProductDetailsPage({ params }: PageProps) {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span className="text-muted-foreground">Cena sprzedaży:</span>
+                                <div className="flex flex-col">
+                                     {product.salePrice ? (
+                                        <>
+                                            <span className="font-bold text-red-600 text-lg">{formatPrice(product.salePrice)}</span>
+                                            <span className="text-sm text-muted-foreground line-through">{formatPrice(product.regularPrice || product.price)}</span>
+                                        </>
+                                     ) : (
+                                        <span className="font-medium text-lg">{formatPrice(product.price)}</span>
+                                     )}
+                                </div>
+                            </div>
                             <div>
                                 <span className="text-muted-foreground">Czas realizacji:</span>
                                 <div className="font-medium text-blue-600">{product.leadTime || "Nie określono"}</div>

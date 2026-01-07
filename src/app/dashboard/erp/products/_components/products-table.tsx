@@ -45,6 +45,9 @@ interface Product {
     category: { id: string; name: string } | null;
     source: string | null;
     isSyncEnabled: boolean | null;
+    price: string | null;
+    regularPrice: string | null;
+    salePrice: string | null;
 }
 
 interface Category {
@@ -62,6 +65,14 @@ interface ProductsTableProps {
     categories: Category[];
     suppliers: Supplier[];
 }
+
+const formatPrice = (price?: string | null) => {
+    if (!price) return "-";
+    // Price comes as string "129.00" (dot decimal)
+    const val = parseFloat(price);
+    if (isNaN(val)) return "-";
+    return new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(val);
+};
 
 export function ProductsTable({ data, categories, suppliers = [] }: ProductsTableProps) {
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -246,13 +257,14 @@ export function ProductsTable({ data, categories, suppliers = [] }: ProductsTabl
                             <TableHead>Kategoria</TableHead>
                             <TableHead>Typ</TableHead>
                             <TableHead>Jednostka</TableHead>
+                            <TableHead className="text-right">Cena</TableHead>
                             <TableHead>Status</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {filteredData.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={7} className="h-24 text-center">
+                                <TableCell colSpan={8} className="h-24 text-center">
                                     Brak produktów spełniających kryteria.
                                 </TableCell>
                             </TableRow>
@@ -314,6 +326,22 @@ export function ProductsTable({ data, categories, suppliers = [] }: ProductsTabl
                                         </Badge>
                                     </TableCell>
                                     <TableCell>{product.unit}</TableCell>
+                                    <TableCell className="text-right font-medium">
+                                        <div className="flex flex-col items-end">
+                                            {product.salePrice ? (
+                                                <>
+                                                    <span className="text-red-600 dark:text-red-400 font-bold">
+                                                        {formatPrice(product.salePrice)}
+                                                    </span>
+                                                    <span className="text-xs text-muted-foreground line-through">
+                                                        {formatPrice(product.regularPrice || product.price)}
+                                                    </span>
+                                                </>
+                                            ) : (
+                                                <span>{formatPrice(product.price)}</span>
+                                            )}
+                                        </div>
+                                    </TableCell>
                                     <TableCell>
                                         <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>
                                             {product.status === 'active' ? 'Aktywny' : 'Archiwum'}
