@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -31,7 +31,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { createLead } from '../actions';
+import { createLead, getReferrers } from '../actions';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { type MontageSampleStatus } from '@/lib/db/schema';
@@ -56,6 +56,15 @@ export function AddLeadModal({
     const open = isControlled ? controlledOpen : internalOpen;
     const setOpen = isControlled ? controlledOnOpenChange! : setInternalOpen;
 
+    const [referrers, setReferrers] = useState<{
+        architects: { id: string, name: string }[];
+        partners: { id: string, name: string }[];
+    }>({ architects: [], partners: [] });
+
+    useEffect(() => {
+        getReferrers().then(setReferrers).catch(console.error);
+    }, []);
+
     const [formData, setFormData] = useState({
         clientName: '',
         contactPhone: '',
@@ -64,6 +73,9 @@ export function AddLeadModal({
         description: '',
         forecastedInstallationDate: '',
         sampleStatus: 'none' as MontageSampleStatus,
+        source: 'showroom',
+        architectId: '',
+        partnerId: '',
     });
 
     const resetForm = () => {
@@ -75,6 +87,9 @@ export function AddLeadModal({
             description: '',
             forecastedInstallationDate: '',
             sampleStatus: 'none',
+            source: 'showroom',
+            architectId: '',
+            partnerId: '',
         });
         setDuplicateCustomer(null);
     };
@@ -99,7 +114,14 @@ export function AddLeadModal({
 
         startTransition(async () => {
             try {
-                const result = await createLead(formData);
+                const submissionData = {
+                    ...formData,
+                    source: formData.source as any,
+                    architectId: formData.source === 'architect' && formData.architectId ? formData.architectId : undefined,
+                    partnerId: formData.source === 'partner' && formData.partnerId ? formData.partnerId : undefined,
+                };
+                
+                const result = await createLead(submissionData);
                 
                 if (result.success) {
                     toast.success(result.message);
@@ -121,10 +143,15 @@ export function AddLeadModal({
 
         startTransition(async () => {
             try {
-                const result = await createLead({
+                const submissionData = {
                     ...formData,
-                    existingCustomerId: duplicateCustomer.id
-                });
+                    existingCustomerId: duplicateCustomer.id,
+                    source: formData.source as any,
+                    architectId: formData.source === 'architect' && formData.architectId ? formData.architectId : undefined,
+                    partnerId: formData.source === 'partner' && formData.partnerId ? formData.partnerId : undefined,
+                };
+
+                const result = await createLead(submissionData);
                 
                 if (result.success) {
                     toast.success('Lead został przypisany do istniejącego klienta');
@@ -202,6 +229,68 @@ export function AddLeadModal({
                                 disabled={isPending}
                             />
                         </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="source">Źródło</Label>
+                            <Select
+                                value={formData.source}
+                                onValueChange={(value) => setFormData({ ...formData, source: value, architectId: '', partnerId: '' })}
+                                disabled={isPending}
+                            >
+                                <SelectTrigger id="source">
+                                    <SelectValue placeholder="Wybierz źródło" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="showroom">🏠 Salon (Showroom)</SelectItem>
+                                    <SelectItem value="phone">📞 Telefon</SelectItem>
+                                    <SelectItem value="website">🌐 Strona WWW</SelectItem>
+                                    <SelectItem value="architect">📐 Architekt</SelectItem>
+                                    <SelectItem value="partner">🤝 Partner B2B</SelectItem>
+                                    <SelectItem value="other">❓ Inne</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {formData.source === 'architect' && (
+                            <div className="grid gap-2 pl-4 border-l-2 border-primary/20">
+                                <Label htmlFor="architectId">Wybierz architekta</Label>
+                                <Select
+                                    value={formData.architectId}
+                                    onValueChange={(value) => setFormData({ ...formData, architectId: value })}
+                                    disabled={isPending}
+                                >
+                                    <SelectTrigger id="architectId">
+                                        <SelectValue placeholder="Wybierz z listy..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {referrers.architects.map((arch) => (
+                                            <SelectItem key={arch.id} value={arch.id}>{arch.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+
+                        {formData.source === 'partner' && (
+                            <div className="grid gap-2 pl-4 border-l-2 border-primary/20">
+                                <Label htmlFor="partnerId">Wybierz partnera</Label>
+                                <Select
+                                    value={formData.partnerId}
+                                    onValueChange={(value) => setFormData({ ...formData, partnerId: value })}
+                                    disabled={isPending}
+                                >
+                                    <SelectTrigger id="partnerId">
+                                        <SelectValue placeholder="Wybierz z listy..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {referrers.partners.map((p) => (
+                                            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+
                         <div className="grid gap-2">
                             <Label htmlFor="forecastedInstallationDate">Szacowany termin montażu</Label>
                             <Input

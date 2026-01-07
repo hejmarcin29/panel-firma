@@ -141,7 +141,7 @@ export type PartnerProfile = {
     companyName?: string;
     nip?: string;
     bankAccount?: string;
-    commissionRate?: number; // Percentage (0-100)
+    commissionRate?: number; // PLN per m2
     termsAcceptedAt?: string; // ISO date string
     termsVersion?: string;
 };
@@ -1299,6 +1299,8 @@ export const partnerCommissions = pgTable(
             .notNull()
             .references(() => montages.id, { onDelete: 'cascade' }),
         amount: integer('amount').notNull(), // in minor units (grosze)
+        rate: real('rate').notNull().default(0), // PLN per m2
+        area: real('area').notNull().default(0), // m2
         status: text('status').$type<CommissionStatus>().notNull().default('pending'),
         createdAt: timestamp('created_at').notNull().defaultNow(),
         approvedAt: timestamp('approved_at'),

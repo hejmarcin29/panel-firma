@@ -599,6 +599,7 @@ export async function updateMontageStatus({ montageId, status }: UpdateMontageSt
             where: eq(montages.id, montageId),
             with: {
                 architect: true,
+                partner: true,
                 customer: true,
             }
         });
@@ -632,8 +633,38 @@ export async function updateMontageStatus({ montageId, status }: UpdateMontageSt
                     }
                 }
             } 
+            
+            // Priority 2: Partner Commission
+            if (montageWithRelations.partnerId && montageWithRelations.partner && montageWithRelations.partner.partnerProfile?.commissionRate) {
+                const existingPartnerCommission = await db.query.partnerCommissions.findFirst({
+                    where: eq(partnerCommissions.montageId, montageId),
+                });
+
+                if (!existingPartnerCommission) {
+                    const rate = montageWithRelations.partner.partnerProfile.commissionRate;
+                    const area = montageWithRelations.floorArea || 0;
+                    const amount = Math.round(area * rate * 100); // in grosze
+
+                    if (amount > 0) {
+                        await db.insert(partnerCommissions).values({
+                            id: crypto.randomUUID(),
+                            partnerId: montageWithRelations.partnerId,
+                            montageId: montageId,
+                            amount,
+                            rate,
+                            area,
+                            status: 'pending',
+                            createdAt: new Date(),
+                            // approvedAt: null
+                        });
+                        
+                        await logSystemEvent('create_commission', `Utworzono prowizję dla partnera ${montageWithRelations.partner.name} za montaż ${montageWithRelations.clientName}`, user.id);
+                    }
+                }
+            }
+
             /*
-            // Priority 2: Referral Commission (only if no architect)
+            // Priority 3: Referral Commission (only if no architect)
             else if (montageWithRelations.customer?.referredById) {
                 const referrerId = montageWithRelations.customer.referredById;
                 const existingReferralCommission = await db.query.referralCommissions.findFirst({
@@ -2016,6 +2047,9 @@ export async function createLead(data: {
     forecastedInstallationDate?: string;
     sampleStatus?: MontageSampleStatus;
     existingCustomerId?: string;
+    source?: CustomerSource;
+    architectId?: string;
+    partnerId?: string;
 }) {
     try {
         const user = await requireUser();
@@ -2029,8 +2063,32 @@ export async function createLead(data: {
         const montageId = crypto.randomUUID();
         const now = new Date();
 
-        // Auto-assign architect if the creator has the architect role
-        const architectId = user.roles.includes('architect') ? user.id : null;
+        // Determine architect/partner logic
+        // If Admin passed an ID, use it.
+        // If User IS an architect/partner, use their ID (self-service).
+        let finalArchitectId = data.architectId || null;
+        let finalPartnerId = data.partnerId || null;
+        let finalSource = data.source || 'other';
+
+        if (user.roles.includes('architect') && !user.roles.includes('admin')) {
+             finalArchitectId = user.id;
+             finalSource = 'architect';
+        }
+        if (user.roles.includes('partner') && !user.roles.includes('admin')) {
+             finalPartnerId = user.id;
+             finalSource = 'recommendation'; // Or 'partner' if we add it to enum later? For now 'recommendation' or 'other' or logic. 
+             // schema says: 'internet', 'social_media', 'recommendation', 'architect', 'event', 'drive_by', 'phone', 'other'
+             // 'partner' is not in customerSources enum in schema.ts yet?
+             // User confusingly asked about Partner B2B. Schema has 'architect' but not 'partner' in customerSources. 
+             // Let's assume 'recommendation' or 'other' effectively, BUT in the future we might want 'partner'.
+             // For now, I will trust the current schema literals.
+        }
+        
+        // If data.source is explicitly 'architect', ensure we have an ID if provided
+        if (data.source === 'architect' && data.architectId) {
+            finalArchitectId = data.architectId;
+            finalSource = 'architect';
+        }
 
         const normalizedEmail = data.contactEmail?.trim() || null;
         const normalizedPhone = data.contactPhone?.trim() || null;
@@ -2087,8 +2145,8 @@ export async function createLead(data: {
                 name: trimmedName,
                 phone: normalizedPhone,
                 email: normalizedEmail,
-                source: architectId ? 'architect' : 'other',
-                architectId,
+                source: finalSource,
+                architectId: finalArchitectId,
                 createdAt: now,
                 updatedAt: now,
             });
@@ -2107,7 +2165,8 @@ export async function createLead(data: {
             forecastedInstallationDate: data.forecastedInstallationDate ? new Date(data.forecastedInstallationDate) : null,
             sampleStatus: data.sampleStatus || 'none',
             status: 'new_lead',
-            architectId,
+            architectId: finalArchitectId,
+            partnerId: finalPartnerId,
             createdAt: now,
             updatedAt: now,
         });
@@ -2117,7 +2176,7 @@ export async function createLead(data: {
             await db.insert(montageNotes).values({
                 id: crypto.randomUUID(),
                 montageId: montageId,
-                content: `[Info od klienta]: ${data.description.trim()}`,
+                content: `[Info od klienta / Źródło: ${finalSource}]: ${data.description.trim()}`,
                 isInternal: false,
                 createdBy: user.id,
                 createdAt: now,
@@ -2722,4 +2781,27 @@ export async function deleteMontageAttachment(attachmentId: string) {
     }
 
     revalidatePath(MONTAGE_DASHBOARD_PATH);
+}
+
+export async function getReferrers(role: 'architect' | 'partner') {
+    await requireUser();
+    
+    // Safety check - only allow fetching architects and partners
+    if (role !== 'architect' && role !== 'partner') {
+        return [];
+    }
+
+    // Get all users who have this role in their roles array
+    const allUsers = await db.query.users.findMany({
+        where: (table, { eq }) => eq(table.isActive, true),
+        columns: {
+            id: true,
+            name: true,
+            email: true,
+            roles: true,
+        },
+        orderBy: (table, { asc }) => [asc(table.name)],
+    });
+
+    return allUsers.filter(u => u.roles.includes(role));
 }

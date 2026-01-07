@@ -13,6 +13,8 @@ type Lead = {
     installationCity: string | null;
     status: string;
     createdAt: Date;
+    commissionStatus?: string;
+    commissionAmount?: number;
 };
 
 const STEPS = [
@@ -122,6 +124,22 @@ export function PartnerLeadsList({ leads }: { leads: Lead[] }) {
                                             </div>
                                         );
                                     })}
+                                </div>
+                            </div>
+
+                            <div className="mt-6 pt-4 border-t flex justify-between items-center">
+                                <div className="text-sm">
+                                    <span className="text-muted-foreground mr-2">Prowizja:</span>
+                                    {lead.commissionStatus ? (
+                                        <Badge variant={lead.commissionStatus === 'paid' ? 'outline' : 'secondary'} className={lead.commissionStatus === 'paid' ? 'border-green-500 text-green-600' : ''}>
+                                            {lead.commissionStatus === 'paid' ? '✅ Wypłacona' : 
+                                             lead.commissionStatus === 'approved' ? '💰 Do wypłaty' : 
+                                             '⏳ Oczekująca'}
+                                            {lead.commissionAmount ? ` (${(lead.commissionAmount / 100).toFixed(2)} PLN)` : ''}
+                                        </Badge>
+                                    ) : (
+                                        <span className="text-muted-foreground italic">Brak danych</span>
+                                    )}
                                 </div>
                             </div>
                         </div>

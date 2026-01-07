@@ -37,21 +37,9 @@ System obsługuje dwa tryby dostawy materiałów, definiowane przez montażystę
 - **Blokada stron:** Middleware/Layout sprawdza rolę i przekierowuje na stronę główną przy próbie wejścia w link bez uprawnień.
 
 ### Planowane (Do wdrożenia):
-- **Prowizje Partnerów:** Automatyczne naliczanie prowizji dla architektów (Cennik Baza + X%).
 - **Powiadomienia SMS:** Automat wysyłający SMS do klienta dzień przed montażem.
 
 ## 4. Moduł ERP (Zakupy i Magazyn)
-
-### Zakupy (Purchase Orders)
-- **Proces:** Tworzenie zamówienia (Draft) -> Wysłanie do dostawcy (Ordered) -> Przyjęcie towaru (Received).
-- **Przyjęcie towaru:** Zmiana statusu na `received` automatycznie zwiększa stan magazynowy produktów (`stock_quantity`) oraz tworzy wpis w historii ruchów magazynowych (`warehouse_movements`).
-
-### Magazyn (Warehouse)
-- **Stany:** Oparte na polu `stock_quantity` w tabeli `products`.
-- **Ruchy:** Każda zmiana stanu (zakup, sprzedaż, montaż, korekta) jest rejestrowana w `warehouse_movements`.
-- **Integracja:**
-  - Sprzedaż (Zamówienie): Zmniejsza stan.
-  - Montaż: Zmniejsza stan (jeśli materiał pobrany z magazynu).
 
 ---
 *Ostatnia aktualizacja: 20.12.2025*

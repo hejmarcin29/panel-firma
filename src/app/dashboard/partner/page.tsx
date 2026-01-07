@@ -1,6 +1,6 @@
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
-import { montages, partnerPayouts, partnerCommissions, users } from '@/lib/db/schema';
+import { montages, partnerPayouts, partnerCommissions, users, commissions } from '@/lib/db/schema';
 import { eq, desc, or } from 'drizzle-orm';
 import { Metadata } from 'next';
 
@@ -27,7 +27,10 @@ import { PartnerLeadsList } from './_components/partner-leads-list';
 export default async function PartnerDashboard() {
     const sessionUser = await requireUser();
     
-    if (!sessionUser.roles.includes('partner')) {
+    const isPartner = sessionUser.roles.includes('partner');
+    const isArchitect = sessionUser.roles.includes('architect');
+
+    if (!isPartner && !isArchitect) {
         return <div>Brak dostępu.</div>;
     }
 
@@ -47,32 +50,61 @@ export default async function PartnerDashboard() {
         orderBy: [desc(montages.createdAt)],
     });
 
-    const payouts = await db.query.partnerPayouts.findMany({
-        where: eq(partnerPayouts.partnerId, user.id),
-        orderBy: [desc(partnerPayouts.createdAt)],
-    });
+    let userCommissions: any[] = [];
+    let userPayouts: any[] = [];
 
-    const commissions = await db.query.partnerCommissions.findMany({
-        where: eq(partnerCommissions.partnerId, user.id),
-    });
+    if (isPartner) {
+        userCommissions = await db.query.partnerCommissions.findMany({
+            where: eq(partnerCommissions.partnerId, user.id),
+        });
+        userPayouts = await db.query.partnerPayouts.findMany({
+            where: eq(partnerPayouts.partnerId, user.id),
+            orderBy: [desc(partnerPayouts.createdAt)],
+        });
+    } else if (isArchitect) {
+        userCommissions = await db.query.commissions.findMany({
+            where: eq(commissions.architectId, user.id),
+        });
+    }
 
-    const totalEarned = commissions.reduce((sum, c) => sum + c.amount, 0);
-    const totalPaid = payouts.filter(p => p.status === 'paid').reduce((sum, p) => sum + p.amount, 0);
-    const totalPendingPayout = payouts.filter(p => p.status === 'pending').reduce((sum, p) => sum + p.amount, 0);
+    const totalEarned = userCommissions.reduce((sum, c) => sum + c.amount, 0);
+    
+    let totalPaid = 0;
+    let totalPendingPayout = 0;
+    
+    if (isPartner) {
+        totalPaid = userPayouts.filter(p => p.status === 'paid').reduce((sum, p) => sum + p.amount, 0);
+        totalPendingPayout = userPayouts.filter(p => p.status === 'pending').reduce((sum, p) => sum + p.amount, 0);
+    } else {
+        totalPaid = userCommissions.filter(c => c.status === 'paid').reduce((sum, c) => sum + c.amount, 0);
+    }
+    
     const availableFunds = totalEarned - totalPaid - totalPendingPayout;
 
     const referralLink = `${process.env.NEXT_PUBLIC_APP_URL || 'https://b2b.primepodloga.pl'}/polecam/${user.referralToken || 'brak-tokenu'}`;
-    const termsAccepted = !!user.partnerProfile?.termsAcceptedAt;
+    
+    const termsAccepted = !isPartner || !!user.partnerProfile?.termsAcceptedAt;
 
     if (!termsAccepted) {
         return <TermsAcceptance />;
     }
 
+    const leadsWithCommissions = leads.map(lead => {
+        const comm = userCommissions.find(c => c.montageId === lead.id);
+        return {
+            ...lead,
+            commissionStatus: comm?.status,
+            commissionAmount: comm?.amount,
+        };
+    });
+
     return (
         <div className="space-y-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Moje Polecenia</h1>
+                    <h1 className="text-3xl font-bold tracking-tight">
+                        {isArchitect ? 'Strefa Architekta' : 'Strefa Partnera'}
+                    </h1>
                     <p className="text-muted-foreground">
                         Śledź statusy klientów, których nam poleciłeś.
                     </p>
@@ -112,7 +144,7 @@ export default async function PartnerDashboard() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-green-600">{formatCurrency(availableFunds / 100)}</div>
-                        {availableFunds > 0 && (
+                        {isPartner && availableFunds > 0 && (
                             <div className="mt-4">
                                 <PayoutRequestForm maxAmount={availableFunds / 100} />
                             </div>
@@ -123,7 +155,7 @@ export default async function PartnerDashboard() {
 
             <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-3">
                 <div className="lg:col-span-2">
-                    <PartnerLeadsList leads={leads} />
+                    <PartnerLeadsList leads={leadsWithCommissions} />
                 </div>
 
                 <div className="lg:col-span-1">
@@ -141,14 +173,14 @@ export default async function PartnerDashboard() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {payouts.length === 0 ? (
+                                    {userPayouts.length === 0 ? (
                                         <TableRow>
                                             <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
                                                 Brak wypłat.
                                             </TableCell>
                                         </TableRow>
                                     ) : (
-                                        payouts.map((payout) => (
+                                        userPayouts.map((payout: any) => (
                                             <TableRow key={payout.id}>
                                                 <TableCell>
                                                     {format(payout.createdAt, 'dd.MM.yyyy')}

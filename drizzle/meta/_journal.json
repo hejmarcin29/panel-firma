@@ -442,6 +442,13 @@
       "when": 1767734030717,
       "tag": "0062_sour_avengers",
       "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1767776499013,
+      "tag": "0063_fixed_partner_commission",
+      "breakpoints": true
     }
   ]
 }
