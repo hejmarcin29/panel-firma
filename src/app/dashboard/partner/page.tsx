@@ -1,7 +1,7 @@
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
 import { montages, partnerPayouts, partnerCommissions, users, commissions } from '@/lib/db/schema';
-import { eq, desc, or } from 'drizzle-orm';
+import { eq, desc, or, type InferSelectModel } from 'drizzle-orm';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -23,6 +23,9 @@ import { formatCurrency } from '@/lib/utils';
 import { PayoutRequestForm } from './_components/payout-request-form';
 import { TermsAcceptance } from './_components/terms-acceptance';
 import { PartnerLeadsList } from './_components/partner-leads-list';
+
+type Commission = InferSelectModel<typeof commissions> | InferSelectModel<typeof partnerCommissions>;
+type Payout = InferSelectModel<typeof partnerPayouts>;
 
 export default async function PartnerDashboard() {
     const sessionUser = await requireUser();
@@ -50,8 +53,8 @@ export default async function PartnerDashboard() {
         orderBy: [desc(montages.createdAt)],
     });
 
-    let userCommissions: any[] = [];
-    let userPayouts: any[] = [];
+    let userCommissions: Commission[] = [];
+    let userPayouts: Payout[] = [];
 
     if (isPartner) {
         userCommissions = await db.query.partnerCommissions.findMany({
@@ -180,7 +183,7 @@ export default async function PartnerDashboard() {
                                             </TableCell>
                                         </TableRow>
                                     ) : (
-                                        userPayouts.map((payout: any) => (
+                                        userPayouts.map((payout) => (
                                             <TableRow key={payout.id}>
                                                 <TableCell>
                                                     {format(payout.createdAt, 'dd.MM.yyyy')}

@@ -5,9 +5,7 @@ import { erpProducts, erpPurchasePrices, erpProductAttributes, erpCategories, er
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 import { requireUser } from "@/lib/auth/session";
-import { logSystemEvent } from "@/lib/logging";
 import { inArray } from "drizzle-orm";
-import { getWooCredentials } from "./import-actions";
 import { syncProducts } from "@/lib/sync/products";
 
 export async function runGlobalSync() {

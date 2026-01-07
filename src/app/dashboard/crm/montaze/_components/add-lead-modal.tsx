@@ -34,7 +34,7 @@ import {
 import { createLead, getReferrers } from '../actions';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
-import { type MontageSampleStatus } from '@/lib/db/schema';
+import { type MontageSampleStatus, type CustomerSource } from '@/lib/db/schema';
 
 export function AddLeadModal({ 
     open: controlledOpen, 
@@ -119,7 +119,7 @@ export function AddLeadModal({
             try {
                 const submissionData = {
                     ...formData,
-                    source: formData.source as any,
+                    source: formData.source as CustomerSource,
                     architectId: formData.source === 'architect' && formData.architectId ? formData.architectId : undefined,
                     partnerId: formData.source === 'partner' && formData.partnerId ? formData.partnerId : undefined,
                 };
@@ -149,7 +149,7 @@ export function AddLeadModal({
                 const submissionData = {
                     ...formData,
                     existingCustomerId: duplicateCustomer.id,
-                    source: formData.source as any,
+                    source: formData.source as CustomerSource,
                     architectId: formData.source === 'architect' && formData.architectId ? formData.architectId : undefined,
                     partnerId: formData.source === 'partner' && formData.partnerId ? formData.partnerId : undefined,
                 };
