@@ -12,13 +12,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Check, AlertCircle } from "lucide-react";
+import { Loader2, Check } from "lucide-react";
 import { toast } from "sonner";
 import { updateProductPurchaseInfo } from "../actions";
 import { formatDistanceToNow } from "date-fns";
 import { pl } from "date-fns/locale";
 
-interface Product {
+export interface Product {
     id: string;
     name: string;
     sku: string;
@@ -65,7 +65,7 @@ const ProductRow = ({ product }: { product: Product }) => {
             });
             setIsChanged(false);
             toast.success("Zapisano zmiany");
-        } catch (error) {
+        } catch {
             toast.error("Błąd zapisu");
         } finally {
             setIsSaving(false);

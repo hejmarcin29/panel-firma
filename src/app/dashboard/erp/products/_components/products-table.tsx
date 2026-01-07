@@ -408,7 +408,7 @@ export function ProductsTable({ data, categories, suppliers = [] }: ProductsTabl
                                         />
                                     </div>
                                     {product.imageUrl && (
-                                        <div className="h-12 w-12 relative overflow-hidden rounded-md border bg-muted flex-shrink-0">
+                                        <div className="h-12 w-12 relative overflow-hidden rounded-md border bg-muted shrink-0">
                                             {/* eslint-disable-next-line @next/next/no-img-element */}
                                             <img 
                                                 src={product.imageUrl} 

@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
 import { getSupplier, getSupplierProducts } from "../actions";
-import { SupplierProductsTable } from "../_components/supplier-products-table";
+import { SupplierProductsTable, type Product } from "../_components/supplier-products-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, User, Phone, Mail, Globe, MapPin, Building2, Wallet } from "lucide-react";
+import { ArrowLeft, Phone, Mail, Globe, MapPin, Building2 } from "lucide-react";
 import Link from "next/link";
 
 interface PageProps {
@@ -59,7 +59,7 @@ export default async function SupplierDetailsPage({ params }: PageProps) {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <SupplierProductsTable products={products as any[]} />
+                            <SupplierProductsTable products={products as Product[]} />
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -105,18 +105,21 @@ export default async function SupplierDetailsPage({ params }: PageProps) {
                                     <Globe className="h-4 w-4 text-muted-foreground" />
                                     {supplier.website ? <a href={supplier.website} target="_blank" rel="noopener noreferrer" className="hover:underline">{supplier.website}</a> : '-'}
                                 </div>
-                                {supplier.address && (
-                                    <div className="pt-2 border-t mt-2">
-                                        <div className="text-sm">
-                                            {/* @ts-ignore */}
-                                            {supplier.address.street}<br />
-                                            {/* @ts-ignore */}
-                                            {supplier.address.zip} {supplier.address.city}<br />
-                                            {/* @ts-ignore */}
-                                            {supplier.address.country}
+                                {(() => {
+                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                    const address = supplier.address as any;
+                                    if (!address) return null;
+
+                                    return (
+                                        <div className="pt-2 border-t mt-2">
+                                            <div className="text-sm">
+                                                {address.street}<br />
+                                                {address.zip} {address.city}<br />
+                                                {address.country}
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
+                                    );
+                                })()}
                             </CardContent>
                         </Card>
                      </div>
