@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-type MontageView = "lead" | "in-progress" | "done";
+type MontageView = "lead" | "in-progress" | "done" | "rejected";
 
 type InProgressStage =
   | "all"
@@ -95,6 +95,18 @@ export function MontageViewTabs({ newLeadsCount = 0 }: { newLeadsCount?: number 
         onClick={() => setView("done")}
       >
         Zakończono
+      </Button>
+      <Button
+        type="button"
+        size="sm"
+        variant="ghost"
+        className={cn(
+          "h-7 rounded-full px-3",
+          currentView === "rejected" && "bg-background shadow-sm"
+        )}
+        onClick={() => setView("rejected")}
+      >
+        Odrzucone
       </Button>
     </div>
   );

@@ -25,7 +25,7 @@ import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
 import { SORT_OPTIONS, type SortOption } from './constants';
 
-type MontageView = 'lead' | 'in-progress' | 'done';
+type MontageView = 'lead' | 'in-progress' | 'done' | 'rejected';
 
 type InProgressStage =
     | 'all'
@@ -86,7 +86,8 @@ export default async function MontazePage(props: any) {
     const view: MontageView =
         searchParams?.view === 'lead' ||
         searchParams?.view === 'done' ||
-        searchParams?.view === 'in-progress'
+        searchParams?.view === 'in-progress' ||
+        searchParams?.view === 'rejected'
             ? searchParams.view
             : 'in-progress';
 
@@ -150,7 +151,9 @@ export default async function MontazePage(props: any) {
                 'lead_pre_estimate'
             ]));
         } else if (view === 'done') {
-            conditions.push(eq(montages.status, 'completed'));
+            conif (view === 'rejected') {
+            conditions.push(inArray(montages.status, ['on_hold', 'rejected']));
+        } else ditions.push(eq(montages.status, 'completed'));
         } else {
             const inProgressStatuses: MontageStatus[] = [
                 'measurement_to_schedule',

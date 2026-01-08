@@ -13,7 +13,7 @@ export const DEFAULT_STATUSES: MontageStatusDefinition[] = [
     { id: 'lead_contact', label: 'W Kontakcie', description: 'Negocjacje, badanie potrzeb.', order: 2, group: 'Leady', isSystem: true },
     { id: 'lead_samples_pending', label: 'Wysłano Link', description: 'Czekamy na wybór próbek.', order: 3, group: 'Leady', isSystem: true },
     { id: 'lead_samples_sent', label: 'Próbki Wysłane', description: 'Paczka w drodze.', order: 4, group: 'Leady', isSystem: true },
-    { id: 'lead_pre_estimate', label: 'Wstępna Wycena', description: 'Klient zna widełki.', order: 5, group: 'Leady', isSystem: true },
+    { id: 'lead_pre_estimate', label: 'Negocjacje / Decyzja', description: 'Klient zna ofertę, wymagany kontakt.', order: 5, group: 'Leady', isSystem: true },
 
     // 2. PRZEKAZANIE (REALIZACJA START)
     { id: 'measurement_to_schedule', label: 'Do Umówienia', description: 'Zlecono pomiar, montażysta dzwoni.', order: 6, group: 'Realizacja', isSystem: true },
