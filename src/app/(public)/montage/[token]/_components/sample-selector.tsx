@@ -249,6 +249,8 @@ export function SampleSelector({ token, samples }: SampleSelectorProps) {
                     </div>
                     <Button onClick={handleSubmit} disabled={isSubmitting || selectedIds.length === 0} size="lg" className="rounded-full shadow-md">
                         {isSubmitting ? "Wysyłanie..." : "Zamawiam (Bezpłatnie)"}
+                    </Button>
+                </div>
             </div>
         </div>
     );
