@@ -16,7 +16,7 @@ import {
     SheetHeader,
     SheetTitle,
     SheetFooter,
-} from "@/components/ui/sheet";
+} from '@/components/ui/sheet';
 import { useUser } from '@/lib/auth/client';
 import { cn } from '@/lib/utils';
 
@@ -104,7 +104,7 @@ export default function ShowroomPage() {
         return acc;
     }, {} as Record<string, Product[]>);
 
-    // Sort categories: "Pozostałe" last, others alphabetical
+    // Sort categories: 'Pozostałe' last, others alphabetical
     const sortedCategories = Object.keys(groupedProducts).sort((a, b) => {
         if (a === 'Pozostałe') return 1;
         if (b === 'Pozostałe') return -1;
@@ -123,91 +123,80 @@ export default function ShowroomPage() {
     const favoriteProducts = products.filter(p => favorites.includes(p.id));
 
     return (
-        <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 font-serif pb-20 md:pb-0">
+        <div className='max-w-7xl mx-auto p-6 md:p-10 space-y-8'>
             {/* Header */}
-            <div className="sticky top-0 z-40 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-b">
-                <div className="max-w-7xl mx-auto px-4 h-auto py-4 md:py-0 md:h-20 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <div className="w-full md:w-auto flex items-center justify-between">
-                        <h1 className="text-2xl font-medium tracking-tight">Wirtualny Showroom</h1>
-                        <Button 
-                            variant="outline" 
-                            size="icon"
-                            className="rounded-full relative md:hidden"
-                            onClick={() => setIsMoodboardOpen(true)}
-                        >
-                            <ShoppingBag className="h-4 w-4" />
-                            {favorites.length > 0 && (
-                                <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 rounded-full">
-                                    {favorites.length}
-                                </Badge>
-                            )}
-                        </Button>
+            <div className='flex flex-col md:flex-row justify-between items-start md:items-end gap-4'>
+                <div>
+                    <h1 className='text-3xl font-bold tracking-tight text-zinc-900'>Wirtualny Showroom</h1>
+                    <p className='text-zinc-500 mt-1'>Przeglądaj katalog produktów i twórz moodboardy.</p>
+                </div>
+                <div className='flex items-center gap-3 w-full md:w-auto'>
+                    <div className='relative flex-1 md:w-64'>
+                         <Search className='absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400' />
+                         <Input 
+                            placeholder='Szukaj...' 
+                            className='pl-9 bg-white border-zinc-200 rounded-full shadow-sm focus-visible:ring-indigo-500' 
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
                     </div>
-                    
-                    <div className="flex items-center gap-4 w-full md:w-auto">
-                        <div className="relative w-full md:w-auto">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input 
-                                placeholder="Szukaj dekoru..." 
-                                className="pl-9 w-full md:w-64 bg-zinc-100 border-none rounded-full"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </div>
-
-                        <Button 
-                            variant="outline" 
-                            className="rounded-full relative hidden md:flex"
-                            onClick={() => setIsMoodboardOpen(true)}
-                        >
-                            <ShoppingBag className="h-4 w-4 mr-2" />
-                            Moodboard
-                            {favorites.length > 0 && (
-                                <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 rounded-full">
-                                    {favorites.length}
-                                </Badge>
-                            )}
-                        </Button>
-                    </div>
+                    <Button 
+                        className='rounded-full bg-zinc-900 text-white hover:bg-zinc-800 relative shadow-sm'
+                        onClick={() => setIsMoodboardOpen(true)}
+                    >
+                        <ShoppingBag className='h-4 w-4 md:mr-2' />
+                        <span className='hidden md:inline'>Moodboard</span>
+                        {favorites.length > 0 && (
+                            <span className='absolute -top-1 -right-1 h-5 w-5 bg-indigo-600 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white'>
+                                {favorites.length}
+                            </span>
+                        )}
+                    </Button>
                 </div>
             </div>
 
-            {/* Content */}
-            <div className="max-w-7xl mx-auto px-4 py-8 space-y-12">
+            {/* Grid Content */}
+            <div className='space-y-12 min-h-[500px]'>
                 {isLoading ? (
-                    <div className="flex items-center justify-center h-64">
-                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                    <div className='flex items-center justify-center h-64'>
+                        <Loader2 className='h-8 w-8 animate-spin text-zinc-300' />
                     </div>
                 ) : filteredProducts.length === 0 ? (
-                    <div className="text-center py-20">
-                        <p className="text-muted-foreground text-lg">Brak produktów spełniających kryteria.</p>
+                    <div className='flex flex-col items-center justify-center p-12 border border-dashed border-zinc-200 rounded-3xl bg-zinc-50/50'>
+                        <Search className='h-12 w-12 text-zinc-300 mb-4' />
+                        <h3 className='text-lg font-medium text-zinc-900'>Brak wyników</h3>
+                        <p className='text-zinc-500 mt-2'>Nie znaleziono produktów dla Twojego zapytania.</p>
                     </div>
                 ) : (
                     sortedCategories.map(categoryName => (
-                        <div key={categoryName} className="space-y-6">
-                            <h2 className="text-xl font-medium border-b pb-2 text-zinc-800 dark:text-zinc-200">
-                                {categoryName}
-                                <span className="ml-2 text-sm text-muted-foreground font-normal">
-                                    ({groupedProducts[categoryName].length})
+                        <div key={categoryName} className='space-y-6'>
+                            <div className='flex items-center gap-4'>
+                                <h2 className='text-xl font-bold text-zinc-900'>
+                                    {categoryName}
+                                </h2>
+                                <span className='px-2.5 py-0.5 rounded-full bg-zinc-100 text-zinc-600 text-xs font-medium'>
+                                    {groupedProducts[categoryName].length}
                                 </span>
-                            </h2>
+                                <div className='h-px bg-zinc-100 flex-1' />
+                            </div>
                             
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-10">
+                            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
                                 {groupedProducts[categoryName].map((product) => (
                                     <motion.div
-                                        key={`${categoryName}-${product.id}`}
+                                        key={\\-\\}
                                         initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
+                                        whileInView={{ opacity: 1, y: 0 }}
+                                        viewport={{ once: true }}
                                         transition={{ duration: 0.4 }}
-                                        className="h-full flex flex-col"
+                                        className='group flex flex-col bg-white rounded-2xl border border-zinc-200 p-3 hover:border-zinc-300 hover:shadow-lg hover:shadow-zinc-200/50 transition-all duration-300'
                                     >
-                                        <div className="group relative aspect-4/5 overflow-hidden rounded-xl bg-zinc-100 mb-4 shadow-sm hover:shadow-md transition-all">
+                                        <div className='relative aspect-[4/5] overflow-hidden rounded-xl bg-zinc-100 mb-4'>
                                             {getInstallationMethod(product) && (
                                                 <div className={cn(
-                                                    "absolute top-3 left-3 px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md shadow-sm z-20 backdrop-blur-md border",
+                                                    'absolute top-3 left-3 px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md shadow-sm z-20 backdrop-blur-md border',
                                                     getInstallationMethod(product) === 'CLICK' 
-                                                        ? "bg-amber-50/90 text-amber-900 border-amber-200" 
-                                                        : "bg-blue-50/90 text-blue-900 border-blue-200"
+                                                        ? 'bg-amber-50/90 text-amber-900 border-amber-200' 
+                                                        : 'bg-blue-50/90 text-blue-900 border-blue-200'
                                                 )}>
                                                     {getInstallationMethod(product)}
                                                 </div>
@@ -217,52 +206,43 @@ export default function ShowroomPage() {
                                                     src={product.imageUrl}
                                                     alt={product.name}
                                                     fill
-                                                    className="object-cover transition-transform duration-700 group-hover:scale-105"
-                                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                                    className='object-cover transition-transform duration-700 group-hover:scale-105'
+                                                    sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
                                                 />
                                             ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-zinc-50">
+                                                <div className='w-full h-full flex items-center justify-center text-zinc-300 bg-zinc-50'>
                                                     Brak zdjęcia
                                                 </div>
                                             )}
                                             
                                             {/* Overlay Actions */}
-                                            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                                            <div className='absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3'>
                                                 <Button
-                                                    size="icon"
-                                                    variant="secondary"
-                                                    className="rounded-full h-10 w-10 sm:h-12 sm:w-12 bg-white/90 hover:bg-white shadow-lg font-sans"
+                                                    size='icon'
+                                                    variant='secondary'
+                                                    className='rounded-full h-10 w-10 bg-white shadow-xl hover:bg-zinc-50 hover:scale-110 transition-all duration-200'
                                                     onClick={() => toggleFavorite(product.id)}
-                                                    title={favorites.includes(product.id) ? "Usuń z moodboardu" : "Dodaj do moodboardu"}
                                                 >
-                                                    <Heart className={cn("h-5 w-5 transition-colors", favorites.includes(product.id) && "fill-red-500 text-red-500")} />
+                                                    <Heart className={cn('h-5 w-5 transition-colors', favorites.includes(product.id) && 'fill-rose-500 text-rose-500')} />
                                                 </Button>
-                                                {/* <Button
-                                                    size="icon"
-                                                    variant="secondary"
-                                                    className="rounded-full h-12 w-12 bg-white/90 hover:bg-white shadow-lg"
-                                                    onClick={() => toast.success('Pobieranie tekstur...')}
-                                                >
-                                                    <Download className="h-5 w-5" />
-                                                </Button> */}
                                             </div>
 
-                                            {/* Mobile Favorite Indicator (always visible if favorite) */}
+                                            {/* Mobile Favorite Indicator */}
                                             {favorites.includes(product.id) && (
-                                                <div className="absolute top-2 right-2 md:hidden">
-                                                    <div className="bg-white/90 rounded-full p-1.5 shadow-sm">
-                                                        <Heart className="h-3 w-3 fill-red-500 text-red-500" />
+                                                <div className='absolute top-2 right-2 md:hidden'>
+                                                    <div className='bg-white/90 rounded-full p-1.5 shadow-sm'>
+                                                        <Heart className='h-3 w-3 fill-rose-500 text-rose-500' />
                                                     </div>
                                                 </div>
                                             )}
                                         </div>
 
-                                        <div className="mt-auto space-y-1">
-                                            <h3 className="font-medium text-lg leading-tight line-clamp-2" title={product.name}>{product.name}</h3>
-                                            <p className="text-sm text-muted-foreground font-sans truncate">SKU: {product.sku}</p>
+                                        <div className='mt-auto space-y-1 px-1 pb-1'>
+                                            <h3 className='font-bold text-zinc-900 leading-snug line-clamp-2 text-sm' title={product.name}>{product.name}</h3>
+                                            <p className='text-xs text-zinc-400 font-medium font-mono'>SKU: {product.sku}</p>
                                             
                                             {/* Price Display */}
-                                            <div className="pt-1">
+                                            <div className='pt-2 mt-2 border-t border-dashed border-zinc-100'>
                                                 {(() => {
                                                     const currentBrutto = calculateBrutto(product.price);
                                                     const oldBrutto = calculateBrutto(product.regularPrice);
@@ -271,35 +251,26 @@ export default function ShowroomPage() {
                                                     if (!currentBrutto) return null;
 
                                                     return (
-                                                        <div className="font-sans">
+                                                        <div className='flex items-center justify-between'>
                                                             {isPromo && oldBrutto ? (
-                                                                <div className="flex items-baseline gap-2">
-                                                                     <span className="font-bold text-zinc-900 dark:text-zinc-100">
+                                                                <div className='flex flex-col'>
+                                                                     <span className='font-bold text-zinc-900'>
                                                                         {formatCurrency(currentBrutto)}
                                                                     </span>
-                                                                    <span className="text-xs text-muted-foreground line-through">
+                                                                    <span className='text-[10px] text-zinc-400 line-through'>
                                                                         {formatCurrency(oldBrutto)}
                                                                     </span>
                                                                 </div>
                                                             ) : (
-                                                                <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                                                                <span className='font-bold text-zinc-900'>
                                                                     {formatCurrency(currentBrutto)}
                                                                 </span>
                                                             )}
-                                                            <span className="text-[10px] text-muted-foreground ml-1">brutto / {product.unit || 'szt'}</span>
+                                                            <span className='text-[10px] text-zinc-400 uppercase font-medium bg-zinc-50 px-1.5 py-0.5 rounded'>{product.unit || 'szt'}</span>
                                                         </div>
                                                     );
                                                 })()}
                                             </div>
-
-                                            {/* Attributes pills */}
-                                            {/* <div className="flex flex-wrap gap-1 mt-2">
-                                                {product.attributes?.slice(0, 2).map(attr => (
-                                                    <span key={attr.name} className="text-[10px] uppercase tracking-wider bg-zinc-100 px-2 py-1 rounded-sm text-zinc-600 font-sans">
-                                                        {attr.options[0]}
-                                                    </span>
-                                                ))}
-                                            </div> */}
                                         </div>
                                     </motion.div>
                                 ))}
@@ -311,47 +282,48 @@ export default function ShowroomPage() {
 
             {/* Moodboard Drawer */}
             <Sheet open={isMoodboardOpen} onOpenChange={setIsMoodboardOpen}>
-                <SheetContent className="w-full sm:max-w-md flex flex-col">
-                    <SheetHeader>
-                        <SheetTitle className="font-serif text-2xl">Twój Moodboard</SheetTitle>
+                <SheetContent className='w-full sm:max-w-md flex flex-col p-0 gap-0'>
+                    <SheetHeader className='p-6 border-b border-zinc-100'>
+                        <SheetTitle className='text-xl font-bold'>Twój Moodboard</SheetTitle>
                         <SheetDescription>
                             Wybrane produkty ({favorites.length}).
                         </SheetDescription>
                     </SheetHeader>
 
-                    <div className="flex-1 overflow-y-auto py-6 px-4 space-y-4">
+                    <div className='flex-1 overflow-y-auto p-6 space-y-4 bg-zinc-50/50'>
                         {favoriteProducts.length === 0 ? (
-                            <div className="text-center py-10 text-muted-foreground">
-                                Twój moodboard jest pusty.
+                            <div className='flex flex-col items-center justify-center h-48 text-zinc-400'>
+                                <ShoppingBag className='h-8 w-8 mb-2 opacity-50' />
+                                <p>Twój moodboard jest pusty.</p>
                             </div>
                         ) : (
                             favoriteProducts.map(p => (
-                                <div key={p.id} className="flex gap-4 items-center p-3 bg-zinc-50 rounded-lg border">
-                                    <div className="relative h-16 w-16 rounded-md overflow-hidden bg-zinc-200 shrink-0">
+                                <div key={p.id} className='flex gap-4 items-center p-3 bg-white rounded-xl border border-zinc-200 shadow-sm'>
+                                    <div className='relative h-16 w-16 rounded-lg overflow-hidden bg-zinc-100 shrink-0 border border-zinc-100'>
                                         {p.imageUrl && (
-                                            <Image src={p.imageUrl} alt={p.name} fill className="object-cover" />
+                                            <Image src={p.imageUrl} alt={p.name} fill className='object-cover' />
                                         )}
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="font-medium truncate">{p.name}</h4>
-                                        <p className="text-xs text-muted-foreground">{p.sku}</p>
+                                    <div className='flex-1 min-w-0'>
+                                        <h4 className='font-bold text-sm text-zinc-900 truncate'>{p.name}</h4>
+                                        <p className='text-xs text-zinc-500 font-mono'>{p.sku}</p>
                                     </div>
                                     <Button
-                                        variant="ghost"
-                                        size="icon"
+                                        variant='ghost'
+                                        size='icon'
+                                        className='text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-full'
                                         onClick={() => toggleFavorite(p.id)}
                                     >
-                                        <X className="h-4 w-4" />
+                                        <X className='h-4 w-4' />
                                     </Button>
                                 </div>
                             ))
                         )}
                     </div>
 
-                    <SheetFooter className="flex-col gap-3 sm:flex-col">
+                    <SheetFooter className='p-6 border-t border-zinc-100 bg-white'>
                         <Button 
-                            variant="outline" 
-                            className="w-full" 
+                            className='w-full rounded-xl bg-zinc-900 text-white hover:bg-zinc-800' 
                             disabled={favorites.length === 0}
                             onClick={() => toast.info('Generowanie PDF w przygotowaniu')}
                         >
