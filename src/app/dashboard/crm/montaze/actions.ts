@@ -1298,6 +1298,30 @@ export async function updateMontageClientInfo(montageId: string, clientInfo: str
     revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
 
+export async function generateMontageToken(montageId: string) {
+    const user = await requireUser();
+    
+    // Check if token exists
+    const montage = await db.query.montages.findFirst({
+        where: eq(montages.id, montageId),
+        columns: { accessToken: true }
+    });
+
+    if (montage?.accessToken) {
+        return montage.accessToken;
+    }
+
+    const token = randomUUID();
+    
+    await db.update(montages)
+        .set({ accessToken: token, updatedAt: new Date() })
+        .where(eq(montages.id, montageId));
+
+    await logSystemEvent('generate_token', 'Wygenerowano link dostępu dla klienta', user.id);
+    
+    return token;
+}
+
 export async function updateMontageLeadData(montageId: string, data: { clientInfo?: string; estimatedFloorArea?: number }) {
     const user = await requireUser();
     await db.update(montages)

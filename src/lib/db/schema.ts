@@ -592,6 +592,8 @@ export const montages = pgTable(
 		displayId: text('display_id'),
 		materialStatus: text('material_status').$type<MontageMaterialStatus>().notNull().default('none'),
         materialClaimType: text('material_claim_type').$type<MontageMaterialClaimType>(),
+        // Magic Link Access Token
+        accessToken: text('access_token').unique(),
 		installerStatus: text('installer_status').$type<MontageInstallerStatus>().notNull().default('none'),
 		installerId: text('installer_id').references(() => users.id, { onDelete: 'set null' }),
 		measurerId: text('measurer_id').references(() => users.id, { onDelete: 'set null' }),

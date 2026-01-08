@@ -6,8 +6,10 @@ import { Loader2, CheckCircle2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { updateMontageLeadData } from "../../actions";
+import { Button } from "@/components/ui/button";
+import { updateMontageLeadData, generateMontageToken } from "../../actions";
 import { toast } from "sonner";
+import { Link as LinkIcon, Copy } from "lucide-react";
 
 interface MontageLeadQuickEditProps {
     montageId: string;
@@ -41,6 +43,20 @@ export function MontageLeadQuickEdit({ montageId, initialClientInfo, initialEsti
         setEstimatedArea(e.target.value);
         if (e.target.value !== lastSaved.current.estimatedArea) {
             setStatus('saving');
+        }
+    };
+
+    const handleCopyMagicLink = async () => {
+        try {
+            const token = await generateMontageToken(montageId);
+            const url = `${window.location.origin}/public/montage/${token}`;
+            await navigator.clipboard.writeText(url);
+            toast.success("Link skopiowany do schowka!", {
+                description: "Wyślij go klientowi, aby wybrał próbki."
+            });
+        } catch (error) {
+            console.error(error);
+            toast.error("Nie udało się wygenerować linku");
         }
     };
 
@@ -115,9 +131,15 @@ export function MontageLeadQuickEdit({ montageId, initialClientInfo, initialEsti
         <div className="bg-card rounded-xl border shadow-sm p-6 space-y-4">
             <div className="flex items-center justify-between mb-2">
                 <h3 className="font-semibold">Dane Wstępne (Lead)</h3>
-                <div className="h-6 w-6 flex items-center justify-center">
-                    {status === 'saving' && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
-                    {status === 'saved' && <CheckCircle2 className="h-4 w-4 text-green-500" />}
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={handleCopyMagicLink} title="Generuj link do wyboru próbek">
+                        <LinkIcon className="h-4 w-4 mr-2" />
+                        Magic Link (Próbki)
+                    </Button>
+                    <div className="h-6 w-6 flex items-center justify-center">
+                        {status === 'saving' && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                        {status === 'saved' && <CheckCircle2 className="h-4 w-4 text-green-500" />}
+                    </div>
                 </div>
             </div>
             
