@@ -36,9 +36,6 @@ export async function getAvailableSamples() {
     return samples;
 }
 
-import { sql } from 'drizzle-orm';
-import { randomUUID } from 'crypto';
-
 export async function submitSampleRequest(token: string, productIds: string[]) {
     // 1. Verify Token
     const montage = await getPublicMontage(token);
