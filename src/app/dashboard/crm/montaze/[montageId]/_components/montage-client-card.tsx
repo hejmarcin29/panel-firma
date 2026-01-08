@@ -633,7 +633,7 @@ export function MontageClientCard({
                 <InPostLabelGenerator 
                     montageId={montage.id}
                     sampleDelivery={montage.sampleDelivery}
-                    sampleStatus={montage.sampleStatus}
+                    sampleStatus={montage.sampleStatus ?? null}
                 />
             </div>
         </div>

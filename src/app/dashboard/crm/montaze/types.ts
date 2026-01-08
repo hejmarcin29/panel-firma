@@ -153,6 +153,16 @@ export type Montage = {
 	forecastedInstallationDate: TimestampValue;
 	status: MontageStatus;
     sampleStatus?: MontageSampleStatus | null;
+    sampleDelivery?: {
+        method: 'courier' | 'parcel_locker';
+        pointName?: string;
+        pointAddress?: string;
+        courierAddress?: {
+            street: string;
+            city: string;
+            postalCode: string;
+        };
+    } | null;
 	displayId: string | null;
 	materialStatus: MontageMaterialStatus;
     materialClaimType?: MontageMaterialClaimType | null;

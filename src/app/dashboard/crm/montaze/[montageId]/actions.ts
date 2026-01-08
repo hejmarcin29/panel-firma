@@ -407,6 +407,7 @@ export async function addMontageAttachment(formData: FormData) {
     return { success: true, url };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function generateInPostLabel(montageId: string, deliveryData: any) {
     const user = await requireUser();
 
@@ -423,6 +424,7 @@ export async function generateInPostLabel(montageId: string, deliveryData: any) 
     const phone = montage.contactPhone || montage.customer?.phone || '000000000';
     
     // Parse deliveryData
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const delivery = deliveryData || (montage.sampleDelivery as any);
     
     if (!delivery) throw new Error("Brak danych dostawy");
@@ -506,7 +508,7 @@ export async function generateInPostLabel(montageId: string, deliveryData: any) 
         id: randomUUID(),
         montageId: montage.id,
         content: `Wygenerowano etykietę InPost (${shipment.tracking_number}). [Pobierz Etykietę](${labelUrl})`,
-        authorId: user.id,
+        createdBy: user.id,
     });
     
     revalidatePath(`/dashboard/crm/montaze/${montageId}`);

@@ -1,11 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Package, Loader2, FileText, ExternalLink } from 'lucide-react';
+import { Package, Loader2, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { generateInPostLabel } from '../actions';
-import { cn } from '@/lib/utils';
 import {
     Dialog,
     DialogContent,
@@ -18,6 +17,7 @@ import {
 
 interface InPostLabelGeneratorProps {
     montageId: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     sampleDelivery: any; // JSON
     sampleStatus: string | null;
 }

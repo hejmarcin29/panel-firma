@@ -1,11 +1,10 @@
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
-import { montages, users, commissions } from '@/lib/db/schema';
+import { montages, commissions } from '@/lib/db/schema';
 import { eq, and, not, desc, sum, sql } from 'drizzle-orm';
 import { formatCurrency } from '@/lib/utils';
 import Link from 'next/link';
 import { ArrowUpRight, Clock, MapPin, DollarSign, Wallet, ArrowRight, User } from 'lucide-react';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 export const dynamic = 'force-dynamic';
