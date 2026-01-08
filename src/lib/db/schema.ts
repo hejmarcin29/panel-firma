@@ -589,6 +589,16 @@ export const montages = pgTable(
 		forecastedInstallationDate: timestamp('forecasted_installation_date'),
 		status: text('status').$type<MontageStatus>().notNull().default('new_lead'),
         sampleStatus: text('sample_status').$type<MontageSampleStatus>().default('none'),
+        sampleDelivery: json('sample_delivery').$type<{
+            method: 'courier' | 'parcel_locker';
+            pointName?: string; // np. WAW24M
+            pointAddress?: string; // np. Marszałkowska 1, Warszawa
+            courierAddress?: {
+                street: string;
+                city: string;
+                postalCode: string;
+            };
+        }>(),
 		displayId: text('display_id'),
 		materialStatus: text('material_status').$type<MontageMaterialStatus>().notNull().default('none'),
         materialClaimType: text('material_claim_type').$type<MontageMaterialClaimType>(),

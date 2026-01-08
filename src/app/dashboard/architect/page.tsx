@@ -64,9 +64,9 @@ export default async function ArchitectDashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 
                 {/* 1. Wallet / Balance Card (Large) */}
-                <div className="md:col-span-2 relative overflow-hidden rounded-3xl bg-white border border-zinc-200 p-8 flex flex-col justify-between h-[300px] group hover:border-zinc-300 transition-colors shadow-sm">
+                <div className="md:col-span-2 relative overflow-hidden rounded-3xl bg-white border border-zinc-200 p-6 flex flex-col justify-between h-[300px] group hover:border-zinc-300 transition-colors shadow-sm">
                     {/* Background Noise/Gradient */}
-                    <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-indigo-50 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+                    <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-indigo-50 rounded-full blur-[120px] -translate-y-1/3 translate-x-1/4 pointer-events-none" />
                     
                     <div className="relative z-10 flex justify-between items-start">
                         <div className="flex items-center gap-2 p-2 bg-white/80 rounded-lg border border-zinc-200 backdrop-blur-sm">
@@ -95,7 +95,7 @@ export default async function ArchitectDashboardPage() {
                 </div>
 
                 {/* 2. Quick Action / Promo Card */}
-                <div className="md:col-span-1 rounded-3xl bg-linear-to-br from-indigo-600 to-violet-700 p-8 text-white flex flex-col justify-between h-[300px] shadow-xl shadow-indigo-900/10">
+                <div className="md:col-span-1 rounded-3xl bg-linear-to-br from-indigo-600 to-violet-700 p-6 text-white flex flex-col justify-between h-[300px] shadow-xl shadow-indigo-900/10">
                     <div>
                         <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-6">
                             <DollarSign className="h-6 w-6 text-white" />
@@ -113,7 +113,7 @@ export default async function ArchitectDashboardPage() {
                 </div>
 
                 {/* 3. Active Projects List */}
-                <div className="md:col-span-2 rounded-3xl bg-white border border-zinc-200 p-6 md:p-8 min-h-[300px] shadow-sm">
+                <div className="md:col-span-2 rounded-3xl bg-white border border-zinc-200 p-6 min-h-[300px] shadow-sm">
                      <div className="flex items-center justify-between mb-6">
                         <h3 className="text-xl font-semibold text-zinc-900">Aktywne Projekty</h3>
                         <Link href="/dashboard/crm/montaze" className="text-sm text-zinc-500 hover:text-zinc-900 flex items-center gap-1 transition-colors">
@@ -159,7 +159,7 @@ export default async function ArchitectDashboardPage() {
                 </div>
 
                 {/* 4. Contact / Assistant */}
-                <div className="md:col-span-1 rounded-3xl bg-white border border-zinc-200 p-6 md:p-8 flex flex-col justify-center items-center text-center shadow-sm">
+                <div className="md:col-span-1 rounded-3xl bg-white border border-zinc-200 p-6 flex flex-col justify-center items-center text-center shadow-sm">
                     <div className="h-20 w-20 rounded-full bg-linear-to-tr from-zinc-200 to-zinc-100 mb-4 p-1">
                         <div className="h-full w-full rounded-full bg-zinc-50 flex items-center justify-center overflow-hidden border border-zinc-100">
                             <User className="h-8 w-8 text-zinc-400" />

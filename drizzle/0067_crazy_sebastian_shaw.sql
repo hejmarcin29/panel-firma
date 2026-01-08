@@ -1,0 +1,1 @@
+ALTER TABLE "montages" ADD COLUMN "sample_delivery" json;

@@ -77,7 +77,7 @@ export default async function MontazePage(props: any) {
     };
 
     const statusDefinitions = await getMontageStatusDefinitions();
-    const statusOptions = statusDefinitions.map(def => ({
+    let statusOptions = statusDefinitions.map(def => ({
         value: def.id,
         label: def.label,
         description: def.description
@@ -262,6 +262,34 @@ export default async function MontazePage(props: any) {
         }
     }
 
+    // Filter statuses for Installer (restrict columns)
+    if (isOnlyInstaller) {
+        const installerVisibleStatuses: MontageStatus[] = [
+            'measurement_to_schedule',
+            'measurement_scheduled',
+            'measurement_done',
+            'installation_scheduled',
+            'installation_in_progress',
+            'protocol_signed',
+        ];
+        statusOptions = statusOptions.filter(s => installerVisibleStatuses.includes(s.value as MontageStatus));
+    }
+
+    // Filter statuses for Architect (restrict columns)
+    if (isOnlyArchitect) {
+        const architectVisibleStatuses: MontageStatus[] = [
+             'new_lead',
+             'measurement_scheduled',
+             'quote_sent', 
+             'quote_accepted',
+             'contract_signed',
+             'installation_scheduled',
+             'installation_in_progress',
+             'completed'
+        ];
+        statusOptions = statusOptions.filter(s => architectVisibleStatuses.includes(s.value as MontageStatus));
+    }
+
     // Filter status options based on view to show only relevant columns on the board
     let filteredStatusOptions = statusOptions;
     if (view === 'lead') {
@@ -327,7 +355,7 @@ export default async function MontazePage(props: any) {
             <div className="border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 z-10">
                 <div className="flex flex-col md:flex-row md:h-16 md:items-center px-4 py-3 md:py-0 sm:px-6 justify-between gap-3 md:gap-4">
                     <div className="flex items-center justify-between">
-                        <h1 className="text-lg font-semibold">Centrum Montaży</h1>
+                        <h1 className="text-lg font-semibold">{isOnlyArchitect ? 'Moje Projekty' : 'Centrum Montaży'}</h1>
                         <div className="flex items-center gap-2 md:hidden">
                             {!isOnlyArchitect && (
                                 <Button asChild size="sm" variant="outline" className="h-8 w-8 p-0 rounded-full">
