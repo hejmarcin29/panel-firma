@@ -98,6 +98,19 @@ export async function bulkUpdateUnit(ids: string[], unit: string) {
     await db.update(erpProducts)
         .set({ unit: unit, updatedAt: new Date() })
         .where(inArray(erpProducts.id, ids));
+        
+    revalidatePath('/dashboard/erp/products');
+}
+
+export async function bulkUpdateSampleStatus(ids: string[], isSample: boolean) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) throw new Error('Unauthorized');
+
+    if (ids.length === 0) return;
+
+    await db.update(erpProducts)
+        .set({ isSample: isSample, updatedAt: new Date() })
+        .where(inArray(erpProducts.id, ids));
 
     revalidatePath('/dashboard/erp/products');
 }

@@ -29,9 +29,9 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { bulkUpdateSyncStatus, bulkAssignCategory, bulkDeleteProducts } from "../actions";
+import { bulkUpdateSyncStatus, bulkAssignCategory, bulkDeleteProducts, bulkUpdateSampleStatus } from "../actions";
 import { toast } from "sonner";
-import { FolderInput, Trash2, DollarSign, Scale } from "lucide-react";
+import { FolderInput, Trash2, DollarSign, Scale, Package } from "lucide-react";
 import { BulkPriceDialog } from "./bulk-price-dialog";
 import { BulkUnitDialog } from "./bulk-unit-dialog";
 import { BulkSupplierDialog } from "./bulk-supplier-dialog";
@@ -174,6 +174,16 @@ export function ProductsTable({ data, categories, suppliers = [] }: ProductsTabl
         }
     };
 
+    const handleBulkSample = async (isSample: boolean) => {
+        try {
+            await bulkUpdateSampleStatus(selectedIds, isSample);
+            toast.success(isSample ? "Oznaczono jako próbki" : "Usunięto oznaczenie próbki");
+            setSelectedIds([]);
+        } catch {
+            toast.error("Błąd aktualizacji próbek");
+        }
+    };
+
     return (
         <div className="space-y-4">
             <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center bg-card p-4 rounded-lg border">
@@ -242,8 +252,24 @@ export function ProductsTable({ data, categories, suppliers = [] }: ProductsTabl
                             ))}
                         </DropdownMenuContent>
                     </DropdownMenu>
+                    
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button size="sm" variant="outline">
+                                <Package className="mr-2 h-4 w-4" /> Próbki
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start">
+                            <DropdownMenuItem onClick={() => handleBulkSample(true)}>
+                                Oznacz jako próbkę
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleBulkSample(false)}>
+                                Odznacz próbkę
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
 
-                    <BulkPriceDialog 
+                    <BulkPriceDialog  
                         selectedIds={selectedIds} 
                         suppliers={suppliers} 
                         onSuccess={() => setSelectedIds([])}
