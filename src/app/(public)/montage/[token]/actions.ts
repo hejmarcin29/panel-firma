@@ -36,7 +36,15 @@ export async function getAvailableSamples() {
     return samples;
 }
 
-export async function submitSampleRequest(token: string, productIds: string[]) {
+export async function submitSampleRequest(
+    token: string, 
+    productIds: string[],
+    delivery?: {
+        method: 'courier' | 'parcel_locker';
+        pointName?: string;
+        pointAddress?: string;
+    }
+) {
     // 1. Verify Token
     const montage = await getPublicMontage(token);
     if (!montage) throw new Error('Invalid token');
@@ -50,13 +58,20 @@ export async function submitSampleRequest(token: string, productIds: string[]) {
 
     // 3. Format Note
     const sampleList = selectedProducts.map(p => `- ${p.name} (${p.sku})`).join('\n');
-    // Note variable removed as it was unused individually, content used in additionalInfo
+    
+    let deliveryNote = '';
+    if (delivery?.method === 'parcel_locker') {
+        deliveryNote = `\n[DOSTAWA: PACZKOMAT] ${delivery.pointName} (${delivery.pointAddress})`;
+    } else {
+        deliveryNote = `\n[DOSTAWA: KURIER] (Na adres montażu)`;
+    }
 
     await db.update(montages)
         .set({
             status: 'lead_samples_pending',
             sampleStatus: 'to_send',
-            additionalInfo: sql`${montages.additionalInfo} || '\n\n[ZAMÓWIENIE PRÓBEK ' || to_char(now(), 'YYYY-MM-DD HH24:MI') || ']:\n' || ${sampleList}`,
+            sampleDelivery: delivery,
+            additionalInfo: sql`${montages.additionalInfo} || '\n\n[ZAMÓWIENIE PRÓBEK ' || to_char(now(), 'YYYY-MM-DD HH24:MI') || ']:\n' || ${sampleList} || ${deliveryNote}`,
             updatedAt: new Date()
         })
         .where(eq(montages.id, montage.id));
@@ -65,7 +80,7 @@ export async function submitSampleRequest(token: string, productIds: string[]) {
     await db.insert(systemLogs).values({
         id: randomUUID(),
         action: 'sample_request',
-        details: `Klient zamówił ${selectedProducts.length} próbek dla montażu ${montage.id}`,
+        details: `Klient zamówił ${selectedProducts.length} próbek dla montażu ${montage.id} (${delivery?.method === 'parcel_locker' ? 'Paczkomat' : 'Kurier'})`,
         createdAt: new Date()
     });
     
