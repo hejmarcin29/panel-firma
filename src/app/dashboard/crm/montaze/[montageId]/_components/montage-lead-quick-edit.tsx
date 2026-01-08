@@ -14,7 +14,7 @@ import { Link as LinkIcon, Copy } from "lucide-react";
 interface MontageLeadQuickEditProps {
     montageId: string;
     initialClientInfo: string | null;
-    initialEstimatedArea: number | null;
+    initialEstimatedArea: number | null | undefined;
 }
 
 export function MontageLeadQuickEdit({ montageId, initialClientInfo, initialEstimatedArea }: MontageLeadQuickEditProps) {

@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useJsonConfetti } from "@/hooks/use-json-confetti"; // Optional fun
 import { toast } from "sonner";
 import { submitSampleRequest } from "../actions";
 import { CheckCircle2, Package } from "lucide-react";

@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { eq, and, sql, ne, inArray, type SQL } from 'drizzle-orm';
 import { createTransport } from 'nodemailer';
+import { randomUUID } from 'crypto';
 
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';

@@ -36,6 +36,9 @@ export async function getAvailableSamples() {
     return samples;
 }
 
+import { sql } from 'drizzle-orm';
+import { randomUUID } from 'crypto';
+
 export async function submitSampleRequest(token: string, productIds: string[]) {
     // 1. Verify Token
     const montage = await getPublicMontage(token);
@@ -52,21 +55,6 @@ export async function submitSampleRequest(token: string, productIds: string[]) {
     const sampleList = selectedProducts.map(p => `- ${p.name} (${p.sku})`).join('\n');
     const note = `Klient zamówił próbki przez Magic Link:\n${sampleList}`;
 
-    // 4. Update Montage
-    // We append to materialDetails or create a system note. 
-    // Ideally we should use montageNotes but let's update materialDetails for now as per plan
-    // actually, creating a note is more appropriate for "Events".
-    // But status change update is key.
-    
-    // Let's create a Note via existing mechanism or direct insert?
-    // Direct insert to montageNotes is good, but I need authorId... 
-    // Since it's public (Client), authorId should be null or system?
-    // montageNotes authorId is nullable? Let's check schema.
-    
-    // Plan update: Just update materialDetails string for visibility in "Material Card"
-    
-    // We update status to lead_samples_pending and sampleStatus to to_send
-    
     await db.update(montages)
         .set({
             status: 'lead_samples_pending',
@@ -78,7 +66,7 @@ export async function submitSampleRequest(token: string, productIds: string[]) {
 
     // Log event (system user or null)
     await db.insert(systemLogs).values({
-        type: 'client_action',
+        id: randomUUID(),
         action: 'sample_request',
         details: `Klient zamówił ${selectedProducts.length} próbek dla montażu ${montage.id}`,
         createdAt: new Date()
@@ -87,4 +75,3 @@ export async function submitSampleRequest(token: string, productIds: string[]) {
     return { success: true };
 }
 
-import { sql } from 'drizzle-orm';
