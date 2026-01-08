@@ -230,7 +230,12 @@ export default async function MontazePage(props: any) {
             quotes: true,
         },
     });
-
+    // Fetch new leads count for navigation badge
+    const newLeadsCountRes = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(montages)
+        .where(eq(montages.status, 'new_lead'));
+    const newLeadsCount = Number(newLeadsCountRes[0]?.count ?? 0);
     const montagesList = montageRows.map(row => mapMontageRow(row as MontageRow, publicBaseUrl));
 
     // Ensure all used statuses are in statusOptions
@@ -326,6 +331,7 @@ export default async function MontazePage(props: any) {
                     statusOptions={filteredStatusOptions}
                     threatDays={threatDays}
                     alertSettings={alertSettings}
+                    newLeadsCount={newLeadsCount} // Added prop
                     headerAction={
                         <div className="flex gap-2">
                             <AddLeadModal />

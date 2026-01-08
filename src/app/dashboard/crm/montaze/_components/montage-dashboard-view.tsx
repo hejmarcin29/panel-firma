@@ -19,16 +19,17 @@ interface MontageDashboardViewProps {
   headerAction?: React.ReactNode;
   threatDays: number;
   alertSettings: AlertSettings;
+  newLeadsCount?: number;
 }
 
-export function MontageDashboardView({ montages, statusOptions, headerAction, threatDays, alertSettings }: MontageDashboardViewProps) {
+export function MontageDashboardView({ montages, statusOptions, headerAction, threatDays, alertSettings, newLeadsCount = 0 }: MontageDashboardViewProps) {
   const [view, setView] = useState<"board" | "list" | "calendar">("board");
 
   return (
     <div className="flex flex-col gap-4 h-full pt-4 md:pt-0">
       <div className="flex flex-col gap-4 px-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
-            <MontageViewTabs />
+            <MontageViewTabs newLeadsCount={newLeadsCount} />
             <div className="w-px h-6 bg-border mx-2 shrink-0" />
             <Tabs value={view} onValueChange={(v) => setView(v as "board" | "list" | "calendar")} className="w-auto">
                 <TabsList>
