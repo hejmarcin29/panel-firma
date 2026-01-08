@@ -89,3 +89,37 @@ export async function testWooConnection() {
 		return { success: false, message: `Wystąpił błąd: ${errorMessage}` };
 	}
 }
+export async function saveInPostSettings(formData: FormData) {
+	const user = await requireUser();
+
+	const orgId = formData.get('orgId') as string;
+	const token = formData.get('token') as string;
+	const sandbox = formData.get('sandbox') === 'true';
+
+	const settingsToUpdate = [
+		{ key: appSettingKeys.inpostOrgId, value: orgId },
+		{ key: appSettingKeys.inpostToken, value: token },
+		{ key: appSettingKeys.inpostSandbox, value: sandbox ? 'true' : 'false' },
+	];
+
+	for (const setting of settingsToUpdate) {
+		await db
+			.insert(appSettings)
+			.values({
+				key: setting.key,
+				value: setting.value || '',
+				updatedBy: user.id,
+				updatedAt: new Date(),
+			})
+			.onConflictDoUpdate({
+				target: appSettings.key,
+				set: {
+					value: setting.value || '',
+					updatedBy: user.id,
+					updatedAt: new Date(),
+				},
+			});
+	}
+
+	revalidatePath('/dashboard/settings');
+}

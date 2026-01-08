@@ -33,6 +33,7 @@ import { DensitySelector } from './_components/density-selector';
 import { MobileMenuItem } from './actions';
 import { WooSettingsForm } from './integrations/_components/woo-settings-form';
 import { GoogleCalendarSettingsForm } from './integrations/_components/google-calendar-settings-form';
+import { InPostSettingsForm } from './integrations/_components/inpost-settings-form';
 import { FluentFormsSettings } from './integrations/_components/fluent-forms-settings';
 import { WebFormsSettings } from './integrations/_components/web-forms-settings';
 import { TurnstileSettings } from './integrations/_components/turnstile-settings';
@@ -190,6 +191,9 @@ export default async function SettingsPage() {
         // companyLogoUrl, // removed unused
         cloudflareTurnstileSiteKey,
         cloudflareTurnstileSecretKey,
+        inpostOrgId,
+        inpostToken,
+        inpostSandbox,
 	] = await Promise.all([
 		getAppSetting(appSettingKeys.wooWebhookSecret),
 		getAppSetting(appSettingKeys.wooConsumerKey),
@@ -241,6 +245,9 @@ export default async function SettingsPage() {
         getAppSetting(appSettingKeys.companyLogoUrl),
         getAppSetting(appSettingKeys.cloudflareTurnstileSiteKey),
         getAppSetting(appSettingKeys.cloudflareTurnstileSecretKey),
+        getAppSetting(appSettingKeys.inpostOrgId),
+        getAppSetting(appSettingKeys.inpostToken),
+        getAppSetting(appSettingKeys.inpostSandbox),
 	]);
 
     const statusOptions = montageStatusDefinitions.map(def => ({
@@ -517,6 +524,7 @@ export default async function SettingsPage() {
 								<TabsTrigger value="mail" className="w-full justify-start border bg-background data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Poczta</TabsTrigger>
 								<TabsTrigger value="storage" className="w-full justify-start border bg-background data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Magazyn plików</TabsTrigger>
                                 <TabsTrigger value="fluent" className="w-full justify-start border bg-background data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Fluent Forms (WP)</TabsTrigger>
+                                <TabsTrigger value="inpost" className="w-full justify-start border bg-background data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">InPost</TabsTrigger>
 							</TabsList>
 						</div>
 
@@ -529,6 +537,7 @@ export default async function SettingsPage() {
 								<TabsTrigger value="storage">Magazyn plików</TabsTrigger>
                                 <TabsTrigger value="fluent">Fluent Forms</TabsTrigger>
                                 <TabsTrigger value="web-forms">Formularze WWW</TabsTrigger>
+                                <TabsTrigger value="inpost">InPost</TabsTrigger>
 							</TabsList>
 						</div>
 					</div>
@@ -614,6 +623,15 @@ export default async function SettingsPage() {
                             initialSecretKey={cloudflareTurnstileSecretKey ?? ''}
                         />
                         <WebFormsSettings siteKey={cloudflareTurnstileSiteKey ?? undefined} />
+                    </TabsContent>
+                    <TabsContent value="inpost">
+                        <InPostSettingsForm 
+                            initialSettings={{
+                                orgId: inpostOrgId ?? '',
+                                token: inpostToken ?? '',
+                                sandbox: inpostSandbox === 'true',
+                            }}
+                        />
                     </TabsContent>
 				</Tabs>
 			}
