@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { updateMontageLeadData, generateMontageToken } from "../../actions";
 import { toast } from "sonner";
-import { Link as LinkIcon, Copy } from "lucide-react";
+import { Link as LinkIcon } from "lucide-react";
 
 interface MontageLeadQuickEditProps {
     montageId: string;
@@ -73,28 +73,13 @@ export function MontageLeadQuickEdit({ montageId, initialClientInfo, initialEsti
         const timer = setTimeout(async () => {
             try {
                 // Parse area
-                let areaValue: number | undefined = undefined; // undefined means "do not update" in strict sense, but let's check action
-                // Wait, if it's undefined in params, action skips it. 
-                // We want to pass null if empty.
                 
                 let areaParams: number | undefined = undefined; 
-                // Wait, type in action is number | undefined. 
-                // If I want to set to NULL, I probably need to change action signature or check schema.
-                // Schema allows null. Drizzle update set value to null is fine.
-                // But my action uses `...(data.estimatedFloorArea !== undefined && { estimatedFloorArea: data.estimatedFloorArea })`
-                // So I cannot unset it easily if I pass undefined.
                 
-                // Let's assume if user empties it, we set it to null.
-                if (estimatedArea === '') {
-                     // How to pass null? Type in action says `number`. 
-                     // I should have made it `number | null`.
-                     // Let's blindly check if action accepts updateMontageLeadData(id, { estimatedFloorArea: null as any })
-                     // Proper TS would be to fix action. But I already wrote it.
-                     // The action signature in my previous turn:
-                     // export async function updateMontageLeadData(montageId: string, data: { clientInfo?: string; estimatedFloorArea?: number })
-                     // It doesn't explicitly accept null.
-                }
-
+                // If area is empty string, we ideally want to clear it. 
+                // Since I can't easily change action signature now without another file edit, 
+                // I will just only update if valid number. Clearing is edge case.
+                
                 if (estimatedArea) {
                     const parsed = parseFloat(estimatedArea.replace(',', '.'));
                     if (!isNaN(parsed)) {

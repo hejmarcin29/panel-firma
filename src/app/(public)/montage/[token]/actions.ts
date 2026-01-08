@@ -1,9 +1,9 @@
 'use server';
 
-import { eq, and } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { montages, erpProducts, systemLogs } from '@/lib/db/schema';
-import { revalidatePath } from 'next/cache';
+import { randomUUID } from 'crypto';
 
 export async function getPublicMontage(token: string) {
     const montage = await db.query.montages.findFirst({
@@ -53,7 +53,7 @@ export async function submitSampleRequest(token: string, productIds: string[]) {
 
     // 3. Format Note
     const sampleList = selectedProducts.map(p => `- ${p.name} (${p.sku})`).join('\n');
-    const note = `Klient zamówił próbki przez Magic Link:\n${sampleList}`;
+    // Note variable removed as it was unused individually, content used in additionalInfo
 
     await db.update(montages)
         .set({

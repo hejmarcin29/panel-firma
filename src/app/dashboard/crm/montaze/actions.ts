@@ -1324,7 +1324,7 @@ export async function generateMontageToken(montageId: string) {
 }
 
 export async function updateMontageLeadData(montageId: string, data: { clientInfo?: string; estimatedFloorArea?: number }) {
-    const user = await requireUser();
+    await requireUser();
     await db.update(montages)
         .set({ 
             ...(data.clientInfo !== undefined && { clientInfo: data.clientInfo }),

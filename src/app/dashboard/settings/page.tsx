@@ -187,7 +187,7 @@ export default async function SettingsPage() {
         smsToken,
         smsSenderName,
         requireInstallerForMeasurement,
-        companyLogoUrl,
+        // companyLogoUrl, // removed unused
         cloudflareTurnstileSiteKey,
         cloudflareTurnstileSecretKey,
 	] = await Promise.all([

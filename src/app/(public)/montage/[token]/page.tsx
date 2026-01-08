@@ -1,4 +1,3 @@
-import { notFound } from "next/navigation";
 import { getPublicMontage, getAvailableSamples } from "./actions";
 import { SampleSelector } from "./_components/sample-selector";
 
