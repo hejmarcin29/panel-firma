@@ -23,8 +23,11 @@ import { tryGetR2Config } from '@/lib/r2/config';
 import { getMontageStatusDefinitions } from '@/lib/montaze/statuses';
 import { PROCESS_STEPS } from '@/lib/montaze/process-definition';
 import { mapMontageRow, type MontageRow } from '../utils';
-import { uploadMontageObject } from '@/lib/r2/storage';
+import { uploadMontageObject, uploadShipmentLabel } from '@/lib/r2/storage';
 import { logSystemEvent } from '@/lib/logging';
+import { createShipment, getShipmentLabel } from '@/lib/inpost/client';
+import type { CreateShipmentRequest, InPostReceiver } from '@/lib/inpost/types';
+
 
 export async function getMontageDetails(montageId: string) {
     const user = await requireUser();
@@ -403,4 +406,112 @@ export async function addMontageAttachment(formData: FormData) {
     revalidatePath(`/dashboard/crm/montaze/${montageId}`);
     return { success: true, url };
 }
+
+export async function generateInPostLabel(montageId: string, deliveryData: any) {
+    const user = await requireUser();
+
+    // Fetch montage to verify/get email/phone
+    const montage = await db.query.montages.findFirst({
+        where: eq(montages.id, montageId),
+        with: { customer: true }
+    });
+
+    if (!montage) throw new Error('Montaż nie istnieje');
+
+    // Priority: deliveryData form > montage/customer data
+    const email = montage.contactEmail || montage.customer?.email || 'nieznany@klient.pl';
+    const phone = montage.contactPhone || montage.customer?.phone || '000000000';
+    
+    // Parse deliveryData
+    const delivery = deliveryData || (montage.sampleDelivery as any);
+    
+    if (!delivery) throw new Error("Brak danych dostawy");
+
+    // Construct Payload
+    const receiver: InPostReceiver = {
+        email: email,
+        phone: phone.replace(/\s+/g, '').replace(/-/g, '').substring(0, 9), // simple cleanup
+    };
+
+    let service: 'inpost_locker_standard' | 'inpost_courier_standard' = 'inpost_locker_standard';
+    let targetPoint = '';
+
+    if (delivery.pointName) {
+         // Paczkomat
+         service = 'inpost_locker_standard';
+         targetPoint = delivery.pointName;
+    } else {
+         // Courier
+         service = 'inpost_courier_standard';
+         // ShipX requires address for courier
+         receiver.address = {
+             street: delivery.street || montage.installationAddress || 'Ulica',
+             building_number: delivery.buildingNumber || '1',
+             city: delivery.city || montage.installationCity || 'Miasto',
+             post_code: delivery.postCode || montage.installationPostalCode || '00-000',
+             country_code: 'PL'
+         };
+    }
+
+    const payload: CreateShipmentRequest = {
+        receiver,
+        parcels: [{
+            template: 'small', // Default to small for samples
+        }],
+        service: service,
+        reference: `Montaż ${montage.clientName}`,
+        comments: `Próbki dla ${montage.clientName}`
+    };
+
+    if (targetPoint) {
+        payload.custom_attributes = {
+            target_point: targetPoint
+        };
+    }
+
+    // Call InPost
+    const shipment = await createShipment(payload);
+
+    // Get Label
+    // We try immediately. With ShipX specific logic, sometimes you need to wait, but usually instant for wrappers.
+    let pdfBuffer: ArrayBuffer;
+    try {
+        pdfBuffer = await getShipmentLabel(shipment.id);
+    } catch (e) {
+        throw new Error(`Przesyłka ${shipment.id} utworzona, ale błąd etykiety: ${(e as Error).message}`);
+    }
+
+    // Upload to R2
+    const fileName = `Etykieta_${shipment.tracking_number}.pdf`;
+    const labelUrl = await uploadShipmentLabel({
+        fileBuffer: Buffer.from(pdfBuffer),
+        fileName: fileName
+    });
+
+    // Update Montage with tracking info
+    const updatedDelivery = {
+        ...delivery,
+        trackingNumber: shipment.tracking_number,
+        labelUrl: labelUrl,
+        shipmentId: shipment.id
+    };
+
+    await db.update(montages).set({
+        sampleDelivery: updatedDelivery,
+        sampleStatus: 'sent'
+    }).where(eq(montages.id, montage.id));
+    
+    // Add Note
+    await db.insert(montageNotes).values({
+        id: randomUUID(),
+        montageId: montage.id,
+        content: `Wygenerowano etykietę InPost (${shipment.tracking_number}). [Pobierz Etykietę](${labelUrl})`,
+        authorId: user.id,
+    });
+    
+    revalidatePath(`/dashboard/crm/montaze/${montageId}`);
+
+    return { success: true, labelUrl, trackingNumber: shipment.tracking_number };
+}
+
 

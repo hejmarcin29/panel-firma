@@ -374,3 +374,37 @@ export async function uploadSignedContract({
     return `${config.publicBaseUrl}/${key}`;
 }
 
+export async function uploadShipmentLabel({
+    fileBuffer,
+    fileName,
+    contentType = 'application/pdf',
+}: {
+    fileBuffer: Buffer;
+    fileName: string;
+    contentType?: string;
+}): Promise<string> {
+    const config = await getR2Config();
+    const client = createR2Client(config);
+
+    // Save to a temporary folder
+    const key = `temp-labels/${Date.now()}_${fileName}`;
+
+    const command = new PutObjectCommand({
+        Bucket: config.bucketName,
+        Key: key,
+        Body: fileBuffer,
+        ContentType: contentType,
+    });
+
+    await client.send(command);
+
+    if (config.publicBaseUrl) {
+        // Construct public URL
+        const baseUrl = config.publicBaseUrl.replace(/\/$/, '');
+        return `${baseUrl}/${key}`;
+    }
+
+    // Fallback if no public URL configured
+    return key;
+}
+

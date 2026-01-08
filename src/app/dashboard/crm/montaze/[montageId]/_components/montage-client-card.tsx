@@ -39,6 +39,8 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { type UserRole, type MontageSampleStatus } from '@/lib/db/schema';
+import { InPostLabelGenerator } from './inpost-label-generator';
+
 
 export function MontageClientCard({ 
     montage, 
@@ -625,6 +627,14 @@ export function MontageClientCard({
                         <SelectItem value="returned">Próbki zwrócone</SelectItem>
                     </SelectContent>
                 </Select>
+            </div>
+            
+            <div className="pl-7">
+                <InPostLabelGenerator 
+                    montageId={montage.id}
+                    sampleDelivery={montage.sampleDelivery}
+                    sampleStatus={montage.sampleStatus}
+                />
             </div>
         </div>
 
