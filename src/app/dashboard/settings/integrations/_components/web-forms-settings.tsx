@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { Copy } from 'lucide-react';
 
-export function WebFormsSettings() {
+export function WebFormsSettings({ siteKey }: { siteKey?: string }) {
     const [origin, setOrigin] = useState('');
 
     useEffect(() => {
@@ -20,6 +20,13 @@ export function WebFormsSettings() {
 
     const getCode = () => {
         const apiUrl = `${origin}/api/leads`;
+        const turnstileWidget = siteKey 
+            ? `\n    <!-- Cloudflare Turnstile CAPTCHA -->\n    <div class="cf-turnstile" data-sitekey="${siteKey}" style="margin-bottom: 12px;"></div>`
+            : '';
+        const turnstileScript = siteKey
+            ? `\n\n<!-- Cloudflare Turnstile Script -->\n<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>`
+            : '';
+            
         return `<!-- Formularz Leadów CRM -->
 <div id="crm-lead-form" style="max-width: 400px; font-family: sans-serif;">
   <form onsubmit="submitCrmLead(event)">
@@ -51,12 +58,12 @@ export function WebFormsSettings() {
     <!-- Honeypot (Anty-SPAM) - ukryte pole, którego człowiek nie widzi, a bot wypełni -->
     <div style="display:none !important;" aria-hidden="true">
       <label>Nie wypełniaj tego pola<input type="text" name="_gotcha" tabindex="-1" autocomplete="off" /></label>
-    </div>
+    </div>${turnstileWidget}
 
     <button type="submit" style="background: #2563eb; color: #fff; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold;">Wyślij zgłoszenie</button>
   </form>
   <div id="crm-form-status" style="margin-top: 10px; display: none; padding: 10px; border-radius: 4px; text-align: center; font-size: 14px;"></div>
-</div>
+</div>${turnstileScript}
 
 <script>
 async function submitCrmLead(e) {
@@ -74,6 +81,12 @@ async function submitCrmLead(e) {
     message: form.message.value,
     _gotcha: form._gotcha.value // Honeypot
   };
+
+  // Turnstile token if present
+  const turnstileInput = form.querySelector('[name="cf-turnstile-response"]');
+  if (turnstileInput) {
+    data['cf-turnstile-response'] = turnstileInput.value;
+  }
   
   btn.disabled = true;
   btn.innerText = 'Wysyłanie...';
@@ -92,6 +105,10 @@ async function submitCrmLead(e) {
       status.style.backgroundColor = '#dcfce7';
       status.style.color = '#166534';
       form.reset();
+      // Reset Turnstile if exists
+      if (window.turnstile) {
+        window.turnstile.reset();
+      }
     } else {
       status.innerText = 'Błąd: ' + (json.message || 'Spróbuj ponownie.');
       status.style.backgroundColor = '#fee2e2';

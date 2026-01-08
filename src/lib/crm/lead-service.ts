@@ -79,62 +79,48 @@ export async function createLeadCore(data: CreateLeadData): Promise<LeadCreation
         const normalizedPhone = data.contactPhone?.trim() || null;
         let customerId = data.existingCustomerId;
 
-        // If no existing customer ID provided, check for duplicates
+        // If no existing customer ID provided, check for duplicates (and reuse if found)
         if (!customerId) {
-            // Check if customer with this email already exists
+            // Priority 1: Check by Email
             if (normalizedEmail) {
                 const existingCustomer = await db.query.customers.findFirst({
                     where: (table, { eq }) => eq(table.email, normalizedEmail),
                 });
 
                 if (existingCustomer) {
-                    return { 
-                        success: false, 
-                        status: 'duplicate_found',
-                        existingCustomer: {
-                            id: existingCustomer.id,
-                            name: existingCustomer.name,
-                            email: existingCustomer.email,
-                            phone: existingCustomer.phone
-                        },
-                        message: `Klient o adresie email ${normalizedEmail} już istnieje w bazie.` 
-                    };
+                    customerId = existingCustomer.id;
                 }
             }
 
-            // Check if customer with this phone already exists
-            if (normalizedPhone) {
+            // Priority 2: Check by Phone (only if not found by email)
+            if (!customerId && normalizedPhone) {
+                // Remove formatting for search if needed, but assuming DB has raw format or we search strictly
+                // For better matching, ideally we should store normalized phones. 
+                // For now, we search exact match.
                 const existingCustomer = await db.query.customers.findFirst({
                     where: (table, { eq }) => eq(table.phone, normalizedPhone),
                 });
 
                 if (existingCustomer) {
-                    return { 
-                        success: false, 
-                        status: 'duplicate_found',
-                        existingCustomer: {
-                            id: existingCustomer.id,
-                            name: existingCustomer.name,
-                            email: existingCustomer.email,
-                            phone: existingCustomer.phone
-                        },
-                        message: `Klient o numerze telefonu ${normalizedPhone} już istnieje w bazie.` 
-                    };
+                    customerId = existingCustomer.id;
                 }
             }
 
-            // Create new customer record if no duplicate found
-            customerId = crypto.randomUUID();
-            await db.insert(customers).values({
-                id: customerId,
-                name: trimmedName,
-                phone: normalizedPhone,
-                email: normalizedEmail,
-                source: data.source || 'other',
-                architectId: data.architectId || null,
-                createdAt: now,
-                updatedAt: now,
-            });
+            // Create new customer record ONLY if not found
+            if (!customerId) {
+                customerId = crypto.randomUUID();
+                await db.insert(customers).values({
+                    id: customerId,
+                    name: trimmedName,
+                    phone: normalizedPhone,
+                    email: normalizedEmail,
+                    source: data.source || 'other',
+                    architectId: data.architectId || null,
+                    createdAt: now,
+                    updatedAt: now,
+                });
+            }
+            // If found, we just proceed using the found customerId
         }
 
         await db.insert(montages).values({

@@ -35,6 +35,7 @@ import { WooSettingsForm } from './integrations/_components/woo-settings-form';
 import { GoogleCalendarSettingsForm } from './integrations/_components/google-calendar-settings-form';
 import { FluentFormsSettings } from './integrations/_components/fluent-forms-settings';
 import { WebFormsSettings } from './integrations/_components/web-forms-settings';
+import { TurnstileSettings } from './integrations/_components/turnstile-settings';
 import { getFluentFormsSecret } from './integrations/fluent-actions';
 import { IntegrationLogs } from './integrations/_components/integration-logs';
 import { WpChangesSettings } from './_components/wp-changes-settings';
@@ -607,8 +608,12 @@ export default async function SettingsPage() {
                             baseUrl={process.env.NEXT_PUBLIC_APP_URL ?? 'https://twoja-domena.pl'} 
                         />
                     </TabsContent>
-                    <TabsContent value="web-forms">
-                        <WebFormsSettings />
+                    <TabsContent value="web-forms" className="space-y-6">
+                        <TurnstileSettings 
+                            initialSiteKey={cloudflareTurnstileSiteKey ?? ''}
+                            initialSecretKey={cloudflareTurnstileSecretKey ?? ''}
+                        />
+                        <WebFormsSettings siteKey={cloudflareTurnstileSiteKey ?? undefined} />
                     </TabsContent>
 				</Tabs>
 			}
