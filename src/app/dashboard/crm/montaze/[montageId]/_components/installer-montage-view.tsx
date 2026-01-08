@@ -164,80 +164,52 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
                     <div className="space-y-6">
                         {/* 1. Task-Driven Actions (Top Priority) */}
                         
-                        {/* SCENARIO A: New Lead / Contact Attempt */}
-                        {(montage.status === 'new_lead' || montage.status === 'contact_attempt') && (
+                        {/* SCENARIO A: Measurement To Schedule (Inbox for Installer) */}
+                        {montage.status === 'measurement_to_schedule' && (
                             <Card className="border-l-4 border-l-orange-500 shadow-md bg-orange-50/50">
                                 <CardHeader>
-                                    <CardTitle className="text-lg text-orange-900">Wymagane Akcje: Kontakt</CardTitle>
+                                    <CardTitle className="text-lg text-orange-900">Wymagane Akcje: Kontakt & Termin</CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex items-center justify-center w-10 h-10 rounded-full border-2 bg-white border-orange-500 text-orange-700">
-                                            <Phone className="w-5 h-5" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <h4 className="font-semibold text-base">Skontaktuj się z Klientem</h4>
-                                            <p className="text-sm text-muted-foreground">Zadzwoń, aby umówić termin pomiaru.</p>
-                                        </div>
-                                        <div className="flex flex-col gap-2 sm:flex-row">
-                                            <Button 
-                                                variant="outline" 
-                                                onClick={async () => {
-                                                    toast.promise(updateMontageStatus({ montageId: montage.id, status: 'contact_attempt' }), {
-                                                        loading: 'Zapisywanie...',
-                                                        success: 'Zanotowano próbę kontaktu',
-                                                        error: 'Błąd'
-                                                    });
-                                                }}
-                                            >
-                                                Nie odbiera
-                                            </Button>
-                                            <Button 
-                                                className="bg-orange-600 hover:bg-orange-700 text-white"
-                                                onClick={async () => {
-                                                    toast.promise(updateMontageStatus({ montageId: montage.id, status: 'contact_established' }), {
-                                                        loading: 'Zapisywanie...',
-                                                        success: 'Kontakt nawiązany!',
-                                                        error: 'Błąd'
-                                                    });
-                                                }}
-                                            >
-                                                Kontakt Nawiązany
+                                    <div className="flex flex-col gap-4">
+                                        <div className="flex items-center gap-4">
+                                            <div className="flex items-center justify-center w-10 h-10 rounded-full border-2 bg-white border-orange-500 text-orange-700">
+                                                <Phone className="w-5 h-5" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <h4 className="font-semibold text-base">Zadzwoń do Klienta</h4>
+                                                <p className="text-sm text-muted-foreground">Ustal dogodny termin pomiaru.</p>
+                                            </div>
+                                            <Button variant="outline" asChild>
+                                                <a href={`tel:${montage.contactPhone}`}>
+                                                    <Phone className="mr-2 h-4 w-4" />
+                                                    {montage.contactPhone || 'Brak numeru'}
+                                                </a>
                                             </Button>
                                         </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        )}
 
-                        {/* SCENARIO B: Contact Established -> Schedule Measurement */}
-                        {montage.status === 'contact_established' && (
-                            <Card className="border-l-4 border-l-blue-500 shadow-md bg-blue-50/50">
-                                <CardHeader>
-                                    <CardTitle className="text-lg text-blue-900">Wymagane Akcje: Termin</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex items-center justify-center w-10 h-10 rounded-full border-2 bg-white border-blue-500 text-blue-700">
-                                            <CalendarIcon className="w-5 h-5" />
+                                        <div className="flex items-center gap-4 border-t border-orange-200 pt-4">
+                                            <div className="flex items-center justify-center w-10 h-10 rounded-full border-2 bg-white border-orange-500 text-orange-700">
+                                                <CalendarIcon className="w-5 h-5" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <h4 className="font-semibold text-base">Zapisz Termin</h4>
+                                                <p className="text-sm text-muted-foreground">Kiedy odbędzie się pomiar?</p>
+                                            </div>
+                                            <MeasurementDateSelector 
+                                                currentDate={montage.measurementDate ? new Date(montage.measurementDate) : null}
+                                                onSelect={async (date) => {
+                                                    toast.promise(async () => {
+                                                        await updateMontageMeasurementDate(montage.id, date);
+                                                        await updateMontageStatus({ montageId: montage.id, status: 'measurement_scheduled' });
+                                                    }, {
+                                                        loading: 'Zapisywanie terminu...',
+                                                        success: 'Termin zapisany! Przechodzę do etapu pomiaru.',
+                                                        error: 'Błąd zapisu'
+                                                    });
+                                                }}
+                                            />
                                         </div>
-                                        <div className="flex-1">
-                                            <h4 className="font-semibold text-base">Umów Termin Pomiaru</h4>
-                                            <p className="text-sm text-muted-foreground">Wybierz datę ustaloną z klientem.</p>
-                                        </div>
-                                        <MeasurementDateSelector 
-                                            currentDate={montage.measurementDate ? new Date(montage.measurementDate) : null}
-                                            onSelect={async (date) => {
-                                                toast.promise(async () => {
-                                                    await updateMontageMeasurementDate(montage.id, date);
-                                                    await updateMontageStatus({ montageId: montage.id, status: 'measurement_scheduled' });
-                                                }, {
-                                                    loading: 'Zapisywanie terminu...',
-                                                    success: 'Termin zapisany! Przechodzę do etapu pomiaru.',
-                                                    error: 'Błąd zapisu'
-                                                });
-                                            }}
-                                        />
                                     </div>
                                 </CardContent>
                             </Card>

@@ -45,6 +45,21 @@ const formatCurrency = (val: number) => {
      return new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(val);
 }
 
+const getInstallationMethod = (product: Product): 'CLICK' | 'KLEJONE' | null => {
+    // 1. Check Category Name
+    const catName = (product.category?.name || product.categories?.[0]?.name || '').toLowerCase();
+    if (catName.includes('click') || catName.includes('klik')) return 'CLICK';
+    if (catName.includes('klej') || catName.includes('dryback')) return 'KLEJONE';
+
+    // 2. Check Product Name
+    const name = product.name.toLowerCase();
+    if (name.includes('click') || name.includes('5g') || name.includes('2g')) return 'CLICK';
+    if (name.includes('klej') || name.includes('dryback')) return 'KLEJONE';
+
+    // 3. Fallback or specific rules
+    return null;
+}
+
 export default function ShowroomPage() {
     const { user } = useUser();
     const [products, setProducts] = useState<Product[]>([]);
@@ -187,6 +202,16 @@ export default function ShowroomPage() {
                                         className="h-full flex flex-col"
                                     >
                                         <div className="group relative aspect-4/5 overflow-hidden rounded-xl bg-zinc-100 mb-4 shadow-sm hover:shadow-md transition-all">
+                                            {getInstallationMethod(product) && (
+                                                <div className={cn(
+                                                    "absolute top-3 left-3 px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md shadow-sm z-20 backdrop-blur-md border",
+                                                    getInstallationMethod(product) === 'CLICK' 
+                                                        ? "bg-amber-50/90 text-amber-900 border-amber-200" 
+                                                        : "bg-blue-50/90 text-blue-900 border-blue-200"
+                                                )}>
+                                                    {getInstallationMethod(product)}
+                                                </div>
+                                            )}
                                             {product.imageUrl ? (
                                                 <Image
                                                     src={product.imageUrl}

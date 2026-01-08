@@ -1298,6 +1298,19 @@ export async function updateMontageClientInfo(montageId: string, clientInfo: str
     revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
 
+export async function updateMontageLeadData(montageId: string, data: { clientInfo?: string; estimatedFloorArea?: number }) {
+    const user = await requireUser();
+    await db.update(montages)
+        .set({ 
+            ...(data.clientInfo !== undefined && { clientInfo: data.clientInfo }),
+            ...(data.estimatedFloorArea !== undefined && { estimatedFloorArea: data.estimatedFloorArea }),
+            updatedAt: new Date() 
+        })
+        .where(eq(montages.id, montageId));
+    
+    revalidatePath(MONTAGE_DASHBOARD_PATH);
+}
+
 export async function updateMontageMeasurementDate(montageId: string, date: Date | null) {
     const user = await requireUser();
     
@@ -2584,7 +2597,9 @@ export async function assignMeasurerAndAdvance(montageId: string, measurerId: st
     const user = await requireUser();
     const montage = await getMontageOrThrow(montageId);
 
-    if (montage.status !== 'new_lead') {
+    // Allow conversion from any Lead Phase status
+    const LEAD_PHASE_STATUSES = ['new_lead', 'lead_contact', 'lead_samples_pending', 'lead_samples_sent', 'lead_pre_estimate'];
+    if (!LEAD_PHASE_STATUSES.includes(montage.status)) {
         throw new Error('Tylko leady mogą być przekazywane do pomiaru.');
     }
 
@@ -2592,7 +2607,7 @@ export async function assignMeasurerAndAdvance(montageId: string, measurerId: st
     await db.update(montages)
         .set({
             measurerId: measurerId,
-            status: 'contact_attempt', // "Do umówienia"
+            status: 'measurement_to_schedule', // INBOX MONTAŻYSTY
             updatedAt: new Date(),
         })
         .where(eq(montages.id, montageId));

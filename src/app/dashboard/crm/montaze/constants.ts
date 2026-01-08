@@ -8,39 +8,44 @@ type StatusLabelConfig = {
 };
 
 export const statusLabels: Record<MontageStatus, StatusLabelConfig> = {
-    // 1. LEJKI
+    // 1. LEJKI (SPRZEDAŻ)
     new_lead: { label: 'Nowe Zgłoszenie', description: 'Klient czeka na pierwszy kontakt' },
-    contact_attempt: { label: 'Próba Kontaktu', description: 'Podjęto próbę kontaktu z klientem' },
-    contact_established: { label: 'Kontakt Nawiązany', description: 'Rozmowa przeprowadzona, ustalanie szczegółów' },
+    lead_contact: { label: 'W Kontakcie', description: 'Negocjacje w toku / Ustalanie potrzeb' },
+    lead_samples_pending: { label: 'Wysłano Link (Próbki)', description: 'Czekamy na wybór próbek przez klienta' },
+    lead_samples_sent: { label: 'Próbki Wysłane', description: 'Próbki fizycznie wysłane do klienta' },
+    lead_pre_estimate: { label: 'Wstępna Wycena', description: 'Wysłano szacunkowy kosztorys' },
+    
+    // 2. PRZEKAZANIE
+    measurement_to_schedule: { label: 'Do Umówienia', description: 'Oczekuje na telefon od montażysty' },
     measurement_scheduled: { label: 'Pomiar Umówiony', description: 'Termin pomiaru został ustalony' },
     
-    // 2. WYCENA
-    measurement_done: { label: 'Po Pomiarze', description: 'Pomiar wykonany, dane w systemie' },
-    quote_in_progress: { label: 'Wycena w Toku', description: 'Trwa przygotowywanie oferty' },
+    // 3. WYCENA (PO POMIARZE)
+    measurement_done: { label: 'Po Pomiarze', description: 'Pomiar wykonany, raport w systemie' },
+    quote_in_progress: { label: 'Wycena w Toku', description: 'Trwa przygotowywanie oferty końcowej' },
     quote_sent: { label: 'Oferta Wysłana', description: 'Oferta wysłana do klienta' },
     quote_accepted: { label: 'Oferta Zaakceptowana', description: 'Klient zaakceptował warunki' },
     
-    // 3. FORMALNOŚCI
+    // 4. FORMALNOŚCI
     contract_signed: { label: 'Umowa Podpisana', description: 'Umowa została podpisana' },
     waiting_for_deposit: { label: 'Oczekiwanie na Zaliczkę', description: 'Czekamy na wpłatę zaliczki' },
     deposit_paid: { label: 'Zaliczka Opłacona', description: 'Zaliczka zaksięgowana' },
     
-    // 4. LOGISTYKA
+    // 5. LOGISTYKA
     materials_ordered: { label: 'Materiały Zamówione', description: 'Zamówienie wysłane do dostawcy' },
     materials_pickup_ready: { label: 'Gotowe do Odbioru', description: 'Towar czeka na odbiór' },
     installation_scheduled: { label: 'Montaż Zaplanowany', description: 'Termin montażu potwierdzony' },
     materials_delivered: { label: 'Materiały u Klienta', description: 'Towar dostarczony na miejsce' },
     
-    // 5. REALIZACJA
+    // 6. REALIZACJA
     installation_in_progress: { label: 'Montaż w Toku', description: 'Prace montażowe w trakcie' },
     protocol_signed: { label: 'Protokół Podpisany', description: 'Protokół odbioru podpisany' },
     
-    // 6. FINISZ
+    // 7. FINISZ
     final_invoice_issued: { label: 'Faktura Końcowa', description: 'Wystawiono fakturę końcową' },
     final_settlement: { label: 'Rozliczenie Końcowe', description: 'Wszystkie płatności uregulowane' },
     completed: { label: 'Zakończone', description: 'Zlecenie zamknięte' },
     
-    // 7. SPECJALNE
+    // 8. STANY SPECJALNE
     on_hold: { label: 'Wstrzymane', description: 'Realizacja wstrzymana' },
     rejected: { label: 'Odrzucone', description: 'Zlecenie odrzucone' },
     complaint: { label: 'Reklamacja', description: 'Zgłoszono reklamację' },

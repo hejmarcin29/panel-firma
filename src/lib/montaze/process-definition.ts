@@ -35,13 +35,31 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
         actor: 'office', 
         automations: [
             { id: 'auto_lead_notification', label: 'Powiadomienie Biura', description: 'Email/SMS do biura o nowym leadzie', trigger: 'Nowy rekord' },
-            { id: 'auto_assign_measurer', label: 'Przypisanie Pomiarowca', description: 'Przypisanie osoby zmienia status na "Do umówienia"', trigger: 'Przypisanie w panelu' },
-            { id: 'auto_client_data', label: 'Uzupełnienie Danych', description: 'Klient wpisał adres -> zmiana na "Pomiar Umówiony" (Self-service)', trigger: 'Formularz w panelu' }
         ], 
         checkpoints: [] 
     },
-    { id: 'contact_attempt', label: 'Do umówienia', description: 'Oczekiwanie na kontakt telefoniczny i ustalenie terminu.', relatedStatuses: ['contact_attempt'], actor: 'installer', automations: [], checkpoints: [] },
-    { id: 'contact_established', label: 'Kontakt Nawiązany', description: 'Rozmawialiśmy, ustalamy co dalej.', relatedStatuses: ['contact_established'], actor: 'office', automations: [], checkpoints: [] },
+    { 
+        id: 'lead_active', 
+        label: 'Proces Handlowy', 
+        description: 'Kontakt, próbki, wstępna wycena.', 
+        relatedStatuses: ['lead_contact', 'lead_samples_pending', 'lead_samples_sent', 'lead_pre_estimate'], 
+        actor: 'office', 
+        automations: [
+             { id: 'auto_magic_link', label: 'Magic Link', description: 'Wysłanie linku do próbek', trigger: 'Ręcznie' }
+        ], 
+        checkpoints: [] 
+    },
+    { 
+        id: 'measurement_to_schedule', 
+        label: 'Do umówienia', 
+        description: 'Zlecono pomiar, montażysta dzwoni.', 
+        relatedStatuses: ['measurement_to_schedule'], 
+        actor: 'installer', 
+        automations: [
+            { id: 'auto_installer_notif', label: 'Powiadomienie Montażysty', description: 'SMS: Nowy klient do umówienia', trigger: 'Zmiana statusu' }
+        ], 
+        checkpoints: [] 
+    },
     { 
         id: 'measurement_scheduled', 
         label: 'Pomiar Umówiony', 

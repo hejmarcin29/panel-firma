@@ -67,33 +67,44 @@ export type MailFolderKind = (typeof mailFolderKinds)[number];
 export type MailAccountStatus = (typeof mailAccountStatuses)[number];
 
 export const montageStatuses = [
-    // 1. LEJKI
+    // 1. LEJKI (SPRZEDAŻ)
     'new_lead',
-    'contact_attempt',
-    'contact_established',
-    'measurement_scheduled',
-    // 2. WYCENA
+    'lead_contact',        // dzwoniliśmy, klient myśli
+    'lead_samples_pending',// link wysłany, czekamy na wybór
+    'lead_samples_sent',   // próbki wysłane fizycznie
+    'lead_pre_estimate',   // wstępna wycena (opcjonalnie)
+    
+    // 2. PRZEKAZANIE
+    'measurement_to_schedule', // INBOX MONTAŻYSTY (Handlowiec zlecił)
+    'measurement_scheduled',   // TERMIN USTALONY
+
+    // 3. WYCENA (PO POMIARZE)
     'measurement_done',
     'quote_in_progress',
     'quote_sent',
     'quote_accepted',
-    // 3. FORMALNOŚCI
+    
+    // 4. FORMALNOŚCI
     'contract_signed',
     'waiting_for_deposit',
     'deposit_paid',
-    // 4. LOGISTYKA
+    
+    // 5. LOGISTYKA
     'materials_ordered',
     'materials_pickup_ready',
     'installation_scheduled',
     'materials_delivered',
-    // 5. REALIZACJA
+    
+    // 6. REALIZACJA
     'installation_in_progress',
     'protocol_signed',
-    // 6. FINISZ
+    
+    // 7. FINISZ
     'final_invoice_issued',
     'final_settlement',
     'completed',
-    // 7. STANY SPECJALNE
+    
+    // 8. STANY SPECJALNE
     'on_hold',
     'rejected',
     'complaint'
@@ -1617,6 +1628,9 @@ export const erpProducts = pgTable('erp_products', {
     
     // Type
     type: text('type').default('product'), // product, service
+
+    // Samples
+    isSample: boolean('is_sample').default(false), // Flag if product is available as sample
     
     // Status
     status: text('status').default('active'), // active, archived

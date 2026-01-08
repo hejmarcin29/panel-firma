@@ -234,8 +234,14 @@ export async function getDashboardStats(publicBaseUrl: string | null): Promise<D
 
     // KPI breakdown for New Leads
     const newCount = allMontages.filter(m => m.status === 'new_lead').length;
-    const attemptCount = allMontages.filter(m => m.status === 'contact_attempt').length;
-    const establishedCount = allMontages.filter(m => m.status === 'contact_established').length;
+    
+    // attempt -> 'lead_contact' (Kontakt / Negocjacje)
+    const attemptCount = allMontages.filter(m => m.status === 'lead_contact').length;
+    
+    // established -> 'lead_samples*' or 'lead_pre_estimate' (Zaawansowane leady)
+    const establishedCount = allMontages.filter(m => 
+        ['lead_samples_pending', 'lead_samples_sent', 'lead_pre_estimate'].includes(m.status)
+    ).length;
     
     // Total count for backward compatibility or general "Leads" count if needed
     // However, the user wants separation. We will keep newLeadsCount as the sum for now

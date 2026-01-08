@@ -32,7 +32,7 @@ import { MontageHistoryTab } from './_components/montage-history-tab';
 import { MontageMeasurementTab } from '../_components/montage-measurement-tab';
 import { MontageSettlementTab } from '../_components/montage-settlement-tab';
 import { MontageQuotes } from './_components/montage-quotes';
-import { MontageClientInfo } from './_components/montage-client-info';
+import { MontageLeadQuickEdit } from './_components/montage-lead-quick-edit';
 
 import { MontageDetailsLayout } from './_components/montage-details-layout';
 import { ConvertLeadDialog } from './_components/convert-lead-dialog';
@@ -80,7 +80,9 @@ export function MontageView({ montageId, initialData, portalEnabled, requireInst
         return <InstallerMontageView montage={montage} logs={logs} userRoles={userRoles} hasGoogleCalendar={hasGoogleCalendar} />;
     }
 
-    if (montage.status === 'new_lead') {
+    const LEAD_PHASE_STATUSES = ['new_lead', 'lead_contact', 'lead_samples_pending', 'lead_samples_sent', 'lead_pre_estimate'];
+
+    if (LEAD_PHASE_STATUSES.includes(montage.status)) {
         return (
              <div className="flex min-h-screen flex-col bg-muted/10">
                 <div className="p-4 md:p-6 space-y-6 max-w-5xl mx-auto w-full">
@@ -100,7 +102,7 @@ export function MontageView({ montageId, initialData, portalEnabled, requireInst
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
                             <h1 className="text-2xl font-bold">{montage.clientName}</h1>
-                            <p className="text-muted-foreground">Nowy Lead - Weryfikacja</p>
+                            <p className="text-muted-foreground">Panel Handlowy (Lead)</p>
                         </div>
                         <div className="flex items-center gap-2">
                             <AlertDialog>
@@ -143,7 +145,7 @@ export function MontageView({ montageId, initialData, portalEnabled, requireInst
                             <MontageMaterialCard montage={montage} userRoles={userRoles} />
                         </div>
                         <div className="space-y-6">
-                             <MontageClientInfo montageId={montage.id} initialContent={montage.clientInfo} />
+                             <MontageLeadQuickEdit montageId={montage.id} initialClientInfo={montage.clientInfo} initialEstimatedArea={montage.estimatedFloorArea} />
                              <div className="bg-card rounded-xl border shadow-sm p-6">
                                 <h3 className="font-semibold mb-4">Notatki</h3>
                                 <MontageNotesTab montage={montage} userRoles={userRoles} />
@@ -195,7 +197,7 @@ export function MontageView({ montageId, initialData, portalEnabled, requireInst
                         )}
 
                         {/* Client Requirements (Lead) */}
-                        <MontageClientInfo montageId={montage.id} initialContent={montage.clientInfo} />
+                        <MontageLeadQuickEdit montageId={montage.id} initialClientInfo={montage.clientInfo} initialEstimatedArea={montage.estimatedFloorArea} />
                     </div>
                 }
                 defaultTab={activeTab}

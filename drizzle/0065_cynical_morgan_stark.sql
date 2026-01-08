@@ -1,0 +1,1 @@
+ALTER TABLE "erp_products" ADD COLUMN "is_sample" boolean DEFAULT false;

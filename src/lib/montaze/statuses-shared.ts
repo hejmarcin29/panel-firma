@@ -8,26 +8,31 @@ export type MontageStatusDefinition = {
 };
 
 export const DEFAULT_STATUSES: MontageStatusDefinition[] = [
-    // 1. LEJKI
-    { id: 'new_lead', label: 'Nowe Zgłoszenie', description: 'Wpadło, nikt nie dzwonił.', order: 1, group: 'Lejki', isSystem: true },
-    { id: 'contact_attempt', label: 'Do umówienia', description: 'Zlecono pomiar, oczekuje na kontakt z klientem.', order: 2, group: 'Lejki', isSystem: true },
-    { id: 'contact_established', label: 'Kontakt Nawiązany', description: 'Rozmawialiśmy, ustalamy co dalej.', order: 3, group: 'Lejki', isSystem: true },
-    { id: 'measurement_scheduled', label: 'Pomiar Umówiony', description: 'Jest data w kalendarzu.', order: 4, group: 'Lejki', isSystem: true },
+    // 1. LEJKI (SPRZEDAŻ)
+    { id: 'new_lead', label: 'Nowe Zgłoszenie', description: 'Wpadło, nikt nie dzwonił.', order: 1, group: 'Leady', isSystem: true },
+    { id: 'lead_contact', label: 'W Kontakcie', description: 'Negocjacje, badanie potrzeb.', order: 2, group: 'Leady', isSystem: true },
+    { id: 'lead_samples_pending', label: 'Wysłano Link', description: 'Czekamy na wybór próbek.', order: 3, group: 'Leady', isSystem: true },
+    { id: 'lead_samples_sent', label: 'Próbki Wysłane', description: 'Paczka w drodze.', order: 4, group: 'Leady', isSystem: true },
+    { id: 'lead_pre_estimate', label: 'Wstępna Wycena', description: 'Klient zna widełki.', order: 5, group: 'Leady', isSystem: true },
+
+    // 2. PRZEKAZANIE (REALIZACJA START)
+    { id: 'measurement_to_schedule', label: 'Do Umówienia', description: 'Zlecono pomiar, montażysta dzwoni.', order: 6, group: 'Realizacja', isSystem: true },
+    { id: 'measurement_scheduled', label: 'Pomiar Umówiony', description: 'Jest data w kalendarzu.', order: 7, group: 'Realizacja', isSystem: true },
 
     // 2. WYCENA
-    { id: 'measurement_done', label: 'Po Pomiarze', description: 'Montażysta był, ale brak wyceny.', order: 5, group: 'Wycena', isSystem: true },
-    { id: 'quote_in_progress', label: 'Wycena w Toku', description: 'Liczymy, sprawdzamy dostępność.', order: 6, group: 'Wycena', isSystem: true },
-    { id: 'quote_sent', label: 'Oferta Wysłana', description: 'Klient ma maila, czekamy.', order: 7, group: 'Wycena', isSystem: true },
-    { id: 'quote_accepted', label: 'Oferta Zaakceptowana', description: 'Klient powiedział TAK, ale brak papierów.', order: 8, group: 'Wycena', isSystem: true },
+    { id: 'measurement_done', label: 'Po Pomiarze', description: 'Montażysta był, ale brak wyceny.', order: 8, group: 'Wycena', isSystem: true },
+    { id: 'quote_in_progress', label: 'Wycena w Toku', description: 'Liczymy, sprawdzamy dostępność.', order: 9, group: 'Wycena', isSystem: true },
+    { id: 'quote_sent', label: 'Oferta Wysłana', description: 'Klient ma maila, czekamy.', order: 10, group: 'Wycena', isSystem: true },
+    { id: 'quote_accepted', label: 'Oferta Zaakceptowana', description: 'Klient powiedział TAK, ale brak papierów.', order: 11, group: 'Wycena', isSystem: true },
 
     // 3. FORMALNOŚCI
-    { id: 'contract_signed', label: 'Umowa Podpisana', description: 'Jest podpis na umowie.', order: 9, group: 'Formalności', isSystem: true },
-    { id: 'waiting_for_deposit', label: 'Oczekiwanie na Zaliczkę', description: 'Faktura zaliczkowa wysłana.', order: 10, group: 'Formalności', isSystem: true },
-    { id: 'deposit_paid', label: 'Zaliczka Opłacona', description: 'Kasa na koncie -> Startujemy.', order: 11, group: 'Formalności', isSystem: true },
+    { id: 'contract_signed', label: 'Umowa Podpisana', description: 'Jest podpis na umowie.', order: 12, group: 'Formalności', isSystem: true },
+    { id: 'waiting_for_deposit', label: 'Oczekiwanie na Zaliczkę', description: 'Faktura zaliczkowa wysłana.', order: 13, group: 'Formalności', isSystem: true },
+    { id: 'deposit_paid', label: 'Zaliczka Opłacona', description: 'Kasa na koncie -> Startujemy.', order: 14, group: 'Formalności', isSystem: true },
 
     // 4. LOGISTYKA
-    { id: 'materials_ordered', label: 'Materiały Zamówione', description: 'Poszło zamówienie do producenta.', order: 12, group: 'Logistyka', isSystem: true },
-    { id: 'materials_pickup_ready', label: 'Gotowe do Odbioru', description: 'Towar czeka w magazynie/hurtowni.', order: 13, group: 'Logistyka', isSystem: true },
+    { id: 'materials_ordered', label: 'Materiały Zamówione', description: 'Poszło zamówienie do producenta.', order: 15, group: 'Logistyka', isSystem: true },
+    { id: 'materials_pickup_ready', label: 'Gotowe do Odbioru', description: 'Towar czeka w magazynie/hurtowni.', order: 16, group: 'Logistyka', isSystem: true },
     { id: 'installation_scheduled', label: 'Montaż Zaplanowany', description: 'Ekipa ma termin startu.', order: 14, group: 'Logistyka', isSystem: true },
     { id: 'materials_delivered', label: 'Materiały u Klienta', description: 'Towar dostarczony na budowę.', order: 15, group: 'Logistyka', isSystem: true },
 

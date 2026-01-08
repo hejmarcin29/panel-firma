@@ -142,11 +142,18 @@ export default async function MontazePage(props: any) {
             // KPI: Nierozliczone montaże
             conditions.push(inArray(montages.status, ['waiting_for_deposit', 'final_settlement']));
         } else if (view === 'lead') {
-            conditions.push(inArray(montages.status, ['new_lead', 'contact_attempt', 'contact_established']));
+            conditions.push(inArray(montages.status, [
+                'new_lead',
+                'lead_contact',
+                'lead_samples_pending',
+                'lead_samples_sent',
+                'lead_pre_estimate'
+            ]));
         } else if (view === 'done') {
             conditions.push(eq(montages.status, 'completed'));
         } else {
             const inProgressStatuses: MontageStatus[] = [
+                'measurement_to_schedule',
                 'measurement_scheduled',
                 'measurement_done',
                 'quote_in_progress',
