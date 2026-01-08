@@ -22,9 +22,7 @@ export function ArchitectSidebar() {
             <aside className="hidden md:flex fixed left-0 top-0 z-40 h-screen w-20 flex-col items-center py-8 bg-zinc-950 border-r border-zinc-800">
                 {/* Logo */}
                 <div className="mb-8 p-3 bg-zinc-900 rounded-xl">
-                    <div className="h-6 w-6 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500" />
-                </div>
-
+                <div className="h-6 w-6 rounded-full bg-linear-to-tr from-indigo-500 to-purple-500" />
                 {/* Nav */}
                 <nav className="flex-1 flex flex-col gap-4 w-full px-4">
                     {navItems.map((item) => {

@@ -4,7 +4,7 @@ import { montages, users, commissions } from '@/lib/db/schema';
 import { eq, and, not, desc, sum, sql } from 'drizzle-orm';
 import { formatCurrency } from '@/lib/utils';
 import Link from 'next/link';
-import { ArrowUpRight, Clock, MapPin, DollarSign, Wallet, ArrowRight } from 'lucide-react';
+import { ArrowUpRight, Clock, MapPin, DollarSign, Wallet, ArrowRight, User } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -95,7 +95,7 @@ export default async function ArchitectDashboardPage() {
                 </div>
 
                 {/* 2. Quick Action / Promo Card */}
-                <div className="md:col-span-1 rounded-3xl bg-gradient-to-br from-indigo-600 to-violet-700 p-8 text-white flex flex-col justify-between h-[300px] shadow-2xl shadow-indigo-900/20">
+                <div className="md:col-span-1 rounded-3xl bg-linear-to-br from-indigo-600 to-violet-700 p-8 text-white flex flex-col justify-between h-[300px] shadow-2xl shadow-indigo-900/20">
                     <div>
                         <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-6">
                             <DollarSign className="h-6 w-6 text-white" />
@@ -160,7 +160,7 @@ export default async function ArchitectDashboardPage() {
 
                 {/* 4. Contact / Assistant */}
                 <div className="md:col-span-1 rounded-3xl bg-zinc-900 border border-zinc-800 p-6 md:p-8 flex flex-col justify-center items-center text-center">
-                    <div className="h-20 w-20 rounded-full bg-gradient-to-tr from-zinc-700 to-zinc-600 mb-4 p-1">
+                    <div className="h-20 w-20 rounded-full bg-linear-to-tr from-zinc-700 to-zinc-600 mb-4 p-1">
                         <div className="h-full w-full rounded-full bg-zinc-800 flex items-center justify-center overflow-hidden">
                             <User className="h-8 w-8 text-zinc-400" />
                         </div>
