@@ -18,6 +18,7 @@ import { users, montages } from '@/lib/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { ImpersonationBanner } from './_components/impersonation-banner';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
+import { ArchitectSidebar } from './architect/_components/architect-sidebar';
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
 	let sessionUser;
@@ -50,6 +51,19 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     };
     
     const userRoles = sessionUser.roles;
+
+    // === ARCHITECT LAYOUT ===
+    if (userRoles.includes('architect')) {
+        return (
+            <div className="dark min-h-screen bg-black text-zinc-100 font-sans selection:bg-indigo-500/30">
+                {isImpersonating && <ImpersonationBanner />}
+                <ArchitectSidebar />
+                <main className="md:pl-20 pb-24 md:pb-0 min-h-screen">
+                    {children}
+                </main>
+            </div>
+        );
+    }
     
     let urgentOrdersCount = 0;
     try {

@@ -41,6 +41,12 @@ export default async function DashboardPage() {
 
     try {
 	    user = await requireUser();
+        
+        // Redirect Architect to Premium Dashboard
+        if (user.roles.includes('architect') && !user.roles.includes('admin')) {
+            redirect('/dashboard/architect');
+        }
+
         if (user.roles.includes('installer') && !user.roles.includes('admin')) {
             installerData = await getInstallerDashboardData(user.id);
         }
