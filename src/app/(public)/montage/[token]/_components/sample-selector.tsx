@@ -16,6 +16,8 @@ declare global {
     easyPack: {
       modalMap: (
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        callback: (point: any, modal: any) => void,
+        options: {
           width?: number;
           height?: number;
           defaultLocale?: string;
