@@ -530,14 +530,14 @@ export default async function SettingsPage() {
 
 						{/* Desktop: Grid */}
 						<div className="hidden md:block">
-							<TabsList className="grid w-full grid-cols-5">
-								<TabsTrigger value="woocommerce">WooCommerce</TabsTrigger>
-								<TabsTrigger value="google">Kalendarz Google</TabsTrigger>
-								<TabsTrigger value="mail">Poczta</TabsTrigger>
-								<TabsTrigger value="storage">Magazyn plików</TabsTrigger>
-                                <TabsTrigger value="fluent">Fluent Forms</TabsTrigger>
-                                <TabsTrigger value="web-forms">Formularze WWW</TabsTrigger>
-                                <TabsTrigger value="inpost">InPost</TabsTrigger>
+							<TabsList className="flex w-full flex-wrap h-auto gap-1">
+								<TabsTrigger value="woocommerce" className="flex-1">WooCommerce</TabsTrigger>
+								<TabsTrigger value="google" className="flex-1">Kalendarz Google</TabsTrigger>
+								<TabsTrigger value="mail" className="flex-1">Poczta</TabsTrigger>
+								<TabsTrigger value="storage" className="flex-1">Magazyn plików</TabsTrigger>
+                                <TabsTrigger value="fluent" className="flex-1">Fluent Forms</TabsTrigger>
+                                <TabsTrigger value="web-forms" className="flex-1">Formularze WWW</TabsTrigger>
+                                <TabsTrigger value="inpost" className="flex-1">InPost</TabsTrigger>
 							</TabsList>
 						</div>
 					</div>
