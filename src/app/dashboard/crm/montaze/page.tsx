@@ -151,9 +151,9 @@ export default async function MontazePage(props: any) {
                 'lead_pre_estimate'
             ]));
         } else if (view === 'done') {
-            conif (view === 'rejected') {
+            conditions.push(eq(montages.status, 'completed'));
+        } else if (view === 'rejected') {
             conditions.push(inArray(montages.status, ['on_hold', 'rejected']));
-        } else ditions.push(eq(montages.status, 'completed'));
         } else {
             const inProgressStatuses: MontageStatus[] = [
                 'measurement_to_schedule',
