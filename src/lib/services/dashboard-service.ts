@@ -69,6 +69,11 @@ export interface DashboardStats {
     };
     kpiData: {
         newLeadsCount: number;
+        leadsBreakdown: {
+            new: number;
+            attempt: number;
+            established: number;
+        };
         pendingPaymentsCount: number;
         pendingContractsCount: number;
         urgentTasksCount: number;
@@ -227,10 +232,20 @@ export async function getDashboardStats(publicBaseUrl: string | null): Promise<D
             floorArea: m.floorArea
         }));
 
-    const newLeadsCount = allMontages.filter(m => 
-        m.status === 'new_lead' || 
-        m.status === 'contact_attempt'
-    ).length;
+    // KPI breakdown for New Leads
+    const newCount = allMontages.filter(m => m.status === 'new_lead').length;
+    const attemptCount = allMontages.filter(m => m.status === 'contact_attempt').length;
+    const establishedCount = allMontages.filter(m => m.status === 'contact_established').length;
+    
+    // Total count for backward compatibility or general "Leads" count if needed
+    // However, the user wants separation. We will keep newLeadsCount as the sum for now
+    // or just the first one? The previous logic was (new_lead + contact_attempt). 
+    // Let's keep it as sum of all 3 for general "active leads" count if needed, 
+    // or stick to previous logic. The Layout uses a separate query for the badge.
+    // Let's make newLeadsCount just 'new_lead' + 'contact_attempt' + 'contact_established' to be safe,
+    // although the card will use the breakdown.
+    const newLeadsCount = newCount + attemptCount + establishedCount;
+
     const pendingPaymentsCount = allMontages.filter(m => 
         m.status === 'waiting_for_deposit' || 
         m.status === 'final_settlement' ||
@@ -449,6 +464,11 @@ export async function getDashboardStats(publicBaseUrl: string | null): Promise<D
         },
         kpiData: {
             newLeadsCount,
+            leadsBreakdown: {
+                new: newCount,
+                attempt: attemptCount,
+                established: establishedCount
+            },
             pendingPaymentsCount,
             pendingContractsCount,
             urgentTasksCount,

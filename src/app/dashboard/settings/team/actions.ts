@@ -5,7 +5,7 @@ import { eq, desc } from 'drizzle-orm';
 import { hash } from 'bcryptjs';
 
 import { db } from '@/lib/db';
-import { users, montages, commissions, type UserRole, type InstallerProfile, type ArchitectProfile, type PartnerProfile } from '@/lib/db/schema';
+import { users, montages, commissions, erpProducts, type UserRole, type InstallerProfile, type ArchitectProfile, type PartnerProfile } from '@/lib/db/schema';
 import { requireUser, impersonateUser } from '@/lib/auth/session';
 import { generatePortalToken } from '@/lib/utils';
 
@@ -77,6 +77,20 @@ export async function updateArchitectAssignedProducts(userId: string, productIds
         .where(eq(users.id, userId));
 
     revalidatePath(`/dashboard/settings/team/${userId}`);
+}
+
+export async function getMinimalProducts() {
+    await requireUser();
+    
+    return db.query.erpProducts.findMany({
+        columns: {
+            id: true,
+            name: true,
+            sku: true,
+        },
+        where: eq(erpProducts.status, 'active'),
+        orderBy: [desc(erpProducts.createdAt)],
+    });
 }
 
 export async function updatePartnerProfile(userId: string, profile: PartnerProfile) {

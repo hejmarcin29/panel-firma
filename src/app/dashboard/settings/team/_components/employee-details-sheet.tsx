@@ -85,7 +85,7 @@ const architectProfileSchema = z.object({
     nip: z.string().optional(),
     bankAccount: z.string().optional(),
     commissionRate: z.coerce.number().min(0, "Stawka musi być dodatnia").optional(),
-    assignedProductIds: z.array(z.number()).optional(),
+    assignedProductIds: z.array(z.string()).optional(),
 });
 
 const partnerProfileSchema = z.object({
@@ -109,7 +109,7 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [commissions, setCommissions] = useState<any[]>([]);
     const [isLoadingCommissions, setIsLoadingCommissions] = useState(false);
-    const [availableProducts, setAvailableProducts] = useState<{id: number, name: string, sku: string}[]>([]);
+    const [availableProducts, setAvailableProducts] = useState<{id: string, name: string, sku: string}[]>([]);
     const [productSearch, setProductSearch] = useState('');
     const [isPending, startTransition] = useTransition();
 
@@ -193,7 +193,7 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
                 nip: member.architectProfile.nip || '',
                 bankAccount: member.architectProfile.bankAccount || '',
                 commissionRate: member.architectProfile.commissionRate || 0,
-                assignedProductIds: member.architectProfile.assignedProductIds || [],
+                assignedProductIds: (member.architectProfile.assignedProductIds || []).map(String),
             });
         } else {
             architectForm.reset({

@@ -52,6 +52,8 @@ export const appSettingKeys = {
     smsToken: 'sms.token',
     smsSenderName: 'sms.sender_name',
     companyLogoUrl: 'company.logo_url',
+    cloudflareTurnstileSiteKey: 'cloudflare.turnstile_site_key',
+    cloudflareTurnstileSecretKey: 'cloudflare.turnstile_secret_key',
 } as const;
 
 export type AppSettingKey = (typeof appSettingKeys)[keyof typeof appSettingKeys];
@@ -91,6 +93,10 @@ function readEnvFallback(key: AppSettingKey): string | null {
 			return process.env.GOOGLE_CLIENT_EMAIL?.trim() || null;
 		case appSettingKeys.googlePrivateKey:
 			return process.env.GOOGLE_PRIVATE_KEY?.trim() || null;
+        case appSettingKeys.cloudflareTurnstileSiteKey:
+            return process.env.CLOUDFLARE_TURNSTILE_SITE_KEY?.trim() || null;
+        case appSettingKeys.cloudflareTurnstileSecretKey:
+            return process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY?.trim() || null;
 		default:
 			return null;
 	}

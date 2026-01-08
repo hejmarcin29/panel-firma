@@ -189,6 +189,11 @@ interface DashboardBuilderProps {
     };
     kpiData: {
         newLeadsCount: number;
+        leadsBreakdown?: {
+            new: number;
+            attempt: number;
+            established: number;
+        };
         pendingPaymentsCount: number;
         urgentTasksCount: number;
         newOrdersCount: number;

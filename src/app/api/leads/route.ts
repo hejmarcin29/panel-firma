@@ -4,6 +4,23 @@ import { createLeadCore } from '@/lib/crm/lead-service';
 export async function POST(request: Request) {
     try {
         const body = await request.json();
+
+        // Honeypot logic: If _gotcha is filled, it's a bot.
+        // We return success to trick the bot, but don't save the lead.
+        if (body._gotcha) {
+            console.log('SPAM Honeypot triggered:', body);
+            return NextResponse.json(
+                { success: true, message: 'Message received' }, 
+                { 
+                    status: 200,
+                    headers: {
+                        'Access-Control-Allow-Origin': '*',
+                        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                        'Access-Control-Allow-Headers': 'Content-Type',
+                    }
+                }
+            );
+        }
         
         // Basic validation
         if (!body.name) {

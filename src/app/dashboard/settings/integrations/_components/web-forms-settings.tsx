@@ -48,6 +48,11 @@ export function WebFormsSettings() {
       <textarea name="message" rows="3" placeholder="Interesuje mnie wylewka..." style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; resize: vertical;"></textarea>
     </div>
     
+    <!-- Honeypot (Anty-SPAM) - ukryte pole, którego człowiek nie widzi, a bot wypełni -->
+    <div style="display:none !important;" aria-hidden="true">
+      <label>Nie wypełniaj tego pola<input type="text" name="_gotcha" tabindex="-1" autocomplete="off" /></label>
+    </div>
+
     <button type="submit" style="background: #2563eb; color: #fff; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold;">Wyślij zgłoszenie</button>
   </form>
   <div id="crm-form-status" style="margin-top: 10px; display: none; padding: 10px; border-radius: 4px; text-align: center; font-size: 14px;"></div>
@@ -66,7 +71,8 @@ async function submitCrmLead(e) {
     phone: form.phone.value,
     email: form.email.value,
     city: form.city.value,
-    message: form.message.value
+    message: form.message.value,
+    _gotcha: form._gotcha.value // Honeypot
   };
   
   btn.disabled = true;

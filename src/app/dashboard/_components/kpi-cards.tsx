@@ -22,6 +22,11 @@ import { motion } from "framer-motion";
 
 interface KPICardsProps {
   newLeadsCount: number;
+  leadsBreakdown?: {
+      new: number;
+      attempt: number;
+      established: number;
+  };
   pendingPaymentsCount: number;
   pendingContractsCount?: number;
   urgentTasksCount: number;
@@ -37,6 +42,7 @@ interface KPICardsProps {
 
 export function KPICards({
   newLeadsCount,
+  leadsBreakdown,
   pendingPaymentsCount,
   pendingContractsCount = 0,
   urgentTasksCount,
@@ -72,7 +78,7 @@ export function KPICards({
     setLastSeenOrders(newOrdersCount);
   };
 
-  const hasNewLeads = isLoaded && newLeadsCount > lastSeenLeads;
+  const hasNewLeads = leadsBreakdown ? leadsBreakdown.new > 0 : (isLoaded && newLeadsCount > lastSeenLeads);
   const hasNewOrders = isLoaded && newOrdersCount > lastSeenOrders;
 
   const container = {
@@ -133,7 +139,7 @@ export function KPICards({
         <motion.div variants={item} className="h-full">
         <Card className={cn(
             "bg-card border-border shadow-none relative overflow-hidden group h-full transition-all duration-300",
-            hasNewLeads && "border-blue-500 ring-1 ring-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.15)]"
+            hasNewLeads && (leadsBreakdown ? "border-red-500 ring-1 ring-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)]" : "border-blue-500 ring-1 ring-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.15)]")
         )}>
             <Link 
                 href="/dashboard/crm/montaze?view=lead" 
@@ -145,7 +151,10 @@ export function KPICards({
                     <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
                         Nowy Lead Montaż
                         {hasNewLeads && (
-                            <span className="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 animate-pulse">
+                            <span className={cn(
+                                "ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium animate-pulse",
+                                leadsBreakdown ? "bg-red-100 text-red-800" : "bg-blue-100 text-blue-800"
+                            )}>
                                 NOWE
                             </span>
                         )}
@@ -161,11 +170,25 @@ export function KPICards({
                         </TooltipContent>
                     </Tooltip>
                 </div>
-                <Briefcase className="h-4 w-4 text-blue-500" />
+                <Briefcase className={cn("h-4 w-4", leadsBreakdown && hasNewLeads ? "text-red-500" : "text-blue-500")} />
             </CardHeader>
             <CardContent className="p-4 pt-0">
-                <div className="text-2xl font-bold text-foreground">{newLeadsCount}</div>
-                <p className="text-xs text-blue-500/80 flex items-center mt-1">
+                <div className="text-2xl font-bold text-foreground">
+                    {leadsBreakdown ? (
+                        <div className="flex items-baseline gap-1.5">
+                            <span className={cn(leadsBreakdown.new > 0 && "text-red-600 dark:text-red-500")}>
+                                {leadsBreakdown.new}
+                            </span>
+                            <span className="text-muted-foreground font-light text-lg opacity-50">/</span>
+                            <span>{leadsBreakdown.attempt}</span>
+                            <span className="text-muted-foreground font-light text-lg opacity-50">/</span>
+                            <span>{leadsBreakdown.established}</span>
+                        </div>
+                    ) : (
+                        newLeadsCount
+                    )}
+                </div>
+                <p className={cn("text-xs flex items-center mt-1", leadsBreakdown && hasNewLeads ? "text-red-500/80" : "text-blue-500/80")}>
                     W realizacji <ArrowUpRight className="h-3 w-3 ml-1" />
                 </p>
             </CardContent>
