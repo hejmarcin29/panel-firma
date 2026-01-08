@@ -263,7 +263,14 @@ export default async function MontazePage(props: any) {
     let filteredStatusOptions = statusOptions;
     if (view === 'lead') {
         filteredStatusOptions = statusOptions.filter(s => 
-            ['new_lead', 'contact_attempt', 'contact_established'].includes(s.value)
+            [
+                'new_lead', 
+                'lead_contact', 
+                'lead_samples_pending', 
+                'lead_samples_sent', 
+                'lead_pre_estimate',
+                'measurement_to_schedule'
+            ].includes(s.value)
         );
     } else if (view === 'done') {
         filteredStatusOptions = statusOptions.filter(s => s.value === 'completed');
@@ -280,7 +287,15 @@ export default async function MontazePage(props: any) {
             filteredStatusOptions = statusOptions.filter(s => s.value === targetStatus);
         } else {
             filteredStatusOptions = statusOptions.filter(s => 
-                !['new_lead', 'contact_attempt', 'contact_established', 'completed'].includes(s.value)
+                ![
+                    'new_lead', 
+                    'lead_contact', 
+                    'lead_samples_pending', 
+                    'lead_samples_sent', 
+                    'lead_pre_estimate',
+                    'measurement_to_schedule', 
+                    'completed'
+                ].includes(s.value)
             );
         }
     }
