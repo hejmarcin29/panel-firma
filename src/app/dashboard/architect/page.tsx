@@ -44,15 +44,15 @@ export default async function ArchitectDashboardPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                 <div>
-                    <h1 className="text-4xl font-bold tracking-tight text-white mb-2">
+                    <h1 className="text-4xl font-bold tracking-tight text-zinc-900 mb-2">
                         Cześć, {user.name?.split(' ')[0] || 'Architekcie'}!
                     </h1>
-                    <p className="text-zinc-400">
+                    <p className="text-zinc-500">
                         Oto centrum dowodzenia Twoimi projektami.
                     </p>
                 </div>
                 <div className="flex gap-3">
-                    <Button variant="outline" className="rounded-full border-zinc-700 hover:bg-zinc-800 hover:text-white" asChild>
+                    <Button variant="outline" className="rounded-full border-zinc-200 hover:bg-zinc-50 text-zinc-700" asChild>
                         <Link href="/dashboard/showroom">
                             Otwórz Showroom
                         </Link>
@@ -64,27 +64,27 @@ export default async function ArchitectDashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 
                 {/* 1. Wallet / Balance Card (Large) */}
-                <div className="md:col-span-2 relative overflow-hidden rounded-3xl bg-zinc-900 border border-zinc-800 p-8 flex flex-col justify-between h-[300px] group hover:border-zinc-700 transition-colors">
+                <div className="md:col-span-2 relative overflow-hidden rounded-3xl bg-white border border-zinc-200 p-8 flex flex-col justify-between h-[300px] group hover:border-zinc-300 transition-colors shadow-sm">
                     {/* Background Noise/Gradient */}
-                    <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-indigo-500/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+                    <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-indigo-50 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 pointer-events-none" />
                     
                     <div className="relative z-10 flex justify-between items-start">
-                        <div className="flex items-center gap-2 p-2 bg-zinc-950/50 rounded-lg border border-zinc-800 backdrop-blur-sm">
-                            <Wallet className="h-4 w-4 text-indigo-400" />
-                            <span className="text-xs font-medium text-zinc-300">Portfel Prowizji</span>
+                        <div className="flex items-center gap-2 p-2 bg-white/80 rounded-lg border border-zinc-200 backdrop-blur-sm">
+                            <Wallet className="h-4 w-4 text-indigo-600" />
+                            <span className="text-xs font-medium text-zinc-600">Portfel Prowizji</span>
                         </div>
-                        <Button variant="ghost" className="text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-full" size="icon">
+                        <Button variant="ghost" className="text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 rounded-full" size="icon">
                             <ArrowUpRight className="h-5 w-5" />
                         </Button>
                     </div>
 
                     <div className="relative z-10">
-                        <div className="text-sm text-zinc-400 mb-1">Całkowity obrót prowizyjny</div>
-                        <div className="text-5xl md:text-6xl font-bold text-white tracking-tighter">
+                        <div className="text-sm text-zinc-500 mb-1">Całkowity obrót prowizyjny</div>
+                        <div className="text-5xl md:text-6xl font-bold text-zinc-900 tracking-tighter">
                             {formatCurrency(balance)}
                         </div>
                         <div className="mt-4 flex items-center gap-3">
-                             <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-500/10 text-green-400 rounded-full text-xs font-medium border border-green-500/20">
+                             <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 rounded-full text-xs font-medium border border-green-200">
                                 +12% w tym miesiącu
                              </span>
                              <span className="text-xs text-zinc-500">
@@ -95,7 +95,7 @@ export default async function ArchitectDashboardPage() {
                 </div>
 
                 {/* 2. Quick Action / Promo Card */}
-                <div className="md:col-span-1 rounded-3xl bg-linear-to-br from-indigo-600 to-violet-700 p-8 text-white flex flex-col justify-between h-[300px] shadow-2xl shadow-indigo-900/20">
+                <div className="md:col-span-1 rounded-3xl bg-linear-to-br from-indigo-600 to-violet-700 p-8 text-white flex flex-col justify-between h-[300px] shadow-xl shadow-indigo-900/10">
                     <div>
                         <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-6">
                             <DollarSign className="h-6 w-6 text-white" />
@@ -113,28 +113,28 @@ export default async function ArchitectDashboardPage() {
                 </div>
 
                 {/* 3. Active Projects List */}
-                <div className="md:col-span-2 rounded-3xl bg-zinc-900 border border-zinc-800 p-6 md:p-8 min-h-[300px]">
+                <div className="md:col-span-2 rounded-3xl bg-white border border-zinc-200 p-6 md:p-8 min-h-[300px] shadow-sm">
                      <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-xl font-semibold text-white">Aktywne Projekty</h3>
-                        <Link href="/dashboard/crm" className="text-sm text-zinc-500 hover:text-white flex items-center gap-1 transition-colors">
+                        <h3 className="text-xl font-semibold text-zinc-900">Aktywne Projekty</h3>
+                        <Link href="/dashboard/crm/montaze" className="text-sm text-zinc-500 hover:text-zinc-900 flex items-center gap-1 transition-colors">
                             Wszystkie <ArrowRight className="h-3 w-3" />
                         </Link>
                     </div>
 
                     <div className="space-y-3">
                         {activeProjects.length === 0 ? (
-                            <div className="p-8 text-center border border-dashed border-zinc-800 rounded-2xl">
+                            <div className="p-8 text-center border border-dashed border-zinc-200 rounded-2xl">
                                 <p className="text-zinc-500">Brak aktywnych projektów</p>
                             </div>
                         ) : (
                             activeProjects.map(project => (
-                                <div key={project.id} className="group flex items-center justify-between p-4 rounded-2xl bg-zinc-950/50 border border-zinc-800/50 hover:bg-zinc-800/50 hover:border-zinc-700 transition-all cursor-pointer">
+                                <div key={project.id} className="group flex items-center justify-between p-4 rounded-2xl bg-zinc-50 border border-zinc-200/60 hover:bg-white hover:border-zinc-300 hover:shadow-md transition-all cursor-pointer">
                                     <div className="flex items-center gap-4">
-                                        <div className="h-10 w-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 font-medium border border-zinc-700">
+                                        <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-zinc-500 font-medium border border-zinc-200 shadow-sm">
                                             {project.clientName.charAt(0)}
                                         </div>
                                         <div>
-                                            <h4 className="text-white font-medium group-hover:text-indigo-400 transition-colors">
+                                            <h4 className="text-zinc-900 font-medium group-hover:text-indigo-600 transition-colors">
                                                 {project.clientName}
                                             </h4>
                                             <div className="flex items-center gap-3 text-xs text-zinc-500 mt-1">
@@ -148,7 +148,7 @@ export default async function ArchitectDashboardPage() {
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <Button size="icon" variant="ghost" className="text-zinc-500 group-hover:text-white rounded-full">
+                                        <Button size="icon" variant="ghost" className="text-zinc-400 group-hover:text-zinc-900 rounded-full">
                                             <ArrowRight className="h-5 w-5" />
                                         </Button>
                                     </div>
@@ -159,20 +159,20 @@ export default async function ArchitectDashboardPage() {
                 </div>
 
                 {/* 4. Contact / Assistant */}
-                <div className="md:col-span-1 rounded-3xl bg-zinc-900 border border-zinc-800 p-6 md:p-8 flex flex-col justify-center items-center text-center">
-                    <div className="h-20 w-20 rounded-full bg-linear-to-tr from-zinc-700 to-zinc-600 mb-4 p-1">
-                        <div className="h-full w-full rounded-full bg-zinc-800 flex items-center justify-center overflow-hidden">
+                <div className="md:col-span-1 rounded-3xl bg-white border border-zinc-200 p-6 md:p-8 flex flex-col justify-center items-center text-center shadow-sm">
+                    <div className="h-20 w-20 rounded-full bg-linear-to-tr from-zinc-200 to-zinc-100 mb-4 p-1">
+                        <div className="h-full w-full rounded-full bg-zinc-50 flex items-center justify-center overflow-hidden border border-zinc-100">
                             <User className="h-8 w-8 text-zinc-400" />
                         </div>
                     </div>
-                    <h3 className="text-lg font-semibold text-white mb-1">Twój Opiekun</h3>
+                    <h3 className="text-lg font-semibold text-zinc-900 mb-1">Twój Opiekun</h3>
                     <p className="text-zinc-500 text-sm mb-6">
                         Masz pytania do wyceny? <br /> Jestem dostępny.
                     </p>
-                     <Button variant="outline" className="w-full rounded-xl border-zinc-700 hover:bg-zinc-800 hover:text-white mb-2">
+                     <Button variant="outline" className="w-full rounded-xl border-zinc-200 hover:bg-zinc-50 hover:text-zinc-900 mb-2 text-zinc-700">
                         Zadzwoń
                     </Button>
-                     <Button variant="ghost" className="w-full rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800">
+                     <Button variant="ghost" className="w-full rounded-xl text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50">
                         Napisz wiadomość
                     </Button>
                 </div>

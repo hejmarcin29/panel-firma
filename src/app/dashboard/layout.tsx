@@ -55,7 +55,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     // === ARCHITECT LAYOUT ===
     if (userRoles.includes('architect')) {
         return (
-            <div className="dark min-h-screen bg-black text-zinc-100 font-sans selection:bg-indigo-500/30">
+            <div className="min-h-screen bg-zinc-50/50 font-sans selection:bg-indigo-500/30">
                 {isImpersonating && <ImpersonationBanner />}
                 <ArchitectSidebar />
                 <main className="md:pl-20 pb-24 md:pb-0 min-h-screen">

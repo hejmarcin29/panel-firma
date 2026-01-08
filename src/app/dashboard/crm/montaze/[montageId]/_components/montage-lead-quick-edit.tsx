@@ -49,7 +49,7 @@ export function MontageLeadQuickEdit({ montageId, initialClientInfo, initialEsti
     const handleCopyMagicLink = async () => {
         try {
             const token = await generateMontageToken(montageId);
-            const url = `${window.location.origin}/public/montage/${token}`;
+            const url = `${window.location.origin}/montage/${token}`;
             await navigator.clipboard.writeText(url);
             toast.success("Link skopiowany do schowka!", {
                 description: "Wyślij go klientowi, aby wybrał próbki."
