@@ -8,8 +8,8 @@ import { logoutAction } from '@/app/dashboard/actions';
 
 const navItems = [
     { label: 'Pulpit', href: '/dashboard/architect', icon: Home },
-    { label: 'Klienci', href: '/dashboard/crm/customers', icon: Users },
-    { label: 'Projekty', href: '/dashboard/crm/montaze', icon: FolderOpen },
+    { label: 'Klienci', href: '/dashboard/architect/customers', icon: Users },
+    { label: 'Projekty', href: '/dashboard/architect/projects', icon: FolderOpen },
     { label: 'Showroom', href: '/dashboard/showroom', icon: ShoppingBag },
     { label: 'Portfel', href: '/dashboard/wallet', icon: Wallet },
 ];

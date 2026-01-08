@@ -32,6 +32,7 @@ interface Product {
     name: string;
     sku: string;
     description: string | null;
+    imageUrl: string | null;
 }
 
 interface SampleSelectorProps {
@@ -162,9 +163,17 @@ export function SampleSelector({ token, samples }: SampleSelectorProps) {
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <div className="aspect-square bg-muted rounded-md flex items-center justify-center text-muted-foreground mb-4">
-                                {/* Placeholder for image */}
-                                <Package className="h-10 w-10 opacity-20" />
+                            <div className="aspect-square bg-muted rounded-md flex items-center justify-center text-muted-foreground mb-4 overflow-hidden relative">
+                                {sample.imageUrl ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img 
+                                        src={sample.imageUrl} 
+                                        alt={sample.name}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <Package className="h-10 w-10 opacity-20" />
+                                )}
                             </div>
                             {sample.description && (
                                 <p className="text-sm text-muted-foreground line-clamp-2">

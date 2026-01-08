@@ -295,7 +295,7 @@ export async function sendPortalLinkSms(customerId: string) {
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://b2b.primepodloga.pl';
     const link = `${appUrl}/s/${token}`;
-    const companyName = await getAppSetting(appSettingKeys.companyName) || 'Prime Podłogi';
+    const companyName = await getAppSetting(appSettingKeys.companyName) || 'Prime Podłoga';
     
     const message = `Dzień dobry, przesyłamy link do śledzenia statusu zamówienia: ${link} Pozdrawiamy, ${companyName}`;
 

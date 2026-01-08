@@ -1365,7 +1365,7 @@ export async function updateMontageMeasurementDate(montageId: string, date: Date
             if (date) {
                 const city = montage.installationCity || 'Brak miasta';
                 const event = {
-                    summary: `Pomiar: ${montage.clientName} - ${city} - Prime Podłogi`,
+                    summary: `Pomiar: ${montage.clientName} - ${city} - Prime Podłoga`,
                     description: `Adres: ${montage.installationAddress || montage.address || 'Brak adresu'}\nTel: ${montage.contactPhone || 'Brak'}\nLink: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard/crm/montaze/${montage.id}`,
                     location: montage.installationAddress || montage.address || '',
                     start: { dateTime: date.toISOString() },
@@ -1438,7 +1438,7 @@ export async function updateMontageMeasurementDate(montageId: string, date: Date
                                         <li>Prosimy o zapewnienie dostępu do prądu (dla urządzeń pomiarowych).</li>
                                     </ul>
                                     <p>W razie pytań prosimy o kontakt.</p>
-                                    <p>Pozdrawiamy,<br>Zespół Prime Podłogi</p>
+                                    <p>Pozdrawiamy,<br>Zespół Prime Podłoga</p>
                                 </div>
                             `;
 
@@ -2564,9 +2564,9 @@ export async function sendDataRequest(montageId: string) {
                     await transporter.sendMail({
                         from: `${mailAccount.displayName} <${mailAccount.email}>`,
                         to: montage.contactEmail,
-                        subject: 'Witamy w Panelu Klienta - Prime Podłogi',
+                        subject: 'Witamy w Panelu Klienta - Prime Podłoga',
                         text: message,
-                        html: `<p>Dzień dobry!</p><p>Rozpoczynamy współpracę. Utworzyliśmy dla Ciebie Panel Klienta, gdzie będziesz widzieć postępy prac.</p><p><a href="${portalLink}">Kliknij tutaj, aby przejść do panelu</a></p><p>Prosimy o uzupełnienie adresu, abyśmy mogli zlecić pomiar.</p><br><p>Pozdrawiamy,<br>Zespół Prime Podłogi</p>`
+                        html: `<p>Dzień dobry!</p><p>Rozpoczynamy współpracę. Utworzyliśmy dla Ciebie Panel Klienta, gdzie będziesz widzieć postępy prac.</p><p><a href="${portalLink}">Kliknij tutaj, aby przejść do panelu</a></p><p>Prosimy o uzupełnienie adresu, abyśmy mogli zlecić pomiar.</p><br><p>Pozdrawiamy,<br>Zespół Prime Podłoga</p>`
                     });
                     sentChannels.push('Email');
                  }

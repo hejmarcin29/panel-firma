@@ -129,7 +129,7 @@ export default async function ArchitectDashboardPage() {
                             <span className="text-xs font-medium text-zinc-600">Aktywne Projekty</span>
                         </div>
                         <Button variant="ghost" className="text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 rounded-full h-8 px-3 text-xs" asChild>
-                             <Link href="/dashboard/crm/montaze">
+                             <Link href="/dashboard/architect/projects">
                                 Wszystkie <ArrowRight className="ml-1 h-3 w-3" />
                             </Link>
                         </Button>
@@ -142,70 +142,65 @@ export default async function ArchitectDashboardPage() {
                             </div>
                         ) : (
                             activeProjects.map(project => (
-                                <div key={project.id} className="group/item flex items-center justify-between p-4 rounded-2xl bg-zinc-50 border border-zinc-200/60 hover:bg-white hover:border-zinc-300 hover:shadow-md transition-all cursor-pointer">
-                                    <div className="flex items-center gap-4">
-                                        <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-zinc-500 font-medium border border-zinc-200 shadow-sm text-sm">
-                                            {project.clientName.charAt(0)}
-                                        </div>
-                                        <div>
-                                            <h4 className="text-zinc-900 font-medium group-hover/item:text-blue-600 transition-colors text-sm">
-                                                {project.clientName}
-                                            </h4>
-                                            <div className="flex items-center gap-3 text-[10px] text-zinc-500 mt-1 uppercase tracking-wider font-medium">
-                                                <span className="flex items-center gap-1">
-                                                    {project.installationCity || 'Brak lokalizacji'}
-                                                </span>
-                                                <span className="w-1 h-1 rounded-full bg-zinc-300" />
-                                                <span className="flex items-center gap-1 text-blue-600">
-                                                     {project.status ? project.status.replace('_', ' ') : 'Nowy'}
-                                                </span>
+                                <Link key={project.id} href={`/dashboard/crm/montaze/${project.id}`} className="block">
+                                    <div className="group/item flex items-center justify-between p-4 rounded-2xl bg-zinc-50 border border-zinc-200/60 hover:bg-white hover:border-zinc-300 hover:shadow-md transition-all cursor-pointer">
+                                        <div className="flex items-center gap-4">
+                                            <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-zinc-500 font-medium border border-zinc-200 shadow-sm text-sm">
+                                                {project.clientName.charAt(0)}
+                                            </div>
+                                            <div>
+                                                <h4 className="text-zinc-900 font-medium group-hover/item:text-blue-600 transition-colors text-sm">
+                                                    {project.clientName}
+                                                </h4>
+                                                <div className="flex items-center gap-3 text-[10px] text-zinc-500 mt-1 uppercase tracking-wider font-medium">
+                                                    <span className="flex items-center gap-1">
+                                                        {project.installationCity || 'Brak lokalizacji'}
+                                                    </span>
+                                                    <span className="w-1 h-1 rounded-full bg-zinc-300" />
+                                                    <span className="flex items-center gap-1 text-blue-600">
+                                                        {project.status ? project.status.replace('_', ' ') : 'Nowy'}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
+                                        <div className="text-right">
+                                            <Button size="icon" variant="ghost" className="h-8 w-8 text-zinc-400 group-hover/item:text-zinc-900 rounded-full">
+                                                <ArrowRight className="h-4 w-4" />
+                                            </Button>
+                                        </div>
                                     </div>
-                                    <div className="text-right">
-                                        <Button size="icon" variant="ghost" className="h-8 w-8 text-zinc-400 group-hover/item:text-zinc-900 rounded-full">
-                                            <ArrowRight className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </div>
+                                </Link>
                             ))
                         )}
                     </div>
                 </div>
 
-                {/* 4. Guardian (Unified Header) */}
+                {/* 4. Clients (Replaces Guardian) */}
                 <div className="md:col-span-1 relative overflow-hidden rounded-3xl bg-white border border-zinc-200 p-6 flex flex-col justify-between min-h-[320px] group hover:border-zinc-300 transition-colors shadow-sm">
                      {/* Background Gradient Accent */}
-                     <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-zinc-50 rounded-full blur-[80px] -translate-y-1/3 translate-x-1/3 pointer-events-none" />
+                     <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-orange-50 rounded-full blur-[80px] -translate-y-1/3 translate-x-1/3 pointer-events-none" />
 
                      <div className="relative z-10 flex justify-between items-start mb-6">
                         <div className="flex items-center gap-2 p-2 bg-white/80 rounded-lg border border-zinc-200 backdrop-blur-sm">
-                            <User className="h-4 w-4 text-zinc-600" />
-                            <span className="text-xs font-medium text-zinc-600">Twój Opiekun</span>
+                            <User className="h-4 w-4 text-orange-600" />
+                            <span className="text-xs font-medium text-zinc-600">Moi Klienci</span>
                         </div>
                     </div>
 
-                    <div className="relative z-10 flex flex-col items-center text-center mt-auto mb-auto">
-                        <div className="h-20 w-20 rounded-full bg-white mb-4 p-1 border border-zinc-100 shadow-sm">
-                            <div className="h-full w-full rounded-full bg-zinc-50 flex items-center justify-center overflow-hidden border border-zinc-200 text-zinc-400">
-                                <User className="h-8 w-8" />
-                            </div>
-                        </div>
-                         <h3 className="text-lg font-semibold text-zinc-900 mb-1">Jan Kowalski</h3>
-                        <p className="text-zinc-500 text-sm">
-                            Opiekun Regionu
+                    <div className="relative z-10 flex flex-col items-start mt-auto">
+                         <h3 className="text-2xl font-bold text-zinc-900 mb-2">Baza Kontaktów</h3>
+                        <p className="text-zinc-500 text-sm leading-relaxed mb-6">
+                            Szybki dostęp do wizytówek Twoich klientów i historii współpracy.
                         </p>
-                    </div>
-
-                    <div className="relative z-10 mt-6 space-y-2">
-                         <Button variant="outline" className="w-full rounded-xl border-zinc-200 hover:bg-zinc-50 hover:text-zinc-900 text-zinc-700 h-10 shadow-sm">
-                            Zadzwoń
-                        </Button>
-                         <Button variant="ghost" className="w-full rounded-xl text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 h-10">
-                            Napisz wiadomość
+                        <Button className="w-full bg-orange-600 text-white hover:bg-orange-700 rounded-xl h-11 shadow-sm" asChild>
+                            <Link href="/dashboard/architect/customers">
+                                Lista Klientów
+                            </Link>
                         </Button>
                     </div>
                 </div>
+
+
 
             </div>
         </div>
