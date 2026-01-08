@@ -65,7 +65,7 @@ export function MeasurementScheduler({ montageId, currentDate, clientPhone, onSu
         // Assuming 1 hour duration
         const end = new Date(date.getTime() + 60 * 60 * 1000).toISOString().replace(/-|:|\.\d\d\d/g, "");
         
-        const title = encodeURIComponent("Pomiar - Prime Podłogi");
+        const title = encodeURIComponent("Pomiar - Prime Podłoga");
         const details = encodeURIComponent(`Pomiar u klienta. Tel: ${clientPhone || 'Brak'}`);
         
         return `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}`;

@@ -301,7 +301,7 @@ export function CustomerPortal({ customer, token, bankAccount, companyInfo }: Cu
         >
             <motion.div className="text-center space-y-2" variants={itemVariants}>
                 <h1 className="text-3xl font-bold">Witaj, {customer.name}!</h1>
-                <p className="text-muted-foreground">Panel Klienta Prime Podłogi</p>
+                <p className="text-muted-foreground">Panel Klienta Prime Podłoga</p>
             </motion.div>
 
             <div className="space-y-6">
