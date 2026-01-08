@@ -30,7 +30,7 @@ export async function getAvailableSamples() {
             name: true,
             sku: true,
             description: true,
-            // Add image handling if available later
+            imageUrl: true,
         }
     });
     return samples;

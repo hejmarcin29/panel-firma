@@ -48,6 +48,11 @@ export const appSettingKeys = {
     // Portal & SMS
     portalEnabled: 'portal.enabled',
     smsProvider: 'sms.provider',
+
+    // Sample Shop / Logistics
+    sampleOrderNotificationEmail: 'samples.notification_email',
+    sampleOrderConfirmationSubject: 'samples.confirmation_subject',
+    sampleOrderConfirmationTemplate: 'samples.confirmation_template',
     requireInstallerForMeasurement: 'montage.require_installer_for_measurement',
     smsToken: 'sms.token',
     smsSenderName: 'sms.sender_name',

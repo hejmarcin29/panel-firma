@@ -165,6 +165,21 @@ export async function updateR2Config({ accountId, accessKeyId, secretAccessKey, 
 	revalidatePath('/dashboard/settings');
 }
 
+export async function updateSampleSettingsAction(input: { notificationEmail: string | null, confirmationSubject: string | null, confirmationTemplate: string | null }) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) throw new Error('Unauthorized');
+
+    await Promise.all([
+        input.notificationEmail !== null && input.notificationEmail !== undefined ? setAppSetting({ key: appSettingKeys.sampleOrderNotificationEmail, value: input.notificationEmail, userId: user.id }) : Promise.resolve(),
+        input.confirmationSubject !== null && input.confirmationSubject !== undefined ? setAppSetting({ key: appSettingKeys.sampleOrderConfirmationSubject, value: input.confirmationSubject, userId: user.id }) : Promise.resolve(),
+        input.confirmationTemplate !== null && input.confirmationTemplate !== undefined ? setAppSetting({ key: appSettingKeys.sampleOrderConfirmationTemplate, value: input.confirmationTemplate, userId: user.id }) : Promise.resolve()
+    ]);
+    
+    await logSystemEvent('update_sample_settings', 'Zaktualizowano ustawienia próbek', user.id);
+
+    revalidatePath('/dashboard/settings');
+}
+
 export async function testR2Connection() {
 	const user = await requireUser();
 	if (!user.roles.includes('admin')) {

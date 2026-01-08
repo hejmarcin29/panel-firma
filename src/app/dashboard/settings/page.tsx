@@ -194,6 +194,9 @@ export default async function SettingsPage() {
         inpostOrgId,
         inpostToken,
         inpostSandbox,
+        sampleOrderNotificationEmail,
+        sampleOrderConfirmationSubject,
+        sampleOrderConfirmationTemplate,
 	] = await Promise.all([
 		getAppSetting(appSettingKeys.wooWebhookSecret),
 		getAppSetting(appSettingKeys.wooConsumerKey),
@@ -248,6 +251,9 @@ export default async function SettingsPage() {
         getAppSetting(appSettingKeys.inpostOrgId),
         getAppSetting(appSettingKeys.inpostToken),
         getAppSetting(appSettingKeys.inpostSandbox),
+        getAppSetting(appSettingKeys.sampleOrderNotificationEmail),
+        getAppSetting(appSettingKeys.sampleOrderConfirmationSubject),
+        getAppSetting(appSettingKeys.sampleOrderConfirmationTemplate),
 	]);
 
     const statusOptions = montageStatusDefinitions.map(def => ({
@@ -408,6 +414,11 @@ export default async function SettingsPage() {
                         initialNotifications={montageNotifications}
                         initialAutomationSettings={montageAutomationSettings}
                         requireInstallerForMeasurement={requireInstallerForMeasurementValue}
+                        sampleSettings={{
+                            notificationEmail: sampleOrderNotificationEmail,
+                            confirmationSubject: sampleOrderConfirmationSubject,
+                            confirmationTemplate: sampleOrderConfirmationTemplate
+                        }}
                     />
 				</div>
 			}

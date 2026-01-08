@@ -14,6 +14,7 @@ import type { StatusOption } from '../../crm/montaze/types';
 import { SYSTEM_NOTIFICATIONS } from '@/lib/montaze/notifications';
 import { updateMontageNotificationsAction } from '../actions';
 import { PortalTimelineDocs } from '../automations/_components/portal-timeline-docs';
+import { SampleOrderSettings } from './sample-order-settings';
 
 interface AutomationRegistryProps {
   templates: MontageChecklistTemplate[];
@@ -22,16 +23,23 @@ interface AutomationRegistryProps {
   initialNotifications: Record<string, boolean>;
   initialAutomationSettings: Record<string, boolean>;
   requireInstallerForMeasurement: boolean;
+  sampleSettings?: {
+      notificationEmail: string | null;
+      confirmationSubject: string | null;
+      confirmationTemplate: string | null;
+  };
 }
 
 export function AutomationRegistry({ 
     templates, 
     initialRules, 
     statusOptions, 
-    initialNotifications, 
+    initialNotifications,
     initialAutomationSettings,
-    requireInstallerForMeasurement
+    requireInstallerForMeasurement,
+    sampleSettings
 }: AutomationRegistryProps) {
+
     const [notifications, setNotifications] = useState<Record<string, boolean>>(initialNotifications);
     const [isPending, startTransition] = useTransition();
 
@@ -150,6 +158,9 @@ export function AutomationRegistry({
                     );
                 })}
             </div>
+            
+            {/* Section 2b: Sample Orders */}
+            <SampleOrderSettings initialSettings={sampleSettings} />
         </div>
         {/* Section 3: Customer Portal Timeline Docs */}
         <div className="space-y-4">
