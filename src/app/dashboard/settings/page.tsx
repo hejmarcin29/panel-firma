@@ -186,6 +186,9 @@ export default async function SettingsPage() {
         smsToken,
         smsSenderName,
         requireInstallerForMeasurement,
+        companyLogoUrl,
+        cloudflareTurnstileSiteKey,
+        cloudflareTurnstileSecretKey,
 	] = await Promise.all([
 		getAppSetting(appSettingKeys.wooWebhookSecret),
 		getAppSetting(appSettingKeys.wooConsumerKey),
@@ -234,6 +237,9 @@ export default async function SettingsPage() {
         getAppSetting(appSettingKeys.smsToken),
         getAppSetting(appSettingKeys.smsSenderName),
         getAppSetting(appSettingKeys.requireInstallerForMeasurement),
+        getAppSetting(appSettingKeys.companyLogoUrl),
+        getAppSetting(appSettingKeys.cloudflareTurnstileSiteKey),
+        getAppSetting(appSettingKeys.cloudflareTurnstileSecretKey),
 	]);
 
     const statusOptions = montageStatusDefinitions.map(def => ({
