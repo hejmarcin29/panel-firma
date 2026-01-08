@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Script from "next/script";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
@@ -16,8 +15,7 @@ declare global {
   interface Window {
     easyPack: {
       modalMap: (
-        callback: (point: any, modal: any) => void,
-        options: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
           width?: number;
           height?: number;
           defaultLocale?: string;
@@ -65,6 +63,7 @@ export function SampleSelector({ token, samples }: SampleSelectorProps) {
             return;
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const widget = window.easyPack.modalMap((point: any, modal: any) => {
             setSelectedPoint({
                 name: point.name,
