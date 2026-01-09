@@ -1,7 +1,7 @@
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
 import { montages, commissions } from '@/lib/db/schema';
-import { eq, and, not, desc, sum, sql } from 'drizzle-orm';
+import { eq, and, not, desc, sum, sql, isNull } from 'drizzle-orm';
 import { formatCurrency } from '@/lib/utils';
 import Link from 'next/link';
 import { ArrowUpRight, DollarSign, Wallet, ArrowRight, User, ShoppingBag, FolderOpen } from 'lucide-react';
@@ -17,6 +17,7 @@ export default async function ArchitectDashboardPage() {
     const activeProjects = await db.query.montages.findMany({
         where: and(
             eq(montages.architectId, user.id),
+            isNull(montages.deletedAt),
             not(eq(montages.status, 'completed')),
             not(eq(montages.status, 'rejected'))
         ),

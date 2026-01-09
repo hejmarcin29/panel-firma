@@ -188,6 +188,61 @@ export default async function MontazePage(props: any) {
     }
 
     let orderByClause;
+    
+    // Filter status options based on view
+    if (view === 'lead') {
+        const leadStatuses = [
+             'new_lead',
+             'lead_contact',
+             'lead_samples_pending',
+             'lead_samples_sent',
+             'lead_pre_estimate'
+        ];
+        statusOptions = statusOptions.filter(s => leadStatuses.includes(s.value));
+    } else if (view === 'done') {
+        statusOptions = statusOptions.filter(s => s.value === 'completed');
+    } else if (view === 'rejected') {
+        statusOptions = statusOptions.filter(s => ['on_hold', 'rejected'].includes(s.value));
+    } else {
+         // In Progress view
+         if (stage !== 'all') {
+             // If a specific stage is selected, filter status options accordingly
+             let filteredStatuses: MontageStatus[] = [];
+             if (stage === 'before-measure') filteredStatuses = ['measurement_to_schedule', 'measurement_scheduled']; // Updated to include 'To Schedule' as it leads to measure
+             if (stage === 'before-first-payment') filteredStatuses = ['measurement_done', 'quote_in_progress', 'quote_sent', 'quote_accepted', 'contract_signed', 'waiting_for_deposit'];
+             if (stage === 'before-install') filteredStatuses = ['deposit_paid', 'materials_ordered', 'materials_pickup_ready', 'installation_scheduled', 'materials_delivered'];
+             if (stage === 'before-invoice') filteredStatuses = ['installation_in_progress', 'protocol_signed', 'final_invoice_issued', 'final_settlement'];
+
+            // If we have a stage, we likely want to see that pipeline slice
+            if (filteredStatuses.length > 0) {
+                 statusOptions = statusOptions.filter(s => filteredStatuses.includes(s.value as MontageStatus));
+            }
+         } else {
+             // Show all In-Progress statuses
+             const inProgressStatuses = [
+                'measurement_to_schedule',
+                'measurement_scheduled',
+                'measurement_done',
+                'quote_in_progress',
+                'quote_sent',
+                'quote_accepted',
+                'contract_signed',
+                'waiting_for_deposit',
+                'deposit_paid',
+                'materials_ordered',
+                'materials_pickup_ready',
+                'installation_scheduled',
+                'materials_delivered',
+                'installation_in_progress',
+                'protocol_signed',
+                'final_invoice_issued',
+                'final_settlement',
+                'complaint'
+             ];
+             statusOptions = statusOptions.filter(s => inProgressStatuses.includes(s.value));
+         }
+    }
+
     if (sort === SORT_OPTIONS.SMART_DATE) {
         orderByClause = [
             asc(sql`COALESCE(${montages.scheduledInstallationAt}, ${montages.forecastedInstallationDate})`),

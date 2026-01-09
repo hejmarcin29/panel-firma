@@ -79,8 +79,10 @@ export function SampleSelector({ token, samples }: SampleSelectorProps) {
     };
 
     const openInPostModal = () => {
+        // Double check both flag and window object availability
         if (!isMapScriptLoaded || typeof window.easyPack === 'undefined') {
-            toast.error("Mapa InPost jeszcze się nie załadowała. Spróbuj za chwilę.");
+            console.warn("Attempted to open InPost map before script load complete.");
+            toast.error("Mapa InPost jeszcze się ładuje. Proszę czekać...");
             return;
         }
 
@@ -209,13 +211,6 @@ export function SampleSelector({ token, samples }: SampleSelectorProps) {
                                     />
                                 ) : (
                                     <Package className="h-10 w-10 opacity-20" />
-                                )}
-                            </div>
-                            {sample.description && (
-                                <p className="text-sm text-muted-foreground line-clamp-2">
-                                    {sample.description}
-                                </p>
-                            )}
                         </CardContent>
                     </Card>
                 ))}
