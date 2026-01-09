@@ -16,7 +16,6 @@ interface InPostSettingsFormProps {
     initialSettings: {
         orgId: string;
         token: string;
-        geoWidgetToken: string;
         sandbox: boolean;
     };
 }
@@ -25,7 +24,6 @@ export function InPostSettingsForm({ initialSettings }: InPostSettingsFormProps)
     const [formData, setFormData] = useState({
         orgId: initialSettings.orgId,
         token: initialSettings.token,
-        geoWidgetToken: initialSettings.geoWidgetToken || '',
         sandbox: initialSettings.sandbox,
     });
 
@@ -38,7 +36,6 @@ export function InPostSettingsForm({ initialSettings }: InPostSettingsFormProps)
             const formDataToSend = new FormData();
             formDataToSend.append('orgId', data.orgId);
             formDataToSend.append('token', data.token);
-            formDataToSend.append('geoWidgetToken', data.geoWidgetToken);
             formDataToSend.append('sandbox', String(data.sandbox));
 
             await saveInPostSettings(formDataToSend);
@@ -91,19 +88,7 @@ export function InPostSettingsForm({ initialSettings }: InPostSettingsFormProps)
                     />
                 </div>
                 <div className='grid gap-2'>
-                    <Label htmlFor='inpost-geowidget-token'>Token GeoWidget</Label>
-                    <Input
-                        id='inpost-geowidget-token'
-                        value={formData.geoWidgetToken}
-                        onChange={(e) => handleChange('geoWidgetToken', e.target.value)}
-                        placeholder='Token mapy (GeoWidget)'
-                    />
-                    <p className="text-[0.8rem] text-muted-foreground">
-                        Token z panelu InPost (Manager Paczek / GeoWidget) autoryzujący wyświetlanie mapy.
-                    </p>
-                </div>
-                <div className='grid gap-2'>
-                    <Label htmlFor='inpost-token'>Token API (ShipX)</Label>
+                    <Label htmlFor='inpost-token'>Token API</Label>
                     <div className="relative">
                         <Input
                             id='inpost-token'

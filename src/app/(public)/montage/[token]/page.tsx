@@ -1,6 +1,5 @@
 import { getPublicMontage, getAvailableSamples } from "./actions";
 import { SampleSelector } from "./_components/sample-selector";
-import { getAppSetting, appSettingKeys } from "@/lib/settings";
 
 interface PublicMontagePageProps {
     params: Promise<{
@@ -11,12 +10,7 @@ interface PublicMontagePageProps {
 export default async function PublicMontagePage({ params }: PublicMontagePageProps) {
     const { token } = await params;
     
-    // Fetch data in parallel
-    const [montage, samples, geoWidgetToken] = await Promise.all([
-        getPublicMontage(token),
-        getAvailableSamples(),
-        getAppSetting(appSettingKeys.inpostGeoWidgetToken)
-    ]);
+    const montage = await getPublicMontage(token);
     
     if (!montage) {
         return (
@@ -33,6 +27,8 @@ export default async function PublicMontagePage({ params }: PublicMontagePagePro
        For now flexible.
     */
 
+    const samples = await getAvailableSamples();
+
     if (samples.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4">
@@ -44,7 +40,7 @@ export default async function PublicMontagePage({ params }: PublicMontagePagePro
 
     return (
         <div className="max-w-5xl mx-auto">
-           <SampleSelector token={token} samples={samples} inpostToken={geoWidgetToken ?? undefined} />
+           <SampleSelector token={token} samples={samples} />
         </div>
     );
 }

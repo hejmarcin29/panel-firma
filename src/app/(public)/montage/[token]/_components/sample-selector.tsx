@@ -15,10 +15,7 @@ import { Input } from "@/components/ui/input";
 // Types needed for InPost GeoWidget
 declare global {
   interface Window {
-    easyPackAsyncInit?: () => void;
     easyPack: {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      init: (config: any) => void;
       modalMap: (
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         callback: (point: any, modal: any) => void,
@@ -43,12 +40,11 @@ interface Product {
 interface SampleSelectorProps {
     token: string;
     samples: Product[];
-    inpostToken?: string;
 }
 
 type DeliveryMethod = 'courier' | 'parcel_locker';
 
-export function SampleSelector({ token, samples, inpostToken }: SampleSelectorProps) {
+export function SampleSelector({ token, samples }: SampleSelectorProps) {
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -77,39 +73,7 @@ export function SampleSelector({ token, samples, inpostToken }: SampleSelectorPr
     const [isMapScriptLoaded, setIsMapScriptLoaded] = useState(false);
     const [hasMapError, setHasMapError] = useState(false);
 
-    // Initializacja mapy po załadowaniu skryptu (lub jeśli już jest)
     const initMap = () => {
-        if (typeof window.easyPack === 'undefined') return;
-        
-        // Jeśli podano token, inicjalizujemy z nim
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const config: any = {
-            defaultLocale: 'pl',
-            mapType: 'osm',
-            searchType: 'osm',
-            points: { types: ['parcel_locker', 'pop'] },
-            map: { useGeolocation: true }
-        };
-
-        /* 
-           Dokumentacja InPost GeoWidget mówi, że funkcja easyPackAsyncInit 
-           jest wywoływana automatycznie, jeśli zdefiniujemy ją w window.
-           Ale w React/Next.js lepiej wywołać init ręcznie w onReady lub useEffect.
-        */
-       
-        // UWAGA: easyPack.init może nie być dostępne w starszych wersjach, ale w v5 jest.
-        // Jeśli mamy token, próbujemy go użyć.
-        if (inpostToken && window.easyPack.init) {
-             // W niektórych wersjach API token przekazuje się tu
-             // W innych token jest w script src.
-             // Spróbujmy standardowej inicjalizacji
-             try {
-                window.easyPack.init({ ...config, token: inpostToken });
-             } catch (e) {
-                console.warn("EasyPack init warning:", e);
-             }
-        }
-
         const link = document.createElement("link");
         link.rel = "stylesheet";
         link.href = "https://geowidget.inpost.pl/inpost-geowidget.css";
@@ -119,12 +83,11 @@ export function SampleSelector({ token, samples, inpostToken }: SampleSelectorPr
         setIsMapScriptLoaded(true);
     };
 
-
     useEffect(() => {
-        // Polling loop - sprawdza czy easyPack jest dostępny (dla pewności)
+        // Check if map is already loaded or loads later (fallback for onReady)
         const checkMap = () => {
              if (typeof window !== 'undefined' && window.easyPack) {
-                if (!isMapScriptLoaded) initMap();
+                initMap();
                 return true;
             }
             return false;
@@ -139,8 +102,7 @@ export function SampleSelector({ token, samples, inpostToken }: SampleSelectorPr
         }, 1000);
 
         return () => clearInterval(interval);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isMapScriptLoaded, inpostToken]);
+    }, []);
 
     const toggleSelection = (id: string) => {
         setSelectedIds(prev => 
@@ -150,33 +112,30 @@ export function SampleSelector({ token, samples, inpostToken }: SampleSelectorPr
 
     const openInPostModal = () => {
         if (hasMapError) {
-             toast.error("Wystąpił problem z mapą InPost. Odśwież stronę (F5).");
+             toast.error("Nie udało się załadować mapy InPost. Odśwież stronę lub sprawdź blokowanie reklam.");
              return;
         }
 
-        if (typeof window.easyPack === 'undefined') {
-            toast.error("Mapa ładuje się w tle... Spróbuj za 2 sekundy.");
+        // Double check both flag and window object availability
+        if (!isMapScriptLoaded || typeof window.easyPack === 'undefined') {
+            console.warn("Attempted to open InPost map before script load complete.");
+            toast.error("Mapa InPost jeszcze się ładuje. Proszę czekać...");
             return;
         }
 
-        try {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const widget = window.easyPack.modalMap((point: any, modal: any) => {
-                setSelectedPoint({
-                    name: point.name,
-                    address: `${point.address_details.street} ${point.address_details.building_number}, ${point.address_details.city}`
-                });
-                modal.closeModal();
-            }, {
-                width: 500,
-                height: 600,
-                defaultLocale: 'pl'
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const widget = window.easyPack.modalMap((point: any, modal: any) => {
+            setSelectedPoint({
+                name: point.name,
+                address: `${point.address_details.street} ${point.address_details.building_number}, ${point.address_details.city}`
             });
-            widget.open();
-        } catch (e) {
-            console.error("Error opening InPost modal:", e);
-            toast.error("Błąd podczas otwierania mapy.");
-        }
+            modal.closeModal(); // Close modal after selection
+        }, {
+            width: 500,
+            height: 600,
+            defaultLocale: 'pl'
+        });
+        widget.open();
     };
 
     const handleSubmit = async () => {
@@ -428,7 +387,7 @@ export function SampleSelector({ token, samples, inpostToken }: SampleSelectorPr
                                 </div>
                                 <Button onClick={openInPostModal} className="w-full sm:w-auto" size="lg" disabled={!isMapScriptLoaded && !hasMapError}>
                                     <MapPin className="mr-2 h-4 w-4" />
-                                    {hasMapError ? "Błąd mapy" : (isMapScriptLoaded ? "Otwórz mapę Paczkomatów" : "Ładowanie mapy...")}
+                                    {hasMapError ? "Spróbuj ponownie" : (isMapScriptLoaded ? "Otwórz mapę Paczkomatów" : "Ładowanie mapy...")}
                                 </Button>
                             </>
                         )}
