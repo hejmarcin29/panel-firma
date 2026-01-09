@@ -71,7 +71,6 @@ export function SampleSelector({ token, samples }: SampleSelectorProps) {
     });
 
     const [isMapScriptLoaded, setIsMapScriptLoaded] = useState(false);
-    const [isMapScriptLoaded, setIsMapScriptLoaded] = useState(false);
 
     const toggleSelection = (id: string) => {
         setSelectedIds(prev => 
