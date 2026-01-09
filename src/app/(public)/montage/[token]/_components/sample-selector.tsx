@@ -211,6 +211,8 @@ export function SampleSelector({ token, samples }: SampleSelectorProps) {
                                     />
                                 ) : (
                                     <Package className="h-10 w-10 opacity-20" />
+                                )}
+                            </div>
                         </CardContent>
                     </Card>
                 ))}
