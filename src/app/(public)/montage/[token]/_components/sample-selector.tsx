@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Script from "next/script";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -61,6 +61,7 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
     const [isGeoDialogOpen, setIsGeoDialogOpen] = useState(false);
 
     const onPointEventName = useMemo(() => "inpost_point_selected", []);
+    const geoWidgetRef = useRef<HTMLElement | null>(null);
 
     const initMap = () => {
         const link = document.createElement("link");
@@ -74,6 +75,15 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
 
     useEffect(() => {
         if (!isGeoDialogOpen) return;
+
+        // IMPORTANT: Geowidget v5 defines some properties (like `token`) as getter-only.
+        // React may try to set them as DOM properties and crash. We set them as attributes manually.
+        if (geoWidgetRef.current) {
+            geoWidgetRef.current.setAttribute("token", geowidgetToken || "");
+            geoWidgetRef.current.setAttribute("config", geowidgetConfig || "");
+            geoWidgetRef.current.setAttribute("language", "pl");
+            geoWidgetRef.current.setAttribute("onpoint", onPointEventName);
+        }
 
         const handler = (event: Event) => {
             const customEvent = event as CustomEvent;
@@ -275,10 +285,9 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
                     <div className="px-6 pb-6">
                         <div className="h-[70vh] min-h-[520px] w-full rounded-lg overflow-hidden border">
                             <inpost-geowidget
-                                token={geowidgetToken}
-                                config={geowidgetConfig}
-                                language="pl"
-                                onpoint={onPointEventName}
+                                ref={(el) => {
+								geoWidgetRef.current = el;
+							}}
                                 className="block h-full w-full"
                             />
                         </div>
