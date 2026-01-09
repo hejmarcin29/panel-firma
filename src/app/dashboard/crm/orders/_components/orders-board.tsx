@@ -136,7 +136,7 @@ export function OrdersBoard({ orders: initialOrders }: OrdersBoardProps) {
     >
       <div className="h-[calc(100vh-14rem)] flex gap-4 overflow-x-auto pb-4 snap-x ml-4 md:ml-0">
         {columns.map((col) => (
-          <div key={col.id} className="w-[280px] md:w-[320px] flex-shrink-0 snap-center h-full">
+          <div key={col.id} className="w-[280px] md:w-[320px] shrink-0 snap-center h-full">
             <OrdersPipelineColumn
               statusId={col.id}
               orders={col.orders}

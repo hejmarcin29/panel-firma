@@ -189,7 +189,7 @@ export default function ShowroomPage() {
                                         transition={{ duration: 0.4 }}
                                         className='group flex flex-col bg-white rounded-2xl border border-zinc-200 p-3 hover:border-zinc-300 hover:shadow-lg hover:shadow-zinc-200/50 transition-all duration-300'
                                     >
-                                        <div className='relative aspect-[4/5] overflow-hidden rounded-xl bg-zinc-100 mb-4'>
+                                        <div className='relative aspect-4/5 overflow-hidden rounded-xl bg-zinc-100 mb-4'>
                                             {getInstallationMethod(product) && (
                                                 <div className={cn(
                                                     'absolute top-3 left-3 px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md shadow-sm z-20 backdrop-blur-md border',

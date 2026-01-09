@@ -64,7 +64,7 @@ export default async function ArchitectDashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 
                 {/* 1. Wallet / Balance Card (Large) */}
-                <div className="md:col-span-2 relative overflow-hidden rounded-3xl bg-white border border-zinc-200 p-6 flex flex-col justify-between h-[320px] group hover:border-zinc-300 transition-colors shadow-sm">
+                <div className="md:col-span-2 relative overflow-hidden rounded-3xl bg-white border border-zinc-200 p-6 flex flex-col justify-between h-80 group hover:border-zinc-300 transition-colors shadow-sm">
                     {/* Background Noise/Gradient */}
                     <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-indigo-50 rounded-full blur-[120px] -translate-y-1/3 translate-x-1/4 pointer-events-none" />
                     
@@ -95,7 +95,7 @@ export default async function ArchitectDashboardPage() {
                 </div>
 
                 {/* 2. Showroom Card (Unified Style) */}
-                <div className="md:col-span-1 relative overflow-hidden rounded-3xl bg-white border border-zinc-200 p-6 flex flex-col justify-between h-[320px] group hover:border-zinc-300 transition-colors shadow-sm">
+                <div className="md:col-span-1 relative overflow-hidden rounded-3xl bg-white border border-zinc-200 p-6 flex flex-col justify-between h-80 group hover:border-zinc-300 transition-colors shadow-sm">
                      {/* Background Gradient Accent */}
                      <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-violet-50 rounded-full blur-[80px] -translate-y-1/3 translate-x-1/3 pointer-events-none" />
 
@@ -123,7 +123,7 @@ export default async function ArchitectDashboardPage() {
                 </div>
 
                 {/* 3. Active Projects List (Unified Header) */}
-                <div className="md:col-span-2 rounded-3xl bg-white border border-zinc-200 p-6 min-h-[320px] shadow-sm group hover:border-zinc-300 transition-colors">
+                <div className="md:col-span-2 rounded-3xl bg-white border border-zinc-200 p-6 min-h-80 shadow-sm group hover:border-zinc-300 transition-colors">
                      <div className="flex items-center justify-between mb-6">
                          <div className="flex items-center gap-2 p-2 bg-white/80 rounded-lg border border-zinc-200 backdrop-blur-sm w-fit">
                             <FolderOpen className="h-4 w-4 text-blue-600" />
@@ -177,7 +177,7 @@ export default async function ArchitectDashboardPage() {
                 </div>
 
                 {/* 4. Clients (Replaces Guardian) */}
-                <div className="md:col-span-1 relative overflow-hidden rounded-3xl bg-white border border-zinc-200 p-6 flex flex-col justify-between min-h-[320px] group hover:border-zinc-300 transition-colors shadow-sm">
+                <div className="md:col-span-1 relative overflow-hidden rounded-3xl bg-white border border-zinc-200 p-6 flex flex-col justify-between min-h-80 group hover:border-zinc-300 transition-colors shadow-sm">
                      {/* Background Gradient Accent */}
                      <div className="absolute top-0 right-0 w-[200px] h-[200px] bg-orange-50 rounded-full blur-[80px] -translate-y-1/3 translate-x-1/3 pointer-events-none" />
 
