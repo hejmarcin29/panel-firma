@@ -267,7 +267,7 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
         <div className="space-y-8 pb-32">
             <Script 
                 id="inpost-geowidget-script"
-                src={`https://geowidget.inpost.pl/inpost-geowidget.js?token=${encodeURIComponent(geowidgetToken || "")}`}
+                src="https://geowidget.inpost.pl/inpost-geowidget.js"
                 strategy="afterInteractive"
                 onReady={initMap}
                 onError={() => {
