@@ -246,7 +246,7 @@ export default async function SettingsPage() {
         getAppSetting(appSettingKeys.smsToken),
         getAppSetting(appSettingKeys.smsSenderName),
         getAppSetting(appSettingKeys.requireInstallerForMeasurement),
-        getAppSetting(appSettingKeys.companyLogoUrl),
+        // getAppSetting(appSettingKeys.companyLogoUrl),
         getAppSetting(appSettingKeys.cloudflareTurnstileSiteKey),
         getAppSetting(appSettingKeys.cloudflareTurnstileSecretKey),
         getAppSetting(appSettingKeys.inpostOrgId),
