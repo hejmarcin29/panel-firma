@@ -1,15 +1,8 @@
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { FileText, Download, CheckCircle2, AlertCircle } from 'lucide-react';
 import type { OrderDocument } from '../../data';
 import { formatDate } from './utils';
 
@@ -18,104 +11,63 @@ interface OrderDocumentsCardProps {
 }
 
 export function OrderDocumentsCard({ documents }: OrderDocumentsCardProps) {
-  if (documents.length === 0) {
-    return (
-        <Card>
-            <CardHeader className="px-4 py-3">
-                <CardTitle className="text-base">Dokumenty</CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 pb-4 pt-0">
-                <p className="text-xs text-muted-foreground">Brak wystawionych dokumentów.</p>
-            </CardContent>
-        </Card>
-    );
-  }
-
   return (
-    <Card>
-      <CardHeader className="px-4 py-3">
-        <CardTitle className="text-base">Dokumenty</CardTitle>
-        <CardDescription className="text-xs">Faktury i proformy.</CardDescription>
+    <Card className="border-border/50 shadow-sm overflow-hidden">
+      <CardHeader className="px-6 py-4 bg-muted/10 border-b border-border/50 flex flex-row items-center justify-between space-y-0">
+        <CardTitle className="text-base font-medium">Dokumenty finansowe</CardTitle>
+        <span className="text-xs text-muted-foreground bg-background border px-2 py-0.5 rounded-full">
+            {documents.length}
+        </span>
       </CardHeader>
-      <CardContent className="px-4 pb-4 pt-0">
-        {/* Mobile */}
-        <div className="space-y-3 md:hidden">
-            {documents.map((document) => (
-                <div key={document.id} className="rounded-lg border bg-muted/40 p-3">
-                    <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-medium capitalize text-foreground">{document.type}</p>
-                        <Badge variant="outline" className="px-2 py-0 text-[10px]">
-                            {document.status}
-                        </Badge>
-                    </div>
-                    <dl className="mt-3 grid grid-cols-2 gap-3 text-[11px]">
-                        <div className="space-y-1">
-                            <dt className="text-muted-foreground">Numer</dt>
-                            <dd className="font-semibold text-foreground">{document.number ?? '—'}</dd>
-                        </div>
-                        <div className="space-y-1">
-                            <dt className="text-muted-foreground">Data</dt>
-                            <dd className="font-semibold text-foreground">
-                                {document.issueDate ? formatDate(document.issueDate) : '—'}
-                            </dd>
-                        </div>
-                    </dl>
-                    <div className="mt-3">
-                        {document.pdfUrl ? (
-                            <Button asChild size="sm" variant="outline" className="h-8 w-full px-3 text-xs">
-                                <Link href={document.pdfUrl} target="_blank" rel="noreferrer">
-                                    Pobierz PDF
-                                </Link>
-                            </Button>
-                        ) : (
-                            <span className="text-[10px] text-muted-foreground">Brak pliku</span>
-                        )}
-                    </div>
-                </div>
-            ))}
-        </div>
-
-        {/* Desktop */}
-        <div className="hidden overflow-x-auto md:block">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead className="py-2 text-[11px]">Typ</TableHead>
-                        <TableHead className="py-2 text-[11px]">Numer</TableHead>
-                        <TableHead className="py-2 text-[11px]">Status</TableHead>
-                        <TableHead className="py-2 text-[11px]">Data</TableHead>
-                        <TableHead className="py-2 text-right text-[11px]">Akcje</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {documents.map((document) => (
-                        <TableRow key={document.id}>
-                            <TableCell className="py-2 text-xs font-medium capitalize">{document.type}</TableCell>
-                            <TableCell className="py-2 text-xs">{document.number ?? '—'}</TableCell>
-                            <TableCell className="py-2 text-xs">
-                                <Badge variant="outline" className="px-2 py-0 text-[10px]">
-                                    {document.status}
-                                </Badge>
-                            </TableCell>
-                            <TableCell className="py-2 text-xs">
-                                {document.issueDate ? formatDate(document.issueDate) : '—'}
-                            </TableCell>
-                            <TableCell className="py-2 text-right text-xs">
-                                {document.pdfUrl ? (
-                                    <Button asChild size="sm" variant="outline" className="h-8 px-3 text-xs">
-                                        <Link href={document.pdfUrl} target="_blank" rel="noreferrer">
-                                            Pobierz PDF
-                                        </Link>
-                                    </Button>
-                                ) : (
-                                    <span className="text-[10px] text-muted-foreground">Brak pliku</span>
-                                )}
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </div>
+      <CardContent className="p-0">
+        {documents.length === 0 ? (
+           <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
+                <FileText className="h-10 w-10 mb-3 opacity-20" />
+                <p className="text-sm">Brak wystawionych dokumentów.</p>
+           </div>
+        ) : (
+           <div className="divide-y divide-border/50">
+               {documents.map((doc) => (
+                   <div key={doc.id} className="p-4 flex items-center justify-between hover:bg-muted/5 transition-colors group">
+                       <div className="flex items-center gap-3">
+                           <div className="h-10 w-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 flex-shrink-0">
+                                <FileText className="h-5 w-5" />
+                           </div>
+                           <div className="flex flex-col gap-0.5">
+                               <div className="flex items-center gap-2">
+                                    <span className="font-medium text-sm capitalize">
+                                        {doc.type === 'invoice' ? 'Faktura VAT' : doc.type === 'proforma' ? 'Proforma' : doc.type}
+                                    </span>
+                                    {doc.status === 'paid' && (
+                                        <Badge variant="secondary" className="text-[10px] h-5 px-1.5 bg-green-50 text-green-700 hover:bg-green-100 gap-1 border-green-200">
+                                            <CheckCircle2 className="h-3 w-3" /> Opłacona
+                                        </Badge>
+                                    )}
+                                    {doc.status !== 'paid' && (
+                                        <Badge variant="outline" className="text-[10px] h-5 px-1.5 text-orange-700 bg-orange-50 border-orange-200 gap-1">
+                                            <AlertCircle className="h-3 w-3" /> {doc.status}
+                                        </Badge>
+                                    )}
+                               </div>
+                               <span className="text-xs text-muted-foreground">
+                                   {doc.number ?? 'Brak numeru'} • {doc.issueDate ? formatDate(doc.issueDate) : '—'}
+                               </span>
+                           </div>
+                       </div>
+                       
+                       {doc.pdfUrl ? (
+                           <Button asChild variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                               <Link href={doc.pdfUrl} target="_blank" title="Pobierz PDF">
+                                    <Download className="h-4 w-4" />
+                               </Link>
+                           </Button>
+                       ) : (
+                           <span className="text-[10px] text-muted-foreground italic px-2">Brak pliku</span>
+                       )}
+                   </div>
+               ))}
+           </div>
+        )}
       </CardContent>
     </Card>
   );
