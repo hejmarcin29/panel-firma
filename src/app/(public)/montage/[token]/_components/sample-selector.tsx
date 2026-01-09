@@ -60,7 +60,7 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
     const [hasMapError, setHasMapError] = useState(false);
     const [isGeoDialogOpen, setIsGeoDialogOpen] = useState(false);
 
-    const onPointEventName = useMemo(() => "inpost_point_selected", []);
+    const onPointEventName = useMemo(() => "onpointselect", []);
     const geoWidgetRef = useRef<HTMLElement | null>(null);
 
     const initMap = () => {
