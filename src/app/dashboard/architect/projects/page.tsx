@@ -1,10 +1,9 @@
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
-import { montages, customers, commissions } from '@/lib/db/schema';
-import { eq, desc, and, not, or } from 'drizzle-orm';
+import { montages } from '@/lib/db/schema';
+import { eq, desc } from 'drizzle-orm';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { MapPin, Calendar, ArrowRight, FolderOpen, Coins } from 'lucide-react';
+import { MapPin, ArrowRight, FolderOpen, Coins } from 'lucide-react';
 import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
 import { cn } from '@/lib/utils';

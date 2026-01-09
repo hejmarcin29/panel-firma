@@ -1,7 +1,7 @@
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
 import { customers, montages } from '@/lib/db/schema';
-import { eq, desc, and } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import { Button } from '@/components/ui/button';
 import { Mail, Phone, Calendar, ArrowRight, User } from 'lucide-react';
 import Link from 'next/link';

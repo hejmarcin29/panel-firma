@@ -32,7 +32,7 @@ export function SampleOrderSettings({ initialSettings }: SampleOrderSettingsProp
                     confirmationTemplate: template
                 });
                 toast.success('Ustawienia próbek zapisane');
-            } catch (error) {
+            } catch {
                 toast.error('Błąd zapisu ustawień');
             }
         });

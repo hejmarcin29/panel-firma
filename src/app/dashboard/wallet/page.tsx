@@ -124,7 +124,11 @@ export default async function WalletPage() {
                             <div key={commission.id} className='p-4 hover:bg-zinc-50/50 transition-colors flex items-center justify-between group'>
                                 <div className='flex items-center gap-4'>
                                     {/* Icon based on status */}
-                                    <div className={\h-10 w-10 rounded-full flex items-center justify-center border \\}>
+                                    <div className={`h-10 w-10 rounded-full flex items-center justify-center border ${
+                                        commission.status === 'paid' 
+                                            ? 'bg-emerald-50 border-emerald-100 text-emerald-600' 
+                                            : 'bg-amber-50 border-amber-100 text-amber-600'
+                                    }`}>
                                         {commission.status === 'paid' ? (
                                             <ArrowDownToLine className='h-5 w-5' />
                                         ) : (
@@ -135,7 +139,7 @@ export default async function WalletPage() {
                                     <div>
                                         <div className='font-medium text-zinc-900 flex items-center gap-2'>
                                             {commission.montage ? (
-                                                 <Link href={\/dashboard/crm/montaze/\\} className='hover:text-indigo-600 transition-colors flex items-center gap-1'>
+                                                 <Link href={`/dashboard/crm/montaze/${commission.montage.id}`} className='hover:text-indigo-600 transition-colors flex items-center gap-1'>
                                                     {commission.montage.clientName}
                                                     <ArrowUpRight className='h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity' />
                                                 </Link>
@@ -162,10 +166,14 @@ export default async function WalletPage() {
                                 </div>
 
                                 <div className='text-right'>
-                                    <div className={\ont-bold text-lg \\}>
+                                    <div className={`font-bold text-lg ${
+                                        commission.status === 'paid' ? 'text-emerald-600' : 'text-zinc-900'
+                                    }`}>
                                         +{formatCurrency(commission.amount / 100)}
                                     </div>
-                                    <div className={\	ext-xs font-medium uppercase tracking-wider \\}>
+                                    <div className={`text-xs font-medium uppercase tracking-wider ${
+                                        commission.status === 'paid' ? 'text-emerald-600' : 'text-amber-600'
+                                    }`}>
                                         {commission.status === 'paid' ? 'Wypłacone' : 'Oczekujące'}
                                     </div>
                                 </div>

@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Heart, ShoppingBag, Search, X, Loader2 } from 'lucide-react';
 import { getAssignedProducts } from '../erp/products/actions';
 import { toast } from 'sonner';
@@ -183,7 +182,7 @@ export default function ShowroomPage() {
                             <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
                                 {groupedProducts[categoryName].map((product) => (
                                     <motion.div
-                                        key={\\-\\}
+                                        key={product.id}
                                         initial={{ opacity: 0, y: 20 }}
                                         whileInView={{ opacity: 1, y: 0 }}
                                         viewport={{ once: true }}

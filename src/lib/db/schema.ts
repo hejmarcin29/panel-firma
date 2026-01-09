@@ -593,8 +593,14 @@ export const montages = pgTable(
             method: 'courier' | 'parcel_locker';
             pointName?: string; // np. WAW24M
             pointAddress?: string; // np. Marszałkowska 1, Warszawa
-            courierAddress?: {
+            recipient: {
+                name: string;
+                email: string;
+                phone: string;
+            };
+            address?: { // Tylko dla kuriera
                 street: string;
+                buildingNumber: string;
                 city: string;
                 postalCode: string;
             };

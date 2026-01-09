@@ -39,10 +39,21 @@ export async function getAvailableSamples() {
 export async function submitSampleRequest(
     token: string, 
     productIds: string[],
-    delivery?: {
+    delivery: {
         method: 'courier' | 'parcel_locker';
+        recipient: {
+            name: string;
+            email: string;
+            phone: string;
+        };
         pointName?: string;
         pointAddress?: string;
+        address?: {
+            street: string;
+            buildingNumber: string;
+            city: string;
+            postalCode: string;
+        };
     }
 ) {
     // 1. Verify Token
@@ -60,12 +71,15 @@ export async function submitSampleRequest(
     const sampleList = selectedProducts.map(p => `- ${p.name} (${p.sku})`).join('\n');
     
     let deliveryNote = '';
-    if (delivery?.method === 'parcel_locker') {
-        deliveryNote = `\n[DOSTAWA: PACZKOMAT] ${delivery.pointName} (${delivery.pointAddress})`;
+    const { method, recipient, address, pointName, pointAddress } = delivery;
+
+    if (method === 'parcel_locker') {
+        deliveryNote = `\n[DOSTAWA: PACZKOMAT]\nPunkt: ${pointName} (${pointAddress})\nDla: ${recipient.name}, ${recipient.phone}, ${recipient.email}`;
     } else {
-        deliveryNote = `\n[DOSTAWA: KURIER] (Na adres montażu)`;
+        deliveryNote = `\n[DOSTAWA: KURIER]\nAdres: ${address?.street} ${address?.buildingNumber}, ${address?.postalCode} ${address?.city}\nDla: ${recipient.name}, ${recipient.phone}, ${recipient.email}`;
     }
 
+    // Update Sample Delivery Info ONLY (Do not touch main client address)
     await db.update(montages)
         .set({
             status: 'lead_samples_pending',

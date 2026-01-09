@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import { submitSampleRequest } from "../actions";
 import { CheckCircle2, Package, Truck, MapPin } from "lucide-react";
 
+import { Input } from "@/components/ui/input";
+
 // Types needed for InPost GeoWidget
 declare global {
   interface Window {
@@ -54,6 +56,23 @@ export function SampleSelector({ token, samples }: SampleSelectorProps) {
         address: string;
     } | null>(null);
 
+    // Form State
+    const [recipient, setRecipient] = useState({
+        name: '',
+        email: '',
+        phone: ''
+    });
+
+    const [address, setAddress] = useState({
+        street: '',
+        buildingNumber: '',
+        city: '',
+        postalCode: ''
+    });
+
+    const [isMapScriptLoaded, setIsMapScriptLoaded] = useState(false);
+    const [isMapScriptLoaded, setIsMapScriptLoaded] = useState(false);
+
     const toggleSelection = (id: string) => {
         setSelectedIds(prev => 
             prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
@@ -61,7 +80,7 @@ export function SampleSelector({ token, samples }: SampleSelectorProps) {
     };
 
     const openInPostModal = () => {
-        if (typeof window.easyPack === 'undefined') {
+        if (!isMapScriptLoaded || typeof window.easyPack === 'undefined') {
             toast.error("Mapa InPost jeszcze się nie załadowała. Spróbuj za chwilę.");
             return;
         }
@@ -87,15 +106,30 @@ export function SampleSelector({ token, samples }: SampleSelectorProps) {
             return;
         }
 
+        // Walidacja danych kontaktowych
+        if (!recipient.name || !recipient.email || !recipient.phone) {
+            toast.error("Uzupełnij dane kontaktowe (Imię, Email, Telefon).");
+            return;
+        }
+
         if (deliveryMethod === 'parcel_locker' && !selectedPoint) {
             toast.error("Proszę wybrać Paczkomat z mapy.");
             return;
+        }
+
+        if (deliveryMethod === 'courier') {
+            if (!address.street || !address.buildingNumber || !address.city || !address.postalCode) {
+                toast.error("Uzupełnij pełny adres dostawy.");
+                return;
+            }
         }
 
         setIsSubmitting(true);
         try {
             await submitSampleRequest(token, selectedIds, {
                 method: deliveryMethod,
+                recipient,
+                address: deliveryMethod === 'courier' ? address : undefined,
                 pointName: selectedPoint?.name,
                 pointAddress: selectedPoint?.address
             });
@@ -130,12 +164,15 @@ export function SampleSelector({ token, samples }: SampleSelectorProps) {
         <div className="space-y-8 pb-32">
             <Script 
                 src="https://geowidget.inpost.pl/inpost-geowidget.js" 
-                strategy="lazyOnload"
-                onLoad={() => {
+                strategy="afterInteractive"
+                onReady={() => {
                     const link = document.createElement("link");
                     link.rel = "stylesheet";
                     link.href = "https://geowidget.inpost.pl/inpost-geowidget.css";
-                    document.head.appendChild(link);
+                    if (!document.head.querySelector(`link[href="${link.href}"]`)) {
+                        document.head.appendChild(link);
+                    }
+                    setIsMapScriptLoaded(true);
                 }}
             />
 
@@ -203,7 +240,7 @@ export function SampleSelector({ token, samples }: SampleSelectorProps) {
                         >
                             <Truck className="mb-3 h-6 w-6" />
                             <div className="text-center font-semibold">Kurier</div>
-                            <div className="text-center text-xs text-muted-foreground mt-1">Na adres montażu</div>
+                            <div className="text-center text-xs text-muted-foreground mt-1">Dostawa do domu</div>
                         </Label>
                     </div>
                     <div>
@@ -221,6 +258,82 @@ export function SampleSelector({ token, samples }: SampleSelectorProps) {
                     </div>
                 </RadioGroup>
 
+                {/* Dane Kontaktowe (Zawsze) */}
+                <div className="bg-muted/50 p-6 rounded-lg space-y-4">
+                    <h3 className="font-semibold text-lg">Twoje Dane Kontaktowe</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="recipientName">Imię i Nazwisko</Label>
+                            <Input 
+                                id="recipientName" 
+                                placeholder="Janowalski" 
+                                value={recipient.name}
+                                onChange={(e) => setRecipient(prev => ({...prev, name: e.target.value}))}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="recipientPhone">Telefon</Label>
+                            <Input 
+                                id="recipientPhone" 
+                                placeholder="500600700" 
+                                value={recipient.phone}
+                                onChange={(e) => setRecipient(prev => ({...prev, phone: e.target.value}))}
+                            />
+                            <p className="text-xs text-muted-foreground">Wymagany przez InPost do powiadomień SMS.</p>
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                            <Label htmlFor="recipientEmail">Adres E-mail</Label>
+                            <Input 
+                                id="recipientEmail" 
+                                type="email"
+                                placeholder="jan@przyklad.pl" 
+                                value={recipient.email}
+                                onChange={(e) => setRecipient(prev => ({...prev, email: e.target.value}))}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {deliveryMethod === 'courier' && (
+                     <div className="bg-muted/50 p-6 rounded-lg space-y-4 animate-in slide-in-from-top-4 fade-in duration-300">
+                        <h3 className="font-semibold text-lg">Adres Dostawy</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2 md:col-span-1">
+                                <Label>Ulica</Label>
+                                <Input 
+                                    placeholder="Marszałkowska" 
+                                    value={address.street} 
+                                    onChange={e => setAddress(prev => ({...prev, street: e.target.value}))}
+                                />
+                            </div>
+                            <div className="space-y-2 md:col-span-1">
+                                <Label>Nr domu / lokalu</Label>
+                                <Input 
+                                    placeholder="1/2" 
+                                    value={address.buildingNumber} 
+                                    onChange={e => setAddress(prev => ({...prev, buildingNumber: e.target.value}))}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Kod pocztowy</Label>
+                                <Input 
+                                    placeholder="00-001" 
+                                    value={address.postalCode} 
+                                    onChange={e => setAddress(prev => ({...prev, postalCode: e.target.value}))}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Miasto</Label>
+                                <Input 
+                                    placeholder="Warszawa" 
+                                    value={address.city} 
+                                    onChange={e => setAddress(prev => ({...prev, city: e.target.value}))}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
+                
                 {deliveryMethod === 'parcel_locker' && (
                      <div className="bg-muted/50 p-6 rounded-lg border-2 border-dashed border-primary/20 flex flex-col items-center gap-4 animate-in slide-in-from-top-4 fade-in duration-300">
                         {selectedPoint ? (
@@ -242,14 +355,18 @@ export function SampleSelector({ token, samples }: SampleSelectorProps) {
                                     <h3 className="font-semibold">Wybierz punkt odbioru</h3>
                                     <p className="text-sm text-muted-foreground">Kliknij przycisk poniżej, aby otworzyć mapę.</p>
                                 </div>
-                                <Button onClick={openInPostModal} className="w-full sm:w-auto" size="lg">
+                                <Button onClick={openInPostModal} className="w-full sm:w-auto" size="lg" disabled={!isMapScriptLoaded}>
                                     <MapPin className="mr-2 h-4 w-4" />
-                                    Otwórz mapę Paczkomatów
+                                    {isMapScriptLoaded ? "Otwórz mapę Paczkomatów" : "Ładowanie mapy..."}
                                 </Button>
                             </>
                         )}
                     </div>
                 )}
+
+                <p className="text-xs text-muted-foreground text-center px-4">
+                    Podane dane osobowe zostaną wykorzystane wyłącznie w celu realizacji wysyłki próbek.
+                </p>
             </div>
 
             <div className="sticky bottom-4 mx-auto max-w-md z-50">
