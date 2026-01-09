@@ -27,7 +27,7 @@ async function main() {
     userMontages.forEach(m => {
         console.log(`- ID: ${m.id}, Client: ${m.clientName}, Status: ${m.status}, Created: ${m.createdAt}`);
         if(m.customer) {
-            console.log(`  > Customer Relation: ${m.customer.firstName} ${m.customer.lastName}`);
+            console.log(`  > Customer Relation: ${m.customer.name}`);
         }
     });
     
