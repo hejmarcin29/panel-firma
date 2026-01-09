@@ -104,7 +104,6 @@ export function SampleSelector({ token, samples, inpostToken }: SampleSelectorPr
              // W innych token jest w script src.
              // Spróbujmy standardowej inicjalizacji
              try {
-                // @ts-expect-error - easyPack init signature might vary or be dynamic
                 window.easyPack.init({ ...config, token: inpostToken });
              } catch (e) {
                 console.warn("EasyPack init warning:", e);
