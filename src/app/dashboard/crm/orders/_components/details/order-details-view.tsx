@@ -32,7 +32,7 @@ export function OrderDetailsView({ order, documents, timelineEntries }: OrderDet
     <div className="flex flex-col gap-6 max-w-[1600px] mx-auto w-full pb-12">
         
         {/* TOP NAV / BREADCRUMB AREA */}
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-[-1rem]">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground -mb-4">
             <Link href="/dashboard/crm/orders" className="hover:text-foreground transition-colors flex items-center gap-1">
                 <ArrowLeft className="h-4 w-4" />
                 Wróć do listy

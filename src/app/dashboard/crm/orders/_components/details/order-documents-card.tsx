@@ -30,7 +30,7 @@ export function OrderDocumentsCard({ documents }: OrderDocumentsCardProps) {
                {documents.map((doc) => (
                    <div key={doc.id} className="p-4 flex items-center justify-between hover:bg-muted/5 transition-colors group">
                        <div className="flex items-center gap-3">
-                           <div className="h-10 w-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 flex-shrink-0">
+                           <div className="h-10 w-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 shrink-0">
                                 <FileText className="h-5 w-5" />
                            </div>
                            <div className="flex flex-col gap-0.5">

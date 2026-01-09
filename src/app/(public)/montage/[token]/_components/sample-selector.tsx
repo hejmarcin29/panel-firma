@@ -17,6 +17,7 @@ declare global {
   interface Window {
     easyPackAsyncInit?: () => void;
     easyPack: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       init: (config: any) => void;
       modalMap: (
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -81,6 +82,7 @@ export function SampleSelector({ token, samples, inpostToken }: SampleSelectorPr
         if (typeof window.easyPack === 'undefined') return;
         
         // Jeśli podano token, inicjalizujemy z nim
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const config: any = {
             defaultLocale: 'pl',
             mapType: 'osm',
@@ -102,7 +104,7 @@ export function SampleSelector({ token, samples, inpostToken }: SampleSelectorPr
              // W innych token jest w script src.
              // Spróbujmy standardowej inicjalizacji
              try {
-                // @ts-ignore
+                // @ts-expect-error - easyPack init signature might vary or be dynamic
                 window.easyPack.init({ ...config, token: inpostToken });
              } catch (e) {
                 console.warn("EasyPack init warning:", e);
@@ -138,6 +140,7 @@ export function SampleSelector({ token, samples, inpostToken }: SampleSelectorPr
         }, 1000);
 
         return () => clearInterval(interval);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isMapScriptLoaded, inpostToken]);
 
     const toggleSelection = (id: string) => {

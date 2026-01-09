@@ -5,7 +5,6 @@ import { User, Phone, Mail, MapPin, Copy, Truck } from "lucide-react";
 import { Order } from "../../data";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 
 export function OrderInfoCard({ order }: { order: Order }) {
   const copyToClipboard = (text: string, label: string) => {

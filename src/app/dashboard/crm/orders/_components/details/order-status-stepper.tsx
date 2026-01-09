@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Circle, Clock, Package } from "lucide-react";
+import { Check, Circle, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ORDER_STATUSES, StatusDefinition } from "../../utils";
 
