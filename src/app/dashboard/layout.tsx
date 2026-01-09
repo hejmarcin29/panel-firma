@@ -139,7 +139,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
                 </header>
                 <main className="mx-auto w-full max-w-[1600px] p-0 md:px-5 md:py-8">
                     <div className="hidden md:block px-4 py-4 md:p-0 sticky top-[65px] z-40 bg-transparent">
-                        <DashboardNav urgentOrdersCount={urgentOrdersCount} leadsCount={newLeadsCount} userRoles={userRoles} />
+                        <DashboardNav leadsCount={newLeadsCount} userRoles={userRoles} />
                     </div>
                     {children}
                 </main>
