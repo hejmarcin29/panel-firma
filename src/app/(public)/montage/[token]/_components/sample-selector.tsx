@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Script from "next/script";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,25 +9,9 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { submitSampleRequest } from "../actions";
 import { CheckCircle2, Package, Truck, MapPin } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 import { Input } from "@/components/ui/input";
-
-// Types needed for InPost GeoWidget
-declare global {
-  interface Window {
-    easyPack: {
-      modalMap: (
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        callback: (point: any, modal: any) => void,
-        options: {
-          width?: number;
-          height?: number;
-          defaultLocale?: string;
-        }
-      ) => { open: () => void };
-    };
-  }
-}
 
 interface Product {
     id: string;
@@ -73,6 +57,10 @@ export function SampleSelector({ token, samples, geowidgetToken }: SampleSelecto
 
     const [isMapScriptLoaded, setIsMapScriptLoaded] = useState(false);
     const [hasMapError, setHasMapError] = useState(false);
+    const [isGeoDialogOpen, setIsGeoDialogOpen] = useState(false);
+
+    const geowidgetConfig = "parcelCollect";
+    const onPointEventName = useMemo(() => "inpost_point_selected", []);
 
     const initMap = () => {
         const link = document.createElement("link");
@@ -85,25 +73,87 @@ export function SampleSelector({ token, samples, geowidgetToken }: SampleSelecto
     };
 
     useEffect(() => {
-        // Check if map is already loaded or loads later (fallback for onReady)
-        const checkMap = () => {
-             if (typeof window !== 'undefined' && window.easyPack) {
-                initMap();
-                return true;
+        if (!isGeoDialogOpen) return;
+
+        const handler = (event: Event) => {
+            const customEvent = event as CustomEvent;
+            const detail = customEvent?.detail as unknown;
+            if (!detail || typeof detail !== "object") return;
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const point = detail as any;
+
+            const name =
+                point?.name ??
+                point?.id ??
+                point?.pointName ??
+                point?.point_id ??
+                "";
+
+            const street =
+                point?.address_details?.street ??
+                point?.address?.street ??
+                point?.street ??
+                "";
+
+            const buildingNumber =
+                point?.address_details?.building_number ??
+                point?.address?.buildingNumber ??
+                point?.building_number ??
+                point?.buildingNumber ??
+                "";
+
+            const city =
+                point?.address_details?.city ??
+                point?.address?.city ??
+                point?.city ??
+                "";
+
+            const postalCode =
+                point?.address_details?.post_code ??
+                point?.address?.postCode ??
+                point?.post_code ??
+                point?.postalCode ??
+                "";
+
+            const addressLine1 =
+                point?.address?.line1 ??
+                point?.address?.line_1 ??
+                "";
+
+            const addressLine2 =
+                point?.address?.line2 ??
+                point?.address?.line_2 ??
+                "";
+
+            const composedAddress = [
+                [street, buildingNumber].filter(Boolean).join(" "),
+                [postalCode, city].filter(Boolean).join(" "),
+            ]
+                .filter(Boolean)
+                .join(", ");
+
+            const address =
+                [addressLine1, addressLine2].filter(Boolean).join(", ") ||
+                composedAddress ||
+                "";
+
+            if (!name) {
+                toast.error("Nie udało się odczytać wybranego punktu. Spróbuj ponownie.");
+                return;
             }
-            return false;
+
+            setSelectedPoint({
+                name,
+                address,
+            });
+
+            setIsGeoDialogOpen(false);
         };
 
-        if (checkMap()) return;
-
-        const interval = setInterval(() => {
-            if (checkMap()) {
-                clearInterval(interval);
-            }
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, []);
+        document.addEventListener(onPointEventName, handler);
+        return () => document.removeEventListener(onPointEventName, handler);
+    }, [isGeoDialogOpen, onPointEventName]);
 
     const toggleSelection = (id: string) => {
         setSelectedIds(prev => 
@@ -112,31 +162,23 @@ export function SampleSelector({ token, samples, geowidgetToken }: SampleSelecto
     };
 
     const openInPostModal = () => {
+        if (!geowidgetToken) {
+            toast.error("Brak tokenu Geowidgetu. Ustaw go w panelu administracyjnym.");
+            return;
+        }
+
         if (hasMapError) {
              toast.error("Nie udało się załadować mapy InPost. Odśwież stronę lub sprawdź blokowanie reklam.");
              return;
         }
 
-        // Double check both flag and window object availability
-        if (!isMapScriptLoaded || typeof window.easyPack === 'undefined') {
+        if (!isMapScriptLoaded) {
             console.warn("Attempted to open InPost map before script load complete.");
             toast.error("Mapa InPost jeszcze się ładuje. Proszę czekać...");
             return;
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const widget = window.easyPack.modalMap((point: any, modal: any) => {
-            setSelectedPoint({
-                name: point.name,
-                address: `${point.address_details.street} ${point.address_details.building_number}, ${point.address_details.city}`
-            });
-            modal.closeModal(); // Close modal after selection
-        }, {
-            width: 500,
-            height: 600,
-            defaultLocale: 'pl'
-        });
-        widget.open();
+        setIsGeoDialogOpen(true);
     };
 
     const handleSubmit = async () => {
@@ -202,7 +244,7 @@ export function SampleSelector({ token, samples, geowidgetToken }: SampleSelecto
     return (
         <div className="space-y-8 pb-32">
             <Script 
-                src={`https://geowidget.inpost.pl/inpost-geowidget.js?token=${geowidgetToken}`}
+                src={`https://geowidget.inpost.pl/inpost-geowidget.js?token=${encodeURIComponent(geowidgetToken || "")}`}
                 strategy="afterInteractive"
                 onReady={initMap}
                 onError={() => {
@@ -211,6 +253,25 @@ export function SampleSelector({ token, samples, geowidgetToken }: SampleSelecto
                     toast.error("Nie udało się załadować mapy InPost. Sprawdź połączenie lub wyłącz blokowanie reklam.");
                 }}
             />
+
+            <Dialog open={isGeoDialogOpen} onOpenChange={setIsGeoDialogOpen}>
+                <DialogContent className="sm:max-w-4xl p-0 overflow-hidden">
+                    <DialogHeader className="px-6 pt-6">
+                        <DialogTitle>Wybierz Paczkomat</DialogTitle>
+                    </DialogHeader>
+                    <div className="px-6 pb-6">
+                        <div className="h-[70vh] min-h-[520px] w-full rounded-lg overflow-hidden border">
+                            <inpost-geowidget
+                                token={geowidgetToken}
+                                config={geowidgetConfig}
+                                language="pl"
+                                onpoint={onPointEventName}
+                                className="block h-full w-full"
+                            />
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             <div className="text-center space-y-2">
                 <h1 className="text-3xl font-bold tracking-tight">Wybierz Próbki Podłóg</h1>
