@@ -11,7 +11,6 @@ const links = [
     { href: '/dashboard/zadania', label: 'Zadania' },
 	{ href: '/dashboard/calendar', label: 'Kalendarz' },
     { href: '/dashboard/crm', label: 'CRM', labelForInstaller: 'Moje Zlecenia' },
-	{ href: '/dashboard/orders', label: 'Zamówienia' },
 	{ href: '/dashboard/erp/products', label: 'Produkty' },
     { href: '/dashboard/erp', label: 'ERP' },
 	{ href: '/dashboard/mail', label: 'Poczta' },
@@ -47,7 +46,7 @@ export function DashboardNav({ urgentOrdersCount = 0, leadsCount = 0, userRoles 
              return allowedLinks.includes(link.href);
         }
 
-        const restrictedLinks = ['/dashboard/orders', '/dashboard/products', '/dashboard/mail', '/dashboard/wallet', '/dashboard/erp'];
+        const restrictedLinks = ['/dashboard/products', '/dashboard/mail', '/dashboard/wallet', '/dashboard/erp'];
         return !restrictedLinks.includes(link.href);
     });
 
@@ -97,12 +96,6 @@ export function DashboardNav({ urgentOrdersCount = 0, leadsCount = 0, userRoles 
 								)}
 							>
 								{getLabel(link)}
-                                {link.href === '/dashboard/orders' && urgentOrdersCount > 0 && (
-                                    <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
-                                    </span>
-                                )}
                                 {link.href === '/dashboard/crm' && leadsCount > 0 && (
                                     <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>

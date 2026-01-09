@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Users, Hammer, FileText, LayoutDashboard, Images, HardHat } from 'lucide-react';
+import { Users, Hammer, FileText, LayoutDashboard, Images, HardHat, Package } from 'lucide-react';
 
 export function CRMNavigation({ userRoles = [] }: { userRoles?: string[] }) {
     const pathname = usePathname();
@@ -15,6 +15,7 @@ export function CRMNavigation({ userRoles = [] }: { userRoles?: string[] }) {
         '/dashboard/crm',
         '/dashboard/crm/customers',
         '/dashboard/crm/montaze',
+        '/dashboard/crm/orders',
         '/dashboard/crm/oferty',
         '/dashboard/crm/logistics',
         '/dashboard/crm/montaze/galeria',
@@ -76,8 +77,18 @@ export function CRMNavigation({ userRoles = [] }: { userRoles?: string[] }) {
                         {isArchitect ? 'Moje Projekty' : 'Realizacje'}
                     </Button>
                 </Link>
-                {!isInstaller && !isArchitect && (
-                    <Link href="/dashboard/crm/oferty">
+                {!isInstaller && !isArchitect && (                    <Link href="/dashboard/crm/orders">
+                        <Button 
+                            variant={pathname.startsWith('/dashboard/crm/orders') ? "secondary" : "ghost"} 
+                            size="sm" 
+                            className="gap-2"
+                        >
+                            <Package className="h-4 w-4" />
+                            Zamówienia
+                        </Button>
+                    </Link>
+                )}
+                {!isInstaller && !isArchitect && (                    <Link href="/dashboard/crm/oferty">
                         <Button 
                             variant={pathname.startsWith('/dashboard/crm/oferty') ? "secondary" : "ghost"} 
                             size="sm" 

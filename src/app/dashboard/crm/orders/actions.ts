@@ -14,7 +14,7 @@ ManualOrderPayload,
 Order,
 OrderDocument,
 } from './data';
-import { normalizeStatus, statusOptions, parseTaskOverrides } from './utils';
+import { normalizeStatus, parseTaskOverrides, ORDER_STATUSES } from './utils';
 import { 
     getFilteredOrders, 
     getManualOrderById as getOrderByIdService, 
@@ -45,7 +45,11 @@ export async function getManualOrderById(id: string): Promise<Order | null> {
     if (user.roles.includes('installer') && !user.roles.includes('admin')) {
         return null;
     }
-    return getOrderByIdService(id);
+    const order = await getOrderByIdService(id);
+    if (order) {
+        order.status = normalizeStatus(order.status);
+    }
+    return order;
 }
 
 export async function getManualOrders(filter?: string): Promise<Order[]> {
@@ -53,7 +57,11 @@ export async function getManualOrders(filter?: string): Promise<Order[]> {
     if (user.roles.includes('installer') && !user.roles.includes('admin')) {
         return [];
     }
-    return getFilteredOrders(filter);
+    const orders = await getFilteredOrders(filter);
+    return orders.map(o => ({
+        ...o,
+        status: normalizeStatus(o.status)
+    }));
 }
 
 export async function createOrder(payload: ManualOrderPayload, userId?: string | null): Promise<Order> {
@@ -235,7 +243,7 @@ throw new Error('Nie znaleziono zamówienia do aktualizacji.');
 
 const trimmedNote = note?.trim() ?? '';
 const currentStatus = normalizeStatus(orderRow.status);
-const shouldUnsetReview = Boolean(orderRow.requiresReview) && typedStatus !== statusOptions[0];
+const shouldUnsetReview = Boolean(orderRow.requiresReview) && typedStatus !== 'order.received';
 let combinedNotes = orderRow.notes ?? '';
 
 if (trimmedNote) {
@@ -294,18 +302,35 @@ return updated;
 }
 
 export async function updateOrderNote(orderId: string, note: string) {
-const user = await requireUser();
+	const user = await requireUser();
 
-await db
-.update(manualOrders)
-.set({
-notes: note,
-updatedAt: new Date(),
-})
-.where(eq(manualOrders.id, orderId));
+	await db
+		.update(manualOrders)
+		.set({
+			notes: note,
+			updatedAt: new Date(),
+		})
+		.where(eq(manualOrders.id, orderId));
 
-await logSystemEvent('update_order_note', `Zaktualizowano notatkę zamówienia ${orderId}`, user.id);
+	await logSystemEvent('update_order_note', `Zaktualizowano notatkę zamówienia ${orderId}`, user.id);
 
-revalidatePath('/dashboard/orders');
-revalidatePath(`/dashboard/orders/${orderId}`);
+	revalidatePath('/dashboard/crm/orders');
+	revalidatePath(`/dashboard/crm/orders/${orderId}`);
+}
+
+export async function updateOrderStatus(orderId: string, newStatus: string): Promise<void> {
+    const user = await requireUser();
+    
+    // Simple drag and drop update
+    await db
+        .update(manualOrders)
+        .set({ 
+            status: newStatus,
+            updatedAt: new Date(),
+        })
+        .where(eq(manualOrders.id, orderId));
+        
+    await logSystemEvent('update_order_status', `Status changed to ${newStatus} (Drag & Drop)`, user.id);
+    
+    revalidatePath('/dashboard/crm/orders');
 }

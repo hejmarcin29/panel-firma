@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Script from "next/script";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -71,6 +71,23 @@ export function SampleSelector({ token, samples }: SampleSelectorProps) {
     });
 
     const [isMapScriptLoaded, setIsMapScriptLoaded] = useState(false);
+    const [hasMapError, setHasMapError] = useState(false);
+
+    const initMap = () => {
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = "https://geowidget.inpost.pl/inpost-geowidget.css";
+        if (!document.head.querySelector(`link[href="${link.href}"]`)) {
+            document.head.appendChild(link);
+        }
+        setIsMapScriptLoaded(true);
+    };
+
+    useEffect(() => {
+        if (typeof window !== 'undefined' && window.easyPack) {
+            initMap();
+        }
+    }, []);
 
     const toggleSelection = (id: string) => {
         setSelectedIds(prev => 
@@ -79,6 +96,11 @@ export function SampleSelector({ token, samples }: SampleSelectorProps) {
     };
 
     const openInPostModal = () => {
+        if (hasMapError) {
+             toast.error("Nie udało się załadować mapy InPost. Odśwież stronę lub sprawdź blokowanie reklam.");
+             return;
+        }
+
         // Double check both flag and window object availability
         if (!isMapScriptLoaded || typeof window.easyPack === 'undefined') {
             console.warn("Attempted to open InPost map before script load complete.");
@@ -166,14 +188,11 @@ export function SampleSelector({ token, samples }: SampleSelectorProps) {
             <Script 
                 src="https://geowidget.inpost.pl/inpost-geowidget.js" 
                 strategy="afterInteractive"
-                onReady={() => {
-                    const link = document.createElement("link");
-                    link.rel = "stylesheet";
-                    link.href = "https://geowidget.inpost.pl/inpost-geowidget.css";
-                    if (!document.head.querySelector(`link[href="${link.href}"]`)) {
-                        document.head.appendChild(link);
-                    }
-                    setIsMapScriptLoaded(true);
+                onReady={initMap}
+                onError={() => {
+                    setIsMapScriptLoaded(false);
+                    setHasMapError(true);
+                    toast.error("Nie udało się załadować mapy InPost. Sprawdź połączenie lub wyłącz blokowanie reklam.");
                 }}
             />
 

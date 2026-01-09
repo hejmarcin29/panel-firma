@@ -1,34 +1,106 @@
-import type { OrderTimelineEntry, OrderTimelineState } from './data';
 
-export const statusOptions = [
-	'Zamówienie utworzone',
-	'Weryfikacja i płatność',
-	'Kompletacja zamówienia',
-	'Wydanie przewoźnikowi',
-	'Dostarczone do klienta',
-	'Zakończone',
-] as const;
+import { orderStatuses, type OrderStatus } from '@/lib/db/schema';
 
-export type StatusOption = (typeof statusOptions)[number];
-
-const legacyStatusMap: Record<string, StatusOption> = {
-	Nowe: 'Weryfikacja i płatność',
-	'W realizacji': 'Kompletacja zamówienia',
-	Pakowanie: 'Kompletacja zamówienia',
-	'Wysłane': 'Wydanie przewoźnikowi',
-	'Dostarczone': 'Dostarczone do klienta',
+export type StatusDefinition = {
+    id: OrderStatus;
+    label: string;
+    description: string;
+    color: string;
 };
 
-export function normalizeStatus(status: string): StatusOption {
+export const ORDER_STATUSES: StatusDefinition[] = [
+    { 
+        id: 'order.received', 
+        label: 'Nowe / Inbox', 
+        description: 'Wpadło ze sklepu lub formularza. Wymaga weryfikacji.',
+        color: 'bg-zinc-100 text-zinc-900 border-zinc-200' 
+    },
+    { 
+        id: 'order.pending_proforma', 
+        label: 'Szkic / Oferta', 
+        description: 'Koszyk zbudowany, oferta wysłana do klienta. Czekamy na akceptację.',
+        color: 'bg-blue-50 text-blue-700 border-blue-200' 
+    },
+    { 
+        id: 'order.proforma_issued', 
+        label: 'Proforma Wysłana', 
+        description: 'Klient ma dokument do płatności. Czekamy na przelew.',
+        color: 'bg-indigo-50 text-indigo-700 border-indigo-200' 
+    },
+    { 
+        id: 'order.paid', 
+        label: 'Opłacone / Zlecić', 
+        description: 'Pieniądze na koncie. WYMAGANE ZAMÓWIENIE U DOSTAWCY.',
+        color: 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+    },
+    { 
+        id: 'order.forwarded_to_supplier', 
+        label: 'U Dostawcy', 
+        description: 'Wysłano maila do producenta. Czekamy na realizację.',
+        color: 'bg-amber-50 text-amber-700 border-amber-200' 
+    },
+    { 
+        id: 'order.fulfillment_confirmed', 
+        label: 'Wysłane / Tracking', 
+        description: 'Towar fizycznie w drodze. Jest numer listu przewozowego.',
+        color: 'bg-purple-50 text-purple-700 border-purple-200' 
+    },
+     { 
+        id: 'order.final_invoice', 
+        label: 'Faktura Wysłana', 
+        description: 'Dokument końcowy wystawiony. Oczekiwanie na ewentualną dopłatę.',
+        color: 'bg-sky-50 text-sky-700 border-sky-200' 
+    },
+    { 
+        id: 'order.closed', 
+        label: 'Zakończone', 
+        description: 'Temat zamknięty i rozliczony.',
+        color: 'bg-zinc-100 text-zinc-500 border-zinc-200' 
+    },
+];
+
+export const statusOptions = ORDER_STATUSES.map(s => s.label);
+
+export function getStatusLabel(id: string): string {
+    return ORDER_STATUSES.find(s => s.id === id)?.label ?? id;
+}
+
+export function getStatusColor(id: string): string {
+     return ORDER_STATUSES.find(s => s.id === id)?.color ?? 'bg-zinc-100';
+}
+
+const legacyStatusMap: Record<string, string> = {
+    'Zamówienie utworzone': 'order.received',
+	'Nowe': 'order.received',
+    'Weryfikacja i płatność': 'order.pending_proforma',
+	'W realizacji': 'order.forwarded_to_supplier',
+	'Pakowanie': 'order.forwarded_to_supplier',
+    'Kompletacja zamówienia': 'order.forwarded_to_supplier',
+    'Wydanie przewoźnikowi': 'order.fulfillment_confirmed',
+	'Wysłane': 'order.fulfillment_confirmed',
+    'Dostarczone do klienta': 'order.closed', // or final_invoice?
+	'Dostarczone': 'order.closed',
+    'Zakończone': 'order.closed'
+};
+
+export function normalizeStatus(status: string): string {
 	const trimmed = status.trim();
+    
+    // Check if it's already a valid new ID
+    if (ORDER_STATUSES.some(s => s.id === trimmed)) {
+        return trimmed;
+    }
+
+    // Check legacy map
 	if (legacyStatusMap[trimmed]) {
 		return legacyStatusMap[trimmed];
 	}
-	if (statusOptions.includes(trimmed as StatusOption)) {
-		return trimmed as StatusOption;
-	}
-	return statusOptions[0];
+
+    // Default
+	return ORDER_STATUSES[0].id; // 'order.received'
 }
+
+
 export const channelOptions = ['Sklep online', 'Marketplace', 'Telefon', 'Showroom'] as const;
 
 const timelineStages = [
