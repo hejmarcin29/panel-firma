@@ -14,7 +14,7 @@ ManualOrderPayload,
 Order,
 OrderDocument,
 } from './data';
-import { normalizeStatus, parseTaskOverrides, ORDER_STATUSES } from './utils';
+import { normalizeStatus, parseTaskOverrides } from './utils';
 import { 
     getFilteredOrders, 
     getManualOrderById as getOrderByIdService, 

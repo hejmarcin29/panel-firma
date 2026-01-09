@@ -3,7 +3,6 @@
 import {
   DndContext,
   DragEndEvent,
-  DragOverEvent,
   DragOverlay,
   DragStartEvent,
   MouseSensor,
@@ -16,7 +15,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
-import { ORDER_STATUSES, OrderStatus } from "../utils";
+import { OrderStatus } from "../utils";
 import { OrdersPipelineCard } from "./orders-pipeline-card";
 import { OrdersPipelineColumn } from "./orders-pipeline-column";
 import { updateOrderStatus } from "../actions";
@@ -77,7 +76,7 @@ export function OrdersBoard({ orders: initialOrders }: OrdersBoardProps) {
     }
   }
 
-  function onDragOver(event: DragOverEvent) {
+  function onDragOver() {
       // Intentionally empty
   }
 
@@ -95,7 +94,7 @@ export function OrdersBoard({ orders: initialOrders }: OrdersBoardProps) {
     
     const currentOrder = orders[activeOrderIndex];
     
-    const isOverColumn = VISIBLE_COLUMNS.includes(overId as any);
+    const isOverColumn = VISIBLE_COLUMNS.includes(overId as OrderStatus);
     
     let newStatus = "";
     
@@ -119,7 +118,7 @@ export function OrdersBoard({ orders: initialOrders }: OrdersBoardProps) {
         await updateOrderStatus(activeId, newStatus);
         toast.success("Zmieniono status zamówienia");
         router.refresh();
-    } catch (error) {
+    } catch {
         toast.error("Wystąpił błąd podczas zmiany statusu");
         setOrders(oldOrders);
     }

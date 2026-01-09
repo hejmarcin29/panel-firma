@@ -1,7 +1,6 @@
 "use client";
 
 import { useDroppable } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useMemo } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +28,6 @@ export function OrdersPipelineColumn({ statusId, orders, className }: OrdersPipe
 
   const statusDef = ORDER_STATUSES.find((s) => s.id === statusId);
 
-  const orderIds = useMemo(() => orders.map((o) => o.id), [orders]);
   const totalValue = useMemo(() => orders.reduce((acc, curr) => acc + (curr.totals?.totalGross || 0), 0), [orders]);
 
   // Format currency roughly for header

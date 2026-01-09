@@ -20,7 +20,7 @@ const links = [
     { href: '/dashboard/partner', label: 'Moje Polecenia' },
 ];
 
-export function DashboardNav({ urgentOrdersCount = 0, leadsCount = 0, userRoles = ['admin'] }: { urgentOrdersCount?: number; leadsCount?: number; userRoles?: UserRole[] }) {
+export function DashboardNav({ leadsCount = 0, userRoles = ['admin'] }: { leadsCount?: number; userRoles?: UserRole[] }) {
 	const pathname = usePathname();
 
     const filteredLinks = links.filter(link => {

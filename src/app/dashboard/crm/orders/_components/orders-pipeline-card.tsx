@@ -2,7 +2,7 @@
 
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { Calendar, CreditCard, User, Box, ArrowRight } from "lucide-react";
+import { Calendar, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn, formatCurrency } from "@/lib/utils";
 
-import { getStatusColor, getStatusLabel, ORDER_STATUSES } from "../utils";
+import { ORDER_STATUSES } from "../utils";
 
 import { Order } from "../data";
 // PipelineOrder interface removed in favor of Order
