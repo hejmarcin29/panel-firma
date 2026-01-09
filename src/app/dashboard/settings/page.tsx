@@ -193,6 +193,7 @@ export default async function SettingsPage() {
         cloudflareTurnstileSecretKey,
         inpostOrgId,
         inpostToken,
+        inpostGeoWidgetToken,
         inpostSandbox,
         sampleOrderNotificationEmail,
         sampleOrderConfirmationSubject,
@@ -250,6 +251,7 @@ export default async function SettingsPage() {
         getAppSetting(appSettingKeys.cloudflareTurnstileSecretKey),
         getAppSetting(appSettingKeys.inpostOrgId),
         getAppSetting(appSettingKeys.inpostToken),
+        getAppSetting(appSettingKeys.inpostGeoWidgetToken),
         getAppSetting(appSettingKeys.inpostSandbox),
         getAppSetting(appSettingKeys.sampleOrderNotificationEmail),
         getAppSetting(appSettingKeys.sampleOrderConfirmationSubject),
@@ -640,6 +642,7 @@ export default async function SettingsPage() {
                             initialSettings={{
                                 orgId: inpostOrgId ?? '',
                                 token: inpostToken ?? '',
+                                geoWidgetToken: inpostGeoWidgetToken ?? '',
                                 sandbox: inpostSandbox === 'true',
                             }}
                         />

@@ -10,6 +10,8 @@ interface OrderItemsCardProps {
 }
 
 export function OrderItemsCard({ order }: OrderItemsCardProps) {
+  const totalVat = order.totals.totalGross - order.totals.totalNet;
+
   return (
     <Card className="border-border/50 shadow-sm overflow-hidden">
       <CardHeader className="px-6 py-4 bg-muted/10">
@@ -66,11 +68,11 @@ export function OrderItemsCard({ order }: OrderItemsCardProps) {
                                 </span>
                              </div>
 
-                             {(perPackageArea > 0) && (
+                             {((perPackageArea || 0) > 0) && (
                                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                                    <div className="flex items-center gap-1.5">
                                       <span className="text-xs uppercase tracking-wider opacity-70">Opakowanie:</span>
-                                      <span className="font-medium text-foreground">{formatNumber(perPackageArea)} m²</span>
+                                      <span className="font-medium text-foreground">{formatNumber(perPackageArea!)} m²</span>
                                    </div>
                                    <Separator orientation="vertical" className="h-4" />
                                    <div className="flex items-center gap-1.5">
@@ -102,7 +104,7 @@ export function OrderItemsCard({ order }: OrderItemsCardProps) {
                 </div>
                 <div className="flex justify-between text-sm text-muted-foreground">
                     <span>Podatek VAT:</span>
-                    <span>{formatCurrency(order.totals.totalVat, order.currency)}</span>
+                    <span>{formatCurrency(totalVat, order.currency)}</span>
                 </div>
                 <Separator className="my-2" />
                 <div className="flex justify-between items-baseline">

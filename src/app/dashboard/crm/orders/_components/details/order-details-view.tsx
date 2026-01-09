@@ -143,17 +143,7 @@ export function OrderDetailsView({ order, documents, timelineEntries }: OrderDet
   );
 }
 
+
 // Removing DesktopView / MobileView split. 
 // The responsive Grid handles layout changes naturally (1 col on mobile, 3 on desktop).
 // Tabs are removed in favor of a long-scroll experience which is standard in 2024/2025 modern SaaS apps.
-
-
-export function OrderDetailsView({ order, documents, timelineEntries }: OrderDetailsViewProps) {
-  return (
-    <div className="flex flex-col min-h-screen bg-muted/10">
-      <OrderHeader order={order} />
-      <DesktopView order={order} documents={documents} timelineEntries={timelineEntries} />
-      <MobileView order={order} documents={documents} timelineEntries={timelineEntries} />
-    </div>
-  );
-}

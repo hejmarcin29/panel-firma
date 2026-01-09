@@ -2,7 +2,7 @@
 
 import { Check, Circle, Clock, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ORDER_STATUSES, StatusDefinition } from "../utils";
+import { ORDER_STATUSES, StatusDefinition } from "../../utils";
 
 interface OrderStatusStepperProps {
   currentStatus: string;

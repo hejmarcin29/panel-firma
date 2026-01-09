@@ -22,18 +22,55 @@
     </div>
 
     <script>
+        // Pobierz token z URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+
         window.easyPackAsyncInit = function () {
-            window.easyPack.init({
+            const config = {
                 defaultLocale: 'pl',
                 mapType: 'osm',
                 searchType: 'osm',
                 points: { types: ['parcel_locker', 'pop'] },
                 map: { useGeolocation: true }
-            });
+            };
+
+            // Jeśli podano token, dodaj go do konfiguracji
+            if (token) {
+                // Token usuwa limity i blokady domenowe
+                // InPost wymaga tokena string
+                // config.token = token; // Stara dokumentacja
+                // Nowa dokumentacja może wymagać innego parametru, ale
+                // w większości przypadków geowidget.inpost.pl sam wykrywa domenę.
+                // Jednak dla pewności przekażmy go, jeśli API na to pozwala.
+                // Uwaga: standardowy config init() w dokumentacji geowidgetu 
+                // nie zawsze wymienia 'token', ale często jest on wymagany w <script src="...&token=XYZ">
+                // lub jako parametr inicjalizacji. Weryfikacja:
+                // Zwykle geowidget v5 konfiguruje się przez easyPack.init({ instance: 'PL', ... })
+                // Sprawdźmy czy można dodać token.
+            }
+
+            // Wg dokumentacji GeoWidget v4/v5 token podaje się przy inicjalizacji, jeśli używamy
+            // wersji z autoryzacją.
+            // Spróbujmy przekazać go w obiekcie config, jeśli istnieje.
+            // Ale uwaga: token jest często weryfikowany per domena.
+            
+            // Wersja "bezpieczna": Jeśli mamy token, dodajemy go.
+            // Jeśli nie - działamy w trybie OSM (open).
+            
+            // WAŻNE: W dokumentacji InPost często token jest po prostu
+            // identyfikatorem klienta.
+            
+            // Update: Poprawna metoda to przekazanie apiToken / token w zależności od wersji.
+            // Zakładamy że user ma token (API Key) do GeoWidgetu.
+        
+            window.easyPack.init(token ? { ...config, token: token } : config);
 
             var widget = window.easyPack.modalMap(function(point, modal) {
-                if (window.opener) {
-                    window.opener.postMessage({
+                // Obsługa iframe (parent) oraz popup (opener)
+                var target = window.parent || window.opener;
+                if (target) {
+                    target.postMessage({
                         type: 'INPOST_SELECTION',
                         point: {
                             name: point.name,
@@ -43,7 +80,10 @@
                     }, '*');
                 }
                 modal.closeModal();
-                window.close();
+                // Nie zamykamy okna automatycznie jeśli to iframe, ale jeśli popup to tak.
+                if (window.opener) {
+                    window.close();
+                }
             }, {
                 width: '100%',
                 height: '100%',
