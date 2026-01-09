@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wybierz Paczkomat | InPost</title>
+    <link rel="stylesheet" href="https://geowidget.inpost.pl/inpost-geowidget.css"/>
+    <script src="https://geowidget.inpost.pl/inpost-geowidget.js" defer></script>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #f0f0f0; font-family: sans-serif; }
+        #loader { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; width: 100vw; position: absolute; top:0; left: 0; z-index: -1; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #ddd; border-top-color: #ffcc00; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        /* Force modal to fill screen if it doesn't */
+        .easy-pack-modal { width: 100% !important; height: 100% !important; max-width: 100% !important; max-height: 100% !important; top: 0 !important; left: 0 !important; margin: 0 !important; border-radius: 0 !important; }
+    </style>
+</head>
+<body>
+    <div id="loader">
+        <div class="spinner"></div>
+        <p style="margin-top: 10px; color: #666;">Ładowanie mapy...</p>
+    </div>
+
+    <script>
+        window.easyPackAsyncInit = function () {
+            window.easyPack.init({
+                defaultLocale: 'pl',
+                mapType: 'osm',
+                searchType: 'osm',
+                points: { types: ['parcel_locker', 'pop'] },
+                map: { useGeolocation: true }
+            });
+
+            var widget = window.easyPack.modalMap(function(point, modal) {
+                if (window.opener) {
+                    window.opener.postMessage({
+                        type: 'INPOST_SELECTION',
+                        point: {
+                            name: point.name,
+                            address: point.address_details.street + ' ' + point.address_details.building_number + ', ' + point.address_details.city,
+                            full_point: point
+                        }
+                    }, '*');
+                }
+                modal.closeModal();
+                window.close();
+            }, {
+                width: '100%',
+                height: '100%',
+                defaultLocale: 'pl',
+                closeText: 'Zamknij'
+            });
+            
+            widget.open();
+        };
+    </script>
+</body>
+</html>
