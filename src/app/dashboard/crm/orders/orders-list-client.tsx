@@ -42,6 +42,7 @@ import { ConfirmOrderButton } from './_components/confirm-order-button';
 import { OrdersStats } from './_components/orders-stats';
 import { OrderStatusBadge } from './_components/order-status-badge';
 import { OrdersBoard } from './_components/orders-board';
+import { ACTIVE_STATUS_IDS, ARCHIVED_STATUS_IDS, type OrderStatus } from './utils';
 import type { Order } from './data';
 
 const STATUS_FILTERS = [
@@ -99,13 +100,12 @@ export type OrdersListClientProps = {
   initialView?: 'list' | 'board';
 };
 
-export function OrdersListClient({ initialOrders, initialTab = 'all', initialView = 'list' }: OrdersListClientProps) {
-  const [statusFilter, setStatusFilter] = useState<StatusFilterValue>('all');
+export function OrdersListClient({ initialOrders, initialTab = 'board', initialView = 'board' }: OrdersListClientProps) {
   const [sourceFilter, setSourceFilter] = useState<SourceFilterValue>('all');
   const [search, setSearch] = useState('');
-  const [activeTab, setActiveTab] = useState(initialTab);
+  // We use 'board', 'list', 'archive' as main tabs
+  const [activeTab, setActiveTab] = useState<string>(initialTab === 'all' ? 'board' : initialTab);
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
-  const [currentView, setCurrentView] = useState<'list' | 'board'>(initialView);
 
   const availableMonths = useMemo(() => {
     const months = new Set<string>();
@@ -118,55 +118,38 @@ export function OrdersListClient({ initialOrders, initialTab = 'all', initialVie
   }, [initialOrders]);
 
   const ordersFilteredByDate = useMemo(() => {
-    if (selectedMonth === 'all') return initialOrders;
-    return initialOrders.filter(order => {
-      const date = new Date(order.createdAt);
-      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      return key === selectedMonth;
-    });
-  }, [initialOrders, selectedMonth]);
-
-  const verificationCount = useMemo(() => {
-    return ordersFilteredByDate.filter(o => o.status === 'Zamówienie utworzone' || o.requiresReview).length;
-  }, [ordersFilteredByDate]);
-
-  const filteredOrders = useMemo(() => {
-    const query = search.toLowerCase().trim();
+    // First, filter by date (month)
+    let byDate = initialOrders;
+    if (selectedMonth !== 'all') {
+      byDate = initialOrders.filter(order => {
+        const date = new Date(order.createdAt);
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        return key === selectedMonth;
+      });
+    }
     
-    return ordersFilteredByDate.filter((order) => {
-      // Define what constitutes a "completed" order in your workflow
-      const isCompleted = 
-        order.status === 'order.closed' || 
-        order.status === 'Zakończone' ||
-        order.status === 'order.fulfillment_confirmed' || 
-        order.status === 'order.final_invoice';
-
-      const isVerification = order.status === 'Zamówienie utworzone' || order.requiresReview;
-
-      // Tab filtering
-      if (activeTab === 'verification') {
-        if (!isVerification) return false;
-      } else if (activeTab === 'active') {
-        if (isCompleted || order.status === 'cancelled' || isVerification) return false;
-      } else if (activeTab === 'completed') {
-        if (!isCompleted) return false;
-      }
-
-      // Existing filters
-      if (statusFilter === 'review' && !order.requiresReview) return false;
-      if (statusFilter === 'confirmed' && order.requiresReview) return false;
-      if (sourceFilter !== 'all' && order.source !== sourceFilter) return false;
-
-      if (!query) return true;
-
-      return (
+    // Then apply Search and Source filters globally
+    const query = search.toLowerCase().trim();
+    return byDate.filter((order) => {
+       if (sourceFilter !== 'all' && order.source !== sourceFilter) return false;
+       if (!query) return true;
+       return (
         includesQuery(order.reference, query) ||
         includesQuery(order.customer, query) ||
         includesQuery(order.billing.email, query) ||
         includesQuery(order.billing.phone, query)
       );
     });
-  }, [ordersFilteredByDate, statusFilter, sourceFilter, search, activeTab]);
+  }, [initialOrders, selectedMonth, sourceFilter, search]);
+
+  // Split into Pipeline (Active) and Archive
+  const pipelineOrders = useMemo(() => {
+      return ordersFilteredByDate.filter(o => ACTIVE_STATUS_IDS.includes(o.status as OrderStatus));
+  }, [ordersFilteredByDate]);
+
+  const archivedOrders = useMemo(() => {
+      return ordersFilteredByDate.filter(o => ARCHIVED_STATUS_IDS.includes(o.status as OrderStatus));
+  }, [ordersFilteredByDate]);
 
   return (
     <div className="flex flex-col gap-6 p-0 md:p-6">
@@ -237,59 +220,42 @@ export function OrdersListClient({ initialOrders, initialTab = 'all', initialVie
 
       <OrdersStats orders={ordersFilteredByDate} />
 
-      <Tabs value={currentView} className="w-full" onValueChange={(val) => setCurrentView(val as 'list' | 'board')}>
-        <div className="flex items-center mb-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="flex items-center justify-between mb-4">
              <TabsList>
-                 <TabsTrigger value="list">
-                     <List className="mr-2 h-4 w-4" />
-                     Lista
-                 </TabsTrigger>
                  <TabsTrigger value="board">
                      <LayoutGrid className="mr-2 h-4 w-4" />
-                     Tablica
+                     Pipeline
+                 </TabsTrigger>
+                 <TabsTrigger value="list">
+                     <List className="mr-2 h-4 w-4" />
+                     Lista Aktywnych
+                 </TabsTrigger>
+                 <TabsTrigger value="archive">
+                     <FileText className="mr-2 h-4 w-4" />
+                     Archiwum
                  </TabsTrigger>
              </TabsList>
-         </div>
-
-         <TabsContent value="list" className="mt-0 space-y-4">
-           {/* Inner Tabs for List View Statuses */}
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <div className="flex items-center justify-between px-4 md:px-0 overflow-x-auto pb-2 md:pb-0 -mx-4 md:mx-0">
-                <TabsList className="w-full justify-start md:w-auto h-auto flex-wrap md:flex-nowrap gap-1 bg-transparent md:bg-muted p-0 md:p-1">
-                    <TabsTrigger value="verification" className="data-[state=active]:bg-background data-[state=active]:shadow-sm flex-1 md:flex-none">
-                    Do weryfikacji
-                    {verificationCount > 0 && (
-                        <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                        {verificationCount}
-                        </span>
-                    )}
-                    </TabsTrigger>
-                    <TabsTrigger value="active" className="data-[state=active]:bg-background data-[state=active]:shadow-sm flex-1 md:flex-none">Aktywne</TabsTrigger>
-                    <TabsTrigger value="completed" className="data-[state=active]:bg-background data-[state=active]:shadow-sm flex-1 md:flex-none">Zakończone</TabsTrigger>
-                    <TabsTrigger value="all" className="data-[state=active]:bg-background data-[state=active]:shadow-sm flex-1 md:flex-none">Wszystkie</TabsTrigger>
-                </TabsList>
-                </div>
-
-                <div className="my-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between px-4 md:px-0">
-                <div className="flex flex-1 items-center gap-2">
-                    <div className="relative flex-1 md:max-w-sm">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+             
+             {/* Simple Search bar moved here for context */}
+             <div className="flex items-center gap-2">
+                 <div className="relative w-full md:w-64">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
-                        placeholder="Szukaj zamówienia..."
-                        className="pl-8"
+                        placeholder="Szukaj..."
+                        className="pl-8 h-9"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
-                    </div>
-                    <DropdownMenu>
+                 </div>
+                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" className="h-9 w-9">
                         <Filter className="h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                        <DropdownMenuLabel>Filtruj według źródła</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Filtruj źródło</DropdownMenuLabel>
                         {SOURCE_FILTERS.map((filter) => (
                         <DropdownMenuItem 
                             key={filter.value}
@@ -299,40 +265,21 @@ export function OrdersListClient({ initialOrders, initialTab = 'all', initialVie
                             {filter.label}
                         </DropdownMenuItem>
                         ))}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuLabel>Status weryfikacji</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        {STATUS_FILTERS.map((filter) => (
-                        <DropdownMenuItem 
-                            key={filter.value}
-                            onClick={() => setStatusFilter(filter.value)}
-                            className={statusFilter === filter.value ? "bg-accent" : ""}
-                        >
-                            {filter.label}
-                        </DropdownMenuItem>
-                        ))}
                     </DropdownMenuContent>
                     </DropdownMenu>
-                </div>
-                </div>
+             </div>
+         </div>
 
-                <TabsContent value="verification" className="mt-0">
-                    <OrdersTable orders={filteredOrders} />
-                </TabsContent>
-                <TabsContent value="all" className="mt-0">
-                    <OrdersTable orders={filteredOrders} />
-                </TabsContent>
-                <TabsContent value="active" className="mt-0">
-                    <OrdersTable orders={filteredOrders} />
-                </TabsContent>
-                <TabsContent value="completed" className="mt-0">
-                    <OrdersTable orders={filteredOrders} />
-                </TabsContent>
-            </Tabs>
+         <TabsContent value="board" className="mt-0 h-[calc(100vh-220px)]">
+            <OrdersBoard orders={pipelineOrders} />
          </TabsContent>
 
-         <TabsContent value="board" className="mt-0">
-            <OrdersBoard orders={ordersFilteredByDate} />
+         <TabsContent value="list" className="mt-0">
+             <OrdersTable orders={pipelineOrders} />
+         </TabsContent>
+         
+         <TabsContent value="archive" className="mt-0">
+             <OrdersTable orders={archivedOrders} />
          </TabsContent>
       </Tabs>
     </div>

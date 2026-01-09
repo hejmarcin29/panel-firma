@@ -94,11 +94,13 @@ export async function saveInPostSettings(formData: FormData) {
 
 	const orgId = formData.get('orgId') as string;
 	const token = formData.get('token') as string;
+	const geowidgetToken = formData.get('geowidgetToken') as string;
 	const sandbox = formData.get('sandbox') === 'true';
 
 	const settingsToUpdate = [
 		{ key: appSettingKeys.inpostOrgId, value: orgId },
 		{ key: appSettingKeys.inpostToken, value: token },
+		{ key: appSettingKeys.inpostGeowidgetToken, value: geowidgetToken },
 		{ key: appSettingKeys.inpostSandbox, value: sandbox ? 'true' : 'false' },
 	];
 

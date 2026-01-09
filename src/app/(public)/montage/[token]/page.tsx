@@ -1,5 +1,6 @@
 import { getPublicMontage, getAvailableSamples } from "./actions";
 import { SampleSelector } from "./_components/sample-selector";
+import { getAppSetting, appSettingKeys } from "@/lib/settings";
 
 interface PublicMontagePageProps {
     params: Promise<{
@@ -28,6 +29,7 @@ export default async function PublicMontagePage({ params }: PublicMontagePagePro
     */
 
     const samples = await getAvailableSamples();
+    const geowidgetToken = await getAppSetting(appSettingKeys.inpostGeowidgetToken) || "";
 
     if (samples.length === 0) {
         return (
@@ -40,7 +42,7 @@ export default async function PublicMontagePage({ params }: PublicMontagePagePro
 
     return (
         <div className="max-w-5xl mx-auto">
-           <SampleSelector token={token} samples={samples} />
+           <SampleSelector token={token} samples={samples} geowidgetToken={geowidgetToken} />
         </div>
     );
 }

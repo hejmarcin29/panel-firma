@@ -53,20 +53,18 @@ export function OrdersBoard({ orders: initialOrders }: OrdersBoardProps) {
     })
   );
 
-  const VISIBLE_COLUMNS: OrderStatus[] = [
-    'order.received',
-    'order.pending_proforma',
-    'order.proforma_issued',
-    'order.paid', 
-    'order.forwarded_to_supplier',
-    'order.fulfillment_confirmed',
-    'order.closed'
+  const PIPELINE_COLUMNS = [
+    { id: 'order.pending_proforma', statuses: ['order.received', 'order.pending_proforma'] },
+    { id: 'order.proforma_issued', statuses: ['order.proforma_issued'] },
+    { id: 'order.paid', statuses: ['order.paid'] }, 
+    { id: 'order.forwarded_to_supplier', statuses: ['order.forwarded_to_supplier'] },
+    { id: 'order.fulfillment_confirmed', statuses: ['order.fulfillment_confirmed', 'order.final_invoice'] },
   ];
   
-  const columns = VISIBLE_COLUMNS.map(statusId => {
+  const columns = PIPELINE_COLUMNS.map(col => {
       return {
-          id: statusId,
-          orders: orders.filter(o => o.status === statusId)
+          id: col.id,
+          orders: orders.filter(o => col.statuses.includes(o.status as any))
       };
   });
   
@@ -94,17 +92,25 @@ export function OrdersBoard({ orders: initialOrders }: OrdersBoardProps) {
     
     const currentOrder = orders[activeOrderIndex];
     
-    const isOverColumn = VISIBLE_COLUMNS.includes(overId as OrderStatus);
+    // Determine target column
+    let targetColumn = PIPELINE_COLUMNS.find(col => col.id === overId);
     
-    let newStatus = "";
-    
-    if (isOverColumn) {
-        newStatus = overId;
-    } else {
+    if (!targetColumn) {
+        // Check if dropped over a card
         const overOrder = orders.find(o => o.id === overId);
         if (overOrder) {
-            newStatus = overOrder.status;
+            targetColumn = PIPELINE_COLUMNS.find(col => col.statuses.includes(overOrder.status as any));
         }
+    }
+    
+    if (!targetColumn) return;
+
+    let newStatus = targetColumn.id;
+
+    // If order is already within this column (sub-status match), preserve its status
+    // This prevents "downgrading" status when reordering within valid sub-statuses
+    if (targetColumn.statuses.includes(currentOrder.status as any)) {
+        newStatus = currentOrder.status;
     }
 
     if (!newStatus || newStatus === currentOrder.status) return;
@@ -133,9 +139,9 @@ export function OrdersBoard({ orders: initialOrders }: OrdersBoardProps) {
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}
     >
-      <div className="h-[calc(100vh-14rem)] flex gap-4 overflow-x-auto pb-4 snap-x ml-4 md:ml-0">
+      <div className="h-full flex gap-4 overflow-x-auto pb-4 px-4 md:px-0">
         {columns.map((col) => (
-          <div key={col.id} className="w-[280px] md:w-[320px] shrink-0 snap-center h-full">
+          <div key={col.id} className="w-[280px] md:w-[20%] min-w-[280px] shrink-0 h-full">
             <OrdersPipelineColumn
               statusId={col.id}
               orders={col.orders}

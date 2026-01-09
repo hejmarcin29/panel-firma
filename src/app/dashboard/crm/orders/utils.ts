@@ -14,43 +14,43 @@ export type StatusDefinition = {
 export const ORDER_STATUSES: StatusDefinition[] = [
     { 
         id: 'order.received', 
-        label: 'Nowe / Inbox', 
+        label: 'Inbox', 
         description: 'Wpadło ze sklepu lub formularza. Wymaga weryfikacji.',
         color: 'bg-zinc-100 text-zinc-900 border-zinc-200' 
     },
     { 
         id: 'order.pending_proforma', 
-        label: 'Szkic / Oferta', 
+        label: 'Szkic', 
         description: 'Koszyk zbudowany, oferta wysłana do klienta. Czekamy na akceptację.',
         color: 'bg-blue-50 text-blue-700 border-blue-200' 
     },
     { 
         id: 'order.proforma_issued', 
-        label: 'Proforma Wysłana', 
+        label: 'Proforma', 
         description: 'Klient ma dokument do płatności. Czekamy na przelew.',
         color: 'bg-indigo-50 text-indigo-700 border-indigo-200' 
     },
     { 
         id: 'order.paid', 
-        label: 'Opłacone / Zlecić', 
+        label: 'Do realiz.', 
         description: 'Pieniądze na koncie. WYMAGANE ZAMÓWIENIE U DOSTAWCY.',
         color: 'bg-emerald-50 text-emerald-700 border-emerald-200' 
     },
     { 
         id: 'order.forwarded_to_supplier', 
-        label: 'U Dostawcy', 
+        label: 'W toku', 
         description: 'Wysłano maila do producenta. Czekamy na realizację.',
         color: 'bg-amber-50 text-amber-700 border-amber-200' 
     },
     { 
         id: 'order.fulfillment_confirmed', 
-        label: 'Wysłane / Tracking', 
+        label: 'Wysłane', 
         description: 'Towar fizycznie w drodze. Jest numer listu przewozowego.',
         color: 'bg-purple-50 text-purple-700 border-purple-200' 
     },
      { 
         id: 'order.final_invoice', 
-        label: 'Faktura Wysłana', 
+        label: 'Faktura', 
         description: 'Dokument końcowy wystawiony. Oczekiwanie na ewentualną dopłatę.',
         color: 'bg-sky-50 text-sky-700 border-sky-200' 
     },
@@ -60,6 +60,27 @@ export const ORDER_STATUSES: StatusDefinition[] = [
         description: 'Temat zamknięty i rozliczony.',
         color: 'bg-zinc-100 text-zinc-500 border-zinc-200' 
     },
+    { 
+        id: 'order.cancelled', 
+        label: 'Anulowane', 
+        description: 'Zamówienie zostało anulowane.',
+        color: 'bg-red-50 text-red-700 border-red-200' 
+    },
+];
+
+export const ACTIVE_STATUS_IDS: OrderStatus[] = [
+    'order.received',
+    'order.pending_proforma',
+    'order.proforma_issued',
+    'order.paid', 
+    'order.forwarded_to_supplier',
+    'order.fulfillment_confirmed',
+    'order.final_invoice'
+];
+
+export const ARCHIVED_STATUS_IDS: OrderStatus[] = [
+    'order.closed',
+    'order.cancelled'
 ];
 
 export const statusOptions = ORDER_STATUSES.map(s => s.label);

@@ -16,6 +16,7 @@ interface InPostSettingsFormProps {
     initialSettings: {
         orgId: string;
         token: string;
+        geowidgetToken: string;
         sandbox: boolean;
     };
 }
@@ -24,6 +25,7 @@ export function InPostSettingsForm({ initialSettings }: InPostSettingsFormProps)
     const [formData, setFormData] = useState({
         orgId: initialSettings.orgId,
         token: initialSettings.token,
+        geowidgetToken: initialSettings.geowidgetToken,
         sandbox: initialSettings.sandbox,
     });
 
@@ -36,6 +38,7 @@ export function InPostSettingsForm({ initialSettings }: InPostSettingsFormProps)
             const formDataToSend = new FormData();
             formDataToSend.append('orgId', data.orgId);
             formDataToSend.append('token', data.token);
+            formDataToSend.append('geowidgetToken', data.geowidgetToken);
             formDataToSend.append('sandbox', String(data.sandbox));
 
             await saveInPostSettings(formDataToSend);
@@ -105,6 +108,15 @@ export function InPostSettingsForm({ initialSettings }: InPostSettingsFormProps)
                             {showToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
                     </div>
+                </div>
+                <div className='grid gap-2'>
+                    <Label htmlFor='inpost-geowidget-token'>Token Geowidgetu</Label>
+                    <Input
+                        id='inpost-geowidget-token'
+                        value={formData.geowidgetToken}
+                        onChange={(e) => handleChange('geowidgetToken', e.target.value)}
+                        placeholder='Token do mapy (Geowidget)'
+                    />
                 </div>
                 <div className='flex items-center justify-between space-x-2 rounded-lg border p-4'>
                     <div className="space-y-0.5">

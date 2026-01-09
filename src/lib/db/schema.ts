@@ -27,6 +27,7 @@ export const orderStatuses = [
 	'order.fulfillment_confirmed',
 	'order.final_invoice',
 	'order.closed',
+	'order.cancelled',
 ] as const;
 
 export const documentTypes = ['proforma', 'advance_invoice', 'final_invoice'] as const;

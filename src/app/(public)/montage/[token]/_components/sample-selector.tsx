@@ -40,11 +40,12 @@ interface Product {
 interface SampleSelectorProps {
     token: string;
     samples: Product[];
+    geowidgetToken: string;
 }
 
 type DeliveryMethod = 'courier' | 'parcel_locker';
 
-export function SampleSelector({ token, samples }: SampleSelectorProps) {
+export function SampleSelector({ token, samples, geowidgetToken }: SampleSelectorProps) {
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -201,7 +202,7 @@ export function SampleSelector({ token, samples }: SampleSelectorProps) {
     return (
         <div className="space-y-8 pb-32">
             <Script 
-                src="https://geowidget.inpost.pl/inpost-geowidget.js" 
+                src={`https://geowidget.inpost.pl/inpost-geowidget.js?token=${geowidgetToken}`}
                 strategy="afterInteractive"
                 onReady={initMap}
                 onError={() => {
