@@ -25,11 +25,12 @@ interface SampleSelectorProps {
     token: string;
     samples: Product[];
     geowidgetToken: string;
+    geowidgetConfig: string;
 }
 
 type DeliveryMethod = 'courier' | 'parcel_locker';
 
-export function SampleSelector({ token, samples, geowidgetToken }: SampleSelectorProps) {
+export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig }: SampleSelectorProps) {
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -59,7 +60,6 @@ export function SampleSelector({ token, samples, geowidgetToken }: SampleSelecto
     const [hasMapError, setHasMapError] = useState(false);
     const [isGeoDialogOpen, setIsGeoDialogOpen] = useState(false);
 
-    const geowidgetConfig = "parcelCollect";
     const onPointEventName = useMemo(() => "inpost_point_selected", []);
 
     const initMap = () => {
@@ -167,6 +167,11 @@ export function SampleSelector({ token, samples, geowidgetToken }: SampleSelecto
             return;
         }
 
+		if (!geowidgetConfig) {
+			toast.error("Brak konfiguracji Geowidgetu (config). Ustaw ją w panelu administracyjnym.");
+			return;
+		}
+
         if (hasMapError) {
              toast.error("Nie udało się załadować mapy InPost. Odśwież stronę lub sprawdź blokowanie reklam.");
              return;
@@ -176,6 +181,13 @@ export function SampleSelector({ token, samples, geowidgetToken }: SampleSelecto
             console.warn("Attempted to open InPost map before script load complete.");
             toast.error("Mapa InPost jeszcze się ładuje. Proszę czekać...");
             return;
+        }
+
+        if (typeof window !== "undefined" && typeof window.customElements !== "undefined") {
+            if (!window.customElements.get("inpost-geowidget")) {
+                toast.error("Widget InPost nie jest jeszcze gotowy. Odśwież stronę i spróbuj ponownie.");
+                return;
+            }
         }
 
         setIsGeoDialogOpen(true);
@@ -244,6 +256,7 @@ export function SampleSelector({ token, samples, geowidgetToken }: SampleSelecto
     return (
         <div className="space-y-8 pb-32">
             <Script 
+                id="inpost-geowidget-script"
                 src={`https://geowidget.inpost.pl/inpost-geowidget.js?token=${encodeURIComponent(geowidgetToken || "")}`}
                 strategy="afterInteractive"
                 onReady={initMap}

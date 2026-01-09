@@ -194,6 +194,7 @@ export default async function SettingsPage() {
         inpostOrgId,
         inpostToken,
         inpostGeowidgetToken,
+		inpostGeowidgetConfig,
         inpostSandbox,
         sampleOrderNotificationEmail,
         sampleOrderConfirmationSubject,
@@ -252,6 +253,7 @@ export default async function SettingsPage() {
         getAppSetting(appSettingKeys.inpostOrgId),
         getAppSetting(appSettingKeys.inpostToken),
         getAppSetting(appSettingKeys.inpostGeowidgetToken),
+		getAppSetting(appSettingKeys.inpostGeowidgetConfig),
         getAppSetting(appSettingKeys.inpostSandbox),
         getAppSetting(appSettingKeys.sampleOrderNotificationEmail),
         getAppSetting(appSettingKeys.sampleOrderConfirmationSubject),
@@ -643,6 +645,7 @@ export default async function SettingsPage() {
                                 orgId: inpostOrgId ?? '',
                                 token: inpostToken ?? '',
                                 geowidgetToken: inpostGeowidgetToken ?? '',
+								geowidgetConfig: inpostGeowidgetConfig ?? 'parcelCollect',
                                 sandbox: inpostSandbox === 'true',
                             }}
                         />

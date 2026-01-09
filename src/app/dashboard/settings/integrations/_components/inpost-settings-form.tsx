@@ -17,6 +17,7 @@ interface InPostSettingsFormProps {
         orgId: string;
         token: string;
         geowidgetToken: string;
+        geowidgetConfig: string;
         sandbox: boolean;
     };
 }
@@ -26,6 +27,7 @@ export function InPostSettingsForm({ initialSettings }: InPostSettingsFormProps)
         orgId: initialSettings.orgId,
         token: initialSettings.token,
         geowidgetToken: initialSettings.geowidgetToken,
+        geowidgetConfig: initialSettings.geowidgetConfig,
         sandbox: initialSettings.sandbox,
     });
 
@@ -39,6 +41,7 @@ export function InPostSettingsForm({ initialSettings }: InPostSettingsFormProps)
             formDataToSend.append('orgId', data.orgId);
             formDataToSend.append('token', data.token);
             formDataToSend.append('geowidgetToken', data.geowidgetToken);
+            formDataToSend.append('geowidgetConfig', data.geowidgetConfig);
             formDataToSend.append('sandbox', String(data.sandbox));
 
             await saveInPostSettings(formDataToSend);
@@ -117,6 +120,18 @@ export function InPostSettingsForm({ initialSettings }: InPostSettingsFormProps)
                         onChange={(e) => handleChange('geowidgetToken', e.target.value)}
                         placeholder='Token do mapy (Geowidget)'
                     />
+                </div>
+                <div className='grid gap-2'>
+                    <Label htmlFor='inpost-geowidget-config'>Konfiguracja Geowidgetu (config)</Label>
+                    <Input
+                        id='inpost-geowidget-config'
+                        value={formData.geowidgetConfig}
+                        onChange={(e) => handleChange('geowidgetConfig', e.target.value)}
+                        placeholder='np. parcelCollect lub Twoja nazwa konfiguracji'
+                    />
+                    <p className='text-xs text-muted-foreground'>
+                        To jest nazwa konfiguracji przekazywana jako <code>configname</code> do Geowidget v5.
+                    </p>
                 </div>
                 <div className='flex items-center justify-between space-x-2 rounded-lg border p-4'>
                     <div className="space-y-0.5">

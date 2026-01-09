@@ -63,6 +63,7 @@ export const appSettingKeys = {
     inpostOrgId: 'inpost.org_id',
     inpostToken: 'inpost.token',
     inpostGeowidgetToken: 'inpost.geowidget_token',
+	inpostGeowidgetConfig: 'inpost.geowidget_config',
     inpostSandbox: 'inpost.sandbox',
 } as const;
 
