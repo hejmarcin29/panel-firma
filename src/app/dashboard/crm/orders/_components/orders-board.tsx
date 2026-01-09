@@ -61,7 +61,7 @@ export function OrdersBoard({ orders: initialOrders }: OrdersBoardProps) {
     'order.paid', 
     'order.forwarded_to_supplier',
     'order.fulfillment_confirmed',
-    'order.completed'
+    'order.closed'
   ];
   
   const columns = VISIBLE_COLUMNS.map(statusId => {

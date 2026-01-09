@@ -12,7 +12,7 @@ import { BackButton } from './_components/back-button';
 import { RefreshButton } from './_components/refresh-button';
 import { logoutAction } from './actions';
 import { getCurrentSession } from '@/lib/auth/session';
-import { getUrgentOrdersCount } from './orders/queries';
+import { getUrgentOrdersCount } from './crm/orders/queries';
 import { db } from '@/lib/db';
 import { users, montages } from '@/lib/db/schema';
 import { eq, sql } from 'drizzle-orm';

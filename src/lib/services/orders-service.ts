@@ -10,8 +10,8 @@ import {
     type ManualOrderSource,
     type ManualOrderPayload,
     type OrderItemPayload
-} from '@/app/dashboard/orders/data';
-import { buildTimelineEntries, normalizeStatus, parseTaskOverrides } from '@/app/dashboard/orders/utils';
+} from '@/app/dashboard/crm/orders/data';
+import { buildTimelineEntries, normalizeStatus, parseTaskOverrides } from '@/app/dashboard/crm/orders/utils';
 
 const MONEY_SCALE = 100;
 const QUANTITY_SCALE = 1000;
@@ -319,7 +319,7 @@ export async function createOrder(payload: ManualOrderPayload): Promise<Order> {
 
     // Calculate totals using integer arithmetic (minor units) to avoid rounding errors
 	const orderTotalsMinor = payload.items.reduce(
-		(acc, item) => ({
+		(acc: { net: number; gross: number }, item) => ({
 			net: acc.net + toMinorUnits(item.totalNet),
 			gross: acc.gross + toMinorUnits(item.totalGross),
 		}),

@@ -1,5 +1,8 @@
 
 import { orderStatuses, type OrderStatus } from '@/lib/db/schema';
+import type { OrderTimelineEntry, OrderTimelineState } from './data';
+
+export type { OrderStatus };
 
 export type StatusDefinition = {
     id: OrderStatus;

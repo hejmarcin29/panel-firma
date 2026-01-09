@@ -84,9 +84,24 @@ export function SampleSelector({ token, samples }: SampleSelectorProps) {
     };
 
     useEffect(() => {
-        if (typeof window !== 'undefined' && window.easyPack) {
-            initMap();
-        }
+        // Check if map is already loaded or loads later (fallback for onReady)
+        const checkMap = () => {
+             if (typeof window !== 'undefined' && window.easyPack) {
+                initMap();
+                return true;
+            }
+            return false;
+        };
+
+        if (checkMap()) return;
+
+        const interval = setInterval(() => {
+            if (checkMap()) {
+                clearInterval(interval);
+            }
+        }, 1000);
+
+        return () => clearInterval(interval);
     }, []);
 
     const toggleSelection = (id: string) => {
@@ -360,8 +375,8 @@ export function SampleSelector({ token, samples }: SampleSelectorProps) {
                                     <p className="font-bold text-xl">{selectedPoint.name}</p>
                                     <p className="text-sm text-muted-foreground">{selectedPoint.address}</p>
                                 </div>
-                                <Button variant="outline" size="sm" onClick={openInPostModal} className="mt-2">
-                                    Zmień punkt
+                                <Button variant="outline" size="sm" onClick={openInPostModal} className="mt-2" disabled={!isMapScriptLoaded && !hasMapError}>
+                                    {hasMapError ? "Błąd mapy" : (isMapScriptLoaded ? "Zmień punkt" : "Ładowanie...")}
                                 </Button>
                             </div>
                         ) : (
@@ -370,9 +385,9 @@ export function SampleSelector({ token, samples }: SampleSelectorProps) {
                                     <h3 className="font-semibold">Wybierz punkt odbioru</h3>
                                     <p className="text-sm text-muted-foreground">Kliknij przycisk poniżej, aby otworzyć mapę.</p>
                                 </div>
-                                <Button onClick={openInPostModal} className="w-full sm:w-auto" size="lg" disabled={!isMapScriptLoaded}>
+                                <Button onClick={openInPostModal} className="w-full sm:w-auto" size="lg" disabled={!isMapScriptLoaded && !hasMapError}>
                                     <MapPin className="mr-2 h-4 w-4" />
-                                    {isMapScriptLoaded ? "Otwórz mapę Paczkomatów" : "Ładowanie mapy..."}
+                                    {hasMapError ? "Spróbuj ponownie" : (isMapScriptLoaded ? "Otwórz mapę Paczkomatów" : "Ładowanie mapy...")}
                                 </Button>
                             </>
                         )}
