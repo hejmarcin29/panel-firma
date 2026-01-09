@@ -27,7 +27,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -44,14 +43,6 @@ import { OrderStatusBadge } from './_components/order-status-badge';
 import { OrdersBoard } from './_components/orders-board';
 import { ACTIVE_STATUS_IDS, ARCHIVED_STATUS_IDS, type OrderStatus } from './utils';
 import type { Order } from './data';
-
-const STATUS_FILTERS = [
-  { value: 'all', label: 'Wszystkie' },
-  { value: 'review', label: 'Do potwierdzenia' },
-  { value: 'confirmed', label: 'Potwierdzone' },
-] as const;
-
-type StatusFilterValue = (typeof STATUS_FILTERS)[number]['value'];
 
 const SOURCE_FILTERS = [
   { value: 'all', label: 'Wszystkie kanały' },
@@ -97,10 +88,9 @@ function includesQuery(value: string, query: string) {
 export type OrdersListClientProps = {
   initialOrders: Order[];
   initialTab?: string;
-  initialView?: 'list' | 'board';
 };
 
-export function OrdersListClient({ initialOrders, initialTab = 'board', initialView = 'board' }: OrdersListClientProps) {
+export function OrdersListClient({ initialOrders, initialTab = 'board' }: OrdersListClientProps) {
   const [sourceFilter, setSourceFilter] = useState<SourceFilterValue>('all');
   const [search, setSearch] = useState('');
   // We use 'board', 'list', 'archive' as main tabs

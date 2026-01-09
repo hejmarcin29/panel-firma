@@ -15,7 +15,6 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
-import { OrderStatus } from "../utils";
 import { OrdersPipelineCard } from "./orders-pipeline-card";
 import { OrdersPipelineColumn } from "./orders-pipeline-column";
 import { updateOrderStatus } from "../actions";
@@ -64,7 +63,7 @@ export function OrdersBoard({ orders: initialOrders }: OrdersBoardProps) {
   const columns = PIPELINE_COLUMNS.map(col => {
       return {
           id: col.id,
-          orders: orders.filter(o => col.statuses.includes(o.status as any))
+          orders: orders.filter(o => col.statuses.includes(o.status))
       };
   });
   
@@ -99,7 +98,7 @@ export function OrdersBoard({ orders: initialOrders }: OrdersBoardProps) {
         // Check if dropped over a card
         const overOrder = orders.find(o => o.id === overId);
         if (overOrder) {
-            targetColumn = PIPELINE_COLUMNS.find(col => col.statuses.includes(overOrder.status as any));
+            targetColumn = PIPELINE_COLUMNS.find(col => col.statuses.includes(overOrder.status));
         }
     }
     
@@ -109,7 +108,7 @@ export function OrdersBoard({ orders: initialOrders }: OrdersBoardProps) {
 
     // If order is already within this column (sub-status match), preserve its status
     // This prevents "downgrading" status when reordering within valid sub-statuses
-    if (targetColumn.statuses.includes(currentOrder.status as any)) {
+    if (targetColumn.statuses.includes(currentOrder.status)) {
         newStatus = currentOrder.status;
     }
 
