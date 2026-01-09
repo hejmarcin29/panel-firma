@@ -208,9 +208,9 @@ export const SYSTEM_NOTIFICATIONS: SystemNotificationDefinition[] = [
     {
         id: 'notify_measurer_new_job',
         type: 'email',
-        trigger: 'Przypisanie pomiarowca do zlecenia',
+        trigger: 'Przypisanie Opiekuna do zlecenia',
         action: 'Wysyła powiadomienie o nowym zleceniu',
-        recipient: 'Montażysta',
+        recipient: 'Opiekun',
         defaultEnabled: true
     },
     {

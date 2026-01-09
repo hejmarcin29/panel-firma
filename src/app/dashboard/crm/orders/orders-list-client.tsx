@@ -8,7 +8,11 @@ import {
   Search, 
   Filter, 
   MoreHorizontal, 
-  FileText, 
+  FileText,
+  LayoutGrid,
+  List,
+  Edit, 
+  Mail
 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -37,8 +41,8 @@ import {
 import { ConfirmOrderButton } from './_components/confirm-order-button';
 import { OrdersStats } from './_components/orders-stats';
 import { OrderStatusBadge } from './_components/order-status-badge';
+import { OrdersBoard } from './_components/orders-board';
 import type { Order } from './data';
-import { Edit, Mail } from 'lucide-react';
 
 const STATUS_FILTERS = [
   { value: 'all', label: 'Wszystkie' },
@@ -92,14 +96,16 @@ function includesQuery(value: string, query: string) {
 export type OrdersListClientProps = {
   initialOrders: Order[];
   initialTab?: string;
+  initialView?: 'list' | 'board';
 };
 
-export function OrdersListClient({ initialOrders, initialTab = 'all' }: OrdersListClientProps) {
+export function OrdersListClient({ initialOrders, initialTab = 'all', initialView = 'list' }: OrdersListClientProps) {
   const [statusFilter, setStatusFilter] = useState<StatusFilterValue>('all');
   const [sourceFilter, setSourceFilter] = useState<SourceFilterValue>('all');
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState(initialTab);
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
+  const [currentView, setCurrentView] = useState<'list' | 'board'>(initialView);
 
   const availableMonths = useMemo(() => {
     const months = new Set<string>();
@@ -191,7 +197,7 @@ export function OrdersListClient({ initialOrders, initialTab = 'all' }: OrdersLi
             </SelectContent>
           </Select>
           <Button asChild>
-            <Link href="/dashboard/orders/new">
+            <Link href="/dashboard/crm/orders/new">
               <Plus className="mr-2 h-4 w-4" />
               Nowe zamówienie
             </Link>
@@ -204,7 +210,7 @@ export function OrdersListClient({ initialOrders, initialTab = 'all' }: OrdersLi
          <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold">Zamówienia</h1>
             <Button asChild size="sm">
-               <Link href="/dashboard/orders/new">
+               <Link href="/dashboard/crm/orders/new">
                   <Plus className="h-4 w-4" />
                </Link>
             </Button>
@@ -231,81 +237,103 @@ export function OrdersListClient({ initialOrders, initialTab = 'all' }: OrdersLi
 
       <OrdersStats orders={ordersFilteredByDate} />
 
-      <Tabs defaultValue={initialTab} className="w-full" onValueChange={setActiveTab}>
-        <div className="flex items-center justify-between px-4 md:px-0 overflow-x-auto pb-2 md:pb-0 -mx-4 md:mx-0">
-          <TabsList className="w-full justify-start md:w-auto h-auto flex-wrap md:flex-nowrap gap-1 bg-transparent md:bg-muted p-0 md:p-1">
-            <TabsTrigger value="verification" className="data-[state=active]:bg-background data-[state=active]:shadow-sm flex-1 md:flex-none">
-              Do weryfikacji
-              {verificationCount > 0 && (
-                <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                  {verificationCount}
-                </span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="active" className="data-[state=active]:bg-background data-[state=active]:shadow-sm flex-1 md:flex-none">Aktywne</TabsTrigger>
-            <TabsTrigger value="completed" className="data-[state=active]:bg-background data-[state=active]:shadow-sm flex-1 md:flex-none">Zakończone</TabsTrigger>
-            <TabsTrigger value="all" className="data-[state=active]:bg-background data-[state=active]:shadow-sm flex-1 md:flex-none">Wszystkie</TabsTrigger>
-          </TabsList>
-        </div>
+      <Tabs value={currentView} className="w-full" onValueChange={(val) => setCurrentView(val as 'list' | 'board')}>
+        <div className="flex items-center mb-4">
+             <TabsList>
+                 <TabsTrigger value="list">
+                     <List className="mr-2 h-4 w-4" />
+                     Lista
+                 </TabsTrigger>
+                 <TabsTrigger value="board">
+                     <LayoutGrid className="mr-2 h-4 w-4" />
+                     Tablica
+                 </TabsTrigger>
+             </TabsList>
+         </div>
 
-        <div className="my-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between px-4 md:px-0">
-          <div className="flex flex-1 items-center gap-2">
-            <div className="relative flex-1 md:max-w-sm">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Szukaj zamówienia..."
-                className="pl-8"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <Filter className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Filtruj według źródła</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {SOURCE_FILTERS.map((filter) => (
-                  <DropdownMenuItem 
-                    key={filter.value}
-                    onClick={() => setSourceFilter(filter.value)}
-                    className={sourceFilter === filter.value ? "bg-accent" : ""}
-                  >
-                    {filter.label}
-                  </DropdownMenuItem>
-                ))}
-                <DropdownMenuSeparator />
-                <DropdownMenuLabel>Status weryfikacji</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {STATUS_FILTERS.map((filter) => (
-                  <DropdownMenuItem 
-                    key={filter.value}
-                    onClick={() => setStatusFilter(filter.value)}
-                    className={statusFilter === filter.value ? "bg-accent" : ""}
-                  >
-                    {filter.label}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
+         <TabsContent value="list" className="mt-0 space-y-4">
+           {/* Inner Tabs for List View Statuses */}
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <div className="flex items-center justify-between px-4 md:px-0 overflow-x-auto pb-2 md:pb-0 -mx-4 md:mx-0">
+                <TabsList className="w-full justify-start md:w-auto h-auto flex-wrap md:flex-nowrap gap-1 bg-transparent md:bg-muted p-0 md:p-1">
+                    <TabsTrigger value="verification" className="data-[state=active]:bg-background data-[state=active]:shadow-sm flex-1 md:flex-none">
+                    Do weryfikacji
+                    {verificationCount > 0 && (
+                        <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                        {verificationCount}
+                        </span>
+                    )}
+                    </TabsTrigger>
+                    <TabsTrigger value="active" className="data-[state=active]:bg-background data-[state=active]:shadow-sm flex-1 md:flex-none">Aktywne</TabsTrigger>
+                    <TabsTrigger value="completed" className="data-[state=active]:bg-background data-[state=active]:shadow-sm flex-1 md:flex-none">Zakończone</TabsTrigger>
+                    <TabsTrigger value="all" className="data-[state=active]:bg-background data-[state=active]:shadow-sm flex-1 md:flex-none">Wszystkie</TabsTrigger>
+                </TabsList>
+                </div>
 
-        <TabsContent value="verification" className="mt-0">
-          <OrdersTable orders={filteredOrders} />
-        </TabsContent>
-        <TabsContent value="all" className="mt-0">
-          <OrdersTable orders={filteredOrders} />
-        </TabsContent>
-        <TabsContent value="active" className="mt-0">
-          <OrdersTable orders={filteredOrders} />
-        </TabsContent>
-        <TabsContent value="completed" className="mt-0">
-          <OrdersTable orders={filteredOrders} />
-        </TabsContent>
+                <div className="my-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between px-4 md:px-0">
+                <div className="flex flex-1 items-center gap-2">
+                    <div className="relative flex-1 md:max-w-sm">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Szukaj zamówienia..."
+                        className="pl-8"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                    />
+                    </div>
+                    <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="icon">
+                        <Filter className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuLabel>Filtruj według źródła</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {SOURCE_FILTERS.map((filter) => (
+                        <DropdownMenuItem 
+                            key={filter.value}
+                            onClick={() => setSourceFilter(filter.value)}
+                            className={sourceFilter === filter.value ? "bg-accent" : ""}
+                        >
+                            {filter.label}
+                        </DropdownMenuItem>
+                        ))}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel>Status weryfikacji</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {STATUS_FILTERS.map((filter) => (
+                        <DropdownMenuItem 
+                            key={filter.value}
+                            onClick={() => setStatusFilter(filter.value)}
+                            className={statusFilter === filter.value ? "bg-accent" : ""}
+                        >
+                            {filter.label}
+                        </DropdownMenuItem>
+                        ))}
+                    </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+                </div>
+
+                <TabsContent value="verification" className="mt-0">
+                    <OrdersTable orders={filteredOrders} />
+                </TabsContent>
+                <TabsContent value="all" className="mt-0">
+                    <OrdersTable orders={filteredOrders} />
+                </TabsContent>
+                <TabsContent value="active" className="mt-0">
+                    <OrdersTable orders={filteredOrders} />
+                </TabsContent>
+                <TabsContent value="completed" className="mt-0">
+                    <OrdersTable orders={filteredOrders} />
+                </TabsContent>
+            </Tabs>
+         </TabsContent>
+
+         <TabsContent value="board" className="mt-0">
+            <OrdersBoard orders={ordersFilteredByDate} />
+         </TabsContent>
       </Tabs>
     </div>
   );
@@ -350,12 +378,12 @@ function OrdersTable({ orders }: { orders: Order[] }) {
             <TableRow 
               key={order.id} 
               className="hover:bg-muted/30 transition-colors cursor-pointer h-16"
-              onClick={() => router.push(`/dashboard/orders/${order.id}`)}
+              onClick={() => router.push(`/dashboard/crm/orders/${order.id}`)}
             >
               <TableCell className="font-medium align-middle">
                 <div className="flex flex-col gap-1">
                   <Link 
-                    href={`/dashboard/orders/${order.id}`}
+                    href={`/dashboard/crm/orders/${order.id}`}
                     className="hover:underline text-primary font-semibold text-base"
                     onClick={(e) => e.stopPropagation()}
                   >
@@ -408,7 +436,7 @@ function OrdersTable({ orders }: { orders: Order[] }) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem asChild>
-                        <Link href={`/dashboard/orders/${order.id}`}>
+                        <Link href={`/dashboard/crm/orders/${order.id}`}>
                           <Edit className="mr-2 h-4 w-4" />
                           Szczegóły
                         </Link>

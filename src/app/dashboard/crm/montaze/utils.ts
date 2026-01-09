@@ -41,8 +41,8 @@ export function getMontageThreats(montage: Montage,  threatDays: number = 14, al
         if (diffDays <= alertSettings.missingInstallerStatusDays && montage.installerStatus === 'none') {
             threats.push(`Brak potwierdzenia ekipy (${diffDays} dni do montażu)`);
         }
-        if (diffDays <= alertSettings.missingMeasurerDays && !montage.measurerId) {
-            threats.push('Brak przypisanego pomiarowca');
+        if (diffDays <= alertSettings.missingMeasurerDays && !montage.measurerId && !montage.installerId) {
+            threats.push('Brak przypisanego opiekuna (pomiarowca)');
         }
         if (diffDays <= alertSettings.missingInstallerDays && !montage.installerId) {
             threats.push('Brak przypisanej ekipy monterskiej');

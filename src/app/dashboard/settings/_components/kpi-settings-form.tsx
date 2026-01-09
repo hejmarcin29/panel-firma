@@ -222,7 +222,7 @@ export function KpiSettingsForm({
             </div>
 
             <div className="grid gap-2">
-                <Label htmlFor="missingMeasurerDays">Brak pomiarowca</Label>
+                <Label htmlFor="missingMeasurerDays">Brak Opiekuna</Label>
                 <Input
                 id="missingMeasurerDays"
                 type="number"
@@ -294,7 +294,7 @@ export function KpiSettingsForm({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="grid gap-2">
-                <Label htmlFor="leadNoMeasurerDays">Brak pomiarowca (Lead)</Label>
+                <Label htmlFor="leadNoMeasurerDays">Brak Opiekuna (Lead)</Label>
                 <Input
                 id="leadNoMeasurerDays"
                 type="number"
@@ -307,7 +307,7 @@ export function KpiSettingsForm({
                     triggerSave({ leadMeasDays: val });
                 }}
                 />
-                <p className="text-[10px] text-muted-foreground">Dni od utworzenia klienta bez przypisanego pomiarowca.</p>
+                <p className="text-[10px] text-muted-foreground">Dni od utworzenia klienta bez przypisanego opiekuna.</p>
             </div>
 
             <div className="grid gap-2">

@@ -1,7 +1,6 @@
 import { requireUser } from '@/lib/auth/session';
 import { redirect } from 'next/navigation';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LayoutGrid, List, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Metadata } from 'next';
@@ -13,7 +12,6 @@ export const metadata: Metadata = {
 
 import { getManualOrders } from './actions';
 import { OrdersListClient } from './orders-list-client';
-import { OrdersBoard } from './_components/orders-board';
 
 type PageProps = {
     searchParams: Promise<{ filter?: string }>;
@@ -49,7 +47,7 @@ export default async function OrdersPage({ searchParams }: PageProps) {
                         </span>
                     </div>
                     <Button variant="ghost" size="sm" asChild className="h-auto py-1 px-2 hover:bg-amber-100 text-amber-900 hover:text-amber-950">
-                        <Link href="/dashboard/orders">
+                        <Link href="/dashboard/crm/orders">
                             <X className="h-3.5 w-3.5 mr-1.5" />
                             Wyczyść
                         </Link>
@@ -57,36 +55,11 @@ export default async function OrdersPage({ searchParams }: PageProps) {
                 </div>
             )}
 
-            <div className="flex-1 flex flex-col p-4 md:p-6 space-y-6 overflow-y-auto">
-                <div className="flex items-center justify-between shrink-0">
-                    <h1 className="text-2xl font-bold">Zamówienia</h1>
-                </div>
-
-                <Tabs defaultValue="list" className="flex-1 flex flex-col">
-                    <div className="flex items-center mb-4">
-                        <TabsList>
-                            <TabsTrigger value="list">
-                                <List className="mr-2 h-4 w-4" />
-                                Lista
-                            </TabsTrigger>
-                            <TabsTrigger value="board">
-                                <LayoutGrid className="mr-2 h-4 w-4" />
-                                Tablica
-                            </TabsTrigger>
-                        </TabsList>
-                    </div>
-
-                    <TabsContent value="list" className="flex-1 mt-0">
-                        <OrdersListClient 
-                            initialOrders={orders} 
-                            initialTab={filter === 'verification' ? 'verification' : 'all'}
-                        />
-                    </TabsContent>
-                    
-                    <TabsContent value="board" className="mt-0">
-                        <OrdersBoard orders={orders} />
-                    </TabsContent>
-                </Tabs>
+            <div className="flex-1 flex flex-col overflow-y-auto">
+                <OrdersListClient 
+                    initialOrders={orders} 
+                    initialTab={filter === 'verification' ? 'verification' : 'all'}
+                />
             </div>
         </div>
     );

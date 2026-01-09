@@ -105,7 +105,7 @@ export function AddEmployeeDialog() {
                         <span className="font-medium">Administrator:</span> Pełny dostęp do systemu (Tylko istniejący admini).
                     </li>
                     <li>
-                        <span className="font-medium">Pomiarowiec / Montażysta:</span> Dostęp tylko do modułów operacyjnych (Montaże, Kalendarz, Zadania).
+                        <span className="font-medium">Montażysta (Opiekun):</span> Dostęp tylko do modułów operacyjnych (Montaże, Kalendarz, Zadania).
                     </li>
                     <li>
                         <span className="font-medium">Architekt:</span> Dostęp do przypisanych zleceń i podgląd prowizji.

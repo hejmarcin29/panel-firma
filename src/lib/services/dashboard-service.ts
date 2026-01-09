@@ -388,14 +388,15 @@ export async function getDashboardStats(publicBaseUrl: string | null): Promise<D
         const daysSinceUpdate = differenceInCalendarDays(today, updatedAt);
 
         // 1. Lead bez pomiarowca (X dni)
-        if (m.status === 'new_lead' && !m.measurerId && daysSinceCreation >= leadNoMeasurerDays) {
-            issues.push(`Lead bez pomiarowca od ${daysSinceCreation} dni`);
+        if (m.status === 'new_lead' && !m.measurerId && !m.installerId && daysSinceCreation >= leadNoMeasurerDays) {
+            issues.push(`Lead bez Opiekuna od ${daysSinceCreation} dni`);
         }
 
         // 2. Opóźniona wycena (X dni po pomiarze)
         // Condition: Measurer assigned, no quote sent (or all drafts), and last update > X days
         const hasSentQuote = m.quotes.some(q => q.status === 'sent' || q.status === 'accepted');
-        if (m.measurerId && !hasSentQuote && daysSinceUpdate >= quoteDelayDays) {
+        const hasMeasurer = m.measurerId || m.installerId;
+        if (hasMeasurer && !hasSentQuote && daysSinceUpdate >= quoteDelayDays) {
              issues.push(`Opóźniona wycena (${daysSinceUpdate} dni bez oferty)`);
         }
 

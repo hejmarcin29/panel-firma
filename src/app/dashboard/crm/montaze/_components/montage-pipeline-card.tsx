@@ -114,7 +114,7 @@ export function MontagePipelineCard({ montage, threatDays, alertSettings }: Prop
                                 </Avatar>
                             )}
                              {montage.measurer && !montage.installer && (
-                                <Avatar className="h-6 w-6 border-2 border-background" title={`Pomiarowiec: ${montage.measurer.name}`}>
+                                <Avatar className="h-6 w-6 border-2 border-background" title={`Opiekun: ${montage.measurer.name}`}>
                                     <AvatarFallback className="text-[9px] bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300">
                                         {initials(montage.measurer.name || montage.measurer.email)}
                                     </AvatarFallback>

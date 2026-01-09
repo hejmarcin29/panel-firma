@@ -543,8 +543,9 @@ export async function updateMontageStatus({ montageId, status }: UpdateMontageSt
 
     // Validation: Cannot move to 'measurement_scheduled' without assigned installer/measurer
     if (status === 'measurement_scheduled' && montage.status === 'new_lead') {
+        // Validation: Legacy support for measurerId, but primary is installerId
         if (!montage.installerId && !montage.measurerId) {
-            throw new Error('Aby skierować do pomiaru, musisz przypisać montażystę lub pomiarowca.');
+             throw new Error('Aby skierować do pomiaru, musisz przypisać Opiekuna (Montażystę).');
         }
     }
 

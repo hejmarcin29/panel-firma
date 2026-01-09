@@ -128,7 +128,7 @@ export function ConvertLeadDialog({ montage, measurers = [] }: ConvertLeadDialog
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="measurer">Pomiarowiec / Montażysta</Label>
+                        <Label htmlFor="measurer">Opiekun Techniczny</Label>
                         <Select
                             value={selectedMeasurerId}
                             onValueChange={setSelectedMeasurerId}

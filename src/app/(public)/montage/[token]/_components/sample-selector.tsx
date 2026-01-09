@@ -112,30 +112,47 @@ export function SampleSelector({ token, samples }: SampleSelectorProps) {
 
     const openInPostModal = () => {
         if (hasMapError) {
-             toast.error("Nie udało się załadować mapy InPost. Odśwież stronę lub sprawdź blokowanie reklam.");
+             toast.error("Wystąpił problem z mapą InPost. Odśwież stronę (F5).");
              return;
         }
 
-        // Double check both flag and window object availability
-        if (!isMapScriptLoaded || typeof window.easyPack === 'undefined') {
-            console.warn("Attempted to open InPost map before script load complete.");
-            toast.error("Mapa InPost jeszcze się ładuje. Proszę czekać...");
+        if (typeof window.easyPack === 'undefined') {
+            // Sytuacja rzadka: skrypt zgłosił gotowość, ale obiektu nie ma.
+            console.error("InPost script loaded but window.easyPack is undefined");
+            toast.error("Mapa nie jest jeszcze gotowa. Próbuję naprawić...");
+            
+            // Próba ratunkowa
+            initMap();
+            
+            setTimeout(() => {
+                if (typeof window.easyPack !== 'undefined') {
+                    toast.success("Mapa naprawiona! Kliknij ponownie.");
+                } else {
+                    setHasMapError(true);
+                    toast.error("Niestety, mapa InPost nie odpowiada. Spróbuj odświeżyć stronę.");
+                }
+            }, 2000);
             return;
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const widget = window.easyPack.modalMap((point: any, modal: any) => {
-            setSelectedPoint({
-                name: point.name,
-                address: `${point.address_details.street} ${point.address_details.building_number}, ${point.address_details.city}`
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const widget = window.easyPack.modalMap((point: any, modal: any) => {
+                setSelectedPoint({
+                    name: point.name,
+                    address: `${point.address_details.street} ${point.address_details.building_number}, ${point.address_details.city}`
+                });
+                modal.closeModal();
+            }, {
+                width: 500,
+                height: 600,
+                defaultLocale: 'pl'
             });
-            modal.closeModal(); // Close modal after selection
-        }, {
-            width: 500,
-            height: 600,
-            defaultLocale: 'pl'
-        });
-        widget.open();
+            widget.open();
+        } catch (e) {
+            console.error("Error opening InPost modal:", e);
+            toast.error("Błąd podczas otwierania mapy. Sprawdź konsolę przeglądarki.");
+        }
     };
 
     const handleSubmit = async () => {

@@ -61,7 +61,7 @@ export function MeasurementAlertsKPI({ alerts }: { alerts: MeasurementAlertItem[
                                 </PopoverTrigger>
                                 <PopoverContent className="max-w-xs">
                                     <p className="text-sm">
-                                        Lista tematów sprzedażowych wymagających uwagi (brak pomiarowca, brak oferty, brak decyzji).
+                                        Lista tematów sprzedażowych wymagających uwagi (brak Opiekuna, brak oferty, brak decyzji).
                                     </p>
                                 </PopoverContent>
                             </Popover>
