@@ -36,23 +36,23 @@ export function WebFormsSettings({ siteKey }: { siteKey?: string }) {
     </div>
     
     <div style="margin-bottom: 12px;">
-      <label style="display:block; margin-bottom: 4px; font-weight: bold; font-size: 14px;">Telefon</label>
-      <input type="tel" name="phone" placeholder="123 456 789" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
+      <label style="display:block; margin-bottom: 4px; font-weight: bold; font-size: 14px;">Telefon *</label>
+      <input type="tel" name="phone" required placeholder="123 456 789" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
     </div>
     
     <div style="margin-bottom: 12px;">
-      <label style="display:block; margin-bottom: 4px; font-weight: bold; font-size: 14px;">Email</label>
-      <input type="email" name="email" placeholder="jan@example.com" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
+      <label style="display:block; margin-bottom: 4px; font-weight: bold; font-size: 14px;">Email *</label>
+      <input type="email" name="email" required placeholder="jan@example.com" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
     </div>
 
      <div style="margin-bottom: 12px;">
-      <label style="display:block; margin-bottom: 4px; font-weight: bold; font-size: 14px;">Miasto</label>
-      <input type="text" name="city" placeholder="Warszawa" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
+      <label style="display:block; margin-bottom: 4px; font-weight: bold; font-size: 14px;">Miasto *</label>
+      <input type="text" name="city" required placeholder="Warszawa" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
     </div>
     
     <div style="margin-bottom: 16px;">
-      <label style="display:block; margin-bottom: 4px; font-weight: bold; font-size: 14px;">Wiadomość</label>
-      <textarea name="message" rows="3" placeholder="Interesuje mnie wylewka..." style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; resize: vertical;"></textarea>
+      <label style="display:block; margin-bottom: 4px; font-weight: bold; font-size: 14px;">Wiadomość *</label>
+      <textarea name="message" required rows="3" placeholder="Interesuje mnie wylewka..." style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; resize: vertical;"></textarea>
     </div>
     
     <!-- Honeypot (Anty-SPAM) - ukryte pole, którego człowiek nie widzi, a bot wypełni -->
@@ -78,7 +78,7 @@ async function submitCrmLead(e) {
     phone: form.phone.value,
     email: form.email.value,
     city: form.city.value,
-    message: form.message.value,
+    description: form.message.value,
     _gotcha: form._gotcha.value // Honeypot
   };
 

@@ -80,11 +80,13 @@ export async function POST(request: Request) {
         
         // Basic validation
         const missingFields = [];
+        const description = body.description || body.message;
+
         if (!body.name) missingFields.push('Imię i nazwisko');
         if (!body.email) missingFields.push('Email');
         if (!body.phone) missingFields.push('Telefon');
         if (!body.city) missingFields.push('Miejscowość');
-        if (!body.description) missingFields.push('Treść wiadomości');
+        if (!description) missingFields.push('Treść wiadomości');
 
         if (missingFields.length > 0) {
             return NextResponse.json(
@@ -113,7 +115,7 @@ export async function POST(request: Request) {
             contactPhone: body.phone, // Pass original formatting or cleaned? Usually original is friendlier for display, but cleaned is better for search. Let's pass original, we clean in service for search.
             contactEmail: body.email,
             address: body.city,
-            description: body.description,
+            description: description,
             sendNotification: true
         });
 
