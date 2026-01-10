@@ -15,6 +15,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 
 import type { MailAccountSettings } from '@/app/dashboard/mail/types';
@@ -68,6 +69,17 @@ return null;
 
 return accounts.find((account) => account.id === id) ?? null;
 }
+
+const DEFAULT_SIGNATURE_TEMPLATE = `<div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+  <p>Pozdrawiamy,</p>
+  <p>
+    <strong>Zespół Prime Podłoga</strong><br>
+    <a href="https://b2b.primepodloga.pl" style="color: #ea580c; text-decoration: none;">b2b.primepodloga.pl</a>
+  </p>
+  <div style="margin-top: 16px; border-top: 1px solid #e5e7eb; padding-top: 8px; color: #6b7280; font-size: 12px;">
+    Wiadoomość wygenerowana automatycznie z Systemu Obsługi Montaży.
+  </div>
+</div>`;
 
 export function MailSettingsForm({ accounts }: MailSettingsFormProps) {
 const router = useRouter();
@@ -450,19 +462,57 @@ placeholder={selectedAccount ? 'Pozostaw puste, aby nie zmieniac' : ''}
 </div>
 </div>
 
-<div className='space-y-2'>
-<Label htmlFor='signature'>Podpis (opcjonalnie)</Label>
-<Textarea
-id='signature'
-name='signature'
-rows={4}
-value={formValues.signature}
-onChange={(event) => handleChange('signature', event.target.value)}
-placeholder='Pozdrowienia, Zespół ...'
-/>
-</div>
+							<div className="space-y-4">
+								<div className="flex items-center justify-between">
+									<Label htmlFor="signature">Stopka / Podpis (HTML)</Label>
+									<Button
+										type="button"
+										variant="outline"
+										size="sm"
+										onClick={() => handleChange('signature', DEFAULT_SIGNATURE_TEMPLATE)}
+										className="h-7 text-xs"
+									>
+										Wstaw szablon
+									</Button>
+								</div>
+								
+								<Tabs defaultValue="edit" className="w-full">
+									<TabsList className="grid w-full grid-cols-2">
+										<TabsTrigger value="edit">Edycja HTML</TabsTrigger>
+										<TabsTrigger value="preview">Podgląd</TabsTrigger>
+									</TabsList>
+									<TabsContent value="edit" className="mt-2">
+										<Textarea
+											id="signature"
+											name="signature"
+											rows={8}
+											value={formValues.signature}
+											onChange={(event) => handleChange('signature', event.target.value)}
+											placeholder="<div>Pozdrawiamy,<br>Zespół...</div>"
+											className="font-mono text-xs"
+										/>
+										<p className="text-[10px] text-muted-foreground mt-1">
+											Możesz używać znaczników HTML do formatowania tekstu, dodawania linków i obrazków.
+										</p>
+									</TabsContent>
+									<TabsContent value="preview" className="mt-2">
+										<div className="rounded-md border bg-card p-4 min-h-[190px]">
+											{formValues.signature ? (
+												<div 
+													className="prose-sm max-w-none"
+													dangerouslySetInnerHTML={{ __html: formValues.signature }} 
+												/>
+											) : (
+												<div className="flex h-full items-center justify-center text-sm text-muted-foreground italic">
+													Brak podpisu do wyświetlenia
+												</div>
+											)}
+										</div>
+									</TabsContent>
+								</Tabs>
+							</div>
 
-<div className='flex flex-wrap items-center gap-3'>
+							<div className="flex flex-wrap items-center gap-3">
 {selectedAccountId === NEW_ACCOUNT_ID && (
 <Button type='submit' disabled={isSubmitting}>
 {isSubmitting ? 'Zapisywanie…' : 'Dodaj konto'}

@@ -2,7 +2,7 @@
 
 import { useSearchParams, useRouter } from 'next/navigation';
 import { getMontageDetails } from './actions';
-import { deleteMontage } from '../actions';
+import { deleteMontage, clientUpdateMontageStatus } from '../actions';
 import { Trash2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -116,13 +116,27 @@ export function MontageView({ montageId, initialData, portalEnabled, requireInst
                                 const isActive = index === effectiveIndex;
                                 
                                 return (
-                                    <div key={step.id} className="flex flex-col items-center gap-2 bg-transparent">
-                                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all duration-300 z-10 bg-white ${
+                                    <button
+                                        key={step.id}
+                                        onClick={async () => {
+                                            if (step.id === montage.status) return;
+                                            // Optional confirmation could go here
+                                            try {
+                                                await clientUpdateMontageStatus(montageId, step.id as any);
+                                                toast.success(`Zmieniono status na: ${step.label}`);
+                                            } catch (error) {
+                                                console.error(error);
+                                                toast.error('Błąd zmiany statusu');
+                                            }
+                                        }}
+                                        className="flex flex-col items-center gap-2 bg-transparent border-none p-0 cursor-pointer focus:outline-none z-10 group"
+                                    >
+                                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all duration-300 bg-white ${
                                             isActive 
                                                 ? 'border-indigo-600 ring-4 ring-indigo-100 scale-110' 
                                                 : isCompleted 
                                                     ? 'bg-indigo-600 border-indigo-600' 
-                                                    : 'border-gray-300'
+                                                    : 'border-gray-300 group-hover:border-indigo-400'
                                         }`}>
                                             {isCompleted && (
                                                 <div className="w-1.5 h-1.5 bg-white rounded-full opacity-0" />
@@ -132,11 +146,11 @@ export function MontageView({ montageId, initialData, portalEnabled, requireInst
                                             )}
                                         </div>
                                         <span className={`text-[10px] uppercase font-bold tracking-wider transition-colors duration-300 ${
-                                            isActive ? 'text-indigo-600' : isCompleted ? 'text-gray-700' : 'text-gray-400'
+                                            isActive ? 'text-indigo-600' : isCompleted ? 'text-gray-700' : 'text-gray-400 group-hover:text-indigo-400'
                                         }`}>
                                             {step.label}
                                         </span>
-                                    </div>
+                                    </button>
                                 );
                             })}
                         </div>
@@ -201,7 +215,14 @@ export function MontageView({ montageId, initialData, portalEnabled, requireInst
                             <MontageMaterialCard montage={montage} userRoles={userRoles} />
                         </div>
                         <div className="space-y-6">
-                             <MontageLeadQuickEdit montageId={montage.id} initialClientInfo={montage.clientInfo} initialEstimatedArea={montage.estimatedFloorArea} />
+                             <MontageLeadQuickEdit 
+                                montageId={montage.id} 
+                                initialClientInfo={montage.clientInfo}
+                                initialEstimatedArea={montage.estimatedFloorArea}
+                                initialForecastedDate={montage.forecastedInstallationDate ? new Date(montage.forecastedInstallationDate) : null}
+                                initialInstallationMethod={montage.measurementInstallationMethod}
+                                initialFloorPattern={montage.measurementFloorPattern}
+                             />
                              <MontageSamplesCard montage={montage} userRoles={userRoles} />
                              <div className="bg-card rounded-xl border shadow-sm p-6">
                                 <h3 className="font-semibold mb-4">Notatki</h3>

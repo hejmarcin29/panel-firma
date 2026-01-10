@@ -1324,12 +1324,21 @@ export async function generateMontageToken(montageId: string) {
     return token;
 }
 
-export async function updateMontageLeadData(montageId: string, data: { clientInfo?: string; estimatedFloorArea?: number }) {
+export async function updateMontageLeadData(montageId: string, data: { 
+    clientInfo?: string; 
+    estimatedFloorArea?: number;
+    forecastedInstallationDate?: Date | null;
+    measurementInstallationMethod?: 'click' | 'glue' | null;
+    measurementFloorPattern?: 'classic' | 'herringbone' | null;
+}) {
     await requireUser();
     await db.update(montages)
         .set({ 
             ...(data.clientInfo !== undefined && { clientInfo: data.clientInfo }),
             ...(data.estimatedFloorArea !== undefined && { estimatedFloorArea: data.estimatedFloorArea }),
+            ...(data.forecastedInstallationDate !== undefined && { forecastedInstallationDate: data.forecastedInstallationDate }),
+            ...(data.measurementInstallationMethod !== undefined && { measurementInstallationMethod: data.measurementInstallationMethod }),
+            ...(data.measurementFloorPattern !== undefined && { measurementFloorPattern: data.measurementFloorPattern }),
             updatedAt: new Date() 
         })
         .where(eq(montages.id, montageId));
@@ -2562,12 +2571,17 @@ export async function sendDataRequest(montageId: string) {
                         },
                     });
 
+                    // Use configured signature or fallback
+                    const signatureHtml = mailAccount.signature 
+                        ? `<br><br>${mailAccount.signature}` 
+                        : `<br><p>Pozdrawiamy,<br>Zespół Prime Podłoga</p>`;
+
                     await transporter.sendMail({
                         from: `${mailAccount.displayName} <${mailAccount.email}>`,
                         to: montage.contactEmail,
                         subject: 'Witamy w Panelu Klienta - Prime Podłoga',
-                        text: message,
-                        html: `<p>Dzień dobry!</p><p>Rozpoczynamy współpracę. Utworzyliśmy dla Ciebie Panel Klienta, gdzie będziesz widzieć postępy prac.</p><p><a href="${portalLink}">Kliknij tutaj, aby przejść do panelu</a></p><p>Prosimy o uzupełnienie adresu, abyśmy mogli zlecić pomiar.</p><br><p>Pozdrawiamy,<br>Zespół Prime Podłoga</p>`
+                        text: message, // Note: This is plain text, signature is not appended here to keep it simple or we should strip tags
+                        html: `<p>Dzień dobry!</p><p>Rozpoczynamy współpracę. Utworzyliśmy dla Ciebie Panel Klienta, gdzie będziesz widzieć postępy prac.</p><p><a href="${portalLink}">Kliknij tutaj, aby przejść do panelu</a></p><p>Prosimy o uzupełnienie adresu, abyśmy mogli zlecić pomiar.</p>${signatureHtml}`
                     });
                     sentChannels.push('Email');
                  }
@@ -2718,3 +2732,20 @@ export async function updateMontageSampleDelivery({
         
     revalidatePath(`/dashboard/crm/montaze/${montageId}`);
 }
+
+export async function clientUpdateMontageStatus(montageId: string, status: MontageStatus) {
+    const user = await requireUser();
+    
+    await db.update(montages)
+        .set({ 
+            status, 
+            updatedAt: new Date() 
+        })
+        .where(eq(montages.id, montageId));
+
+    await logSystemEvent('update_status', `Zmieniono status na "${status}"`, user.id);
+    
+    revalidatePath(`/dashboard/crm/montaze/${montageId}`);
+    revalidatePath('/dashboard/crm/montaze');
+}
+

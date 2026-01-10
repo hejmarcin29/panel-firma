@@ -204,15 +204,27 @@ function convertToHtml(text: string): string {
 }
 
 function buildBodies(body: string, signature: string | null | undefined): { text: string; html?: string } {
-	const parts = [body.trim()];
-	const signatureValue = signature?.trim() ?? '';
-	if (signatureValue) {
-		parts.push(signatureValue);
+	const cleanBody = body.trim();
+	const cleanSig = signature?.trim() ?? '';
+
+	// Text version
+	// We treat body as plain text
+	// We try to strip HTML tags from signature for the plain text version
+	const textSig = cleanSig.replace(/<[^>]*>?/gm, '').trim();
+	const text = [cleanBody, textSig].filter(Boolean).join('\n\n');
+
+	// HTML version
+	let html = '';
+	if (cleanBody) {
+		// Convert plain text body to HTML (escape + newlines)
+		html += convertToHtml(cleanBody);
 	}
 
-	const text = parts.filter(Boolean).join('\n\n');
-	const htmlParts = parts.filter(Boolean).map(convertToHtml);
-	const html = htmlParts.length > 0 ? htmlParts.join('<br /><br />') : undefined;
+	if (cleanSig) {
+		if (html) html += '<br /><br />';
+		// Append signature as raw HTML (it is now an HTML field)
+		html += cleanSig;
+	}
 
 	return { text, html };
 }

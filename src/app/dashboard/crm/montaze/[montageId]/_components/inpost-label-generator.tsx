@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
 import { generateInPostLabel } from '../actions';
-import { updateMontageSampleDelivery } from '../../actions';
+import { updateMontageSampleDelivery, clientUpdateMontageStatus } from '../../actions';
 import {
     Dialog,
     DialogContent,
@@ -18,6 +18,16 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface InPostLabelGeneratorProps {
     montageId: string;
@@ -31,6 +41,7 @@ export function InPostLabelGenerator({ montageId, sampleDelivery, sampleStatus }
     const [isSaving, setIsSaving] = useState(false);
     const [isGenerateOpen, setIsGenerateOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
+    const [showStatusPrompt, setShowStatusPrompt] = useState(false);
 
     // Form State
     const [method, setMethod] = useState<'courier' | 'parcel_locker'>(sampleDelivery?.method || 'courier');
@@ -61,6 +72,7 @@ export function InPostLabelGenerator({ montageId, sampleDelivery, sampleStatus }
             await generateInPostLabel(montageId, sampleDelivery);
             toast.success('Etykieta została wygenerowana i zapisana w notatkach.');
             setIsGenerateOpen(false);
+            setShowStatusPrompt(true);
         } catch (error) {
             console.error(error);
             toast.error(error instanceof Error ? error.message : 'Błąd generowania etykiety');
@@ -278,6 +290,29 @@ export function InPostLabelGenerator({ montageId, sampleDelivery, sampleStatus }
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <AlertDialog open={showStatusPrompt} onOpenChange={setShowStatusPrompt}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Zaktualizować status leadu?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Etykieta została wygenerowana. Czy chcesz zmienić status leadu na "Próbki Wysłane"?
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setShowStatusPrompt(false)}>Nie</AlertDialogCancel>
+                        <AlertDialogAction onClick={async () => {
+                            try {
+                                await clientUpdateMontageStatus(montageId, 'lead_samples_sent');
+                                toast.success('Zmieniono status na Próbki Wysłane');
+                            } catch (e) {
+                                toast.error('Błąd zmiany statusu');
+                            }
+                            setShowStatusPrompt(false);
+                        }}>Tak, zmień status</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
