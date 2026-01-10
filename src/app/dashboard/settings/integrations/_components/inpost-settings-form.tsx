@@ -207,7 +207,6 @@ export function InPostSettingsForm({ initialSettings }: InPostSettingsFormProps)
                                     <p className="text-muted-foreground">Wprowadź Token Geowidgetu aby zobaczyć mapę</p>
                                 </div>
                             )}
-                            {/* @ts-expect-error - custom element */}
                             <inpost-geowidget
                                 ref={geoWidgetRef}
                                 token={formData.geowidgetToken}
