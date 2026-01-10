@@ -26,11 +26,12 @@ interface SampleSelectorProps {
     samples: Product[];
     geowidgetToken: string;
     geowidgetConfig: string;
+    isSandbox?: boolean;
 }
 
 type DeliveryMethod = 'courier' | 'parcel_locker';
 
-export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig }: SampleSelectorProps) {
+export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig, isSandbox = false }: SampleSelectorProps) {
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -66,7 +67,10 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
     const initMap = () => {
         const link = document.createElement("link");
         link.rel = "stylesheet";
-        link.href = "https://geowidget.inpost.pl/inpost-geowidget.css";
+        link.href = isSandbox 
+            ? "https://sandbox-easy-geowidget-sdk.easypack24.net/inpost-geowidget.css"
+            : "https://geowidget.inpost.pl/inpost-geowidget.css";
+        
         if (!document.head.querySelector(`link[href="${link.href}"]`)) {
             document.head.appendChild(link);
         }
@@ -267,7 +271,10 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
         <div className="space-y-8 pb-32">
             <Script 
                 id="inpost-geowidget-script"
-                src="https://geowidget.inpost.pl/inpost-geowidget.js"
+                src={isSandbox 
+                    ? "https://sandbox-easy-geowidget-sdk.easypack24.net/inpost-geowidget.js"
+                    : "https://geowidget.inpost.pl/inpost-geowidget.js"
+                }
                 strategy="afterInteractive"
                 onReady={initMap}
                 onError={() => {
