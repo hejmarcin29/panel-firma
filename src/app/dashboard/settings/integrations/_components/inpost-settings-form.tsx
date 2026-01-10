@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import Script from 'next/script';
 import { useDebouncedCallback } from 'use-debounce';
 import { Loader2, Check, Eye, EyeOff, MapPin } from 'lucide-react';
@@ -38,6 +38,9 @@ export function InPostSettingsForm({ initialSettings }: InPostSettingsFormProps)
 
     // Map Debug Logic
     const [showMapTest, setShowMapTest] = useState(false);
+    const [isMapScriptLoaded, setIsMapScriptLoaded] = useState(false);
+    const [hasMapError, setHasMapError] = useState(false);
+    const onPointEventName = useMemo(() => 'onpointselect', []);
     const geoWidgetRef = useRef<HTMLElement | null>(null);
 
     const initMap = () => {
@@ -47,32 +50,35 @@ export function InPostSettingsForm({ initialSettings }: InPostSettingsFormProps)
         if (!document.head.querySelector(`link[href="${link.href}"]`)) {
             document.head.appendChild(link);
         }
+
+        setIsMapScriptLoaded(true);
     };
 
     useEffect(() => {
-        if (!showMapTest || !geoWidgetRef.current) return;
+        if (!showMapTest) return;
+        if (!isMapScriptLoaded || hasMapError) return;
+        if (!geoWidgetRef.current) return;
 
-        // Force update attributes on the web component
-        geoWidgetRef.current.setAttribute("token", formData.geowidgetToken || "");
-        geoWidgetRef.current.setAttribute("config", formData.geowidgetConfig || "parcelCollect");
-        geoWidgetRef.current.setAttribute("language", "pl");
-        
-        // Listen for point selection
+        // IMPORTANT: Geowidget v5 defines some properties (like `token`) as getter-only.
+        // React may try to set them as DOM properties and crash. We set them as attributes manually.
+        geoWidgetRef.current.setAttribute('token', formData.geowidgetToken || '');
+        geoWidgetRef.current.setAttribute('config', formData.geowidgetConfig || 'parcelCollect');
+        geoWidgetRef.current.setAttribute('language', 'pl');
+        geoWidgetRef.current.setAttribute('onpoint', onPointEventName);
+
         const handler = (event: Event) => {
             const customEvent = event as CustomEvent;
+            const detail = customEvent?.detail as unknown;
+            if (!detail || typeof detail !== 'object') return;
+
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const point = customEvent.detail as any;
-            console.log("InPost Geowidget Selected Point:", point);
-            toast.success(`Wybrano punkt: ${point?.name || point?.id}`);
+            const point = detail as any;
+            toast.success(`Wybrano punkt: ${point?.name || point?.id || '—'}`);
         };
 
-        const currentRef = geoWidgetRef.current;
-        currentRef.addEventListener("onpointselect", handler);
-        
-        return () => {
-            currentRef.removeEventListener("onpointselect", handler);
-        };
-    }, [showMapTest, formData.geowidgetToken, formData.geowidgetConfig]);
+        document.addEventListener(onPointEventName, handler);
+        return () => document.removeEventListener(onPointEventName, handler);
+    }, [showMapTest, isMapScriptLoaded, hasMapError, formData.geowidgetToken, formData.geowidgetConfig, onPointEventName]);
 
     const debouncedSave = useDebouncedCallback(async (data: typeof formData) => {
         setIsSaving(true);
@@ -207,12 +213,20 @@ export function InPostSettingsForm({ initialSettings }: InPostSettingsFormProps)
                                     <p className="text-muted-foreground">Wprowadź Token Geowidgetu aby zobaczyć mapę</p>
                                 </div>
                             )}
+                            {(hasMapError) && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
+                                    <p className="text-muted-foreground">Nie udało się załadować mapy InPost. Sprawdź połączenie lub wyłącz blokowanie reklam.</p>
+                                </div>
+                            )}
+                            {(!hasMapError && !isMapScriptLoaded) && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
+                                    <p className="text-muted-foreground">Ładowanie mapy InPost...</p>
+                                </div>
+                            )}
                             <inpost-geowidget
-                                ref={geoWidgetRef}
-                                token={formData.geowidgetToken}
-                                config={formData.geowidgetConfig || "parcelCollect"}
-                                language="pl"
-                                onpoint="onpointselect"
+                                ref={(el) => {
+                                    geoWidgetRef.current = el;
+                                }}
                                 className="w-full h-full block"
                             />
                         </div>
@@ -225,6 +239,11 @@ export function InPostSettingsForm({ initialSettings }: InPostSettingsFormProps)
                 src="https://geowidget.inpost.pl/inpost-geowidget.js"
                 strategy="lazyOnload"
                 onReady={initMap}
+                onError={() => {
+                    setHasMapError(true);
+                    setIsMapScriptLoaded(false);
+                    toast.error('Nie udało się załadować mapy InPost. Sprawdź połączenie lub wyłącz blokowanie reklam.');
+                }}
             />
         </Card>
     );
