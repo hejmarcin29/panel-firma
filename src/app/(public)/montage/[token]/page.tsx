@@ -31,8 +31,6 @@ export default async function PublicMontagePage({ params }: PublicMontagePagePro
     const samples = await getAvailableSamples();
     const geowidgetToken = await getAppSetting(appSettingKeys.inpostGeowidgetToken) || "";
 	const geowidgetConfig = (await getAppSetting(appSettingKeys.inpostGeowidgetConfig)) || "parcelCollect";
-    const geowidgetSandboxStr = await getAppSetting(appSettingKeys.inpostSandbox);
-    const isGeowidgetSandbox = geowidgetSandboxStr === "1" || geowidgetSandboxStr === "true";
 
     if (samples.length === 0) {
         return (
@@ -45,13 +43,7 @@ export default async function PublicMontagePage({ params }: PublicMontagePagePro
 
     return (
         <div className="max-w-5xl mx-auto">
-           <SampleSelector 
-                token={token} 
-                samples={samples} 
-                geowidgetToken={geowidgetToken} 
-                geowidgetConfig={geowidgetConfig}
-                isSandbox={isGeowidgetSandbox}
-           />
+           <SampleSelector token={token} samples={samples} geowidgetToken={geowidgetToken} geowidgetConfig={geowidgetConfig} />
         </div>
     );
 }

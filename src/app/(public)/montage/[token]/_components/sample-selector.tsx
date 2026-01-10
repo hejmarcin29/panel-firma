@@ -26,12 +26,11 @@ interface SampleSelectorProps {
     samples: Product[];
     geowidgetToken: string;
     geowidgetConfig: string;
-    isSandbox?: boolean;
 }
 
 type DeliveryMethod = 'courier' | 'parcel_locker';
 
-export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig, isSandbox = false }: SampleSelectorProps) {
+export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig }: SampleSelectorProps) {
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -63,15 +62,11 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
 
     const onPointEventName = useMemo(() => "onpointselect", []);
     const geoWidgetRef = useRef<HTMLElement | null>(null);
-    const geoWidgetContainerRef = useRef<HTMLDivElement | null>(null);
 
     const initMap = () => {
         const link = document.createElement("link");
         link.rel = "stylesheet";
-        link.href = isSandbox 
-            ? "https://sandbox-easy-geowidget-sdk.easypack24.net/inpost-geowidget.css"
-            : "https://geowidget.inpost.pl/inpost-geowidget.css";
-        
+        link.href = "https://geowidget.inpost.pl/inpost-geowidget.css";
         if (!document.head.querySelector(`link[href="${link.href}"]`)) {
             document.head.appendChild(link);
         }
@@ -81,23 +76,14 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
     useEffect(() => {
         if (!isGeoDialogOpen) return;
 
-        // IMPORTANT: The custom element reads attributes during initialization (connectedCallback).
-        // If React inserts the element first and we set attributes later, the widget may start with token=null.
-        // To avoid this race, create the element manually with attributes set BEFORE appending to DOM.
-        const container = geoWidgetContainerRef.current;
-        if (!container) return;
-
-        container.replaceChildren();
-
-        const el = document.createElement("inpost-geowidget") as HTMLElement;
-        el.className = "block h-full w-full";
-        el.setAttribute("token", geowidgetToken || "");
-        el.setAttribute("config", geowidgetConfig || "");
-        el.setAttribute("language", "pl");
-        el.setAttribute("onpoint", onPointEventName);
-
-        container.appendChild(el);
-        geoWidgetRef.current = el;
+        // IMPORTANT: Geowidget v5 defines some properties (like `token`) as getter-only.
+        // React may try to set them as DOM properties and crash. We set them as attributes manually.
+        if (geoWidgetRef.current) {
+            geoWidgetRef.current.setAttribute("token", geowidgetToken || "");
+            geoWidgetRef.current.setAttribute("config", geowidgetConfig || "");
+            geoWidgetRef.current.setAttribute("language", "pl");
+            geoWidgetRef.current.setAttribute("onpoint", onPointEventName);
+        }
 
         const handler = (event: Event) => {
             const customEvent = event as CustomEvent;
@@ -176,12 +162,8 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
         };
 
         document.addEventListener(onPointEventName, handler);
-        return () => {
-            document.removeEventListener(onPointEventName, handler);
-            container.replaceChildren();
-            geoWidgetRef.current = null;
-        };
-    }, [isGeoDialogOpen, onPointEventName, geowidgetToken, geowidgetConfig]);
+        return () => document.removeEventListener(onPointEventName, handler);
+    }, [isGeoDialogOpen, onPointEventName]);
 
     const toggleSelection = (id: string) => {
         setSelectedIds(prev => 
@@ -285,10 +267,7 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
         <div className="space-y-8 pb-32">
             <Script 
                 id="inpost-geowidget-script"
-                src={isSandbox 
-                    ? "https://sandbox-easy-geowidget-sdk.easypack24.net/inpost-geowidget.js"
-                    : "https://geowidget.inpost.pl/inpost-geowidget.js"
-                }
+                src="https://geowidget.inpost.pl/inpost-geowidget.js"
                 strategy="afterInteractive"
                 onReady={initMap}
                 onError={() => {
@@ -305,7 +284,12 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
                     </DialogHeader>
                     <div className="px-6 pb-6">
                         <div className="h-[70vh] min-h-[520px] w-full rounded-lg overflow-hidden border">
-                            <div ref={geoWidgetContainerRef} className="h-full w-full" />
+                            <inpost-geowidget
+                                ref={(el) => {
+								geoWidgetRef.current = el;
+							}}
+                                className="block h-full w-full"
+                            />
                         </div>
                     </div>
                 </DialogContent>
