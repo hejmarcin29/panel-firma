@@ -78,19 +78,23 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
 
         if (!isMapScriptLoaded || hasMapError) return;
         if (!mapContainerRef.current) return;
-
-        // IMPORTANT: Geowidget v5 reads token/config only on connectedCallback.
-        // We must set attributes BEFORE appending the element to the DOM.
+        
         const container = mapContainerRef.current;
         container.replaceChildren();
 
-        const widget = document.createElement("inpost-geowidget");
-        widget.setAttribute("token", (geowidgetToken || "").trim());
-        widget.setAttribute("config", (geowidgetConfig || "").trim());
-        widget.setAttribute("language", "pl");
-        widget.setAttribute("onpoint", onPointEventName);
-        widget.className = "block h-full w-full";
-        container.appendChild(widget);
+        // 2026-01-10: Add delay to allow Dialog animation to finish.
+        // Geowidget needs the container to have dimensions.
+        const timer = setTimeout(() => {
+             // IMPORTANT: Geowidget v5 reads token/config only on connectedCallback.
+            // We must set attributes BEFORE appending the element to the DOM.
+            const widget = document.createElement("inpost-geowidget");
+            widget.setAttribute("token", (geowidgetToken || "").trim());
+            widget.setAttribute("config", (geowidgetConfig || "").trim());
+            widget.setAttribute("language", "pl");
+            widget.setAttribute("onpoint", onPointEventName);
+            widget.className = "block h-full w-full";
+            container.appendChild(widget);
+        }, 300);
 
         const handler = (event: Event) => {
             const customEvent = event as CustomEvent;
@@ -170,6 +174,7 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
 
         document.addEventListener(onPointEventName, handler);
         return () => {
+            clearTimeout(timer);
             document.removeEventListener(onPointEventName, handler);
             container.replaceChildren();
         };
