@@ -163,7 +163,7 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
 
         document.addEventListener(onPointEventName, handler);
         return () => document.removeEventListener(onPointEventName, handler);
-    }, [isGeoDialogOpen, onPointEventName]);
+    }, [isGeoDialogOpen, onPointEventName, geowidgetConfig, geowidgetToken]);
 
     const toggleSelection = (id: string) => {
         setSelectedIds(prev => 
