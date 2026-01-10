@@ -2701,3 +2701,20 @@ export async function getReferrers() {
         partners: allUsers.filter(u => u.roles.includes('partner')),
     };
 }
+
+export async function updateMontageSampleDelivery({
+    montageId,
+    delivery
+}: {
+    montageId: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delivery: any;
+}) {
+    await requireUser();
+    
+    await db.update(montages)
+        .set({ sampleDelivery: delivery })
+        .where(eq(montages.id, montageId));
+        
+    revalidatePath(`/dashboard/crm/montaze/${montageId}`);
+}

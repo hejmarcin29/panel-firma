@@ -2,7 +2,7 @@
 
 import { eq, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { montages, erpProducts, systemLogs } from '@/lib/db/schema';
+import { montages, erpProducts, systemLogs, montageNotes } from '@/lib/db/schema';
 import { randomUUID } from 'crypto';
 
 export async function getPublicMontage(token: string) {
@@ -85,10 +85,18 @@ export async function submitSampleRequest(
             status: 'lead_samples_pending',
             sampleStatus: 'to_send',
             sampleDelivery: delivery,
-            additionalInfo: sql`${montages.additionalInfo} || '\n\n[ZAMÓWIENIE PRÓBEK ' || to_char(now(), 'YYYY-MM-DD HH24:MI') || ']:\n' || ${sampleList} || ${deliveryNote}`,
             updatedAt: new Date()
         })
         .where(eq(montages.id, montage.id));
+
+    // Add explicit note to timeline
+    await db.insert(montageNotes).values({
+        id: randomUUID(),
+        montageId: montage.id,
+        content: `[ZAMÓWIENIE PRÓBEK]:\n${sampleList}${deliveryNote}`,
+        isInternal: false,
+        createdAt: new Date()
+    });
 
     // Log event (system user or null)
     await db.insert(systemLogs).values({
