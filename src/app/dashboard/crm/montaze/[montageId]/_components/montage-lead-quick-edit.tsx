@@ -117,10 +117,6 @@ export function MontageLeadQuickEdit({ montageId, initialClientInfo, initialEsti
             <div className="flex items-center justify-between mb-2">
                 <h3 className="font-semibold">Dane Wstępne (Lead)</h3>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={handleCopyMagicLink} title="Generuj link do wyboru próbek">
-                        <LinkIcon className="h-4 w-4 mr-2" />
-                        Magic Link (Próbki)
-                    </Button>
                     <div className="h-6 w-6 flex items-center justify-center">
                         {status === 'saving' && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
                         {status === 'saved' && <CheckCircle2 className="h-4 w-4 text-green-500" />}

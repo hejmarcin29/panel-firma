@@ -33,6 +33,7 @@ import { MontageMeasurementTab } from '../_components/montage-measurement-tab';
 import { MontageSettlementTab } from '../_components/montage-settlement-tab';
 import { MontageQuotes } from './_components/montage-quotes';
 import { MontageLeadQuickEdit } from './_components/montage-lead-quick-edit';
+import { MontageSamplesCard } from './_components/montage-samples-card';
 
 import { MontageDetailsLayout } from './_components/montage-details-layout';
 import { ConvertLeadDialog } from './_components/convert-lead-dialog';
@@ -146,6 +147,7 @@ export function MontageView({ montageId, initialData, portalEnabled, requireInst
                         </div>
                         <div className="space-y-6">
                              <MontageLeadQuickEdit montageId={montage.id} initialClientInfo={montage.clientInfo} initialEstimatedArea={montage.estimatedFloorArea} />
+                             <MontageSamplesCard montage={montage} userRoles={userRoles} />
                              <div className="bg-card rounded-xl border shadow-sm p-6">
                                 <h3 className="font-semibold mb-4">Notatki</h3>
                                 <MontageNotesTab montage={montage} userRoles={userRoles} />
@@ -198,6 +200,8 @@ export function MontageView({ montageId, initialData, portalEnabled, requireInst
 
                         {/* Client Requirements (Lead) */}
                         <MontageLeadQuickEdit montageId={montage.id} initialClientInfo={montage.clientInfo} initialEstimatedArea={montage.estimatedFloorArea} />
+                        
+                        <MontageSamplesCard montage={montage} userRoles={userRoles} />
                     </div>
                 }
                 defaultTab={activeTab}

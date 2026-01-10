@@ -39,10 +39,9 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { type UserRole, type MontageSampleStatus } from '@/lib/db/schema';
-import { InPostLabelGenerator } from './inpost-label-generator';
 
 
-export function MontageClientCard({ 
+export function MontageClientCard({  
     montage, 
     userRoles = ['admin'],
     installers = [],
@@ -612,30 +611,15 @@ export function MontageClientCard({
                         "bg-slate-300"
                     )} />
                 </div>
-                <Select
-                    value={montage.sampleStatus || "none"}
-                    onValueChange={handleSampleStatusChange}
-                >
-                    <SelectTrigger className="h-auto p-0 border-0 shadow-none bg-transparent text-sm hover:bg-transparent focus:ring-0 w-auto data-placeholder:text-foreground">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="none">Brak próbek</SelectItem>
-                        <SelectItem value="to_send">Próbki do wysłania</SelectItem>
-                        <SelectItem value="sent">Próbki wysłane</SelectItem>
-                        <SelectItem value="delivered">Próbki dostarczone</SelectItem>
-                        <SelectItem value="returned">Próbki zwrócone</SelectItem>
-                    </SelectContent>
-                </Select>
+                <span className="text-sm">
+                    {montage.sampleStatus === 'to_send' ? 'Próbki do wysłania' :
+                     montage.sampleStatus === 'sent' ? 'Próbki wysłane' :
+                     montage.sampleStatus === 'delivered' ? 'Próbki dostarczone' :
+                     montage.sampleStatus === 'returned' ? 'Próbki zwrócone' :
+                     'Brak próbek'}
+                </span>
             </div>
             
-            <div className="pl-7">
-                <InPostLabelGenerator 
-                    montageId={montage.id}
-                    sampleDelivery={montage.sampleDelivery}
-                    sampleStatus={montage.sampleStatus ?? null}
-                />
-            </div>
         </div>
 
         <Separator />
