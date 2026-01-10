@@ -63,6 +63,7 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
 
     const onPointEventName = useMemo(() => "onpointselect", []);
     const geoWidgetRef = useRef<HTMLElement | null>(null);
+    const geoWidgetContainerRef = useRef<HTMLDivElement | null>(null);
 
     const initMap = () => {
         const link = document.createElement("link");
@@ -80,13 +81,23 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
     useEffect(() => {
         if (!isGeoDialogOpen) return;
 
-        // Note: attributes are set in the ref callback to ensure they exist before connectedCallback
-        // But we update them here if props change
-        if (geoWidgetRef.current) {
-             const el = geoWidgetRef.current;
-             if (el.getAttribute("token") !== geowidgetToken) el.setAttribute("token", geowidgetToken || "");
-             if (el.getAttribute("config") !== geowidgetConfig) el.setAttribute("config", geowidgetConfig || "");
-        }
+        // IMPORTANT: The custom element reads attributes during initialization (connectedCallback).
+        // If React inserts the element first and we set attributes later, the widget may start with token=null.
+        // To avoid this race, create the element manually with attributes set BEFORE appending to DOM.
+        const container = geoWidgetContainerRef.current;
+        if (!container) return;
+
+        container.replaceChildren();
+
+        const el = document.createElement("inpost-geowidget") as HTMLElement;
+        el.className = "block h-full w-full";
+        el.setAttribute("token", geowidgetToken || "");
+        el.setAttribute("config", geowidgetConfig || "");
+        el.setAttribute("language", "pl");
+        el.setAttribute("onpoint", onPointEventName);
+
+        container.appendChild(el);
+        geoWidgetRef.current = el;
 
         const handler = (event: Event) => {
             const customEvent = event as CustomEvent;
@@ -165,7 +176,11 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
         };
 
         document.addEventListener(onPointEventName, handler);
-        return () => document.removeEventListener(onPointEventName, handler);
+        return () => {
+            document.removeEventListener(onPointEventName, handler);
+            container.replaceChildren();
+            geoWidgetRef.current = null;
+        };
     }, [isGeoDialogOpen, onPointEventName, geowidgetToken, geowidgetConfig]);
 
     const toggleSelection = (id: string) => {
@@ -290,18 +305,7 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
                     </DialogHeader>
                     <div className="px-6 pb-6">
                         <div className="h-[70vh] min-h-[520px] w-full rounded-lg overflow-hidden border">
-                            <inpost-geowidget
-                                ref={(el) => {
-                                    if (el) {
-                                        el.setAttribute("token", geowidgetToken || "");
-                                        el.setAttribute("config", geowidgetConfig || "");
-                                        el.setAttribute("language", "pl");
-                                        el.setAttribute("onpoint", onPointEventName);
-                                        geoWidgetRef.current = el;
-                                    }
-                                }}
-                                className="block h-full w-full"
-                            />
+                            <div ref={geoWidgetContainerRef} className="h-full w-full" />
                         </div>
                     </div>
                 </DialogContent>
