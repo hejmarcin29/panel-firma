@@ -80,13 +80,12 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
     useEffect(() => {
         if (!isGeoDialogOpen) return;
 
-        // IMPORTANT: Geowidget v5 defines some properties (like `token`) as getter-only.
-        // React may try to set them as DOM properties and crash. We set them as attributes manually.
+        // Note: attributes are set in the ref callback to ensure they exist before connectedCallback
+        // But we update them here if props change
         if (geoWidgetRef.current) {
-            geoWidgetRef.current.setAttribute("token", geowidgetToken || "");
-            geoWidgetRef.current.setAttribute("config", geowidgetConfig || "");
-            geoWidgetRef.current.setAttribute("language", "pl");
-            geoWidgetRef.current.setAttribute("onpoint", onPointEventName);
+             const el = geoWidgetRef.current;
+             if (el.getAttribute("token") !== geowidgetToken) el.setAttribute("token", geowidgetToken || "");
+             if (el.getAttribute("config") !== geowidgetConfig) el.setAttribute("config", geowidgetConfig || "");
         }
 
         const handler = (event: Event) => {
@@ -167,7 +166,7 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
 
         document.addEventListener(onPointEventName, handler);
         return () => document.removeEventListener(onPointEventName, handler);
-    }, [isGeoDialogOpen, onPointEventName]);
+    }, [isGeoDialogOpen, onPointEventName, geowidgetToken, geowidgetConfig]);
 
     const toggleSelection = (id: string) => {
         setSelectedIds(prev => 
@@ -293,8 +292,14 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
                         <div className="h-[70vh] min-h-[520px] w-full rounded-lg overflow-hidden border">
                             <inpost-geowidget
                                 ref={(el) => {
-								geoWidgetRef.current = el;
-							}}
+                                    if (el) {
+                                        el.setAttribute("token", geowidgetToken || "");
+                                        el.setAttribute("config", geowidgetConfig || "");
+                                        el.setAttribute("language", "pl");
+                                        el.setAttribute("onpoint", onPointEventName);
+                                        geoWidgetRef.current = el;
+                                    }
+                                }}
                                 className="block h-full w-full"
                             />
                         </div>
