@@ -605,6 +605,7 @@ export const montages = pgTable(
                 city: string;
                 postalCode: string;
             };
+            products?: { id: string; name: string; sku?: string }[];
         }>(),
 		displayId: text('display_id'),
 		materialStatus: text('material_status').$type<MontageMaterialStatus>().notNull().default('none'),

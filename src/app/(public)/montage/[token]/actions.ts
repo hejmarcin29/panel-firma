@@ -80,11 +80,20 @@ export async function submitSampleRequest(
     }
 
     // Update Sample Delivery Info ONLY (Do not touch main client address)
+    const deliveryWithProducts = {
+        ...delivery,
+        products: selectedProducts.map(p => ({
+            id: p.id,
+            name: p.name,
+            sku: p.sku ?? undefined
+        }))
+    };
+
     await db.update(montages)
         .set({
             status: 'lead_samples_pending',
             sampleStatus: 'to_send',
-            sampleDelivery: delivery,
+            sampleDelivery: deliveryWithProducts,
             updatedAt: new Date()
         })
         .where(eq(montages.id, montage.id));

@@ -158,10 +158,22 @@ export type Montage = {
         method: 'courier' | 'parcel_locker';
         pointName?: string;
         pointAddress?: string;
+        products?: { id: string; name: string; sku?: string }[];
         courierAddress?: {
             street: string;
             city: string;
             postalCode: string;
+        };
+        address?: { // Legacy/Schema alignment
+            street: string;
+            buildingNumber: string;
+            city: string;
+            postalCode: string;
+        };
+        recipient: {
+            name: string;
+            email: string;
+            phone: string;
         };
     } | null;
 	displayId: string | null;

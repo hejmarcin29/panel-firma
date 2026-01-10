@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Link as LinkIcon, Package, ExternalLink, Loader2, CheckCircle2 } from "lucide-react";
+import { Link as LinkIcon, Package, ExternalLink, Loader2, CheckCircle2, Truck, Box } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -107,6 +107,52 @@ export function MontageSamplesCard({ montage, userRoles = [] }: MontageSamplesCa
                         )}
                     </div>
                 </div>
+
+                {/* Order Details Section */}
+                {montage.sampleDelivery ? (
+                    <div className="rounded-md border p-3 bg-muted/30 text-sm space-y-2">
+                        <div className="font-medium text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                            Szczegóły Zamówienia
+                        </div>
+                        
+                        {/* Products List (if available) */}
+                        {montage.sampleDelivery.products && montage.sampleDelivery.products.length > 0 && (
+                            <ul className="list-disc list-inside space-y-1 text-sm mb-2">
+                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                                {montage.sampleDelivery.products.map((p: any) => (
+                                    <li key={p.id} className="truncate text-muted-foreground">{p.name}</li>
+                                ))}
+                            </ul>
+                        )}
+
+                        {/* Delivery Info */}
+                        <div className="flex items-start gap-2 pt-2 border-t border-dashed border-gray-200 mt-2">
+                            {montage.sampleDelivery.method === 'parcel_locker' ? (
+                                <Box className="h-4 w-4 mt-0.5 text-yellow-600 shrink-0" />
+                            ) : (
+                                <Truck className="h-4 w-4 mt-0.5 text-blue-600 shrink-0" />
+                            )}
+                            <div className="grid gap-0.5 leading-tight">
+                                <span className="font-medium">
+                                    {montage.sampleDelivery.method === 'parcel_locker' ? 'Paczkomat' : 'Kurier'}
+                                </span>
+                                <span className="text-muted-foreground text-xs">
+                                    {montage.sampleDelivery.method === 'parcel_locker' 
+                                        ? `${montage.sampleDelivery.pointName ?? ''} (${montage.sampleDelivery.pointAddress ?? ''})`
+                                        : `${montage.sampleDelivery.address?.street ?? ''} ${montage.sampleDelivery.address?.buildingNumber ?? ''}, ${montage.sampleDelivery.address?.city ?? ''}`
+                                    }
+                                </span>
+                                <span className="text-muted-foreground text-xs mt-1 block">
+                                    {montage.sampleDelivery.recipient.name} ({montage.sampleDelivery.recipient.phone})
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="text-xs text-center p-2 text-muted-foreground italic border border-dashed rounded-md bg-slate-50">
+                        Oczekiwanie na wybór próbek przez klienta...
+                    </div>
+                )}
 
                 {/* Status Selection */}
                 <div className="space-y-2">
