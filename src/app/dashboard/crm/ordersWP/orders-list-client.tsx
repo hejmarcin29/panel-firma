@@ -170,7 +170,7 @@ export function OrdersListClient({ initialOrders, initialTab = 'board' }: Orders
             </SelectContent>
           </Select>
           <Button asChild>
-            <Link href="/dashboard/crm/orders/new">
+            <Link href="/dashboard/crm/ordersWP/new">
               <Plus className="mr-2 h-4 w-4" />
               Nowe zamówienie
             </Link>
@@ -183,7 +183,7 @@ export function OrdersListClient({ initialOrders, initialTab = 'board' }: Orders
          <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold">Zamówienia</h1>
             <Button asChild size="sm">
-               <Link href="/dashboard/crm/orders/new">
+               <Link href="/dashboard/crm/ordersWP/new">
                   <Plus className="h-4 w-4" />
                </Link>
             </Button>
@@ -315,12 +315,12 @@ function OrdersTable({ orders }: { orders: Order[] }) {
             <TableRow 
               key={order.id} 
               className="hover:bg-muted/30 transition-colors cursor-pointer h-16"
-              onClick={() => router.push(`/dashboard/crm/orders/${order.id}`)}
+              onClick={() => router.push(`/dashboard/crm/ordersWP/${order.id}`)}
             >
               <TableCell className="font-medium align-middle">
                 <div className="flex flex-col gap-1">
                   <Link 
-                    href={`/dashboard/crm/orders/${order.id}`}
+                    href={`/dashboard/crm/ordersWP/${order.id}`}
                     className="hover:underline text-primary font-semibold text-base"
                     onClick={(e) => e.stopPropagation()}
                   >
@@ -373,7 +373,7 @@ function OrdersTable({ orders }: { orders: Order[] }) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem asChild>
-                        <Link href={`/dashboard/crm/orders/${order.id}`}>
+                        <Link href={`/dashboard/crm/ordersWP/${order.id}`}>
                           <Edit className="mr-2 h-4 w-4" />
                           Szczegóły
                         </Link>

@@ -1,4 +1,4 @@
-import type { ManualOrderPayload } from '@/app/dashboard/crm/orders/data';
+import type { ManualOrderPayload } from '@/app/dashboard/crm/ordersWP/data';
 
 import type { WooMetaData, WooOrder } from './types';
 

@@ -69,7 +69,7 @@ export async function createOrder(payload: ManualOrderPayload, userId?: string |
 
 await logSystemEvent('create_order', `Utworzono zamówienie ${payload.reference}`, userId);
 
-revalidatePath('/dashboard/orders');
+revalidatePath('/dashboard/crm/ordersWP');
 
 return created;
 }
@@ -118,8 +118,8 @@ throw new Error('Nie udało się odczytać zatwierdzonego zamówienia.');
 
 await logSystemEvent('confirm_order', `Zatwierdzono zamówienie ${orderId}`, user.id);
 
-revalidatePath('/dashboard/orders');
-revalidatePath(`/dashboard/orders/${orderId}`);
+revalidatePath('/dashboard/crm/ordersWP');
+revalidatePath(`/dashboard/crm/ordersWP/${orderId}`);
 
 return updated;
 }
@@ -182,8 +182,8 @@ await db
 .set({ updatedAt: now })
 .where(eq(manualOrders.id, orderRecord.id));
 
-revalidatePath(`/dashboard/orders/${orderRecord.id}`);
-revalidatePath('/dashboard/orders');
+revalidatePath(`/dashboard/crm/ordersWP/${orderRecord.id}`);
+revalidatePath('/dashboard/crm/ordersWP');
 }
 
 export async function updateManualOrderTaskOverride(
@@ -295,8 +295,8 @@ if (!updated) {
 throw new Error('Nie udało się odczytać zaktualizowanego zamówienia.');
 }
 
-revalidatePath('/dashboard/orders');
-revalidatePath(`/dashboard/orders/${orderId}`);
+revalidatePath('/dashboard/crm/ordersWP');
+revalidatePath(`/dashboard/crm/ordersWP/${orderId}`);
 
 return updated;
 }
@@ -314,8 +314,8 @@ export async function updateOrderNote(orderId: string, note: string) {
 
 	await logSystemEvent('update_order_note', `Zaktualizowano notatkę zamówienia ${orderId}`, user.id);
 
-	revalidatePath('/dashboard/crm/orders');
-	revalidatePath(`/dashboard/crm/orders/${orderId}`);
+	revalidatePath('/dashboard/crm/ordersWP');
+	revalidatePath(`/dashboard/crm/ordersWP/${orderId}`);
 }
 
 export async function updateOrderStatus(orderId: string, newStatus: string): Promise<void> {
@@ -332,5 +332,5 @@ export async function updateOrderStatus(orderId: string, newStatus: string): Pro
         
     await logSystemEvent('update_order_status', `Status changed to ${newStatus} (Drag & Drop)`, user.id);
     
-    revalidatePath('/dashboard/crm/orders');
+    revalidatePath('/dashboard/crm/ordersWP');
 }

@@ -354,7 +354,7 @@ export function ManualOrderFormClient() {
 					</p>
 				</div>
 				<Button asChild variant="outline">
-					<Link href="/dashboard/orders">Wróć do listy zamówień</Link>
+					<Link href="/dashboard/crm/ordersWP">Wróć do listy zamówień</Link>
 				</Button>
 			</div>
 
@@ -375,7 +375,7 @@ export function ManualOrderFormClient() {
 							<AlertTitle>Gotowe</AlertTitle>
 							<AlertDescription>
 								{successMessage}{' '}
-								<Link className="font-medium underline" href="/dashboard/orders">
+								<Link className="font-medium underline" href="/dashboard/crm/ordersWP">
 									Zobacz na liście
 								</Link>
 							</AlertDescription>

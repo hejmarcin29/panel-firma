@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createHmac } from 'crypto';
 
-import { createOrder } from '@/app/dashboard/crm/orders/actions';
+import { createOrder } from '@/app/dashboard/crm/ordersWP/actions';
 import { db } from '@/lib/db';
 import { integrationLogs } from '@/lib/db/schema';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';

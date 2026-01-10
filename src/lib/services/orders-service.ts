@@ -10,8 +10,8 @@ import {
     type ManualOrderSource,
     type ManualOrderPayload,
     type OrderItemPayload
-} from '@/app/dashboard/crm/orders/data';
-import { buildTimelineEntries, normalizeStatus, parseTaskOverrides } from '@/app/dashboard/crm/orders/utils';
+} from '@/app/dashboard/crm/ordersWP/data';
+import { buildTimelineEntries, normalizeStatus, parseTaskOverrides } from '@/app/dashboard/crm/ordersWP/utils';
 
 const MONEY_SCALE = 100;
 const QUANTITY_SCALE = 1000;

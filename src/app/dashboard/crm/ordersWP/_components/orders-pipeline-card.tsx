@@ -96,7 +96,7 @@ export function OrdersPipelineCard({ order, disabled }: OrdersPipelineCardProps)
                             {statusDef?.label || order.status}
                          </div>
                          <Button asChild size="icon" variant="ghost" className="h-6 w-6 -mr-1 text-zinc-400 hover:text-zinc-900">
-                             <Link href={`/dashboard/crm/orders/${order.id}`}>
+                             <Link href={`/dashboard/crm/ordersWP/${order.id}`}>
                                 <ArrowRight className="h-3 w-3" />
                              </Link>
                          </Button>

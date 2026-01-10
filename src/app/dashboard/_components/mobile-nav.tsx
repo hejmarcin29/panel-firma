@@ -70,7 +70,7 @@ const mainLinks = [
 
 const menuLinks = [
   { href: "/dashboard/crm", label: "CRM", icon: Users },
-  { href: "/dashboard/crm/orders", label: "Zamówienia", icon: Package },
+  { href: "/dashboard/crm/ordersWP", label: "Zamówienia WP", icon: Package },
   { href: "/dashboard/products", label: "Produkty", icon: ShoppingBag },
   { href: "/dashboard/erp", label: "ERP", icon: Factory },
   { href: "/dashboard/showroom", label: "Showroom", icon: Store },
@@ -136,7 +136,7 @@ export function MobileNav({ user, urgentOrdersCount = 0, leadsCount = 0, userRol
            return allowedLinks.includes(href);
       }
 
-      const restrictedLinks = ['/dashboard/orders', '/dashboard/products', '/dashboard/mail', '/dashboard/settings', '/dashboard/wallet', '/dashboard/erp'];
+      const restrictedLinks = ['/dashboard/crm/ordersWP', '/dashboard/products', '/dashboard/mail', '/dashboard/settings', '/dashboard/wallet', '/dashboard/erp'];
       return !restrictedLinks.includes(href);
   };
 
@@ -181,7 +181,7 @@ export function MobileNav({ user, urgentOrdersCount = 0, leadsCount = 0, userRol
                 isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
               )}
             >
-              {href === '/dashboard/crm/orders' && urgentOrdersCount > 0 && (
+              {href === '/dashboard/crm/ordersWP' && urgentOrdersCount > 0 && (
                 <span className="absolute top-0 right-3 flex h-2.5 w-2.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
@@ -246,7 +246,7 @@ export function MobileNav({ user, urgentOrdersCount = 0, leadsCount = 0, userRol
                             >
                                 <Icon className="h-4 w-4" />
                                 {displayLabel}
-                                {href === '/dashboard/crm/orders' && urgentOrdersCount > 0 && (
+                                {href === '/dashboard/crm/ordersWP' && urgentOrdersCount > 0 && (
                                     <span className="ml-auto flex h-2.5 w-2.5">
                                         <span className="animate-ping absolute inline-flex h-2.5 w-2.5 rounded-full bg-red-400 opacity-75"></span>
                                         <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>

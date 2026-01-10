@@ -15,7 +15,7 @@ export function CRMNavigation({ userRoles = [] }: { userRoles?: string[] }) {
         '/dashboard/crm',
         '/dashboard/crm/customers',
         '/dashboard/crm/montaze',
-        '/dashboard/crm/orders',
+        '/dashboard/crm/ordersWP',
         '/dashboard/crm/oferty',
         '/dashboard/crm/logistics',
         '/dashboard/crm/montaze/galeria',
@@ -77,14 +77,14 @@ export function CRMNavigation({ userRoles = [] }: { userRoles?: string[] }) {
                         {isArchitect ? 'Moje Projekty' : 'Realizacje'}
                     </Button>
                 </Link>
-                {!isInstaller && !isArchitect && (                    <Link href="/dashboard/crm/orders">
+                {!isInstaller && !isArchitect && (                    <Link href="/dashboard/crm/ordersWP">
                         <Button 
-                            variant={pathname.startsWith('/dashboard/crm/orders') ? "secondary" : "ghost"} 
+                            variant={pathname.startsWith('/dashboard/crm/ordersWP') ? "secondary" : "ghost"} 
                             size="sm" 
                             className="gap-2"
                         >
                             <Package className="h-4 w-4" />
-                            Zamówienia
+                            Zamówienia WP
                         </Button>
                     </Link>
                 )}

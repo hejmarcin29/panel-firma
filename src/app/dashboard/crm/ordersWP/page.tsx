@@ -47,7 +47,7 @@ export default async function OrdersPage({ searchParams }: PageProps) {
                         </span>
                     </div>
                     <Button variant="ghost" size="sm" asChild className="h-auto py-1 px-2 hover:bg-amber-100 text-amber-900 hover:text-amber-950">
-                        <Link href="/dashboard/crm/orders">
+                        <Link href="/dashboard/crm/ordersWP">
                             <X className="h-3.5 w-3.5 mr-1.5" />
                             Wyczyść
                         </Link>

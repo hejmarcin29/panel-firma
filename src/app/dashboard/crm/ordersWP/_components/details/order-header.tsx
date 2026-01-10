@@ -25,7 +25,7 @@ export function OrderHeader({ order }: OrderHeaderProps) {
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
           <Link
-            href="/dashboard/orders"
+            href="/dashboard/crm/ordersWP"
             className="text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />

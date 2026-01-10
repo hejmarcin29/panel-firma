@@ -203,7 +203,7 @@ export function KPICards({
             hasNewOrders && "border-emerald-500 ring-1 ring-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
         )}>
             <Link 
-                href="/dashboard/orders?filter=verification" 
+                href="/dashboard/crm/ordersWP?filter=verification"  
                 className="absolute inset-0 z-10" 
                 onClick={handleOrdersClick}
             />
@@ -307,7 +307,7 @@ export function KPICards({
       {visibleCards.includes('urgentOrders') && urgentOrdersCount > 0 && (
         <motion.div variants={item} className="h-full">
         <Card className="shadow-none relative overflow-hidden group border-red-500/20 bg-red-500/5 h-full">
-            <Link href="/dashboard/orders?filter=urgent" className="absolute inset-0 z-10" />
+            <Link href="/dashboard/crm/ordersWP?filter=urgent" className="absolute inset-0 z-10" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
                 <div className="flex items-center gap-2">
                     <CardTitle className="text-sm font-medium text-red-600">
@@ -339,7 +339,7 @@ export function KPICards({
       {visibleCards.includes('stalledOrders') && stalledOrdersCount > 0 && (
         <motion.div variants={item} className="h-full">
         <Card className="shadow-none relative overflow-hidden group border-orange-500/20 bg-orange-500/5 h-full">
-            <Link href="/dashboard/orders?filter=invoice" className="absolute inset-0 z-10" />
+            <Link href="/dashboard/crm/ordersWP?filter=invoice" className="absolute inset-0 z-10" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
                 <div className="flex items-center gap-2">
                     <CardTitle className="text-sm font-medium text-orange-600">
