@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
-import { generateInPostLabel, updateMontageSampleDelivery } from '../../actions';
+import { generateInPostLabel } from '../actions';
+import { updateMontageSampleDelivery } from '../../actions';
 import {
     Dialog,
     DialogContent,
