@@ -296,7 +296,7 @@ export function InPostLabelGenerator({ montageId, sampleDelivery, sampleStatus }
                     <AlertDialogHeader>
                         <AlertDialogTitle>Zaktualizować status leadu?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Etykieta została wygenerowana. Czy chcesz zmienić status leadu na "Próbki Wysłane"?
+                            Etykieta została wygenerowana. Czy chcesz zmienić status leadu na &quot;Próbki Wysłane&quot;?
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -305,7 +305,7 @@ export function InPostLabelGenerator({ montageId, sampleDelivery, sampleStatus }
                             try {
                                 await clientUpdateMontageStatus(montageId, 'lead_samples_sent');
                                 toast.success('Zmieniono status na Próbki Wysłane');
-                            } catch (e) {
+                            } catch {
                                 toast.error('Błąd zmiany statusu');
                             }
                             setShowStatusPrompt(false);

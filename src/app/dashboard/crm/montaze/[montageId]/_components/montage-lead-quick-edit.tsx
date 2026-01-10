@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, CheckCircle2, Link as LinkIcon } from "lucide-react";
+import { Loader2, CheckCircle2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,7 +20,7 @@ import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { updateMontageLeadData, generateMontageToken } from "../../actions";
+import { updateMontageLeadData } from "../../actions";
 import { toast } from "sonner";
 
 interface MontageLeadQuickEditProps {

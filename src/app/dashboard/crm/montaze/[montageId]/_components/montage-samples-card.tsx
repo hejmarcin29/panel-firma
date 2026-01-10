@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Link as LinkIcon, Package, ExternalLink, Loader2, CheckCircle2, Truck, Box } from "lucide-react";
+import { Link as LinkIcon, Package, ExternalLink, Loader2, Truck, Box } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import {
     Select,
@@ -25,7 +25,7 @@ interface MontageSamplesCardProps {
     userRoles?: string[];
 }
 
-export function MontageSamplesCard({ montage, userRoles = [] }: MontageSamplesCardProps) {
+export function MontageSamplesCard({ montage }: MontageSamplesCardProps) {
     const router = useRouter();
     const [isGeneratingLink, setIsGeneratingLink] = useState(false);
 

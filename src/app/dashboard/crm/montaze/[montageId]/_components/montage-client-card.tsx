@@ -38,7 +38,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { type UserRole, type MontageSampleStatus } from '@/lib/db/schema';
+import { type UserRole } from '@/lib/db/schema';
 
 
 export function MontageClientCard({  
@@ -202,14 +202,6 @@ export function MontageClientCard({
       await updateMontageRealizationStatus({
           montageId: montage.id,
           installerStatus: value as 'none' | 'informed' | 'confirmed'
-      });
-      router.refresh();
-  };
-
-  const handleSampleStatusChange = async (value: string) => {
-      await updateMontageRealizationStatus({
-          montageId: montage.id,
-          sampleStatus: value as MontageSampleStatus
       });
       router.refresh();
   };

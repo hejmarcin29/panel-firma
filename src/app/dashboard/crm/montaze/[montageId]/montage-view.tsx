@@ -3,6 +3,7 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import { getMontageDetails } from './actions';
 import { deleteMontage, clientUpdateMontageStatus } from '../actions';
+import { type MontageStatus } from '@/lib/db/schema';
 import { Trash2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -122,7 +123,7 @@ export function MontageView({ montageId, initialData, portalEnabled, requireInst
                                             if (step.id === montage.status) return;
                                             // Optional confirmation could go here
                                             try {
-                                                await clientUpdateMontageStatus(montageId, step.id as any);
+                                                await clientUpdateMontageStatus(montageId, step.id as MontageStatus);
                                                 toast.success(`Zmieniono status na: ${step.label}`);
                                             } catch (error) {
                                                 console.error(error);
