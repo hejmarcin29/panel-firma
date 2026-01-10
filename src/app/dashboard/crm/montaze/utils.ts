@@ -249,6 +249,8 @@ export function mapMontageRow(row: MontageRow, publicBaseUrl: string | null): Mo
 		forecastedInstallationDate: row.forecastedInstallationDate ?? null,
 		status: row.status as MontageStatus,
         sampleStatus: row.sampleStatus ?? 'none',
+        sampleDelivery: row.sampleDelivery,
+        accessToken: row.accessToken,
 		displayId: row.displayId ?? null,
 		createdAt: row.createdAt,
 		updatedAt: row.updatedAt,

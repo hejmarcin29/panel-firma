@@ -115,7 +115,7 @@ export function MontageSamplesCard({ montage, userRoles = [] }: MontageSamplesCa
                         value={montage.sampleStatus || "none"}
                         onValueChange={handleSampleStatusChange}
                     >
-                        <SelectTrigger className={cn("w-full transition-colors", getStatusColor(montage.sampleStatus))}>
+                        <SelectTrigger className={cn("w-full transition-colors", getStatusColor(montage.sampleStatus ?? null))}>
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
