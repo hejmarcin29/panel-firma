@@ -41,7 +41,7 @@ export function InPostSettingsForm({ initialSettings }: InPostSettingsFormProps)
     const [isMapScriptLoaded, setIsMapScriptLoaded] = useState(false);
     const [hasMapError, setHasMapError] = useState(false);
     const onPointEventName = useMemo(() => 'onpointselect', []);
-    const geoWidgetRef = useRef<HTMLElement | null>(null);
+    const mapContainerRef = useRef<HTMLDivElement | null>(null);
 
     const initMap = () => {
         const link = document.createElement("link");
@@ -57,14 +57,21 @@ export function InPostSettingsForm({ initialSettings }: InPostSettingsFormProps)
     useEffect(() => {
         if (!showMapTest) return;
         if (!isMapScriptLoaded || hasMapError) return;
-        if (!geoWidgetRef.current) return;
+        if (!mapContainerRef.current) return;
 
-        // IMPORTANT: Geowidget v5 defines some properties (like `token`) as getter-only.
-        // React may try to set them as DOM properties and crash. We set them as attributes manually.
-        geoWidgetRef.current.setAttribute('token', formData.geowidgetToken || '');
-        geoWidgetRef.current.setAttribute('config', formData.geowidgetConfig || 'parcelCollect');
-        geoWidgetRef.current.setAttribute('language', 'pl');
-        geoWidgetRef.current.setAttribute('onpoint', onPointEventName);
+        const container = mapContainerRef.current;
+        container.replaceChildren();
+
+        const token = (formData.geowidgetToken || '').trim();
+        const config = (formData.geowidgetConfig || 'parcelCollect').trim();
+
+        const widget = document.createElement('inpost-geowidget');
+        widget.setAttribute('token', token);
+        widget.setAttribute('config', config);
+        widget.setAttribute('language', 'pl');
+        widget.setAttribute('onpoint', onPointEventName);
+        widget.className = 'w-full h-full block';
+        container.appendChild(widget);
 
         const handler = (event: Event) => {
             const customEvent = event as CustomEvent;
@@ -77,7 +84,10 @@ export function InPostSettingsForm({ initialSettings }: InPostSettingsFormProps)
         };
 
         document.addEventListener(onPointEventName, handler);
-        return () => document.removeEventListener(onPointEventName, handler);
+        return () => {
+            document.removeEventListener(onPointEventName, handler);
+            container.replaceChildren();
+        };
     }, [showMapTest, isMapScriptLoaded, hasMapError, formData.geowidgetToken, formData.geowidgetConfig, onPointEventName]);
 
     const debouncedSave = useDebouncedCallback(async (data: typeof formData) => {
@@ -223,12 +233,7 @@ export function InPostSettingsForm({ initialSettings }: InPostSettingsFormProps)
                                     <p className="text-muted-foreground">Ładowanie mapy InPost...</p>
                                 </div>
                             )}
-                            <inpost-geowidget
-                                ref={(el) => {
-                                    geoWidgetRef.current = el;
-                                }}
-                                className="w-full h-full block"
-                            />
+                            <div ref={mapContainerRef} className="w-full h-full" />
                         </div>
                     )}
                 </div>
