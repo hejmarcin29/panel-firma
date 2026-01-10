@@ -166,3 +166,12 @@
   height: 0;
   pointer-events: none;
 }
+
+/* Fix for Leaflet/InPost map markers in Tailwind */
+.leaflet-pane img,
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.easy-geopost-modal img {
+  max-width: none !important;
+  max-height: none !important;
+}

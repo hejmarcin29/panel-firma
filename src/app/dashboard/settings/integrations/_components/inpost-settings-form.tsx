@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import Script from 'next/script';
 import { useDebouncedCallback } from 'use-debounce';
-import { Loader2, Check, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Check, Eye, EyeOff, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -33,6 +35,44 @@ export function InPostSettingsForm({ initialSettings }: InPostSettingsFormProps)
 
     const [showToken, setShowToken] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+
+    // Map Debug Logic
+    const [showMapTest, setShowMapTest] = useState(false);
+    const geoWidgetRef = useRef<HTMLElement | null>(null);
+
+    const initMap = () => {
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = "https://geowidget.inpost.pl/inpost-geowidget.css";
+        if (!document.head.querySelector(`link[href="${link.href}"]`)) {
+            document.head.appendChild(link);
+        }
+    };
+
+    useEffect(() => {
+        if (!showMapTest || !geoWidgetRef.current) return;
+
+        // Force update attributes on the web component
+        geoWidgetRef.current.setAttribute("token", formData.geowidgetToken || "");
+        geoWidgetRef.current.setAttribute("config", formData.geowidgetConfig || "parcelCollect");
+        geoWidgetRef.current.setAttribute("language", "pl");
+        
+        // Listen for point selection
+        const handler = (event: Event) => {
+            const customEvent = event as CustomEvent;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const point = customEvent.detail as any;
+            console.log("InPost Geowidget Selected Point:", point);
+            toast.success(`Wybrano punkt: ${point?.name || point?.id}`);
+        };
+
+        const currentRef = geoWidgetRef.current;
+        currentRef.addEventListener("onpointselect", handler);
+        
+        return () => {
+            currentRef.removeEventListener("onpointselect", handler);
+        };
+    }, [showMapTest, formData.geowidgetToken, formData.geowidgetConfig]);
 
     const debouncedSave = useDebouncedCallback(async (data: typeof formData) => {
         setIsSaving(true);
@@ -146,7 +186,47 @@ export function InPostSettingsForm({ initialSettings }: InPostSettingsFormProps)
                         onCheckedChange={(checked) => handleChange('sandbox', checked)}
                     />
                 </div>
+
+                <div className="pt-6 border-t">
+                    <div className="flex items-center justify-between mb-4">
+                        <Label>Diagnostyka Mapy (Geowidget)</Label>
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setShowMapTest(!showMapTest)}
+                        >
+                            {showMapTest ? "Ukryj Mapę" : "Pokaż Mapę Testową"}
+                            <MapPin className="ml-2 h-4 w-4" />
+                        </Button>
+                    </div>
+
+                    {showMapTest && (
+                        <div className="border rounded-lg overflow-hidden h-[500px] w-full bg-muted/20 relative">
+                            {(!formData.geowidgetToken) && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
+                                    <p className="text-muted-foreground">Wprowadź Token Geowidgetu aby zobaczyć mapę</p>
+                                </div>
+                            )}
+                            {/* @ts-ignore - custom element */}
+                            <inpost-geowidget
+                                ref={geoWidgetRef}
+                                token={formData.geowidgetToken}
+                                config={formData.geowidgetConfig || "parcelCollect"}
+                                language="pl"
+                                onpoint="onpointselect"
+                                className="w-full h-full block"
+                            />
+                        </div>
+                    )}
+                </div>
             </CardContent>
+            
+            <Script 
+                id="inpost-geowidget-settings"
+                src="https://geowidget.inpost.pl/inpost-geowidget.js"
+                strategy="lazyOnload"
+                onReady={initMap}
+            />
         </Card>
     );
 }
