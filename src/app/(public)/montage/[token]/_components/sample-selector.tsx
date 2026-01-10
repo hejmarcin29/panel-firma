@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import Script from "next/script";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -63,7 +63,7 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
     const onPointEventName = useMemo(() => "onpointselect", []);
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
 
-    const initMap = () => {
+    const initMap = useCallback(() => {
         const link = document.createElement("link");
         link.rel = "stylesheet";
         link.href = "https://geowidget.inpost.pl/inpost-geowidget.css";
@@ -71,7 +71,14 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
             document.head.appendChild(link);
         }
         setIsMapScriptLoaded(true);
-    };
+    }, []);
+
+    // Check if script is already loaded (e.g. from cache or other page)
+    useEffect(() => {
+        if (typeof window !== "undefined" && window.customElements?.get("inpost-geowidget")) {
+            initMap();
+        }
+    }, [initMap]);
 
     useEffect(() => {
         if (!isGeoDialogOpen) return;
@@ -94,7 +101,7 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
             widget.setAttribute("onpoint", onPointEventName);
             widget.className = "block h-full w-full";
             container.appendChild(widget);
-        }, 300);
+        }, 500);
 
         const handler = (event: Event) => {
             const customEvent = event as CustomEvent;
@@ -298,7 +305,7 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
                         <DialogTitle>Wybierz Paczkomat</DialogTitle>
                     </DialogHeader>
                     <div className="px-6 pb-6">
-                        <div className="h-[70vh] min-h-[520px] w-full rounded-lg overflow-hidden border">
+                        <div className="h-[70vh] min-h-[520px] w-full rounded-lg overflow-hidden border relative bg-muted/5">
                             <div ref={mapContainerRef} className="h-full w-full" />
                         </div>
                     </div>
