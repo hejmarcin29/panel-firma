@@ -61,7 +61,7 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
     const [isGeoDialogOpen, setIsGeoDialogOpen] = useState(false);
 
     const onPointEventName = useMemo(() => "onpointselect", []);
-    const geoWidgetRef = useRef<HTMLElement | null>(null);
+    const mapContainerRef = useRef<HTMLDivElement | null>(null);
 
     const initMap = () => {
         const link = document.createElement("link");
@@ -76,14 +76,21 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
     useEffect(() => {
         if (!isGeoDialogOpen) return;
 
-        // IMPORTANT: Geowidget v5 defines some properties (like `token`) as getter-only.
-        // React may try to set them as DOM properties and crash. We set them as attributes manually.
-        if (geoWidgetRef.current) {
-            geoWidgetRef.current.setAttribute("token", geowidgetToken || "");
-            geoWidgetRef.current.setAttribute("config", geowidgetConfig || "");
-            geoWidgetRef.current.setAttribute("language", "pl");
-            geoWidgetRef.current.setAttribute("onpoint", onPointEventName);
-        }
+        if (!isMapScriptLoaded || hasMapError) return;
+        if (!mapContainerRef.current) return;
+
+        // IMPORTANT: Geowidget v5 reads token/config only on connectedCallback.
+        // We must set attributes BEFORE appending the element to the DOM.
+        const container = mapContainerRef.current;
+        container.replaceChildren();
+
+        const widget = document.createElement("inpost-geowidget");
+        widget.setAttribute("token", (geowidgetToken || "").trim());
+        widget.setAttribute("config", (geowidgetConfig || "").trim());
+        widget.setAttribute("language", "pl");
+        widget.setAttribute("onpoint", onPointEventName);
+        widget.className = "block h-full w-full";
+        container.appendChild(widget);
 
         const handler = (event: Event) => {
             const customEvent = event as CustomEvent;
@@ -162,8 +169,11 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
         };
 
         document.addEventListener(onPointEventName, handler);
-        return () => document.removeEventListener(onPointEventName, handler);
-    }, [isGeoDialogOpen, onPointEventName, geowidgetConfig, geowidgetToken]);
+        return () => {
+            document.removeEventListener(onPointEventName, handler);
+            container.replaceChildren();
+        };
+    }, [isGeoDialogOpen, isMapScriptLoaded, hasMapError, onPointEventName, geowidgetConfig, geowidgetToken]);
 
     const toggleSelection = (id: string) => {
         setSelectedIds(prev => 
@@ -284,12 +294,7 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
                     </DialogHeader>
                     <div className="px-6 pb-6">
                         <div className="h-[70vh] min-h-[520px] w-full rounded-lg overflow-hidden border">
-                            <inpost-geowidget
-                                ref={(el) => {
-								geoWidgetRef.current = el;
-							}}
-                                className="block h-full w-full"
-                            />
+                            <div ref={mapContainerRef} className="h-full w-full" />
                         </div>
                     </div>
                 </DialogContent>
