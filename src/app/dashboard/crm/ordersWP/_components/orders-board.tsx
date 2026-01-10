@@ -53,7 +53,7 @@ export function OrdersBoard({ orders: initialOrders }: OrdersBoardProps) {
   );
 
   const PIPELINE_COLUMNS = [
-    { id: 'order.pending_proforma', statuses: ['order.received', 'order.pending_proforma'] },
+    { id: 'order.received', statuses: ['order.received', 'order.pending_proforma'] },
     { id: 'order.proforma_issued', statuses: ['order.proforma_issued'] },
     { id: 'order.paid', statuses: ['order.paid'] }, 
     { id: 'order.forwarded_to_supplier', statuses: ['order.forwarded_to_supplier'] },

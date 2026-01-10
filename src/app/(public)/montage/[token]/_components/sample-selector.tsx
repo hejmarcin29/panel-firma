@@ -8,8 +8,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { submitSampleRequest } from "../actions";
-import { CheckCircle2, Package, Truck, MapPin } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { CheckCircle2, Package, Truck } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 
@@ -58,7 +57,6 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
 
     const [isMapScriptLoaded, setIsMapScriptLoaded] = useState(false);
     const [hasMapError, setHasMapError] = useState(false);
-    const [isGeoDialogOpen, setIsGeoDialogOpen] = useState(false);
 
     const onPointEventName = useMemo(() => "onpointselect", []);
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
@@ -80,28 +78,23 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
         }
     }, [initMap]);
 
+    // Handle map rendering when delivery method is parcel_locker
     useEffect(() => {
-        if (!isGeoDialogOpen) return;
-
+        if (deliveryMethod !== 'parcel_locker') return;
         if (!isMapScriptLoaded || hasMapError) return;
         if (!mapContainerRef.current) return;
         
         const container = mapContainerRef.current;
         container.replaceChildren();
 
-        // 2026-01-10: Add delay to allow Dialog animation to finish.
-        // Geowidget needs the container to have dimensions.
-        const timer = setTimeout(() => {
-             // IMPORTANT: Geowidget v5 reads token/config only on connectedCallback.
-            // We must set attributes BEFORE appending the element to the DOM.
-            const widget = document.createElement("inpost-geowidget");
-            widget.setAttribute("token", (geowidgetToken || "").trim());
-            widget.setAttribute("config", (geowidgetConfig || "").trim());
-            widget.setAttribute("language", "pl");
-            widget.setAttribute("onpoint", onPointEventName);
-            widget.className = "block h-full w-full";
-            container.appendChild(widget);
-        }, 500);
+        // Create widget imperatively
+        const widget = document.createElement("inpost-geowidget");
+        widget.setAttribute("token", (geowidgetToken || "").trim());
+        widget.setAttribute("config", (geowidgetConfig || "").trim());
+        widget.setAttribute("language", "pl");
+        widget.setAttribute("onpoint", onPointEventName);
+        widget.className = "block h-full w-full";
+        container.appendChild(widget);
 
         const handler = (event: Event) => {
             const customEvent = event as CustomEvent;
@@ -175,54 +168,21 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
                 name,
                 address,
             });
-
-            setIsGeoDialogOpen(false);
+            
+            toast.success(`Wybrano punkt: ${name}`);
         };
 
         document.addEventListener(onPointEventName, handler);
         return () => {
-            clearTimeout(timer);
             document.removeEventListener(onPointEventName, handler);
             container.replaceChildren();
         };
-    }, [isGeoDialogOpen, isMapScriptLoaded, hasMapError, onPointEventName, geowidgetConfig, geowidgetToken]);
+    }, [deliveryMethod, isMapScriptLoaded, hasMapError, onPointEventName, geowidgetConfig, geowidgetToken]);
 
     const toggleSelection = (id: string) => {
         setSelectedIds(prev => 
             prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
         );
-    };
-
-    const openInPostModal = () => {
-        if (!geowidgetToken) {
-            toast.error("Brak tokenu Geowidgetu. Ustaw go w panelu administracyjnym.");
-            return;
-        }
-
-		if (!geowidgetConfig) {
-			toast.error("Brak konfiguracji Geowidgetu (config). Ustaw ją w panelu administracyjnym.");
-			return;
-		}
-
-        if (hasMapError) {
-             toast.error("Nie udało się załadować mapy InPost. Odśwież stronę lub sprawdź blokowanie reklam.");
-             return;
-        }
-
-        if (!isMapScriptLoaded) {
-            console.warn("Attempted to open InPost map before script load complete.");
-            toast.error("Mapa InPost jeszcze się ładuje. Proszę czekać...");
-            return;
-        }
-
-        if (typeof window !== "undefined" && typeof window.customElements !== "undefined") {
-            if (!window.customElements.get("inpost-geowidget")) {
-                toast.error("Widget InPost nie jest jeszcze gotowy. Odśwież stronę i spróbuj ponownie.");
-                return;
-            }
-        }
-
-        setIsGeoDialogOpen(true);
     };
 
     const handleSubmit = async () => {
@@ -299,19 +259,6 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
                 }}
             />
 
-            <Dialog open={isGeoDialogOpen} onOpenChange={setIsGeoDialogOpen}>
-                <DialogContent className="sm:max-w-4xl p-0 overflow-hidden">
-                    <DialogHeader className="px-6 pt-6">
-                        <DialogTitle>Wybierz Paczkomat</DialogTitle>
-                    </DialogHeader>
-                    <div className="px-6 pb-6">
-                        <div className="h-[70vh] min-h-[520px] w-full rounded-lg overflow-hidden border relative bg-muted/5">
-                            <div ref={mapContainerRef} className="h-full w-full" />
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
-
             <div className="text-center space-y-2">
                 <h1 className="text-3xl font-bold tracking-tight">Wybierz Próbki Podłóg</h1>
                 <p className="text-muted-foreground">Zaznacz interesujące Cię produkty, a my wyślemy je do Ciebie bezpłatnie.</p>
@@ -360,7 +307,9 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
                 <RadioGroup 
                     defaultValue="courier" 
                     value={deliveryMethod} 
-                    onValueChange={(v) => setDeliveryMethod(v as DeliveryMethod)}
+                    onValueChange={(v) => {
+                         setDeliveryMethod(v as DeliveryMethod);
+                    }}
                     className="grid grid-cols-2 gap-4"
                 >
                     <div>
@@ -466,32 +415,48 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
                 )}
                 
                 {deliveryMethod === 'parcel_locker' && (
-                     <div className="bg-muted/50 p-6 rounded-lg border-2 border-dashed border-primary/20 flex flex-col items-center gap-4 animate-in slide-in-from-top-4 fade-in duration-300">
-                        {selectedPoint ? (
-                            <div className="text-center space-y-2">
-                                <div className="inline-flex items-center justify-center p-3 bg-green-100 text-green-700 rounded-full mb-2">
-                                    <CheckCircle2 className="h-6 w-6" />
+                     <div className="space-y-4 animate-in slide-in-from-top-4 fade-in duration-300">
+                        <div className="bg-muted/50 p-6 rounded-lg border-2 border-dashed border-primary/20 flex flex-col items-center gap-4">
+                            {selectedPoint ? (
+                                <div className="text-center space-y-2 w-full">
+                                    <div className="inline-flex items-center justify-center p-3 bg-green-100 text-green-700 rounded-full mb-2">
+                                        <CheckCircle2 className="h-6 w-6" />
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-xl">{selectedPoint.name}</p>
+                                        <p className="text-sm text-muted-foreground">{selectedPoint.address}</p>
+                                    </div>
+                                    <div className="text-sm text-muted-foreground pt-2">
+                                        Możesz zmienić punkt wybierając inny na mapie poniżej.
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="font-bold text-xl">{selectedPoint.name}</p>
-                                    <p className="text-sm text-muted-foreground">{selectedPoint.address}</p>
+                            ) : (
+                                <div className="text-center space-y-1 w-full">
+                                    <h3 className="font-semibold text-lg">Wybierz punkt odbioru</h3>
+                                    <p className="text-muted-foreground">Skorzystaj z mapy poniżej, aby wybrać Paczkomat lub PaczkoPunkt.</p>
                                 </div>
-                                <Button variant="outline" size="sm" onClick={openInPostModal} className="mt-2" disabled={!isMapScriptLoaded && !hasMapError}>
-                                    {hasMapError ? "Błąd mapy" : (isMapScriptLoaded ? "Zmień punkt" : "Ładowanie...")}
-                                </Button>
-                            </div>
-                        ) : (
-                            <>
-                                <div className="text-center space-y-1">
-                                    <h3 className="font-semibold">Wybierz punkt odbioru</h3>
-                                    <p className="text-sm text-muted-foreground">Kliknij przycisk poniżej, aby otworzyć mapę.</p>
+                            )}
+                        </div>
+
+                        {/* Inline Map Container */}
+                        <div className="w-full h-[500px] border rounded-lg overflow-hidden relative shadow-inner bg-muted/10">
+                             {(!geowidgetToken) && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
+                                    <p className="text-muted-foreground">Brak konfiguracji tokenu mapy.</p>
                                 </div>
-                                <Button onClick={openInPostModal} className="w-full sm:w-auto" size="lg" disabled={!isMapScriptLoaded && !hasMapError}>
-                                    <MapPin className="mr-2 h-4 w-4" />
-                                    {hasMapError ? "Spróbuj ponownie" : (isMapScriptLoaded ? "Otwórz mapę Paczkomatów" : "Ładowanie mapy...")}
-                                </Button>
-                            </>
-                        )}
+                            )}
+                             {(hasMapError) && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
+                                    <p className="text-muted-foreground">Nie udało się załadować mapy InPost. Sprawdź połączenie lub wyłącz blokowanie reklam.</p>
+                                </div>
+                            )}
+                            {(!hasMapError && !isMapScriptLoaded) && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
+                                    <p className="text-muted-foreground">Ładowanie mapy InPost...</p>
+                                </div>
+                            )}
+                            <div ref={mapContainerRef} className="w-full h-full" />
+                        </div>
                     </div>
                 )}
 
