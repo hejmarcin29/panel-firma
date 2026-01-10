@@ -26,8 +26,8 @@ export const ORDER_STATUSES: StatusDefinition[] = [
     },
     { 
         id: 'order.proforma_issued', 
-        label: 'Proforma', 
-        description: 'Klient ma dokument do płatności. Czekamy na przelew.',
+        label: 'Płatność', 
+        description: 'Oczekiwanie na płatność (Przelew lub Tpay).',
         color: 'bg-indigo-50 text-indigo-700 border-indigo-200' 
     },
     { 
@@ -160,10 +160,32 @@ const timelineStages = [
 	},
 ] as const;
 
+function getStageIndexForStatus(statusId: string): number {
+    switch (statusId) {
+        case 'order.received': return 0; // Zamówienie utworzone
+        
+        case 'order.pending_proforma': 
+        case 'order.proforma_issued': 
+            return 1; // Weryfikacja i płatność
+            
+        case 'order.paid':
+        case 'order.forwarded_to_supplier':
+            return 2; // Kompletacja zamówienia
+            
+        case 'order.fulfillment_confirmed':
+            return 3; // Wydanie przewoźnikowi
+
+        case 'order.final_invoice':
+        case 'order.closed':
+            return 4; // Dostarczone do klienta
+            
+        default: return 0;
+    }
+}
+
 export function buildTimelineEntries(status: string, notes: string, createdAt: string, type: 'production' | 'sample' = 'production'): OrderTimelineEntry[] {
 	const normalizedStatus = normalizeStatus(status);
-	const statusIndex = timelineStages.findIndex((stage) => stage.key === normalizedStatus);
-	const activeIndex = statusIndex === -1 ? 0 : statusIndex;
+	const activeIndex = getStageIndexForStatus(normalizedStatus);
 	const createdAtDate = new Date(createdAt);
 
 	const baseEntries: OrderTimelineEntry[] = timelineStages.map((stage, index) => {
