@@ -96,6 +96,21 @@ export function SampleSelector({ token, samples, geowidgetToken, geowidgetConfig
         widget.className = "block h-full w-full";
         container.appendChild(widget);
 
+        // Hack: Inject styles into Shadow DOM to remove blue focus outline
+        setTimeout(() => {
+            if (widget.shadowRoot) {
+                const style = document.createElement('style');
+                style.textContent = `
+                    input:focus, button:focus, .geo-input:focus {
+                        outline: none !important;
+                        box-shadow: none !important;
+                        border-color: #cbd5e1 !important; /* slate-300 */
+                    }
+                `;
+                widget.shadowRoot.appendChild(style);
+            }
+        }, 100);
+
         const handler = (event: Event) => {
             const customEvent = event as CustomEvent;
             const detail = customEvent?.detail as unknown;
