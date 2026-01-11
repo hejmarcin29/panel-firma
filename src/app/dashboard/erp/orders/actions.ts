@@ -9,7 +9,7 @@ import {
     erpSuppliers, 
     quotes,
     orders,
-    erpProducts // Added import
+    erpProducts
 } from '@/lib/db/schema';
 import { eq, and, inArray, desc } from 'drizzle-orm';
 import { requireUser } from '@/lib/auth/session';
@@ -131,18 +131,6 @@ export async function createPurchaseOrder(ids: string[], supplierId: string) {
             }
         });
 
-    // 2. Add items
-    for (const id of ids) {
-        // A. Try Montage
-        const montage = await db.query.montages.findFirst({
-            where: eq(montages.id, id),
-            with: {
-                quotes: {
-                    where: eq(quotes.status, 'accepted'),
-                }
-            }
-        });
-
         if (montage) {
             if (montage.quotes.length > 0) {
                 const quote = montage.quotes[0];
@@ -161,8 +149,6 @@ export async function createPurchaseOrder(ids: string[], supplierId: string) {
                             // Calculate packs count roughly
                             const packs = Math.round(item.quantity / product.packageSizeM2);
                             const totalM2 = packs * product.packageSizeM2;
-                            // Use product name to ensure cleanliness or keep item name (which might have custom notes)
-                            // We prefer item.name usually as it might have modifications, but we allow appending info.
                             const simpleName = product.name;
                             formattedName = `${simpleName} (${packs} op. = ${totalM2.toFixed(2)} m²)`;
                         }
@@ -254,8 +240,8 @@ export async function createPurchaseOrder(ids: string[], supplierId: string) {
                     id: randomUUID(),
                     purchaseOrderId: poId,
                     productName: formattedName,
-                    quantity: quantity, // Teraz m2 (jeśli udało się przeliczyć)
-                    unitPrice: unitPrice, // Teraz za m2
+                    quantity: quantity,
+                    unitPrice: unitPrice,
                     vatRate: taxRate,
                     totalNet: totalNet,
                     totalGross: totalGross,
@@ -279,7 +265,7 @@ export async function receivePurchaseOrder(poId: string) {
 
     // 1. Update PO status
     await db.update(purchaseOrders)
-        .set({ status: 'received' }) // 'received' is not in schema enum? schema says 'received' is ok.
+        .set({ status: 'received' })
         .where(eq(purchaseOrders.id, poId));
 
     // 2. Find affected montages
@@ -293,10 +279,6 @@ export async function receivePurchaseOrder(poId: string) {
     // 3. Update Montages -> 'materials_pickup_ready' / 'in_stock'
     for (const montageId of affectedMontageIds) {
         if (!montageId) continue;
-
-        // Check if ALL items for this montage are received? 
-        // For "Minimal" version, we assume if PO is received, the montage materials in it are received.
-        // We don't check if there are OTHER POs for the same montage yet.
         
         const montage = await db.query.montages.findFirst({
             where: eq(montages.id, montageId),
@@ -331,9 +313,6 @@ export async function issueMaterialsToCrew(montageId: string) {
         columns: { status: true }
     });
 
-    // Guard: Don't change status if it's already further or cancelled
-    // But 'materials_delivered' is usually after 'materials_pickup_ready' or 'installation_scheduled'
-    
     const allowedStatuses = ['materials_pickup_ready', 'installation_scheduled'];
     
     if (montage && allowedStatuses.includes(montage.status)) {
