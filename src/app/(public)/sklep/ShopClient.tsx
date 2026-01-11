@@ -143,7 +143,7 @@ export default function ShopClient({ products, customerData, token }: ShopClient
                 setMagicLinkStatus('idle');
                 toast.error(result.message || 'Błąd wysyłania linku');
             }
-        } catch (e) {
+        } catch {
             setMagicLinkStatus('idle');
             toast.error('Wystąpił błąd');
         }
@@ -337,7 +337,7 @@ export default function ShopClient({ products, customerData, token }: ShopClient
                                         <div>
                                             <h4 className="font-bold text-lg">Zaloguj się lub utwórz konto</h4>
                                             <p className="text-sm text-neutral-500">
-                                                Podaj swój adres email. Wyślemy Ci "Magiczny Link", który automatycznie Cię zaloguje. 
+                                                Podaj swój adres email. Wyślemy Ci &quot;Magiczny Link&quot;, który automatycznie Cię zaloguje. 
                                                 Nie musisz pamiętać hasła.
                                             </p>
                                         </div>

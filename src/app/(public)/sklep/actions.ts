@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db';
 import { customers, orders, orderItems, erpProducts, mailAccounts } from '@/lib/db/schema';
-import { eq, or } from 'drizzle-orm';
+import { eq, or, inArray } from 'drizzle-orm';
 import { getShopConfig } from '@/app/dashboard/settings/shop/actions';
 import { randomUUID } from 'crypto';
 import { createTransport } from 'nodemailer';
@@ -156,6 +156,9 @@ export async function submitShopOrder(data: {
 }) {
     const shopConfig = await getShopConfig();
 
+    // Fix empty NIP causing unique key violation
+    const nip = (data.customer.nip && data.customer.nip.trim().length > 0) ? data.customer.nip.trim() : null;
+
     // 1. Find or Create Customer
     let customer = await db.query.customers.findFirst({
         where: eq(customers.email, data.customer.email),
@@ -168,7 +171,7 @@ export async function submitShopOrder(data: {
             email: data.customer.email,
             name: data.customer.name || data.customer.email,
             phone: data.customer.phone,
-            taxId: data.customer.nip,
+            taxId: nip,
             billingStreet: data.customer.street,
             billingCity: data.customer.city,
             billingPostalCode: data.customer.postalCode,
@@ -186,15 +189,30 @@ export async function submitShopOrder(data: {
         await db.update(customers).set({
             name: data.customer.name,
             phone: data.customer.phone,
-            taxId: data.customer.nip,
+            taxId: nip,
             billingStreet: data.customer.street,
             billingCity: data.customer.city,
             billingPostalCode: data.customer.postalCode,
         }).where(eq(customers.id, customer.id));
     }
 
+    // Prefetch products
+    const productIds = data.items.map(i => i.productId);
+    // Dedup IDs
+    const uniqueProductIds = Array.from(new Set(productIds));
+    
+    let productsMap = new Map<string, { id: string, name: string, price: string | null, sku: string | null }>();
+    if (uniqueProductIds.length > 0) {
+        const products = await db.query.erpProducts.findMany({
+            where: inArray(erpProducts.id, uniqueProductIds),
+            columns: { id: true, name: true, price: true, sku: true }
+        });
+        productsMap = new Map(products.map(p => [p.id, p]));
+    }
+
     // 2. Calculate Totals
     let totalGross = 0;
+    
     // Samples logic
     const sampleItems = data.items.filter(i => i.type === 'sample');
     if (sampleItems.length > 0) {
@@ -202,11 +220,14 @@ export async function submitShopOrder(data: {
         totalGross += shopConfig.sampleShippingCost; // one time shipping
     }
 
-    // Panels logic - price calculation is complex, assuming price is available on product or we calculate it. 
-    // For now, I'll assume we fetch fresh product data to get price.
-    // NOTE: The `erp_products` schema has `price` as TEXT (Woo legacy). I should try to parse it or use `purchasePriceNet` * margin. 
-    // For MVP, I'll try to use `price` field assuming it's consumable.
-    
+    // Panels logic
+    const productItems = data.items.filter(i => i.type === 'product');
+    for (const item of productItems) {
+        const product = productsMap.get(item.productId);
+        const unitPrice = parseFloat(product?.price || '0') * 100; 
+        totalGross += unitPrice * item.quantity;
+    }
+
     // 3. Create Order
     const orderId = randomUUID();
     const status = data.paymentMethod === 'tpay' ? 'order.awaiting_payment' : 'order.pending_proforma';
@@ -224,19 +245,13 @@ export async function submitShopOrder(data: {
 
     // 4. Create Order Items
     for (const item of data.items) {
-        // Fetch product name and price for snapshot
-        // Ideally we do this in bulk before.
-        const product = await db.query.erpProducts.findFirst({
-             where: eq(erpProducts.id, item.productId),
-             columns: { name: true, price: true, sku: true }
-        });
+        const product = productsMap.get(item.productId);
         
         let unitPrice = 0;
         if (item.type === 'sample') {
             unitPrice = shopConfig.samplePrice;
         } else {
             // Panels price logic
-            // Parse product.price or fallback
             unitPrice = parseFloat(product?.price || '0') * 100; 
         }
 
