@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { 
@@ -17,12 +17,10 @@ import {
     CreditCard,
     Building2,
     FileText,
-    Send,
     Archive
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { 
-    updateShopOrderStatus, 
     generateShippingLabel,
     markAsForwardedToSupplier,
     markAsShippedBySupplier,
@@ -31,11 +29,38 @@ import {
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { Progress } from '@/components/ui/progress';
+
+interface OrderItemDetails {
+    name: string;
+    sku: string | null;
+    quantity: number;
+    unitPrice: number;
+}
+
+interface OrderDetails {
+    id: string;
+    status: string;
+    createdAt: Date;
+    totalNet: number;
+    totalGross: number;
+    paymentMethod: string | null;
+    customer: {
+        name: string;
+        email: string | null;
+        phone: string | null;
+        taxId: string | null;
+        billingStreet: string | null;
+        billingPostalCode: string | null;
+        billingCity: string | null;
+        shippingStreet: string | null;
+        shippingPostalCode: string | null;
+        shippingCity: string | null;
+    } | null;
+}
 
 interface OrderDetailsClientProps {
-    order: any; 
-    items: any[];
+    order: OrderDetails; 
+    items: OrderItemDetails[];
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -44,9 +69,12 @@ const STATUS_LABELS: Record<string, string> = {
     'order.proforma_issued': 'Wysłano proformę',
     'order.awaiting_payment': 'Oczekuje na wpłatę',
     'order.paid': 'Opłacono - Do realizacji',
+    'order.advance_invoice': 'Faktura Zaliczkowa',
     'order.forwarded_to_supplier': 'Zlecono u dostawcy',
     'order.fulfillment_confirmed': 'Wysłano do klienta',
+    'order.final_invoice': 'Faktura Końcowa',
     'order.closed': 'Zakończone',
+    'order.cancelled': 'Anulowane',
 };
 
 // Define flow steps for visualization
@@ -75,21 +103,6 @@ export function OrderDetailsClient({ order, items }: OrderDetailsClientProps) {
     const isSampleOrder = order.paymentMethod === 'tpay';
     const currentFlow = isSampleOrder ? SAMPLE_FLOW : PANEL_FLOW;
 
-    // Helper to check if step is completed
-    const isStepCompleted = (stepId: string) => {
-        const statusIndex = currentFlow.findIndex(s => s.id === status);
-        const stepIndex = currentFlow.findIndex(s => s.id === stepId);
-        // Special case: if status is closed, everything is completed
-        if (status === 'order.closed') return true;
-        // Special case: if status is not in flow (e.g. pending_proforma which is before proforma_issued), handle carefully
-        if (statusIndex === -1) {
-            // Check specific mappings for pre-steps
-             if (status === 'order.pending_proforma' && stepId === 'order.received') return true;
-             return false;
-        }
-        return stepIndex >= stepIndex; // Logic fix: check relative position
-    };
-    
     // Correct logic for step completion highlighting
     const getStepState = (stepId: string) => {
         const statusIndex = currentFlow.findIndex(s => s.id === status);
@@ -120,7 +133,7 @@ export function OrderDetailsClient({ order, items }: OrderDetailsClientProps) {
                    router.refresh();
                 }
             }
-        } catch (error) {
+        } catch {
             toast.error('Błąd generowania etykiety');
         } finally {
             setIsLoading(false);
@@ -290,7 +303,7 @@ export function OrderDetailsClient({ order, items }: OrderDetailsClientProps) {
                          }} 
                     />
 
-                    {currentFlow.map((step, idx) => {
+                    {currentFlow.map((step) => {
                         const state = getStepState(step.id);
                         
                         return (
@@ -328,7 +341,7 @@ export function OrderDetailsClient({ order, items }: OrderDetailsClientProps) {
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-4">
-                                {items.map((item: any, idx: number) => (
+                                {items.map((item, idx) => (
                                     <div key={idx} className="flex justify-between items-center border-b last:border-0 pb-4 last:pb-0 border-slate-100">
                                         <div className="flex items-center gap-4">
                                             <div className="bg-slate-50 p-3 rounded-md border border-slate-100">

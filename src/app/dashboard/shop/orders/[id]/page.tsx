@@ -11,7 +11,7 @@ export default async function OrderDetailsPage(props: { params: Promise<{ id: st
     const order = await db.query.orders.findFirst({
         where: eq(orders.id, orderId),
         with: {
-            orderItems: true,
+            items: true,
             customer: true
         }
     });
@@ -22,7 +22,7 @@ export default async function OrderDetailsPage(props: { params: Promise<{ id: st
 
     return (
         <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-            <OrderDetailsClient order={order} items={order.orderItems} />
+            <OrderDetailsClient order={order} items={order.items} />
         </div>
     );
 }

@@ -1,13 +1,13 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { orders } from '@/lib/db/schema';
+import { orders, type OrderStatus } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
 export async function updateShopOrderStatus(orderId: string, newStatus: string) {
     await db.update(orders)
-        .set({ status: newStatus as any })
+        .set({ status: newStatus as OrderStatus })
         .where(eq(orders.id, orderId));
     
     revalidatePath(`/dashboard/shop/orders/${orderId}`);
