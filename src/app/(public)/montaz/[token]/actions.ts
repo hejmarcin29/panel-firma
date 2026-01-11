@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db';
 import { customers, montages, quotes, mailAccounts, montageAttachments, montagePayments, erpProducts, montageNotes, systemLogs } from '@/lib/db/schema';
-import { eq, desc, isNull, and, inArray } from 'drizzle-orm';
+import { eq, desc, isNull, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { logSystemEvent } from '@/lib/logging';
 import { createTransport } from 'nodemailer';
@@ -11,6 +11,7 @@ import { getAppSetting, appSettingKeys } from '@/lib/settings';
 import { uploadSignedContract } from '@/lib/r2/storage';
 import { nanoid } from 'nanoid';
 import { randomUUID } from 'crypto';
+import { CustomerWithRelations } from './types';
 
 function decodeSecret(secret: string | null | undefined): string | null {
     if (!secret) {
@@ -38,7 +39,7 @@ export async function sendQuoteEmailToCustomer(quoteId: string, token: string) {
     if (!quote) throw new Error('Nie znaleziono wyceny');
 
     // Verify ownership
-    const isOwner = customer.montages.some((m: any) => m.id === quote.montageId);
+    const isOwner = customer.montages.some(m => m.id === quote.montageId);
     if (!isOwner) throw new Error('Brak uprawnień do tej wyceny');
 
     if (!quote.montage.contactEmail) {
@@ -173,7 +174,7 @@ export async function signQuote(quoteId: string, signatureData: string, token: s
     if (!quote) throw new Error('Nie znaleziono wyceny');
 
     // Verify ownership
-    const isOwner = customer.montages.some((m: any) => m.id === quote.montageId);
+    const isOwner = customer.montages.some(m => m.id === quote.montageId);
     if (!isOwner) throw new Error('Brak uprawnień do tej wyceny');
 
     if (quote.status === 'accepted') throw new Error('Wycena jest już zaakceptowana');
@@ -243,10 +244,10 @@ export async function updateMontageData(montageId: string, data: MontageUpdateDa
     const customer = await getCustomerByToken(token);
     if (!customer) throw new Error('Nieprawidłowy token');
 
-    const isOwner = customer.montages.some((m: any) => m.id === montageId);
+    const isOwner = customer.montages.some(m => m.id === montageId);
     if (!isOwner) throw new Error('Brak uprawnień');
 
-    const currentMontage = customer.montages.find((m: any) => m.id === montageId);
+    const currentMontage = customer.montages.find(m => m.id === montageId);
     
     await db.update(montages)
         .set({
@@ -289,7 +290,7 @@ export async function acceptInstallationDate(montageId: string, token: string) {
     const customer = await getCustomerByToken(token);
     if (!customer) throw new Error('Nieprawidłowy token');
 
-    const isOwner = customer.montages.some((m: any) => m.id === montageId);
+    const isOwner = customer.montages.some(m => m.id === montageId);
     if (!isOwner) throw new Error('Brak uprawnień');
 
     await db.update(montages)
@@ -304,7 +305,7 @@ export async function rejectInstallationDate(montageId: string, token: string, r
     const customer = await getCustomerByToken(token);
     if (!customer) throw new Error('Nieprawidłowy token');
 
-    const isOwner = customer.montages.some((m: any) => m.id === montageId);
+    const isOwner = customer.montages.some(m => m.id === montageId);
     if (!isOwner) throw new Error('Brak uprawnień');
 
     console.log(`Customer rejected date for montage ${montageId}. Reason: ${reason}`);
@@ -313,7 +314,7 @@ export async function rejectInstallationDate(montageId: string, token: string, r
     return { success: true };
 }
 
-export async function getCustomerByToken(token: string) {
+export async function getCustomerByToken(token: string): Promise<CustomerWithRelations | undefined> {
     // 1. Try Finding Customer by Referral Token
     const customer = await db.query.customers.findFirst({
         where: eq(customers.referralToken, token),
@@ -370,7 +371,7 @@ export async function getCustomerByToken(token: string) {
             updatedAt: montage.updatedAt,
             // ... other customer fields if needed, filled with null/defaults
             montages: [montage]
-        } as any; // Cast to any to match Customer type loosely or defined interface
+        };
     }
 
     return undefined;
@@ -429,7 +430,7 @@ export async function saveSignedContract(token: string, formData: FormData) {
     if (!file || !montageId) throw new Error('Brak pliku lub ID montażu');
 
     // Verify ownership
-    const isOwner = customer.montages.some((m: any) => m.id === montageId);
+    const isOwner = customer.montages.some(m => m.id === montageId);
     if (!isOwner) throw new Error('Brak uprawnień do tego montażu');
 
     // Upload to R2

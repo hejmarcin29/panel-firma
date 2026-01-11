@@ -93,7 +93,7 @@ interface Montage {
 }
 
 interface Customer {
-    name: string | null;
+    name?: string | null;
     montages: Montage[];
 }
 

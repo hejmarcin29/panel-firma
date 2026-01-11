@@ -5,14 +5,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CustomerPortal } from "./customer-portal";
 import { SampleSelector } from "./sample-selector";
 import { Package, ClipboardList } from "lucide-react";
+import { CustomerWithRelations, SampleProduct } from "../types";
+
+interface CompanyInfo {
+    name: string;
+    address: string;
+    nip: string;
+    logoUrl?: string;
+}
 
 interface PortalViewProps {
     token: string;
-    customer: any; // Type inferred from actions result
-    samples: any[];
+    customer: CustomerWithRelations; 
+    samples: SampleProduct[];
     geowidgetToken: string;
     geowidgetConfig: string;
-    companyInfo: any;
+    companyInfo: CompanyInfo;
     bankAccount?: string;
     initialTab?: string;
 }
