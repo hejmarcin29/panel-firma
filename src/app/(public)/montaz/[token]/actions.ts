@@ -38,7 +38,7 @@ export async function sendQuoteEmailToCustomer(quoteId: string, token: string) {
     if (!quote) throw new Error('Nie znaleziono wyceny');
 
     // Verify ownership
-    const isOwner = customer.montages.some(m => m.id === quote.montageId);
+    const isOwner = customer.montages.some((m: any) => m.id === quote.montageId);
     if (!isOwner) throw new Error('Brak uprawnień do tej wyceny');
 
     if (!quote.montage.contactEmail) {
@@ -173,7 +173,7 @@ export async function signQuote(quoteId: string, signatureData: string, token: s
     if (!quote) throw new Error('Nie znaleziono wyceny');
 
     // Verify ownership
-    const isOwner = customer.montages.some(m => m.id === quote.montageId);
+    const isOwner = customer.montages.some((m: any) => m.id === quote.montageId);
     if (!isOwner) throw new Error('Brak uprawnień do tej wyceny');
 
     if (quote.status === 'accepted') throw new Error('Wycena jest już zaakceptowana');
@@ -243,10 +243,10 @@ export async function updateMontageData(montageId: string, data: MontageUpdateDa
     const customer = await getCustomerByToken(token);
     if (!customer) throw new Error('Nieprawidłowy token');
 
-    const isOwner = customer.montages.some(m => m.id === montageId);
+    const isOwner = customer.montages.some((m: any) => m.id === montageId);
     if (!isOwner) throw new Error('Brak uprawnień');
 
-    const currentMontage = customer.montages.find(m => m.id === montageId);
+    const currentMontage = customer.montages.find((m: any) => m.id === montageId);
     
     await db.update(montages)
         .set({
@@ -289,7 +289,7 @@ export async function acceptInstallationDate(montageId: string, token: string) {
     const customer = await getCustomerByToken(token);
     if (!customer) throw new Error('Nieprawidłowy token');
 
-    const isOwner = customer.montages.some(m => m.id === montageId);
+    const isOwner = customer.montages.some((m: any) => m.id === montageId);
     if (!isOwner) throw new Error('Brak uprawnień');
 
     await db.update(montages)
@@ -304,7 +304,7 @@ export async function rejectInstallationDate(montageId: string, token: string, r
     const customer = await getCustomerByToken(token);
     if (!customer) throw new Error('Nieprawidłowy token');
 
-    const isOwner = customer.montages.some(m => m.id === montageId);
+    const isOwner = customer.montages.some((m: any) => m.id === montageId);
     if (!isOwner) throw new Error('Brak uprawnień');
 
     console.log(`Customer rejected date for montage ${montageId}. Reason: ${reason}`);
@@ -376,6 +376,48 @@ export async function getCustomerByToken(token: string) {
     return undefined;
 }
 
+async function sendContractEmail(montageId: string, file: File) {
+    const montage = await db.query.montages.findFirst({
+        where: eq(montages.id, montageId),
+    });
+
+    if (!montage || !montage.contactEmail) return;
+
+    const account = await db.query.mailAccounts.findFirst({
+        where: eq(mailAccounts.status, 'connected'),
+    });
+
+    if (!account || !account.smtpHost || !account.smtpPort) return;
+
+    const password = decodeSecret(account.passwordSecret);
+    if (!password) return;
+
+    const transporter = createTransport({
+        host: account.smtpHost,
+        port: account.smtpPort,
+        secure: Boolean(account.smtpSecure),
+        auth: {
+            user: account.username,
+            pass: password,
+        },
+    });
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    await transporter.sendMail({
+        from: `${account.displayName} <${account.email}>`,
+        to: montage.contactEmail,
+        subject: `Podpisana umowa - ${montage.clientName}`,
+        text: `Dzień dobry,\n\nW załączniku przesyłamy podpisaną umowę.\n\nPozdrawiamy,\nZespół ${account.displayName}`,
+        attachments: [
+            {
+                filename: file.name,
+                content: buffer
+            }
+        ]
+    });
+}
+
 export async function saveSignedContract(token: string, formData: FormData) {
     const customer = await getCustomerByToken(token);
     if (!customer) throw new Error('Nieprawidłowy token');
@@ -387,7 +429,7 @@ export async function saveSignedContract(token: string, formData: FormData) {
     if (!file || !montageId) throw new Error('Brak pliku lub ID montażu');
 
     // Verify ownership
-    const isOwner = customer.montages.some(m => m.id === montageId);
+    const isOwner = customer.montages.some((m: any) => m.id === montageId);
     if (!isOwner) throw new Error('Brak uprawnień do tego montażu');
 
     // Upload to R2
