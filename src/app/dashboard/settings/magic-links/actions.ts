@@ -1,6 +1,6 @@
 'use server';
 
-import { eq, or, isNotNull, and } from 'drizzle-orm';
+import { eq, isNotNull } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { customers, montages } from '@/lib/db/schema';

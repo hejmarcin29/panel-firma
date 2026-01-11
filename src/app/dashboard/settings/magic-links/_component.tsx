@@ -24,7 +24,7 @@ import {
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, ExternalLink, RefreshCw, Copy } from 'lucide-react';
+import { Trash2, ExternalLink, Copy } from 'lucide-react';
 import { revokeMagicLink, revokeAllMagicLinks, type MagicLinkItem } from './actions';
 
 interface MagicLinksManagerProps {

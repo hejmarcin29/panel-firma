@@ -1,6 +1,4 @@
 import { db } from "@/lib/db";
-import { erpProducts } from "@/lib/db/schema";
-import { like } from "drizzle-orm";
 
 export const dynamic = 'force-dynamic';
 
@@ -24,7 +22,7 @@ export default async function DebugShopPage() {
   if (!product) {
     return (
       <div className="p-10 font-mono text-red-500">
-        Nie znaleziono produktu o nazwie zawierającej "{productName}"
+        Nie znaleziono produktu o nazwie zawierającej &quot;{productName}&quot;
       </div>
     );
   }
