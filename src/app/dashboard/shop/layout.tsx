@@ -6,6 +6,9 @@ export default function ShopLayout({ children }: { children: React.ReactNode }) 
         <div className="flex flex-col gap-6">
             <div className="border-b">
                 <nav className="flex gap-4 px-4 pb-2">
+                    <Link href="/dashboard/shop">
+                        <Button variant="ghost">📊 Przegląd</Button>
+                    </Link>
                     <Link href="/dashboard/shop/orders">
                         <Button variant="ghost">📋 Zamówienia</Button>
                     </Link>
