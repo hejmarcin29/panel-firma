@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db';
 import { orders, customers } from '@/lib/db/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 
 export async function getShopStats() {
@@ -33,7 +33,7 @@ export async function getShopStats() {
 export async function generateQuickShopLink(email: string, name?: string) {
     if (!email) return { success: false, error: 'Email jest wymagany' };
 
-    let customer = await db.query.customers.findFirst({
+    const customer = await db.query.customers.findFirst({
         where: eq(customers.email, email),
     });
 

@@ -27,7 +27,7 @@ export function QuickLinkGenerator() {
             } else {
                 toast.error(result.error || 'Błąd generowania linku');
             }
-        } catch (error) {
+        } catch {
             toast.error('Wystąpił błąd');
         } finally {
             setIsLoading(false);
