@@ -3,12 +3,12 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from '@/components/ui/button';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Mail, User } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Image from 'next/image';
-import { submitShopOrder } from './actions';
+import { submitShopOrder, sendShopMagicLink } from './actions';
 import { toast } from 'sonner';
 
 type Product = {
@@ -49,6 +49,7 @@ type CartItem = {
 export default function ShopClient({ products, customerData, token }: ShopClientProps) {
     const [cart, setCart] = useState<CartItem[]>([]);
     const [isCartOpen, setIsCartOpen] = useState(false);
+    const [magicLinkStatus, setMagicLinkStatus] = useState<'idle' | 'loading' | 'sent'>('idle');
 
     // Filter products
     const sampleProducts = products.filter(p => p.isSampleAvailable);
@@ -128,6 +129,26 @@ export default function ShopClient({ products, customerData, token }: ShopClient
         }
     };
 
+    const handleSendMagicLink = async (formData: FormData) => {
+        const email = formData.get('email') as string;
+        if (!email) return;
+
+        setMagicLinkStatus('loading');
+        try {
+            const result = await sendShopMagicLink(email);
+            if (result.success) {
+                setMagicLinkStatus('sent');
+                toast.success('Link logowania został wysłany na Twój email!');
+            } else {
+                setMagicLinkStatus('idle');
+                toast.error(result.message || 'Błąd wysyłania linku');
+            }
+        } catch (e) {
+            setMagicLinkStatus('idle');
+            toast.error('Wystąpił błąd');
+        }
+    };
+
     return (
         <div className="min-h-screen bg-neutral-50 pb-20 md:pb-0">
              <header className="sticky top-0 z-30 flex h-16 items-center border-b bg-white px-4 shadow-sm md:px-6">
@@ -146,7 +167,7 @@ export default function ShopClient({ products, customerData, token }: ShopClient
                                 )}
                             </Button>
                         </SheetTrigger>
-                        <SheetContent side="bottom" className="h-[90vh] sm:side-right sm:h-full">
+                        <SheetContent side="right" className="w-full sm:max-w-md">
                             <SheetHeader>
                                 <SheetTitle>Twój Koszyk</SheetTitle>
                             </SheetHeader>
@@ -265,18 +286,84 @@ export default function ShopClient({ products, customerData, token }: ShopClient
 
                     <TabsContent value="settings">
                         <div className="max-w-md mx-auto">
-                            <h3 className="text-xl font-bold mb-4">Moje Ustawienia</h3>
-                            <p className="text-muted-foreground mb-6">Uzupełnij swoje dane, aby szybciej składać zamówienia.</p>
+                            <h3 className="text-xl font-bold mb-4">Ustawienia Konta</h3>
                             
-                            {/* Reuse checkout form logic or separate update action */}
-                            <form action={checkout} className="space-y-4">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Email (Identyfikator)</label>
-                                    <input name="email" required className="w-full border p-2 rounded bg-neutral-100" defaultValue={customerData?.email || ''} readOnly={!!customerData?.email} />
+                            {customerData ? (
+                                <div className="space-y-6">
+                                    <div className="bg-emerald-50 p-4 rounded-lg border border-emerald-100 text-emerald-800 flex items-start gap-3">
+                                        <User className="h-6 w-6 mt-0.5" />
+                                        <div>
+                                            <p className="font-medium">Jesteś zalogowany jako:</p>
+                                            <p className="text-lg font-bold break-all">{customerData.email}</p>
+                                            <p className="text-sm opacity-80 mt-1">
+                                                Twoje dane są bezpieczne i będą używane do automatycznego uzupełniania zamówień.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <form action={checkout} className="space-y-4 opacity-75">
+                                         <div className="space-y-2">
+                                            <h4 className="font-medium text-sm">Twoje dane (Podgląd)</h4>
+                                            <div className="grid grid-cols-1 gap-2">
+                                                 <input disabled value={customerData.name || ''} className="w-full border p-2 rounded bg-neutral-100 text-neutral-500" placeholder="Nazwa / Firma" />
+                                                 <input disabled value={customerData.phone || ''} className="w-full border p-2 rounded bg-neutral-100 text-neutral-500" placeholder="Telefon" />
+                                                 <input disabled value={customerData.billingStreet || ''} className="w-full border p-2 rounded bg-neutral-100 text-neutral-500" placeholder="Adres" />
+                                            </div>
+                                        </div>
+                                        <Button variant="outline" className="w-full" disabled>Edycja danych (Skontaktuj się z obsługą)</Button>
+                                    </form>
                                 </div>
-                                {/* Full form fields again... simplify for MVP */}
-                                <Button type="submit" variant="outline" className="w-full" disabled>Aktualizacja danych (Wkrótce)</Button>
-                            </form>
+                            ) : magicLinkStatus === 'sent' ? (
+                                <div className="bg-blue-50 p-8 rounded-lg text-center space-y-4 border border-blue-100">
+                                    <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+                                        <Mail className="h-8 w-8" />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-xl text-blue-900">Sprawdź skrzynkę email</h4>
+                                        <p className="text-blue-700 mt-2">
+                                            Wysłaliśmy specjalny link logowania na Twój adres email. 
+                                            Kliknij w niego, aby uzyskać dostęp do panelu klienta.
+                                        </p>
+                                    </div>
+                                    <div className="pt-4">
+                                        <Button variant="outline" onClick={() => setMagicLinkStatus('idle')} className="bg-white hover:bg-neutral-50">
+                                            Użyj innego adresu email
+                                        </Button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="space-y-6">
+                                    <div className="bg-white p-6 rounded-lg border shadow-sm space-y-4">
+                                        <div>
+                                            <h4 className="font-bold text-lg">Zaloguj się lub utwórz konto</h4>
+                                            <p className="text-sm text-neutral-500">
+                                                Podaj swój adres email. Wyślemy Ci "Magiczny Link", który automatycznie Cię zaloguje. 
+                                                Nie musisz pamiętać hasła.
+                                            </p>
+                                        </div>
+
+                                        <form action={handleSendMagicLink} className="space-y-4">
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium">Twój Email</label>
+                                                <input 
+                                                    name="email" 
+                                                    type="email" 
+                                                    required 
+                                                    placeholder="jan.kowalski@firma.pl" 
+                                                    className="w-full border border-neutral-300 p-3 rounded-md focus:ring-2 focus:ring-black focus:outline-none" 
+                                                />
+                                            </div>
+                                            <Button type="submit" className="w-full font-bold" size="lg" disabled={magicLinkStatus === 'loading'}>
+                                                {magicLinkStatus === 'loading' ? 'Wysyłanie...' : 'Wyślij Magic Link'}
+                                            </Button>
+                                        </form>
+                                        
+                                        <p className="text-xs text-center text-neutral-400">
+                                            Klikając przycisk, akceptujesz regulamin sklepu.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </TabsContent>
                 </Tabs>

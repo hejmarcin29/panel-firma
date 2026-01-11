@@ -1,10 +1,117 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { customers, orders, orderItems, erpProducts } from '@/lib/db/schema';
+import { customers, orders, orderItems, erpProducts, mailAccounts } from '@/lib/db/schema';
 import { eq, or } from 'drizzle-orm';
 import { getShopConfig } from '@/app/dashboard/settings/shop/actions';
 import { randomUUID } from 'crypto';
+import { createTransport } from 'nodemailer';
+
+function decodeSecret(secret: string | null | undefined): string | null {
+    if (!secret) return null;
+    try {
+        return Buffer.from(secret, 'base64').toString('utf-8');
+    } catch {
+        return null;
+    }
+}
+
+export async function sendShopMagicLink(email: string) {
+    if (!email || !email.includes('@')) {
+        return { success: false, message: 'Nieprawidłowy adres email' };
+    }
+
+    try {
+        // 1. Find or create customer
+        let customer = await db.query.customers.findFirst({
+            where: eq(customers.email, email),
+        });
+
+        let token = customer?.referralToken;
+
+        if (!customer) {
+            token = randomUUID();
+            const inserted = await db.insert(customers).values({
+                id: randomUUID(),
+                email: email,
+                name: email.split('@')[0], // Default name
+                source: 'other', // or 'shop'
+                referralToken: token,
+            }).returning();
+            customer = inserted[0];
+        } else if (!token) {
+            token = randomUUID();
+            await db.update(customers)
+                .set({ referralToken: token })
+                .where(eq(customers.id, customer.id));
+        }
+
+        // 2. Prepare Email
+        const link = `https://b2b.primepodloga.pl/sklep?token=${token}`;
+
+        // 3. Find Mail Account
+        const account = await db.query.mailAccounts.findFirst({
+            where: eq(mailAccounts.status, 'connected'),
+        });
+
+        if (!account || !account.smtpHost || !account.smtpPort) {
+            // Fallback for dev or error
+            console.warn('No mail account configured. Magic Link:', link);
+            return { success: true, debugLink: link }; 
+        }
+
+        const password = decodeSecret(account.passwordSecret);
+        if (!password) {
+            return { success: false, message: 'Błąd konfiguracji poczty (hasło)' };
+        }
+
+        const transporter = createTransport({
+            host: account.smtpHost,
+            port: account.smtpPort,
+            secure: Boolean(account.smtpSecure),
+            auth: {
+                user: account.username,
+                pass: password,
+            },
+        });
+
+        const html = `
+            <div style="font-family: sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+                <h2>Twój link do Sklepu Prime Podłoga</h2>
+                <p>Kliknij poniższy przycisk, aby zalogować się do swojego panelu klienta w sklepie:</p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="${link}" style="background-color: #0f172a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                        Przejdź do Sklepu
+                    </a>
+                </div>
+                <p style="font-size: 12px; color: #666;">
+                    Jeśli przycisk nie działa, skopiuj ten link: <br>
+                    <a href="${link}">${link}</a>
+                </p>
+            </div>
+        `;
+
+        await transporter.sendMail({
+            from: `"${account.displayName}" <${account.email}>`,
+            to: email,
+            subject: 'Dostęp do Sklepu Prime Podłoga',
+            html: html,
+        });
+
+        return { success: true };
+
+    } catch (error) {
+        console.error('Magic Link Error:', error);
+        return { success: false, message: 'Wystąpił błąd podczas wysyłania linku.' };
+    }
+}
+
+export async function getCustomerByToken(token: string) {
+    if (!token) return null;
+    return db.query.customers.findFirst({
+        where: eq(customers.referralToken, token),
+    });
+}
 
 export async function getShopProducts() {
     return db.query.erpProducts.findMany({
