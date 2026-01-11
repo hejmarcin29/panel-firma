@@ -14,7 +14,7 @@ import {
 import { relations } from 'drizzle-orm';
 
 export const userRoles = ['admin', 'installer', 'architect', 'partner'] as const;
-export const orderSources = ['woocommerce', 'manual'] as const;
+export const orderSources = ['woocommerce', 'manual', 'shop'] as const;
 export const orderTypes = ['production', 'sample'] as const;
 export const orderStatuses = [
 	'order.received',
@@ -29,6 +29,8 @@ export const orderStatuses = [
 	'order.closed',
 	'order.cancelled',
 ] as const;
+
+export const paymentMethods = ['tpay', 'proforma', 'transfer', 'cash'] as const;
 
 export const documentTypes = ['proforma', 'advance_invoice', 'final_invoice'] as const;
 export const documentStatuses = ['draft', 'issued', 'cancelled', 'voided', 'corrected'] as const;
@@ -57,6 +59,7 @@ export type UserRole = (typeof userRoles)[number];
 export type OrderStatus = (typeof orderStatuses)[number];
 export type OrderSource = (typeof orderSources)[number];
 export type OrderType = (typeof orderTypes)[number];
+export type PaymentMethod = (typeof paymentMethods)[number];
 export type DocumentType = (typeof documentTypes)[number];
 export type DocumentStatus = (typeof documentStatuses)[number];
 export type PaymentStatus = (typeof paymentStatuses)[number];
@@ -201,6 +204,12 @@ export const sessions = pgTable(
 	})
 );
 
+export const globalSettings = pgTable('global_settings', {
+    key: text('key').primaryKey(), // e.g., 'shop_config', 'tpay_config'
+    value: json('value').notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 export const customers = pgTable(
 	'customers',
 	{
@@ -312,6 +321,8 @@ export const orders = pgTable(
 		source: text('source').$type<OrderSource>().notNull(),
 		sourceOrderId: text('source_order_id'),
 		status: text('status').$type<OrderStatus>().notNull(),
+        paymentMethod: text('payment_method').$type<PaymentMethod>(),
+        transferTitle: text('transfer_title'),
 		customerId: text('customer_id').references(() => customers.id, {
 			onDelete: 'set null',
 		}),
@@ -1648,6 +1659,11 @@ export const erpProducts = pgTable('erp_products', {
     
     // Type
     type: text('type').default('product'), // product, service
+
+    // Shop Flags
+    isShopVisible: boolean('is_shop_visible').default(false),
+    isSampleAvailable: boolean('is_sample_available').default(false),
+    packageSizeM2: doublePrecision('package_size_m2'),
 
     // Samples
     isSample: boolean('is_sample').default(false), // Flag if product is available as sample

@@ -477,6 +477,13 @@
       "when": 1767894934661,
       "tag": "0067_crazy_sebastian_shaw",
       "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1768158266992,
+      "tag": "0068_magical_black_queen",
+      "breakpoints": true
     }
   ]
 }

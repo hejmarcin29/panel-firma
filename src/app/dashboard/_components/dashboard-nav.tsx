@@ -13,6 +13,7 @@ const links = [
     { href: '/dashboard/crm', label: 'CRM', labelForInstaller: 'Moje Zlecenia' },
 	{ href: '/dashboard/erp/products', label: 'Produkty' },
     { href: '/dashboard/erp', label: 'ERP' },
+    { href: '/dashboard/shop', label: 'Sklep' },
 	{ href: '/dashboard/mail', label: 'Poczta' },
 	{ href: '/dashboard/settings', label: 'Ustawienia' },
     { href: '/dashboard/wallet', label: 'Portfel' },
