@@ -6,8 +6,9 @@ import { eq } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
-export default async function ShopTokenPage({ params }: { params: { token: string } }) {
+export default async function ShopTokenPage({ params }: { params: Promise<{ token: string }> }) {
     const products = await getShopProducts();
+    const { token } = await params;
     
     // Find customer by token
     // Note: Schema has referralToken, but let's assume we use customer ID or specific token logic
@@ -16,7 +17,6 @@ export default async function ShopTokenPage({ params }: { params: { token: strin
     // Let's assume it searches by referralToken for safety, or ID if UUID.
     // Spec said: "Token będzie unikalnym kluczem przypisanym do klienta... referralToken".
     
-    const token = params.token;
     const customer = await db.query.customers.findFirst({
         where: eq(customers.referralToken, token),
     });
