@@ -39,22 +39,52 @@ export function QuickLinkGenerator() {
         toast.success('Skopiowano do schowka');
     };
 
+    const copyGeneralLink = () => {
+        const url = `${window.location.origin}/sklep`;
+        navigator.clipboard.writeText(url);
+        toast.success('Skopiowano link ogólny');
+    };
+
     return (
         <Card>
             <CardHeader>
                 <div className="flex items-center gap-2">
                     <Sparkles className="h-5 w-5 text-amber-500" />
-                    <CardTitle>Szybki Link do Sklepu</CardTitle>
+                    <CardTitle>Linki do Sklepu</CardTitle>
                 </div>
                 <CardDescription>
-                    Wygeneruj unikalny link dla klienta, który pozwoli mu składać zamówienia bez logowania.
+                    Wybierz rodzaj linku który chcesz wysłać klientowi.
                 </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
+                
+                {/* 1. General Link */}
+                <div className="space-y-2">
+                    <label className="text-sm font-medium">Link Ogólny (Klient sam wpisuje dane)</label>
+                    <div className="flex gap-2">
+                         <Button variant="outline" className="w-full justify-start text-muted-foreground font-normal" onClick={copyGeneralLink}>
+                            https://b2b.../sklep
+                         </Button>
+                         <Button size="icon" variant="ghost" onClick={copyGeneralLink} title="Kopiuj">
+                             <Copy className="h-4 w-4" />
+                         </Button>
+                    </div>
+                </div>
+
+                <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-2 text-muted-foreground">LUB SPERSONALIZUJ (Magic Link)</span>
+                    </div>
+                </div>
+
+                {/* 2. Personalized Generator */}
                 {!generatedLink ? (
                     <form onSubmit={handleGenerate} className="space-y-4">
                         <div className="grid gap-2">
-                            <label className="text-sm font-medium">Email klienta</label>
+                            <label className="text-sm font-medium">Email klienta (do pre-wypełnienia)</label>
                             <Input 
                                 placeholder="klient@example.com" 
                                 type="email" 
