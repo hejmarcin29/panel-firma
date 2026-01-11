@@ -21,5 +21,5 @@ export default async function ShopTokenPage({ params }: { params: { token: strin
         where: eq(customers.referralToken, token),
     });
 
-    return <ShopClient products={products as any[]} customerData={customer} token={token} />;
+    return <ShopClient products={products} customerData={customer} token={token} />;
 }

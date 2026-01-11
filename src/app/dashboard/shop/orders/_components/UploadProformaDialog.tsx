@@ -30,7 +30,7 @@ export function UploadProformaDialog({ orderId }: { orderId: string }) {
             await uploadProforma(orderId, title, mockUrl);
             toast.success('Proforma wgrana i wysłana');
             setOpen(false);
-        } catch (error) {
+        } catch {
             toast.error('Wystąpił błąd');
         }
     };

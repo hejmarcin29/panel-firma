@@ -24,7 +24,7 @@ export function ProductRow({ product }: ProductRowProps) {
             try {
                 await toggleShopVisibility(product.id, checked);
                 toast.success(`Zmieniono widoczność w sklepie: ${product.name}`);
-            } catch (e) {
+            } catch {
                 toast.error('Błąd aktualizacji');
             }
         });
@@ -35,7 +35,7 @@ export function ProductRow({ product }: ProductRowProps) {
             try {
                 await toggleSampleAvailability(product.id, checked);
                 toast.success(`Zmieniono dostępność próbki: ${product.name}`);
-            } catch (e) {
+            } catch {
                 toast.error('Błąd aktualizacji');
             }
         });

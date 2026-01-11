@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { orders, customers } from '@/lib/db/schema';
+import { orders } from '@/lib/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { UploadProformaDialog } from './_components/UploadProformaDialog';
 

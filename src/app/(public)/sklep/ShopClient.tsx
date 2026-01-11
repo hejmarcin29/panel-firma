@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, LayoutGrid, Package, Settings, Logs } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -22,9 +22,19 @@ type Product = {
     price: string | null;
 };
 
+type CustomerData = {
+    email?: string | null;
+    name?: string | null;
+    phone?: string | null;
+    billingStreet?: string | null;
+    billingPostalCode?: string | null;
+    billingCity?: string | null;
+    taxId?: string | null;
+};
+
 type ShopClientProps = {
     products: Product[];
-    customerData?: any; // Prefilled data
+    customerData?: CustomerData; // Prefilled data
     token?: string;
 };
 
@@ -88,22 +98,31 @@ export default function ShopClient({ products, customerData, token }: ShopClient
 
     const checkout = async (formData: FormData) => {
         // Collect form data
-        const data = {
-            customer: {
-                email: formData.get('email') as string,
-                name: formData.get('name') as string,
-                street: formData.get('street') as string,
-                city: formData.get('city') as string,
-                postalCode: formData.get('postalCode') as string,
-                nip: formData.get('nip') as string,
-                phone: formData.get('phone') as string,
-            },
-            items: cart,
-            paymentMethod: cart.some(i => i.type === 'product') ? 'proforma' : 'tpay',
+        const customer = {
+            email: formData.get('email') as string,
+            name: formData.get('name') as string,
+            street: formData.get('street') as string,
+            city: formData.get('city') as string,
+            postalCode: formData.get('postalCode') as string,
+            nip: formData.get('nip') as string,
+            phone: formData.get('phone') as string,
+        };
+
+        const paymentMethod = cart.some(i => i.type === 'product') ? 'proforma' : 'tpay';
+
+        const orderData = {
+            customer,
+            items: cart.map(i => ({
+                productId: i.productId,
+                quantity: i.quantity,
+                area: i.area,
+                type: i.type,
+            })),
+            paymentMethod: paymentMethod as 'tpay' | 'proforma',
             referralToken: token,
         };
 
-        const result = await submitShopOrder(data as any);
+        const result = await submitShopOrder(orderData);
         if (result.success) {
             window.location.href = result.redirectUrl || '/sklep/dziekujemy';
         }
@@ -156,17 +175,17 @@ export default function ShopClient({ products, customerData, token }: ShopClient
                                     <form action={checkout} className="space-y-4">
                                         <div className="space-y-2">
                                             <h4 className="font-medium">Dane do zamówienia</h4>
-                                            <input name="email" placeholder="Email" required className="w-full border p-2 rounded" defaultValue={customerData?.email} />
+                                            <input name="email" placeholder="Email" required className="w-full border p-2 rounded" defaultValue={customerData?.email || ''} />
                                             <div className="grid grid-cols-2 gap-2">
-                                                <input name="name" placeholder="Imię i Nazwisko / Firma" required className="w-full border p-2 rounded" defaultValue={customerData?.name} />
-                                                <input name="phone" placeholder="Telefon" required className="w-full border p-2 rounded" defaultValue={customerData?.phone} />
+                                                <input name="name" placeholder="Imię i Nazwisko / Firma" required className="w-full border p-2 rounded" defaultValue={customerData?.name || ''} />
+                                                <input name="phone" placeholder="Telefon" required className="w-full border p-2 rounded" defaultValue={customerData?.phone || ''} />
                                             </div>
-                                            <input name="street" placeholder="Ulica i nr" required className="w-full border p-2 rounded" defaultValue={customerData?.billingStreet} />
+                                            <input name="street" placeholder="Ulica i nr" required className="w-full border p-2 rounded" defaultValue={customerData?.billingStreet || ''} />
                                             <div className="grid grid-cols-2 gap-2">
-                                                 <input name="postalCode" placeholder="Kod poczt." required className="w-full border p-2 rounded" defaultValue={customerData?.billingPostalCode} />
-                                                 <input name="city" placeholder="Miasto" required className="w-full border p-2 rounded" defaultValue={customerData?.billingCity} />
+                                                 <input name="postalCode" placeholder="Kod poczt." required className="w-full border p-2 rounded" defaultValue={customerData?.billingPostalCode || ''} />
+                                                 <input name="city" placeholder="Miasto" required className="w-full border p-2 rounded" defaultValue={customerData?.billingCity || ''} />
                                             </div>
-                                            <input name="nip" placeholder="NIP (opcjonalnie)" className="w-full border p-2 rounded" defaultValue={customerData?.taxId} />
+                                            <input name="nip" placeholder="NIP (opcjonalnie)" className="w-full border p-2 rounded" defaultValue={customerData?.taxId || ''} />
                                         </div>
                                         <Button type="submit" className="w-full">
                                             {cart.some(i => i.type === 'product') ? 'Zamawiam i proszę o proformę' : 'Zamawiam i płacę online'}
@@ -253,7 +272,7 @@ export default function ShopClient({ products, customerData, token }: ShopClient
                             <form action={checkout} className="space-y-4">
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium">Email (Identyfikator)</label>
-                                    <input name="email" required className="w-full border p-2 rounded bg-neutral-100" defaultValue={customerData?.email} readOnly={!!customerData?.email} />
+                                    <input name="email" required className="w-full border p-2 rounded bg-neutral-100" defaultValue={customerData?.email || ''} readOnly={!!customerData?.email} />
                                 </div>
                                 {/* Full form fields again... simplify for MVP */}
                                 <Button type="submit" variant="outline" className="w-full" disabled>Aktualizacja danych (Wkrótce)</Button>

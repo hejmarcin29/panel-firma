@@ -1,9 +1,9 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { customers, orders, orderItems, globalSettings, erpProducts } from '@/lib/db/schema';
+import { customers, orders, orderItems, erpProducts } from '@/lib/db/schema';
 import { eq, or } from 'drizzle-orm';
-import { getShopConfig, getTpayConfig } from '@/app/dashboard/settings/shop/actions';
+import { getShopConfig } from '@/app/dashboard/settings/shop/actions';
 import { randomUUID } from 'crypto';
 
 export async function getShopProducts() {
@@ -56,7 +56,7 @@ export async function submitShopOrder(data: {
 
     if (!customer) {
         const newId = randomUUID();
-        await db.insert(customers).values({
+        const inserted = await db.insert(customers).values({
             id: newId,
             email: data.customer.email,
             name: data.customer.name || data.customer.email,
@@ -71,8 +71,8 @@ export async function submitShopOrder(data: {
             shippingPostalCode: data.customer.postalCode,
             source: 'other', // Should add 'shop' to customerSources if needed
             referralToken: data.referralToken,
-        });
-        customer = { id: newId } as any; 
+        }).returning();
+        customer = inserted[0];
     } else {
         // Update basic info if provided (optional, skipping for brevity, assume "Find" is enough or strictly "Update")
         // User requested: "Update basic info if provided" - let's do simple update
@@ -146,7 +146,7 @@ export async function submitShopOrder(data: {
 
     // 5. Handle Payment Redirection or Return
     if (data.paymentMethod === 'tpay') {
-        const tpayConfig = await getTpayConfig();
+        // const tpayConfig = await getTpayConfig();
         // Here we would call Tpay API to create transaction
         // For now, return a success message or mock URL
         return { success: true, orderId: orderId, redirectUrl: '/sklep/dziekujemy?status=oplacone' };
