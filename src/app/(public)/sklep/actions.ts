@@ -201,11 +201,11 @@ export async function submitShopOrder(data: {
     // Dedup IDs
     const uniqueProductIds = Array.from(new Set(productIds));
     
-    let productsMap = new Map<string, { id: string, name: string, price: string | null, sku: string | null }>();
+    let productsMap = new Map<string, { id: string, name: string, price: string | null, sku: string | null, packageSizeM2: number | null }>();
     if (uniqueProductIds.length > 0) {
         const products = await db.query.erpProducts.findMany({
             where: inArray(erpProducts.id, uniqueProductIds),
-            columns: { id: true, name: true, price: true, sku: true }
+            columns: { id: true, name: true, price: true, sku: true, packageSizeM2: true }
         });
         productsMap = new Map(products.map(p => [p.id, p]));
     }
@@ -224,7 +224,13 @@ export async function submitShopOrder(data: {
     const productItems = data.items.filter(i => i.type === 'product');
     for (const item of productItems) {
         const product = productsMap.get(item.productId);
-        const unitPrice = parseFloat(product?.price || '0') * 100; 
+        let unitPrice = parseFloat(product?.price || '0') * 100; 
+
+        // Fix: Jeśli produkt ma zdefiniowaną paczkę, zakładamy, że cena w bazie jest za m², więc mnożymy razy wielkość paczki
+        if (product && product.packageSizeM2 && product.packageSizeM2 > 0) {
+            unitPrice = Math.round(unitPrice * product.packageSizeM2);
+        }
+
         totalGross += unitPrice * item.quantity;
     }
 
@@ -252,14 +258,21 @@ export async function submitShopOrder(data: {
             unitPrice = shopConfig.samplePrice;
         } else {
             // Panels price logic
-            unitPrice = parseFloat(product?.price || '0') * 100; 
+            unitPrice = parseFloat(product?.price || '0') * 100;
+
+            // Fix: Cena za paczkę
+            if (product && product.packageSizeM2 && product.packageSizeM2 > 0) {
+                unitPrice = Math.round(unitPrice * product.packageSizeM2);
+            }
         }
 
         await db.insert(orderItems).values({
             id: randomUUID(),
             orderId: orderId,
             sku: product?.sku,
-            name: product?.name || 'Produkt Sklepowy',
+            name: (product?.packageSizeM2 && item.type === 'product') 
+                ? `${product.name} (op. ${product.packageSizeM2} m²)`
+                : (product?.name || 'Produkt Sklepowy'),
             quantity: item.quantity,
             unitPrice: unitPrice,
             taxRate: 2300, // 23.00%

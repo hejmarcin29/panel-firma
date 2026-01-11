@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,16 +21,14 @@ import { createPurchaseOrder, receivePurchaseOrder, issueMaterialsToCrew } from 
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 
-interface MontageToOrder {
+interface ERPItemToOrder {
     id: string;
+    type: 'montage' | 'shop';
     clientName: string;
     createdAt: Date;
-    floorArea: number | null;
-    quotes: {
-        items: {
-            name: string;
-        }[];
-    }[];
+    details: string;
+    subDetails: string;
+    url: string;
 }
 
 interface OrderInTransit {
@@ -61,7 +60,7 @@ interface Supplier {
 
 interface ERPOrdersBoardProps {
     data: {
-        toOrder: MontageToOrder[];
+        toOrder: ERPItemToOrder[];
         inTransit: OrderInTransit[];
         ready: MontageReady[];
         suppliers: Supplier[];
@@ -85,7 +84,7 @@ export function ERPOrdersBoard({ data }: ERPOrdersBoardProps) {
             return;
         }
         if (selectedMontages.length === 0) {
-            toast.error("Zaznacz co najmniej jeden montaż");
+            toast.error("Zaznacz co najmniej jeden element");
             return;
         }
 
@@ -171,27 +170,41 @@ export function ERPOrdersBoard({ data }: ERPOrdersBoardProps) {
 
                     <ScrollArea className="flex-1 -mx-4 px-4">
                         <div className="space-y-3 pb-4">
-                            {data.toOrder.map((montage) => (
-                                <div key={montage.id} className="bg-white p-3 rounded-md border shadow-sm hover:shadow-md transition-shadow">
+                            {data.toOrder.map((item) => (
+                                <div key={item.id} className="bg-white p-3 rounded-md border shadow-sm hover:shadow-md transition-shadow">
                                     <div className="flex items-start gap-3">
                                         <Checkbox 
-                                            checked={selectedMontages.includes(montage.id)}
-                                            onCheckedChange={() => handleToggleMontage(montage.id)}
+                                            checked={selectedMontages.includes(item.id)}
+                                            onCheckedChange={() => handleToggleMontage(item.id)}
                                             className="mt-1"
                                         />
                                         <div className="flex-1 space-y-1">
                                             <div className="flex justify-between items-start">
-                                                <span className="font-medium text-sm">{montage.clientName}</span>
+                                                <span className="font-medium text-sm">{item.clientName}</span>
                                                 <span className="text-[10px] text-muted-foreground bg-slate-100 px-1.5 py-0.5 rounded">
-                                                    {format(new Date(montage.createdAt), 'dd.MM')}
+                                                    {format(new Date(item.createdAt), 'dd.MM')}
                                                 </span>
                                             </div>
+
+                                            {/* Type Badge & details link */}
+                                            <div className="flex items-center gap-2 pb-1">
+                                                <Badge 
+                                                    variant={item.type === 'shop' ? 'default' : 'secondary'} 
+                                                    className={`text-[10px] h-5 px-1.5 ${item.type === 'shop' ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
+                                                >
+                                                    {item.type === 'shop' ? 'Sklep' : 'Montaż'}
+                                                </Badge>
+                                                <Link href={item.url} className="text-xs text-blue-600 hover:text-blue-800 hover:underline">
+                                                    Szczegóły &rarr;
+                                                </Link>
+                                            </div>
+
                                             <p className="text-xs text-muted-foreground line-clamp-2">
-                                                {montage.quotes?.[0]?.items?.map((i) => i.name).join(', ') || "Brak szczegółów produktu"}
+                                                {item.details}
                                             </p>
                                             <div className="pt-1 flex gap-2">
                                                 <Badge variant="outline" className="text-[10px] h-5">
-                                                    {montage.floorArea} m²
+                                                    {item.subDetails}
                                                 </Badge>
                                             </div>
                                         </div>

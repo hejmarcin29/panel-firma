@@ -7,7 +7,9 @@ import {
     purchaseOrders, 
     purchaseOrderItems, 
     erpSuppliers, 
-    quotes, 
+    quotes,
+    orders,
+    erpProducts // Added import
 } from '@/lib/db/schema';
 import { eq, and, inArray, desc } from 'drizzle-orm';
 import { requireUser } from '@/lib/auth/session';
@@ -17,8 +19,6 @@ export async function getERPOrdersData() {
     await requireUser();
 
     // 1. Zapotrzebowanie (To Order)
-    // Montages where we should order materials.
-    // Usually after deposit is paid.
     const montagesToOrder = await db.query.montages.findMany({
         where: and(
             inArray(montages.status, ['deposit_paid', 'materials_ordered', 'materials_pickup_ready', 'installation_scheduled']),
@@ -31,6 +31,15 @@ export async function getERPOrdersData() {
             }
         },
         orderBy: desc(montages.createdAt)
+    });
+
+    const shopOrdersToOrder = await db.query.orders.findMany({
+        where: eq(orders.status, 'order.paid'),
+        with: {
+            customer: true,
+            items: true
+        },
+        orderBy: desc(orders.createdAt)
     });
 
     // 2. W Drodze (In Transit)
@@ -66,18 +75,39 @@ export async function getERPOrdersData() {
         where: eq(erpSuppliers.status, 'active')
     });
 
+    const toOrder = [
+        ...montagesToOrder.map(m => ({
+            id: m.id,
+            type: 'montage' as const,
+            clientName: m.clientName,
+            createdAt: m.createdAt,
+            details: m.quotes.flatMap(q => q.items.map(i => i.name)).join(', ') || 'Brak produktów',
+            subDetails: `${m.floorArea} m²`,
+            url: `/dashboard/crm/montaze/${m.id}`
+        })),
+        ...shopOrdersToOrder.map(o => ({
+            id: o.id,
+            type: 'shop' as const,
+            clientName: o.customer?.name || 'Klient Sklepu',
+            createdAt: o.createdAt,
+            details: o.items.map(i => i.name).join(', ') || 'Brak produktów',
+            subDetails: `${(o.totalGross / 100).toFixed(2)} PLN`,
+            url: `/dashboard/shop/orders/${o.id}`
+        }))
+    ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
     return {
-        toOrder: montagesToOrder,
+        toOrder,
         inTransit: ordersInTransit,
         ready: montagesReady,
         suppliers
     };
 }
 
-export async function createPurchaseOrder(montageIds: string[], supplierId: string) {
+export async function createPurchaseOrder(ids: string[], supplierId: string) {
     await requireUser();
 
-    if (!montageIds.length) return { success: false, error: 'No montages selected' };
+    if (!ids.length) return { success: false, error: 'No items selected' };
 
     const poId = randomUUID();
 
@@ -89,10 +119,11 @@ export async function createPurchaseOrder(montageIds: string[], supplierId: stri
         orderDate: new Date(),
     });
 
-    // 2. Add items from accepted quotes of these montages
-    for (const montageId of montageIds) {
+    // 2. Add items
+    for (const id of ids) {
+        // A. Try Montage
         const montage = await db.query.montages.findFirst({
-            where: eq(montages.id, montageId),
+            where: eq(montages.id, id),
             with: {
                 quotes: {
                     where: eq(quotes.status, 'accepted'),
@@ -100,53 +131,142 @@ export async function createPurchaseOrder(montageIds: string[], supplierId: stri
             }
         });
 
-        if (montage && montage.quotes.length > 0) {
-            const quote = montage.quotes[0]; // Take the first accepted quote
+    // 2. Add items
+    for (const id of ids) {
+        // A. Try Montage
+        const montage = await db.query.montages.findFirst({
+            where: eq(montages.id, id),
+            with: {
+                quotes: {
+                    where: eq(quotes.status, 'accepted'),
+                }
+            }
+        });
+
+        if (montage) {
+            if (montage.quotes.length > 0) {
+                const quote = montage.quotes[0];
+                for (const item of quote.items) {
+                    
+                    let formattedName = item.name;
+                    // Secure lookup via productId if available
+                    if (item.productId) {
+                        const product = await db.query.erpProducts.findFirst({
+                            where: eq(erpProducts.id, String(item.productId)),
+                            columns: { packageSizeM2: true, name: true }
+                        });
+
+                        if (product && product.packageSizeM2 && product.packageSizeM2 > 0) {
+                            // Quote Quantity is usually already m2 aligned to packs.
+                            // Calculate packs count roughly
+                            const packs = Math.round(item.quantity / product.packageSizeM2);
+                            const totalM2 = packs * product.packageSizeM2;
+                            // Use product name to ensure cleanliness or keep item name (which might have custom notes)
+                            // We prefer item.name usually as it might have modifications, but we allow appending info.
+                            const simpleName = product.name;
+                            formattedName = `${simpleName} (${packs} op. = ${totalM2.toFixed(2)} m²)`;
+                        }
+                    }
+
+                    await db.insert(purchaseOrderItems).values({
+                        id: randomUUID(),
+                        purchaseOrderId: poId,
+                        productName: formattedName,
+                        quantity: item.quantity,
+                        unitPrice: item.priceNet,
+                        vatRate: item.vatRate,
+                        totalNet: item.totalNet,
+                        totalGross: item.totalGross,
+                        montageId: id,
+                    });
+                }
+            } else {
+                 await db.insert(purchaseOrderItems).values({
+                    id: randomUUID(),
+                    purchaseOrderId: poId,
+                    productName: `Materiały do: ${montage.clientName}`,
+                    quantity: 1,
+                    unitPrice: 0,
+                    vatRate: 23,
+                    totalNet: 0,
+                    totalGross: 0,
+                    montageId: id,
+                });
+            }
             
-            for (const item of quote.items) {
+            // 3. Update Montage Status
+            if (montage.status === 'deposit_paid') {
+                 await db.update(montages)
+                    .set({ 
+                        status: 'materials_ordered',
+                        materialStatus: 'ordered'
+                    })
+                    .where(eq(montages.id, id));
+            } else {
+                 await db.update(montages)
+                    .set({ 
+                        materialStatus: 'ordered'
+                    })
+                    .where(eq(montages.id, id));
+            }
+            continue;
+        }
+
+        // B. Try Shop Order
+        const shopOrder = await db.query.orders.findFirst({
+            where: eq(orders.id, id),
+            with: { items: true }
+        });
+
+        if (shopOrder) {
+            for (const item of shopOrder.items) {
+                // Determine totals
+                let quantity = item.quantity;
+                let unitPrice = item.unitPrice;
+                let formattedName = item.name;
+
+                // Secure lookup via SKU
+                if (item.sku) {
+                    const product = await db.query.erpProducts.findFirst({
+                        where: eq(erpProducts.sku, item.sku),
+                        columns: { packageSizeM2: true, name: true }
+                    });
+
+                    if (product && product.packageSizeM2 && product.packageSizeM2 > 0) {
+                        const quantityPacks = item.quantity;
+                        const totalM2 = quantityPacks * product.packageSizeM2;
+                        
+                        formattedName = `${product.name} (${quantityPacks} op. = ${totalM2.toFixed(2)} m²)`;
+
+                        // Convert quantity to M2 for consistency with Montages
+                        quantity = totalM2;
+                        // Convert Price Per Pack -> Price Per M2
+                        unitPrice = Math.round(item.unitPrice / product.packageSizeM2);
+                    }
+                }
+
+                const totalNet = item.unitPrice * item.quantity;
+                // Assuming taxRate is integer percent e.g. 2300 (23.00%) -> 23
+                const taxRate = item.taxRate > 100 ? item.taxRate / 100 : item.taxRate;
+                const totalGross = Math.round(totalNet * (1 + taxRate / 100));
+
                 await db.insert(purchaseOrderItems).values({
                     id: randomUUID(),
                     purchaseOrderId: poId,
-                    productName: item.name,
-                    quantity: item.quantity,
-                    unitPrice: item.priceNet,
-                    vatRate: item.vatRate,
-                    totalNet: item.totalNet,
-                    totalGross: item.totalGross,
-                    montageId: montageId,
+                    productName: formattedName,
+                    quantity: quantity, // Teraz m2 (jeśli udało się przeliczyć)
+                    unitPrice: unitPrice, // Teraz za m2
+                    vatRate: taxRate,
+                    totalNet: totalNet,
+                    totalGross: totalGross,
+                    // montageId: null
                 });
             }
-        } else {
-            // Fallback if no quote: Create a generic item for the montage
-            await db.insert(purchaseOrderItems).values({
-                id: randomUUID(),
-                purchaseOrderId: poId,
-                productName: `Materiały do montażu: ${montage?.clientName || montageId}`,
-                quantity: 1,
-                unitPrice: 0,
-                vatRate: 23,
-                totalNet: 0,
-                totalGross: 0,
-                montageId: montageId,
-            });
-        }
 
-        // 3. Update Montage Status -> 'materials_ordered'
-        // Only if current status allows (Guard)
-        if (montage?.status === 'deposit_paid') {
-             await db.update(montages)
-                .set({ 
-                    status: 'materials_ordered',
-                    materialStatus: 'ordered'
-                })
-                .where(eq(montages.id, montageId));
-        } else {
-             // Just update material status
-             await db.update(montages)
-                .set({ 
-                    materialStatus: 'ordered'
-                })
-                .where(eq(montages.id, montageId));
+            // Update status
+            await db.update(orders)
+                .set({ status: 'order.forwarded_to_supplier' })
+                .where(eq(orders.id, id));
         }
     }
 
