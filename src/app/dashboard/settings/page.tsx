@@ -50,6 +50,8 @@ import { PortalSettingsForm } from './_components/portal-settings-form';
 import { ContractTemplatesManager } from './_components/contract-templates-manager';
 import { getContractTemplates } from './contracts/actions';
 import { InstallerSettingsView } from './_components/installer-settings-view';
+import { getMagicLinks } from './magic-links/actions';
+import { MagicLinksManager } from './magic-links/_component';
 import ServicesSettingsPage from './services/page';
 import TeamSettingsPage from './team/page';
 
@@ -199,6 +201,7 @@ export default async function SettingsPage() {
         sampleOrderNotificationEmail,
         sampleOrderConfirmationSubject,
         sampleOrderConfirmationTemplate,
+        magicLinks,
 	] = await Promise.all([
 		getAppSetting(appSettingKeys.wooWebhookSecret),
 		getAppSetting(appSettingKeys.wooConsumerKey),
@@ -258,6 +261,7 @@ export default async function SettingsPage() {
         getAppSetting(appSettingKeys.sampleOrderNotificationEmail),
         getAppSetting(appSettingKeys.sampleOrderConfirmationSubject),
         getAppSetting(appSettingKeys.sampleOrderConfirmationTemplate),
+        getMagicLinks(),
 	]);
 
     const statusOptions = montageStatusDefinitions.map(def => ({
@@ -692,6 +696,9 @@ export default async function SettingsPage() {
             }
             contractTemplatesManager={
                 <ContractTemplatesManager templates={serializedTemplates} />
+            }
+            magicLinks={
+                <MagicLinksManager links={magicLinks} />
             }
 		>
             <div className="space-y-6">

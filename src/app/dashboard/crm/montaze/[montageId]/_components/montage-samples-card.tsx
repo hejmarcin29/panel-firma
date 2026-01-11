@@ -47,7 +47,7 @@ export function MontageSamplesCard({ montage }: MontageSamplesCardProps) {
         setIsGeneratingLink(true);
         try {
             const token = await generateMontageToken(montage.id);
-            const url = `${window.location.origin}/montage/${token}`;
+            const url = `${window.location.origin}/montaz/${token}`;
             await navigator.clipboard.writeText(url);
             toast.success("Link skopiowany do schowka!", {
                 description: "Wyślij go klientowi, aby wybrał próbki."
@@ -100,7 +100,7 @@ export function MontageSamplesCard({ montage }: MontageSamplesCardProps) {
                         </Button>
                         {montage.accessToken && (
                             <Button variant="ghost" size="icon" className="shrink-0" asChild>
-                                <a href={`/montage/${montage.accessToken}`} target="_blank" rel="noopener noreferrer" title="Otwórz podgląd">
+                                <a href={`/montaz/${montage.accessToken}`} target="_blank" rel="noopener noreferrer" title="Otwórz podgląd">
                                     <ExternalLink className="h-4 w-4" />
                                 </a>
                             </Button>

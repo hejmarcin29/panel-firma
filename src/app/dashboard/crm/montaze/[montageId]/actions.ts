@@ -191,11 +191,21 @@ export async function generateCustomerToken(montageId: string) {
             .where(eq(montages.id, montageId));
     }
 
-    const token = randomUUID();
+    // Ensure montage has access token
+    if (!montage.accessToken) {
+        await db.update(montages)
+            .set({ accessToken: randomUUID() })
+            .where(eq(montages.id, montageId));
+    }
 
-    await db.update(customers)
-        .set({ referralToken: token })
-        .where(eq(customers.id, customerId));
+    let token = montage.customer?.referralToken;
+
+    if (!token) {
+        token = randomUUID();
+        await db.update(customers)
+            .set({ referralToken: token })
+            .where(eq(customers.id, customerId));
+    }
 
     revalidatePath(`/dashboard/crm/montaze/${montageId}`);
     return token;

@@ -17,6 +17,7 @@ import {
   Bot,
   Banknote,
   Users,
+  Sparkles,
 } from "lucide-react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -36,6 +37,7 @@ interface SettingsViewProps {
   portalSettings: React.ReactNode;
   contractTemplatesManager: React.ReactNode;
   servicesSettings: React.ReactNode;
+  magicLinks: React.ReactNode;
 }
 
 export function SettingsView({
@@ -53,6 +55,7 @@ export function SettingsView({
   portalSettings,
   contractTemplatesManager,
   servicesSettings,
+  magicLinks,
 }: SettingsViewProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -209,8 +212,20 @@ export function SettingsView({
 
         <Button
           variant="ghost"
-          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3 bg-card border shadow-sm"
-          onClick={() => handleTabChange("mobile-menu")}
+          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3 bg-card border shadow-sm"          onClick={() => handleTabChange("magic-links")}
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-900">
+            <Sparkles className="h-4 w-4" />
+          </span>
+          <span className="flex flex-col text-left">
+            <span className="text-sm font-medium">Magic Linki</span>
+            <span className="text-xs text-muted-foreground">Zarządzanie linkami dostępowymi.</span>
+          </span>
+        </Button>
+
+        <Button
+          variant="ghost"
+          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3 bg-card border shadow-sm"          onClick={() => handleTabChange("mobile-menu")}
         >
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
             <Smartphone className="h-4 w-4" />
@@ -356,6 +371,13 @@ export function SettingsView({
               Portal & SMS
             </TabsTrigger>
             <TabsTrigger 
+              value="magic-links" 
+              className="w-full justify-start gap-2 px-3 py-2 h-9 data-[state=active]:bg-amber-100 data-[state=active]:text-amber-900 data-[state=active]:shadow-none ring-offset-background transition-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <Sparkles className="h-4 w-4" />
+              Magic Linki
+            </TabsTrigger>
+            <TabsTrigger 
               value="contracts" 
               className="w-full justify-start gap-2 px-3 py-2 h-9 data-[state=active]:bg-muted data-[state=active]:shadow-none ring-offset-background transition-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
@@ -431,6 +453,10 @@ export function SettingsView({
 
           <TabsContent value="portal" className="m-0 space-y-4">
             {portalSettings}
+          </TabsContent>
+
+          <TabsContent value="magic-links" className="m-0 space-y-4">
+            {magicLinks}
           </TabsContent>
 
           <TabsContent value="contracts" className="m-0 space-y-4">

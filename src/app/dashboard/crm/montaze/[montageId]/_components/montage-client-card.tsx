@@ -490,14 +490,17 @@ export function MontageClientCard({
                         </p>
                     </div>
                     <div className="flex gap-1">
-                        {portalEnabled && (montage.customer?.referralToken ? (
+                        {portalEnabled && ((montage.accessToken || montage.customer?.referralToken) ? (
                             <div className="flex items-center gap-0.5 bg-amber-50 border border-amber-200 rounded-md px-1">
                                 <Button
                                     variant="ghost"
                                     size="icon"
                                     className="h-6 w-6 text-amber-600 hover:text-amber-700 hover:bg-amber-100"
                                     onClick={() => {
-                                        navigator.clipboard.writeText(`https://b2b.primepodloga.pl/s/${montage.customer!.referralToken}`);
+                                        const url = montage.accessToken 
+                                            ? `https://b2b.primepodloga.pl/montaz/${montage.accessToken}`
+                                            : `https://b2b.primepodloga.pl/s/${montage.customer!.referralToken}`;
+                                        navigator.clipboard.writeText(url);
                                         toast.success('Link do portalu skopiowany');
                                     }}
                                     title="Kopiuj link do portalu klienta"
@@ -511,7 +514,11 @@ export function MontageClientCard({
                                     asChild
                                     title="Otwórz portal klienta"
                                 >
-                                    <a href={`/s/${montage.customer.referralToken}`} target="_blank" rel="noopener noreferrer">
+                                    <a 
+                                        href={montage.accessToken ? `/montaz/${montage.accessToken}` : `/s/${montage.customer!.referralToken}`} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                    >
                                         <ExternalLink className="h-3.5 w-3.5" />
                                     </a>
                                 </Button>
