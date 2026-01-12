@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
     X, ChevronLeft, ChevronRight, Check, Calendar, FileText, 
-    Ruler, Hammer, Package, CheckCircle2, AlertCircle, Plus, Trash2, Camera, Image as ImageIcon, Loader2 
+    Ruler, Hammer, Package, CheckCircle2, AlertCircle, Plus, Trash2, Camera, Loader2 
 } from "lucide-react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
