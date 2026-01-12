@@ -10,9 +10,7 @@ import {
     FileText,
     Navigation,
     Info,
-    Calendar as CalendarIcon,
-    ChevronRight,
-    AlertCircle
+    Calendar as CalendarIcon
 } from "lucide-react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
@@ -48,6 +46,32 @@ interface InstallerMontageViewProps {
     hasGoogleCalendar?: boolean;
 }
 
+interface DashboardTileProps {
+    icon: React.ReactNode;
+    title: string;
+    metric?: string;
+    description?: string;
+    onClick: () => void;
+    alert?: boolean;
+}
+
+const DashboardTile = ({ icon, title, metric, description, onClick, alert }: DashboardTileProps) => (
+    <button 
+        onClick={onClick}
+        className="flex flex-col items-start p-4 bg-white rounded-xl border shadow-sm active:scale-95 transition-transform text-left w-full h-full relative overflow-hidden"
+    >
+        {alert && (
+            <div className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full m-2 animate-pulse" />
+        )}
+        <div className="p-2 bg-muted/50 rounded-lg mb-3 text-primary">
+            {icon}
+        </div>
+        <span className="font-semibold text-gray-900 text-sm">{title}</span>
+        {metric && <span className="text-xl font-bold text-gray-900 mt-1">{metric}</span>}
+        {description && <span className="text-xs text-muted-foreground mt-1 line-clamp-1">{description}</span>}
+    </button>
+);
+
 export function InstallerMontageView({ montage, logs, userRoles }: InstallerMontageViewProps) {
     // Drawer States
     const [measurementOpen, setMeasurementOpen] = useState(false);
@@ -65,24 +89,6 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
     const city = montage.installationCity || montage.billingCity || '';
     const fullAddress = `${address}, ${city}`;
     const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
-
-    // Helper: Dashboard Tile Component
-    const DashboardTile = ({ icon, title, metric, description, onClick, alert }: any) => (
-        <button 
-            onClick={onClick}
-            className="flex flex-col items-start p-4 bg-white rounded-xl border shadow-sm active:scale-95 transition-transform text-left w-full h-full relative overflow-hidden"
-        >
-            {alert && (
-                <div className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full m-2 animate-pulse" />
-            )}
-            <div className="p-2 bg-muted/50 rounded-lg mb-3 text-primary">
-                {icon}
-            </div>
-            <span className="font-semibold text-gray-900 text-sm">{title}</span>
-            {metric && <span className="text-xl font-bold text-gray-900 mt-1">{metric}</span>}
-            {description && <span className="text-xs text-muted-foreground mt-1 line-clamp-1">{description}</span>}
-        </button>
-    );
 
     // Helper: Primary Action Logic
     const renderPrimaryAction = () => {
