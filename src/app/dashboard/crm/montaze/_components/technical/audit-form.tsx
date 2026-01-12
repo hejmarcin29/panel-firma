@@ -135,7 +135,7 @@ export function AuditForm({ montageId, initialData, readOnly = false, hideSaveBu
                     <SelectTrigger className="w-[120px]">
                         <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-[250]">
                         <SelectItem value="CM">Metoda CM</SelectItem>
                         <SelectItem value="electric">Elektr.</SelectItem>
                         <SelectItem value="other">Inna</SelectItem>
@@ -157,7 +157,7 @@ export function AuditForm({ montageId, initialData, readOnly = false, hideSaveBu
                 <SelectTrigger>
                     <SelectValue placeholder="Wybierz..." />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[250]">
                     <SelectItem value="concrete">Beton / Jastrych</SelectItem>
                     <SelectItem value="anhydrite">Anhydryt</SelectItem>
                     <SelectItem value="osb">Płyta OSB / Drewno</SelectItem>
@@ -176,7 +176,7 @@ export function AuditForm({ montageId, initialData, readOnly = false, hideSaveBu
                 <SelectTrigger>
                     <SelectValue placeholder="Ocena..." />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[250]">
                     <SelectItem value="ok">W normie (gotowe)</SelectItem>
                     <SelectItem value="grinding">Wymaga szlifowania</SelectItem>
                     <SelectItem value="leveling">Wymaga wylewki</SelectItem>

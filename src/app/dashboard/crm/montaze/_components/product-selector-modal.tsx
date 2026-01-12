@@ -69,7 +69,7 @@ export function ProductSelectorModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-3xl h-[80vh] flex flex-col">
+      <DialogContent className="max-w-3xl h-[80vh] flex flex-col z-[250]">
         <DialogHeader>
           <DialogTitle>
             Wybierz {getTitle()}
