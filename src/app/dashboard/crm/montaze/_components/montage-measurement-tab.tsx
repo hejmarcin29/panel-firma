@@ -65,9 +65,6 @@ import { getEstimatedBaseService } from '../actions-services';
 interface MontageMeasurementTabProps {
   montage: Montage;
   userRoles?: string[];
-interface MontageMeasurementTabProps {
-  montage: Montage;
-  userRoles: ('admin' | 'installer' | 'partner' | 'manager')[];
 }
 
 export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasurementTabProps) {
