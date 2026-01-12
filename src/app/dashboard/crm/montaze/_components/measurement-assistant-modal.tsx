@@ -95,13 +95,6 @@ export function MeasurementAssistantModal({
     const [auditData, setAuditData] = useState<TechnicalAuditData | null>(technicalAudit);
     const [isRoomsExpanded, setIsRoomsExpanded] = useState(measurementRooms.length > 0);
 
-    // Update initial step when reopening
-    useEffect(() => {
-        if (isOpen) {
-             setCurrentStep(initialStep);
-        }
-    }, [isOpen, initialStep]);
-
     // Auto-save Audit Data
     useEffect(() => {
         if (!auditData) return;

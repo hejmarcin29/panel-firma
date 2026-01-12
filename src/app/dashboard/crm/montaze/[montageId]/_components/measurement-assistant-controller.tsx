@@ -129,6 +129,7 @@ export function MeasurementAssistantController({ montage, isOpen, onClose, initi
 
     return (
         <MeasurementAssistantModal
+            key={isOpen ? "open" : "closed"}
             isOpen={isOpen}
             onClose={onClose}
             onSave={handleSave}

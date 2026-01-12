@@ -19,20 +19,12 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
   Card,
   CardContent,
 } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { Montage, MeasurementMaterialItem } from '../../types';
 import { updateMontageMeasurement } from '../../actions';
-import { updateTechnicalAudit } from '../../technical-actions';
 import { TechnicalAuditData } from '../../technical-data';
 
 interface InstallerMeasurementTabProps {
@@ -116,28 +108,6 @@ export function InstallerMeasurementTab({ montage, userRoles = [], onEditSection
   const technicalAudit = montage.technicalAudit as unknown as TechnicalAuditData | null;
   const [humidity, setHumidity] = useState<number | null>(technicalAudit?.humidity ?? null);
 
-  const handleHumiditySave = async (val: number | null) => {
-      if (isReadOnly) return;
-      // Optimistic update
-      setHumidity(val);
-      try {
-          // Prepare full audit object based on existing
-          const newAudit: TechnicalAuditData = {
-              ...(technicalAudit || {}),
-              humidity: val,
-              // Ensure required fields
-              humidityMethod: technicalAudit?.humidityMethod || 'CM',
-              heating: technicalAudit?.heating || false,
-              heatingProtocol: technicalAudit?.heatingProtocol || false, 
-              floorHeated: technicalAudit?.floorHeated || false,
-          };
-          await updateTechnicalAudit(montage.id, newAudit);
-          setLastSaved(new Date());
-          router.refresh();
-      } catch (e) {
-          console.error("Failed to save humidity", e);
-      }
-  };
 
   const saveData = useCallback(async () => {
       setIsSaving(true);
