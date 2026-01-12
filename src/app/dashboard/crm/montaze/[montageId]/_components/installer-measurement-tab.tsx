@@ -32,6 +32,7 @@ import {
 import { cn } from '@/lib/utils';
 import type { Montage, MeasurementMaterialItem } from '../../types';
 import { updateMontageMeasurement } from '../../actions';
+import { updateTechnicalAudit } from '../../technical-actions';
 import { TechnicalAuditData } from '../../technical-data';
 
 interface InstallerMeasurementTabProps {
@@ -102,11 +103,40 @@ export function InstallerMeasurementTab({ montage, userRoles = [] }: InstallerMe
 
   // Sync state with prop changes
   useEffect(() => {
-    // Basic sync logic (abbreviated for brevity, assuming mount sync is main case)
-    // Production note: A full sync effect similar to original file should be here if montage prop updates without remount
-  }, [montage.id]);
+    // When montage prop updates (e.g. after Assistant saves and router.refresh() occurs),
+    // we need to update our local state to reflect those changes.
+    setFloorArea(montage.floorArea?.toString() || '');
+    setSubfloorCondition(montage.measurementSubfloorCondition || 'good');
+    setIsHousingVat(montage.isHousingVat ?? true);
+    setHumidity((montage.technicalAudit as unknown as TechnicalAuditData)?.humidity ?? null);
+    // Add other fields as needed...
+  }, [montage]);
 
   const technicalAudit = montage.technicalAudit as unknown as TechnicalAuditData | null;
+  const [humidity, setHumidity] = useState<number | null>(technicalAudit?.humidity ?? null);
+
+  const handleHumiditySave = async (val: number | null) => {
+      if (isReadOnly) return;
+      // Optimistic update
+      setHumidity(val);
+      try {
+          // Prepare full audit object based on existing
+          const newAudit: TechnicalAuditData = {
+              ...(technicalAudit || {}),
+              humidity: val,
+              // Ensure required fields
+              humidityMethod: technicalAudit?.humidityMethod || 'CM',
+              heating: technicalAudit?.heating || false,
+              heatingProtocol: technicalAudit?.heatingProtocol || false, 
+              floorHeated: technicalAudit?.floorHeated || false,
+          };
+          await updateTechnicalAudit(montage.id, newAudit);
+          setLastSaved(new Date());
+          router.refresh();
+      } catch (e) {
+          console.error("Failed to save humidity", e);
+      }
+  };
 
   const saveData = useCallback(async () => {
       setIsSaving(true);
@@ -219,7 +249,7 @@ export function InstallerMeasurementTab({ montage, userRoles = [] }: InstallerMe
       {/* 2. KPI Grid (Critical Parameters) */}
       <div className="grid grid-cols-2 gap-3">
             {/* Condition */}
-            <div className={cn("p-3 rounded-xl border flex flex-col justify-between aspect-[3/2]", getSubfloorColor(subfloorCondition))}>
+            <div className={cn("p-4 rounded-xl border flex flex-col justify-between min-h-[120px]", getSubfloorColor(subfloorCondition))}>
                 <div className="flex items-start justify-between">
                     <Layers className="w-5 h-5 opacity-70" />
                     <span className="text-[10px] uppercase font-bold tracking-wider opacity-70">Podłoże</span>
@@ -245,21 +275,39 @@ export function InstallerMeasurementTab({ montage, userRoles = [] }: InstallerMe
             </div>
 
             {/* Humidity */}
-            <div className="p-3 rounded-xl border bg-card flex flex-col justify-between aspect-[3/2]">
-                 <div className="flex items-start justify-between text-blue-500">
-                    <Droplets className="w-5 h-5" />
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Wilgotność</span>
+            <div className="p-4 rounded-xl border bg-card flex flex-col justify-between min-h-[120px]">
+                 <div className="flex items-start justify-between text-blue-500 mb-2">
+                    <div className="flex items-center gap-2">
+                        <Droplets className="w-5 h-5" />
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Wilgotność</span>
+                    </div>
                  </div>
-                 <div>
-                     {technicalAudit?.humidity ? (
-                         <div className="text-2xl font-bold font-mono text-foreground">
-                             {technicalAudit.humidity}%
-                         </div>
-                     ) : (
-                         <span className="text-sm text-muted-foreground">Brak pomiaru</span>
-                     )}
-                     <p className="text-[10px] text-muted-foreground mt-1">Norma: &lt; 2.0% (CM)</p>
+                 
+                 <div className="flex items-baseline gap-1">
+                     <Input
+                        type="number"
+                        step="0.1"
+                        placeholder="0.0"
+                        value={humidity ?? ''}
+                        disabled={isReadOnly}
+                        className={cn(
+                            "h-auto p-0 border-0 bg-transparent text-3xl font-bold shadow-none focus:ring-0 w-24",
+                            humidity && humidity > 2.0 ? "text-red-600" : "text-foreground"
+                        )}
+                        onChange={(e) => {
+                            const val = e.target.value ? parseFloat(e.target.value) : null;
+                            setHumidity(val);
+                        }}
+                        onBlur={(e) => {
+                             const val = e.target.value ? parseFloat(e.target.value) : null;
+                             handleHumiditySave(val);
+                        }}
+                     />
+                     <span className="text-sm font-medium text-muted-foreground self-end mb-1">%</span>
                  </div>
+                 <p className="text-[10px] text-muted-foreground mt-1">
+                    {technicalAudit?.humidityMethod ? `Metoda: ${technicalAudit.humidityMethod}` : 'Norma: < 2.0% (CM)'}
+                 </p>
             </div>
 
              {/* Area Total */}
