@@ -526,17 +526,32 @@ export async function getInstallerDashboardData(userId: string) {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // 1. OVERDUE (Zaległe) - Date < Today AND Not Completed
+    const hiddenStatuses = [
+        'completed', 
+        'rejected', 
+        'on_hold', 
+        'protocol_signed', 
+        'measurement_done', 
+        'quote_in_progress', 
+        'quote_sent', 
+        'quote_accepted', 
+        'contract_signed', 
+        'waiting_for_deposit', 
+        'deposit_paid', 
+        'materials_ordered'
+    ];
+
+    // 1. OVERDUE (Zaległe) - Date < Today AND Action Required
     const overdue = await db.query.montages.findMany({
-        where: (table, { and, eq, lt, isNull, or, ne }) => and(
+        where: (table, { and, eq, lt, isNull, or, notInArray }) => and(
             or(
                 eq(table.measurerId, userId),
                 eq(table.installerId, userId)
             ),
-            ne(table.status, 'completed'),
+            notInArray(table.status, hiddenStatuses),
             or(
-                and(lt(table.measurementDate, today), isNull(table.scheduledInstallationAt)), // Overdue measurement
-                lt(table.scheduledInstallationAt, today) // Overdue installation
+                and(lt(table.measurementDate, today), isNull(table.scheduledInstallationAt)), 
+                lt(table.scheduledInstallationAt, today) 
             ),
             isNull(table.deletedAt)
         ),
@@ -551,14 +566,14 @@ export async function getInstallerDashboardData(userId: string) {
         }
     });
 
-    // 2. TODAY (Dziś) - Date == Today AND Not Completed
+    // 2. TODAY (Dziś)
     const todaySchedule = await db.query.montages.findMany({
-        where: (table, { and, eq, gte, lt, isNull, or, ne }) => and(
+        where: (table, { and, eq, gte, lt, isNull, or, notInArray }) => and(
             or(
                 eq(table.measurerId, userId),
                 eq(table.installerId, userId)
             ),
-            ne(table.status, 'completed'),
+            notInArray(table.status, ['completed', 'rejected', 'on_hold', 'protocol_signed']),
             or(
                 and(gte(table.measurementDate, today), lt(table.measurementDate, tomorrow)),
                 and(gte(table.scheduledInstallationAt, today), lt(table.scheduledInstallationAt, tomorrow))
@@ -576,14 +591,14 @@ export async function getInstallerDashboardData(userId: string) {
         }
     });
 
-    // 3. UPCOMING (Nadchodzące) - Date > Today AND Not Completed
+    // 3. UPCOMING (Nadchodzące)
     const upcoming = await db.query.montages.findMany({
-        where: (table, { and, eq, gte, isNull, or, ne }) => and(
+        where: (table, { and, eq, gte, isNull, or, notInArray }) => and(
             or(
                 eq(table.measurerId, userId),
                 eq(table.installerId, userId)
             ),
-            ne(table.status, 'completed'),
+            notInArray(table.status, hiddenStatuses),
             or(
                 gte(table.measurementDate, tomorrow),
                 gte(table.scheduledInstallationAt, tomorrow)
@@ -594,21 +609,22 @@ export async function getInstallerDashboardData(userId: string) {
         limit: 20
     });
 
-    // 4. BACKLOG (Poczekalnia) - Assigned but no date OR waiting for next step
-    // Includes: Leads, Before Measurement (no date), After Measurement (waiting for offer/deposit), Before Installation (no date)
+    // 4. BACKLOG (Poczekalnia) - Assigned but no actionable date
+    // Hide 'Active Execution' statuses which should be in Today/Overdue/Upcoming logic
+    // Hide 'Office/Hidden' statuses
     const backlog = await db.query.montages.findMany({
-        where: (table, { and, eq, or, isNull, ne }) => and(
+        where: (table, { and, eq, or, isNull, notInArray }) => and(
             or(
                 eq(table.measurerId, userId),
                 eq(table.installerId, userId)
             ),
-            ne(table.status, 'completed'),
-            ne(table.status, 'rejected'),
-            ne(table.status, 'measurement_scheduled'),
-            ne(table.status, 'installation_scheduled'),
-            ne(table.status, 'materials_delivered'),
-            ne(table.status, 'installation_in_progress'),
-            ne(table.status, 'protocol_signed'),
+            notInArray(table.status, [
+                ...hiddenStatuses,
+                'measurement_scheduled',
+                'installation_scheduled',
+                'materials_delivered',
+                'installation_in_progress',
+            ]),
             isNull(table.deletedAt)
         ),
         orderBy: (table, { desc }) => [desc(table.updatedAt)],

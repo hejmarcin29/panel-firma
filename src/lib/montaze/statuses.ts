@@ -44,6 +44,15 @@ export async function getMontageStatusDefinitions(): Promise<MontageStatusDefini
             return DEFAULT_STATUSES;
         }
 
+        // Ensure all system statuses from DEFAULT_STATUSES are present in the list
+        // This fixes issues where new system statuses are added to the code but not visible because of old DB settings
+        const existingIds = new Set(statuses.map(s => s.id));
+        for (const defaultStatus of DEFAULT_STATUSES) {
+            if (defaultStatus.isSystem && !existingIds.has(defaultStatus.id)) {
+                statuses.push(defaultStatus);
+            }
+        }
+
 		return statuses.sort((a, b) => a.order - b.order);
 	} catch {
 		return DEFAULT_STATUSES;

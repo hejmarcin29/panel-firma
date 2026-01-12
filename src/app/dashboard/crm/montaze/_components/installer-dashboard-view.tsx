@@ -25,7 +25,7 @@ export function InstallerDashboardView({ montages }: InstallerDashboardViewProps
   const nextWeekEnd = endOfWeek(addWeeks(today, 1), { weekStartsOn: 1 });
 
   const getActionDate = (m: Montage) => {
-    const isMeasurement = ['new_lead', 'contact_attempt', 'contact_established', 'measurement_scheduled', 'measurement_done'].includes(m.status);
+    const isMeasurement = ['new_lead', 'contact_attempt', 'contact_established', 'measurement_to_schedule', 'measurement_scheduled', 'measurement_done'].includes(m.status);
     const dateVal = isMeasurement ? m.measurementDate : m.scheduledInstallationAt;
     return dateVal ? new Date(dateVal) : null;
   };
@@ -208,7 +208,7 @@ export function InstallerDashboardView({ montages }: InstallerDashboardViewProps
 }
 
 function UnifiedMontageCard({ montage, date, highlight = false, compact = false }: { montage: Montage, date: Date | null, highlight?: boolean, compact?: boolean }) {
-  const isMeasurement = ['new_lead', 'contact_attempt', 'contact_established', 'measurement_scheduled', 'measurement_done'].includes(montage.status);
+  const isMeasurement = ['new_lead', 'contact_attempt', 'contact_established', 'measurement_to_schedule', 'measurement_scheduled', 'measurement_done'].includes(montage.status);
   const isTodayDate = date && isToday(date);
 
   return (

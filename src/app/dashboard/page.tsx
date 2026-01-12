@@ -37,7 +37,6 @@ const DEFAULT_LAYOUT: DashboardLayoutConfig = {
 
 export default async function DashboardPage() {
     let user;
-    let installerData = null;
 
     try {
 	    user = await requireUser();
@@ -48,7 +47,7 @@ export default async function DashboardPage() {
         }
 
         if (user.roles.includes('installer') && !user.roles.includes('admin')) {
-            installerData = await getInstallerDashboardData(user.id);
+            redirect('/dashboard/crm/montaze');
         }
     } catch (error) {
          // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -57,18 +56,6 @@ export default async function DashboardPage() {
         }
         console.error('Auth error in dashboard page:', error);
         redirect('/login');
-    }
-
-    if (installerData) {
-        return (
-            <InstallerDashboard 
-                overdue={installerData.overdue}
-                today={installerData.today}
-                upcoming={installerData.upcoming}
-                backlog={installerData.backlog}
-                history={installerData.history}
-            />
-        );
     }
 
     const r2Config = await tryGetR2Config();
