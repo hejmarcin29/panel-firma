@@ -33,13 +33,15 @@ export function MeasurementAssistantController({ montage, isOpen, onClose }: Mea
             return montage.technicalAudit as unknown as TechnicalAuditData;
         }
         return {
-            moisture: '',
-            level: '',
-            cracks: false,
-            expansionJoints: false,
+            humidity: null,
+            humidityMethod: 'CM',
+            flatness: null,
+            subfloorType: 'concrete',
             heating: false,
             heatingProtocol: false,
-            photoUrl: '',
+            floorHeated: false,
+            photoUrl: '', // Assistant actually uses `photos` array in TechnicalAuditData interface I saw in file
+            photos: [],
             notes: ''
         };
     });
@@ -87,8 +89,9 @@ export function MeasurementAssistantController({ montage, isOpen, onClose }: Mea
     const handleSave = async () => {
         try {
             // 1. Save Measurement Data
-            await updateMontageMeasurement(montage.id, {
-               measurementDate: measurementDate ? new Date(measurementDate) : null,
+            await updateMontageMeasurement({
+               montageId: montage.id,
+               measurementDate: measurementDate || null,
                isHousingVat,
                floorArea: floorArea ? parseFloat(floorArea) : null,
                measurementSubfloorCondition: subfloorCondition,
@@ -96,10 +99,19 @@ export function MeasurementAssistantController({ montage, isOpen, onClose }: Mea
                measurementFloorPattern: floorPattern,
                panelWaste: parseFloat(panelWaste) || 0,
                measurementAdditionalMaterials: additionalMaterials,
-               measurementRooms: measurementRooms, // JSON
-               // We might need to handle dateRange -> scheduledInstallationAt if assistant sets it
+               measurementRooms: measurementRooms,
                scheduledInstallationAt: dateRange?.from,
                scheduledInstallationEndAt: dateRange?.to,
+               // Required fields that are not in assistant, passing current or defaults
+               measurementDetails: montage.measurementDetails || '',
+               floorDetails: montage.floorDetails || '',
+               panelModel: panelModel,
+               panelProductId: montage.panelProductId, 
+               modelsApproved: montage.modelsApproved || false,
+               additionalInfo: montage.additionalInfo || '',
+               sketchUrl: montage.sketchUrl || null,
+               measurementAdditionalWorkNeeded: montage.measurementAdditionalWorkNeeded || false,
+               measurementAdditionalWorkDescription: montage.measurementAdditionalWorkDescription || ''
             });
 
             // 2. Save Technical Audit

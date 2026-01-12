@@ -68,13 +68,13 @@ export function CostEstimationController({ montage, isOpen, onClose }: CostEstim
     }, [isOpen, montage.id, montage.measurementInstallationMethod, montage.measurementFloorPattern]);
 
 
-    const handleSave = async (completed: boolean) => {
+    const handleSave = async (completed: boolean | undefined) => {
         try {
-           await updateMontageCostEstimation(montage.id, {
-                costEstimationAdditionalWorkDescription: additionalWorkDescription,
-                costEstimationAdditionalMaterials: additionalMaterials, // If modified
-                costEstimationServices: additionalServices,
-                costEstimationCompleted: completed
+           await updateMontageCostEstimation({
+                montageId: montage.id,
+                measurementAdditionalMaterials: additionalMaterials, 
+                additionalServices: additionalServices,
+                completed: completed ?? false
            });
            router.refresh();
            onClose();
@@ -96,7 +96,6 @@ export function CostEstimationController({ montage, isOpen, onClose }: CostEstim
             measurementDate={measurementDate} // Just for display
             
             additionalWorkDescription={additionalWorkDescription}
-            setAdditionalWorkDescription={setAdditionalWorkDescription}
             
             baseService={{
                 name: baseServiceName,
