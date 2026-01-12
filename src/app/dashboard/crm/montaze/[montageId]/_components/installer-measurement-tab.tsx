@@ -440,7 +440,8 @@ export function InstallerMeasurementTab({ montage, userRoles = [], onEditSection
                             <span className="font-medium">
                                 {technicalAudit.subfloorType === 'concrete' && 'Cementowe'}
                                 {technicalAudit.subfloorType === 'anhydrite' && 'Anhydryt'}
-                                {technicalAudit.subfloorType === 'wood' && 'Drewniane/OSB'}
+                                {technicalAudit.subfloorType === 'osb' && 'Drewniane/OSB'}
+                                {technicalAudit.subfloorType === 'other' && 'Inne'}
                                 {!technicalAudit.subfloorType && '-'}
                             </span>
                         </div>
