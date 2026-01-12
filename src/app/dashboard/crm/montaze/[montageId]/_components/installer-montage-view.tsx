@@ -31,7 +31,7 @@ import { RequestDataButton } from "./request-data-button";
 
 import { MontageNotesTab } from "./montage-notes-tab";
 import { MontageGalleryTab } from "./montage-gallery-tab";
-import { MontageMeasurementTab } from "../../_components/montage-measurement-tab";
+import { InstallerMeasurementTab } from "./installer-measurement-tab";
 import { MontageSettlementTab } from "../../_components/montage-settlement-tab";
 import { MontageClientCard } from "./montage-client-card";
 import { StartWorkDialog } from "./start-work-dialog";
@@ -401,12 +401,12 @@ export function InstallerMontageView({ montage, logs, userRoles, withBottomNav =
                         <DrawerTitle>Dane Pomiarowe</DrawerTitle>
                     </DrawerHeader>
                     <ScrollArea className="h-full px-4 pb-10">
-                         <MontageMeasurementTab 
+                         <InstallerMeasurementTab 
                             montage={montage} 
                             userRoles={userRoles} 
                         />
                          <div className="h-20" /> {/* Spacer for scroll */}
-                    </ScrollArea>
+                    </ScrollArea>>
                 </DrawerContent>
             </Drawer>
 
