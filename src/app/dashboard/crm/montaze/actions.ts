@@ -2612,8 +2612,15 @@ export async function sendDataRequest(montageId: string) {
         createdAt: new Date(),
     });
 
-    revalidatePath(`${MONTAGE_DASHBOARD_PATH}/${montageId}`);
-    return { success: true };
+    revalidatePath(`/dashboard/crm/montaze/${montageId}`);
+    
+    return {
+        success: true,
+        link: portalLink,
+        message: message,
+        sentChannels,
+        montagePhone: montage.contactPhone
+    };
 }
 
 export async function finishMontage(montageId: string) {
