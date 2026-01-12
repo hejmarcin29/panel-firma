@@ -63,7 +63,7 @@ export function MeasurementAssistantController({ montage, isOpen, onClose, initi
     
     // Panel selection state
     const [panelModel, setPanelModel] = useState(montage.panelModel || '');
-    const [panelProductId, setPanelProductId] = useState<string | null>(montage.panelProductId || null);
+    const [panelProductId, setPanelProductId] = useState<string | null>(montage.panelProductId ? String(montage.panelProductId) : null);
     const [isPanelSelectorOpen, setIsPanelSelectorOpen] = useState(false);
 
     const [additionalMaterials, setAdditionalMaterials] = useState<MeasurementMaterialItem[]>(() => {
@@ -132,6 +132,7 @@ export function MeasurementAssistantController({ montage, isOpen, onClose, initi
     };
 
     return (
+        <>
         <MeasurementAssistantModal
             key={isOpen ? "open" : "closed"}
             isOpen={isOpen}
