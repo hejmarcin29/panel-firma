@@ -62,6 +62,8 @@ interface MeasurementAssistantModalProps {
     // Installation Date
     dateRange: DateRange | undefined;
     setDateRange: (range: DateRange | undefined) => void;
+
+    initialStep?: number;
 }
 
 const STEPS = [
@@ -86,11 +88,19 @@ export function MeasurementAssistantModal({
     panelModel, setIsPanelSelectorOpen,
     additionalMaterials, setAdditionalMaterials,
     measurementRooms, setMeasurementRooms,
-    dateRange, setDateRange
+    dateRange, setDateRange,
+    initialStep = 0
 }: MeasurementAssistantModalProps) {
-    const [currentStep, setCurrentStep] = useState(0);
+    const [currentStep, setCurrentStep] = useState(initialStep);
     const [auditData, setAuditData] = useState<TechnicalAuditData | null>(technicalAudit);
     const [isRoomsExpanded, setIsRoomsExpanded] = useState(measurementRooms.length > 0);
+
+    // Update initial step when reopening
+    useEffect(() => {
+        if (isOpen) {
+             setCurrentStep(initialStep);
+        }
+    }, [isOpen, initialStep]);
 
     // Auto-save Audit Data
     useEffect(() => {

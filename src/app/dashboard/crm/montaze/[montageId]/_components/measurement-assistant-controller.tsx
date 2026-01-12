@@ -13,9 +13,10 @@ interface MeasurementAssistantControllerProps {
     montage: Montage;
     isOpen: boolean;
     onClose: () => void;
+    initialStep?: number;
 }
 
-export function MeasurementAssistantController({ montage, isOpen, onClose }: MeasurementAssistantControllerProps) {
+export function MeasurementAssistantController({ montage, isOpen, onClose, initialStep = 0 }: MeasurementAssistantControllerProps) {
     const router = useRouter();
 
     // --- STATE INITIALIZATION FROM MONTAGE ---
@@ -175,6 +176,8 @@ export function MeasurementAssistantController({ montage, isOpen, onClose }: Mea
             
             dateRange={dateRange}
             setDateRange={setDateRange}
+            
+            initialStep={initialStep}
         />
     );
 }

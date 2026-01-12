@@ -38,9 +38,10 @@ import { TechnicalAuditData } from '../../technical-data';
 interface InstallerMeasurementTabProps {
   montage: Montage;
   userRoles?: string[];
+  onEditSection?: (section: 'date' | 'tax' | 'subfloor' | 'humidity' | 'area' | 'tech' | 'materials') => void;
 }
 
-export function InstallerMeasurementTab({ montage, userRoles = [] }: InstallerMeasurementTabProps) {
+export function InstallerMeasurementTab({ montage, userRoles = [], onEditSection }: InstallerMeasurementTabProps) {
   const router = useRouter();
   
   const isLockedBySettlement = montage.settlement?.status === 'approved' || montage.settlement?.status === 'paid';
@@ -249,33 +250,33 @@ export function InstallerMeasurementTab({ montage, userRoles = [] }: InstallerMe
       {/* 2. KPI Grid (Critical Parameters) */}
       <div className="grid grid-cols-2 gap-3">
             {/* Condition */}
-            <div className={cn("p-4 rounded-xl border flex flex-col justify-between min-h-[120px]", getSubfloorColor(subfloorCondition))}>
+            <div 
+                className={cn(
+                    "p-4 rounded-xl border flex flex-col justify-between min-h-[120px] transition-all active:scale-95 cursor-pointer",
+                    getSubfloorColor(subfloorCondition)
+                )}
+                onClick={() => onEditSection?.('subfloor')}
+            >
                 <div className="flex items-start justify-between">
                     <Layers className="w-5 h-5 opacity-70" />
                     <span className="text-[10px] uppercase font-bold tracking-wider opacity-70">Podłoże</span>
                 </div>
                 <div>
-                     <Select 
-                        value={subfloorCondition} 
-                        onValueChange={setSubfloorCondition} 
-                        disabled={isReadOnly}
-                    >
-                        <SelectTrigger className="h-auto p-0 border-0 bg-transparent text-lg font-bold shadow-none focus:ring-0">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                             <SelectItem value="ideal">Idealne</SelectItem>
-                             <SelectItem value="good">Dobre</SelectItem>
-                             <SelectItem value="bad">Złe</SelectItem>
-                             <SelectItem value="critical">Krytyczne</SelectItem>
-                        </SelectContent>
-                     </Select>
+                     <div className="text-xl font-bold">
+                         {subfloorCondition === 'ideal' && 'Idealne'}
+                         {subfloorCondition === 'good' && 'Dobre'}
+                         {subfloorCondition === 'bad' && 'Złe (Szlif)'}
+                         {subfloorCondition === 'critical' && 'Krytyczne'}
+                     </div>
                      <p className="text-[10px] leading-tight opacity-80 mt-1">Stan ogólny wylewki</p>
                 </div>
             </div>
 
             {/* Humidity */}
-            <div className="p-4 rounded-xl border bg-card flex flex-col justify-between min-h-[120px]">
+            <div 
+                className="p-4 rounded-xl border bg-card flex flex-col justify-between min-h-[120px] transition-all active:scale-95 cursor-pointer hover:border-blue-300"
+                onClick={() => onEditSection?.('humidity')}
+            >
                  <div className="flex items-start justify-between text-blue-500 mb-2">
                     <div className="flex items-center gap-2">
                         <Droplets className="w-5 h-5" />
@@ -284,25 +285,12 @@ export function InstallerMeasurementTab({ montage, userRoles = [] }: InstallerMe
                  </div>
                  
                  <div className="flex items-baseline gap-1">
-                     <Input
-                        type="number"
-                        step="0.1"
-                        placeholder="0.0"
-                        value={humidity ?? ''}
-                        disabled={isReadOnly}
-                        className={cn(
-                            "h-auto p-0 border-0 bg-transparent text-3xl font-bold shadow-none focus:ring-0 w-24",
-                            humidity && humidity > 2.0 ? "text-red-600" : "text-foreground"
-                        )}
-                        onChange={(e) => {
-                            const val = e.target.value ? parseFloat(e.target.value) : null;
-                            setHumidity(val);
-                        }}
-                        onBlur={(e) => {
-                             const val = e.target.value ? parseFloat(e.target.value) : null;
-                             handleHumiditySave(val);
-                        }}
-                     />
+                     <span className={cn(
+                        "text-3xl font-bold",
+                        humidity && humidity > 2.0 ? "text-red-600" : "text-foreground"
+                     )}>
+                        {humidity ?? '--'}
+                     </span>
                      <span className="text-sm font-medium text-muted-foreground self-end mb-1">%</span>
                  </div>
                  <p className="text-[10px] text-muted-foreground mt-1">
@@ -311,21 +299,19 @@ export function InstallerMeasurementTab({ montage, userRoles = [] }: InstallerMe
             </div>
 
              {/* Area Total */}
-             <div className="col-span-2 p-4 rounded-xl border bg-primary/5 flex items-center justify-between">
-                  {/* Left: Input for Quick Edit */}
+             <div 
+                className="col-span-2 p-4 rounded-xl border bg-primary/5 flex items-center justify-between transition-all active:scale-95 cursor-pointer hover:border-primary/30"
+                onClick={() => onEditSection?.('area')}
+             >
+                  {/* Left */}
                   <div className="flex-1">
                       <Label className="text-[10px] uppercase text-muted-foreground font-bold tracking-wider">
                           Całkowita Powierzchnia
                       </Label>
                       <div className="flex items-baseline gap-1 mt-1">
-                          <Input 
-                             type="number" 
-                             value={floorArea} 
-                             onChange={(e) => setFloorArea(e.target.value)}
-                             disabled={isReadOnly}
-                             className="h-auto p-0 border-0 bg-transparent text-3xl font-bold shadow-none focus:ring-0 max-w-[120px]"
-                             placeholder="0"
-                          />
+                          <span className="text-3xl font-bold text-gray-900">
+                              {floorArea || '0'}
+                          </span>
                           <span className="text-xl font-medium text-muted-foreground">m²</span>
                       </div>
                   </div>

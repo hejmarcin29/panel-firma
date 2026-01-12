@@ -93,7 +93,13 @@ export function InstallerMontageView({ montage, logs, userRoles, withBottomNav =
     
     // Assistant Controllers
     const [assistantOpen, setAssistantOpen] = useState(false);
+    const [assistantInitialStep, setAssistantInitialStep] = useState(0);
     const [costEstimationOpen, setCostEstimationOpen] = useState(false);
+
+    const openAssistantAtStep = (step: number) => {
+        setAssistantInitialStep(step);
+        setAssistantOpen(true);
+    };
 
     const address = montage.installationAddress || montage.billingAddress || 'Brak adresu';
     const city = montage.installationCity || montage.billingCity || '';
@@ -403,7 +409,21 @@ export function InstallerMontageView({ montage, logs, userRoles, withBottomNav =
                     <ScrollArea className="h-full px-4 pb-10">
                          <InstallerMeasurementTab 
                             montage={montage} 
-                            userRoles={userRoles} 
+                            userRoles={userRoles}
+                            onEditSection={(section) => {
+                                let step = 0;
+                                switch(section) {
+                                    case 'date': step = 0; break;
+                                    case 'tax': step = 1; break;
+                                    case 'subfloor': 
+                                    case 'humidity': step = 2; break;
+                                    case 'area':
+                                    case 'tech': step = 3; break;
+                                    case 'materials': step = 4; break;
+                                    default: step = 0;
+                                }
+                                openAssistantAtStep(step);
+                            }}
                         />
                          <div className="h-20" /> {/* Spacer for scroll */}
                     </ScrollArea>
@@ -487,6 +507,7 @@ export function InstallerMontageView({ montage, logs, userRoles, withBottomNav =
             <MeasurementAssistantController 
                 montage={montage}
                 isOpen={assistantOpen}
+                initialStep={assistantInitialStep}
                 onClose={() => setAssistantOpen(false)}
             />
 
