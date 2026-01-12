@@ -16,9 +16,10 @@ import type { Montage } from "../../types";
 interface RequestDataButtonProps {
   montage: Montage;
   requireInstallerForMeasurement?: boolean;
+  ignoreSampleStatus?: boolean;
 }
 
-export function RequestDataButton({ montage, requireInstallerForMeasurement }: RequestDataButtonProps) {
+export function RequestDataButton({ montage, requireInstallerForMeasurement, ignoreSampleStatus }: RequestDataButtonProps) {
   const [isPending, startTransition] = useTransition();
 
   const handleRequestData = () => {
@@ -33,7 +34,7 @@ export function RequestDataButton({ montage, requireInstallerForMeasurement }: R
     });
   };
 
-  const isSampleBlocking = montage.sampleStatus === 'to_send' || montage.sampleStatus === 'sent';
+  const isSampleBlocking = !ignoreSampleStatus && (montage.sampleStatus === 'to_send' || montage.sampleStatus === 'sent');
   const isInstallerBlocking = requireInstallerForMeasurement && !montage.installerId;
 
   if (isSampleBlocking) {

@@ -88,6 +88,10 @@ export function MontageClientCard({
     isHousingVat: montage.isHousingVat || false,
   });
 
+  const [showBillingAddress, setShowBillingAddress] = useState(
+      Boolean(montage.billingAddress || montage.billingCity || montage.billingPostalCode)
+  );
+
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: montage.scheduledInstallationAt ? new Date(montage.scheduledInstallationAt) : undefined,
     to: montage.scheduledInstallationEndAt ? new Date(montage.scheduledInstallationEndAt) : undefined,
@@ -100,6 +104,7 @@ export function MontageClientCard({
         contactEmail: montage.contactEmail || "",
         installationAddress: montage.installationAddress || "",
         installationCity: montage.installationCity || "",
+        installationPostalCode: montage.installationPostalCode || "",
         scheduledInstallationAt: montage.scheduledInstallationAt 
           ? new Date(montage.scheduledInstallationAt as string | number | Date).toISOString().split("T")[0] 
           : "",
@@ -185,7 +190,11 @@ export function MontageClientCard({
   };
 
   const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-    (montage.installationAddress || "") + " " + (montage.installationCity || "")
+    [
+        montage.installationAddress,
+        montage.installationPostalCode,
+        montage.installationCity
+    ].filter(Boolean).join(", ")
   )}`;
 
   const formattedDate = formatScheduleRange(montage.scheduledInstallationAt, montage.scheduledInstallationEndAt);
@@ -341,15 +350,26 @@ export function MontageClientCard({
                   id="installationAddress"
                   value={formData.installationAddress}
                   onChange={(e) => handleChange("installationAddress", e.target.value)}
+                  placeholder="Ulica i numer"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="installationCity">Miasto montażu</Label>
-                <Input
-                  id="installationCity"
-                  value={formData.installationCity}
-                  onChange={(e) => handleChange("installationCity", e.target.value)}
-                />
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-2">
+                    <Label htmlFor="installationPostalCode">Kod pocztowy</Label>
+                    <Input
+                        id="installationPostalCode"
+                        value={formData.installationPostalCode}
+                        onChange={(e) => handleChange("installationPostalCode", e.target.value)}
+                    />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="installationCity">Miasto</Label>
+                    <Input
+                        id="installationCity"
+                        value={formData.installationCity}
+                        onChange={(e) => handleChange("installationCity", e.target.value)}
+                    />
+                </div>
               </div>
 
               <Separator />
@@ -383,33 +403,59 @@ export function MontageClientCard({
                 </>
               )}
 
-              <div className="space-y-2">
-                <Label htmlFor="billingAddress">Adres do faktury</Label>
-                <Input
-                  id="billingAddress"
-                  value={formData.billingAddress}
-                  onChange={(e) => handleChange("billingAddress", e.target.value)}
-                  placeholder="Ulica i numer"
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                    id="differentBillingAddress" 
+                    checked={showBillingAddress}
+                    onCheckedChange={(checked) => {
+                        const isChecked = checked as boolean;
+                        setShowBillingAddress(isChecked);
+                        if (!isChecked) {
+                            const newData = {
+                                ...formData,
+                                billingAddress: "",
+                                billingPostalCode: "",
+                                billingCity: ""
+                            };
+                            setFormData(newData);
+                            debouncedSave(newData);
+                        }
+                    }}
                 />
+                <Label htmlFor="differentBillingAddress">Inne dane do faktury</Label>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-2">
-                    <Label htmlFor="billingPostalCode">Kod pocztowy</Label>
+
+              {showBillingAddress && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="billingAddress">Adres do faktury</Label>
                     <Input
-                    id="billingPostalCode"
-                    value={formData.billingPostalCode}
-                    onChange={(e) => handleChange("billingPostalCode", e.target.value)}
+                      id="billingAddress"
+                      value={formData.billingAddress}
+                      onChange={(e) => handleChange("billingAddress", e.target.value)}
+                      placeholder="Ulica i numer"
                     />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="billingCity">Miasto</Label>
-                    <Input
-                    id="billingCity"
-                    value={formData.billingCity}
-                    onChange={(e) => handleChange("billingCity", e.target.value)}
-                    />
-                </div>
-              </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-2">
+                        <Label htmlFor="billingPostalCode">Kod pocztowy</Label>
+                        <Input
+                        id="billingPostalCode"
+                        value={formData.billingPostalCode}
+                        onChange={(e) => handleChange("billingPostalCode", e.target.value)}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="billingCity">Miasto</Label>
+                        <Input
+                        id="billingCity"
+                        value={formData.billingCity}
+                        onChange={(e) => handleChange("billingCity", e.target.value)}
+                        />
+                    </div>
+                  </div>
+                </>
+              )}
 
               <Separator />
 

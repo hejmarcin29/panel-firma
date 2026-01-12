@@ -417,16 +417,16 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
           </div>
         </div>
       )}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h3 className="text-lg font-medium">Karta Pomiarowa</h3>
           <p className="text-sm text-muted-foreground">
             Wprowadź szczegóły pomiaru, szkice i dodatkowe informacje.
           </p>
         </div>
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-2 text-sm self-end sm:self-auto">
             {!isReadOnly && (
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap justify-end gap-2">
                     {/* Stage 2: Cost Estimation Button (Visible only if measurement is started) */}
                     {((floorArea && parseFloat(floorArea) > 0) || measurementDate) && (
                         <Button

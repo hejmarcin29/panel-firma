@@ -1375,6 +1375,7 @@ export const usersRelations = relations(users, ({ many }) => ({
     // assignedProducts: many(architectProducts),
     partnerPayouts: many(partnerPayouts),
     partnerCommissions: many(partnerCommissions),
+    settlements: many(settlements),
     serviceRates: many(userServiceRates),
 }));
 

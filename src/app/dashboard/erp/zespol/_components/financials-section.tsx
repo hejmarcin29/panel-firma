@@ -14,7 +14,7 @@ import {
     TableHeader, 
     TableRow 
 } from "@/components/ui/table";
-import { Wallet, Hammer, FileText } from "lucide-react";
+import { Wallet, Hammer, FileText, CircleDollarSign } from "lucide-react";
 
 interface FinancialsSectionProps {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -184,51 +184,113 @@ export function FinancialsSection({ data, roles }: FinancialsSectionProps) {
 
             {/* INSTALLER SECTION */}
             {roles.includes('installer') && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Hammer className="h-5 w-5 text-orange-500" />
-                            Ostatnie Zlecenia
-                        </CardTitle>
-                        <CardDescription>Lista ostatnich montaży lub pomiarów przypisanych do pracownika.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Klient</TableHead>
-                                    <TableHead>Adres</TableHead>
-                                    <TableHead>Data</TableHead>
-                                    <TableHead>Status</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                                {(data.installerMontages || data.measurerMontages || []).map((montage: any) => (
-                                    <TableRow key={montage.id}>
-                                        <TableCell className="font-medium">{montage.clientName}</TableCell>
-                                        <TableCell>
-                                            {montage.installationCity}, {montage.address}
-                                        </TableCell>
-                                        <TableCell>
-                                            {montage.scheduledInstallationAt ? format(new Date(montage.scheduledInstallationAt), 'd MMM', { locale: pl }) : '-'}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline">{getStatusLabel(montage.status)}</Badge>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                                {(!data.installerMontages?.length && !data.measurerMontages?.length) && (
+                <div className="space-y-6">
+                    {data.settlements && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <CircleDollarSign className="h-5 w-5 text-green-600" />
+                                    Rozliczenia (Wypłaty)
+                                </CardTitle>
+                                <CardDescription>Historia rozliczeń z montażystą.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Data utworzenia</TableHead>
+                                            <TableHead>Okres rozliczeniowy</TableHead>
+                                            <TableHead>Kwota</TableHead>
+                                            <TableHead>Status</TableHead>
+                                            <TableHead>Faktura</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                                        {data.settlements.map((settlement: any) => (
+                                            <TableRow key={settlement.id}>
+                                                <TableCell>{format(new Date(settlement.createdAt), 'd MMM yyyy', { locale: pl })}</TableCell>
+                                                <TableCell>
+                                                    {settlement.periodStart && settlement.periodEnd ? (
+                                                        <span className="text-xs">
+                                                            {format(new Date(settlement.periodStart), 'd.MM', { locale: pl })} - {format(new Date(settlement.periodEnd), 'd.MM', { locale: pl })}
+                                                        </span>
+                                                    ) : '-'}
+                                                </TableCell>
+                                                <TableCell>{formatCurrency(settlement.amount / 100)}</TableCell>
+                                                <TableCell>
+                                                    <Badge variant={settlement.status === 'paid' ? 'default' : settlement.status === 'rejected' ? 'destructive' : 'outline'}>
+                                                        {settlement.status === 'paid' ? 'Wypłacono' : settlement.status === 'rejected' ? 'Odrzucono' : 'Oczekuje'}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell>
+                                                    {settlement.invoiceUrl ? (
+                                                        <a href={settlement.invoiceUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                                                            Pobierz
+                                                        </a>
+                                                    ) : '-'}
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                        {data.settlements.length === 0 && (
+                                            <TableRow>
+                                                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                                                    Brak historii rozliczeń.
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Hammer className="h-5 w-5 text-orange-500" />
+                                Ostatnie Zlecenia
+                            </CardTitle>
+                            <CardDescription>Lista ostatnich montaży lub pomiarów przypisanych do pracownika.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader>
                                     <TableRow>
-                                        <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                                            Brak przypisanych zleceń.
-                                        </TableCell>
+                                        <TableHead>Klient</TableHead>
+                                        <TableHead>Adres</TableHead>
+                                        <TableHead>Data</TableHead>
+                                        <TableHead>Status</TableHead>
                                     </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
+                                </TableHeader>
+                                <TableBody>
+                                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                                    {(data.installerMontages || data.measurerMontages || []).map((montage: any) => (
+                                        <TableRow key={montage.id}>
+                                            <TableCell className="font-medium">{montage.clientName}</TableCell>
+                                            <TableCell>
+                                                {montage.installationCity}, {montage.address}
+                                            </TableCell>
+                                            <TableCell>
+                                                {montage.scheduledInstallationAt ? format(new Date(montage.scheduledInstallationAt), 'd MMM', { locale: pl }) : '-'}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline">{getStatusLabel(montage.status)}</Badge>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                    {(!data.installerMontages?.length && !data.measurerMontages?.length) && (
+                                        <TableRow>
+                                            <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                                                Brak przypisanych zleceń.
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                </div>
             )}
         </div>
     );

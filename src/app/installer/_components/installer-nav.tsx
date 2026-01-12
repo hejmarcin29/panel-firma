@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Calendar, MessageSquare, User } from "lucide-react";
+import { Home, Calendar, CircleDollarSign, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
@@ -17,9 +17,9 @@ const items = [
         icon: Calendar
     },
     {
-        label: "Wiadomości",
-        href: "/installer/messages",
-        icon: MessageSquare
+        label: "Rozliczenia",
+        href: "/installer/settlements",
+        icon: CircleDollarSign
     },
     {
         label: "Profil",

@@ -27,6 +27,7 @@ import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { updateMontageStatus, updateMontageMeasurementDate } from "../../actions";
 import { toast } from "sonner";
+import { RequestDataButton } from "./request-data-button";
 
 import { MontageNotesTab } from "./montage-notes-tab";
 import { MontageGalleryTab } from "./montage-gallery-tab";
@@ -44,6 +45,7 @@ interface InstallerMontageViewProps {
     logs: MontageLog[];
     userRoles: UserRole[];
     hasGoogleCalendar?: boolean;
+    withBottomNav?: boolean;
 }
 
 interface DashboardTileProps {
@@ -72,7 +74,7 @@ const DashboardTile = ({ icon, title, metric, description, onClick, alert }: Das
     </button>
 );
 
-export function InstallerMontageView({ montage, logs, userRoles }: InstallerMontageViewProps) {
+export function InstallerMontageView({ montage, logs, userRoles, withBottomNav = false }: InstallerMontageViewProps) {
     // Drawer States
     const [measurementOpen, setMeasurementOpen] = useState(false);
     const [galleryOpen, setGalleryOpen] = useState(false);
@@ -88,6 +90,10 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
     const address = montage.installationAddress || montage.billingAddress || 'Brak adresu';
     const city = montage.installationCity || montage.billingCity || '';
     const fullAddress = `${address}, ${city}`;
+    const hasAddress = Boolean(
+        (montage.installationAddress && montage.installationCity && montage.installationPostalCode) || 
+        (montage.billingAddress && montage.billingCity && montage.billingPostalCode)
+    );
     const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
 
     // Helper: Primary Action Logic
@@ -113,6 +119,7 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
                          }}
                          fullWidth
                     />
+                    {!hasAddress && <RequestDataButton montage={montage} ignoreSampleStatus={true} />}
                 </div>
              )
         }
@@ -120,17 +127,20 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
         // 2. Scheduled -> Start Measurement
         if (montage.status === 'measurement_scheduled') {
             return (
-                <Button 
-                    size="lg" 
-                    className="w-full h-12 text-base shadow-lg bg-blue-600 hover:bg-blue-700"
-                    onClick={() => {
-                        setDefaultOpenModal('assistant');
-                        setMeasurementOpen(true);
-                    }}
-                >
-                    <Ruler className="mr-2 h-5 w-5" />
-                    Uruchom Asystenta Pomiaru
-                </Button>
+                <div className="w-full flex flex-col gap-2">
+                    <Button 
+                        size="lg" 
+                        className="w-full h-12 text-base shadow-lg bg-blue-600 hover:bg-blue-700"
+                        onClick={() => {
+                            setDefaultOpenModal('assistant');
+                            setMeasurementOpen(true);
+                        }}
+                    >
+                        <Ruler className="mr-2 h-5 w-5" />
+                        Uruchom Asystenta Pomiaru
+                    </Button>
+                    {!hasAddress && <RequestDataButton montage={montage} ignoreSampleStatus={true} />}
+                </div>
             );
         }
 
@@ -308,7 +318,10 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
 
 
             {/* 5. STICKY FOOTER ACTION BAR */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-3 px-4 z-40 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+            <div className={cn(
+                "fixed left-0 right-0 bg-white border-t p-3 px-4 z-40 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.08)]",
+                withBottomNav ? "bottom-[calc(4rem+env(safe-area-inset-bottom))]" : "bottom-0"
+            )}>
                 {renderPrimaryAction()}
                 
                 {/* Secondary Actions (Link-like below the big button, optional) */}

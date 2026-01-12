@@ -2530,7 +2530,7 @@ export async function sendDataRequest(montageId: string) {
             .where(eq(customers.id, customerId!));
     }
 
-    const portalLink = `https://b2b.primepodloga.pl/s/${referralToken}`;
+    const portalLink = `https://b2b.primepodloga.pl/montaz/${referralToken}`;
     const message = `Dzień dobry! Rozpoczynamy współpracę. Utworzyliśmy dla Ciebie Panel Klienta, gdzie będziesz widzieć postępy prac: ${portalLink}. Prosimy o uzupełnienie adresu, abyśmy mogli zlecić pomiar.`;
 
     const sentChannels: string[] = [];

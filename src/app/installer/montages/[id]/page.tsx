@@ -31,6 +31,7 @@ export default async function InstallerMontageDetailsPage({ params }: Params) {
              logs={data.logs}
              userRoles={user.roles}
              hasGoogleCalendar={data.hasGoogleCalendar}
+             withBottomNav={true}
         />
     );
 }

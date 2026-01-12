@@ -220,7 +220,7 @@ export function MontageSettlementTab({ montage, userRoles }: MontageSettlementTa
     return (
         <div className="space-y-6">
             {/* Header Status */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                     <h3 className="text-lg font-medium">Rozliczenie Montażu</h3>
                     <p className="text-sm text-muted-foreground">
@@ -229,7 +229,7 @@ export function MontageSettlementTab({ montage, userRoles }: MontageSettlementTa
                 </div>
                 {settlement && (
                     <Badge variant={settlement.status === 'paid' ? 'default' : 'secondary'} 
-                    className={`text-base px-4 py-1 ${
+                    className={`text-base px-4 py-1 self-start sm:self-auto ${
                         settlement.status === 'approved' ? 'bg-green-600 hover:bg-green-700 text-white' : 
                         settlement.status === 'pending' ? 'bg-yellow-500 hover:bg-yellow-600 text-white' : ''
                     }`}>

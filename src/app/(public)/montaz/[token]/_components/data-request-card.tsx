@@ -181,21 +181,21 @@ export function DataRequestCard({ montage, token }: DataRequestCardProps) {
                             placeholder="np. Kwiatowa 15/3"
                         />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label>Miasto</Label>
-                            <Input 
-                                value={formData.city} 
-                                onChange={(e) => setFormData({...formData, city: e.target.value})}
-                                placeholder="np. Warszawa"
-                            />
-                        </div>
+                    <div className="grid grid-cols-[1fr_2fr] gap-4">
                         <div className="space-y-2">
                             <Label>Kod pocztowy</Label>
                             <Input 
                                 value={formData.postalCode} 
                                 onChange={(e) => setFormData({...formData, postalCode: e.target.value})}
                                 placeholder="00-000"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Miasto</Label>
+                            <Input 
+                                value={formData.city} 
+                                onChange={(e) => setFormData({...formData, city: e.target.value})}
+                                placeholder="np. Warszawa"
                             />
                         </div>
                     </div>
@@ -264,29 +264,29 @@ export function DataRequestCard({ montage, token }: DataRequestCardProps) {
                                 </>
                             )}
 
-                            <div className="space-y-2">
-                                <Label>Adres {formData.isCompany ? 'siedziby' : 'zamieszkania'}</Label>
-                                <Input 
-                                    value={formData.billingAddress} 
-                                    onChange={(e) => setFormData({...formData, billingAddress: e.target.value})}
-                                />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label>Miasto</Label>
-                                    <Input 
-                                        value={formData.billingCity} 
-                                        onChange={(e) => setFormData({...formData, billingCity: e.target.value})}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Kod pocztowy</Label>
-                                    <Input 
-                                        value={formData.billingPostalCode} 
-                                        onChange={(e) => setFormData({...formData, billingPostalCode: e.target.value})}
-                                    />
-                                </div>
-                            </div>
+                        <Label>Adres do faktury (Ulica i numer)</Label>
+                        <Input 
+                            value={formData.billingAddress} 
+                            onChange={(e) => setFormData({...formData, billingAddress: e.target.value})}
+                            placeholder="np. Długa 10/4"
+                        />
+                    </div>
+                    <div className="grid grid-cols-[1fr_2fr] gap-4">
+                        <div className="space-y-2">
+                            <Label>Kod pocztowy</Label>
+                            <Input 
+                                value={formData.billingPostalCode} 
+                                onChange={(e) => setFormData({...formData, billingPostalCode: e.target.value})}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Miasto</Label>
+                            <Input 
+                                value={formData.billingCity} 
+                                onChange={(e) => setFormData({...formData, billingCity: e.target.value})}
+                            />
+                        </div>
+                    </div>
                         </div>
                     )}
                 </div>

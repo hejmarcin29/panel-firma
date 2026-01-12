@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { users, montages, commissions, partnerCommissions, partnerPayouts, type UserRole } from '@/lib/db/schema';
+import { users, montages, commissions, partnerCommissions, partnerPayouts, settlements, type UserRole } from '@/lib/db/schema';
 import { desc, eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { hash } from 'bcryptjs';
@@ -167,6 +167,12 @@ export async function getUserFinancials(userId: string, roles: string[]) {
         data.installerMontages = await db.query.montages.findMany({
             where: eq(montages.installerId, userId),
             orderBy: [desc(montages.createdAt)],
+            limit: 20
+        });
+        
+        data.settlements = await db.query.settlements.findMany({
+            where: eq(settlements.installerId, userId),
+            orderBy: [desc(settlements.createdAt)],
             limit: 20
         });
     }
