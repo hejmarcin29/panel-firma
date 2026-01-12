@@ -30,9 +30,9 @@ import {
   CardContent,
 } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import type { Montage, MeasurementMaterialItem } from '../types';
-import { updateMontageMeasurement } from '../actions';
-import { TechnicalAuditData } from '../technical-data';
+import type { Montage, MeasurementMaterialItem } from '../../types';
+import { updateMontageMeasurement } from '../../actions';
+import { TechnicalAuditData } from '../../technical-data';
 
 interface InstallerMeasurementTabProps {
   montage: Montage;
@@ -130,9 +130,9 @@ export function InstallerMeasurementTab({ montage, userRoles = [] }: InstallerMe
           isHousingVat,
           measurementRooms,
           additionalInfo,
-          sketchUrl: montage.sketchUrl, // We are not editing sketch here directly in this simplified view yet
-          scheduledInstallationAt: montage.scheduledInstallationAt, // Preserving original
-          scheduledInstallationEndAt: montage.scheduledInstallationEndAt, // Preserving original
+          sketchUrl: montage.sketchUrl,
+          scheduledInstallationAt: montage.scheduledInstallationAt ? new Date(montage.scheduledInstallationAt).getTime() : null,
+          scheduledInstallationEndAt: montage.scheduledInstallationEndAt ? new Date(montage.scheduledInstallationEndAt).getTime() : null,
         });
         setLastSaved(new Date());
         router.refresh();
@@ -251,9 +251,9 @@ export function InstallerMeasurementTab({ montage, userRoles = [] }: InstallerMe
                     <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">Wilgotność</span>
                  </div>
                  <div>
-                     {technicalAudit?.conditions?.humidity ? (
+                     {technicalAudit?.humidity ? (
                          <div className="text-2xl font-bold font-mono text-foreground">
-                             {technicalAudit.conditions.humidity}%
+                             {technicalAudit.humidity}%
                          </div>
                      ) : (
                          <span className="text-sm text-muted-foreground">Brak pomiaru</span>
