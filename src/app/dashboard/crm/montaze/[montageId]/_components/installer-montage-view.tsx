@@ -406,7 +406,7 @@ export function InstallerMontageView({ montage, logs, userRoles, withBottomNav =
                             userRoles={userRoles} 
                         />
                          <div className="h-20" /> {/* Spacer for scroll */}
-                    </ScrollArea>>
+                    </ScrollArea>
                 </DrawerContent>
             </Drawer>
 

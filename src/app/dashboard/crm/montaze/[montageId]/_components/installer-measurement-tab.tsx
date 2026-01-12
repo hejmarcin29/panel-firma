@@ -5,20 +5,15 @@ import { useRouter } from 'next/navigation';
 import { 
   CalendarIcon, 
   Droplets, 
-  Thermometer, 
   Layers, 
   Check, 
   Loader2, 
   Info,
-  ChevronRight,
   ImageIcon,
-  Pencil,
-  FileText
+  Pencil
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { pl } from 'date-fns/locale';
 
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -33,8 +28,6 @@ import {
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { Montage, MeasurementMaterialItem } from '../types';
@@ -58,17 +51,17 @@ export function InstallerMeasurementTab({ montage, userRoles = [] }: InstallerMe
 
   const [measurementDetails] = useState(montage.measurementDetails || '');
   const [floorArea, setFloorArea] = useState<string>(montage.floorArea?.toString() || '');
-  const [panelAdditionalMaterials, setPanelAdditionalMaterials] = useState(montage.floorDetails || '');
+  const [panelAdditionalMaterials] = useState(montage.floorDetails || '');
   
-  const [panelModel, setPanelModel] = useState(montage.panelModel || '');
-  const [panelProductId, setPanelProductId] = useState<number | string | null>(montage.panelProductId || null);
-  const [panelWaste, setPanelWaste] = useState<string>(montage.panelWaste?.toString() || '5');
-  const [modelsApproved, setModelsApproved] = useState(montage.modelsApproved || false);
+  const [panelModel] = useState(montage.panelModel || '');
+  const [panelProductId] = useState<number | string | null>(montage.panelProductId || null);
+  const [panelWaste] = useState<string>(montage.panelWaste?.toString() || '5');
+  const [modelsApproved] = useState(montage.modelsApproved || false);
 
   const [installationMethod, setInstallationMethod] = useState<'click' | 'glue'>(
     (montage.measurementInstallationMethod as 'click' | 'glue') || 'click'
   );
-  const [floorPattern, setFloorPattern] = useState<'classic' | 'herringbone'>(
+  const [floorPattern] = useState<'classic' | 'herringbone'>(
     (montage.measurementFloorPattern as 'classic' | 'herringbone') || 'classic'
   );
 
@@ -77,7 +70,7 @@ export function InstallerMeasurementTab({ montage, userRoles = [] }: InstallerMe
   const [additionalWorkDescription, setAdditionalWorkDescription] = useState(montage.measurementAdditionalWorkDescription || '');
   
   // Legacy material handling
-  const [additionalMaterials, setAdditionalMaterials] = useState<MeasurementMaterialItem[]>(() => {
+  const [additionalMaterials] = useState<MeasurementMaterialItem[]>(() => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const raw = montage.measurementAdditionalMaterials as any;
       if (Array.isArray(raw)) return raw;
@@ -92,12 +85,12 @@ export function InstallerMeasurementTab({ montage, userRoles = [] }: InstallerMe
       return [];
   });
   
-  const [measurementRooms, setMeasurementRooms] = useState<{ name: string; area: number }[]>(montage.measurementRooms || []);
+  const [measurementRooms] = useState<{ name: string; area: number }[]>(montage.measurementRooms || []);
 
   const [isHousingVat, setIsHousingVat] = useState(montage.isHousingVat ?? true);
-  const [additionalInfo, setAdditionalInfo] = useState(montage.additionalInfo || '');
+  const [additionalInfo] = useState(montage.additionalInfo || '');
   
-  const [measurementDate, setMeasurementDate] = useState(
+  const [measurementDate] = useState(
     montage.measurementDate 
       ? new Date(montage.measurementDate as string | number | Date).toISOString().slice(0, 16)
       : ""
@@ -187,16 +180,6 @@ export function InstallerMeasurementTab({ montage, userRoles = [] }: InstallerMe
       if (val === 'ideal') return 'text-green-600 bg-green-50';
       if (val === 'good') return 'text-blue-600 bg-blue-50';
       return 'text-red-600 bg-red-50';
-  };
-
-  const getSubfloorLabel = (val: string) => {
-      const map: Record<string, string> = {
-          'ideal': 'Idealne',
-          'good': 'Dobre',
-          'bad': 'Złe',
-          'critical': 'Krytyczne'
-      };
-      return map[val] || val;
   };
 
   return (
@@ -324,7 +307,7 @@ export function InstallerMeasurementTab({ montage, userRoles = [] }: InstallerMe
                   <div className="text-center py-6 text-muted-foreground text-sm italic bg-muted/20 rounded-lg">
                       Brak zdefiniowanych pomieszczeń.
                       <br />
-                      Użyj "Asystenta Pomiaru" aby dodać.
+                      Użyj &quot;Asystenta Pomiaru&quot; aby dodać.
                   </div>
               )}
           </div>
