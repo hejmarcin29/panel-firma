@@ -10,7 +10,8 @@ import {
     FileText,
     Navigation,
     Info,
-    Calendar as CalendarIcon
+    Calendar as CalendarIcon,
+    CheckCircle
 } from "lucide-react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
@@ -25,7 +26,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { updateMontageStatus, updateMontageMeasurementDate } from "../../actions";
+import { updateMontageStatus, updateMontageMeasurementDate, updateMontageRealizationStatus } from "../../actions";
 import { toast } from "sonner";
 import { RequestDataButton } from "./request-data-button";
 
@@ -36,6 +37,11 @@ import { MontageSettlementTab } from "../../_components/montage-settlement-tab";
 import { MontageClientCard } from "./montage-client-card";
 import { StartWorkDialog } from "./start-work-dialog";
 import { FinishWorkDialog } from "./finish-work-dialog";
+
+// Controllers
+import { MeasurementAssistantController } from "./measurement-assistant-controller";
+import { CostEstimationController } from "./cost-estimation-controller";
+
 import type { Montage, MontageLog } from "../../types";
 import type { UserRole } from "@/lib/db/schema";
 import { Separator } from "@/components/ui/separator";
@@ -85,7 +91,10 @@ export function InstallerMontageView({ montage, logs, userRoles, withBottomNav =
     // Dialog States
     const [startWorkOpen, setStartWorkOpen] = useState(false);
     const [finishWorkOpen, setFinishWorkOpen] = useState(false);
-    const [defaultOpenModal, setDefaultOpenModal] = useState<'assistant' | 'costEstimation' | undefined>(undefined);
+    
+    // Assistant Controllers
+    const [assistantOpen, setAssistantOpen] = useState(false);
+    const [costEstimationOpen, setCostEstimationOpen] = useState(false);
 
     const address = montage.installationAddress || montage.billingAddress || 'Brak adresu';
     const city = montage.installationCity || montage.billingCity || '';
@@ -98,6 +107,36 @@ export function InstallerMontageView({ montage, logs, userRoles, withBottomNav =
 
     // Helper: Primary Action Logic
     const renderPrimaryAction = () => {
+        // 0. NEW FLOW: Confirm Assignment
+        if (montage.installerStatus !== 'confirmed') {
+            return (
+                <div className="w-full flex flex-col gap-2">
+                     <p className="text-xs text-center text-muted-foreground font-medium mb-1">
+                        Potwierdź przyjęcie zlecenia, aby rozpocząć.
+                    </p>
+                    <Button 
+                        size="lg" 
+                        className="w-full h-12 text-base shadow-lg bg-emerald-600 hover:bg-emerald-700 animate-pulse"
+                        onClick={async () => {
+                            toast.promise(async () => {
+                                await updateMontageRealizationStatus({ 
+                                    montageId: montage.id, 
+                                    installerStatus: 'confirmed' 
+                                });
+                            }, {
+                                loading: 'Potwierdzanie...',
+                                success: 'Zlecenie przyjęte!',
+                                error: 'Błąd'
+                            });
+                        }}
+                    >
+                        <CheckCircle className="mr-2 h-5 w-5" />
+                        Potwierdzam Przyjęcie Zlecenia
+                    </Button>
+                </div>
+            );
+        }
+
         // 1. To Schedule
         if (montage.status === 'measurement_to_schedule') {
              return (
@@ -132,8 +171,7 @@ export function InstallerMontageView({ montage, logs, userRoles, withBottomNav =
                         size="lg" 
                         className="w-full h-12 text-base shadow-lg bg-blue-600 hover:bg-blue-700"
                         onClick={() => {
-                            setDefaultOpenModal('assistant');
-                            setMeasurementOpen(true);
+                            setAssistantOpen(true);
                         }}
                     >
                         <Ruler className="mr-2 h-5 w-5" />
@@ -144,20 +182,31 @@ export function InstallerMontageView({ montage, logs, userRoles, withBottomNav =
             );
         }
 
-        // 3. Measurement Done -> Edit / Wait
+        // 3. Measurement Done -> Cost Estimation (Primary)
         if (montage.status === 'measurement_done' || montage.status === 'quote_in_progress') {
              return (
-                <Button 
-                    size="lg" 
-                    variant="outline"
-                    className="w-full h-12 text-base border-primary/20 bg-primary/5 text-primary"
-                    onClick={() => {
-                         setMeasurementOpen(true);
-                    }}
-                >
-                    <FileText className="mr-2 h-5 w-5" />
-                    Podgląd / Edycja Pomiaru
-                </Button>
+                <div className="w-full flex flex-col gap-2">
+                    <Button 
+                        size="lg" 
+                        className="w-full h-12 text-base shadow-lg bg-orange-600 hover:bg-orange-700"
+                        onClick={() => {
+                             setCostEstimationOpen(true);
+                        }}
+                    >
+                        <span className="mr-2">💰</span>
+                        Uzupełnij Kosztorys Robocizny
+                    </Button>
+                     <Button 
+                        size="sm" 
+                        variant="ghost"
+                        className="text-muted-foreground"
+                        onClick={() => {
+                             setMeasurementOpen(true);
+                        }}
+                    >
+                        Pokaż szczegóły pomiaru
+                    </Button>
+                </div>
             );
         }
 
@@ -245,6 +294,14 @@ export function InstallerMontageView({ montage, logs, userRoles, withBottomNav =
                     </Badge>
                  </div>
                  
+                 {/* Visual Confirmation Indicator */}
+                 {montage.installerStatus === 'confirmed' && (
+                     <div className="flex items-center gap-1.5 mb-2 text-emerald-600">
+                         <CheckCircle className="w-3.5 h-3.5" />
+                         <span className="text-xs font-medium">Zlecenie przyjęte i potwierdzone</span>
+                     </div>
+                 )}
+
                  {/* Dynamic Instruction */}
                  <p className="text-sm text-gray-600 leading-snug">
                     {montage.status === 'measurement_to_schedule' && "Skontaktuj się z klientem i ustal termin pomiaru."}
@@ -348,13 +405,6 @@ export function InstallerMontageView({ montage, logs, userRoles, withBottomNav =
                          <MontageMeasurementTab 
                             montage={montage} 
                             userRoles={userRoles} 
-                            defaultOpenModal={defaultOpenModal}
-                            onAssistantSave={() => {
-                                if (defaultOpenModal === 'assistant') {
-                                    setMeasurementOpen(false); // Close drawer after assistant completion if needed
-                                    setDefaultOpenModal(undefined);
-                                }
-                            }}
                         />
                          <div className="h-20" /> {/* Spacer for scroll */}
                     </ScrollArea>
@@ -432,6 +482,19 @@ export function InstallerMontageView({ montage, logs, userRoles, withBottomNav =
                 montageId={montage.id} 
                 open={finishWorkOpen} 
                 onOpenChange={setFinishWorkOpen} 
+            />
+
+            {/* --- CONTROLLERS (LOGIC) --- */}
+            <MeasurementAssistantController 
+                montage={montage}
+                isOpen={assistantOpen}
+                onClose={() => setAssistantOpen(false)}
+            />
+
+            <CostEstimationController
+                montage={montage}
+                isOpen={costEstimationOpen}
+                onClose={() => setCostEstimationOpen(false)}
             />
 
         </div>

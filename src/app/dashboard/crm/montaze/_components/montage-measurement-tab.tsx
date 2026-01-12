@@ -59,37 +59,23 @@ import type { TechnicalAuditData } from '../technical-data';
 import { addMontageAttachment } from '../actions';
 import { MontageSubCategories } from '@/lib/r2/constants';
 
-import { MeasurementAssistantModal } from './measurement-assistant-modal';
-import { CostEstimationModal } from './cost-estimation-modal';
 import { updateMontageCostEstimation } from '../actions';
 import { getEstimatedBaseService } from '../actions-services';
 
 interface MontageMeasurementTabProps {
   montage: Montage;
   userRoles?: string[];
-  defaultOpenModal?: 'assistant' | 'costEstimation';
-  onAssistantSave?: () => void;
+interface MontageMeasurementTabProps {
+  montage: Montage;
+  userRoles: ('admin' | 'installer' | 'partner' | 'manager')[];
 }
 
-export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModal, onAssistantSave }: MontageMeasurementTabProps) {
+export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasurementTabProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   
   const isLockedBySettlement = montage.settlement?.status === 'approved' || montage.settlement?.status === 'paid';
   const isReadOnly = (!userRoles.includes('admin') && !userRoles.includes('installer')) || isLockedBySettlement;
-
-  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
-  const [isCostEstimationOpen, setIsCostEstimationOpen] = useState(false);
-  const [baseServicePrice, setBaseServicePrice] = useState<number | undefined>(undefined);
-  const [baseServiceName, setBaseServiceName] = useState<string>('Montaż podłogi');
-
-  useEffect(() => {
-      if (defaultOpenModal === 'assistant') {
-          setIsAssistantOpen(true);
-      } else if (defaultOpenModal === 'costEstimation') {
-          setIsCostEstimationOpen(true);
-      }
-  }, [defaultOpenModal]);
 
   const [isSketchOpen, setIsSketchOpen] = useState(false);
   const [sketchDataUrl, setSketchDataUrl] = useState<string | null>(montage.sketchUrl || null);
@@ -111,27 +97,6 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
     (montage.measurementFloorPattern as 'classic' | 'herringbone') || 'classic'
   );
 
-  // Fetch base service price when modal opens
-  useEffect(() => {
-      if (isCostEstimationOpen) {
-          const fetchPrice = async () => {
-              try {
-                  const service = await getEstimatedBaseService(
-                      installationMethod || 'click',
-                      floorPattern || 'classic',
-                      montage.id
-                  );
-                  if (service) {
-                      setBaseServicePrice(service.basePriceNet || 0);
-                      setBaseServiceName(service.name);
-                  }
-              } catch (e) {
-                  console.error("Failed to fetch base service price", e);
-              }
-          };
-          fetchPrice();
-      }
-  }, [isCostEstimationOpen, installationMethod, floorPattern, montage.id]);
   const [subfloorCondition, setSubfloorCondition] = useState(montage.measurementSubfloorCondition || 'good');
   const [additionalWorkNeeded, setAdditionalWorkNeeded] = useState(montage.measurementAdditionalWorkNeeded || false);
   const [additionalWorkDescription, setAdditionalWorkDescription] = useState(montage.measurementAdditionalWorkDescription || '');
@@ -427,106 +392,33 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
         <div className="flex items-center gap-2 text-sm self-end sm:self-auto">
             {!isReadOnly && (
                 <div className="flex flex-wrap justify-end gap-2">
-                    {/* Stage 2: Cost Estimation Button (Visible only if measurement is started) */}
-                    {((floorArea && parseFloat(floorArea) > 0) || measurementDate) && (
-                        <Button
-                            onClick={() => setIsCostEstimationOpen(true)}
-                            variant="outline"
-                            className="border-green-600 text-green-700 hover:bg-green-50"
-                        >
-                            <span className="mr-2">💰</span>
-                            Edytuj Kosztorys
-                        </Button>
-                    )}
-
-                    <div className="flex flex-col items-end gap-1">
-                        <Button 
-                            onClick={() => setIsAssistantOpen(true)}
-                            className={cn(
-                                "shadow-md transition-all",
-                                ((floorArea && parseFloat(floorArea) > 0) || measurementDate)
-                                    ? "bg-amber-500 hover:bg-amber-600 text-white" 
-                                    : "bg-blue-600 hover:bg-blue-700 text-white"
-                            )}
-                        >
-                            <span className="mr-2">{((floorArea && parseFloat(floorArea) > 0) || measurementDate) ? "✏️" : "🚀"}</span>
-                            {((floorArea && parseFloat(floorArea) > 0) || measurementDate) ? "Edytuj Pomiar" : "Uruchom Asystenta"}
-                        </Button>
-                        {((floorArea && parseFloat(floorArea) > 0) || measurementDate) && montage.updatedAt && (
-                             <span className="text-xs text-muted-foreground">
-                                Ostatnia edycja: {formatDistanceToNow(new Date(montage.updatedAt), { addSuffix: true, locale: pl })}
-                             </span>
-                        )}
-                    </div>
+                    <Button 
+                         onClick={saveData}
+                         disabled={isSaving}
+                         className="bg-primary hover:bg-primary/90 text-white shadow-sm"
+                    >
+                         {isSaving ? (
+                             <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Zapisywanie...
+                             </>
+                         ) : (
+                             <>
+                                <Check className="mr-2 h-4 w-4" />
+                                Zapisz Zmiany
+                             </>
+                         )}
+                    </Button>
                 </div>
             )}
-            {isSaving ? (
-                <span className="text-muted-foreground flex items-center gap-1">
-                    <Loader2 className="h-3 w-3 animate-spin" /> Zapisywanie...
-                </span>
-            ) : lastSaved ? (
-                <span className="text-green-600 flex items-center gap-1">
+            {lastSaved ? (
+                <span className="text-green-600 flex items-center gap-1 text-xs">
                     <Check className="h-3 w-3" /> Zapisano {lastSaved.toLocaleTimeString()}
                 </span>
             ) : null}
         </div>
       </div>
-
-      <MeasurementAssistantModal
-        key={isAssistantOpen ? 'open' : 'closed'}
-        isOpen={isAssistantOpen}
-        onClose={() => setIsAssistantOpen(false)}
-        onSave={() => {
-            saveData();
-            setIsAssistantOpen(false);
-            if (onAssistantSave) onAssistantSave();
-        }}
-        measurementDate={measurementDate}
-        setMeasurementDate={setMeasurementDate}
-        isHousingVat={isHousingVat}
-        setIsHousingVat={setIsHousingVat}
-        subfloorCondition={subfloorCondition}
-        setSubfloorCondition={setSubfloorCondition}
-        technicalAudit={technicalAudit}
-        montageId={montage.id}
-        installationMethod={installationMethod}
-        setInstallationMethod={setInstallationMethod}
-        floorPattern={floorPattern}
-        setFloorPattern={setFloorPattern}
-        panelWaste={panelWaste}
-        setPanelWaste={setPanelWaste}
-        floorArea={floorArea}
-        setFloorArea={setFloorArea}
-        panelModel={panelModel}
-        setIsPanelSelectorOpen={setIsPanelSelectorOpen}
-        additionalMaterials={additionalMaterials}
-        setAdditionalMaterials={setAdditionalMaterials}
-        measurementRooms={measurementRooms}
-        setMeasurementRooms={setMeasurementRooms}
-        dateRange={dateRange}
-        setDateRange={setDateRange}
-      />
-
-      <CostEstimationModal
-        isOpen={isCostEstimationOpen}
-        onClose={() => setIsCostEstimationOpen(false)}
-        onSave={(completed) => {
-            saveCostEstimation(completed);
-            setIsCostEstimationOpen(false);
-        }}
-        measurementDate={measurementDate}
-        additionalWorkDescription={additionalWorkDescription}
-        baseService={{
-            name: baseServiceName,
-            quantity: montage.floorArea || 0,
-            unit: 'm2',
-            price: baseServicePrice
-        }}
-        additionalMaterials={additionalMaterials}
-        setAdditionalMaterials={setAdditionalMaterials}
-        additionalServices={additionalServices}
-        setAdditionalServices={setAdditionalServices}
-      />
+{/* Removed Modals from here, they are now handled by Controllers in parent view */}
 
 <Tabs defaultValue="main" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
@@ -910,26 +802,30 @@ export function MontageMeasurementTab({ montage, userRoles = [], defaultOpenModa
                                         readOnly={measurementRooms.length > 0}
                                         className={cn(measurementRooms.length > 0 && "bg-muted text-muted-foreground cursor-not-allowed")}
                                     />
-                                    {!isReadOnly && (
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="absolute right-0 top-0 h-full px-2 text-muted-foreground hover:text-primary"
-                                            onClick={() => setIsAssistantOpen(true)}
-                                            title="Edytuj pomieszczenia"
-                                        >
-                                            <Pencil className="h-4 w-4" />
-                                        </Button>
-                                    )}
+                                    {/* Link to Assistant triggered from parent now */}
                                 </div>
+                                
+                                {/* Rooms List - Enhanced */}
                                 {measurementRooms.length > 0 && (
-                                    <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
-                                        {measurementRooms.map((room, i) => (
-                                            <div key={i} className="flex justify-between">
-                                                <span>{room.name || 'Bez nazwy'}:</span>
-                                                <span>{room.area} m²</span>
+                                    <div className="mt-2 space-y-1.5">
+                                        <Label className="text-[10px] text-muted-foreground uppercase tracking-wide">Pomiary pomieszczeń</Label>
+                                        <div className="bg-muted/30 rounded-lg p-2 space-y-2 border border-border/50">
+                                            {measurementRooms.map((room, i) => (
+                                                <div key={i} className="flex items-center justify-between text-xs bg-white p-1.5 rounded border shadow-sm">
+                                                    <div className="flex items-center gap-1.5 overflow-hidden">
+                                                        <span className="w-5 h-5 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-[10px] shrink-0">
+                                                            {i + 1}
+                                                        </span>
+                                                        <span className="font-medium truncate">{room.name || 'Bez nazwy'}</span>
+                                                    </div>
+                                                    <span className="font-mono bg-gray-50 px-1.5 py-0.5 rounded border">{room.area}m²</span>
+                                                </div>
+                                            ))}
+                                            <div className="pt-1 flex justify-between items-center text-xs font-semibold text-muted-foreground border-t mt-1">
+                                                <span>Suma:</span>
+                                                <span>{measurementRooms.reduce((acc, r) => acc + (r.area || 0), 0).toFixed(2)} m²</span>
                                             </div>
-                                        ))}
+                                        </div>
                                     </div>
                                 )}
                             </div>
