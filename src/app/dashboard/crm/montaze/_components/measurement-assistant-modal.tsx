@@ -687,7 +687,7 @@ export function MeasurementAssistantModal({
     };
 
     return (
-        <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col">
+        <div className="fixed inset-0 z-[200] bg-background/95 backdrop-blur-sm flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b bg-background">
                 <div className="flex items-center gap-2">
@@ -729,7 +729,7 @@ export function MeasurementAssistantModal({
             </div>
 
             {/* Footer */}
-            <div className="fixed bottom-0 left-0 right-0 p-4 border-t bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+            <div className="fixed bottom-0 left-0 right-0 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
                 <div className="max-w-lg mx-auto flex gap-3">
                     {currentStep === STEPS.length - 1 ? (
                         <>
