@@ -6,6 +6,7 @@ import { DateRange } from 'react-day-picker';
 import type { Montage, MeasurementMaterialItem } from '../../types';
 import type { TechnicalAuditData } from '../../technical-data';
 import { MeasurementAssistantModal } from '../../_components/measurement-assistant-modal';
+import { ProductSelectorModal } from '../../_components/product-selector-modal';
 import { updateMontageMeasurement } from '../../actions';
 import { updateTechnicalAudit } from '../../technical-actions';
 
@@ -60,12 +61,10 @@ export function MeasurementAssistantController({ montage, isOpen, onClose, initi
     const [panelWaste, setPanelWaste] = useState<string>(montage.panelWaste?.toString() || '5');
     const [floorArea, setFloorArea] = useState(montage.floorArea?.toString() || '');
     
-    // We don't need full panel selector logic here if Assistant only sets the model name string
-    // But AssistantModal prop expects setIsPanelSelectorOpen. 
-    // If the assistant uses the full selector, we need that state too.
-    // For now, let's keep it minimal or mock it if the assistant doesn't deeply use it yet.
-    const [panelModel] = useState(montage.panelModel || '');
-    const [, setIsPanelSelectorOpen] = useState(false);
+    // Panel selection state
+    const [panelModel, setPanelModel] = useState(montage.panelModel || '');
+    const [panelProductId, setPanelProductId] = useState<string | null>(montage.panelProductId || null);
+    const [isPanelSelectorOpen, setIsPanelSelectorOpen] = useState(false);
 
     const [additionalMaterials, setAdditionalMaterials] = useState<MeasurementMaterialItem[]>(() => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -113,7 +112,7 @@ export function MeasurementAssistantController({ montage, isOpen, onClose, initi
                measurementDetails: montage.measurementDetails || '',
                floorDetails: montage.floorDetails || '',
                panelModel: panelModel,
-               panelProductId: montage.panelProductId, 
+               panelProductId: panelProductId, 
                modelsApproved: montage.modelsApproved || false,
                additionalInfo: montage.additionalInfo || '',
                sketchUrl: montage.sketchUrl || null,
@@ -190,5 +189,17 @@ export function MeasurementAssistantController({ montage, isOpen, onClose, initi
             
             initialStep={initialStep}
         />
+        
+        <ProductSelectorModal 
+            isOpen={isPanelSelectorOpen}
+            onClose={() => setIsPanelSelectorOpen(false)}
+            type="panel"
+            currentValue={panelModel}
+            onSelect={(product) => {
+                setPanelModel(product.name);
+                setPanelProductId(String(product.id));
+            }}
+        />
+        </>
     );
 }
