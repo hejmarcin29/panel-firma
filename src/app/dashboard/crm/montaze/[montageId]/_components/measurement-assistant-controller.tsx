@@ -3,11 +3,12 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { DateRange } from 'react-day-picker';
+import { toast } from 'sonner';
 import type { Montage, MeasurementMaterialItem } from '../../types';
 import type { TechnicalAuditData } from '../../technical-data';
 import { MeasurementAssistantModal } from '../../_components/measurement-assistant-modal';
 import { ProductSelectorModal } from '../../_components/product-selector-modal';
-import { updateMontageMeasurement } from '../../actions';
+import { updateMontageMeasurement, updateMontageStatus } from '../../actions';
 import { updateTechnicalAudit } from '../../technical-actions';
 
 interface MeasurementAssistantControllerProps {
@@ -123,11 +124,19 @@ export function MeasurementAssistantController({ montage, isOpen, onClose, initi
             // 2. Save Technical Audit
             await updateTechnicalAudit(montage.id, technicalAudit);
 
+            // 3. Auto-update status if scheduled
+            if (montage.status === 'measurement_scheduled') {
+                await updateMontageStatus({ montageId: montage.id, status: 'measurement_done' });
+                toast.success("Pomiar zatwierdzony! Przejdź do wyceny.");
+            } else {
+                toast.success("Dane pomiarowe zaktualizowane");
+            }
+
             router.refresh();
             onClose();
         } catch (error) {
             console.error("Error saving assistant data", error);
-            // toast error?
+            toast.error("Błąd zapisu danych pomiarowych");
         }
     };
 

@@ -94,6 +94,13 @@ export function InstallerMeasurementTab({ montage, userRoles = [], onEditSection
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const isFirstRender = useRef(true);
 
+  // Define installation date variables for display
+  const installationStart = montage.scheduledInstallationAt ? new Date(montage.scheduledInstallationAt) : null;
+  const installationEnd = montage.scheduledInstallationEndAt ? new Date(montage.scheduledInstallationEndAt) : null;
+  const installationDays = installationStart && installationEnd 
+       ? Math.ceil((installationEnd.getTime() - installationStart.getTime()) / (1000 * 60 * 60 * 24)) 
+       : 1;
+
   // Sync state with prop changes
   useEffect(() => {
     // When montage prop updates (e.g. after Assistant saves and router.refresh() occurs),
@@ -102,11 +109,51 @@ export function InstallerMeasurementTab({ montage, userRoles = [], onEditSection
     setSubfloorCondition(montage.measurementSubfloorCondition || 'good');
     setIsHousingVat(montage.isHousingVat ?? true);
     setHumidity((montage.technicalAudit as unknown as TechnicalAuditData)?.humidity ?? null);
-    // Add other fields as needed...
+    
+    // Updated syncing for all fields
+    setMeasurementRooms(montage.measurementRooms || []);
+    setAdditionalMaterials(() => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const raw = montage.measurementAdditionalMaterials as any;
+        if (Array.isArray(raw)) return raw;
+        if (typeof raw === 'string' && raw.trim().length > 0) {
+            return [{
+                id: 'legacy-1',
+                name: raw,
+                quantity: '',
+                supplySide: 'installer'
+            }];
+        }
+        return [];
+    });
+    // Sync other fields
+    setPanelModel(montage.panelModel || '');
+    setPanelProductId(montage.panelProductId || null);
+    setPanelWaste(montage.panelWaste?.toString() || '5');
+    setInstallationMethod((montage.measurementInstallationMethod as 'click' | 'glue') || 'click');
+    setFloorPattern((montage.measurementFloorPattern as 'classic' | 'herringbone') || 'classic');
+    setLayingDirection(montage.measurementLayingDirection || '');
+
   }, [montage]);
 
   const technicalAudit = montage.technicalAudit as unknown as TechnicalAuditData | null;
   const [humidity, setHumidity] = useState<number | null>(technicalAudit?.humidity ?? null);
+  const [layingDirection, setLayingDirection] = useState(montage.measurementLayingDirection || '');
+  const [measurementRooms, setMeasurementRooms] = useState<{ name: string; area: number }[]>(montage.measurementRooms || []);
+  const [additionalMaterials, setAdditionalMaterials] = useState<MeasurementMaterialItem[]>(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const raw = montage.measurementAdditionalMaterials as any;
+    if (Array.isArray(raw)) return raw;
+    if (typeof raw === 'string' && raw.trim().length > 0) {
+        return [{
+            id: 'legacy-1',
+            name: raw,
+            quantity: '',
+            supplySide: 'installer'
+        }];
+    }
+    return [];
+});
 
 
   const saveData = useCallback(async () => {
@@ -215,6 +262,32 @@ export function InstallerMeasurementTab({ montage, userRoles = [], onEditSection
              <Info className="w-5 h-5 shrink-0" />
              Edycja zablokowana przez rozliczenie.
          </div>
+      )}
+
+      {/* NEW SECTION: Planned Installation Date (Highlighted) */}
+      {installationStart && (
+          <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 flex items-center gap-4 shadow-sm">
+              <div className="bg-white p-3 rounded-lg border border-indigo-100 shadow-sm">
+                  <CalendarIcon className="w-6 h-6 text-indigo-600" />
+              </div>
+              <div className="flex-1">
+                  <span className="text-xs uppercase font-bold text-indigo-600 tracking-wider">Planowany Termin Montażu</span>
+                  <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2">
+                       <span className="text-lg font-bold text-gray-900">
+                           {format(installationStart, 'dd.MM.yyyy')}
+                           {installationEnd && installationStart.getTime() !== installationEnd.getTime() && (
+                               <>
+                                <span className="mx-1 text-gray-400">-</span> 
+                                {format(installationEnd, 'dd.MM.yyyy')}
+                               </>
+                           )}
+                       </span>
+                       <span className="text-sm text-indigo-700 font-medium">
+                           ({installationDays} {installationDays === 1 ? 'dzień' : 'dni'} robocze)
+                       </span>
+                  </div>
+              </div>
+          </div>
       )}
 
       {/* 2. KPI Grid (Critical Parameters) */}
@@ -345,6 +418,70 @@ export function InstallerMeasurementTab({ montage, userRoles = [], onEditSection
                    </button>
                </div>
           </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Model podłogi</Label>
+                  <div className="font-medium text-sm p-2 bg-muted/30 rounded-md border">
+                      {panelModel || 'Nie wybrano'}
+                  </div>
+              </div>
+              <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Układanie</Label>
+                   <div className="grid grid-cols-2 gap-2">
+                      <div className="font-medium text-sm p-2 bg-muted/30 rounded-md border">
+                            {floorPattern === 'herringbone' ? 'Jodełka' : 'Klasyk'}
+                      </div>
+                      <div className="font-medium text-sm p-2 bg-muted/30 rounded-md border truncate" title={layingDirection}>
+                            {layingDirection || 'Brak kierunku'}
+                      </div>
+                   </div>
+              </div>
+              <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Odpad (Zapas)</Label>
+                  <div className="font-medium text-sm p-2 bg-muted/30 rounded-md border flex justify-between">
+                      <span>{panelWaste}%</span>
+                  </div>
+              </div>
+          </div>
+
+          {/* Detailed Technical Audit */}
+          {technicalAudit && (
+               <div className="mt-4 p-4 bg-slate-50 border rounded-xl space-y-3">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Szczegóły Techniczne (Audyt)</h4>
+                    <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-sm">
+                        <div className="flex flex-col">
+                            <span className="text-[10px] text-muted-foreground">Typ podłoża</span>
+                            <span className="font-medium">
+                                {technicalAudit.subfloorType === 'concrete' && 'Cementowe'}
+                                {technicalAudit.subfloorType === 'anhydrite' && 'Anhydryt'}
+                                {technicalAudit.subfloorType === 'wood' && 'Drewniane/OSB'}
+                                {!technicalAudit.subfloorType && '-'}
+                            </span>
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-[10px] text-muted-foreground">Ogrzewanie podłogowe</span>
+                            <span className={cn("font-medium", technicalAudit.floorHeated ? "text-orange-600" : "")}>
+                                {technicalAudit.floorHeated ? 'Tak, występuje' : 'Brak'}
+                            </span>
+                        </div>
+                        {technicalAudit.floorHeated && (
+                            <div className="flex flex-col">
+                                <span className="text-[10px] text-muted-foreground">Protokół wygrzewania</span>
+                                <span className={cn("font-medium", technicalAudit.heatingProtocol ? "text-green-600" : "text-red-600")}>
+                                    {technicalAudit.heatingProtocol ? 'Dostępny' : 'Brak dokumentu'}
+                                </span>
+                            </div>
+                        )}
+                        <div className="flex flex-col col-span-2">
+                             <span className="text-[10px] text-muted-foreground">Uwagi techniczne</span>
+                             <span className="text-sm italic text-gray-700 bg-white p-2 rounded border mt-1">
+                                 {technicalAudit.notes || 'Brak uwag.'}
+                             </span>
+                        </div>
+                    </div>
+               </div>
+          )}
 
           {/* Quick Note Input */}
           <div className="space-y-2">
@@ -367,6 +504,28 @@ export function InstallerMeasurementTab({ montage, userRoles = [], onEditSection
                    />
                )}
           </div>
+          
+           {/* Additional Materials List */}
+           {additionalMaterials.length > 0 && (
+              <div className="space-y-2 pt-2">
+                  <Label className="text-xs font-semibold">Zapotrzebowanie Materiałowe (Dodatkowe)</Label>
+                  <div className="rounded-lg border bg-card divide-y">
+                      {additionalMaterials.map((item, idx) => (
+                          <div key={idx} className="flex justify-between items-center p-3 text-sm">
+                              <div className="flex flex-col">
+                                  <span className="font-medium">{item.name}</span>
+                                  <span className="text-[10px] text-muted-foreground">
+                                      Dostarcza: {item.supplySide === 'installer' ? 'Montażysta' : 'Firma'}
+                                  </span>
+                              </div>
+                              <span className="font-mono bg-muted px-2 py-1 rounded text-xs">
+                                  {item.quantity} {item.unit || 'szt.'}
+                              </span>
+                          </div>
+                      ))}
+                  </div>
+              </div>
+           )}
       </div>
 
       {/* 5. Media (Carousel Style) */}
