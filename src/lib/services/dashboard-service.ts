@@ -526,7 +526,7 @@ export async function getInstallerDashboardData(userId: string) {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const hiddenStatuses = [
+    const hiddenStatuses: MontageStatus[] = [
         'completed', 
         'rejected', 
         'on_hold', 

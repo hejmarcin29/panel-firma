@@ -13,9 +13,8 @@ import { tryGetR2Config } from '@/lib/r2/config';
 
 import { DashboardBuilder } from './_components/dashboard-builder';
 import { ArchitectDashboard } from './_components/architect-dashboard';
-import { InstallerDashboard } from './_components/installer-dashboard';
 import type { DashboardLayoutConfig } from './actions';
-import { getDashboardStats, getArchitectDashboardStats, getInstallerDashboardData } from '@/lib/services/dashboard-service';
+import { getDashboardStats, getArchitectDashboardStats } from '@/lib/services/dashboard-service';
 import { redirect } from 'next/navigation';
 
 const DEFAULT_LAYOUT: DashboardLayoutConfig = {
