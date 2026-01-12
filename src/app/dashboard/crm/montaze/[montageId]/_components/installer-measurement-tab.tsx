@@ -374,7 +374,7 @@ export function InstallerMeasurementTab({ montage, userRoles = [], onEditSection
           <h3 className="font-semibold text-sm">Media i Szkice</h3>
           <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 snap-x">
                {/* Sketch Card */}
-               <Card className="min-w-[160px] snap-center cursor-pointer border-dashed border-2 hover:border-primary/50 transition-colors">
+               <Card className="min-w-40 snap-center cursor-pointer border-dashed border-2 hover:border-primary/50 transition-colors">
                    <CardContent className="p-0 flex flex-col items-center justify-center h-[120px]">
                        {montage.sketchUrl ? (
                            <div className="relative w-full h-full">
@@ -398,7 +398,7 @@ export function InstallerMeasurementTab({ montage, userRoles = [], onEditSection
                
                {/* Photos Placeholder */}
                {technicalAudit?.photos?.map((photo: string, i: number) => (
-                   <Card key={i} className="min-w-[160px] snap-center overflow-hidden">
+                   <Card key={i} className="min-w-40 snap-center overflow-hidden">
                        <CardContent className="p-0 h-[120px]">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                            <img src={photo} alt={`Foto ${i}`} className="w-full h-full object-cover" />

@@ -260,7 +260,7 @@ export function MeasurementAssistantModal({
                                 <SelectTrigger className="h-12">
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent className="z-[250]">
+                                <SelectContent className="z-250">
                                     <SelectItem value="ideal">Idealne (bez uwag)</SelectItem>
                                     <SelectItem value="good">Dobre (drobne nierówności)</SelectItem>
                                     <SelectItem value="bad">Złe (wymaga szlifowania/naprawy)</SelectItem>
@@ -416,7 +416,7 @@ export function MeasurementAssistantModal({
                                         <SelectTrigger>
                                             <SelectValue />
                                         </SelectTrigger>
-                                        <SelectContent className="z-[250]">
+                                        <SelectContent className="z-250">
                                             <SelectItem value="click">Pływająca (Click)</SelectItem>
                                             <SelectItem value="glue">Klejona</SelectItem>
                                         </SelectContent>
@@ -428,7 +428,7 @@ export function MeasurementAssistantModal({
                                         <SelectTrigger>
                                             <SelectValue />
                                         </SelectTrigger>
-                                        <SelectContent className="z-[250]">
+                                        <SelectContent className="z-250">
                                             <SelectItem value="classic">Klasycznie</SelectItem>
                                             <SelectItem value="herringbone">Jodełka</SelectItem>
                                         </SelectContent>
@@ -621,7 +621,7 @@ export function MeasurementAssistantModal({
                                                     <SelectTrigger className="w-20">
                                                         <SelectValue />
                                                     </SelectTrigger>
-                                                    <SelectContent className="z-[250]">
+                                                    <SelectContent className="z-250">
                                                         <SelectItem value="szt">szt</SelectItem>
                                                         <SelectItem value="opak.">opak.</SelectItem>
                                                         <SelectItem value="mb">mb</SelectItem>
@@ -645,7 +645,7 @@ export function MeasurementAssistantModal({
                                                 <SelectTrigger>
                                                     <SelectValue />
                                                 </SelectTrigger>
-                                                <SelectContent className="z-[250]">
+                                                <SelectContent className="z-250">
                                                     <SelectItem value="installer">Montażysta (Kupuję)</SelectItem>
                                                     <SelectItem value="company">Firma (Z magazynu)</SelectItem>
                                                 </SelectContent>
@@ -808,7 +808,7 @@ export function MeasurementAssistantModal({
     };
 
     return (
-        <div className="fixed inset-0 z-[200] bg-background/95 backdrop-blur-sm flex flex-col">
+        <div className="fixed inset-0 z-200 bg-background/95 backdrop-blur-sm flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b bg-background">
                 <div className="flex items-center gap-2">

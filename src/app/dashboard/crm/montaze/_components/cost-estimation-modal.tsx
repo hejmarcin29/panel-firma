@@ -303,10 +303,10 @@ export function CostEstimationModal({
                                                         setAdditionalServices(newServices);
                                                     }}
                                                 >
-                                                    <SelectTrigger className="w-[80px]">
+                                                    <SelectTrigger className="w-20">
                                                         <SelectValue />
                                                     </SelectTrigger>
-                                                    <SelectContent className="z-[250]">
+                                                    <SelectContent className="z-250">
                                                         <SelectItem value="m2">m²</SelectItem>
                                                         <SelectItem value="mb">mb</SelectItem>
                                                         <SelectItem value="szt">szt</SelectItem>
@@ -399,7 +399,7 @@ export function CostEstimationModal({
     };
 
     return (
-        <div className="fixed inset-0 z-[200] bg-background/95 backdrop-blur-sm flex flex-col">
+        <div className="fixed inset-0 z-200 bg-background/95 backdrop-blur-sm flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b bg-background">
                 <Button variant="ghost" size="icon" onClick={onClose}>
