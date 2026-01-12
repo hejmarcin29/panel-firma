@@ -28,7 +28,7 @@ export function MeasurementAssistantController({ montage, isOpen, onClose }: Mea
     const [subfloorCondition, setSubfloorCondition] = useState(montage.measurementSubfloorCondition || 'good');
     
     // Technical Audit
-    const [technicalAudit, setTechnicalAudit] = useState<TechnicalAuditData>(() => {
+    const [technicalAudit] = useState<TechnicalAuditData>(() => {
         if (montage.technicalAudit) {
             return montage.technicalAudit as unknown as TechnicalAuditData;
         }
@@ -59,8 +59,8 @@ export function MeasurementAssistantController({ montage, isOpen, onClose }: Mea
     // But AssistantModal prop expects setIsPanelSelectorOpen. 
     // If the assistant uses the full selector, we need that state too.
     // For now, let's keep it minimal or mock it if the assistant doesn't deeply use it yet.
-    const [panelModel, setPanelModel] = useState(montage.panelModel || '');
-    const [isPanelSelectorOpen, setIsPanelSelectorOpen] = useState(false);
+    const [panelModel] = useState(montage.panelModel || '');
+    const [, setIsPanelSelectorOpen] = useState(false);
 
     const [additionalMaterials, setAdditionalMaterials] = useState<MeasurementMaterialItem[]>(() => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -80,7 +80,7 @@ export function MeasurementAssistantController({ montage, isOpen, onClose }: Mea
     const [measurementRooms, setMeasurementRooms] = useState<{ name: string; area: number }[]>(montage.measurementRooms || []);
     
     // Assistant needs dateRange prop?
-    const [dateRange, setDateRange] = useState<any>({
+    const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
         from: montage.scheduledInstallationAt ? new Date(montage.scheduledInstallationAt) : undefined,
         to: montage.scheduledInstallationEndAt ? new Date(montage.scheduledInstallationEndAt) : undefined,
     });

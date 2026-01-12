@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useTransition, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { CalendarIcon, Eraser, Plus, Pencil } from 'lucide-react';
-import { format, formatDistanceToNow } from 'date-fns';
+import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { DateRange } from 'react-day-picker';
 
@@ -59,8 +59,8 @@ import type { TechnicalAuditData } from '../technical-data';
 import { addMontageAttachment } from '../actions';
 import { MontageSubCategories } from '@/lib/r2/constants';
 
-import { updateMontageCostEstimation } from '../actions';
-import { getEstimatedBaseService } from '../actions-services';
+// import { updateMontageCostEstimation } from '../actions';
+// import { getEstimatedBaseService } from '../actions-services';
 
 interface MontageMeasurementTabProps {
   montage: Montage;
@@ -118,7 +118,7 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
   // Additional Services State (for Cost Estimation)
   // We don't have a direct field in montage for this yet, so we might need to fetch it or assume it's empty initially
   // For now, let's initialize it as empty array. In a real scenario, we would fetch existing service items linked to this montage.
-  const [additionalServices, setAdditionalServices] = useState<{ id: string; name: string; quantity: number; unit: string; price: number }[]>([]);
+  // const [additionalServices, setAdditionalServices] = useState<{ id: string; name: string; quantity: number; unit: string; price: number }[]>([]);
 
   const [isHousingVat, setIsHousingVat] = useState(montage.isHousingVat ?? true);
 
@@ -187,23 +187,23 @@ export function MontageMeasurementTab({ montage, userRoles = [] }: MontageMeasur
 
   const technicalAudit = montage.technicalAudit as unknown as TechnicalAuditData | null;
 
-  const saveCostEstimation = useCallback(async (completed: boolean = false) => {
-      setIsSaving(true);
-      try {
-          await updateMontageCostEstimation({
-              montageId: montage.id,
-              measurementAdditionalMaterials: additionalMaterials,
-              additionalServices: additionalServices,
-              completed
-          });
-          setLastSaved(new Date());
-          router.refresh();
-      } catch (err) {
-          console.error("Cost estimation save failed", err);
-      } finally {
-          setIsSaving(false);
-      }
-  }, [montage.id, additionalMaterials, additionalServices, router]);
+//   const saveCostEstimation = useCallback(async (completed: boolean = false) => {
+//       setIsSaving(true);
+//       try {
+//           await updateMontageCostEstimation({
+//               montageId: montage.id,
+//               measurementAdditionalMaterials: additionalMaterials,
+//               // additionalServices: additionalServices,
+//               completed
+//           });
+//           setLastSaved(new Date());
+//           router.refresh();
+//       } catch (err) {
+//           console.error("Cost estimation save failed", err);
+//       } finally {
+//           setIsSaving(false);
+//       }
+//   }, [montage.id, additionalMaterials, router]);
 
   const saveData = useCallback(async () => {
       setIsSaving(true);

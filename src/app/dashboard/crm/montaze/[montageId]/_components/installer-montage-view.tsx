@@ -7,7 +7,6 @@ import {
     Ruler, 
     Camera, 
     MessageSquare, 
-    FileText,
     Navigation,
     Info,
     Calendar as CalendarIcon,

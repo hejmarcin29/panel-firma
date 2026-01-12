@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, addMonths, subMonths, startOfWeek, endOfWeek, compareAsc, parseISO } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, addMonths, subMonths, startOfWeek, endOfWeek, compareAsc } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Clock, MapPin, Navigation, Calendar as CalendarIcon, List as ListIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,10 +10,11 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import type { Montage } from '@/app/dashboard/crm/montaze/types';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function CalendarView({ montages }: { montages: any[] }) {
+export function CalendarView({ montages }: { montages: Montage[] }) {
     const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
+
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(new Date());
 
@@ -185,7 +186,7 @@ export function CalendarView({ montages }: { montages: any[] }) {
     );
 }
 
-function MontageCard({ montage, showDate = false }: { montage: any, showDate?: boolean }) {
+function MontageCard({ montage, showDate = false }: { montage: Montage, showDate?: boolean }) {
     return (
         <Link href={`/installer/montages/${montage.id}`} className="block mb-3">
             <Card className="active:scale-98 transition-transform">

@@ -16,7 +16,7 @@ interface CostEstimationControllerProps {
 export function CostEstimationController({ montage, isOpen, onClose }: CostEstimationControllerProps) {
     const router = useRouter();
 
-    const [additionalWorkDescription, setAdditionalWorkDescription] = useState(montage.measurementAdditionalWorkDescription || '');
+    const [additionalWorkDescription] = useState(montage.measurementAdditionalWorkDescription || '');
     
     // Additional Materials - reused from measurement or specific for cost?
     // In original tab: const [additionalMaterials, setAdditionalMaterials] = useState...
