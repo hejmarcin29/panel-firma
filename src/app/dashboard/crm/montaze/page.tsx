@@ -177,10 +177,10 @@ export default async function MontazePage(props: any) {
 
             let filteredStatuses = inProgressStatuses;
             if (stage !== 'all') {
-                if (stage === 'before-measure') filteredStatuses = ['measurement_scheduled'];
-                if (stage === 'before-first-payment') filteredStatuses = ['waiting_for_deposit'];
-                if (stage === 'before-install') filteredStatuses = ['installation_scheduled'];
-                if (stage === 'before-invoice') filteredStatuses = ['final_settlement'];
+                if (stage === 'before-measure') filteredStatuses = ['measurement_to_schedule', 'measurement_scheduled'];
+                if (stage === 'before-first-payment') filteredStatuses = ['measurement_done', 'quote_in_progress', 'quote_sent', 'quote_accepted', 'contract_signed', 'waiting_for_deposit'];
+                if (stage === 'before-install') filteredStatuses = ['deposit_paid', 'materials_ordered', 'materials_pickup_ready', 'installation_scheduled', 'materials_delivered'];
+                if (stage === 'before-invoice') filteredStatuses = ['installation_in_progress', 'protocol_signed', 'final_invoice_issued', 'final_settlement'];
             }
 
             conditions.push(inArray(montages.status, filteredStatuses));
