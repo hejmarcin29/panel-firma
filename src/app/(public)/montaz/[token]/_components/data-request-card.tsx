@@ -263,16 +263,17 @@ export function DataRequestCard({ montage, token }: DataRequestCardProps) {
                                     </div>
                                 </>
                             )}
-
-                        <Label>Adres do faktury (Ulica i numer)</Label>
-                        <Input 
-                            value={formData.billingAddress} 
-                            onChange={(e) => setFormData({...formData, billingAddress: e.target.value})}
-                            placeholder="np. Długa 10/4"
-                        />
-                    </div>
-                    <div className="grid grid-cols-[1fr_2fr] gap-4">
+                        
                         <div className="space-y-2">
+                            <Label>Adres do faktury (Ulica i numer)</Label>
+                            <Input 
+                                value={formData.billingAddress} 
+                                onChange={(e) => setFormData({...formData, billingAddress: e.target.value})}
+                                placeholder="np. Długa 10/4"
+                            />
+                        </div>
+                        <div className="grid grid-cols-[1fr_2fr] gap-4">
+                            <div className="space-y-2">
                             <Label>Kod pocztowy</Label>
                             <Input 
                                 value={formData.billingPostalCode} 

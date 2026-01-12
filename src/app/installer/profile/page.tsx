@@ -1,14 +1,13 @@
 import { getInstallerProfile } from '../actions';
 import { signOut } from '@/lib/auth/session';
 import { redirect } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { User, Phone, MapPin, Truck, Wallet, LogOut, Settings } from 'lucide-react';
+import { User, Phone, MapPin, Truck, Wallet, LogOut } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
-import Link from 'next/link';
+// import Link from 'next/link';
 
 export const metadata = {
     title: 'Profil | Panel Montażysty',

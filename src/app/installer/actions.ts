@@ -3,7 +3,7 @@
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
 import { montages, settlements, users } from '@/lib/db/schema';
-import { eq, desc, and, gte, lte, or } from 'drizzle-orm';
+import { eq, desc, or } from 'drizzle-orm';
 
 export async function getInstallerMontages() {
     const user = await requireUser();
