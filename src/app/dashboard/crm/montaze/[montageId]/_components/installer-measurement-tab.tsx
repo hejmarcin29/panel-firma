@@ -47,24 +47,25 @@ export function InstallerMeasurementTab({ montage, userRoles = [], onEditSection
   const [floorArea, setFloorArea] = useState<string>(montage.floorArea?.toString() || '');
   const [panelAdditionalMaterials] = useState(montage.floorDetails || '');
   
-  const [panelModel] = useState(montage.panelModel || '');
-  const [panelProductId] = useState<number | string | null>(montage.panelProductId || null);
-  const [panelWaste] = useState<string>(montage.panelWaste?.toString() || '5');
+  const [panelModel, setPanelModel] = useState(montage.panelModel || '');
+  const [panelProductId, setPanelProductId] = useState<number | string | null>(montage.panelProductId || null);
+  const [panelWaste, setPanelWaste] = useState<string>(montage.panelWaste?.toString() || '5');
   const [modelsApproved] = useState(montage.modelsApproved || false);
 
   const [installationMethod, setInstallationMethod] = useState<'click' | 'glue'>(
     (montage.measurementInstallationMethod as 'click' | 'glue') || 'click'
   );
-  const [floorPattern] = useState<'classic' | 'herringbone'>(
+  const [floorPattern, setFloorPattern] = useState<'classic' | 'herringbone'>(
     (montage.measurementFloorPattern as 'classic' | 'herringbone') || 'classic'
   );
+  const [layingDirection, setLayingDirection] = useState(montage.measurementLayingDirection || '');
 
   const [subfloorCondition, setSubfloorCondition] = useState(montage.measurementSubfloorCondition || 'good');
   const [additionalWorkNeeded, setAdditionalWorkNeeded] = useState(montage.measurementAdditionalWorkNeeded || false);
   const [additionalWorkDescription, setAdditionalWorkDescription] = useState(montage.measurementAdditionalWorkDescription || '');
   
   // Legacy material handling
-  const [additionalMaterials] = useState<MeasurementMaterialItem[]>(() => {
+  const [additionalMaterials, setAdditionalMaterials] = useState<MeasurementMaterialItem[]>(() => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const raw = montage.measurementAdditionalMaterials as any;
       if (Array.isArray(raw)) return raw;
@@ -79,7 +80,7 @@ export function InstallerMeasurementTab({ montage, userRoles = [], onEditSection
       return [];
   });
   
-  const [measurementRooms] = useState<{ name: string; area: number }[]>(montage.measurementRooms || []);
+  const [measurementRooms, setMeasurementRooms] = useState<{ name: string; area: number }[]>(montage.measurementRooms || []);
 
   const [isHousingVat, setIsHousingVat] = useState(montage.isHousingVat ?? true);
   const [additionalInfo] = useState(montage.additionalInfo || '');
@@ -138,22 +139,6 @@ export function InstallerMeasurementTab({ montage, userRoles = [], onEditSection
 
   const technicalAudit = montage.technicalAudit as unknown as TechnicalAuditData | null;
   const [humidity, setHumidity] = useState<number | null>(technicalAudit?.humidity ?? null);
-  const [layingDirection, setLayingDirection] = useState(montage.measurementLayingDirection || '');
-  const [measurementRooms, setMeasurementRooms] = useState<{ name: string; area: number }[]>(montage.measurementRooms || []);
-  const [additionalMaterials, setAdditionalMaterials] = useState<MeasurementMaterialItem[]>(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const raw = montage.measurementAdditionalMaterials as any;
-    if (Array.isArray(raw)) return raw;
-    if (typeof raw === 'string' && raw.trim().length > 0) {
-        return [{
-            id: 'legacy-1',
-            name: raw,
-            quantity: '',
-            supplySide: 'installer'
-        }];
-    }
-    return [];
-});
 
 
   const saveData = useCallback(async () => {
