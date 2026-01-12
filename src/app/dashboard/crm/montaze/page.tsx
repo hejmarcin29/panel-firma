@@ -299,7 +299,7 @@ export default async function MontazePage(props: any) {
     const newLeadsCountRes = await db
         .select({ count: sql<number>`count(*)` })
         .from(montages)
-        .where(eq(montages.status, 'new_lead'));
+        .where(and(eq(montages.status, 'new_lead'), isNull(montages.deletedAt)));
     const newLeadsCount = Number(newLeadsCountRes[0]?.count ?? 0);
     const montagesList = montageRows.map(row => mapMontageRow(row as MontageRow, publicBaseUrl));
 
@@ -363,26 +363,36 @@ export default async function MontazePage(props: any) {
     } else {
         // In-progress view
         if (stage !== 'all') {
-             const statusMap: Record<string, string> = {
-                'before-measure': 'before_measurement',
-                'before-first-payment': 'before_first_payment',
-                'before-install': 'before_installation',
-                'before-invoice': 'before_final_invoice'
+             const statusMap: Record<string, string[]> = {
+                'before-measure': ['measurement_to_schedule', 'measurement_scheduled'],
+                'before-first-payment': ['measurement_done', 'quote_in_progress', 'quote_sent', 'quote_accepted', 'contract_signed', 'waiting_for_deposit'],
+                'before-install': ['deposit_paid', 'materials_ordered', 'materials_pickup_ready', 'installation_scheduled', 'materials_delivered'],
+                'before-invoice': ['installation_in_progress', 'protocol_signed', 'final_invoice_issued', 'final_settlement']
             };
-            const targetStatus = statusMap[stage];
-            filteredStatusOptions = statusOptions.filter(s => s.value === targetStatus);
+            const targetStatuses = statusMap[stage] || [];
+            filteredStatusOptions = statusOptions.filter(s => targetStatuses.includes(s.value));
         } else {
-            filteredStatusOptions = statusOptions.filter(s => 
-                ![
-                    'new_lead', 
-                    'lead_contact', 
-                    'lead_samples_pending', 
-                    'lead_samples_sent', 
-                    'lead_pre_estimate',
-                    'measurement_to_schedule', 
-                    'completed'
-                ].includes(s.value)
-            );
+            const inProgressStatuses = [
+                'measurement_to_schedule',
+                'measurement_scheduled',
+                'measurement_done',
+                'quote_in_progress',
+                'quote_sent',
+                'quote_accepted',
+                'contract_signed',
+                'waiting_for_deposit',
+                'deposit_paid',
+                'materials_ordered',
+                'materials_pickup_ready',
+                'installation_scheduled',
+                'materials_delivered',
+                'installation_in_progress',
+                'protocol_signed',
+                'final_invoice_issued',
+                'final_settlement',
+                'complaint'
+            ];
+            filteredStatusOptions = statusOptions.filter(s => inProgressStatuses.includes(s.value));
         }
     }
 
