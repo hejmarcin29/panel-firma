@@ -92,6 +92,22 @@ export function MeasurementAssistantModal({
     const [auditData, setAuditData] = useState<TechnicalAuditData | null>(technicalAudit);
     const [isRoomsExpanded, setIsRoomsExpanded] = useState(measurementRooms.length > 0);
 
+    // Auto-save Audit Data
+    useEffect(() => {
+        if (!auditData) return;
+        
+        const timer = setTimeout(async () => {
+             console.log("Auto-saving technical audit...");
+             try {
+                 await updateTechnicalAudit(montageId, auditData);
+             } catch (e) {
+                 console.error("Audit auto-save failed", e);
+             }
+        }, 1500);
+
+        return () => clearTimeout(timer);
+    }, [auditData, montageId]);
+
     // Auto-calculate waste
     useEffect(() => {
         if (installationMethod === 'glue') {
@@ -232,7 +248,7 @@ export function MeasurementAssistantModal({
                                 <SelectTrigger className="h-12">
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="z-[250]">
                                     <SelectItem value="ideal">Idealne (bez uwag)</SelectItem>
                                     <SelectItem value="good">Dobre (drobne nierówności)</SelectItem>
                                     <SelectItem value="bad">Złe (wymaga szlifowania/naprawy)</SelectItem>
@@ -388,7 +404,7 @@ export function MeasurementAssistantModal({
                                         <SelectTrigger>
                                             <SelectValue />
                                         </SelectTrigger>
-                                        <SelectContent>
+                                        <SelectContent className="z-[250]">
                                             <SelectItem value="click">Pływająca (Click)</SelectItem>
                                             <SelectItem value="glue">Klejona</SelectItem>
                                         </SelectContent>
@@ -400,7 +416,7 @@ export function MeasurementAssistantModal({
                                         <SelectTrigger>
                                             <SelectValue />
                                         </SelectTrigger>
-                                        <SelectContent>
+                                        <SelectContent className="z-[250]">
                                             <SelectItem value="classic">Klasycznie</SelectItem>
                                             <SelectItem value="herringbone">Jodełka</SelectItem>
                                         </SelectContent>
@@ -500,7 +516,7 @@ export function MeasurementAssistantModal({
                                                     <SelectTrigger className="w-20">
                                                         <SelectValue />
                                                     </SelectTrigger>
-                                                    <SelectContent>
+                                                    <SelectContent className="z-[250]">
                                                         <SelectItem value="szt">szt</SelectItem>
                                                         <SelectItem value="opak.">opak.</SelectItem>
                                                         <SelectItem value="mb">mb</SelectItem>
@@ -524,7 +540,7 @@ export function MeasurementAssistantModal({
                                                 <SelectTrigger>
                                                     <SelectValue />
                                                 </SelectTrigger>
-                                                <SelectContent>
+                                                <SelectContent className="z-[250]">
                                                     <SelectItem value="installer">Montażysta (Kupuję)</SelectItem>
                                                     <SelectItem value="company">Firma (Z magazynu)</SelectItem>
                                                 </SelectContent>

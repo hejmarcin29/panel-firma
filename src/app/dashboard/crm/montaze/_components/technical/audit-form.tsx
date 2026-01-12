@@ -107,7 +107,7 @@ export function AuditForm({ montageId, initialData, readOnly = false, hideSaveBu
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <Label className="text-base font-medium">Audyt Techniczny Podłoża</Label>
-        {!readOnly && (
+        {!readOnly && !hideSaveButton && (
             <Button onClick={handleSave} disabled={isPending} size="sm" variant="outline">
                 {isPending && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
                 Zapisz Audyt
