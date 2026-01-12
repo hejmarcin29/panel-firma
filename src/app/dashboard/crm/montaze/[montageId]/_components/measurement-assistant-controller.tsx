@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Montage, MeasurementMaterialItem } from '../types';
-import type { TechnicalAuditData } from '../technical-data';
-import { MeasurementAssistantModal } from './_components/measurement-assistant-modal';
-import { updateMontageMeasurement } from './actions';
-import { updateTechnicalAudit } from './technical-actions';
+import type { Montage, MeasurementMaterialItem } from '../../types';
+import type { TechnicalAuditData } from '../../technical-data';
+import { MeasurementAssistantModal } from '../../_components/measurement-assistant-modal';
+import { updateMontageMeasurement } from '../../actions';
+import { updateTechnicalAudit } from '../../technical-actions';
 
 interface MeasurementAssistantControllerProps {
     montage: Montage;
