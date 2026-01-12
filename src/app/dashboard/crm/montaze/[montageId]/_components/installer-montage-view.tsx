@@ -321,7 +321,7 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
             {/* Measurement Drawer */}
             <Drawer open={measurementOpen} onOpenChange={setMeasurementOpen}>
                 <DrawerContent className="h-[95vh] rounded-t-[20px]">
-                    <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted my-4" />
+                    <div className="mx-auto w-12 h-1.5 shrink-0 rounded-full bg-muted my-4" />
                     <DrawerHeader className="text-left px-4 pt-0 pb-2">
                         <DrawerTitle>Dane Pomiarowe</DrawerTitle>
                     </DrawerHeader>
@@ -345,7 +345,7 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
             {/* Gallery Drawer */}
             <Drawer open={galleryOpen} onOpenChange={setGalleryOpen}>
                 <DrawerContent className="h-[95vh] rounded-t-[20px]">
-                     <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted my-4" />
+                     <div className="mx-auto w-12 h-1.5 shrink-0 rounded-full bg-muted my-4" />
                      <DrawerHeader className="text-left px-4 pt-0 pb-2">
                         <DrawerTitle>Galeria Zdjęć</DrawerTitle>
                     </DrawerHeader>
@@ -359,7 +359,7 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
              {/* Notes Drawer */}
             <Drawer open={notesOpen} onOpenChange={setNotesOpen}>
                 <DrawerContent className="h-[90vh] rounded-t-[20px]">
-                     <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted my-4" />
+                     <div className="mx-auto w-12 h-1.5 shrink-0 rounded-full bg-muted my-4" />
                      <DrawerHeader className="text-left px-4 pt-0 pb-2">
                         <DrawerTitle>Notatki i Komentarze</DrawerTitle>
                     </DrawerHeader>
@@ -373,7 +373,7 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
              {/* Info Drawer */}
             <Drawer open={infoOpen} onOpenChange={setInfoOpen}>
                 <DrawerContent className="h-[90vh] rounded-t-[20px]">
-                     <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted my-4" />
+                     <div className="mx-auto w-12 h-1.5 shrink-0 rounded-full bg-muted my-4" />
                      <DrawerHeader className="text-left px-4 pt-0 pb-2">
                         <DrawerTitle>Szczegóły Zlecenia</DrawerTitle>
                     </DrawerHeader>
@@ -392,7 +392,7 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
              {/* Settlement Drawer (Short wrapper if opened directly) */}
             <Drawer open={settlementOpen} onOpenChange={setSettlementOpen}>
                 <DrawerContent className="h-[85vh] rounded-t-[20px]">
-                     <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted my-4" />
+                     <div className="mx-auto w-12 h-1.5 shrink-0 rounded-full bg-muted my-4" />
                      <DrawerHeader className="text-left px-4 pt-0 pb-2">
                         <DrawerTitle>Rozliczenia</DrawerTitle>
                     </DrawerHeader>
