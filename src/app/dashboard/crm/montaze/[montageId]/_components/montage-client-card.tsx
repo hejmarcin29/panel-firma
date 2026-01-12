@@ -64,6 +64,7 @@ export function MontageClientCard({
     contactEmail: montage.contactEmail || "",
     installationAddress: montage.installationAddress || "",
     installationCity: montage.installationCity || "",
+    installationPostalCode: montage.installationPostalCode || "",
     scheduledInstallationAt: montage.scheduledInstallationAt 
       ? new Date(montage.scheduledInstallationAt as string | number | Date).toISOString().split("T")[0] 
       : "",

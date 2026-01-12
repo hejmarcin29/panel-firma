@@ -1,4 +1,4 @@
-import { getInstallerMontages } from '../../actions';
+import { getInstallerMontages } from '../actions';
 import { CalendarView } from './_components/calendar-view';
 
 export const metadata = {
