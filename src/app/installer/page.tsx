@@ -1,4 +1,4 @@
-import { asc, desc, eq, and, or, isNull } from 'drizzle-orm';
+import { desc, eq, and, or, isNull } from 'drizzle-orm';
 import { redirect } from "next/navigation";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
@@ -9,8 +9,6 @@ import { db } from '@/lib/db';
 import { montages } from '@/lib/db/schema';
 import { requireUser } from '@/lib/auth/session';
 import { getStatusLabel } from '@/lib/montaze/statuses-shared';
-import { cn } from '@/lib/utils';
-import { Button } from "@/components/ui/button";
 
 export const dynamic = 'force-dynamic';
 
@@ -73,7 +71,7 @@ export default async function InstallerPage() {
                     </div>
                     
                     <Link href={`/installer/montages/${focusItem.id}`}>
-                        <div className="p-5 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-[24px] shadow-lg shadow-blue-500/20 text-white relative overflow-hidden group">
+                        <div className="p-5 bg-linear-to-br from-blue-600 to-indigo-700 rounded-3xl shadow-lg shadow-blue-500/20 text-white relative overflow-hidden group">
                              {/* Background Pattern */}
                             <div className="absolute top-0 right-0 p-8 opacity-10 transform translate-x-1/2 -translate-y-1/2">
                                 <Navigation className="w-48 h-48" />
@@ -109,7 +107,7 @@ export default async function InstallerPage() {
                     </Link>
                 </section>
             ) : (
-                <div className="p-8 text-center bg-white rounded-[24px] border shadow-sm">
+                <div className="p-8 text-center bg-white rounded-3xl border shadow-sm">
                     <p className="text-muted-foreground">Brak aktywnych zleceń na ten moment.</p>
                     <p className="text-sm text-gray-400 mt-2">Odpocznij chwilę ☕</p>
                 </div>

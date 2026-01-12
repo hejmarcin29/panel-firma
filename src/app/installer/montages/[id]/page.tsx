@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
-import { getAppSetting, appSettingKeys } from '@/lib/settings';
 import { getMontageDetails } from '@/app/dashboard/crm/montaze/[montageId]/actions';
 import { InstallerMontageView } from '@/app/dashboard/crm/montaze/[montageId]/_components/installer-montage-view';
 import { requireUser } from '@/lib/auth/session';
+import type { Montage } from '@/app/dashboard/crm/montaze/types';
 
 type Params = {
     params: Promise<{
@@ -27,7 +27,7 @@ export default async function InstallerMontageDetailsPage({ params }: Params) {
 
     return (
         <InstallerMontageView 
-             montage={data.montage as any}
+             montage={data.montage as unknown as Montage}
              logs={data.logs}
              userRoles={user.roles}
              hasGoogleCalendar={data.hasGoogleCalendar}
