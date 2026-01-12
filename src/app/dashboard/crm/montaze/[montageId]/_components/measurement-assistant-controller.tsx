@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { DateRange } from 'react-day-picker';
 import type { Montage, MeasurementMaterialItem } from '../../types';
 import type { TechnicalAuditData } from '../../technical-data';
 import { MeasurementAssistantModal } from '../../_components/measurement-assistant-modal';
@@ -80,7 +81,7 @@ export function MeasurementAssistantController({ montage, isOpen, onClose }: Mea
     const [measurementRooms, setMeasurementRooms] = useState<{ name: string; area: number }[]>(montage.measurementRooms || []);
     
     // Assistant needs dateRange prop?
-    const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+    const [dateRange, setDateRange] = useState<DateRange | undefined>({
         from: montage.scheduledInstallationAt ? new Date(montage.scheduledInstallationAt) : undefined,
         to: montage.scheduledInstallationEndAt ? new Date(montage.scheduledInstallationEndAt) : undefined,
     });
@@ -100,8 +101,8 @@ export function MeasurementAssistantController({ montage, isOpen, onClose }: Mea
                panelWaste: parseFloat(panelWaste) || 0,
                measurementAdditionalMaterials: additionalMaterials,
                measurementRooms: measurementRooms,
-               scheduledInstallationAt: dateRange?.from,
-               scheduledInstallationEndAt: dateRange?.to,
+               scheduledInstallationAt: dateRange?.from ? dateRange.from.getTime() : null,
+               scheduledInstallationEndAt: dateRange?.to ? dateRange.to.getTime() : null,
                // Required fields that are not in assistant, passing current or defaults
                measurementDetails: montage.measurementDetails || '',
                floorDetails: montage.floorDetails || '',

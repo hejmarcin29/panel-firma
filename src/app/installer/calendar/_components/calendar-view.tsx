@@ -10,9 +10,21 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
-import type { Montage } from '@/app/dashboard/crm/montaze/types';
+// import type { Montage } from '@/app/dashboard/crm/montaze/types';
 
-export function CalendarView({ montages }: { montages: Montage[] }) {
+interface CalendarMontage {
+    id: string;
+    clientName: string;
+    installationCity: string | null;
+    installationAddress: string | null;
+    billingAddress: string | null;
+    address?: string | null;
+    scheduledInstallationAt: Date | number | string | null | undefined;
+    scheduledInstallationEndAt: Date | number | string | null | undefined;
+    status: string;
+}
+
+export function CalendarView({ montages }: { montages: CalendarMontage[] }) {
     const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
 
     const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -163,8 +175,8 @@ export function CalendarView({ montages }: { montages: Montage[] }) {
                         ) : (
                             // Group by date logic could be added here, currently flat list
                             sortedMontages.map((montage, index) => {
-                                const date = new Date(montage.scheduledInstallationAt);
-                                const prevDate = index > 0 ? new Date(sortedMontages[index - 1].scheduledInstallationAt) : null;
+                                const date = new Date(montage.scheduledInstallationAt || 0);
+                                const prevDate = index > 0 ? new Date(sortedMontages[index - 1].scheduledInstallationAt || 0) : null;
                                 const showDateHeader = !prevDate || !isSameDay(date, prevDate);
 
                                 return (
@@ -186,7 +198,7 @@ export function CalendarView({ montages }: { montages: Montage[] }) {
     );
 }
 
-function MontageCard({ montage, showDate = false }: { montage: Montage, showDate?: boolean }) {
+function MontageCard({ montage, showDate = false }: { montage: CalendarMontage, showDate?: boolean }) {
     return (
         <Link href={`/installer/montages/${montage.id}`} className="block mb-3">
             <Card className="active:scale-98 transition-transform">
@@ -204,7 +216,7 @@ function MontageCard({ montage, showDate = false }: { montage: Montage, showDate
                                 <MapPin className="h-3.5 w-3.5 text-primary" />
                                 {montage.installationCity || 'Brak miasta'} 
                                 <span className="text-muted-foreground text-xs font-normal">
-                                    ({montage.address?.split(',')[0]}...)
+                                    ({(montage.installationAddress || montage.billingAddress)?.split(',')[0]}...)
                                 </span>
                             </div>
                         </div>
@@ -221,7 +233,9 @@ function MontageCard({ montage, showDate = false }: { montage: Montage, showDate
                         <div className="flex items-center gap-1.5 text-muted-foreground ml-auto">
                             <Clock className="h-3.5 w-3.5" />
                             <span className="text-xs">
-                                {montage.forecastedInstallationDuration || 4}h
+                                {montage.scheduledInstallationEndAt && montage.scheduledInstallationAt 
+                                    ? Math.round((new Date(montage.scheduledInstallationEndAt).getTime() - new Date(montage.scheduledInstallationAt).getTime()) / 3600000) 
+                                    : 4}h
                             </span>
                         </div>
                     </div>
