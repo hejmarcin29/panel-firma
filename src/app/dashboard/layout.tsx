@@ -15,7 +15,7 @@ import { getCurrentSession } from '@/lib/auth/session';
 import { getUrgentOrdersCount } from './crm/ordersWP/queries';
 import { db } from '@/lib/db';
 import { users, montages } from '@/lib/db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, and, isNull } from 'drizzle-orm';
 import { ImpersonationBanner } from './_components/impersonation-banner';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
 import { ArchitectSidebar } from './architect/_components/architect-sidebar';
@@ -77,7 +77,10 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         const leadsRes = await db
             .select({ count: sql<number>`count(*)` })
             .from(montages)
-            .where(eq(montages.status, 'new_lead'));
+            .where(and(
+                eq(montages.status, 'new_lead'),
+                isNull(montages.deletedAt)
+            ));
         newLeadsCount = Number(leadsRes[0]?.count ?? 0);
     } catch (e) {
         console.error('Failed to fetch leads count:', e);

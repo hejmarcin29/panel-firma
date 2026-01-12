@@ -252,10 +252,10 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
                 <DashboardTile 
                     icon={<Ruler className="w-6 h-6" />}
                     title="Dane Pomiaru"
-                    metric={montage.measurementDetails ? "Wpisane" : "Brak"}
-                    description={montage.measurementDetails ? `${montage.measurementDetails.totalArea || 0} m²` : "Kliknij, aby uzupełnić"}
+                    metric={montage.floorArea ? "Wpisane" : "Brak"}
+                    description={montage.floorArea ? `${montage.floorArea} m²` : "Kliknij, aby uzupełnić"}
                     onClick={() => setMeasurementOpen(true)}
-                    alert={!montage.measurementDetails && ['measurement_scheduled', 'measurement_done'].includes(montage.status)}
+                    alert={!montage.floorArea && ['measurement_scheduled', 'measurement_done'].includes(montage.status)}
                 />
 
                 {/* Gallery Tile */}
@@ -274,7 +274,7 @@ export function InstallerMontageView({ montage, logs, userRoles }: InstallerMont
                     metric={String(montage.notes.length)}
                     description="Komentarze i ustalenia"
                     onClick={() => setNotesOpen(true)}
-                    alert={montage.notes.length > 0 && montage.notes[0].isUrgent}
+                    alert={false}
                 />
 
                 {/* Info / Contract Tile */}

@@ -46,5 +46,9 @@ export async function loginAction(_: LoginFormState, formData: FormData): Promis
 	await createSession(user.id);
 	await logSystemEvent('login', 'Użytkownik zalogował się', user.id);
 
+    if (user.roles.includes('installer') && !user.roles.includes('admin')) {
+        redirect('/installer');
+    }
+
 	redirect('/dashboard');
 }
