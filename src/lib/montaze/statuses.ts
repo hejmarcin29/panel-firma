@@ -44,16 +44,29 @@ export async function getMontageStatusDefinitions(): Promise<MontageStatusDefini
             return DEFAULT_STATUSES;
         }
 
-        // Ensure all system statuses from DEFAULT_STATUSES are present in the list
-        // This fixes issues where new system statuses are added to the code but not visible because of old DB settings
-        const existingIds = new Set(statuses.map(s => s.id));
+        // Merge strategy:
+        // 1. Keep custom statuses (non-system id)
+        // 2. For system statuses, ALWAYS use the definition from DEFAULT_STATUSES to ensure consistency
+        //    (unless we want to allow renaming system statuses - but for now let's prioritize structure)
+        
+        const mergedStatuses: MontageStatusDefinition[] = [];
+        const systemIds = new Set(DEFAULT_STATUSES.filter(s => s.isSystem).map(s => s.id));
+        
+        // Add custom statuses from DB
+        for (const status of statuses) {
+            if (!systemIds.has(status.id)) {
+                mergedStatuses.push(status);
+            }
+        }
+        
+        // Add all system statuses (overwrite any DB versions)
         for (const defaultStatus of DEFAULT_STATUSES) {
-            if (defaultStatus.isSystem && !existingIds.has(defaultStatus.id)) {
-                statuses.push(defaultStatus);
+            if (defaultStatus.isSystem) {
+                mergedStatuses.push(defaultStatus);
             }
         }
 
-		return statuses.sort((a, b) => a.order - b.order);
+		return mergedStatuses.sort((a, b) => a.order - b.order);
 	} catch {
 		return DEFAULT_STATUSES;
 	}
