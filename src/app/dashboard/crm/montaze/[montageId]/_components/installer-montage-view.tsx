@@ -360,6 +360,44 @@ export function InstallerMontageView({ montage, logs, userRoles, withBottomNav =
 
             </div>
 
+            {/* 3.1 RECENT NOTES (NEW) */}
+            <div className="px-4 mt-6">
+                <div className="flex items-center justify-between mb-3 px-1">
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase">Ostatnie Notatki</h3>
+                    <Button variant="ghost" size="sm" onClick={() => setNotesOpen(true)} className="h-6 text-primary text-xs hover:bg-transparent px-0 hover:underline">
+                        Dodaj / Zobacz wszystkie
+                    </Button>
+                </div>
+                
+                {montage.notes && montage.notes.length > 0 ? (
+                    <div className="space-y-3">
+                        {[...montage.notes].reverse().slice(0, 3).map((note) => (
+                            <div key={note.id} className="bg-white p-4 rounded-xl border shadow-sm relative">
+                                <div className="flex justify-between items-start mb-2">
+                                     <div className="flex items-center gap-2">
+                                         <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">
+                                             {note.author?.name ? note.author.name.substring(0,2).toUpperCase() : 'SY'}
+                                         </div>
+                                         <span className="font-semibold text-sm text-gray-900">{note.author?.name || 'System'}</span>
+                                     </div>
+                                     <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-md">
+                                        {note.createdAt ? format(new Date(note.createdAt), "dd.MM HH:mm", { locale: pl }) : '-'}
+                                     </span>
+                                </div>
+                                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{note.content}</p>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center p-6 border-2 border-dashed rounded-xl bg-muted/20">
+                         <p className="text-sm text-muted-foreground font-medium">Brak notatek do tego zlecenia</p>
+                         <Button variant="link" size="sm" onClick={() => setNotesOpen(true)} className="mt-1 h-auto p-0">
+                             Dodaj pierwszą notatkę
+                         </Button>
+                    </div>
+                )}
+            </div>
+
             {/* 4. ADDITIONAL INFO */}
              {logs.length > 0 && (
                 <div className="px-4 mt-6">
