@@ -6,30 +6,27 @@ import {
     MapPin, 
     Ruler, 
     Camera, 
-    CheckSquare, 
     MessageSquare, 
-    History, 
     FileText,
     Navigation,
-    Banknote,
-    Play,
-    AlertTriangle,
-    Flag
+    Info,
+    Calendar as CalendarIcon,
+    ChevronRight,
+    AlertCircle
 } from "lucide-react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 
 import { getStatusLabel } from "@/lib/montaze/statuses-shared";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
 import { updateMontageStatus, updateMontageMeasurementDate } from "../../actions";
 import { toast } from "sonner";
 
@@ -37,13 +34,12 @@ import { MontageNotesTab } from "./montage-notes-tab";
 import { MontageGalleryTab } from "./montage-gallery-tab";
 import { MontageMeasurementTab } from "../../_components/montage-measurement-tab";
 import { MontageSettlementTab } from "../../_components/montage-settlement-tab";
-import { MontageClientCard } from "./montage-client-card"; // Reusing for edit capabilities if needed
-import { MontageMaterialCard } from "./montage-material-card";
-import { MontageProcessTimeline } from "./montage-process-timeline";
+import { MontageClientCard } from "./montage-client-card";
 import { StartWorkDialog } from "./start-work-dialog";
 import { FinishWorkDialog } from "./finish-work-dialog";
 import type { Montage, MontageLog } from "../../types";
 import type { UserRole } from "@/lib/db/schema";
+import { Separator } from "@/components/ui/separator";
 
 interface InstallerMontageViewProps {
     montage: Montage;
@@ -53,430 +49,384 @@ interface InstallerMontageViewProps {
 }
 
 export function InstallerMontageView({ montage, logs, userRoles }: InstallerMontageViewProps) {
-    const [activeTab, setActiveTab] = useState("process");
-    const [defaultOpenModal, setDefaultOpenModal] = useState<'assistant' | 'costEstimation' | undefined>(undefined);
+    // Drawer States
+    const [measurementOpen, setMeasurementOpen] = useState(false);
+    const [galleryOpen, setGalleryOpen] = useState(false);
+    const [notesOpen, setNotesOpen] = useState(false);
+    const [infoOpen, setInfoOpen] = useState(false);
+    const [settlementOpen, setSettlementOpen] = useState(false);
+
+    // Dialog States
     const [startWorkOpen, setStartWorkOpen] = useState(false);
     const [finishWorkOpen, setFinishWorkOpen] = useState(false);
-
-    // Filter logs to show only current user's actions (or system actions relevant to him)
-    // In a real scenario, we'd filter by userId, but for now let's show all to keep context, 
-    // or we can filter if we have the current user ID available. 
-    // Let's assume we show all for context but simplified.
-    const myLogs = logs; 
-
-    // Filter attachments - hide sensitive docs
-    // const safeAttachments = montage.attachments.filter(a => 
-    //    !['contract', 'invoice', 'proforma'].includes(a.type)
-    // );
-    // const safeAttachments = montage.attachments;
+    const [defaultOpenModal, setDefaultOpenModal] = useState<'assistant' | 'costEstimation' | undefined>(undefined);
 
     const address = montage.installationAddress || montage.billingAddress || 'Brak adresu';
     const city = montage.installationCity || montage.billingCity || '';
     const fullAddress = `${address}, ${city}`;
     const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
 
-    const isDone = montage.status === 'completed';
+    // Helper: Dashboard Tile Component
+    const DashboardTile = ({ icon, title, metric, description, onClick, alert }: any) => (
+        <button 
+            onClick={onClick}
+            className="flex flex-col items-start p-4 bg-white rounded-xl border shadow-sm active:scale-95 transition-transform text-left w-full h-full relative overflow-hidden"
+        >
+            {alert && (
+                <div className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full m-2 animate-pulse" />
+            )}
+            <div className="p-2 bg-muted/50 rounded-lg mb-3 text-primary">
+                {icon}
+            </div>
+            <span className="font-semibold text-gray-900 text-sm">{title}</span>
+            {metric && <span className="text-xl font-bold text-gray-900 mt-1">{metric}</span>}
+            {description && <span className="text-xs text-muted-foreground mt-1 line-clamp-1">{description}</span>}
+        </button>
+    );
+
+    // Helper: Primary Action Logic
+    const renderPrimaryAction = () => {
+        // 1. To Schedule
+        if (montage.status === 'measurement_to_schedule') {
+             return (
+                <div className="w-full flex flex-col gap-2">
+                    <p className="text-xs text-center text-muted-foreground font-medium mb-1">
+                        Etap: Do Umówienia. Skontaktuj się z klientem.
+                    </p>
+                    <MeasurementDateSelector 
+                         currentDate={montage.measurementDate ? new Date(montage.measurementDate) : null}
+                         onSelect={async (date) => {
+                             toast.promise(async () => {
+                                 await updateMontageMeasurementDate(montage.id, date);
+                                 await updateMontageStatus({ montageId: montage.id, status: 'measurement_scheduled' });
+                             }, {
+                                 loading: 'Zapisywanie...',
+                                 success: 'Termin zapisany!',
+                                 error: 'Błąd zapisu'
+                             });
+                         }}
+                         fullWidth
+                    />
+                </div>
+             )
+        }
+        
+        // 2. Scheduled -> Start Measurement
+        if (montage.status === 'measurement_scheduled') {
+            return (
+                <Button 
+                    size="lg" 
+                    className="w-full h-12 text-base shadow-lg bg-blue-600 hover:bg-blue-700"
+                    onClick={() => {
+                        setDefaultOpenModal('assistant');
+                        setMeasurementOpen(true);
+                    }}
+                >
+                    <Ruler className="mr-2 h-5 w-5" />
+                    Uruchom Asystenta Pomiaru
+                </Button>
+            );
+        }
+
+        // 3. Measurement Done -> Edit / Wait
+        if (montage.status === 'measurement_done' || montage.status === 'quote_in_progress') {
+             return (
+                <Button 
+                    size="lg" 
+                    variant="outline"
+                    className="w-full h-12 text-base border-primary/20 bg-primary/5 text-primary"
+                    onClick={() => {
+                         setMeasurementOpen(true);
+                    }}
+                >
+                    <FileText className="mr-2 h-5 w-5" />
+                    Podgląd / Edycja Pomiaru
+                </Button>
+            );
+        }
+
+        // 4. Ready to Install -> Start Work
+        if (['installation_scheduled', 'materials_delivered', 'materials_pickup_ready'].includes(montage.status)) {
+             return (
+                <Button 
+                    size="lg" 
+                    className="w-full h-12 text-base shadow-lg bg-green-600 hover:bg-green-700 animate-pulse"
+                    onClick={() => setStartWorkOpen(true)}
+                >
+                    <Navigation className="mr-2 h-5 w-5" />
+                    Rozpocznij Montaż
+                </Button>
+             );
+        }
+
+        // 5. In Progress -> Finish
+        if (montage.status === 'installation_in_progress') {
+             return (
+                 <Button 
+                    size="lg" 
+                    className="w-full h-12 text-base shadow-lg bg-indigo-600 hover:bg-indigo-700"
+                    onClick={() => setFinishWorkOpen(true)}
+                >
+                    <Badge className="mr-2 bg-white text-indigo-600 h-5 px-1.5">Finał</Badge>
+                    Zakończ Pracę / Protokół
+                </Button>
+             );
+        }
+
+        // Default / Completed
+        return (
+            <Button 
+                size="lg" 
+                variant="secondary"
+                className="w-full h-12 text-base cursor-not-allowed opacity-50"
+                disabled
+            >
+                Brak wymaganych akcji
+            </Button>
+        );
+    };
 
     return (
-        <div className="flex flex-col min-h-screen bg-muted/10 pb-20">
-            {/* 1. HEADER (Mobile First, Desktop Responsive) */}
-            <div className="bg-background border-b sticky top-0 z-20 shadow-sm">
-                <div className="max-w-4xl mx-auto w-full">
-                    <div className="p-4 space-y-3 md:flex md:items-center md:justify-between md:space-y-0 md:gap-6">
-                        <div className="flex justify-between items-start md:block md:flex-1">
-                            <div>
-                                <h1 className="text-lg font-bold leading-tight md:text-xl">{montage.clientName}</h1>
-                                <div className="flex items-center text-muted-foreground text-sm mt-1">
-                                    <MapPin className="w-3 h-3 mr-1" />
-                                    {city}, {address}
-                                </div>
-                            </div>
-                            <Badge variant={isDone ? "default" : "outline"} className="md:hidden">
-                                {getStatusLabel(montage.status)}
-                            </Badge>
+        <div className="flex flex-col min-h-screen bg-gray-50/50 pb-28 md:pb-24">
+            
+            {/* 1. STICKY HEADER */}
+            <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b shadow-sm px-4 py-3 pb-4">
+                <div className="flex items-start justify-between">
+                    <div>
+                        <h1 className="text-lg font-bold text-gray-900 leading-tight pr-2">
+                           {montage.clientName}
+                        </h1>
+                        <div className="flex items-center text-muted-foreground text-sm mt-0.5">
+                            <MapPin className="w-3.5 h-3.5 mr-1 shrink-0" />
+                            <span className="truncate max-w-[200px]">{city}, {address}</span>
                         </div>
-
-                        <div className="hidden md:block">
-                             <Badge variant={isDone ? "default" : "outline"} className="text-sm px-3 py-1">
-                                {getStatusLabel(montage.status)}
-                            </Badge>
-                        </div>
-
-                        {/* BIG ACTION BUTTONS */}
-                        <div className="grid grid-cols-2 gap-3 md:flex md:w-auto">
-                            <Button className="w-full h-12 text-base md:w-40" variant="outline" asChild>
-                                <a href={`tel:${montage.contactPhone}`}>
-                                    <Phone className="mr-2 h-5 w-5" />
-                                    Zadzwoń
-                                </a>
-                            </Button>
-                            <Button className="w-full h-12 text-base md:w-40" asChild>
-                                <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer">
-                                    <Navigation className="mr-2 h-5 w-5" />
-                                    Nawiguj
-                                </a>
-                            </Button>
-                        </div>
-                    </div>
-                    
-                    {/* TABS NAVIGATION */}
-                    <div className="px-2 overflow-x-auto scrollbar-hide md:px-4">
-                        <Tabs value={activeTab} onValueChange={(val) => {
-                            setActiveTab(val);
-                            setDefaultOpenModal(undefined);
-                        }} className="w-full">
-                            <TabsList className="w-full justify-start h-12 bg-transparent p-0 md:w-auto md:inline-flex">
-                                <TabsTrigger value="process" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-4">
-                                    <CheckSquare className="w-4 h-4 mr-2" />
-                                    Proces
-                                </TabsTrigger>
-                                <TabsTrigger value="measurement" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-4">
-                                    <Ruler className="w-4 h-4 mr-2" />
-                                    Pomiar
-                                </TabsTrigger>
-                                <TabsTrigger value="notes" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-4">
-                                    <MessageSquare className="w-4 h-4 mr-2" />
-                                    Notatki
-                                </TabsTrigger>
-                                <TabsTrigger value="gallery" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-4">
-                                    <Camera className="w-4 h-4 mr-2" />
-                                    Zdjęcia
-                                </TabsTrigger>
-                                <TabsTrigger value="settlement" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-4">
-                                    <Banknote className="w-4 h-4 mr-2" />
-                                    Rozliczenia
-                                </TabsTrigger>
-                                <TabsTrigger value="info" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none h-full px-4">
-                                    <FileText className="w-4 h-4 mr-2" />
-                                    Info
-                                </TabsTrigger>
-                            </TabsList>
-                        </Tabs>
                     </div>
                 </div>
+                
+                {/* Quick Actions Row */}
+                <div className="flex gap-3 mt-4">
+                    <Button variant="outline" className="flex-1 h-10 border-gray-200" asChild>
+                        <a href={`tel:${montage.contactPhone}`}>
+                            <Phone className="mr-2 h-4 w-4 text-green-600" />
+                            Zadzwoń
+                        </a>
+                    </Button>
+                    <Button variant="outline" className="flex-1 h-10 border-gray-200" asChild>
+                        <a href={googleMapsUrl} target="_blank" rel="noopener noreferrer">
+                            <Navigation className="mr-2 h-4 w-4 text-blue-600" />
+                            Nawiguj
+                        </a>
+                    </Button>
+                </div>
+            </header>
+
+            {/* 2. HERO / STATUS SECTION (Condensed) */}
+            <div className="px-4 py-3 bg-white border-b mb-3">
+                 <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Obecny Etap</span>
+                    <Badge variant="secondary" className="font-normal">
+                         {getStatusLabel(montage.status)}
+                    </Badge>
+                 </div>
+                 
+                 {/* Dynamic Instruction */}
+                 <p className="text-sm text-gray-600 leading-snug">
+                    {montage.status === 'measurement_to_schedule' && "Skontaktuj się z klientem i ustal termin pomiaru."}
+                    {montage.status === 'measurement_scheduled' && "Przygotuj się do wizyty. Pamiętaj o zabraniu dalmierza i wzorników."}
+                    {montage.status === 'installation_in_progress' && "Wykonuj zdjęcia postępów co 2 godziny."}
+                    {montage.status === 'completed' && "Zlecenie zakończone. Dziękujemy za dobrą robotę!"}
+                    {!['measurement_to_schedule', 'measurement_scheduled', 'installation_in_progress', 'completed'].includes(montage.status) && "Sprawdź szczegóły poniżej."}
+                 </p>
             </div>
 
-            {/* 2. MAIN CONTENT AREA */}
-            <div className="p-4 space-y-6 max-w-4xl mx-auto w-full">
+            {/* 3. DASHBOARD TILES GRID */}
+            <div className="grid grid-cols-2 gap-3 px-3">
                 
-                {/* TAB: PROCESS (The Hub) */}
-                {activeTab === 'process' && (
-                    <div className="space-y-6">
-                        {/* 1. Task-Driven Actions (Top Priority) */}
-                        
-                        {/* SCENARIO A: Measurement To Schedule (Inbox for Installer) */}
-                        {montage.status === 'measurement_to_schedule' && (
-                            <Card className="border-l-4 border-l-orange-500 shadow-md bg-orange-50/50">
-                                <CardHeader>
-                                    <CardTitle className="text-lg text-orange-900">Wymagane Akcje: Kontakt & Termin</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="flex flex-col gap-4">
-                                        <div className="flex items-center gap-4">
-                                            <div className="flex items-center justify-center w-10 h-10 rounded-full border-2 bg-white border-orange-500 text-orange-700">
-                                                <Phone className="w-5 h-5" />
-                                            </div>
-                                            <div className="flex-1">
-                                                <h4 className="font-semibold text-base">Zadzwoń do Klienta</h4>
-                                                <p className="text-sm text-muted-foreground">Ustal dogodny termin pomiaru.</p>
-                                            </div>
-                                            <Button variant="outline" asChild>
-                                                <a href={`tel:${montage.contactPhone}`}>
-                                                    <Phone className="mr-2 h-4 w-4" />
-                                                    {montage.contactPhone || 'Brak numeru'}
-                                                </a>
-                                            </Button>
-                                        </div>
+                {/* Measurement Tile */}
+                <DashboardTile 
+                    icon={<Ruler className="w-6 h-6" />}
+                    title="Dane Pomiaru"
+                    metric={montage.measurementDetails ? "Wpisane" : "Brak"}
+                    description={montage.measurementDetails ? `${montage.measurementDetails.totalArea || 0} m²` : "Kliknij, aby uzupełnić"}
+                    onClick={() => setMeasurementOpen(true)}
+                    alert={!montage.measurementDetails && ['measurement_scheduled', 'measurement_done'].includes(montage.status)}
+                />
 
-                                        <div className="flex items-center gap-4 border-t border-orange-200 pt-4">
-                                            <div className="flex items-center justify-center w-10 h-10 rounded-full border-2 bg-white border-orange-500 text-orange-700">
-                                                <CalendarIcon className="w-5 h-5" />
-                                            </div>
-                                            <div className="flex-1">
-                                                <h4 className="font-semibold text-base">Zapisz Termin</h4>
-                                                <p className="text-sm text-muted-foreground">Kiedy odbędzie się pomiar?</p>
-                                            </div>
-                                            <MeasurementDateSelector 
-                                                currentDate={montage.measurementDate ? new Date(montage.measurementDate) : null}
-                                                onSelect={async (date) => {
-                                                    toast.promise(async () => {
-                                                        await updateMontageMeasurementDate(montage.id, date);
-                                                        await updateMontageStatus({ montageId: montage.id, status: 'measurement_scheduled' });
-                                                    }, {
-                                                        loading: 'Zapisywanie terminu...',
-                                                        success: 'Termin zapisany! Przechodzę do etapu pomiaru.',
-                                                        error: 'Błąd zapisu'
-                                                    });
-                                                }}
-                                            />
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        )}
+                {/* Gallery Tile */}
+                <DashboardTile 
+                    icon={<Camera className="w-6 h-6" />}
+                    title="Zdjęcia"
+                    metric={String(montage.attachments.length)}
+                    description="Dokumentacja foto"
+                    onClick={() => setGalleryOpen(true)}
+                />
 
-                        {/* SCENARIO C: Measurement Scheduled (Existing) */}
-                        {montage.status === 'measurement_scheduled' && (
-                            <Card className="border-l-4 border-l-blue-500 shadow-md bg-blue-50/50">
-                                <CardHeader>
-                                    <CardTitle className="text-lg text-blue-900">Wymagane Akcje: Pomiar</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    {/* Step 1: Measurement Assistant */}
-                                    <div className="flex items-center gap-4">
-                                        <div className={cn(
-                                            "flex items-center justify-center w-10 h-10 rounded-full border-2",
-                                            (!!montage.measurementDate || !!montage.measurementDetails) 
-                                                ? "bg-emerald-100 border-emerald-500 text-emerald-700" 
-                                                : "bg-white border-blue-500 text-blue-700"
-                                        )}>
-                                            {(!!montage.measurementDate || !!montage.measurementDetails) ? <CheckSquare className="w-6 h-6" /> : <span className="font-bold">1</span>}
-                                        </div>
-                                        <div className="flex-1">
-                                            <h4 className="font-semibold text-base">Asystent Pomiaru</h4>
-                                            <p className="text-sm text-muted-foreground">Wprowadź wymiary, wilgotność i zdjęcia.</p>
-                                        </div>
-                                        <Button 
-                                            onClick={() => {
-                                                setActiveTab('measurement');
-                                                setDefaultOpenModal('assistant');
-                                            }}
-                                            variant={(!!montage.measurementDate || !!montage.measurementDetails) ? "outline" : "default"}
-                                            className={cn(
-                                                (!!montage.measurementDate || !!montage.measurementDetails) 
-                                                    ? "border-emerald-500 text-emerald-700 hover:bg-emerald-50" 
-                                                    : "bg-blue-600 hover:bg-blue-700"
-                                            )}
-                                        >
-                                            {(!!montage.measurementDate || !!montage.measurementDetails) ? "Edytuj / Podgląd" : "Uruchom"}
-                                        </Button>
-                                    </div>
+                {/* Notes Tile */}
+                <DashboardTile 
+                    icon={<MessageSquare className="w-6 h-6" />}
+                    title="Notatki"
+                    metric={String(montage.notes.length)}
+                    description="Komentarze i ustalenia"
+                    onClick={() => setNotesOpen(true)}
+                    alert={montage.notes.length > 0 && montage.notes[0].isUrgent}
+                />
 
-                                    {/* Step 2: Labor Cost Estimate */}
-                                    <div className={cn("flex items-center gap-4 transition-opacity", !(!!montage.measurementDate || !!montage.measurementDetails) && "opacity-50")}>
-                                        <div className={cn(
-                                            "flex items-center justify-center w-10 h-10 rounded-full border-2",
-                                            !!montage.costEstimationCompletedAt 
-                                                ? "bg-emerald-100 border-emerald-500 text-emerald-700" 
-                                                : "bg-white border-gray-300 text-gray-500"
-                                        )}>
-                                            {!!montage.costEstimationCompletedAt ? <CheckSquare className="w-6 h-6" /> : <span className="font-bold">2</span>}
-                                        </div>
-                                        <div className="flex-1">
-                                            <h4 className="font-semibold text-base">Kosztorys Robocizny</h4>
-                                            <p className="text-sm text-muted-foreground">Wyceń swoją pracę na podstawie pomiaru.</p>
-                                        </div>
-                                        <Button 
-                                            onClick={() => setActiveTab('settlement')}
-                                            disabled={!(!!montage.measurementDate || !!montage.measurementDetails)}
-                                            variant={!!montage.costEstimationCompletedAt ? "outline" : "secondary"}
-                                            className={cn(
-                                                !!montage.costEstimationCompletedAt 
-                                                    ? "border-emerald-500 text-emerald-700 hover:bg-emerald-50" 
-                                                    : ""
-                                            )}
-                                        >
-                                            {!!montage.costEstimationCompletedAt ? "Edytuj / Podgląd" : "Wypełnij"}
-                                        </Button>
-                                    </div>
+                {/* Info / Contract Tile */}
+                <DashboardTile 
+                    icon={<Info className="w-6 h-6" />}
+                    title="Szczegóły"
+                    description="O ofercie i kliencie"
+                    metric="Info"
+                    onClick={() => setInfoOpen(true)}
+                />
 
-                                    {/* Step 3: Finish Measurement */}
-                                    <div className="pt-4 mt-2 border-t">
-                                        <Button 
-                                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
-                                            size="lg"
-                                            disabled={!((!!montage.measurementDate || !!montage.measurementDetails) && !!montage.costEstimationCompletedAt)}
-                                            onClick={() => {
-                                                toast.promise(async () => {
-                                                    await updateMontageStatus({ montageId: montage.id, status: 'measurement_done' });
-                                                }, {
-                                                    loading: 'Zamykanie etapu pomiaru...',
-                                                    success: 'Pomiar zakończony! Przekazano do biura.',
-                                                    error: 'Wystąpił błąd'
-                                                });
-                                            }}
-                                        >
-                                            <CheckSquare className="w-5 h-5 mr-2" />
-                                            Zakończ Pomiar
-                                        </Button>
-                                        {(!((!!montage.measurementDate || !!montage.measurementDetails) && !!montage.costEstimationCompletedAt)) && (
-                                            <p className="text-xs text-center text-muted-foreground mt-2">
-                                                Uzupełnij dane pomiarowe i kosztorys, aby zakończyć.
-                                            </p>
-                                        )}
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        )}
+            </div>
 
-                        {/* SCENARIO D: Ready to Start */}
-                        {(montage.status === 'installation_scheduled' || montage.status === 'materials_delivered') && (
-                            <Card className="border-l-4 border-l-green-500 shadow-md bg-green-50/50">
-                                <CardHeader>
-                                    <CardTitle className="text-lg text-green-900">Wymagane Akcje: Rozpoczęcie</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex items-center justify-center w-10 h-10 rounded-full border-2 bg-white border-green-500 text-green-700">
-                                            <Play className="w-5 h-5 ml-1" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <h4 className="font-semibold text-base">Rozpocznij Montaż</h4>
-                                            <p className="text-sm text-muted-foreground">Jesteś na miejscu? Zrób zdjęcie i zaczynamy.</p>
-                                        </div>
-                                        <Button 
-                                            className="bg-green-600 hover:bg-green-700 text-white"
-                                            onClick={() => setStartWorkOpen(true)}
-                                        >
-                                            Rozpocznij Pracę
-                                        </Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        )}
-
-                        {/* SCENARIO E: In Progress */}
-                        {montage.status === 'installation_in_progress' && (
-                            <Card className="border-l-4 border-l-indigo-500 shadow-md bg-indigo-50/50">
-                                <CardHeader>
-                                    <CardTitle className="text-lg text-indigo-900">Panel Realizacji</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                        <Button 
-                                            variant="outline" 
-                                            className="h-auto py-4 flex flex-col gap-2"
-                                            onClick={() => setActiveTab('gallery')}
-                                        >
-                                            <Camera className="w-6 h-6 text-indigo-600" />
-                                            <span className="font-semibold">Dokumentuj</span>
-                                            <span className="text-xs text-muted-foreground font-normal">Dodaj zdjęcie z postępu</span>
-                                        </Button>
-
-                                        <Button 
-                                            variant="outline" 
-                                            className="h-auto py-4 flex flex-col gap-2 border-red-200 hover:bg-red-50"
-                                            onClick={() => {
-                                                // TODO: Open problem dialog
-                                                toast.info("Funkcja zgłaszania problemów wkrótce.");
-                                            }}
-                                        >
-                                            <AlertTriangle className="w-6 h-6 text-red-600" />
-                                            <span className="font-semibold text-red-700">Zgłoś Problem</span>
-                                            <span className="text-xs text-red-600/80 font-normal">Coś nie tak?</span>
-                                        </Button>
-
-                                        <Button 
-                                            className="h-auto py-4 flex flex-col gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
-                                            onClick={() => setFinishWorkOpen(true)}
-                                        >
-                                            <Flag className="w-6 h-6" />
-                                            <span className="font-semibold">Zakończ</span>
-                                            <span className="text-xs text-indigo-100 font-normal">Protokół i odbiór</span>
-                                        </Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        )}
-
-                        <StartWorkDialog 
-                            montageId={montage.id} 
-                            open={startWorkOpen} 
-                            onOpenChange={setStartWorkOpen} 
-                        />
-
-                        <FinishWorkDialog 
-                            montageId={montage.id} 
-                            open={finishWorkOpen} 
-                            onOpenChange={setFinishWorkOpen} 
-                        />
-
-                        {/* 2. Read-Only Timeline */}
-                        <MontageProcessTimeline montage={montage} readOnly={true} />
-
-                        <div className="space-y-2">
-                            <h4 className="font-medium text-sm">Materiały do zabrania:</h4>
-                            <MontageMaterialCard montage={montage} userRoles={userRoles} />
-                        </div>
-
-                        {/* Recent History (Simplified) */}
-                        <div className="space-y-3">
-                            <h3 className="font-medium text-sm text-muted-foreground px-1">Ostatnia aktywność</h3>
-                            <div className="bg-card rounded-lg border divide-y">
-                                {myLogs.slice(0, 3).map((log) => (
-                                    <div key={log.id} className="p-3 text-sm flex gap-3">
-                                        <History className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
-                                        <div>
-                                            <p>{log.details || log.action}</p>
-                                            <p className="text-xs text-muted-foreground mt-1">
-                                                {format(new Date(log.createdAt), "dd.MM HH:mm", { locale: pl })}
-                                            </p>
-                                        </div>
-                                    </div>
-                                ))}
-                                {myLogs.length === 0 && (
-                                    <div className="p-4 text-center text-sm text-muted-foreground">Brak historii</div>
-                                )}
-                            </div>
-                        </div>
+            {/* 4. ADDITIONAL INFO */}
+             {logs.length > 0 && (
+                <div className="px-4 mt-6">
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase mb-3 px-1">Ostatnia Aktywność</h3>
+                    <div className="bg-white rounded-xl border p-3 text-sm space-y-3 shadow-sm">
+                         {logs.slice(0, 2).map(log => (
+                             <div key={log.id} className="flex gap-3">
+                                 <div className="w-1 h-1 bg-gray-300 rounded-full mt-2 shrink-0" />
+                                 <div>
+                                     <p className="text-gray-700 leading-snug">{log.details || log.action}</p>
+                                     <span className="text-xs text-muted-foreground">{format(new Date(log.createdAt), "dd.MM HH:mm", { locale: pl })}</span>
+                                 </div>
+                             </div>
+                         ))}
                     </div>
-                )}
+                </div>
+             )}
 
-                {/* TAB: MEASUREMENT (Form) */}
-                {activeTab === 'measurement' && (
-                    <div className="space-y-4">
-                        <MontageMeasurementTab 
+
+            {/* 5. STICKY FOOTER ACTION BAR */}
+            <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-3 px-4 z-40 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+                {renderPrimaryAction()}
+                
+                {/* Secondary Actions (Link-like below the big button, optional) */}
+                {['measurement_done', 'quote_in_progress'].includes(montage.status) && (
+                     <button 
+                        onClick={() => setSettlementOpen(true)}
+                        className="w-full text-center text-xs text-muted-foreground font-medium mt-3 py-1"
+                    >
+                        Pokaż Kosztorys Robocizny
+                    </button>
+                )}
+            </div>
+
+            {/* --- DRAWERS AND DIALOGS --- */}
+            
+            {/* Measurement Drawer */}
+            <Drawer open={measurementOpen} onOpenChange={setMeasurementOpen}>
+                <DrawerContent className="h-[95vh] rounded-t-[20px]">
+                    <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted my-4" />
+                    <DrawerHeader className="text-left px-4 pt-0 pb-2">
+                        <DrawerTitle>Dane Pomiarowe</DrawerTitle>
+                    </DrawerHeader>
+                    <ScrollArea className="h-full px-4 pb-10">
+                         <MontageMeasurementTab 
                             montage={montage} 
                             userRoles={userRoles} 
                             defaultOpenModal={defaultOpenModal}
                             onAssistantSave={() => {
                                 if (defaultOpenModal === 'assistant') {
-                                    setActiveTab('process');
+                                    setMeasurementOpen(false); // Close drawer after assistant completion if needed
                                     setDefaultOpenModal(undefined);
                                 }
                             }}
                         />
-                    </div>
-                )}
+                         <div className="h-20" /> {/* Spacer for scroll */}
+                    </ScrollArea>
+                </DrawerContent>
+            </Drawer>
 
-                {/* TAB: NOTES */}
-                {activeTab === 'notes' && (
-                    <MontageNotesTab montage={montage} userRoles={userRoles} />
-                )}
+            {/* Gallery Drawer */}
+            <Drawer open={galleryOpen} onOpenChange={setGalleryOpen}>
+                <DrawerContent className="h-[95vh] rounded-t-[20px]">
+                     <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted my-4" />
+                     <DrawerHeader className="text-left px-4 pt-0 pb-2">
+                        <DrawerTitle>Galeria Zdjęć</DrawerTitle>
+                    </DrawerHeader>
+                    <ScrollArea className="h-full px-4 pb-10">
+                        <MontageGalleryTab montage={montage} userRoles={userRoles} />
+                        <div className="h-20" />
+                    </ScrollArea>
+                </DrawerContent>
+            </Drawer>
 
-                {/* TAB: GALLERY */}
-                {activeTab === 'gallery' && (
-                    <MontageGalleryTab 
-                        montage={montage} 
-                        userRoles={userRoles} 
-                    />
-                )}
+             {/* Notes Drawer */}
+            <Drawer open={notesOpen} onOpenChange={setNotesOpen}>
+                <DrawerContent className="h-[90vh] rounded-t-[20px]">
+                     <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted my-4" />
+                     <DrawerHeader className="text-left px-4 pt-0 pb-2">
+                        <DrawerTitle>Notatki i Komentarze</DrawerTitle>
+                    </DrawerHeader>
+                    <ScrollArea className="h-full px-4 pb-10">
+                        <MontageNotesTab montage={montage} userRoles={userRoles} />
+                        <div className="h-20" />
+                    </ScrollArea>
+                </DrawerContent>
+            </Drawer>
 
-                {/* TAB: SETTLEMENT */}
-                {activeTab === 'settlement' && (
-                    <MontageSettlementTab montage={montage} userRoles={userRoles} />
-                )}
+             {/* Info Drawer */}
+            <Drawer open={infoOpen} onOpenChange={setInfoOpen}>
+                <DrawerContent className="h-[90vh] rounded-t-[20px]">
+                     <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted my-4" />
+                     <DrawerHeader className="text-left px-4 pt-0 pb-2">
+                        <DrawerTitle>Szczegóły Zlecenia</DrawerTitle>
+                    </DrawerHeader>
+                    <ScrollArea className="h-full px-4 pb-10">
+                        <MontageClientCard montage={montage} userRoles={userRoles} />
+                        <div className="h-6" />
+                        <Separator />
+                        <div className="h-6" />
+                        <h3 className="font-semibold mb-4">Finanse i Rozliczenia</h3>
+                        <MontageSettlementTab montage={montage} userRoles={userRoles} />
+                        <div className="h-20" />
+                    </ScrollArea>
+                </DrawerContent>
+            </Drawer>
 
-                {/* TAB: INFO (Client Details) */}
-                {activeTab === 'info' && (
-                    <MontageClientCard 
-                        montage={montage} 
-                        userRoles={userRoles}
-                        // Hide complex edit options for installer if needed, 
-                        // but keeping them for now so he can update dates
-                    />
-                )}
-            </div>
+             {/* Settlement Drawer (Short wrapper if opened directly) */}
+            <Drawer open={settlementOpen} onOpenChange={setSettlementOpen}>
+                <DrawerContent className="h-[85vh] rounded-t-[20px]">
+                     <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted my-4" />
+                     <DrawerHeader className="text-left px-4 pt-0 pb-2">
+                        <DrawerTitle>Rozliczenia</DrawerTitle>
+                    </DrawerHeader>
+                    <ScrollArea className="h-full px-4 pb-10">
+                        <MontageSettlementTab montage={montage} userRoles={userRoles} />
+                        <div className="h-20" />
+                    </ScrollArea>
+                </DrawerContent>
+            </Drawer>
+
+            <StartWorkDialog 
+                montageId={montage.id} 
+                open={startWorkOpen} 
+                onOpenChange={setStartWorkOpen} 
+            />
+
+            <FinishWorkDialog 
+                montageId={montage.id} 
+                open={finishWorkOpen} 
+                onOpenChange={setFinishWorkOpen} 
+            />
+
         </div>
     );
 }
 
 function MeasurementDateSelector({ 
     currentDate, 
-    onSelect 
+    onSelect,
+    fullWidth = false
 }: { 
     currentDate: Date | null, 
-    onSelect: (date: Date) => Promise<void> 
+    onSelect: (date: Date) => Promise<void>,
+    fullWidth?: boolean
 }) {
     const [date, setDate] = useState<Date | undefined>(currentDate || undefined);
     const [time, setTime] = useState(currentDate ? format(currentDate, "HH:mm") : "09:00");
@@ -506,14 +456,15 @@ function MeasurementDateSelector({
         <Popover open={isOpen} onOpenChange={setIsOpen}>
             <PopoverTrigger asChild>
                 <Button variant="outline" className={cn(
-                    "w-60 justify-start text-left font-normal",
+                    "justify-start text-left font-normal bg-white border-2 border-primary/20 hover:bg-primary/5 hover:border-primary/50 text-primary h-12",
+                    fullWidth && "w-full",
                     !currentDate && "text-muted-foreground"
                 )}>
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {currentDate ? format(currentDate, "dd.MM.yyyy HH:mm", { locale: pl }) : <span>Wybierz datę</span>}
+                    <CalendarIcon className="mr-2 h-5 w-5" />
+                    {currentDate ? format(currentDate, "dd.MM.yyyy HH:mm", { locale: pl }) : <span className="font-semibold">Wybierz Datę Pomiaru</span>}
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
+            <PopoverContent className="w-auto p-0" align="center">
                 <div className="p-3 border-b space-y-3">
                         <div className="flex items-center justify-between">
                         <Label className="text-sm font-medium">Godzina:</Label>
