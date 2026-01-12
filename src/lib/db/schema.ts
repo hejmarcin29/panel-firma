@@ -572,6 +572,8 @@ export const montages = pgTable(
 		measurementInstallationMethod: text('measurement_installation_method').$type<'click' | 'glue'>(),
         measurementFloorPattern: text('measurement_floor_pattern').$type<'classic' | 'herringbone'>().default('classic'),
 		measurementSubfloorCondition: text('measurement_subfloor_condition'),
+        measurementLayingDirection: text('measurement_laying_direction'),
+        measurementSketchPhotoUrl: text('measurement_sketch_photo_url'),
 		measurementAdditionalWorkNeeded: boolean('measurement_additional_work_needed').default(false),
 		measurementAdditionalWorkDescription: text('measurement_additional_work_description'),
         measurementAdditionalMaterials: json('measurement_additional_materials').$type<{

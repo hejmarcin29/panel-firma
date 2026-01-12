@@ -54,6 +54,9 @@ export function MeasurementAssistantController({ montage, isOpen, onClose, initi
     const [floorPattern, setFloorPattern] = useState<'classic' | 'herringbone'>(
         (montage.measurementFloorPattern as 'classic' | 'herringbone') || 'classic'
     );
+    const [layingDirection, setLayingDirection] = useState(montage.measurementLayingDirection || '');
+    const [sketchPhotoUrl, setSketchPhotoUrl] = useState(montage.measurementSketchPhotoUrl || null);
+    
     const [panelWaste, setPanelWaste] = useState<string>(montage.panelWaste?.toString() || '5');
     const [floorArea, setFloorArea] = useState(montage.floorArea?.toString() || '');
     
@@ -99,6 +102,8 @@ export function MeasurementAssistantController({ montage, isOpen, onClose, initi
                measurementSubfloorCondition: subfloorCondition,
                measurementInstallationMethod: installationMethod,
                measurementFloorPattern: floorPattern,
+               measurementLayingDirection: layingDirection,
+               measurementSketchPhotoUrl: sketchPhotoUrl,
                panelWaste: parseFloat(panelWaste) || 0,
                measurementAdditionalMaterials: additionalMaterials,
                measurementRooms: measurementRooms,
@@ -157,6 +162,11 @@ export function MeasurementAssistantController({ montage, isOpen, onClose, initi
             floorPattern={floorPattern}
             setFloorPattern={setFloorPattern}
             
+            layingDirection={layingDirection}
+            setLayingDirection={setLayingDirection}
+            sketchPhotoUrl={sketchPhotoUrl}
+            setSketchPhotoUrl={setSketchPhotoUrl}
+
             panelWaste={panelWaste}
             setPanelWaste={setPanelWaste}
             

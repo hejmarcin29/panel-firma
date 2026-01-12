@@ -4,12 +4,13 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
     X, ChevronLeft, ChevronRight, Check, Calendar, FileText, 
-    Ruler, Hammer, Package, CheckCircle2, AlertCircle, Plus, Trash2 
+    Ruler, Hammer, Package, CheckCircle2, AlertCircle, Plus, Trash2, Camera, Image as ImageIcon, Loader2 
 } from "lucide-react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { DateRange } from "react-day-picker";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
@@ -17,7 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { AuditForm } from "./technical/audit-form";
-import { updateTechnicalAudit } from "../technical-actions";
+import { updateTechnicalAudit, uploadAuditPhotoAction } from "../technical-actions";
 import type { TechnicalAuditData } from "../technical-data";
 import type { MeasurementMaterialItem } from "../types";
 
@@ -44,6 +45,10 @@ interface MeasurementAssistantModalProps {
     
     floorPattern: 'classic' | 'herringbone';
     setFloorPattern: (val: 'classic' | 'herringbone') => void;
+    layingDirection: string;
+    setLayingDirection: (val: string) => void;
+    sketchPhotoUrl: string | null;
+    setSketchPhotoUrl: (val: string | null) => void;
     panelWaste: string;
     setPanelWaste: (val: string) => void;
     
@@ -83,7 +88,10 @@ export function MeasurementAssistantModal({
     subfloorCondition, setSubfloorCondition,
     technicalAudit, montageId,
     installationMethod, setInstallationMethod,
-    floorPattern, setFloorPattern, panelWaste, setPanelWaste,
+    floorPattern, setFloorPattern, 
+    layingDirection, setLayingDirection,
+    sketchPhotoUrl, setSketchPhotoUrl,
+    panelWaste, setPanelWaste,
     floorArea, setFloorArea,
     panelModel, setIsPanelSelectorOpen,
     additionalMaterials, setAdditionalMaterials,
@@ -94,6 +102,7 @@ export function MeasurementAssistantModal({
     const [currentStep, setCurrentStep] = useState(initialStep);
     const [auditData, setAuditData] = useState<TechnicalAuditData | null>(technicalAudit);
     const [isRoomsExpanded, setIsRoomsExpanded] = useState(measurementRooms.length > 0);
+    const [isUploadingSketch, setIsUploadingSketch] = useState(false);
 
     // Auto-save Audit Data
     useEffect(() => {
@@ -424,6 +433,99 @@ export function MeasurementAssistantModal({
                                             <SelectItem value="herringbone">Jodełka</SelectItem>
                                         </SelectContent>
                                     </Select>
+                                </div>
+                                <div className="col-span-2 space-y-2">
+                                     <Label>Kierunek układania</Label>
+                                     <div className="space-y-3">
+                                         <Input 
+                                             placeholder="np. Prostopadle do okna, Wg projektu..." 
+                                             value={layingDirection}
+                                             onChange={(e) => setLayingDirection(e.target.value)}
+                                             className="h-12"
+                                         />
+                                         <div className="flex flex-wrap gap-2">
+                                             {['Prostopadle do okna', 'Równolegle do okna', 'Wg projektu', 'W linii od drzwi'].map(opt => (
+                                                 <Badge 
+                                                     key={opt}
+                                                     variant="outline" 
+                                                     className="cursor-pointer hover:bg-primary/10 py-2 px-3 text-sm font-normal"
+                                                     onClick={() => setLayingDirection(opt)}
+                                                 >
+                                                     {opt}
+                                                 </Badge>
+                                             ))}
+                                         </div>
+                                     </div>
+                                </div>
+
+                                <div className="col-span-2 pt-2 pb-2">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="flex items-center gap-2">
+                                            Szkic sytuacyjny (Opcjonalne)
+                                        </Label>
+                                        {sketchPhotoUrl && (
+                                            <Button 
+                                                variant="ghost" 
+                                                size="sm" 
+                                                className="h-8 text-destructive hover:text-destructive"
+                                                onClick={() => setSketchPhotoUrl(null)}
+                                            >
+                                                <Trash2 className="w-4 h-4 mr-2" />
+                                                Usuń
+                                            </Button>
+                                        )}
+                                    </div>
+                                    
+                                    {!sketchPhotoUrl ? (
+                                        <div className="mt-2">
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                capture="environment"
+                                                className="hidden"
+                                                id="sketch-upload"
+                                                onChange={async (e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (!file) return;
+                                                    
+                                                    setIsUploadingSketch(true);
+                                                    try {
+                                                        const formData = new FormData();
+                                                        formData.append('file', file);
+                                                        formData.append('montageId', montageId);
+                                                        const url = await uploadAuditPhotoAction(formData);
+                                                        setSketchPhotoUrl(url);
+                                                    } catch (err) {
+                                                        console.error("Upload failed", err);
+                                                    } finally {
+                                                        setIsUploadingSketch(false);
+                                                    }
+                                                }}
+                                            />
+                                            <Button
+                                                variant="outline"
+                                                className="w-full h-16 border-dashed gap-2"
+                                                disabled={isUploadingSketch}
+                                                onClick={() => document.getElementById('sketch-upload')?.click()}
+                                            >
+                                                {isUploadingSketch ? (
+                                                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                                                ) : (
+                                                    <Camera className="w-5 h-5" />
+                                                )}
+                                                {isUploadingSketch ? "Wysyłanie..." : "Dodaj zdjęcie szkicu"}
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <div className="mt-2 relative rounded-xl overflow-hidden border bg-muted/20 h-48 flex items-center justify-center">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img 
+                                                src={sketchPhotoUrl} 
+                                                alt="Szkic" 
+                                                className="h-full w-auto max-w-full object-contain" 
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

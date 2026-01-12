@@ -129,6 +129,8 @@ export type Montage = {
 	modelsApproved: boolean;
 	measurementInstallationMethod: 'click' | 'glue' | null;
     measurementFloorPattern?: 'classic' | 'herringbone' | null;
+    measurementLayingDirection?: string | null;
+    measurementSketchPhotoUrl?: string | null;
 	measurementSubfloorCondition: string | null;
 	measurementAdditionalWorkNeeded: boolean;
 	measurementAdditionalWorkDescription: string | null;

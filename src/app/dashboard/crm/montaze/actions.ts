@@ -1843,6 +1843,8 @@ export async function updateMontageMeasurement({
         name: string;
         area: number;
     }[] | null;
+    measurementLayingDirection?: string | null;
+    measurementSketchPhotoUrl?: string | null;
 }) {
 	await requireUser();
 
@@ -1883,6 +1885,8 @@ export async function updateMontageMeasurement({
             measurementFloorPattern,
             measurementRooms,
             measurementSubfloorCondition,
+            measurementLayingDirection,
+            measurementSketchPhotoUrl,
             measurementAdditionalWorkNeeded,
             measurementAdditionalWorkDescription,
             measurementAdditionalMaterials,
