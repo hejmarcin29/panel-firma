@@ -34,7 +34,7 @@ export function InstallerDashboardView({ montages }: InstallerDashboardViewProps
     if (m.status === 'installation_in_progress') return 'IN_PROGRESS';
     
     // Completed or Cancelled - hide or put in separate list (not handled here based on requirements)
-    if (['completed', 'rejected', 'protocol_signed'].includes(m.status)) return 'PENDING';
+    if (['completed', 'rejected', 'protocol_signed', 'on_hold'].includes(m.status)) return 'PENDING';
 
     const date = getActionDate(m);
 
