@@ -484,6 +484,13 @@
       "when": 1768158266992,
       "tag": "0068_magical_black_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1768246649192,
+      "tag": "0069_lean_grim_reaper",
+      "breakpoints": true
     }
   ]
 }
