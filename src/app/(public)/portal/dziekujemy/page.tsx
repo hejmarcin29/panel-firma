@@ -28,7 +28,7 @@ export default function PortalThankYouPage() {
                             <div className="space-y-1">
                                 <h3 className="font-medium text-sm">Status zaktualizowany</h3>
                                 <p className="text-xs text-muted-foreground">
-                                    Status Twojego zlecenia zmienił się na "Opłacone". Montażysta oraz biuro otrzymali powiadomienie.
+                                    Status Twojego zlecenia zmienił się na &quot;Opłacone&quot;. Montażysta oraz biuro otrzymali powiadomienie.
                                 </p>
                             </div>
                         </div>

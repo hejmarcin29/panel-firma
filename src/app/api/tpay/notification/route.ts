@@ -72,7 +72,7 @@ async function handlePaymentSuccess(transactionId: string, crc: string, amountPa
         
         await db.update(orders)
             .set({ 
-                status: 'paid', 
+                status: 'order.paid', 
                 // We might want to store transactionId in orders table too, but for now we update status
             })
             .where(eq(orders.id, orderId));

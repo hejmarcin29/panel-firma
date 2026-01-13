@@ -10,9 +10,10 @@ import { RichTextEditor } from "@/components/ui/rich-text-editor"; // Check if t
 import { upsertPost } from "../actions";
 import { useRouter } from 'next/navigation';
 import { toast } from "sonner";
-import { Separator } from '@/components/ui/separator';
+// import { Separator } from '@/components/ui/separator';
 
 interface PostFormProps {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     initialData?: any;
 }
 

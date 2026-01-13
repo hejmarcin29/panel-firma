@@ -12,6 +12,7 @@ import { uploadSignedContract } from '@/lib/r2/storage';
 import { nanoid } from 'nanoid';
 import { randomUUID } from 'crypto';
 import { CustomerWithRelations } from './types';
+import { createPayment } from '@/lib/tpay';
 
 function decodeSecret(secret: string | null | undefined): string | null {
     if (!secret) {
@@ -472,15 +473,29 @@ export async function initiatePayment(orderId: string, token: string) {
 
     if (!order) throw new Error('Nie znaleziono zamówienia');
 
-    // 2. Here we would call Tpay API to create transaction
-    // For now, we simulate a Tpay URL that redirects back to our system to confirm payment
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    
-    // Simulate Tpay payment link (which would be distinct from our app in reality)
-    // We return a link to a "Mock Payment Provider" page which sets status and redirects back
-    const paymentUrl = `${appUrl}/api/tpay/mock/pay?orderId=${orderId}&token=${token}`;
+    // 2. Get Customer
+    const customer = await getCustomerByToken(token);
+    if (!customer) throw new Error('Nie znaleziono klienta');
 
-    return { paymentUrl };
+    // 3. Call Tpay API
+    try {
+        const title = order.transferTitle || `Zamówienie ${order.id.slice(0, 8)}`;
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://b2b.primepodloga.pl';
+        
+        const transaction = await createPayment({
+             amount: order.totalGross, 
+             description: title,
+             crc: `ORDER_${orderId}`,
+             email: customer.email || 'brak@email.pl',
+             name: customer.name || 'Klient',
+             returnUrl: `${appUrl}/portal/dziekujemy?orderId=${orderId}`,
+        });
+        
+        return { paymentUrl: transaction.url };
+    } catch (e) {
+        console.error('Tpay error:', e);
+        throw new Error('Błąd tworzenia płatności Tpay');
+    }
 }
 
 // --- SAMPLES ACTIONS ---

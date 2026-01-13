@@ -24,6 +24,7 @@ export async function deletePost(id: string) {
     revalidatePath('/dashboard/shop/blog');
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function upsertPost(data: any) {
     // Basic validation
     if (!data.title || !data.slug) {

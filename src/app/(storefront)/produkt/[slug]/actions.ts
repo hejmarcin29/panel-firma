@@ -7,6 +7,7 @@ import { eq, and } from 'drizzle-orm';
 export interface ProductDetails {
     id: string;
     name: string;
+    slug: string | null;
     description: string | null;
     sku: string;
     price: string | null; // serialized decimal/text
@@ -77,6 +78,7 @@ export async function getProductBySlug(slug: string): Promise<ProductDetails | n
     return {
         id: product.id,
         name: product.name,
+        slug: product.slug,
         description: product.description,
         sku: product.sku,
         price: product.price,

@@ -31,8 +31,9 @@ import {
     type CustomerSource,
     orders,
     orderItems,
-    erpProducts,
     globalSettings,
+    erpProducts,
+    erpCategories,
 } from '@/lib/db/schema';
 import { type ShopConfig } from '../../settings/shop/actions';
 import { uploadMontageObject } from '@/lib/r2/storage';
@@ -581,7 +582,7 @@ export async function updateMontageStatus({ montageId, status }: UpdateMontageSt
     if (resolved === 'measurement_done') {
         const montageData = await db.query.montages.findFirst({
             where: eq(montages.id, montageId),
-            with: { measurer: { with: { installerProfile: true } } }
+            with: { measurer: true }
         });
         
         if (montageData?.measurer?.installerProfile?.measurementRate) {
@@ -592,7 +593,9 @@ export async function updateMontageStatus({ montageId, status }: UpdateMontageSt
             });
 
             if (existingSettlement) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const calcs = (existingSettlement.calculations as any[]) || [];
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 if (!calcs.find((c: any) => c.type === 'measurement')) {
                     const newCalcs = [...calcs, { type: 'measurement', amount: rate, description: 'Opłata za pomiar' }];
                     const newTotal = existingSettlement.totalAmount + rate;
@@ -1692,7 +1695,7 @@ export async function updateMontageChecklistItemLabel({ montageId, itemId, label
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 }
 
-import { erpProducts, erpCategories } from '@/lib/db/schema';
+// import { erpProducts, erpCategories } from '@/lib/db/schema';
 
 export async function getMontageProducts(options: { type: 'panel' | 'accessory', category?: string }) {
     await requireUser();
@@ -2790,8 +2793,8 @@ export async function assignMeasurerAndAdvance(montageId: string, measurerId: st
                 source: 'shop',
                 status: 'order.awaiting_payment',
                 customerId: montage.customerId!,
-                totalNet: measureProduct.priceNet, 
-                totalGross: measureProduct.priceGross,
+                totalNet: Math.round((parseFloat(measureProduct.price || '0') * 100) / 1.23), 
+                totalGross: Math.round(parseFloat(measureProduct.price || '0') * 100),
                 currency: 'PLN',
             });
 
@@ -2802,8 +2805,8 @@ export async function assignMeasurerAndAdvance(montageId: string, measurerId: st
                 name: measureProduct.name,
                 sku: measureProduct.sku,
                 quantity: 1,
-                unitPrice: measureProduct.priceGross, // Store gross as unit price for simplicity in this context or net? Schema says unit_price. Usually Net or Gross depending on system. Assuming Gross based on totalGross usage.
-                taxRate: measureProduct.vatRate,
+                unitPrice: Math.round(parseFloat(measureProduct.price || '0') * 100), // Store gross as unit price for simplicity in this context or net? Schema says unit_price. Usually Net or Gross depending on system. Assuming Gross based on totalGross usage.
+                taxRate: 23,
             });
             
              // 4. Update Montage

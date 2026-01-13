@@ -23,7 +23,7 @@ export default async function ShopSettingsPage() {
         columns: {
             id: true,
             name: true,
-            priceGross: true,
+            price: true,
         }
     });
 
@@ -195,7 +195,7 @@ export default async function ShopSettingsPage() {
                                         <option value="">-- Brak / Wybierz produkt --</option>
                                         {availableProducts.map(p => (
                                             <option key={p.id} value={p.id}>
-                                                {p.name} ({(p.priceGross / 100).toFixed(2)} PLN)
+                                                {p.name} ({p.price} PLN)
                                             </option>
                                         ))}
                                     </select>

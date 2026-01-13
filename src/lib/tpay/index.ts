@@ -131,6 +131,7 @@ export async function verifyNotificationSignature(notification: TpayNotification
     return true; 
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getTransactionDetails(transactionId: string): Promise<any> {
     const accessToken = await getAccessToken();
     const baseUrl = await getBaseUrl();

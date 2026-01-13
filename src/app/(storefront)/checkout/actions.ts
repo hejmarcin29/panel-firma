@@ -3,6 +3,7 @@
 import { db } from '@/lib/db';
 import { manualOrders, manualOrderItems } from '@/lib/db/schema';
 import { format } from 'date-fns';
+import { createPayment } from '@/lib/tpay';
 
 type OrderData = {
     firstName: string;
@@ -123,11 +124,23 @@ export async function processOrder(data: OrderData) {
             }
         });
 
-        // 5. Handle Tpay Redirect (Mock for now)
-        const redirectUrl: string | null = null;
+        // 5. Handle Tpay Redirect
+        let redirectUrl: string | null = null;
         if (data.paymentMethod === 'tpay') {
-             // In real impl, we would hit Tpay API here
-             // redirectUrl = await createTpayTransaction(...)
+             try {
+                 const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://b2b.primepodloga.pl';
+                 const transaction = await createPayment({
+                     amount: totalGross,
+                     description: `Zamówienie ${reference}`,
+                     crc: `ORDER_${orderId}`,
+                     email: data.email,
+                     name: `${data.firstName} ${data.lastName}`,
+                     returnUrl: `${appUrl}/sklep/dziekujemy?orderId=${orderId}`,
+                 });
+                 redirectUrl = transaction.url;
+             } catch (error) {
+                 console.error('Failed to create Tpay transaction:', error);
+             }
         }
 
         return {

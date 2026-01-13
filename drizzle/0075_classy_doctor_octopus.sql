@@ -1,0 +1,1 @@
+ALTER TABLE "montage_payments" ADD COLUMN "transaction_id" text;

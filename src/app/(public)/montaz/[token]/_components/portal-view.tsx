@@ -23,6 +23,7 @@ interface PortalViewProps {
     companyInfo: CompanyInfo;
     bankAccount?: string;
     initialTab?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     pendingOrder?: any; // Using any to avoid heavy typing import if not needed, but ideally should be Order type
 }
 

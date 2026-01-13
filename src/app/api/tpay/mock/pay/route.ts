@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     await db.update(orders)
         .set({ 
             status: 'order.paid', 
-            paymentMethod: 'tpay_mock',
+            paymentMethod: 'tpay',
             updatedAt: new Date() 
         })
         .where(eq(orders.id, orderId));

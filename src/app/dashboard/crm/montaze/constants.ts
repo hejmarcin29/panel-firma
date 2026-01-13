@@ -11,6 +11,7 @@ export const statusLabels: Record<MontageStatus, StatusLabelConfig> = {
     // 1. LEJKI (SPRZEDAŻ)
     new_lead: { label: 'Nowe Zgłoszenie', description: 'Klient czeka na pierwszy kontakt' },
     lead_contact: { label: 'W Kontakcie', description: 'Negocjacje w toku / Ustalanie potrzeb' },
+    lead_payment_pending: { label: 'Oczekuje na Płatność', description: 'Czekamy na opłatę weryfikacyjną' },
     lead_samples_pending: { label: 'Wysłano Link (Próbki)', description: 'Czekamy na wybór próbek przez klienta' },
     lead_samples_sent: { label: 'Próbki Wysłane', description: 'Próbki fizycznie wysłane do klienta' },
     lead_pre_estimate: { label: 'Wstępna Wycena', description: 'Wysłano szacunkowy kosztorys' },

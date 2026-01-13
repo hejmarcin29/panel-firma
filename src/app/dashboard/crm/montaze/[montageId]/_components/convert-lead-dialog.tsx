@@ -53,7 +53,7 @@ export function ConvertLeadDialog({ montage, measurers = [] }: ConvertLeadDialog
     const handleAssignAndAdvance = async (measurerId: string) => {
         startTransition(async () => {
             try {
-                // @ts-ignore - Updated action signature
+                // Updated action signature
                 const result = await assignMeasurerAndAdvance(montage.id, measurerId, requirePayment);
                 if (result.success) {
                     if (result.paymentRequired) {
