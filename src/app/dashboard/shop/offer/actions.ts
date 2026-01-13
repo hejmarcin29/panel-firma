@@ -4,12 +4,40 @@ import { db } from '@/lib/db';
 import { erpProducts } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
+import { slugify } from '@/lib/utils';
 
 export async function toggleShopVisibility(productId: string, isVisible: boolean) {
-    await db
-        .update(erpProducts)
-        .set({ isShopVisible: isVisible })
-        .where(eq(erpProducts.id, productId));
+    if (!isVisible) {
+        await db
+            .update(erpProducts)
+            .set({ isShopVisible: false })
+            .where(eq(erpProducts.id, productId));
+    } else {
+        const product = await db.query.erpProducts.findFirst({
+            where: eq(erpProducts.id, productId),
+            columns: {
+                id: true,
+                slug: true,
+                name: true
+            }
+        });
+
+        if (!product) return;
+
+        let slug = product.slug;
+
+        if (!slug) {
+            slug = slugify(product.name);
+        }
+
+        await db
+            .update(erpProducts)
+            .set({ 
+                isShopVisible: true,
+                slug: slug
+            })
+            .where(eq(erpProducts.id, productId));
+    }
 
     revalidatePath('/dashboard/shop/offer');
     revalidatePath('/sklep');

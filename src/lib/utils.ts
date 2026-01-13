@@ -29,3 +29,22 @@ export function generateId(prefix?: string): string {
   }
   return prefix ? `${prefix}_${token}` : token;
 }
+
+export function slugify(text: string): string {
+  const map: { [key: string]: string } = {
+    'ą': 'a', 'ć': 'c', 'ę': 'e', 'ł': 'l', 'ń': 'n', 'ó': 'o', 'ś': 's', 'ź': 'z', 'ż': 'z',
+    'Ą': 'A', 'Ć': 'C', 'Ę': 'E', 'Ł': 'L', 'Ń': 'N', 'Ó': 'O', 'Ś': 'S', 'Ź': 'Z', 'Ż': 'Z'
+  };
+
+  const folded = text.replace(/[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g, match => map[match]);
+
+  return folded
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')     // Zamień spacje na myślniki
+    .replace(/[^\w\-]+/g, '') // Usuń wszystko co nie jest literą, cyfrą lub myślnikiem
+    .replace(/\-\-+/g, '-')   // Zredukuj powtórzone myślniki
+    .replace(/^-+/, '')       // Usuń myślniki z początku
+    .replace(/-+$/, '');      // Usuń myślniki z końca
+}

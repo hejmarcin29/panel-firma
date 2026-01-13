@@ -1660,6 +1660,7 @@ export const erpProducts = pgTable('erp_products', {
     sku: text('sku').unique().notNull(), // Kod produktu
     ean: text('ean'), // Kod kreskowy
     name: text('name').notNull(),
+    slug: text('slug').unique(),
     description: text('description'),
     categoryId: text('category_id').references(() => erpCategories.id),
     supplierId: text('supplier_id').references(() => erpSuppliers.id), // Główny dostawca
@@ -1786,6 +1787,23 @@ export const erpProductsRelations = relations(erpProducts, ({ one, many }) => ({
     purchasePrices: many(erpPurchasePrices),
     inventory: many(erpInventory),
     attributes: many(erpProductAttributes),
+    images: many(erpProductImages),
+}));
+
+export const erpProductImages = pgTable('erp_product_images', {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    productId: text('product_id').references(() => erpProducts.id).notNull(),
+    url: text('url').notNull(),
+    alt: text('alt'),
+    order: integer('order').default(0),
+    createdAt: timestamp('created_at').defaultNow(),
+});
+
+export const erpProductImagesRelations = relations(erpProductImages, ({ one }) => ({
+    product: one(erpProducts, {
+        fields: [erpProductImages.productId],
+        references: [erpProducts.id],
+    }),
 }));
 
 export const erpAttributesRelations = relations(erpAttributes, ({ one, many }) => ({
