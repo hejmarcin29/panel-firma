@@ -1870,6 +1870,7 @@ export async function updateMontageMeasurement({
         area: number;
         waste: number;
         installationMethod: 'click' | 'glue' | null;
+        pattern?: string | null;
         layingDirection?: string | null;
         rooms?: {
             name: string;
@@ -1940,6 +1941,7 @@ export async function updateMontageMeasurement({
                 area: fp.area,
                 waste: fp.waste,
                 installationMethod: fp.installationMethod,
+                pattern: fp.pattern as any,
                 layingDirection: fp.layingDirection,
                 rooms: fp.rooms
             })));

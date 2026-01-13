@@ -272,6 +272,7 @@ export type FloorProductState = {
     area: number;
     waste: number;
     installationMethod: 'click' | 'glue';
+    pattern: 'simple' | 'herringbone' | 'chevron' | 'tiles' | string; // Allowing string for robustness
     layingDirection: string;
     rooms: { name: string; area: number }[];
 };

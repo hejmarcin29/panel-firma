@@ -17,6 +17,7 @@ export const montageFloorProducts = pgTable('montage_floor_products', {
     area: doublePrecision('area').notNull().default(0), // Net area
     waste: doublePrecision('waste').notNull().default(0), // Waste percentage (e.g. 5, 10)
     installationMethod: text('installation_method').$type<'click' | 'glue'>().default('click'),
+    pattern: text('pattern').$type<'simple' | 'herringbone' | 'chevron' | 'tiles'>().default('simple'),
     layingDirection: text('laying_direction'),
     rooms: json('rooms').$type<{
         name: string;

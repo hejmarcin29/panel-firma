@@ -1,0 +1,1 @@
+ALTER TABLE "montage_floor_products" ADD COLUMN "pattern" text DEFAULT 'simple';

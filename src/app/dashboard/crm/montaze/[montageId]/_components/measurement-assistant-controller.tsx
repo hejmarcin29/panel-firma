@@ -61,6 +61,7 @@ export function MeasurementAssistantController({ montage, isOpen, onClose, initi
                 area: fp.area,
                 waste: fp.waste,
                 installationMethod: (fp.installationMethod as 'click' | 'glue') || 'click',
+                pattern: (fp.pattern as any) || 'simple',
                 layingDirection: fp.layingDirection || '',
                 rooms: fp.rooms || []
             }));
@@ -76,6 +77,7 @@ export function MeasurementAssistantController({ montage, isOpen, onClose, initi
                 area: legacyArea,
                 waste: montage.panelWaste || 5,
                 installationMethod: (montage.measurementInstallationMethod as 'click' | 'glue') || 'click',
+                pattern: montage.measurementFloorPattern === 'herringbone' ? 'herringbone' : 'simple',
                 layingDirection: montage.measurementLayingDirection || '',
                 rooms: montage.measurementRooms || []
             }];

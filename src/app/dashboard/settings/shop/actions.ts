@@ -91,4 +91,5 @@ export async function updateTpayConfig(data: TpayConfig) {
         });
 
     revalidatePath('/dashboard/settings/integrations');
+    revalidatePath('/dashboard/settings/shop');
 }

@@ -304,6 +304,7 @@ export function MeasurementAssistantModal({
                          area: 0,
                          waste: 5,
                          installationMethod: 'click',
+                         pattern: 'simple',
                          layingDirection: '',
                          rooms: []
                      }]);
@@ -389,26 +390,41 @@ export function MeasurementAssistantModal({
                                     {/* Tech Details */}
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
-                                            <Label>Montaż</Label>
-                                            <Select value={product.installationMethod} onValueChange={(v: 'click'|'glue') => updateFloorProduct(index, { installationMethod: v })}>
-                                                <SelectTrigger>
+                                            <Label>Wzór</Label>
+                                            <Select value={product.pattern || 'simple'} onValueChange={(v) => updateFloorProduct(index, { pattern: v })}>
+                                                <SelectTrigger className="h-12">
                                                     <SelectValue />
                                                 </SelectTrigger>
-                                                <SelectContent className="z-250">
+                                                <SelectContent className="z-50">
+                                                    <SelectItem value="simple">Klasycznie</SelectItem>
+                                                    <SelectItem value="herringbone">Jodełka</SelectItem>
+                                                    <SelectItem value="chevron">Chevron</SelectItem>
+                                                    <SelectItem value="tiles">Płytki</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Montaż</Label>
+                                            <Select value={product.installationMethod} onValueChange={(v: 'click'|'glue') => updateFloorProduct(index, { installationMethod: v })}>
+                                                <SelectTrigger className="h-12">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent className="z-50">
                                                     <SelectItem value="click">Click (Pływająca)</SelectItem>
                                                     <SelectItem value="glue">Klejona</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
-                                         <div className="space-y-2">
-                                             <Label>Kierunek</Label>
-                                             <Input 
-                                                value={product.layingDirection} 
-                                                onChange={(e) => updateFloorProduct(index, { layingDirection: e.target.value })}
-                                                placeholder="np. Od okna"
-                                             />
-                                         </div>
                                     </div>
+                                    <div className="space-y-2">
+                                         <Label>Kierunek</Label>
+                                         <Input 
+                                            value={product.layingDirection} 
+                                            onChange={(e) => updateFloorProduct(index, { layingDirection: e.target.value })}
+                                            placeholder="np. Od okna"
+                                            className="h-12"
+                                         />
+                                     </div>
 
                                     {/* Rooms (Repeater) */}
                                      <div className="space-y-2 pt-2 border-t">
