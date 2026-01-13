@@ -7,7 +7,7 @@ import type { WooMetaData, WooOrder } from './types';
 
 const STATUS_MAP: Record<string, string> = {
 	pending: 'Nowe',
-	processing: 'W realizacji',
+	processing: 'Nowe', // Force "Waiting Room" for processing orders (usually paid)
 	onhold: 'Nowe',
 	completed: 'Pakowanie',
 	shipped: 'Wysłane',
@@ -174,6 +174,17 @@ export function mapWooOrderToManualOrderPayload(order: WooOrder): ManualOrderPay
 	const paymentMethod = order.payment_method_title || order.payment_method || 'Nieznana';
 	const shippingMethod = order.shipping_lines?.[0]?.method_title || 'Nieznana';
 
+    // Heuristics: Check if this is a sample order
+    // If ALL items contain "próbka", "wzornik" or "sample" -> it is a Sample order
+    // Otherwise -> Production (Pallet/Standard)
+    const SAMPLE_KEYWORDS = ['próbka', 'wzornik', 'sample', 'tester'];
+    
+    // Check if every item matches at least one keyword
+    const isSampleOrder = allItems.length > 0 && allItems.every(item => {
+        const lowerName = item.product.toLowerCase();
+        return SAMPLE_KEYWORDS.some(kw => lowerName.includes(kw));
+    });
+
 	return {
 		reference: order.number,
 		status,
@@ -186,6 +197,7 @@ export function mapWooOrderToManualOrderPayload(order: WooOrder): ManualOrderPay
 		source: 'woocommerce',
 		sourceOrderId: order.id !== undefined ? String(order.id) : order.number ?? null,
 		requiresReview: true,
+        type: isSampleOrder ? 'sample' : 'production', // Auto-detect type
 		paymentMethod,
 		shippingMethod,
 	};
