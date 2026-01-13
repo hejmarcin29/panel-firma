@@ -5,16 +5,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ShoppingCart, RefreshCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCartStore } from "@/lib/store/cart-store";
+import { toast } from "sonner";
 
 interface FloorCalculatorProps {
+  product: {
+    id: string;
+    name: string;
+    sku: string;
+    imageUrl: string | null;
+  };
   pricePerM2: number;
   packageSizeM2: number;
   unit: string;
 }
 
-export function FloorCalculator({ pricePerM2, packageSizeM2 }: FloorCalculatorProps) {
+export function FloorCalculator({ product, pricePerM2, packageSizeM2, unit }: FloorCalculatorProps) {
   const [area, setArea] = useState<string>("20");
   const [waste, setWaste] = useState<string>("5"); // 5% waste
+  const { addItem } = useCartStore();
 
   const areaNum = parseFloat(area) || 0;
   const wasteNum = parseFloat(waste) || 0;
@@ -23,9 +32,36 @@ export function FloorCalculator({ pricePerM2, packageSizeM2 }: FloorCalculatorPr
   const areaWithWaste = areaNum * (1 + wasteNum / 100);
   
   // If unit is 'm2' and we sell by packages
-  const packsNeeded = Math.ceil(areaWithWaste / packageSizeM2);
-  const totalArea = packsNeeded * packageSizeM2;
+  // If unit is 'szt', we act differently, but here we assume flooring (m2)
+  const isFlooring = unit === 'm2';
+  
+  const packsNeeded = isFlooring && packageSizeM2 > 0
+    ? Math.ceil(areaWithWaste / packageSizeM2)
+    : Math.ceil(areaWithWaste); // Basic fallback
+
+  const totalArea = isFlooring && packageSizeM2 > 0
+    ? packsNeeded * packageSizeM2
+    : packsNeeded;
+
   const totalPrice = totalArea * pricePerM2;
+
+  const handleAddToCart = () => {
+    if (totalPrice <= 0) return;
+
+    addItem({
+      productId: product.id,
+      name: product.name,
+      sku: product.sku,
+      image: product.imageUrl,
+      pricePerUnit: isFlooring ? (pricePerM2 * packageSizeM2) : pricePerM2, // Cena za paczkę/sztukę
+      vatRate: 0.23,
+      quantity: packsNeeded,
+      unit: unit,
+      packageSize: packageSizeM2
+    });
+    
+    toast.success("Dodano do koszyka");
+  };
 
   return (
     <div className="rounded-xl border bg-card p-6 shadow-sm space-y-6">
@@ -89,7 +125,7 @@ export function FloorCalculator({ pricePerM2, packageSizeM2 }: FloorCalculatorPr
                     {totalPrice.toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' })}
                 </span>
             </div>
-            <Button size="lg" className="w-full h-12 text-base font-semibold">
+            <Button size="lg" className="w-full h-12 text-base font-semibold" onClick={handleAddToCart}>
                 <ShoppingCart className="mr-2 h-5 w-5" />
                 Dodaj do koszyka
             </Button>

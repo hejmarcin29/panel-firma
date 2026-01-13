@@ -24,19 +24,23 @@ export function middleware(request: NextRequest) {
 
   // Routing dla sklepu
   if (isStoreDomain) {
-    // Jeśli jesteśmy w domenie sklepu, ale ścieżka nie zaczyna się od (storefront),
-    // to przepisujemy URL na grupę (storefront)
-    // Ale w Next.js Route Groups są "przezroczyste" w URLu, chyba że robimy rewrite.
-    // Tutaj chcemy, żeby "/" w domenie sklepu wskazywało na "src/app/(storefront)/page.tsx"
     
-    // Jeśli to główna strona sklepu
+    // Główna strona sklepu (test.primepodloga.pl/) -> /witryna
     if (url.pathname === '/') {
-      return NextResponse.rewrite(new URL('/(storefront)', request.url));
+      return NextResponse.rewrite(new URL('/witryna', request.url));
     }
 
-    // Jeśli to inna podstrona sklepu, np. /koszyk -> przepisujemy na /(storefront)/koszyk
-    // Warunek: nie chcemy przepisywać jeśli już tam jest (chociaż rewrite tego nie pokaże w URL)
-    return NextResponse.rewrite(new URL(`/(storefront)${url.pathname}`, request.url));
+    // Pozostałe podstrony (np. /produkt/slug) - sprawdź czy plik istnieje w (storefront)?
+    // Nie musimy sprawdzać. Next.js sam dopasuje np. /produkt/xyz do (storefront)/produkt/xyz
+    // Ale upewnijmy się, że nie próbujemy wejść do /dashboard
+    if (url.pathname.startsWith('/dashboard')) {
+       return NextResponse.redirect(new URL('/', request.url)); // Wyrzuć ze sklepu na główną (czyli witrynę)
+    }
+
+    // Ważne: Żeby /witryna działała przezroczyle, musimy pozwolić na standardowe dopasowanie
+    // Next.js automatycznie szuka w (storefront) bo to Root Layout group.
+    
+    return NextResponse.next();
   }
 
   // Routing dla panelu (b2b.primepodloga.pl lub inna domena)

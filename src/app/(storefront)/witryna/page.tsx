@@ -1,6 +1,6 @@
-import { HeroSection } from "./_components/hero-section";
-import { FeaturesSection } from "./_components/features-section";
-import { CategoryGrid } from "./_components/category-grid";
+import { HeroSection } from "../_components/hero-section";
+import { FeaturesSection } from "../_components/features-section";
+import { CategoryGrid } from "../_components/category-grid";
 
 export default function StorefrontHomePage() {
   return (
@@ -26,4 +26,3 @@ export default function StorefrontHomePage() {
     </div>
   );
 }
-

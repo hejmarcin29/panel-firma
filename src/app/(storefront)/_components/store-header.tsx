@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ShoppingCart, Search, Menu, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CartButton } from "./cart-button";
 
 export function StoreHeader() {
   return (
@@ -44,16 +45,7 @@ export function StoreHeader() {
             <User className="h-5 w-5" />
             <span className="sr-only">Konto</span>
           </Button>
-          <Link href="/koszyk">
-            <Button variant="outline" size="icon" className="relative">
-              <ShoppingCart className="h-5 w-5" />
-              <span className="sr-only">Koszyk</span>
-              {/* Badge placeholder */}
-              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
-                0
-              </span>
-            </Button>
-          </Link>
+          <CartButton />
         </div>
       </div>
     </header>

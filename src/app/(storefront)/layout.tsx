@@ -1,6 +1,7 @@
 import { StoreHeader } from "./_components/store-header";
 import { MobileNav } from "./_components/mobile-nav";
 import { StoreFooter } from "./_components/store-footer";
+import { CartSheet } from "./_components/cart-sheet";
 
 export default function StorefrontLayout({
   children,
@@ -15,6 +16,7 @@ export default function StorefrontLayout({
       </main>
       <StoreFooter />
       <MobileNav />
+      <CartSheet />
     </div>
   );
 }
