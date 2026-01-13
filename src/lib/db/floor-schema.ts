@@ -1,11 +1,7 @@
 import {
-	boolean,
 	doublePrecision,
-    integer,
-    json,
-	pgTable,
+    pgTable,
 	text,
-	timestamp
 } from 'drizzle-orm/pg-core';
 import { montages } from './schema';
 

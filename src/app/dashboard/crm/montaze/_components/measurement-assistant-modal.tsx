@@ -91,22 +91,24 @@ export function MeasurementAssistantModal({
     isHousingVat, setIsHousingVat,
     subfloorCondition, setSubfloorCondition,
     technicalAudit, montageId,
-    installationMethod, setInstallationMethod,
-    floorPattern, setFloorPattern, 
-    layingDirection, setLayingDirection,
+    installationMethod, // setInstallationMethod unused
+    floorPattern, // setFloorPattern unused
+    // layingDirection unused
+    // setLayingDirection unused
     sketchPhotoUrl, setSketchPhotoUrl,
-    panelWaste, setPanelWaste,
+    // panelWaste unused
+    setPanelWaste,
     floorArea, setFloorArea,
     panelModel, setIsPanelSelectorOpen,
     floorProducts, setFloorProducts,
     additionalMaterials, setAdditionalMaterials,
-    measurementRooms, setMeasurementRooms,
+    measurementRooms, // setMeasurementRooms unused
     dateRange, setDateRange,
     initialStep = 0
 }: MeasurementAssistantModalProps) {
     const [currentStep, setCurrentStep] = useState(initialStep);
     const [auditData, setAuditData] = useState<TechnicalAuditData | null>(technicalAudit);
-    const [isRoomsExpanded, setIsRoomsExpanded] = useState(measurementRooms.length > 0);
+    // const [isRoomsExpanded, setIsRoomsExpanded] = useState(measurementRooms.length > 0);
     const [isUploadingSketch, setIsUploadingSketch] = useState(false);
 
     // Auto-save Audit Data

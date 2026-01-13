@@ -102,7 +102,6 @@ export function CostEstimationController({ montage, isOpen, onClose }: CostEstim
                 montageId: montage.id,
                 measurementAdditionalMaterials: additionalMaterials, 
                 additionalServices: additionalServices,
-                // @ts-ignore - action will be updated momentarily
                 baseServices: baseServices,
                 completed: completed ?? false
            });
