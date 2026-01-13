@@ -5,48 +5,54 @@ export function middleware(request: NextRequest) {
   const url = request.nextUrl;
   const hostname = request.headers.get('host') || '';
 
-  // Sprawdź czy to domena sklepu (test.primepodloga.pl lub primepodloga.pl)
-  // W środowisku lokalnym możesz testować np. mapując w hosts domenę test.localhost
-  const isStoreDomain = 
-    hostname.includes('test.primepodloga.pl') || 
-    hostname.includes('primepodloga.pl') ||
-    hostname.startsWith('test.');
+  // --- KONFIGURACJA DOMEN ---
+  // Tu wpisujemy sztywne adresy. Żadnego zgadywania.
+  const DOMAIN_PANEL = 'b2b.primepodloga.pl';
+  const DOMAIN_SKLEP_TEST = 'test.primepodloga.pl';
+  // Opcjonalnie docelowa domena sklepu w przyszłości:
+  const DOMAIN_SKLEP_PROD = 'primepodloga.pl'; 
 
-  // Ignore static files, api, _next
+  // Ignoruj pliki systemowe Next.js, API, obrazki
   if (
     url.pathname.startsWith('/_next') ||
     url.pathname.startsWith('/api') ||
     url.pathname.startsWith('/static') ||
-    url.pathname.includes('.') // file extension
+    url.pathname.includes('.')
   ) {
     return NextResponse.next();
   }
 
-  // Routing dla sklepu
-  if (isStoreDomain) {
+  // --- LOGIKA DLA PANELU (b2b) ---
+  if (hostname === DOMAIN_PANEL) {
+    // Panel działa "po bożemu" - korzysta z głównego routingu aplikacji
+    // src/app/page.tsx przekieruje na /login lub /dashboard
+    return NextResponse.next();
+  }
+
+  // --- LOGIKA DLA SKLEPU (test lub prod) ---
+  if (hostname === DOMAIN_SKLEP_TEST || hostname === DOMAIN_SKLEP_PROD) {
     
-    // Główna strona sklepu (test.primepodloga.pl/) -> /witryna
+    // 1. OCHRONA: Nie pozwalaj wejść do panelu B2B z adresu sklepu
+    if (url.pathname.startsWith('/dashboard') || 
+        url.pathname.startsWith('/login') || 
+        url.pathname.startsWith('/settings')) {
+       // Wyrzuć z powrotem na stronę główną sklepu
+       return NextResponse.redirect(new URL('/', request.url));
+    }
+
+    // 2. STRONA GŁÓWNA: Przepisz "/" na "/witryna"
+    // (Bo fizyczny plik "/" jest zajęty przez panel B2B)
     if (url.pathname === '/') {
       return NextResponse.rewrite(new URL('/witryna', request.url));
     }
 
-    // Pozostałe podstrony (np. /produkt/slug) - sprawdź czy plik istnieje w (storefront)?
-    // Nie musimy sprawdzać. Next.js sam dopasuje np. /produkt/xyz do (storefront)/produkt/xyz
-    // Ale upewnijmy się, że nie próbujemy wejść do /dashboard
-    if (url.pathname.startsWith('/dashboard')) {
-       return NextResponse.redirect(new URL('/', request.url)); // Wyrzuć ze sklepu na główną (czyli witrynę)
-    }
-
-    // Ważne: Żeby /witryna działała przezroczyle, musimy pozwolić na standardowe dopasowanie
-    // Next.js automatycznie szuka w (storefront) bo to Root Layout group.
-    
+    // 3. POZOSTAŁE PODSTRONY SKLEPU
+    // np. /produkt/xyz, /koszyk, /kolekcje - działają normalnie
     return NextResponse.next();
   }
 
-  // Routing dla panelu (b2b.primepodloga.pl lub inna domena)
-  // Nic nie zmieniamy, działa standardowo (src/app/page.tsx, src/app/dashboard/...)
-  // Możemy opcjonalnie wymusić przekierowanie z "/" na "/dashboard" lub "/login" jeśli to panel
-  
+  // --- LOCALHOST (Development) ---
+  // Dla localhosta domyślne zachowanie (czyli odpala się Panel B2B)
   return NextResponse.next();
 }
 
