@@ -258,6 +258,8 @@ export async function createProduct(data: any) {
         length: data.length,
         weight: data.weight,
         categoryId: data.categoryId || null,
+        brandId: data.brandId || null,
+        collectionId: data.collectionId || null,
         leadTime: data.leadTime,
     }).returning({ id: erpProducts.id });
 
@@ -404,6 +406,8 @@ export async function getProductDetails(id: string) {
         where: eq(erpProducts.id, id),
         with: {
             category: true,
+            brand: true,
+            collection: true,
             purchasePrices: {
                 with: {
                     supplier: true

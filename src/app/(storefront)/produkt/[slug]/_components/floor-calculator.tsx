@@ -18,9 +18,20 @@ interface FloorCalculatorProps {
   pricePerM2: number;
   packageSizeM2: number;
   unit: string;
+  isSampleAvailable?: boolean;
+  isPurchasable?: boolean;
+  samplePrice?: number;
 }
 
-export function FloorCalculator({ product, pricePerM2, packageSizeM2, unit }: FloorCalculatorProps) {
+export function FloorCalculator({ 
+    product, 
+    pricePerM2, 
+    packageSizeM2, 
+    unit,
+    isSampleAvailable = false,
+    isPurchasable = false,
+    samplePrice = 20
+}: FloorCalculatorProps) {
   const [area, setArea] = useState<string>("20");
   const [waste, setWaste] = useState<string>("5"); // 5% waste
   const { addItem } = useCartStore();
@@ -61,6 +72,22 @@ export function FloorCalculator({ product, pricePerM2, packageSizeM2, unit }: Fl
     });
     
     toast.success("Dodano do koszyka");
+  };
+
+  const handleAddSample = () => {
+    addItem({
+      productId: `sample_${product.id}`,
+      name: `Próbka: ${product.name}`,
+      sku: `SAMPLE-${product.sku}`,
+      image: product.imageUrl,
+      pricePerUnit: samplePrice,
+      vatRate: 0.23,
+      quantity: 1,
+      unit: 'szt',
+      packageSize: 1
+    });
+    
+    toast.success("Dodano próbkę");
   };
 
   return (
@@ -125,10 +152,29 @@ export function FloorCalculator({ product, pricePerM2, packageSizeM2, unit }: Fl
                     {totalPrice.toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' })}
                 </span>
             </div>
-            <Button size="lg" className="w-full h-12 text-base font-semibold" onClick={handleAddToCart}>
-                <ShoppingCart className="mr-2 h-5 w-5" />
-                Dodaj do koszyka
-            </Button>
+            
+            {isPurchasable ? (
+                <Button size="lg" className="w-full h-12 text-base font-semibold" onClick={handleAddToCart}>
+                    <ShoppingCart className="mr-2 h-5 w-5" />
+                    Dodaj do koszyka
+                </Button>
+            ) : (
+                <Button size="lg" disabled className="w-full h-12 text-base font-semibold opacity-75 cursor-not-allowed" variant="secondary">
+                     Produkt niedostępny w sprzedaży online
+                </Button>
+            )}
+            
+            {isSampleAvailable && (
+                <Button 
+                    variant="outline" 
+                    size="lg" 
+                    className="w-full h-12 text-base font-medium mt-3" 
+                    onClick={handleAddSample}
+                >
+                    Zamów próbkę ({samplePrice.toFixed(2)} zł)
+                </Button>
+            )}
+
             <p className="text-center text-xs text-muted-foreground mt-3">
                 Darmowa dostawa od 4000 zł
             </p>

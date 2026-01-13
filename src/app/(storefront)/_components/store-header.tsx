@@ -21,14 +21,14 @@ export function StoreHeader() {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-          <Link href="/kolekcje" className="transition-colors hover:text-foreground/80 text-foreground/60">
-            Kolekcje
+          <Link href="/sklep" className="transition-colors hover:text-foreground/80 text-foreground/60">
+            Oferta
           </Link>
-          <Link href="/promocje" className="transition-colors hover:text-foreground/80 text-foreground/60">
+          <Link href="/sklep?q=promocja" className="transition-colors hover:text-foreground/80 text-foreground/60">
             Promocje
           </Link>
-          <Link href="/inspiracje" className="transition-colors hover:text-foreground/80 text-foreground/60">
-            Inspiracje
+          <Link href="/realizacje" className="transition-colors hover:text-foreground/80 text-foreground/60">
+            Realizacje
           </Link>
           <Link href="/blog" className="transition-colors hover:text-foreground/80 text-foreground/60">
             Poradnik

@@ -15,6 +15,8 @@ export interface ProductDetails {
     unit: string | null;
     packageSizeM2: number | null;
     stockQuantity: number | null;
+    isSampleAvailable: boolean | null;
+    isPurchasable: boolean | null;
     imageUrl: string | null;
     attributes: {
         name: string;
@@ -31,7 +33,7 @@ export async function getProductBySlug(slug: string): Promise<ProductDetails | n
     const product = await db.query.erpProducts.findFirst({
         where: and(
             eq(erpProducts.slug, slug),
-            eq(erpProducts.isShopVisible, true)
+            // eq(erpProducts.isShopVisible, true) // Changed: Always fetch visible product (Catalog Mode)
         ),
         with: {
             attributes: {
@@ -67,6 +69,8 @@ export async function getProductBySlug(slug: string): Promise<ProductDetails | n
         unit: product.unit,
         packageSizeM2: product.packageSizeM2,
         stockQuantity: product.stockQuantity,
+        isSampleAvailable: product.isSampleAvailable,
+        isPurchasable: product.isPurchasable,
         imageUrl: product.imageUrl,
         attributes: transformedAttributes,
         images: product.images

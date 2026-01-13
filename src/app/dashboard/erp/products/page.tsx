@@ -8,6 +8,11 @@ import { ImportWizard } from "./_components/import-wizard";
 import { ProductTools } from "./_components/product-tools";
 import { requireUser } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
+import Link from "next/link"; // Added Link
+import { Button } from "@/components/ui/button"; // Added Button
+import { Book } from "lucide-react"; // Added Icon
+
+import { getBrands, getCollections } from "../dictionaries/actions";
 
 export default async function ProductsPage() {
     const user = await requireUser();
@@ -15,11 +20,12 @@ export default async function ProductsPage() {
         redirect('/dashboard');
     }
 
-    const [products, attributes, categories, suppliers] = await Promise.all([
+    const [products, attributes, categories, suppliers, brands, collections] = await Promise.all([
         db.query.erpProducts.findMany({
             orderBy: [desc(erpProducts.createdAt)],
             with: {
                 category: true,
+                brand: true, // Fetch Brand Name for Table
             }
         }),
         getAttributes(),
@@ -27,13 +33,15 @@ export default async function ProductsPage() {
             orderBy: [desc(erpCategories.name)],
         }),
         db.query.erpSuppliers.findMany({
-            orderBy: [desc(erpProducts.createdAt)], // Re-using createdAt sort or just name
+            orderBy: [desc(erpProducts.createdAt)],
             columns: {
                 id: true,
                 name: true,
                 shortName: true,
             }
-        })
+        }),
+        getBrands(),
+        getCollections(),
     ]);
 
     return (
@@ -47,8 +55,19 @@ export default async function ProductsPage() {
                 </div>
                 <div className="flex gap-2">
                     <ProductTools />
+                    <Link href="/dashboard/erp/dictionaries">
+                        <Button variant="outline" className="gap-2">
+                            <Book className="h-4 w-4" />
+                            Słowniki
+                        </Button>
+                    </Link>
                     <ImportWizard existingAttributes={attributes} />
-                    <ProductSheet attributes={attributes} categories={categories} />
+                    <ProductSheet 
+                        attributes={attributes} 
+                        categories={categories} 
+                        brands={brands}
+                        collections={collections}
+                    />
                 </div>
             </div>
 

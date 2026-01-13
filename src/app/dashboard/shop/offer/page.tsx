@@ -9,6 +9,7 @@ export default async function ShopOfferPage() {
             name: true,
             sku: true,
             isShopVisible: true,
+            isPurchasable: true,
             isSampleAvailable: true,
         },
     });
@@ -29,7 +30,8 @@ export default async function ShopOfferPage() {
                             <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Nazwa Produktu</th>
                                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">SKU</th>
-                                <th className="h-12 px-4 text-center align-middle font-medium text-muted-foreground">Sprzedaż (Panele)</th>
+                                <th className="h-12 px-4 text-center align-middle font-medium text-muted-foreground">Widoczność</th>
+                                <th className="h-12 px-4 text-center align-middle font-medium text-muted-foreground">Sprzedaż</th>
                                 <th className="h-12 px-4 text-center align-middle font-medium text-muted-foreground">Próbki</th>
                             </tr>
                         </thead>

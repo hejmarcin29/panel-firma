@@ -34,6 +34,8 @@ const formSchema = z.object({
     unit: z.string(),
     type: z.enum(["product", "service"]),
     categoryId: z.string().optional(),
+    brandId: z.string().optional(),
+    collectionId: z.string().optional(),
     description: z.string().optional(),
     leadTime: z.string().optional(),
     width: z.string().optional(),
@@ -63,9 +65,17 @@ interface ProductFormProps {
     onSuccess?: () => void;
     availableAttributes?: Attribute[];
     availableCategories?: Category[];
+    availableBrands?: { id: string; name: string }[];
+    availableCollections?: { id: string; name: string; brandId: string | null }[];
 }
 
-export function ProductForm({ onSuccess, availableAttributes = [], availableCategories = [] }: ProductFormProps) {
+export function ProductForm({ 
+    onSuccess, 
+    availableAttributes = [], 
+    availableCategories = [],
+    availableBrands = [],
+    availableCollections = []
+}: ProductFormProps) {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
 
@@ -77,6 +87,8 @@ export function ProductForm({ onSuccess, availableAttributes = [], availableCate
             unit: "szt",
             type: "product",
             attributes: [],
+            brandId: "", // Default empty
+            collectionId: "", // Default empty
         },
     });
 
@@ -84,6 +96,11 @@ export function ProductForm({ onSuccess, availableAttributes = [], availableCate
         control: form.control,
         name: "attributes",
     });
+
+    const selectedBrandId = form.watch("brandId");
+    const filteredCollections = availableCollections.filter(c => 
+        !c.brandId || (selectedBrandId && c.brandId === selectedBrandId)
+    );
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setIsLoading(true);
@@ -220,6 +237,63 @@ export function ProductForm({ onSuccess, availableAttributes = [], availableCate
                                         {availableCategories.map((cat) => (
                                             <SelectItem key={cat.id} value={cat.id}>
                                                 {cat.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    <FormField
+                        control={form.control}
+                        name="brandId"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Marka</FormLabel>
+                                <Select onValueChange={(value) => {
+                                    field.onChange(value);
+                                    form.setValue("collectionId", ""); // Reset collection on brand change
+                                }} defaultValue={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Wybierz markę" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        {availableBrands.map((brand) => (
+                                            <SelectItem key={brand.id} value={brand.id}>
+                                                {brand.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    <FormField
+                        control={form.control}
+                        name="collectionId"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Kolekcja</FormLabel>
+                                <Select 
+                                    onValueChange={field.onChange} 
+                                    defaultValue={field.value}
+                                    disabled={!selectedBrandId && filteredCollections.length === 0}
+                                >
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Wybierz kolekcję" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        {filteredCollections.map((col) => (
+                                            <SelectItem key={col.id} value={col.id}>
+                                                {col.name}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>

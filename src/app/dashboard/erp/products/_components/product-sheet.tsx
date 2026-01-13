@@ -28,9 +28,16 @@ interface Category {
 interface ProductSheetProps {
     attributes?: Attribute[];
     categories?: Category[];
+    brands?: { id: string; name: string }[];
+    collections?: { id: string; name: string; brandId: string | null }[];
 }
 
-export function ProductSheet({ attributes = [], categories = [] }: ProductSheetProps) {
+export function ProductSheet({ 
+    attributes = [], 
+    categories = [], 
+    brands = [], 
+    collections = []
+}: ProductSheetProps) {
     const [open, setOpen] = useState(false);
 
     return (
@@ -53,6 +60,8 @@ export function ProductSheet({ attributes = [], categories = [] }: ProductSheetP
                         onSuccess={() => setOpen(false)} 
                         availableAttributes={attributes} 
                         availableCategories={categories}
+                        availableBrands={brands}
+                        availableCollections={collections}
                     />
                 </div>
             </SheetContent>

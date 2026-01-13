@@ -77,6 +77,8 @@ export default async function ProductDetailsPage({ params }: PageProps) {
                     <p className="text-muted-foreground mt-1">
                         SKU: <span className="font-mono text-foreground">{product.sku}</span>
                         {product.category && ` • Kategoria: ${product.category.name}`}
+                        {product.brand && ` • Marka: ${product.brand.name}`}
+                        {product.collection && ` • Kolekcja: ${product.collection.name}`}
                     </p>
                 </div>
             </div>

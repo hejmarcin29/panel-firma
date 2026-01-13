@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getProductBySlug } from './actions';
+import { getShopConfig } from '@/app/dashboard/settings/shop/actions';
 import { ProductGallery } from './_components/product-gallery';
 import { FloorCalculator } from './_components/floor-calculator';
 
@@ -16,7 +17,10 @@ interface PageProps {
 
 export default async function ProductPage({ params }: PageProps) {
     const { slug } = await params;
-    const product = await getProductBySlug(slug);
+    const [product, shopConfig] = await Promise.all([
+        getProductBySlug(slug),
+        getShopConfig()
+    ]);
 
     if (!product) {
         notFound();
@@ -100,6 +104,9 @@ export default async function ProductPage({ params }: PageProps) {
                                 pricePerM2={price || 50} 
                                 packageSizeM2={product.packageSizeM2 || 2.2}
                                 unit={product.unit || 'm2'}
+                                isSampleAvailable={product.isSampleAvailable || false}
+                                isPurchasable={product.isPurchasable || false}
+                                samplePrice={shopConfig.samplePrice / 100}
                             />
                         </div>
 

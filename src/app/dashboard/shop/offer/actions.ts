@@ -52,3 +52,13 @@ export async function toggleSampleAvailability(productId: string, isAvailable: b
     revalidatePath('/dashboard/shop/offer');
     revalidatePath('/sklep');
 }
+
+export async function togglePurchasable(productId: string, isPurchasable: boolean) {
+    await db
+        .update(erpProducts)
+        .set({ isPurchasable: isPurchasable })
+        .where(eq(erpProducts.id, productId));
+
+    revalidatePath('/dashboard/shop/offer');
+    revalidatePath('/sklep');
+}

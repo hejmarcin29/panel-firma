@@ -512,6 +512,13 @@
       "when": 1768314392312,
       "tag": "0072_concerned_wraith",
       "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1768320031602,
+      "tag": "0073_daffy_toro",
+      "breakpoints": true
     }
   ]
 }

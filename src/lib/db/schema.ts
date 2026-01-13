@@ -1654,6 +1654,27 @@ export const erpCategories = pgTable('erp_categories', {
     createdAt: timestamp('created_at').defaultNow(),
 });
 
+// 2a. Brands (Marki)
+export const erpBrands = pgTable('erp_brands', {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    name: text('name').notNull(),
+    slug: text('slug').unique(),
+    imageUrl: text('image_url'), // Logo
+    website: text('website'),
+    description: text('description'),
+    createdAt: timestamp('created_at').defaultNow(),
+});
+
+// 2b. Collections (Kolekcje)
+export const erpCollections = pgTable('erp_collections', {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    name: text('name').notNull(), // np. "Smaki Życia"
+    slug: text('slug').unique(),
+    brandId: text('brand_id').references(() => erpBrands.id),
+    description: text('description'),
+    createdAt: timestamp('created_at').defaultNow(),
+});
+
 // 3. Products (Kartoteka Towarowa)
 export const erpProducts = pgTable('erp_products', {
     id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
@@ -1663,6 +1684,8 @@ export const erpProducts = pgTable('erp_products', {
     slug: text('slug').unique(),
     description: text('description'),
     categoryId: text('category_id').references(() => erpCategories.id),
+    brandId: text('brand_id').references(() => erpBrands.id), // New Brand
+    collectionId: text('collection_id').references(() => erpCollections.id), // New Collection
     supplierId: text('supplier_id').references(() => erpSuppliers.id), // Główny dostawca
     unit: text('unit').default('szt'), // szt, m2, mb, kpl, opak
     
@@ -1677,6 +1700,7 @@ export const erpProducts = pgTable('erp_products', {
 
     // Shop Flags
     isShopVisible: boolean('is_shop_visible').default(false),
+    isPurchasable: boolean('is_purchasable').default(false), // New switch for "Add to Cart"
     isSampleAvailable: boolean('is_sample_available').default(false),
     packageSizeM2: doublePrecision('package_size_m2'),
 
@@ -1776,6 +1800,14 @@ export const erpProductAttributes = pgTable('erp_product_attributes', {
 // --- ERP RELATIONS ---
 
 export const erpProductsRelations = relations(erpProducts, ({ one, many }) => ({
+    brand: one(erpBrands, {
+        fields: [erpProducts.brandId],
+        references: [erpBrands.id],
+    }),
+    collection: one(erpCollections, {
+        fields: [erpProducts.collectionId],
+        references: [erpCollections.id],
+    }),
     category: one(erpCategories, {
         fields: [erpProducts.categoryId],
         references: [erpCategories.id],
@@ -1834,6 +1866,20 @@ export const erpProductAttributesRelations = relations(erpProductAttributes, ({ 
         fields: [erpProductAttributes.optionId],
         references: [erpAttributeOptions.id],
     }),
+}));
+
+
+export const erpBrandsRelations = relations(erpBrands, ({ many }) => ({
+    products: many(erpProducts),
+    collections: many(erpCollections),
+}));
+
+export const erpCollectionsRelations = relations(erpCollections, ({ one, many }) => ({
+    brand: one(erpBrands, {
+        fields: [erpCollections.brandId],
+        references: [erpBrands.id],
+    }),
+    products: many(erpProducts),
 }));
 
 export const erpSuppliersRelations = relations(erpSuppliers, ({ many }) => ({

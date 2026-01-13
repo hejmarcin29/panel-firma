@@ -48,8 +48,8 @@ export function MobileNav() {
       icon: Home,
     },
     {
-      href: "/kolekcje",
-      label: "Kolekcje",
+      href: "/sklep",
+      label: "Oferta",
       icon: Grid,
     },
     {
@@ -58,13 +58,13 @@ export function MobileNav() {
       icon: ShoppingBag,
     },
     {
-      href: "/ulubione",
-      label: "Schowek",
+      href: "/realizacje",
+      label: "Realizacje",
       icon: Heart,
     },
     {
-      href: "/konto",
-      label: "Konto",
+      href: "#contact",
+      label: "Kontakt",
       icon: User,
     }
   ];

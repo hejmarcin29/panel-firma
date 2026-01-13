@@ -1,11 +1,33 @@
 import { HeroSection } from "../_components/hero-section";
 import { FeaturesSection } from "../_components/features-section";
 import { CategoryGrid } from "../_components/category-grid";
+import { getStoreProducts } from "../sklep/actions";
+import { ProductCard } from "../_components/product-card";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
-export default function StorefrontHomePage() {
+export default async function StorefrontHomePage() {
+  const latestProducts = await getStoreProducts(4);
+
   return (
     <div className="flex flex-col min-h-screen">
       <HeroSection />
+      
+      <section className="py-16 container">
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="font-playfair text-3xl font-bold">Nowości w ofercie</h2>
+          <Link href="/sklep">
+            <Button variant="outline">Zobacz wszystkie</Button>
+          </Link>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {latestProducts.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      </section>
+
       <FeaturesSection />
       <CategoryGrid />
       
