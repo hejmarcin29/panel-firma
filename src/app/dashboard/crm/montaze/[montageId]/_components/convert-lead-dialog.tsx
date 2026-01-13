@@ -23,6 +23,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch'; // Added
 import {
     Tooltip,
     TooltipContent,
@@ -46,14 +47,24 @@ export function ConvertLeadDialog({ montage, measurers = [] }: ConvertLeadDialog
     const [open, setOpen] = useState(false);
     const [isPending, startTransition] = useTransition();
     const [selectedMeasurerId, setSelectedMeasurerId] = useState<string>('');
+    const [requirePayment, setRequirePayment] = useState(false); // Added
     const router = useRouter();
 
     const handleAssignAndAdvance = async (measurerId: string) => {
         startTransition(async () => {
             try {
-                const result = await assignMeasurerAndAdvance(montage.id, measurerId);
+                // @ts-ignore - Updated action signature
+                const result = await assignMeasurerAndAdvance(montage.id, measurerId, requirePayment);
                 if (result.success) {
-                    toast.success('Zlecono pomiar! Status zmieniony na "Do umówienia".');
+                    if (result.paymentRequired) {
+                        toast.success('Utworzono zamówienie. Klient musi opłacić usługę.');
+                        if (result.paymentLink) {
+                             // Optional: Copy link or show it. For now just success toast.
+                             console.log("Payment Link:", result.paymentLink);
+                        }
+                    } else {
+                        toast.success('Zlecono pomiar! Status zmieniony na "Do umówienia".');
+                    }
                     setOpen(false);
                     router.refresh();
                 } else {
@@ -61,7 +72,7 @@ export function ConvertLeadDialog({ montage, measurers = [] }: ConvertLeadDialog
                 }
             } catch (error) {
                 console.error(error);
-                toast.error('Wystąpił błąd podczas zlecania pomiaru');
+                toast.error('Wystąpił błąd: ' + (error instanceof Error ? error.message : 'Unknown'));
             }
         });
     };
@@ -152,6 +163,20 @@ export function ConvertLeadDialog({ montage, measurers = [] }: ConvertLeadDialog
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
+                    <div className="flex items-center space-x-2 border p-3 rounded-md bg-slate-50">
+                        <Switch 
+                            id="payment-required" 
+                            checked={requirePayment}
+                            onCheckedChange={setRequirePayment}
+                        />
+                        <Label htmlFor="payment-required" className="cursor-pointer flex-1">
+                            <span className="font-semibold block">Wymagaj opłaty weryfikacyjnej</span>
+                            <span className="text-xs text-muted-foreground">
+                                Klient otrzyma link do płatności. Zlecenie wstrzymane do wpłaty.
+                            </span>
+                        </Label>
+                    </div>
+
                     <div className="grid gap-2">
                         <Label htmlFor="measurer">Opiekun Techniczny</Label>
                         <Select

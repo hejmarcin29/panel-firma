@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { customers, montages, quotes, mailAccounts, montageAttachments, montagePayments, erpProducts, montageNotes, systemLogs } from '@/lib/db/schema';
+import { customers, montages, quotes, mailAccounts, montageAttachments, montagePayments, orders, erpProducts, montageNotes, systemLogs } from '@/lib/db/schema';
 import { eq, desc, isNull, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { logSystemEvent } from '@/lib/logging';
@@ -454,6 +454,34 @@ export async function saveSignedContract(token: string, formData: FormData) {
     return { success: true };
 }
 
+export async function getPendingTechnicalOrder(montageId: string) {
+    const order = await db.query.orders.findFirst({
+        where: and(
+            eq(orders.sourceOrderId, montageId),
+            eq(orders.status, 'order.awaiting_payment')
+        )
+    });
+    return order;
+}
+
+export async function initiatePayment(orderId: string, token: string) {
+    // 1. Get Order
+    const order = await db.query.orders.findFirst({
+        where: eq(orders.id, orderId)
+    });
+
+    if (!order) throw new Error('Nie znaleziono zamówienia');
+
+    // 2. Here we would call Tpay API to create transaction
+    // For now, we simulate a Tpay URL that redirects back to our system to confirm payment
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    
+    // Simulate Tpay payment link (which would be distinct from our app in reality)
+    // We return a link to a "Mock Payment Provider" page which sets status and redirects back
+    const paymentUrl = `${appUrl}/api/tpay/mock/pay?orderId=${orderId}&token=${token}`;
+
+    return { paymentUrl };
+}
 
 // --- SAMPLES ACTIONS ---
 

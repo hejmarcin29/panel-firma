@@ -67,6 +67,7 @@ interface EmployeeDetailsSheetProps {
 const profileSchema = z.object({
     workScope: z.string().optional(),
     operationArea: z.string().optional(),
+    measurementRate: z.coerce.number().min(0, "Stawka musi być dodatnia").optional(),
     rates: z.object({
         classicClick: z.coerce.number().min(0).optional(),
         classicGlue: z.coerce.number().min(0).optional(),
@@ -175,6 +176,7 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
             form.reset({
                 workScope: member.installerProfile.workScope || '',
                 operationArea: member.installerProfile.operationArea || '',
+                measurementRate: member.installerProfile.measurementRate || 0,
                 rates: member.installerProfile.rates || {},
                 pricing: member.installerProfile.pricing || [],
             });
@@ -182,6 +184,7 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
             form.reset({
                 workScope: '',
                 operationArea: '',
+                measurementRate: 0,
                 rates: {},
                 pricing: [],
             });
@@ -434,6 +437,29 @@ export function EmployeeDetailsSheet({ member, open, onOpenChange }: EmployeeDet
                                         </FormItem>
                                     )}
                                 />
+
+                                <div className="space-y-4 border rounded-md p-4 bg-muted/20">
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex-1">
+                                            <FormField
+                                                control={form.control}
+                                                name="measurementRate"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel className="font-semibold">Stawka za pomiar (PLN netto)</FormLabel>
+                                                        <FormControl>
+                                                            <Input type="number" placeholder="150.00" {...field} onBlur={form.handleSubmit(onSubmit)} />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </div>
+                                        <div className="flex-1 pt-8 text-xs text-muted-foreground">
+                                            Kwota dopisywana do salda montażysty po zatwierdzeniu protokołu pomiarowego.
+                                        </div>
+                                    </div>
+                                </div>
 
                                 <div className="space-y-4 border rounded-md p-4 bg-muted/20">
                                     <FormLabel className="text-base font-semibold">Stawki Podstawowe (PLN/m²)</FormLabel>

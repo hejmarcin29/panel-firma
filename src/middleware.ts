@@ -24,6 +24,20 @@ export function middleware(request: NextRequest) {
 
   // --- LOGIKA DLA PANELU (b2b) ---
   if (hostname === DOMAIN_PANEL) {
+    // Blokada widoków sklepowych na domenie panelu
+    // Żeby nie dało się wejść na b2b.primepodloga.pl/sklep
+    if (
+        url.pathname.startsWith('/sklep') ||
+        url.pathname.startsWith('/produkt') ||
+        url.pathname.startsWith('/kategorie') ||
+        url.pathname.startsWith('/kolekcje') ||
+        url.pathname.startsWith('/koszyk') ||
+        url.pathname.startsWith('/checkout') ||
+        url.pathname.startsWith('/witryna')
+    ) {
+        return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+
     // Panel działa "po bożemu" - korzysta z głównego routingu aplikacji
     // src/app/page.tsx przekieruje na /login lub /dashboard
     return NextResponse.next();

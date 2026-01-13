@@ -17,6 +17,9 @@ export const appSettingKeys = {
 	r2Endpoint: 'r2.endpoint',
 	r2ApiToken: 'r2.api_token',
 	r2PublicBaseUrl: 'r2.public_base_url',
+    tpayClientId: 'tpay.client_id',
+    tpayClientSecret: 'tpay.client_secret',
+    tpayIsSandbox: 'tpay.is_sandbox',
 	montageChecklist: 'montage.checklist',
 	montageAutomation: 'montage.automation', // Legacy: Array of rules
     montageAutomationSettings: 'montage.automation_settings', // New: Record<string, boolean>

@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from 'sonner';
-import { signQuote, sendQuoteEmailToCustomer, saveSignedContract } from '../actions';
+import { signQuote, sendQuoteEmailToCustomer, saveSignedContract, initiatePayment } from '../actions';
 import { useState } from 'react';
 import { SignaturePad } from '@/components/ui/signature-pad';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
@@ -107,12 +107,18 @@ interface CustomerPortalProps {
         nip: string;
         logoUrl?: string;
     };
+    pendingOrder?: {
+        id: string;
+        totalGross: number;
+        currency: string;
+    };
 }
 
-export function CustomerPortal({ customer, token, bankAccount, companyInfo }: CustomerPortalProps) {
+export function CustomerPortal({ customer, token, bankAccount, companyInfo, pendingOrder }: CustomerPortalProps) {
     const activeMontage = customer.montages[0]; // For now, just take the latest one
     const [contractDialogOpen, setContractDialogOpen] = useState(false);
     const [isSendingEmail, setIsSendingEmail] = useState(false);
+    const [isPaying, setIsPaying] = useState(false);
     const [emailConfirmOpen, setEmailConfirmOpen] = useState(false);
     const [pendingSignature, setPendingSignature] = useState<string | null>(null);
     const [isSavingContract, setIsSavingContract] = useState(false);
@@ -120,6 +126,60 @@ export function CustomerPortal({ customer, token, bankAccount, companyInfo }: Cu
     const isImage = (url: string) => {
         return /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(url);
     };
+
+    if (activeMontage?.status === 'lead_payment_pending' && pendingOrder) {
+        return (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto pt-10 px-4">
+                <Card className="border-amber-200 bg-amber-50/50 shadow-lg">
+                    <CardHeader className="text-center pb-2">
+                        <div className="mx-auto bg-amber-100 w-16 h-16 rounded-full flex items-center justify-center mb-4">
+                            <Calculator className="h-8 w-8 text-amber-600" />
+                        </div>
+                        <CardTitle className="text-2xl text-amber-900">Wymagana Opłata Weryfikacyjna</CardTitle>
+                        <CardDescription className="text-amber-700 text-lg">
+                            Aby przekazać Twoje zgłoszenie do realizacji (umówienie pomiaru), prosimy o uregulowanie opłaty za usługę pomiarową.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6 pt-6">
+                        <div className="bg-white p-6 rounded-lg border border-amber-100 shadow-sm space-y-4">
+                            <div className="flex justify-between items-center text-sm text-muted-foreground">
+                                <span>Usługa:</span>
+                                <span>Pomiar i Weryfikacja Techniczna</span>
+                            </div>
+                            <div className="flex justify-between items-center pt-4 border-t">
+                                <span className="text-xl font-bold text-gray-900">Do zapłaty:</span>
+                                <span className="text-2xl font-bold text-primary">
+                                    {formatCurrency(pendingOrder.totalGross / 100)}
+                                </span>
+                            </div>
+                        </div>
+
+                        <Button 
+                            className="w-full text-lg py-6 bg-amber-600 hover:bg-amber-700 text-white shadow-md transition-all active:scale-[0.98]"
+                            disabled={isPaying}
+                            onClick={async () => {
+                                try {
+                                    setIsPaying(true);
+                                    const { paymentUrl } = await initiatePayment(pendingOrder.id, token);
+                                    window.location.href = paymentUrl;
+                                } catch (e) {
+                                    toast.error('Wystąpił błąd podczas inicjalizacji płatności.');
+                                    setIsPaying(false);
+                                }
+                            }}
+                        >
+                            {isPaying ? 'Przetwarzanie...' : 'Opłać bezpiecznie przez Tpay'}
+                        </Button>
+                        
+                        <p className="text-xs text-center text-muted-foreground">
+                            Płatność obsługuje operator Tpay. Twoje dane są bezpieczne.
+                            <br/>Po opłaceniu skontaktujemy się w celu ustalenia terminu.
+                        </p>
+                    </CardContent>
+                </Card>
+            </motion.div>
+        );
+    }
 
     const images = activeMontage?.attachments.filter(att => isImage(att.url)) || [];
     const documents = activeMontage?.attachments.filter(att => !isImage(att.url)) || [];

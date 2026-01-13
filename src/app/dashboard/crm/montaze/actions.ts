@@ -14,6 +14,7 @@ import {
 	montageNotes,
 	montageTasks,
 	montages,
+    settlements,
 	type MontageStatus,
     type MontageMaterialStatus,
     type MontageMaterialClaimType,
@@ -28,7 +29,12 @@ import {
     mailAccounts,
     // referralCommissions,
     type CustomerSource,
+    orders,
+    orderItems,
+    erpProducts,
+    globalSettings,
 } from '@/lib/db/schema';
+import { type ShopConfig } from '../../settings/shop/actions';
 import { uploadMontageObject } from '@/lib/r2/storage';
 import { MontageCategories, MontageSubCategories } from '@/lib/r2/constants';
 import { getMontageChecklistTemplates } from '@/lib/montaze/checklist';
@@ -570,6 +576,47 @@ export async function updateMontageStatus({ montageId, status }: UpdateMontageSt
             }
         }
     }
+
+    // --- INSTALLER SETTLEMENT LOGIC (MEASUREMENT) ---
+    if (resolved === 'measurement_done') {
+        const montageData = await db.query.montages.findFirst({
+            where: eq(montages.id, montageId),
+            with: { measurer: { with: { installerProfile: true } } }
+        });
+        
+        if (montageData?.measurer?.installerProfile?.measurementRate) {
+            const rate = montageData.measurer.installerProfile.measurementRate;
+            
+            const existingSettlement = await db.query.settlements.findFirst({
+                 where: eq(settlements.montageId, montageId)
+            });
+
+            if (existingSettlement) {
+                const calcs = (existingSettlement.calculations as any[]) || [];
+                if (!calcs.find((c: any) => c.type === 'measurement')) {
+                    const newCalcs = [...calcs, { type: 'measurement', amount: rate, description: 'Opłata za pomiar' }];
+                    const newTotal = existingSettlement.totalAmount + rate;
+                    await db.update(settlements).set({ 
+                        calculations: newCalcs, 
+                        totalAmount: newTotal,
+                        updatedAt: new Date()
+                    }).where(eq(settlements.id, existingSettlement.id));
+                    await logSystemEvent('settlement_update', `Doliczono opłatę za pomiar (${rate} PLN) do rozliczenia`, user.id);
+                }
+            } else {
+                await db.insert(settlements).values({
+                    id: crypto.randomUUID(),
+                    montageId: montageId,
+                    installerId: montageData.measurerId!,
+                    status: 'draft',
+                    totalAmount: rate,
+                    calculations: [{ type: 'measurement', amount: rate, description: 'Opłata za pomiar' }],
+                });
+                await logSystemEvent('settlement_create', `Utworzono rozliczenie z opłatą za pomiar (${rate} PLN)`, user.id);
+            }
+        }
+    }
+    // ------------------------------------------------
 
 	await db
 		.update(montages)
@@ -2698,7 +2745,7 @@ export async function finishMontage(montageId: string) {
     return { success: true };
 }
 
-export async function assignMeasurerAndAdvance(montageId: string, measurerId: string) {
+export async function assignMeasurerAndAdvance(montageId: string, measurerId: string, requirePayment: boolean = false) {
     const user = await requireUser();
     const montage = await getMontageOrThrow(montageId);
 
@@ -2708,7 +2755,93 @@ export async function assignMeasurerAndAdvance(montageId: string, measurerId: st
         throw new Error('Tylko leady mogą być przekazywane do pomiaru.');
     }
 
-    // Update measurer and status
+    if (requirePayment) {
+        // 1. Get Shop Config for Measurement Product
+        const shopConfig = await db.query.globalSettings.findFirst({
+            where: eq(globalSettings.key, 'shop_config'),
+        });
+        const configValue = shopConfig?.value as ShopConfig | undefined;
+
+        if (!configValue?.measurementProductId) {
+            throw new Error('Brak skonfigurowanego produktu "Usługa Pomiaru" w ustawieniach sklepu.');
+        }
+
+        // 2. Get Product Details
+        const measureProduct = await db.query.erpProducts.findFirst({
+            where: eq(erpProducts.id, configValue.measurementProductId),
+        });
+
+        if (!measureProduct) {
+            throw new Error('Skonfigurowany produkt pomiarowy nie istnieje w bazie.');
+        }
+
+        // 3. Create Technical Order
+        const orderId = crypto.randomUUID();
+        
+        // Ensure customer exists (montage should have one, but if not, logic might break)
+        if (!montage.customerId) {
+            throw new Error('Montaż musi mieć przypisanego klienta, aby wystawić płatność.');
+        }
+
+        await db.transaction(async (tx) => {
+            // Create Order
+            await tx.insert(orders).values({
+                id: orderId,
+                source: 'shop',
+                status: 'order.awaiting_payment',
+                customerId: montage.customerId!,
+                totalNet: measureProduct.priceNet, 
+                totalGross: measureProduct.priceGross,
+                currency: 'PLN',
+            });
+
+            // Create Order Item
+            await tx.insert(orderItems).values({
+                id: crypto.randomUUID(),
+                orderId: orderId,
+                name: measureProduct.name,
+                sku: measureProduct.sku,
+                quantity: 1,
+                unitPrice: measureProduct.priceGross, // Store gross as unit price for simplicity in this context or net? Schema says unit_price. Usually Net or Gross depending on system. Assuming Gross based on totalGross usage.
+                taxRate: measureProduct.vatRate,
+            });
+            
+             // 4. Update Montage
+            await tx.update(montages)
+            .set({
+                measurerId: measurerId, // Assign measurer but...
+                status: 'lead_payment_pending', // ...hide under this status
+                updatedAt: new Date(),
+                // Link order? We might need a field or just rely on customer/time. 
+                // For now, we don't have a direct 'orderId' on montage, but we have montagePayments or we can rely on the fact that the client will pay this order.
+                // Ideally we should link it. The user mentioned "Tworzymy rekord w tabeli orders... jako zamówienie techniczne, powiązane z montażem".
+                // I don't see a `montageId` in `orders` table in the schema I read. 
+                // I'll add a note for now. The Payment flow usually matches via `sourceOrderId` or similar.
+                // Let's set `sourceOrderId` to montageId for tracking.
+            })
+            .where(eq(montages.id, montageId));
+            
+             // Update order with source link
+             await tx.update(orders).set({ sourceOrderId: montageId }).where(eq(orders.id, orderId));
+        });
+
+        // Ensure token exists for Magic Link
+        let token = montage.accessToken;
+        if (!token) {
+            token = generatePortalToken();
+            await db.update(montages).set({ accessToken: token }).where(eq(montages.id, montageId));
+        }
+
+        await logSystemEvent(
+            'montage.payment_requested',
+            `Wymuszono płatność za pomiar. Zlecenie wstrzymane do czasu wpłaty.`,
+            user.id
+        );
+
+        return { success: true, paymentRequired: true, message: 'Utworzono zamówienie. Oczekiwanie na płatność.', paymentLink: `/montaz/${token}` };
+    }
+
+    // Standard Flow (No Payment)
     await db.update(montages)
         .set({
             measurerId: measurerId,

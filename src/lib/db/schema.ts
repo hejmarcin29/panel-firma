@@ -13,8 +13,8 @@ import {
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { montageFloorProducts } from './floor-schema'; // New table
-
 export { montageFloorProducts } from './floor-schema';
+export { erpPosts, erpPostsRelations, postStatus } from './blog-schema';
 
 export const userRoles = ['admin', 'installer', 'architect', 'partner'] as const;
 export const orderSources = ['woocommerce', 'manual', 'shop'] as const;
@@ -77,6 +77,7 @@ export const montageStatuses = [
     // 1. LEJKI (SPRZEDAŻ)
     'new_lead',
     'lead_contact',        // dzwoniliśmy, klient myśli
+    'lead_payment_pending', // oczekiwanie na opłatę weryfikacyjną (Tpay)
     'lead_samples_pending',// link wysłany, czekamy na wybór
     'lead_samples_sent',   // próbki wysłane fizycznie
     'lead_pre_estimate',   // wstępna wycena (opcjonalnie)
@@ -132,6 +133,7 @@ export type InstallerProfile = {
     carPlate?: string;
     nip?: string;
     bankAccount?: string;
+    measurementRate?: number; // Stawka za pomiar (netto w groszach)
     rates?: {
         classicClick?: number;
         classicGlue?: number;
@@ -761,6 +763,7 @@ export const montagePayments = pgTable(
         amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
         status: text('status', { enum: ['pending', 'paid'] }).default('pending').notNull(),
         invoiceNumber: text('invoice_number').notNull(), // The number for the transfer title
+        transactionId: text('transaction_id'), // Tpay Transaction ID
         proformaUrl: text('proforma_url'), // URL to the uploaded Proforma
         invoiceUrl: text('invoice_url'), // URL to the uploaded Final Invoice
         dueDate: timestamp('due_date'),

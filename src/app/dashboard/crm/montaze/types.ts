@@ -87,6 +87,7 @@ export type MontagePayment = {
     paidAt: Date | null;
     createdAt: Date;
     type: 'advance' | 'final' | 'other';
+    transactionId?: string | null;
 };
 
 export interface AlertSettings {

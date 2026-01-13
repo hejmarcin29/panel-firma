@@ -40,7 +40,7 @@ export default async function InstallerPage() {
     // Client-side grouping for simplicity of this prototyping phase
     // In production, we might want separate queries or smarter filtering
     const activeData = data.filter(m => 
-        !['completed', 'rejected', 'on_hold', 'new_lead'].includes(m.status)
+        !['completed', 'rejected', 'on_hold', 'new_lead', 'lead_payment_pending'].includes(m.status)
     );
 
     // Filter "Today" - this would ideally check scheduledInstallationAt or scheduledMeasurementAt

@@ -12,6 +12,25 @@ export type ShopConfig = {
     proformaBankName: string;
     proformaBankAccount: string;
     welcomeEmailTemplate?: string;
+    heroImage?: string;
+    heroHeadline?: string;
+    heroSubheadline?: string;
+    measurementProductId?: string; // ID produktu "Usługa Pomiarowa"
+
+    // SEO & Firma
+    organizationLogo?: string;
+    contactPhone?: string;
+    contactEmail?: string;
+    socialFacebook?: string;
+    socialInstagram?: string;
+    
+    // Integracje
+    googleSearchConsoleId?: string;
+    googleAnalyticsId?: string;
+    facebookPixelId?: string;
+    
+    // Kontrola
+    noIndex?: boolean;
 };
 
 export type TpayConfig = {
@@ -28,10 +47,13 @@ export async function getShopConfig(): Promise<ShopConfig> {
     if (!setting) {
         return {
             isShopEnabled: false,
-            samplePrice: 2000, // 20.00 PLN (grosze)
-            sampleShippingCost: 1500, // 15.00 PLN (grosze)
+            samplePrice: 2000,
+            sampleShippingCost: 1500,
             proformaBankName: '',
             proformaBankAccount: '',
+            heroHeadline: 'Twoja wymarzona podłoga',
+            heroSubheadline: 'Największy wybór podłóg drewnianych i paneli winylowych z profesjonalnym montażem.',
+            noIndex: false,
         };
     }
 

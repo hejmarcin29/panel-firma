@@ -27,6 +27,7 @@ interface Payment {
     paidAt: Date | null;
     createdAt: Date;
     type: 'advance' | 'final' | 'other';
+    transactionId?: string | null;
 }
 
 interface MontagePaymentsTabProps {
@@ -268,7 +269,14 @@ export function MontagePaymentsTab({ montageId, payments }: MontagePaymentsTabPr
                                             </div>
                                         </TableCell>
                                         <TableCell>{formatCurrency(parseFloat(payment.amount))}</TableCell>
-                                        <TableCell className="font-mono text-xs">{payment.invoiceNumber}</TableCell>
+                                        <TableCell className="font-mono text-xs">
+                                            <div>{payment.invoiceNumber}</div>
+                                            {payment.transactionId && (
+                                                <div className="text-[10px] text-muted-foreground mt-0.5">
+                                                    Tpay: {payment.transactionId}
+                                                </div>
+                                            )}
+                                        </TableCell>
                                         <TableCell>
                                             {payment.status === 'paid' ? (
                                                 <Badge variant="default" className="bg-green-600 hover:bg-green-700">

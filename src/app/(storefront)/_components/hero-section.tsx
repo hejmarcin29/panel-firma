@@ -1,17 +1,20 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { getShopConfig } from "@/app/dashboard/settings/shop/actions";
 
-export function HeroSection() {
+export async function HeroSection() {
+  const config = await getShopConfig();
+  const backgroundImage = config.heroImage || "https://images.unsplash.com/photo-1581858726768-758a03294c68?q=80&w=2689&auto=format&fit=crop";
+
   return (
     <section className="relative h-[80vh] min-h-[600px] w-full overflow-hidden bg-zinc-900 text-white">
       {/* Background Image/Video Placeholder */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-black/40 z-10" />
-        {/* W przyszłości tutaj podepniemy <video> lub <Image> z CMS */}
         <div 
             className="h-full w-full bg-cover bg-center transition-transform hover:scale-105 duration-[20s]"
-            style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1581858726768-758a03294c68?q=80&w=2689&auto=format&fit=crop")' }}
+            style={{ backgroundImage: `url("${backgroundImage}")` }}
         />
       </div>
 
@@ -23,24 +26,22 @@ export function HeroSection() {
           </div>
           
           <h1 className="font-playfair text-5xl font-bold leading-tight tracking-tight sm:text-6xl md:text-7xl">
-            Podłogi, które <br/>
-            tworzą <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-200 to-emerald-500">dom.</span>
+            {config.heroHeadline || "Podłogi, które tworzą dom."}
           </h1>
           
           <p className="text-lg text-gray-200 sm:text-xl max-w-lg leading-relaxed">
-            Odkryj naturalne piękno drewna w nowoczesnym wydaniu. 
-            Trwałość na pokolenia, design na czasie.
+            {config.heroSubheadline || "Odkryj naturalne piękno drewna w nowoczesnym wydaniu. Trwałość na pokolenia, design na czasie."}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 pt-4">
             <Button size="lg" className="h-14 px-8 text-base bg-white text-black hover:bg-gray-100 rounded-full" asChild>
-              <Link href="/kolekcje">
-                Zobacz Kolekcje
+              <Link href="/sklep">
+                Zobacz Ofertę
               </Link>
             </Button>
             <Button size="lg" variant="outline" className="h-14 px-8 text-base border-white/30 bg-white/5 hover:bg-white/10 text-white rounded-full backdrop-blur-sm" asChild>
-              <Link href="/showroom">
-                Odwiedź Showroom <ArrowRight className="ml-2 h-4 w-4" />
+              <Link href="/kontakt">
+                Skontaktuj się <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </div>

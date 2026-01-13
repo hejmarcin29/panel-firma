@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getCustomerByToken, getAvailableSamples } from './actions';
+import { getCustomerByToken, getAvailableSamples, getPendingTechnicalOrder } from './actions';
 import { PortalView } from './_components/portal-view';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
 import { Metadata } from 'next';
@@ -21,6 +21,12 @@ export default async function MontagePage({ params }: PageProps) {
     if (!customer) {
         notFound();
     }
+
+    // Check for pending technical order (Payment Gate)
+    const activeMontage = customer.montages[0];
+    const pendingOrder = activeMontage && activeMontage.status === 'lead_payment_pending' 
+        ? await getPendingTechnicalOrder(activeMontage.id)
+        : undefined;
 
     const samples = await getAvailableSamples();
 
@@ -68,5 +74,6 @@ export default async function MontagePage({ params }: PageProps) {
         companyInfo={companyInfo}
         bankAccount={bankAccount || undefined}
         initialTab={initialTab}
+        pendingOrder={pendingOrder}
     />;
 }

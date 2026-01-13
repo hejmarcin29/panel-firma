@@ -31,8 +31,35 @@ export default async function ProductPage({ params }: PageProps) {
     const regularPrice = product.regularPrice ? parseFloat(product.regularPrice) : null;
     const isOnSale = regularPrice && price && price < regularPrice;
 
+    // JSON-LD Schema
+    const jsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        'name': product.name,
+        'image': product.images && product.images.length > 0 ? product.images : (product.imageUrl ? [product.imageUrl] : []),
+        'description': product.description?.replace(/<[^>]*>/g, '').slice(0, 300) || product.name,
+        'sku': product.sku,
+        'brand': {
+            '@type': 'Brand',
+            'name': product.brand?.name || 'PrimePodloga'
+        },
+        'offers': {
+            '@type': 'Offer',
+            'url': `https://primepodloga.pl/produkt/${product.slug}`,
+            'priceCurrency': 'PLN',
+            'price': price,
+            'priceValidUntil': new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
+            'availability': (product.stockQuantity && product.stockQuantity > 0) ? 'https://schema.org/InStock' : 'https://schema.org/PreOrder',
+            'itemCondition': 'https://schema.org/NewCondition'
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 pb-20">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
             <div className="container px-4 py-8 md:py-12">
                 
                 {/* Breadcrumbs */}

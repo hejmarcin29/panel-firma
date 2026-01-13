@@ -55,7 +55,7 @@ import { MagicLinksManager } from './magic-links/_component';
 
 import ServicesSettingsPage from './services/page';
 import TeamSettingsPage from './team/page';
-import ShopSettingsPage from './shop/page';
+import ShopSettingsPage from './shop/shop-settings-form';
 
 type LogLevel = 'info' | 'warning' | 'error';
 

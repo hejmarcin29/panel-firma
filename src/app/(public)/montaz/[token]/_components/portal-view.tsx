@@ -23,6 +23,7 @@ interface PortalViewProps {
     companyInfo: CompanyInfo;
     bankAccount?: string;
     initialTab?: string;
+    pendingOrder?: any; // Using any to avoid heavy typing import if not needed, but ideally should be Order type
 }
 
 export function PortalView({
@@ -33,7 +34,8 @@ export function PortalView({
     geowidgetConfig,
     companyInfo,
     bankAccount,
-    initialTab = "orders"
+    initialTab = "orders",
+    pendingOrder
 }: PortalViewProps) {
     const [activeTab, setActiveTab] = useState(initialTab);
 
@@ -92,6 +94,7 @@ export function PortalView({
                         token={token}
                         bankAccount={bankAccount}
                         companyInfo={companyInfo}
+                        pendingOrder={pendingOrder}
                     />
                 </TabsContent>
             </Tabs>
