@@ -52,8 +52,10 @@ import { getContractTemplates } from './contracts/actions';
 import { InstallerSettingsView } from './_components/installer-settings-view';
 import { getMagicLinks } from './magic-links/actions';
 import { MagicLinksManager } from './magic-links/_component';
+import MagicLinksManager from './magic-links/_component'; // To był inny import
 import ServicesSettingsPage from './services/page';
 import TeamSettingsPage from './team/page';
+import ShopSettingsPage from './shop/page';
 
 type LogLevel = 'info' | 'warning' | 'error';
 
@@ -678,6 +680,8 @@ export default async function SettingsPage() {
 				<WpChangesSettings />
 			}
             teamSettings={<TeamSettingsPage />}
+            shopSettings={<ShopSettingsPage />}
+            servicesSettings={<ServicesSettingsPage />}
             trash={
                 <TrashView 
                     deletedQuotes={deletedQuotes} 

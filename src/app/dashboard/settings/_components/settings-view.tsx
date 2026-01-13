@@ -18,6 +18,7 @@ import {
   Banknote,
   Users,
   Sparkles,
+  ShoppingBag,
 } from "lucide-react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -30,6 +31,7 @@ interface SettingsViewProps {
   montageSettings: React.ReactNode;
   mobileMenuSettings: React.ReactNode;
   kpiSettings: React.ReactNode;
+  shopSettings: React.ReactNode;
   wpChanges: React.ReactNode;
   teamSettings: React.ReactNode;
   documentation: React.ReactNode;
@@ -48,6 +50,7 @@ export function SettingsView({
   montageSettings,
   mobileMenuSettings,
   kpiSettings,
+  shopSettings,
   wpChanges,
   teamSettings,
   documentation,
@@ -151,6 +154,20 @@ export function SettingsView({
           <span className="flex flex-col text-left">
             <span className="text-sm font-medium">Usługi i Stawki</span>
             <span className="text-xs text-muted-foreground">Katalog usług i cenniki.</span>
+          </span>
+        </Button>
+
+        <Button
+          variant="ghost"
+          className="w-full justify-start rounded-2xl px-4 py-3 h-auto gap-3 bg-card border shadow-sm"
+          onClick={() => handleTabChange("shop")}
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-900">
+            <ShoppingBag className="h-4 w-4" />
+          </span>
+          <span className="flex flex-col text-left">
+            <span className="text-sm font-medium">Sklep</span>
+            <span className="text-xs text-muted-foreground">Konfiguracja i płatności.</span>
           </span>
         </Button>
 
@@ -343,6 +360,13 @@ export function SettingsView({
               Usługi i Stawki
             </TabsTrigger>
             <TabsTrigger 
+              value="shop" 
+              className="w-full justify-start gap-2 px-3 py-2 h-9 data-[state=active]:bg-muted data-[state=active]:shadow-none ring-offset-background transition-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <ShoppingBag className="h-4 w-4" />
+              Sklep
+            </TabsTrigger>
+            <TabsTrigger 
               value="documentation" 
               className="w-full justify-start gap-2 px-3 py-2 h-9 data-[state=active]:bg-muted data-[state=active]:shadow-none ring-offset-background transition-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
@@ -433,6 +457,21 @@ export function SettingsView({
 
           <TabsContent value="services" className="m-0 space-y-4">
             {servicesSettings}
+          </TabsContent>
+
+          <TabsContent value="shop" className="m-0 space-y-6">
+            <div className="flex items-center justify-between rounded-lg bg-emerald-50 px-6 py-4 border border-emerald-100 dark:bg-emerald-950/20 dark:border-emerald-900">
+                <div className="space-y-1">
+                    <h3 className="font-semibold text-emerald-900 dark:text-emerald-100">Zarządzanie Treścią (CMS)</h3>
+                    <p className="text-sm text-emerald-800 dark:text-emerald-200">
+                        Edycja produktów, kategorii, bloga i strony głównej znajduje się w osobnym module.
+                    </p>
+                </div>
+                <Button asChild variant="default" className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                    <a href="/dashboard/shop">Przejdź do CMS</a>
+                </Button>
+            </div>
+            {shopSettings}
           </TabsContent>
 
           <TabsContent value="team" className="m-0 space-y-4">
