@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Filter, X } from "lucide-react";
+import { Filter } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -94,7 +94,7 @@ export function StoreFilters({ categories, brands, collections }: StoreFiltersPr
         router.push('/sklep');
     };
 
-    const FilterContent = () => (
+    const renderFilters = () => (
         <div className="space-y-6">
             <div>
                 <h3 className="mb-4 text-sm font-medium">Kategorie</h3>
@@ -202,7 +202,7 @@ export function StoreFilters({ categories, brands, collections }: StoreFiltersPr
                         </Button>
                     )}
                 </div>
-                <FilterContent />
+                {renderFilters()}
             </div>
 
             {/* Mobile Filters */}
@@ -229,7 +229,7 @@ export function StoreFilters({ categories, brands, collections }: StoreFiltersPr
                             </SheetDescription>
                         </SheetHeader>
                         <ScrollArea className="h-[calc(100vh-8rem)] pr-4">
-                            <FilterContent />
+                            {renderFilters()}
                         </ScrollArea>
                         {hasActiveFilters && (
                             <div className="absolute bottom-6 left-6 right-6">

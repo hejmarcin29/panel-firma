@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useTransition } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useCartStore } from "@/lib/store/cart-store";
@@ -120,6 +120,9 @@ export function CheckoutForm() {
       acceptTerms: false,
     },
   });
+
+  const isCompany = useWatch({ control: form.control, name: "isCompany" });
+  const differentBillingAddress = useWatch({ control: form.control, name: "differentBillingAddress" });
 
   const onSubmit = (data: CheckoutFormData) => {
     if (cart.items.length === 0) {
@@ -309,7 +312,7 @@ export function CheckoutForm() {
                   )}
                 />
 
-                {form.watch("isCompany") && (
+                {isCompany && (
                    <div className="grid gap-4 md:grid-cols-2">
                      <FormField
                         control={form.control as any}
@@ -358,7 +361,7 @@ export function CheckoutForm() {
                   )}
                 />
 
-                {form.watch("differentBillingAddress") && (
+                {differentBillingAddress && (
                    <div className="grid gap-4 md:grid-cols-2 mt-4">
                       <FormField
                         control={form.control as any}
