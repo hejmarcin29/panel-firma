@@ -1828,6 +1828,7 @@ export async function updateMontageMeasurement({
     measurementRooms,
     measurementLayingDirection,
     measurementSketchPhotoUrl,
+    floorProducts,
 }: {
 	montageId: string;
 	measurementDetails: string;
