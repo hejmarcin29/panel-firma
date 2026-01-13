@@ -267,7 +267,7 @@ export function MeasurementAssistantModal({
                                 <SelectTrigger className="h-12">
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent className="z-250">
+                                <SelectContent className="z-50">
                                     <SelectItem value="ideal">Idealne (bez uwag)</SelectItem>
                                     <SelectItem value="good">Dobre (drobne nierówności)</SelectItem>
                                     <SelectItem value="bad">Złe (wymaga szlifowania/naprawy)</SelectItem>
@@ -361,8 +361,12 @@ export function MeasurementAssistantModal({
                                                 <Input
                                                     type="number"
                                                     value={product.area || ''}
+                                                    disabled={product.rooms.length > 0}
                                                     onChange={(e) => updateFloorProduct(index, { area: parseFloat(e.target.value) || 0 })}
-                                                    className="h-12 text-lg font-bold pr-8"
+                                                    className={cn(
+                                                        "h-12 text-lg font-bold pr-8",
+                                                        product.rooms.length > 0 && "bg-muted text-muted-foreground opacity-100"
+                                                    )}
                                                 />
                                                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">m²</span>
                                             </div>
@@ -427,14 +431,21 @@ export function MeasurementAssistantModal({
                                                     onChange={(e) => {
                                                         const newRooms = [...product.rooms];
                                                         newRooms[rIdx].area = parseFloat(e.target.value) || 0;
-                                                        updateFloorProduct(index, { rooms: newRooms });
+                                                        
+                                                        // Calculate new total area for this product using only room sums if rooms exist
+                                                        // OR we might want to let user override? Usually sum is safest.
+                                                        const newTotalArea = newRooms.reduce((acc, curr) => acc + (curr.area || 0), 0);
+                                                        
+                                                        updateFloorProduct(index, { rooms: newRooms, area: newTotalArea });
                                                     }}
                                                     placeholder="m²"
                                                     className="w-20 h-9 text-sm"
                                                 />
                                                 <Button variant="ghost" size="sm" onClick={() => {
                                                      const newRooms = product.rooms.filter((_, i) => i !== rIdx);
-                                                     updateFloorProduct(index, { rooms: newRooms });
+                                                     // Recalculate area
+                                                     const newTotalArea = newRooms.reduce((acc, curr) => acc + (curr.area || 0), 0);
+                                                     updateFloorProduct(index, { rooms: newRooms, area: newTotalArea });
                                                 }}>
                                                     <X className="w-3 h-3"/>
                                                 </Button>
