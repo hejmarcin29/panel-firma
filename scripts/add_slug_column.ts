@@ -16,8 +16,8 @@ async function main() {
         console.log("Adding slug column to erp_products...");
         await sql`ALTER TABLE erp_products ADD COLUMN IF NOT EXISTS slug text UNIQUE;`;
         console.log("Success! Column added.");
-    } catch (error: any) {
-        console.error("Error adding column:", error.message);
+    } catch (error) {
+        console.error("Error adding column:", error instanceof Error ? error.message : String(error));
     } finally {
         await sql.end();
     }

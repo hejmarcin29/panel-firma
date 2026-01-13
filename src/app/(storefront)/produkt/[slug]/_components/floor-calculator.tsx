@@ -12,7 +12,7 @@ interface FloorCalculatorProps {
   unit: string;
 }
 
-export function FloorCalculator({ pricePerM2, packageSizeM2, unit }: FloorCalculatorProps) {
+export function FloorCalculator({ pricePerM2, packageSizeM2 }: FloorCalculatorProps) {
   const [area, setArea] = useState<string>("20");
   const [waste, setWaste] = useState<string>("5"); // 5% waste
 

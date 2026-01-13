@@ -61,7 +61,7 @@ export function MeasurementAssistantController({ montage, isOpen, onClose, initi
                 area: fp.area,
                 waste: fp.waste,
                 installationMethod: (fp.installationMethod as 'click' | 'glue') || 'click',
-                pattern: (fp.pattern as any) || 'simple',
+                pattern: fp.pattern || 'simple',
                 layingDirection: fp.layingDirection || '',
                 rooms: fp.rooms || []
             }));

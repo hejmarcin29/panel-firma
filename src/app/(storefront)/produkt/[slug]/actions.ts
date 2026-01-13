@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { erpProducts, erpProductAttributes, erpAttributes, erpAttributeOptions } from '@/lib/db/schema';
+import { erpProducts } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 
 export interface ProductDetails {
