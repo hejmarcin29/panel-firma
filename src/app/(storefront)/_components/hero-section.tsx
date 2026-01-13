@@ -24,7 +24,7 @@ export function HeroSection() {
           
           <h1 className="font-playfair text-5xl font-bold leading-tight tracking-tight sm:text-6xl md:text-7xl">
             Podłogi, które <br/>
-            tworzą <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-200 to-emerald-500">dom.</span>
+            tworzą <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-200 to-emerald-500">dom.</span>
           </h1>
           
           <p className="text-lg text-gray-200 sm:text-xl max-w-lg leading-relaxed">

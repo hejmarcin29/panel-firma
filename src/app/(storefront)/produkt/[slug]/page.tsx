@@ -92,7 +92,8 @@ export default async function ProductPage({ params }: PageProps) {
                         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
                             <FloorCalculator 
                                 pricePerM2={price || 50} 
-                                packageSize={product.packageSizeM2 || 2.2} 
+                                packageSizeM2={product.packageSizeM2 || 2.2}
+                                unit={product.unit || 'm2'}
                             />
                         </div>
 

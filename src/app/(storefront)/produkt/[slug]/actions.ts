@@ -72,25 +72,3 @@ export async function getProductBySlug(slug: string): Promise<ProductDetails | n
         images: product.images
     };
 }
-
-        return {
-            name: attr.attribute.name,
-            value: displayValue || '',
-        };
-    }));
-
-    return {
-        id: product.id,
-        name: product.name,
-        description: product.description,
-        sku: product.sku,
-        price: product.price,
-        regularPrice: product.regularPrice,
-        salePrice: product.salePrice,
-        unit: product.unit,
-        packageSizeM2: product.packageSizeM2,
-        stockQuantity: product.stockQuantity,
-        imageUrl: product.imageUrl,
-        attributes: processedAttributes.filter(a => a.value !== ''),
-    };
-}

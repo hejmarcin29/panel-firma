@@ -147,6 +147,7 @@ export type Montage = {
         area: number;
         waste: number;
         installationMethod: 'click' | 'glue' | null;
+        pattern?: string | null;
         layingDirection?: string | null;
         rooms?: {
             name: string;

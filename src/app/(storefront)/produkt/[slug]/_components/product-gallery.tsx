@@ -54,7 +54,7 @@ export function ProductGallery({ mainImage, galleryImages, productName }: Produc
                             key={img.id}
                             onClick={() => setSelectedIndex(index)}
                             className={cn(
-                                "relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg border bg-white transition-all",
+                                "relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border bg-white transition-all",
                                 selectedIndex === index 
                                     ? "ring-2 ring-emerald-600 ring-offset-2" 
                                     : "opacity-70 hover:opacity-100"
