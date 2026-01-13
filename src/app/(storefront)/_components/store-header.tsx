@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShoppingCart, Search, Menu, User } from "lucide-react";
+import { Search, Menu, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CartButton } from "./cart-button";
 

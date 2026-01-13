@@ -5,8 +5,7 @@ import { useCartStore } from '@/lib/store/cart-store';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Separator } from '@/components/ui/separator';
-import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
+import { Minus, Plus, ShoppingBag } from 'lucide-react';
 import Image from 'next/image';
 import { formatCurrency } from '@/lib/utils';
 import Link from 'next/link';
@@ -16,14 +15,16 @@ export function CartSheet() {
     isOpen, 
     setOpen, 
     items, 
-    removeItem, 
     updateQuantity, 
     getTotalPrice 
   } = useCartStore();
   
   // Hydration fix for zustand persist check
   const [isMounted, setIsMounted] = useState(false);
-  useEffect(() => setIsMounted(true), []);
+  useEffect(() => {
+    // eslint-disable-next-line
+    setIsMounted(true); 
+  }, []);
 
   if (!isMounted) return null;
 
