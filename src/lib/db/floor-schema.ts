@@ -1,7 +1,9 @@
 import {
 	doublePrecision,
+    json,
     pgTable,
 	text,
+    timestamp,
 } from 'drizzle-orm/pg-core';
 import { montages } from './schema';
 
