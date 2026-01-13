@@ -1876,7 +1876,7 @@ export async function updateMontageMeasurement({
         }[] | null;
     }[] | null;
 }) {
-	await requireUser();
+    await requireUser();
 
     let measurementAt: Date | null = null;
     if (measurementDate) {
@@ -1885,7 +1885,7 @@ export async function updateMontageMeasurement({
         if (!Number.isNaN(parsed.getTime())) {
             measurementAt = parsed;
         } else {
-            // Fallback to date-only parsing if needed (though new Date() usually handles YYYY-MM-DD fine)
+            // Fallback to date-only parsing if needed
             const parsedDateOnly = new Date(`${measurementDate}T00:00:00`);
             if (!Number.isNaN(parsedDateOnly.getTime())) {
                 measurementAt = parsedDateOnly;
