@@ -10,6 +10,7 @@ import { createCollection, deleteCollection } from "../actions";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner"; 
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function CollectionsManager({ initialData, brands }: { initialData: any[], brands: any[] }) {
     const [name, setName] = useState("");
     const [brandId, setBrandId] = useState("");
@@ -43,7 +44,7 @@ export function CollectionsManager({ initialData, brands }: { initialData: any[]
         <Card>
             <CardHeader>
                 <CardTitle>Kolekcje</CardTitle>
-                <CardDescription>Przypisz kolekcje do marek (np. "Smaki Życia" do "Barlinek").</CardDescription>
+                <CardDescription>Przypisz kolekcje do marek (np. &quot;Smaki Życia&quot; do &quot;Barlinek&quot;).</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                 <div className="flex flex-col sm:flex-row gap-2 max-w-lg">

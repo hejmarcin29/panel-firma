@@ -9,6 +9,7 @@ import { createBrand, deleteBrand } from "../actions";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner"; // Assuming sonner is used, or use-toast if not
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function BrandsManager({ initialData }: { initialData: any[] }) {
     const [name, setName] = useState("");
     const [isPending, startTransition] = useTransition();

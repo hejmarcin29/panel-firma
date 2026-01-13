@@ -1,7 +1,7 @@
 
 import 'dotenv/config';
 import { db } from './src/lib/db';
-import { erpAttributes, erpAttributeOptions, erpProductAttributes } from './src/lib/db/schema';
+import { erpAttributes } from './src/lib/db/schema';
 
 async function checkAttributes() {
     console.log("Checking attributes...");
