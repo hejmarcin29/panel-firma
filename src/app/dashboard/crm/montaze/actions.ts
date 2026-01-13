@@ -1941,7 +1941,8 @@ export async function updateMontageMeasurement({
                 area: fp.area,
                 waste: fp.waste,
                 installationMethod: fp.installationMethod,
-                pattern: fp.pattern,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                pattern: fp.pattern as any,
                 layingDirection: fp.layingDirection,
                 rooms: fp.rooms
             })));
