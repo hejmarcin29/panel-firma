@@ -12,6 +12,9 @@ import {
     decimal
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+import { montageFloorProducts } from './floor-schema'; // New table
+
+export { montageFloorProducts } from './floor-schema';
 
 export const userRoles = ['admin', 'installer', 'architect', 'partner'] as const;
 export const orderSources = ['woocommerce', 'manual', 'shop'] as const;
@@ -792,11 +795,19 @@ export const montageTasks = pgTable(
 	})
 );
 
+export const montageFloorProductsRelations = relations(montageFloorProducts, ({ one }) => ({
+    montage: one(montages, {
+        fields: [montageFloorProducts.montageId],
+        references: [montages.id],
+    }),
+}));
+
 export const montagesRelations = relations(montages, ({ one, many }) => ({
 	notes: many(montageNotes),
 	attachments: many(montageAttachments),
 	checklistItems: many(montageChecklistItems),
 	tasks: many(montageTasks),
+    floorProducts: many(montageFloorProducts),
 	commissions: many(commissions, { relationName: 'commission_montage' }),
 	installer: one(users, {
 		fields: [montages.installerId],
