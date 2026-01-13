@@ -16,8 +16,8 @@ interface ProductCardProps {
     price: string | null;
     salePrice: string | null;
     unit: string | null;
-    isPurchasable?: boolean;
-    isSampleAvailable?: boolean;
+    isPurchasable?: boolean | null;
+    isSampleAvailable?: boolean | null;
   };
 }
 

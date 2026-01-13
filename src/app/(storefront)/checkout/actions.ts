@@ -124,7 +124,7 @@ export async function processOrder(data: OrderData) {
         });
 
         // 5. Handle Tpay Redirect (Mock for now)
-        const redirectUrl = null;
+        const redirectUrl: string | null = null;
         if (data.paymentMethod === 'tpay') {
              // In real impl, we would hit Tpay API here
              // redirectUrl = await createTpayTransaction(...)
