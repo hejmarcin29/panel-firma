@@ -18,6 +18,19 @@ export interface ProductDetails {
     isSampleAvailable: boolean | null;
     isPurchasable: boolean | null;
     imageUrl: string | null;
+    brand: {
+        name: string;
+        imageUrl: string | null;
+        slug: string | null;
+    } | null;
+    collection: {
+        name: string;
+        slug: string | null;
+    } | null;
+    category: {
+        name: string;
+        slug: string | null;
+    } | null;
     attributes: {
         name: string;
         value: string;
@@ -36,6 +49,9 @@ export async function getProductBySlug(slug: string): Promise<ProductDetails | n
             // eq(erpProducts.isShopVisible, true) // Changed: Always fetch visible product (Catalog Mode)
         ),
         with: {
+            brand: true,
+            collection: true,
+            category: true,
             attributes: {
                 with: {
                     attribute: true,
@@ -72,6 +88,9 @@ export async function getProductBySlug(slug: string): Promise<ProductDetails | n
         isSampleAvailable: product.isSampleAvailable,
         isPurchasable: product.isPurchasable,
         imageUrl: product.imageUrl,
+        brand: product.brand,
+        collection: product.collection,
+        category: product.category,
         attributes: transformedAttributes,
         images: product.images
     };

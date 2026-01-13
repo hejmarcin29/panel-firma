@@ -35,9 +35,24 @@ export default async function ProductPage({ params }: PageProps) {
         <div className="min-h-screen bg-gray-50 pb-20">
             <div className="container px-4 py-8 md:py-12">
                 
-                {/* Breadcrumbs Placeholder (Optional) */}
-                <div className="mb-6 text-sm text-gray-500">
-                    Sklep / Podłogi / {product.name}
+                {/* Breadcrumbs */}
+                <div className="mb-6 flex flex-wrap items-center gap-2 text-sm text-gray-500">
+                    <a href="/sklep" className="hover:text-gray-900">Sklep</a>
+                    <span>/</span>
+                    {product.category ? (
+                        <>
+                            <a href={`/sklep?category=${product.category.slug}`} className="hover:text-gray-900">
+                                {product.category.name}
+                            </a>
+                            <span>/</span>
+                        </>
+                    ) : (
+                        <>
+                            <span>Podłogi</span>
+                            <span>/</span>
+                        </>
+                    )}
+                    <span className="text-gray-900 font-medium truncate max-w-[200px]">{product.name}</span>
                 </div>
 
                 <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
@@ -54,20 +69,32 @@ export default async function ProductPage({ params }: PageProps) {
                     {/* Right Column: Details & Calculator */}
                     <div className="space-y-8">
                         <div>
-                            <div className="mb-2 flex items-center gap-2">
-                                {product.stockQuantity && product.stockQuantity > 0 ? (
-                                    <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700">
-                                        Dostępny od ręki
-                                    </Badge>
-                                ) : (
-                                    <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
-                                        Na zamówienie
-                                    </Badge>
+                            <div className="mb-4 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    {product.stockQuantity && product.stockQuantity > 0 ? (
+                                        <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700">
+                                            Dostępny od ręki
+                                        </Badge>
+                                    ) : (
+                                        <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
+                                            Na zamówienie
+                                        </Badge>
+                                    )}
+                                    {product.collection && (
+                                        <Badge variant="secondary" className="font-normal">
+                                            Kolekcja: {product.collection.name}
+                                        </Badge>
+                                    )}
+                                </div>
+                                {product.brand && (
+                                    <div className="text-right">
+                                        <span className="text-xs text-muted-foreground block">Producent</span>
+                                        <span className="font-semibold text-gray-900">{product.brand.name}</span>
+                                    </div>
                                 )}
-                                {product.unit && <Badge variant="secondary">{product.unit}</Badge>}
                             </div>
 
-                            <h1 className="font-playfair text-3xl font-bold text-gray-900 md:text-4xl">
+                            <h1 className="font-playfair text-3xl font-bold text-gray-900 md:text-4xl leading-tight">
                                 {product.name}
                             </h1>
                             <div className="mt-2 text-sm text-gray-500">SKU: {product.sku}</div>
@@ -136,8 +163,28 @@ export default async function ProductPage({ params }: PageProps) {
                                 <AccordionItem value="desc">
                                     <AccordionTrigger>Opis Produktu</AccordionTrigger>
                                     <AccordionContent>
-                                        <div className="prose prose-sm text-gray-600 leading-relaxed max-w-none">
-                                            {product.description || "Brak opisu."}
+                                        <div className="prose prose-sm text-gray-600 leading-relaxed max-w-none space-y-4">
+                                            {product.description ? (
+                                                <div>{product.description}</div>
+                                            ) : (
+                                                <p className="italic">Brak szczegółowego opisu produktu.</p>
+                                            )}
+                                            
+                                            {/* Auto-generated collection info */}
+                                            {product.collection && (
+                                                <div className="mt-6 rounded-lg bg-gray-50 p-4 border border-gray-100">
+                                                    <h4 className="font-semibold text-gray-900 mb-2">O kolekcji {product.collection.name}</h4>
+                                                    <p className="text-sm">
+                                                        Ten produkt należy do kolekcji {product.collection.name} od producenta {product.brand?.name}. 
+                                                        Charakteryzuje się ona spójnym wzornictwem i dopasowaną kolorystyką.
+                                                        {product.collection.slug && (
+                                                            <a href={`/sklep?collections=${product.collection.slug}`} className="block mt-2 font-medium text-emerald-600 hover:text-emerald-700">
+                                                                Zobacz całą kolekcję &rarr;
+                                                            </a>
+                                                        )}
+                                                    </p>
+                                                </div>
+                                            )}
                                         </div>
                                     </AccordionContent>
                                 </AccordionItem>
@@ -146,6 +193,26 @@ export default async function ProductPage({ params }: PageProps) {
                                     <AccordionTrigger>Dane Techniczne</AccordionTrigger>
                                     <AccordionContent>
                                         <div className="grid grid-cols-1 gap-y-2 sm:grid-cols-2 sm:gap-x-4">
+                                            {product.brand && (
+                                                <div className="flex justify-between border-b border-gray-100 py-2 text-sm">
+                                                    <span className="font-medium text-gray-700">Producent</span>
+                                                    <span className="text-gray-600">{product.brand.name}</span>
+                                                </div>
+                                            )}
+                                            {product.collection && (
+                                                <div className="flex justify-between border-b border-gray-100 py-2 text-sm">
+                                                    <span className="font-medium text-gray-700">Kolekcja</span>
+                                                    <span className="text-gray-600">{product.collection.name}</span>
+                                                </div>
+                                            )}
+                                            <div className="flex justify-between border-b border-gray-100 py-2 text-sm">
+                                                <span className="font-medium text-gray-700">Typ</span>
+                                                <span className="text-gray-600">
+                                                    {product.unit === 'm2' ? 'Podłoga / Wykończenie' : 'Akcesoria'}
+                                                </span>
+                                            </div>
+                                            
+                                            {/* Dynamic attributes */}
                                             {product.attributes.map((attr) => (
                                                 <div key={attr.name} className="flex justify-between border-b border-gray-100 py-2 text-sm">
                                                     <span className="font-medium text-gray-700">{attr.name}</span>
