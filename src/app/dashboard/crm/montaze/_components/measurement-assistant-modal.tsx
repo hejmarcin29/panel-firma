@@ -98,6 +98,7 @@ export function MeasurementAssistantModal({
     panelWaste, setPanelWaste,
     floorArea, setFloorArea,
     panelModel, setIsPanelSelectorOpen,
+    floorProducts, setFloorProducts,
     additionalMaterials, setAdditionalMaterials,
     measurementRooms, setMeasurementRooms,
     dateRange, setDateRange,

@@ -56,7 +56,7 @@ export function MeasurementAssistantController({ montage, isOpen, onClose, initi
         if (montage.floorProducts && montage.floorProducts.length > 0) {
             return montage.floorProducts.map(fp => ({
                 id: fp.id || Math.random().toString(36).substring(7),
-                productId: fp.productId,
+                productId: fp.productId ?? null,
                 name: fp.name,
                 area: fp.area,
                 waste: fp.waste,
@@ -248,7 +248,7 @@ export function MeasurementAssistantController({ montage, isOpen, onClose, initi
         <ProductSelectorModal 
             isOpen={isPanelSelectorOpen}
             onClose={() => setIsPanelSelectorOpen(false)}
-            // type="panel" - Default to panel
+            type="panel"
             onSelect={(product) => {
                 if (editingFloorIndex !== null && floorProducts[editingFloorIndex]) {
                     const newProducts = [...floorProducts];
