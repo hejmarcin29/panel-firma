@@ -256,7 +256,7 @@ export async function createPurchaseOrder(ids: string[], supplierId: string) {
         }
     }
 
-    revalidatePath('/dashboard/erp/orders');
+    revalidatePath('/dashboard/erp/logistics');
     return { success: true, poId };
 }
 
@@ -301,7 +301,7 @@ export async function receivePurchaseOrder(poId: string) {
         }
     }
 
-    revalidatePath('/dashboard/erp/orders');
+    revalidatePath('/dashboard/erp/logistics');
     return { success: true };
 }
 
@@ -330,6 +330,6 @@ export async function issueMaterialsToCrew(montageId: string) {
             .where(eq(montages.id, montageId));
     }
 
-    revalidatePath('/dashboard/erp/orders');
+    revalidatePath('/dashboard/erp/logistics');
     return { success: true };
 }

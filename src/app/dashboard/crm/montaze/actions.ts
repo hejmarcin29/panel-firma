@@ -10,6 +10,7 @@ import { db } from '@/lib/db';
 import {
 	montageAttachments,
 	montageChecklistItems,
+    montageFloorProducts,
 	montageNotes,
 	montageTasks,
 	montages,
@@ -1710,6 +1711,7 @@ export async function updateMontageCostEstimation({
     montageId,
     measurementAdditionalMaterials,
     additionalServices,
+    baseServices = [],
     completed = false
 }: {
     montageId: string;
@@ -1728,6 +1730,15 @@ export async function updateMontageCostEstimation({
         unit: string;
         price: number;
     }[];
+    baseServices?: {
+        serviceId?: string;
+        name: string;
+        quantity: number;
+        unit: string;
+        price: number;
+        method?: string;
+        pattern?: string;
+    }[];
     completed?: boolean;
 }) {
     const user = await requireUser();
@@ -1744,41 +1755,45 @@ export async function updateMontageCostEstimation({
 
     await logSystemEvent('update_cost_estimation', `Zaktualizowano kosztorys (Status: ${completed ? 'Zakończony' : 'W trakcie'})`, user.id);
 
-    // 2. Update Services (Add new items)
-    // First, we might want to clear existing "estimated" services if we want a full overwrite, 
-    // but for now let's just append or we assume this is a one-time action.
-    // Actually, to be safe and allow edits, we should probably manage them by ID or clear previous ones linked to this "estimation".
-    // For MVP, let's just add them to the montage_service_items table.
-    
-    // Note: In a real app, we should probably have a specific 'source' or 'type' for these service items 
-    // to distinguish them from manually added ones in the office.
-    // For now, we'll add them as standard service items.
+    // 2. Update Services (Reset and Add)
+    // We clear existing service items for this montage as this action is considered a full reset/update of the cost estimation.
+    await db.delete(montageServiceItems).where(eq(montageServiceItems.montageId, montageId));
 
+    const montage = await getMontageOrThrow(montageId);
+    const vatRate = montage.isHousingVat ? 0.08 : 0.23;
+    const genericService = await db.query.services.findFirst(); // Fallback service
+
+    // A. Add Base Services
+    if (baseServices.length > 0) {
+        for (const service of baseServices) {
+             const targetServiceId = service.serviceId || genericService?.id;
+             if (targetServiceId) {
+                await db.insert(montageServiceItems).values({
+                    id: crypto.randomUUID(),
+                    montageId: montageId,
+                    serviceId: targetServiceId,
+                    snapshotName: service.name,
+                    quantity: service.quantity,
+                    clientPrice: service.price, // Base price is Net
+                    installerRate: service.price, // Assuming cost = price for base services for now
+                    vatRate: vatRate,
+                });
+             }
+        }
+    }
+
+    // B. Add Additional Services
     if (additionalServices.length > 0) {
-        // We need to fetch the montage to get the tax rate (8% or 23%)
-        const montage = await getMontageOrThrow(montageId);
-        const vatRate = montage.isHousingVat ? 0.08 : 0.23;
-
-        // We also need a default service ID or create one on the fly?
-        // The schema requires 'serviceId'. We should probably look up a generic "Additional Service" or similar.
-        // Or, if the schema allows null serviceId? Let's check schema.
-        // Schema: serviceId is uuid, references services.id. NOT NULL usually.
-        // Let's check if we have a "Custom Service" or similar.
-        
-        // WORKAROUND: For now, we will try to find a service named "Usługa dodatkowa" or take the first one available
-        // and override the name.
-        const genericService = await db.query.services.findFirst();
-        
         if (genericService) {
             for (const service of additionalServices) {
                 await db.insert(montageServiceItems).values({
                     id: crypto.randomUUID(),
                     montageId: montageId,
-                    serviceId: genericService.id, // Link to a real service ID
-                    snapshotName: service.name, // Override name
+                    serviceId: genericService.id,
+                    snapshotName: service.name,
                     quantity: service.quantity,
-                    clientPrice: service.price, // Net price for client (pass-through)
-                    installerRate: service.price, // Net cost from installer
+                    clientPrice: service.price, 
+                    installerRate: service.price, 
                     vatRate: vatRate,
                 });
             }
@@ -1847,6 +1862,19 @@ export async function updateMontageMeasurement({
     }[] | null;
     measurementLayingDirection?: string | null;
     measurementSketchPhotoUrl?: string | null;
+    floorProducts?: {
+        id?: string;
+        productId?: string | null;
+        name: string;
+        area: number;
+        waste: number;
+        installationMethod: 'click' | 'glue' | null;
+        layingDirection?: string | null;
+        rooms?: {
+            name: string;
+            area: number;
+        }[] | null;
+    }[] | null;
 }) {
 	await requireUser();
 
@@ -1896,6 +1924,26 @@ export async function updateMontageMeasurement({
 			updatedAt: new Date(),
 		})
 		.where(eq(montages.id, montageId));
+
+    // Handle Floor Products
+    if (floorProducts) {
+        // Simple strategy: Delete existing and recreate (safest for full replace updates from UI)
+        await db.delete(montageFloorProducts).where(eq(montageFloorProducts.montageId, montageId));
+        
+        if (floorProducts.length > 0) {
+            await db.insert(montageFloorProducts).values(floorProducts.map(fp => ({
+                id: randomUUID(),
+                montageId,
+                productId: fp.productId,
+                name: fp.name,
+                area: fp.area,
+                waste: fp.waste,
+                installationMethod: fp.installationMethod,
+                layingDirection: fp.layingDirection,
+                rooms: fp.rooms
+            })));
+        }
+    }
 
     // --- GOOGLE CALENDAR SYNC (USER) ---
     // If installation date is set, try to sync with installer's private calendar

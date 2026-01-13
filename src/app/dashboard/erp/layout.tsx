@@ -40,10 +40,10 @@ export default function ERPLayout({ children }: { children: ReactNode }) {
                         Magazyn
                     </Button>
                 </Link>
-                 <Link href="/dashboard/erp/orders">
+                 <Link href="/dashboard/erp/logistics">
                     <Button variant="ghost" size="sm" className="gap-2">
                         <FileText className="h-4 w-4" />
-                        Zamówienia (PO)
+                        Logistyka
                     </Button>
                 </Link>
             </div>

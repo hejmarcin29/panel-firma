@@ -39,33 +39,61 @@ export function CostEstimationController({ montage, isOpen, onClose }: CostEstim
     // Additional Services
     const [additionalServices, setAdditionalServices] = useState<{ id: string; name: string; quantity: number; unit: string; price: number }[]>([]);
 
-    // Base Service Logic
-    const [baseServicePrice, setBaseServicePrice] = useState(0);
-    const [baseServiceName, setBaseServiceName] = useState('');
+    // Base Service Logic - Multi-Product Support
+    const [baseServices, setBaseServices] = useState<{ serviceId?: string; name: string; quantity: number; unit: string; price: number; method: string; pattern: string }[]>([]);
 
     useEffect(() => {
         if (isOpen) {
-            const fetchPrice = async () => {
+            const fetchPrices = async () => {
                 try {
-                    const method = (montage.measurementInstallationMethod as 'click' | 'glue') || 'click';
-                    const pattern = (montage.measurementFloorPattern as 'classic' | 'herringbone') || 'classic';
+                    const servicesList = [];
                     
-                    const service = await getEstimatedBaseService(
-                        method,
-                        pattern,
-                        montage.id
-                    );
-                    if (service) {
-                        setBaseServicePrice(service.basePriceNet || 0);
-                        setBaseServiceName(service.name);
+                    // CASE A: Multi-Product (New)
+                    if (montage.floorProducts && montage.floorProducts.length > 0) {
+                         for (const product of montage.floorProducts) {
+                            const method = product.installationMethod || 'click';
+                            const globalPattern = (montage.measurementFloorPattern as 'classic' | 'herringbone') || 'classic';
+                            
+                            const service = await getEstimatedBaseService(method, globalPattern, montage.id);
+                            
+                            servicesList.push({
+                                serviceId: service?.id,
+                                name: `${service?.name || 'Montaż'} - ${product.name}`,
+                                quantity: product.area,
+                                unit: 'm²',
+                                price: service?.basePriceNet || 0,
+                                method,
+                                pattern: globalPattern
+                            });
+                         }
+                    } 
+                    // CASE B: Legacy
+                    else {
+                        const method = (montage.measurementInstallationMethod as 'click' | 'glue') || 'click';
+                        const pattern = (montage.measurementFloorPattern as 'classic' | 'herringbone') || 'classic';
+                        
+                        const service = await getEstimatedBaseService(method, pattern, montage.id);
+                        
+                        servicesList.push({
+                            serviceId: service?.id,
+                            name: service?.name || 'Montaż',
+                            quantity: montage.floorArea ? parseFloat(montage.floorArea.toString()) : 0,
+                            unit: 'm²',
+                            price: service?.basePriceNet || 0,
+                            method,
+                            pattern
+                        });
                     }
+                    
+                    setBaseServices(servicesList);
+
                 } catch (e) {
-                    console.error("Failed to fetch base service price", e);
+                    console.error("Failed to fetch base service prices", e);
                 }
             };
-            fetchPrice();
+            fetchPrices();
         }
-    }, [isOpen, montage.id, montage.measurementInstallationMethod, montage.measurementFloorPattern]);
+    }, [isOpen, montage.id, montage.measurementInstallationMethod, montage.measurementFloorPattern, montage.floorProducts, montage.floorArea]);
 
 
     const handleSave = async (completed: boolean | undefined) => {
@@ -74,6 +102,8 @@ export function CostEstimationController({ montage, isOpen, onClose }: CostEstim
                 montageId: montage.id,
                 measurementAdditionalMaterials: additionalMaterials, 
                 additionalServices: additionalServices,
+                // @ts-ignore - action will be updated momentarily
+                baseServices: baseServices,
                 completed: completed ?? false
            });
            router.refresh();
@@ -97,12 +127,7 @@ export function CostEstimationController({ montage, isOpen, onClose }: CostEstim
             
             additionalWorkDescription={additionalWorkDescription}
             
-            baseService={{
-                name: baseServiceName,
-                quantity: montage.floorArea ? parseFloat(montage.floorArea.toString()) : 0,
-                unit: 'm2',
-                price: baseServicePrice
-            }}
+            baseServices={baseServices}
             
             additionalMaterials={additionalMaterials}
             setAdditionalMaterials={setAdditionalMaterials}

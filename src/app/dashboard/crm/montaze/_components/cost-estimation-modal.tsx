@@ -22,8 +22,9 @@ interface CostEstimationModalProps {
     // Data from Stage 1 (Read Only context)
     measurementDate?: string | null;
     additionalWorkDescription?: string | null;
-    baseService?: { name: string; quantity: number; unit: string; price?: number };
-    
+    baseService?: { name: string; quantity: number; unit: string; price?: number }; // Legacy single
+    baseServices?: { serviceId?: string; name: string; quantity: number; unit: string; price: number; method?: string; pattern?: string }[]; // Multi
+
     // Data to Edit (Stage 2)
     additionalMaterials: MeasurementMaterialItem[];
     setAdditionalMaterials: (val: MeasurementMaterialItem[]) => void;
@@ -45,10 +46,16 @@ export function CostEstimationModal({
     isOpen, onClose, onSave,
     additionalWorkDescription,
     baseService,
+    baseServices,
     additionalMaterials, setAdditionalMaterials,
     additionalServices, setAdditionalServices
 }: CostEstimationModalProps) {
     const [currentStep, setCurrentStep] = useState(0);
+
+    // Normalize base services
+    const effectiveBaseServices = baseServices && baseServices.length > 0
+        ? baseServices
+        : (baseService ? [ { ...baseService, price: baseService.price || 0 }] : []);
 
     if (!isOpen) return null;
 
@@ -194,40 +201,39 @@ export function CostEstimationModal({
                         <div className="text-center space-y-2">
                             <h2 className="text-2xl font-bold">Usługa Bazowa</h2>
                             <p className="text-muted-foreground">
-                                Potwierdź wycenę usługi podstawowej wynikającej z pomiaru.
+                                Systemowa wycena na podstawie metody montażu i metrażu.
                             </p>
                         </div>
 
-                        {baseService ? (
-                            <div className="p-6 border rounded-xl bg-slate-50 border-slate-200 shadow-sm space-y-4">
-                                <div className="flex justify-between items-start">
-                                    <div className="space-y-1">
-                                        <Label className="text-slate-600">Nazwa Usługi</Label>
-                                        <div className="font-medium text-xl">{baseService.name}</div>
-                                    </div>
-                                    <div className="text-right">
-                                        <span className="text-xs font-medium bg-slate-200 text-slate-600 px-2 py-1 rounded">Automatyczna</span>
-                                    </div>
-                                </div>
-                                
-                                <div className="grid grid-cols-2 gap-6 pt-2">
-                                    <div className="space-y-1">
-                                        <Label className="text-slate-600">Ilość</Label>
-                                        <div className="font-medium text-lg">{baseService.quantity} {baseService.unit}</div>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <Label className="text-slate-600">Cena jedn. (Netto)</Label>
-                                        <div className="font-medium text-lg">
-                                            {baseService.price ? `${baseService.price.toFixed(2)} PLN` : 'Brak stawki'}
+                        {effectiveBaseServices.length > 0 ? (
+                            <div className="space-y-4">
+                                {effectiveBaseServices.map((serviceItem, idx) => (
+                                    <div key={idx} className="p-6 bg-slate-50 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <h3 className="font-bold text-lg text-slate-800">{serviceItem.name}</h3>
+                                                <p className="text-sm text-muted-foreground">Stawka systemowa: {serviceItem.price ? serviceItem.price.toFixed(2) : '---'} PLN/m²</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-2xl font-bold text-slate-900">{serviceItem.quantity} {serviceItem.unit}</div>
+                                                <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Do rozliczenia</div>
+                                            </div>
+                                        </div>
+
+                                        <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
+                                            <span className="text-slate-600 font-medium">Wartość (Netto):</span>
+                                            <span className="text-2xl font-bold text-primary">
+                                                {serviceItem.price ? (serviceItem.price * serviceItem.quantity).toFixed(2) : '0.00'} PLN
+                                            </span>
                                         </div>
                                     </div>
-                                </div>
+                                ))}
 
-                                <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
-                                    <span className="text-slate-600 font-medium">Wartość całkowita (Netto):</span>
-                                    <span className="text-2xl font-bold text-primary">
-                                        {baseService.price ? (baseService.price * baseService.quantity).toFixed(2) : '0.00'} PLN
-                                    </span>
+                                <div className="p-4 bg-primary/5 rounded-xl border border-primary/20 flex justify-between items-center">
+                                     <span className="font-bold text-primary">SUMA Usług Bazowych (Netto):</span>
+                                     <span className="text-2xl font-bold text-primary">
+                                         {effectiveBaseServices.reduce((acc, curr) => acc + (curr.price * curr.quantity), 0).toFixed(2)} PLN
+                                     </span>
                                 </div>
                             </div>
                         ) : (

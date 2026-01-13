@@ -139,6 +139,20 @@ export type Montage = {
         name: string;
         area: number;
     }[] | null;
+    floorProducts?: {
+        id: string;
+        montageId: string;
+        productId?: string | null;
+        name: string;
+        area: number;
+        waste: number;
+        installationMethod: 'click' | 'glue' | null;
+        layingDirection?: string | null;
+        rooms?: {
+            name: string;
+            area: number;
+        }[] | null;
+    }[];
 	finalPanelAmount: number | null;
     
     // Protocol Fields
@@ -249,6 +263,17 @@ export type StatusOption = {
 	value: string;
 	label: string;
 	description: string;
+};
+
+export type FloorProductState = {
+    id: string;
+    productId: string | null;
+    name: string;
+    area: number;
+    waste: number;
+    installationMethod: 'click' | 'glue';
+    layingDirection: string;
+    rooms: { name: string; area: number }[];
 };
 
 

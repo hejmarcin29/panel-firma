@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { DateRange } from 'react-day-picker';
 import { toast } from 'sonner';
 import type { Montage, MeasurementMaterialItem } from '../../types';
+import { type FloorProductState } from '../../types';
 import type { TechnicalAuditData } from '../../technical-data';
 import { MeasurementAssistantModal } from '../../_components/measurement-assistant-modal';
 import { ProductSelectorModal } from '../../_components/product-selector-modal';
@@ -50,22 +51,44 @@ export function MeasurementAssistantController({ montage, isOpen, onClose, initi
         };
     });
 
-    const [installationMethod, setInstallationMethod] = useState<'click' | 'glue'>(
-        (montage.measurementInstallationMethod as 'click' | 'glue') || 'click'
-    );
-    const [floorPattern, setFloorPattern] = useState<'classic' | 'herringbone'>(
-        (montage.measurementFloorPattern as 'classic' | 'herringbone') || 'classic'
-    );
-    const [layingDirection, setLayingDirection] = useState(montage.measurementLayingDirection || '');
+    // Multi-Floor Products State
+    const [floorProducts, setFloorProducts] = useState<FloorProductState[]>(() => {
+        if (montage.floorProducts && montage.floorProducts.length > 0) {
+            return montage.floorProducts.map(fp => ({
+                id: fp.id || Math.random().toString(36).substring(7),
+                productId: fp.productId,
+                name: fp.name,
+                area: fp.area,
+                waste: fp.waste,
+                installationMethod: (fp.installationMethod as 'click' | 'glue') || 'click',
+                layingDirection: fp.layingDirection || '',
+                rooms: fp.rooms || []
+            }));
+        }
+        
+        // Fallback for legacy data
+        const legacyArea = montage.floorArea || 0;
+        if (legacyArea > 0 || montage.panelModel) {
+            return [{
+                id: 'legacy-default',
+                productId: montage.panelProductId?.toString() || null,
+                name: montage.panelModel || '',
+                area: legacyArea,
+                waste: montage.panelWaste || 5,
+                installationMethod: (montage.measurementInstallationMethod as 'click' | 'glue') || 'click',
+                layingDirection: montage.measurementLayingDirection || '',
+                rooms: montage.measurementRooms || []
+            }];
+        }
+        
+        return [];
+    });
+
     const [sketchPhotoUrl, setSketchPhotoUrl] = useState(montage.measurementSketchPhotoUrl || null);
     
-    const [panelWaste, setPanelWaste] = useState<string>(montage.panelWaste?.toString() || '5');
-    const [floorArea, setFloorArea] = useState(montage.floorArea?.toString() || '');
-    
     // Panel selection state
-    const [panelModel, setPanelModel] = useState(montage.panelModel || '');
-    const [panelProductId, setPanelProductId] = useState<string | null>(montage.panelProductId ? String(montage.panelProductId) : null);
     const [isPanelSelectorOpen, setIsPanelSelectorOpen] = useState(false);
+    const [editingFloorIndex, setEditingFloorIndex] = useState<number | null>(null);
 
     const [additionalMaterials, setAdditionalMaterials] = useState<MeasurementMaterialItem[]>(() => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -81,8 +104,6 @@ export function MeasurementAssistantController({ montage, isOpen, onClose, initi
         }
         return [];
     });
-
-    const [measurementRooms, setMeasurementRooms] = useState<{ name: string; area: number }[]>(montage.measurementRooms || []);
     
     // Assistant needs dateRange prop?
     const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -90,30 +111,60 @@ export function MeasurementAssistantController({ montage, isOpen, onClose, initi
         to: montage.scheduledInstallationEndAt ? new Date(montage.scheduledInstallationEndAt) : undefined,
     });
 
+    // --- HELPER FOR OPENING SELECTOR ---
+    const handleOpenPanelSelector = (val: boolean, index?: number) => {
+        setIsPanelSelectorOpen(val);
+        if (val && index !== undefined) {
+            setEditingFloorIndex(index);
+        } else if (!val) {
+            setEditingFloorIndex(null);
+        }
+    };
+
     // --- SAVE LOGIC ---
     const handleSave = async () => {
         try {
+            // Calculated aggregates for legacy/display fields
+            const totalArea = floorProducts.reduce((acc, curr) => acc + (curr.area || 0), 0);
+            const mainProduct = floorProducts[0] || {};
+            const allRooms = floorProducts.flatMap(fp => fp.rooms);
+
             // 1. Save Measurement Data
             await updateMontageMeasurement({
                montageId: montage.id,
                measurementDate: measurementDate || null,
                isHousingVat,
-               floorArea: floorArea ? parseFloat(floorArea) : null,
+               
+               // New Data
+               floorProducts: floorProducts.map(fp => ({
+                   productId: fp.productId,
+                   name: fp.name,
+                   area: fp.area,
+                   waste: fp.waste,
+                   installationMethod: fp.installationMethod,
+                   layingDirection: fp.layingDirection,
+                   rooms: fp.rooms
+               })),
+
+               // Legacy / Aggregate fields
+               floorArea: totalArea,
                measurementSubfloorCondition: subfloorCondition,
-               measurementInstallationMethod: installationMethod,
-               measurementFloorPattern: floorPattern,
-               measurementLayingDirection: layingDirection,
+               measurementInstallationMethod: mainProduct.installationMethod || 'click',
+               measurementFloorPattern: 'classic', // Legacy field
+               measurementLayingDirection: mainProduct.layingDirection || '',
                measurementSketchPhotoUrl: sketchPhotoUrl,
-               panelWaste: parseFloat(panelWaste) || 0,
+               panelWaste: mainProduct.waste || 5, // Approximate
                measurementAdditionalMaterials: additionalMaterials,
-               measurementRooms: measurementRooms,
+               measurementRooms: allRooms,
+               
                scheduledInstallationAt: dateRange?.from ? dateRange.from.getTime() : null,
                scheduledInstallationEndAt: dateRange?.to ? dateRange.to.getTime() : null,
+               
                // Required fields that are not in assistant, passing current or defaults
                measurementDetails: montage.measurementDetails || '',
                floorDetails: montage.floorDetails || '',
-               panelModel: panelModel,
-               panelProductId: panelProductId, 
+               panelModel: mainProduct.name || montage.panelModel || '',
+               panelProductId: mainProduct.productId || montage.panelProductId, 
                modelsApproved: montage.modelsApproved || false,
                additionalInfo: montage.additionalInfo || '',
                sketchUrl: montage.sketchUrl || null,
@@ -158,41 +209,35 @@ export function MeasurementAssistantController({ montage, isOpen, onClose, initi
             setSubfloorCondition={setSubfloorCondition}
             
             technicalAudit={technicalAudit}
-            // setTechnicalAudit isn't passed directly? Assistant likely updates it via internal AuditForm or specific props?
-            // Checking read_file output... props were `technicalAudit`... wait, where is setTechnicalAudit?
-            // Ah, looking at AuditForm usages... it might be internal to the Assistant or passed differently.
-            // Let's re-check the AssistantModal props from read_file.
-            
             montageId={montage.id}
             
-            installationMethod={installationMethod}
-            setInstallationMethod={setInstallationMethod}
+            // Floor Products
+            floorProducts={floorProducts}
+            setFloorProducts={setFloorProducts}
+
+            // Legacy/Dummy Props to satisfy Modal Interface (though Modal ignores them in Case 3)
+            installationMethod={'click'} 
+            setInstallationMethod={() => {}}
+            floorPattern={'classic'}
+            setFloorPattern={() => {}}
+            layingDirection={''}
+            setLayingDirection={() => {}}
+            panelWaste={'5'}
+            setPanelWaste={() => {}}
+            floorArea={floorProducts.reduce((acc, curr) => acc + curr.area, 0).toString()}
+            setFloorArea={() => {}}
+            panelModel={''}
+            // setPanelModel isn't passed
+            setIsPanelSelectorOpen={handleOpenPanelSelector}
             
-            floorPattern={floorPattern}
-            setFloorPattern={setFloorPattern}
-            
-            layingDirection={layingDirection}
-            setLayingDirection={setLayingDirection}
+            measurementRooms={[]} // We use per-model rooms
+            setMeasurementRooms={() => {}}
+
             sketchPhotoUrl={sketchPhotoUrl}
             setSketchPhotoUrl={setSketchPhotoUrl}
-
-            panelWaste={panelWaste}
-            setPanelWaste={setPanelWaste}
-            
-            floorArea={floorArea}
-            setFloorArea={setFloorArea}
-            
-            panelModel={panelModel}
-            // setPanelModel isn't in the props list I saw... checking again.
-            // saw `panelModel` and `setIsPanelSelectorOpen`. 
-            
-            setIsPanelSelectorOpen={setIsPanelSelectorOpen}
             
             additionalMaterials={additionalMaterials}
             setAdditionalMaterials={setAdditionalMaterials}
-            
-            measurementRooms={measurementRooms}
-            setMeasurementRooms={setMeasurementRooms}
             
             dateRange={dateRange}
             setDateRange={setDateRange}
@@ -203,11 +248,19 @@ export function MeasurementAssistantController({ montage, isOpen, onClose, initi
         <ProductSelectorModal 
             isOpen={isPanelSelectorOpen}
             onClose={() => setIsPanelSelectorOpen(false)}
-            type="panel"
-            currentValue={panelModel}
+            // type="panel" - Default to panel
             onSelect={(product) => {
-                setPanelModel(product.name);
-                setPanelProductId(String(product.id));
+                if (editingFloorIndex !== null && floorProducts[editingFloorIndex]) {
+                    const newProducts = [...floorProducts];
+                    newProducts[editingFloorIndex] = {
+                        ...newProducts[editingFloorIndex],
+                        productId: String(product.id),
+                        name: product.name,
+                    };
+                    setFloorProducts(newProducts);
+                }
+                setIsPanelSelectorOpen(false);
+                setEditingFloorIndex(null);
             }}
         />
         </>

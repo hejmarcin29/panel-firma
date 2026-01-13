@@ -104,6 +104,7 @@ export async function getMontageDetails(montageId: string) {
                 orderBy: desc(montagePayments.createdAt),
             },
             settlement: true,
+            floorProducts: true,
         },
     });
 

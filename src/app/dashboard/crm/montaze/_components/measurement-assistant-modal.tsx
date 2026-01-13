@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 import { AuditForm } from "./technical/audit-form";
 import { updateTechnicalAudit, uploadAuditPhotoAction } from "../technical-actions";
 import type { TechnicalAuditData } from "../technical-data";
-import type { MeasurementMaterialItem } from "../types";
+import type { MeasurementMaterialItem, FloorProductState } from "../types";
 
 interface MeasurementAssistantModalProps {
     isOpen: boolean;
@@ -56,7 +56,11 @@ interface MeasurementAssistantModalProps {
     setFloorArea: (val: string) => void;
     
     panelModel: string;
-    setIsPanelSelectorOpen: (val: boolean) => void;
+    setIsPanelSelectorOpen: (val: boolean, index?: number) => void;
+
+    // Floor Products (New Multi-Floor Support)
+    floorProducts?: FloorProductState[];
+    setFloorProducts?: (val: FloorProductState[]) => void;
 
     additionalMaterials: MeasurementMaterialItem[];
     setAdditionalMaterials: (val: MeasurementMaterialItem[]) => void;
@@ -281,184 +285,175 @@ export function MeasurementAssistantModal({
                     </div>
                 );
             case 3: // Floor & Tech (Merged)
+                const updateFloorProduct = (index: number, changes: Partial<FloorProductState>) => {
+                    if (!floorProducts || !setFloorProducts) return;
+                    const newProducts = [...floorProducts];
+                    newProducts[index] = { ...newProducts[index], ...changes };
+                    setFloorProducts(newProducts);
+                };
+
+                const addFloorProduct = () => {
+                     if (!setFloorProducts || !floorProducts) return;
+                     setFloorProducts([...floorProducts, {
+                        id: Math.random().toString(36).substring(7),
+                        productId: null,
+                         name: '',
+                         area: 0,
+                         waste: 5,
+                         installationMethod: 'click',
+                         layingDirection: '',
+                         rooms: []
+                     }]);
+                };
+
+                const removeFloorProduct = (index: number) => {
+                     if (!setFloorProducts || !floorProducts) return;
+                     const newProducts = floorProducts.filter((_, i) => i !== index);
+                     setFloorProducts(newProducts);
+                };
+
                 return (
                     <div className="space-y-6">
                         <div className="text-center space-y-2">
-                            <h2 className="text-2xl font-bold">Podłoga i Technologia</h2>
-                            <p className="text-muted-foreground">Wybierz produkt i sposób montażu.</p>
+                            <h2 className="text-2xl font-bold">Modele Podłogi</h2>
+                            <p className="text-muted-foreground">Dodaj wszystkie rodzaje podłóg w tym montażu.</p>
                         </div>
 
+                        {/* Floor Products List */}
                         <div className="space-y-6">
-                            {/* Area & Waste */}
-                            <div className="p-4 bg-muted/30 rounded-xl space-y-4 border">
-                                <div className="space-y-2">
-                                    <Label>Pomiar rzeczywisty (Netto m²)</Label>
-                                    <Input
-                                        type="number"
-                                        step="0.01"
-                                        value={floorArea}
-                                        onChange={(e) => setFloorArea(e.target.value)}
-                                        className={cn(
-                                            "h-12 text-lg font-bold",
-                                            measurementRooms.length > 0 && "bg-muted text-muted-foreground cursor-not-allowed"
-                                        )}
-                                        placeholder="0.00"
-                                        readOnly={measurementRooms.length > 0}
-                                    />
-                                </div>
-
-                                {/* Rooms Split */}
-                                <div className="space-y-2">
-                                    <button
-                                        onClick={() => setIsRoomsExpanded(!isRoomsExpanded)}
-                                        className="text-sm text-primary font-medium flex items-center gap-1 hover:underline"
-                                    >
-                                        {isRoomsExpanded ? <ChevronLeft className="w-4 h-4 -rotate-90" /> : <ChevronRight className="w-4 h-4 rotate-90" />}
-                                        {isRoomsExpanded ? "Zwiń pomieszczenia" : "Rozpisz na pomieszczenia"}
-                                    </button>
-
-                                    <AnimatePresence>
-                                        {isRoomsExpanded && (
-                                            <motion.div
-                                                initial={{ height: 0, opacity: 0 }}
-                                                animate={{ height: "auto", opacity: 1 }}
-                                                exit={{ height: 0, opacity: 0 }}
-                                                className="overflow-hidden"
-                                            >
-                                                <div className="space-y-2 pt-2 pb-4">
-                                                    {measurementRooms.map((room, idx) => (
-                                                        <div key={idx} className="flex gap-2 items-center">
-                                                            <Input
-                                                                placeholder="Nazwa (np. Salon)"
-                                                                value={room.name}
-                                                                onChange={(e) => {
-                                                                    const newRooms = [...measurementRooms];
-                                                                    newRooms[idx].name = e.target.value;
-                                                                    setMeasurementRooms(newRooms);
-                                                                }}
-                                                                className="flex-1"
-                                                            />
-                                                            <div className="relative w-32">
-                                                                <Input
-                                                                    type="number"
-                                                                    placeholder="0.00"
-                                                                    value={room.area || ''}
-                                                                    onChange={(e) => {
-                                                                        const newRooms = [...measurementRooms];
-                                                                        newRooms[idx].area = parseFloat(e.target.value) || 0;
-                                                                        setMeasurementRooms(newRooms);
-                                                                    }}
-                                                                    className="pr-8"
-                                                                />
-                                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">m²</span>
-                                                            </div>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                onClick={() => {
-                                                                    const newRooms = measurementRooms.filter((_, i) => i !== idx);
-                                                                    setMeasurementRooms(newRooms);
-                                                                }}
-                                                                className="text-muted-foreground hover:text-destructive"
-                                                            >
-                                                                <X className="w-4 h-4" />
-                                                            </Button>
-                                                        </div>
-                                                    ))}
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => setMeasurementRooms([...measurementRooms, { name: '', area: 0 }])}
-                                                        className="w-full border-dashed"
-                                                    >
-                                                        <Plus className="w-4 h-4 mr-2" />
-                                                        Dodaj pomieszczenie
-                                                    </Button>
-                                                </div>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </div>
-                                
-                                <div className="space-y-2">
-                                    <Label>Zapas na ścinki (%)</Label>
-                                    <div className="flex gap-2">
-                                        {['5', '7', '10', '12', '15'].map((val) => (
-                                            <button
-                                                key={val}
-                                                onClick={() => setPanelWaste(val)}
-                                                className={cn(
-                                                    "flex-1 py-2 rounded-md border text-sm font-medium transition-all",
-                                                    panelWaste === val 
-                                                        ? "bg-primary text-primary-foreground border-primary" 
-                                                        : "bg-background hover:bg-muted"
-                                                )}
-                                            >
-                                                {val}%
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="pt-4 border-t flex justify-between items-center">
-                                    <span className="text-muted-foreground font-medium">Do zamówienia:</span>
-                                    <span className="text-2xl font-bold text-primary">
-                                        {floorArea ? (parseFloat(floorArea) * (1 + parseInt(panelWaste)/100)).toFixed(2) : '0.00'} m²
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Tech */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label>Metoda</Label>
-                                    <Select value={installationMethod} onValueChange={(v: 'click' | 'glue') => setInstallationMethod(v)}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent className="z-250">
-                                            <SelectItem value="click">Pływająca (Click)</SelectItem>
-                                            <SelectItem value="glue">Klejona</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Wzór</Label>
-                                    <Select value={floorPattern} onValueChange={(v: 'classic' | 'herringbone') => setFloorPattern(v)}>
-                                        <SelectTrigger>
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent className="z-250">
-                                            <SelectItem value="classic">Klasycznie</SelectItem>
-                                            <SelectItem value="herringbone">Jodełka</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="col-span-2 space-y-2">
-                                     <Label>Kierunek układania</Label>
-                                     <div className="space-y-3">
-                                         <Input 
-                                             placeholder="np. Prostopadle do okna, Wg projektu..." 
-                                             value={layingDirection}
-                                             onChange={(e) => setLayingDirection(e.target.value)}
-                                             className="h-12"
-                                         />
-                                         <div className="flex flex-wrap gap-2">
-                                             {['Prostopadle do okna', 'Równolegle do okna', 'Wg projektu', 'W linii od drzwi'].map(opt => (
-                                                 <Badge 
-                                                     key={opt}
-                                                     variant="outline" 
-                                                     className="cursor-pointer hover:bg-primary/10 py-2 px-3 text-sm font-normal"
-                                                     onClick={() => setLayingDirection(opt)}
-                                                 >
-                                                     {opt}
-                                                 </Badge>
-                                             ))}
-                                         </div>
+                             {floorProducts && floorProducts.map((product, index) => (
+                                 <div key={product.id} className="p-4 border rounded-xl bg-card space-y-4 relative">
+                                     <div className="flex justify-between items-start">
+                                         <Badge variant="secondary" className="mb-2">Model #{index + 1}</Badge>
+                                         <Button variant="ghost" size="icon" className="text-destructive h-8 w-8" onClick={() => removeFloorProduct(index)}>
+                                             <Trash2 className="w-4 h-4" />
+                                         </Button>
                                      </div>
-                                </div>
 
-                                <div className="col-span-2 pt-2 pb-2">
+                                     {/* Product Selection */}
+                                     <div className="space-y-2">
+                                        <Label>Model paneli</Label>
+                                        <div className="flex gap-2">
+                                            <Input
+                                                value={product.name}
+                                                readOnly
+                                                placeholder="Kliknij Wybierz..."
+                                                className="h-12 font-medium"
+                                                onClick={() => setIsPanelSelectorOpen(true, index)}
+                                            />
+                                            <Button 
+                                                className="h-12 px-6" 
+                                                onClick={() => setIsPanelSelectorOpen(true, index)}
+                                            >
+                                                Wybierz
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    {/* Area & Waste */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label>Metraż (m²)</Label>
+                                            <div className="relative">
+                                                <Input
+                                                    type="number"
+                                                    value={product.area || ''}
+                                                    onChange={(e) => updateFloorProduct(index, { area: parseFloat(e.target.value) || 0 })}
+                                                    className="h-12 text-lg font-bold pr-8"
+                                                />
+                                                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">m²</span>
+                                            </div>
+                                        </div>
+                                         <div className="space-y-2">
+                                            <Label>Zapas (%)</Label>
+                                            <Select value={product.waste.toString()} onValueChange={(v) => updateFloorProduct(index, { waste: parseFloat(v) })}>
+                                                <SelectTrigger className="h-12">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent className="z-250">
+                                                    {['0','5','7','10','12','15'].map(v => (
+                                                        <SelectItem key={v} value={v}>{v}%</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+
+                                    {/* Tech Details */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label>Montaż</Label>
+                                            <Select value={product.installationMethod} onValueChange={(v: 'click'|'glue') => updateFloorProduct(index, { installationMethod: v })}>
+                                                <SelectTrigger>
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent className="z-250">
+                                                    <SelectItem value="click">Click (Pływająca)</SelectItem>
+                                                    <SelectItem value="glue">Klejona</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                         <div className="space-y-2">
+                                             <Label>Kierunek</Label>
+                                             <Input 
+                                                value={product.layingDirection} 
+                                                onChange={(e) => updateFloorProduct(index, { layingDirection: e.target.value })}
+                                                placeholder="np. Od okna"
+                                             />
+                                         </div>
+                                    </div>
+
+                                    {/* Rooms (Repeater) */}
+                                     <div className="space-y-2 pt-2 border-t">
+                                        <Label className="text-xs uppercase text-muted-foreground">Pomieszczenia (Dla tego modelu)</Label>
+                                        {product.rooms.map((room, rIdx) => (
+                                            <div key={rIdx} className="flex gap-2">
+                                                <Input 
+                                                    value={room.name} 
+                                                    onChange={(e) => {
+                                                        const newRooms = [...product.rooms];
+                                                        newRooms[rIdx].name = e.target.value;
+                                                        updateFloorProduct(index, { rooms: newRooms });
+                                                    }}
+                                                    placeholder="Nazwa"
+                                                    className="flex-1 h-9 text-sm"
+                                                />
+                                                 <Input 
+                                                    type="number"
+                                                    value={room.area || ''} 
+                                                    onChange={(e) => {
+                                                        const newRooms = [...product.rooms];
+                                                        newRooms[rIdx].area = parseFloat(e.target.value) || 0;
+                                                        updateFloorProduct(index, { rooms: newRooms });
+                                                    }}
+                                                    placeholder="m²"
+                                                    className="w-20 h-9 text-sm"
+                                                />
+                                                <Button variant="ghost" size="sm" onClick={() => {
+                                                     const newRooms = product.rooms.filter((_, i) => i !== rIdx);
+                                                     updateFloorProduct(index, { rooms: newRooms });
+                                                }}>
+                                                    <X className="w-3 h-3"/>
+                                                </Button>
+                                            </div>
+                                        ))}
+                                        <Button variant="outline" size="sm" className="w-full h-8 text-xs border-dashed" onClick={() => {
+                                            updateFloorProduct(index, { rooms: [...product.rooms, { name: '', area: 0 }] });
+                                        }}>
+                                            <Plus className="w-3 h-3 mr-1"/> Dodaj pomieszczenie
+                                        </Button>
+                                     </div>
+                                 </div>
+                             ))}
+
+                             <Button onClick={addFloorProduct} className="w-full h-12 dashed border-2" variant="outline">
+                                 <Plus className="w-5 h-5 mr-2" />
+                                 Dodaj kolejny model podłogi
+                             </Button>
+                        </div>
+                        
+                        {/* Global Sketch */}
+                         <div className="col-span-2 pt-2 pb-2">
                                     <div className="flex items-center justify-between">
                                         <Label className="flex items-center gap-2">
                                             Szkic sytuacyjny (Opcjonalne)
@@ -527,37 +522,6 @@ export function MeasurementAssistantModal({
                                         </div>
                                     )}
                                 </div>
-                            </div>
-
-                            {/* Product */}
-                            <div className="space-y-2">
-                                <Label>Model paneli</Label>
-                                <div className="flex gap-2">
-                                    <Input
-                                        value={panelModel}
-                                        readOnly
-                                        placeholder="Kliknij Wybierz..."
-                                        className="h-12"
-                                        onClick={() => setIsPanelSelectorOpen(true)}
-                                    />
-                                    <Button 
-                                        className="h-12 px-6" 
-                                        onClick={() => setIsPanelSelectorOpen(true)}
-                                    >
-                                        Wybierz
-                                    </Button>
-                                </div>
-                            </div>
-                            
-                            {(!floorArea || parseFloat(floorArea) <= 0 || !panelModel) && (
-                                <p className="text-red-500 text-sm font-medium flex items-center gap-2 justify-center pt-2">
-                                    <AlertCircle className="w-4 h-4" />
-                                    {!floorArea || parseFloat(floorArea) <= 0 
-                                        ? "Wpisz metraż, aby kontynuować." 
-                                        : "Wybierz model panela, aby kontynuować."}
-                                </p>
-                            )}
-                        </div>
                     </div>
                 );
             case 4: // Materials
