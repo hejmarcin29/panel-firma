@@ -72,7 +72,7 @@ interface Collection {
 interface Attribute {
     id: string;
     name: string;
-    type: string;
+    type: string | null;
     options: { id: string; value: string }[];
 }
 
@@ -120,7 +120,14 @@ const PriceDisplay = ({ price, salePrice, regularPrice }: { price: string | null
     );
 };
 
-export function ProductsTable({ data, categories, suppliers = [] }: ProductsTableProps) {
+export function ProductsTable({ 
+    data, 
+    categories, 
+    suppliers = [], 
+    brands = [], 
+    collections = [], 
+    attributes = [] 
+}: ProductsTableProps) {
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("active");

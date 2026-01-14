@@ -129,7 +129,6 @@ export function ProductForm({
                 packageSizeM2: values.packageSizeM2 ? parseFloat(values.packageSizeM2) : null,
             };
 
-            // @ts-expect-error - FormData handling via server action binding is tricky in strict TS
             const result = await createProduct(payload, formData);
             
             if (result.success) {

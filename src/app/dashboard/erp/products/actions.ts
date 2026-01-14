@@ -247,8 +247,6 @@ export async function toggleProductSync(id: string, enabled: boolean) {
 }
 
 
-import { processAndUploadImage } from "@/lib/r2/upload";
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function createProduct(data: any, formData?: FormData) {
     const user = await requireUser();
