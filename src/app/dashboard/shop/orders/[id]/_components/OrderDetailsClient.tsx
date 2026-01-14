@@ -34,11 +34,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TimelineView } from '@/components/shop/timeline-view';
-import { generateOrderMagicLink } from '../actions';
-import { Link as LinkIcon, History } from 'lucide-react';
 
-import { TimelineView } from '@/components/shop/timeline-view';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface OrderItemDetails {
     name: string;

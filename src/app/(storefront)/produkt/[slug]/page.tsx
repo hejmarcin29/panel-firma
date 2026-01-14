@@ -9,6 +9,10 @@ import { formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
+import { getProductReviews } from './_components/reviews-actions';
+import { ProductReviews } from './_components/product-reviews';
+import { StarRating } from './_components/star-rating';
+
 interface PageProps {
     params: Promise<{
         slug: string;
@@ -17,14 +21,25 @@ interface PageProps {
 
 export default async function ProductPage({ params }: PageProps) {
     const { slug } = await params;
-    const [product, shopConfig] = await Promise.all([
-        getProductBySlug(slug),
-        getShopConfig()
-    ]);
+    
+    // Fetch product first to get ID
+    const product = await getProductBySlug(slug);
 
     if (!product) {
         notFound();
     }
+
+    // Parallel fetch config and reviews using Product ID
+    const [shopConfig, reviews] = await Promise.all([
+        getShopConfig(),
+        getProductReviews(product.id)
+    ]);
+
+    const totalReviews = reviews.length;
+    const averageRating = totalReviews > 0 
+        ? reviews.reduce((acc, r) => acc + r.rating, 0) / totalReviews 
+        : 0;
+
 
     // Determine price display
     const price = product.salePrice ? parseFloat(product.salePrice) : (product.price ? parseFloat(product.price) : null);
@@ -124,7 +139,20 @@ export default async function ProductPage({ params }: PageProps) {
                             <h1 className="font-playfair text-3xl font-bold text-gray-900 md:text-4xl leading-tight">
                                 {product.name}
                             </h1>
-                            <div className="mt-2 text-sm text-gray-500">SKU: {product.sku}</div>
+                            
+                            <div className="mt-3 flex items-center gap-4">
+                                <div className="text-sm text-gray-500 font-medium">SKU: {product.sku}</div>
+                                {totalReviews > 0 && (
+                                    <a href="#opinie" className="flex items-center gap-2 group hover:opacity-80 transition-opacity">
+                                        <div className="flex -space-x-1">
+                                            <StarRating rating={averageRating} size="sm" showCount={false} />
+                                        </div>
+                                        <span className="text-sm font-medium text-gray-600 underline decoration-gray-300 underline-offset-4 group-hover:text-gray-900 group-hover:decoration-gray-900 transition-all">
+                                            Zobacz {totalReviews} opinii
+                                        </span>
+                                    </a>
+                                )}
+                            </div>
 
                             <div className="mt-6 flex items-baseline gap-4">
                                 <span className="text-4xl font-bold text-gray-900">
@@ -262,6 +290,15 @@ export default async function ProductPage({ params }: PageProps) {
                              </Accordion>
                         </div>
                     </div>
+                </div>
+
+                {/* Reviews Section */}
+                <div className="mt-16 md:mt-24 pt-16 border-t border-gray-200">
+                    <ProductReviews 
+                        productId={product.id} 
+                        productName={product.name}
+                        reviews={reviews}
+                    />
                 </div>
             </div>
         </div>
