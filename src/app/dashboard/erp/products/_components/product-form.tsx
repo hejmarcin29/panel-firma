@@ -129,7 +129,7 @@ export function ProductForm({
                 packageSizeM2: values.packageSizeM2 ? parseFloat(values.packageSizeM2) : null,
             };
 
-            // @ts-ignore - FormData handling via server action binding is tricky in strict TS
+            // @ts-expect-error - FormData handling via server action binding is tricky in strict TS
             const result = await createProduct(payload, formData);
             
             if (result.success) {
@@ -247,7 +247,7 @@ export function ProductForm({
                                                         placeholder="m2 w paczce (np. 1.77)" 
                                                         {...field} 
                                                         onChange={(e) => {
-                                                            let val = e.target.value.replace(',', '.');
+                                                            const val = e.target.value.replace(',', '.');
                                                             // Allow only numbers and one dot
                                                             if (/^\d*\.?\d{0,2}$/.test(val)) {
                                                                 field.onChange(val);

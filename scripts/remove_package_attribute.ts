@@ -1,7 +1,7 @@
 
 import 'dotenv/config';
 import { db } from '../src/lib/db';
-import { erpProducts, erpProductAttributes, erpAttributes, erpAttributeOptions } from '../src/lib/db/schema';
+import { erpProductAttributes, erpAttributes, erpAttributeOptions } from '../src/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 async function removeAttribute() {

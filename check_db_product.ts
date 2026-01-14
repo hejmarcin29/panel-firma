@@ -32,6 +32,7 @@ async function checkProduct() {
 
     console.log('\nAttributes:');
     if (product.attributes && product.attributes.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         product.attributes.forEach((attr: any) => {
              const attrName = attr.attribute?.name || 'Unknown Attr';
              const attrValue = attr.value || attr.option?.value;

@@ -19,7 +19,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { MoreHorizontal, RefreshCw, Search, X, Trash2, Ban } from "lucide-react";
+import { MoreHorizontal, RefreshCw, Search, X, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
