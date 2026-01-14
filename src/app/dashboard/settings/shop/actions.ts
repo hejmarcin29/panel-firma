@@ -169,7 +169,7 @@ export async function updateShopConfig(
             },
         });
 
-    revalidateTag('shop_config');
+    revalidateTag('shop_config', { expire: 0 });
     revalidatePath('/', 'layout'); // Odśwież cały sklep (layout, home, produkty)
     revalidatePath('/dashboard/settings/shop');
 }
