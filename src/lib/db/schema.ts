@@ -15,6 +15,10 @@ import { relations } from 'drizzle-orm';
 import { montageFloorProducts } from './floor-schema'; // New table
 export { montageFloorProducts } from './floor-schema';
 export { erpPosts, erpPostsRelations, postStatus } from './blog-schema';
+export { 
+    erpProductReviews, erpProductReviewsRelations, reviewStatus, reviewSource,
+    erpOrderTimeline, erpOrderTimelineRelations, timelineType 
+} from './reviews-schema';
 
 export const userRoles = ['admin', 'installer', 'architect', 'partner'] as const;
 export const orderSources = ['woocommerce', 'manual', 'shop'] as const;
