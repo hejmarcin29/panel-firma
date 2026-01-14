@@ -1,4 +1,3 @@
-import 'server-only';
 
 import { appSettingKeys, getAppSetting } from '@/lib/settings';
 

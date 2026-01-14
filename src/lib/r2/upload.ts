@@ -1,4 +1,4 @@
-import 'server-only';
+
 import { PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import sharp from 'sharp';
 import { createR2Client } from './client';
