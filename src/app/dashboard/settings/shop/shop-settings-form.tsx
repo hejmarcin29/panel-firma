@@ -72,6 +72,18 @@ export default async function ShopSettingsPage() {
             vatRate: parseInt(formData.get('vatRate') as string) || 23,
         };
 
+        // Handle File Uploads for Branding
+        const logoFile = formData.get('organizationLogoFile') as File;
+        const headerLogoFile = formData.get('headerLogoFile') as File;
+        const heroImageFile = formData.get('heroImageFile') as File;
+
+        // Pass files to server action (it will handle processing)
+        await updateShopConfig(newShopConfig, {
+            logoFile: logoFile.size > 0 ? logoFile : undefined,
+            headerLogoFile: headerLogoFile.size > 0 ? headerLogoFile : undefined,
+            heroImageFile: heroImageFile.size > 0 ? heroImageFile : undefined,
+        });
+
         // Save Tpay Config
         const newTpayConfig: TpayConfig = {
             clientId: formData.get('tpayClientId') as string,
@@ -79,7 +91,6 @@ export default async function ShopSettingsPage() {
             isSandbox: formData.get('tpayIsSandbox') === 'on',
         };
 
-        await updateShopConfig(newShopConfig);
         await updateTpayConfig(newTpayConfig);
     }
 
@@ -233,14 +244,23 @@ export default async function ShopSettingsPage() {
                                         placeholder="np. Największy wybór podłóg z profesjonalnym montażem."
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="heroImage">Zdjęcie w tle (URL)</Label>
-                                    <Input 
-                                        id="heroImage" 
-                                        name="heroImage" 
-                                        defaultValue={config.heroImage} 
-                                        placeholder="https://..."
-                                    />
+                                <div className="space-y-4 pt-4 border-t">
+                                    <Label>Zdjęcie w tle (Hero Image)</Label>
+                                    <div className="flex gap-4 items-center">
+                                         {config.heroImage ? (
+                                             // eslint-disable-next-line @next/next/no-img-element
+                                             <img src={config.heroImage} alt="Current Hero" className="h-24 w-40 object-cover rounded-lg border shadow-sm" />
+                                         ) : (
+                                             <div className="h-24 w-40 bg-muted rounded-lg border flex items-center justify-center text-xs text-muted-foreground">Brak</div>
+                                         )}
+                                         <div className="flex-1 space-y-2">
+                                             <Input type="file" name="heroImageFile" accept="image/*" className="max-w-sm" />
+                                             <input type="hidden" name="heroImage" value={config.heroImage || ''} />
+                                             <p className="text-[10px] text-muted-foreground">
+                                                 Zalecany format: 2560x800px. System automatycznie zoptymalizuje plik do WebP (Quality 90).
+                                             </p>
+                                         </div>
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>
@@ -285,17 +305,22 @@ export default async function ShopSettingsPage() {
                                 <CardDescription>Dostosuj wygląd i funkcje górnego paska nawigacji.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="headerLogo">Logo w nagłówku (URL)</Label>
-                                    <Input 
-                                        id="headerLogo" 
-                                        name="headerLogo" 
-                                        defaultValue={config.headerLogo} 
-                                        placeholder="https://... (np. plik PNG z przezroczystością)"
-                                    />
-                                    <p className="text-xs text-muted-foreground">Jeśli puste, wyświetli się nazwa tekstowa.</p>
+                                <div className="space-y-4 border-b pb-4">
+                                     <Label>Logo w nagłówku</Label>
+                                     <div className="flex gap-4 items-center">
+                                         {config.headerLogo ? (
+                                             // eslint-disable-next-line @next/next/no-img-element
+                                             <img src={config.headerLogo} alt="Header Logo" className="h-12 object-contain border p-2 rounded bg-white/50" />
+                                         ) : (
+                                             <div className="h-12 w-32 bg-muted rounded border flex items-center justify-center text-xs">Brak logo</div>
+                                         )}
+                                         <div className="flex-1 space-y-2">
+                                              <Input type="file" name="headerLogoFile" accept="image/*" className="max-w-sm" />
+                                              <input type="hidden" name="headerLogo" value={config.headerLogo || ''} />
+                                         </div>
+                                     </div>
                                 </div>
-                                <Separator />
+                                
                                 <div className="flex items-center justify-between rounded-lg border p-4">
                                     <div className="space-y-0.5">
                                         <Label className="text-base">Ikona Wyszukiwania</Label>
@@ -432,15 +457,20 @@ export default async function ShopSettingsPage() {
                                 <CardDescription>Te dane pomagają Google zrozumieć strukturę Twojej firmy.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="organizationLogo">Logo dla Google (URL)</Label>
-                                    <Input 
-                                        id="organizationLogo" 
-                                        name="organizationLogo" 
-                                        defaultValue={config.organizationLogo} 
-                                        placeholder="https://... (najlepiej kwadratowe)"
-                                    />
+                                <div className="space-y-4 border-b pb-4">
+                                     <Label>Logo dla Google (Organization)</Label>
+                                     <div className="flex gap-4 items-center">
+                                         {config.organizationLogo && (
+                                             // eslint-disable-next-line @next/next/no-img-element
+                                             <img src={config.organizationLogo} alt="Org Logo" className="h-16 w-16 object-contain border p-1 rounded bg-white" />
+                                         )}
+                                         <div className="flex-1 space-y-2">
+                                              <Input type="file" name="organizationLogoFile" accept="image/*" className="max-w-sm" />
+                                              <input type="hidden" name="organizationLogo" value={config.organizationLogo || ''} />
+                                         </div>
+                                     </div>
                                 </div>
+ 
                                 <div className="grid gap-4 md:grid-cols-2">
                                     <div className="space-y-2">
                                         <Label htmlFor="contactPhone">Oficjalny Telefon</Label>

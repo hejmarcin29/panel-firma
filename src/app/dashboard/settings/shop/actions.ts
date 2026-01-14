@@ -76,7 +76,43 @@ export async function getShopConfig(): Promise<ShopConfig> {
     return setting.value as ShopConfig;
 }
 
-export async function updateShopConfig(data: ShopConfig) {
+import { processAndUploadImage } from '@/lib/r2/upload';
+
+export async function updateShopConfig(
+    data: ShopConfig, 
+    files?: { 
+        logoFile?: File; 
+        headerLogoFile?: File; 
+        heroImageFile?: File 
+    }
+) {
+    // 1. Przetworzenie plików (jeśli zostały przesłane)
+    const currentConfig = await getShopConfig();
+
+    if (files?.logoFile) {
+        data.organizationLogo = await processAndUploadImage({
+            file: files.logoFile,
+            folderPath: 'system/branding',
+            existingUrl: currentConfig.organizationLogo
+        });
+    }
+
+    if (files?.headerLogoFile) {
+        data.headerLogo = await processAndUploadImage({
+            file: files.headerLogoFile,
+            folderPath: 'system/branding',
+            existingUrl: currentConfig.headerLogo
+        });
+    }
+
+    if (files?.heroImageFile) {
+        data.heroImage = await processAndUploadImage({
+            file: files.heroImageFile,
+            folderPath: 'system/branding', // lub 'system/banners'
+            existingUrl: currentConfig.heroImage
+        });
+    }
+
     await db
         .insert(globalSettings)
         .values({

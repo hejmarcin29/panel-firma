@@ -71,7 +71,14 @@ export default async function ProductsPage() {
                 </div>
             </div>
 
-            <ProductsTable data={products} categories={categories} suppliers={suppliers} />
+            <ProductsTable 
+                data={products} 
+                categories={categories} 
+                suppliers={suppliers} 
+                brands={brands} 
+                collections={collections} 
+                attributes={attributes} 
+            />
         </div>
     );
 }

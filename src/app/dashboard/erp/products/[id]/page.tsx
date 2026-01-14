@@ -110,7 +110,11 @@ export default async function ProductDetailsPage({ params }: PageProps) {
                             </div>
                             <div>
                                 <span className="text-muted-foreground">Jednostka:</span>
-                                <UnitEditableField productId={product.id} initialUnit={product.unit} />
+                                <UnitEditableField 
+                                    productId={product.id} 
+                                    initialUnit={product.unit} 
+                                    initialPackageSizeM2={product.packageSizeM2}
+                                />
                             </div>
                             <div>
                                 <span className="text-muted-foreground">Wymiary (D x S x W):</span>

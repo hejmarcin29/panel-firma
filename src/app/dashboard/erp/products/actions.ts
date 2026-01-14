@@ -3,10 +3,11 @@
 import { db } from "@/lib/db";
 import { erpProducts, erpPurchasePrices, erpProductAttributes, erpCategories, erpInventory } from "@/lib/db/schema";
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { requireUser } from "@/lib/auth/session";
 import { inArray } from "drizzle-orm";
 import { syncProducts } from "@/lib/sync/products";
+import { processAndUploadImage } from "@/lib/r2/upload";
 
 export async function runGlobalSync() {
     const user = await requireUser();
@@ -128,12 +129,18 @@ export async function bulkAssignSupplier(ids: string[], supplierId: string) {
     revalidatePath('/dashboard/erp/products');
 }
 
-export async function updateProductUnit(id: string, unit: string) {
+export async function updateProductUnit(id: string, unit: string, packageSizeM2?: number | null) {
     const user = await requireUser();
     if (!user.roles.includes('admin')) throw new Error('Unauthorized');
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const updateData: any = { unit: unit, updatedAt: new Date() };
+    if (packageSizeM2 !== undefined) {
+        updateData.packageSizeM2 = packageSizeM2;
+    }
+
     await db.update(erpProducts)
-        .set({ unit: unit, updatedAt: new Date() })
+        .set(updateData)
         .where(eq(erpProducts.id, id));
 
     revalidatePath(`/dashboard/erp/products/${id}`);
@@ -240,16 +247,43 @@ export async function toggleProductSync(id: string, enabled: boolean) {
 }
 
 
+import { processAndUploadImage } from "@/lib/r2/upload";
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function createProduct(data: any) {
+export async function createProduct(data: any, formData?: FormData) {
     const user = await requireUser();
     if (user.roles.includes('installer') && !user.roles.includes('admin')) {
         throw new Error('Unauthorized');
     }
 
+    // 1. Upload Main Image (if present)
+    let finalImageUrl = data.imageUrl;
+    
+    if (formData) {
+        const imageFile = formData.get('imageFile') as File;
+        if (imageFile && imageFile.size > 0) {
+            // Temporary ID for path generation. 
+            // Better approach: Insert product first, then upload, then update product.
+            // But to avoid transaction complexity in R2, we will use a temp UUID for folder or just "new"
+            // Wait, we need an ID for folder structure.
+            // Let's generate UUID first.
+            const newId = crypto.randomUUID();
+            
+            finalImageUrl = await processAndUploadImage({
+                file: imageFile,
+                folderPath: `products/${newId}`,
+            });
+            
+            // Hack: We need to force the ID on insert to match folder
+            data.id = newId; 
+        }
+    }
+
     const [product] = await db.insert(erpProducts).values({
+        id: data.id, // Use generated ID if image was uploaded
         name: data.name,
         sku: data.sku,
+        imageUrl: finalImageUrl, // Save R2 URL
         unit: data.unit,
         type: data.type,
         description: data.description,
@@ -432,5 +466,72 @@ export async function getSuppliersList() {
             shortName: true,
         }
     });
+}
+
+export type BulkEditData = {
+    categoryId?: string;
+    brandId?: string;
+    collectionId?: string;
+    supplierId?: string;
+    status?: string;
+    packageSizeM2?: number;
+    price?: string;
+    attributes?: { attributeId: string; value: string }[];
+};
+
+export async function bulkEditProducts(ids: string[], data: BulkEditData) {
+    const user = await requireUser();
+    if (user.roles.includes('installer') && !user.roles.includes('admin')) throw new Error('Unauthorized');
+
+    if (ids.length === 0) return;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const productUpdates: any = {};
+
+    if (data.categoryId) productUpdates.categoryId = data.categoryId === 'none' ? null : data.categoryId;
+    if (data.brandId) productUpdates.brandId = data.brandId === 'none' ? null : data.brandId;
+    if (data.collectionId) productUpdates.collectionId = data.collectionId === 'none' ? null : data.collectionId;
+    if (data.supplierId) productUpdates.supplierId = data.supplierId === 'none' ? null : data.supplierId;
+    if (data.status) productUpdates.status = data.status;
+    if (data.packageSizeM2 !== undefined) productUpdates.packageSizeM2 = data.packageSizeM2;
+    if (data.price) productUpdates.price = data.price;
+    
+    // Obsługa zmiany wagi produktu (może być null, string 'none' lub string z liczbą)
+    // Ale w BulkEditData nie zdefiniowaliśmy weight, więc dodam to do typu jeśli będzie potrzeba.
+    // Na razie skupiamy się na tym co zdefiniowane.
+
+    if (Object.keys(productUpdates).length > 0) {
+        productUpdates.updatedAt = new Date();
+        await db.update(erpProducts)
+            .set(productUpdates)
+            .where(inArray(erpProducts.id, ids));
+    }
+
+    if (data.attributes && data.attributes.length > 0) {
+        for (const attr of data.attributes) {
+            // Delete existing values for this attribute for all selected products
+            await db.delete(erpProductAttributes)
+                .where(and(
+                    inArray(erpProductAttributes.productId, ids),
+                    eq(erpProductAttributes.attributeId, attr.attributeId)
+                ));
+            
+            // Insert new values
+            const newRecords = ids.map(pid => ({
+                productId: pid,
+                attributeId: attr.attributeId,
+                value: attr.value
+            }));
+
+            // Tylko jeśli wartość nie jest pusta (opcjonalnie, zależy czy chcemy czyścić czy ustawiać)
+            // Jeśli attr.value jest pusta, to po prostu usuwamy (co już zrobiliśmy wyżej).
+            // Zakładamy, że jeśli value jest podana, to chcemy ją ustawić.
+            if (attr.value) {
+                await db.insert(erpProductAttributes).values(newRecords);
+            }
+        }
+    }
+
+    revalidatePath('/dashboard/erp/products');
 }
 

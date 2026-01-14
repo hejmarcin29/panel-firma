@@ -19,7 +19,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { MoreHorizontal, RefreshCw, Ban, Search, X } from "lucide-react";
+import { MoreHorizontal, RefreshCw, Search, X, Trash2, Ban } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -29,12 +29,9 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { bulkUpdateSyncStatus, bulkAssignCategory, bulkDeleteProducts, bulkUpdateSampleStatus } from "../actions";
+import { bulkUpdateSyncStatus, bulkDeleteProducts } from "../actions";
 import { toast } from "sonner";
-import { FolderInput, Trash2, DollarSign, Scale, Package } from "lucide-react";
-import { BulkPriceDialog } from "./bulk-price-dialog";
-import { BulkUnitDialog } from "./bulk-unit-dialog";
-import { BulkSupplierDialog } from "./bulk-supplier-dialog";
+import { BulkEditDialog } from "./bulk-edit-dialog";
 
 interface Product {
     id: string;
@@ -62,10 +59,30 @@ interface Supplier {
     name: string;
 }
 
+interface Brand {
+    id: string;
+    name: string;
+}
+
+interface Collection {
+    id: string;
+    name: string;
+}
+
+interface Attribute {
+    id: string;
+    name: string;
+    type: string;
+    options: { id: string; value: string }[];
+}
+
 interface ProductsTableProps {
     data: Product[];
     categories: Category[];
     suppliers: Supplier[];
+    brands: Brand[];
+    collections: Collection[];
+    attributes: Attribute[];
 }
 
 const PriceDisplay = ({ price, salePrice, regularPrice }: { price: string | null, salePrice: string | null, regularPrice?: string | null }) => {
@@ -153,16 +170,6 @@ export function ProductsTable({ data, categories, suppliers = [] }: ProductsTabl
         }
     };
 
-    const handleBulkAssign = async (categoryId: string) => {
-        try {
-            await bulkAssignCategory(selectedIds, categoryId);
-            toast.success("Przypisano kategorię");
-            setSelectedIds([]);
-        } catch {
-            toast.error("Błąd przypisywania kategorii");
-        }
-    };
-
     const handleBulkDelete = async () => {
         if (!confirm("Czy na pewno usunąć zaznaczone produkty?")) return;
         try {
@@ -171,16 +178,6 @@ export function ProductsTable({ data, categories, suppliers = [] }: ProductsTabl
             setSelectedIds([]);
         } catch {
             toast.error("Błąd usuwania");
-        }
-    };
-
-    const handleBulkSample = async (isSample: boolean) => {
-        try {
-            await bulkUpdateSampleStatus(selectedIds, isSample);
-            toast.success(isSample ? "Oznaczono jako próbki" : "Usunięto oznaczenie próbki");
-            setSelectedIds([]);
-        } catch {
-            toast.error("Błąd aktualizacji próbek");
         }
     };
 
@@ -238,61 +235,13 @@ export function ProductsTable({ data, categories, suppliers = [] }: ProductsTabl
                 <div className="flex items-center gap-2 p-2 bg-muted rounded-md flex-wrap">
                     <span className="text-sm font-medium px-2">Zaznaczono: {selectedIds.length}</span>
                     
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button size="sm" variant="outline">
-                                <FolderInput className="mr-2 h-4 w-4" /> Przypisz kategorię
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="max-h-[300px] overflow-y-auto">
-                            {categories.map(cat => (
-                                <DropdownMenuItem key={cat.id} onClick={() => handleBulkAssign(cat.id)}>
-                                    {cat.name}
-                                </DropdownMenuItem>
-                            ))}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                    
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button size="sm" variant="outline">
-                                <Package className="mr-2 h-4 w-4" /> Próbki
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start">
-                            <DropdownMenuItem onClick={() => handleBulkSample(true)}>
-                                Oznacz jako próbkę
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleBulkSample(false)}>
-                                Odznacz próbkę
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-
-                    <BulkPriceDialog  
-                        selectedIds={selectedIds} 
-                        suppliers={suppliers} 
-                        onSuccess={() => setSelectedIds([])}
-                        trigger={
-                            <Button size="sm" variant="outline">
-                                <DollarSign className="mr-2 h-4 w-4" /> Ustaw cenę zakupu
-                            </Button>
-                        } 
-                    />
-
-                    <BulkUnitDialog 
+                    <BulkEditDialog 
                         selectedIds={selectedIds}
-                        onSuccess={() => setSelectedIds([])}
-                        trigger={
-                            <Button size="sm" variant="outline">
-                                <Scale className="mr-2 h-4 w-4" /> Zmień Jm
-                            </Button>
-                        }
-                    />
-
-                    <BulkSupplierDialog 
-                        selectedIds={selectedIds}
+                        categories={categories}
+                        brands={brands}
+                        collections={collections}
                         suppliers={suppliers}
+                        attributes={attributes}
                         onSuccess={() => setSelectedIds([])}
                     />
 
@@ -300,13 +249,11 @@ export function ProductsTable({ data, categories, suppliers = [] }: ProductsTabl
                         <RefreshCw className="mr-2 h-4 w-4" /> Włącz Sync
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => handleBulkSync(false)}>
-                        <Ban className="mr-2 h-4 w-4" /> Wyłącz Sync
+                        <RefreshCw className="mr-2 h-4 w-4" /> Wyłącz Sync
                     </Button>
-                    
-                    <div className="flex-1" />
-                    
+
                     <Button size="sm" variant="destructive" onClick={handleBulkDelete}>
-                        <Trash2 className="mr-2 h-4 w-4" /> Usuń zaznaczone
+                        <Trash2 className="mr-2 h-4 w-4" /> Usuń
                     </Button>
                 </div>
             )}

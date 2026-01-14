@@ -246,7 +246,7 @@ export function InstallerMeasurementTab({ montage, userRoles = [], onEditSection
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex gap-3 text-yellow-900 shadow-sm">
              <Info className="w-5 h-5 shrink-0 text-yellow-600 mt-0.5" />
              <div className="space-y-1">
-                 <h4 className="font-semibold text-sm">Wymagania Handlowe / Klienta</h4>
+                 <h4 className="font-semibold text-sm">Info od klienta</h4>
                  <p className="text-sm leading-relaxed whitespace-pre-line">{montage.clientInfo}</p>
              </div>
           </div>

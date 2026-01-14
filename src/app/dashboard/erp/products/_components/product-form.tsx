@@ -27,6 +27,7 @@ import { createProduct } from "../actions";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PRODUCT_UNITS } from "@/lib/constants";
 
 const formSchema = z.object({
     name: z.string().min(2, "Nazwa musi mieć min. 2 znaki"),
@@ -42,6 +43,11 @@ const formSchema = z.object({
     height: z.string().optional(),
     length: z.string().optional(),
     weight: z.string().optional(),
+    packageSizeM2: z.string()
+        .optional()
+        .refine(val => !val || /^\d+(\.\d{1,2})?$/.test(val), {
+            message: "Format musi być 0.00 (np. 1.77)"
+        }),
     attributes: z.array(z.object({
         attributeId: z.string().min(1, "Wybierz atrybut"),
         value: z.string().optional(),
@@ -105,20 +111,36 @@ export function ProductForm({
     async function onSubmit(values: z.infer<typeof formSchema>) {
         setIsLoading(true);
         try {
-            await createProduct({
+            // Create FormData to handle file
+            const formData = new FormData();
+            
+            // Get file from input ref 
+            const fileInput = document.querySelector('input[name="imageFile"]') as HTMLInputElement;
+            if (fileInput?.files?.[0]) {
+                formData.append('imageFile', fileInput.files[0]);
+            }
+
+            const payload = {
                 ...values,
                 width: values.width ? parseFloat(values.width) : null,
                 height: values.height ? parseFloat(values.height) : null,
                 length: values.length ? parseFloat(values.length) : null,
                 weight: values.weight ? parseFloat(values.weight) : null,
-            });
-            toast.success("Produkt utworzony");
-            if (onSuccess) {
-                onSuccess();
-            } else {
-                router.push("/dashboard/erp/products");
+                packageSizeM2: values.packageSizeM2 ? parseFloat(values.packageSizeM2) : null,
+            };
+
+            // @ts-ignore - FormData handling via server action binding is tricky in strict TS
+            const result = await createProduct(payload, formData);
+            
+            if (result.success) {
+                toast.success("Produkt utworzony");
+                if (onSuccess) {
+                    onSuccess();
+                } else {
+                    router.push(`/dashboard/erp/products/${result.id}`);
+                }
+                router.refresh();
             }
-            router.refresh();
         } catch (error) {
             toast.error("Błąd podczas tworzenia produktu");
             console.error(error);
@@ -133,6 +155,27 @@ export function ProductForm({
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-2xl">
+                
+                <Card className="border-dashed bg-slate-50">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-base">Zdjęcie Główne (Miniaturka)</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex items-center gap-4">
+                            <div className="h-20 w-20 bg-white border rounded-md flex items-center justify-center">
+                                <Plus className="h-6 w-6 text-muted-foreground opacity-50" />
+                            </div>
+                            <div className="space-y-2 flex-1">
+                                <Input type="file" name="imageFile" accept="image/*" className="bg-white" />
+                                <p className="text-[10px] text-muted-foreground">
+                                    System automatycznie przekonwertuje plik na format WebP (Quality 90).
+                                    Max rozdzielczość 2560px.
+                                </p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                         control={form.control}
@@ -180,6 +223,7 @@ export function ProductForm({
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Jednostka</FormLabel>
+                                <div className="flex gap-2">
                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                     <FormControl>
                                         <SelectTrigger>
@@ -187,13 +231,36 @@ export function ProductForm({
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                        <SelectItem value="szt">szt</SelectItem>
-                                        <SelectItem value="m2">m2</SelectItem>
-                                        <SelectItem value="mb">mb</SelectItem>
-                                        <SelectItem value="kpl">kpl</SelectItem>
-                                        <SelectItem value="opak">opak</SelectItem>
+                                        {PRODUCT_UNITS.map(u => (
+                                            <SelectItem key={u.value} value={u.value}>{u.value}</SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
+                                {form.watch('unit') === 'm2' && (
+                                    <FormField
+                                        control={form.control}
+                                        name="packageSizeM2"
+                                        render={({ field }) => (
+                                            <FormItem className="w-full">
+                                                <FormControl>
+                                                    <Input 
+                                                        placeholder="m2 w paczce (np. 1.77)" 
+                                                        {...field} 
+                                                        onChange={(e) => {
+                                                            let val = e.target.value.replace(',', '.');
+                                                            // Allow only numbers and one dot
+                                                            if (/^\d*\.?\d{0,2}$/.test(val)) {
+                                                                field.onChange(val);
+                                                            }
+                                                        }}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                )}
+                                </div>
                                 <FormMessage />
                             </FormItem>
                         )}
