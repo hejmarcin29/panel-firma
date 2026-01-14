@@ -31,6 +31,17 @@ export type ShopConfig = {
     
     // Kontrola
     noIndex?: boolean;
+
+    // Header
+    headerLogo?: string;
+    headerShowSearch?: boolean;
+    headerShowUser?: boolean;
+    showGrossPrices?: boolean; // Pokaż ceny brutto
+    vatRate?: number; // Stawka VAT (np. 23)
+
+    // Wygląd i Kolorystyka
+    primaryColor?: string; // Główny kolor (np. #b02417)
+    // secondaryColor?: string; // Opcjonalnie w przyszłości
 };
 
 export type TpayConfig = {
@@ -51,6 +62,11 @@ export async function getShopConfig(): Promise<ShopConfig> {
             sampleShippingCost: 1500,
             proformaBankName: '',
             proformaBankAccount: '',
+            headerShowSearch: true,
+            headerShowUser: true,
+            headerLogo: '',
+            showGrossPrices: false,
+            vatRate: 23,
             heroHeadline: 'Twoja wymarzona podłoga',
             heroSubheadline: 'Największy wybór podłóg drewnianych i paneli winylowych z profesjonalnym montażem.',
             noIndex: false,

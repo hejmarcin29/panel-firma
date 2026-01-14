@@ -1,4 +1,5 @@
 import { getStoreProducts, getStoreCategories, getStoreBrands, getStoreCollections } from "./actions";
+import { getShopConfig } from "@/app/dashboard/settings/shop/actions"; // Added
 import { ProductCard } from "../_components/product-card";
 import { SearchInput } from "../_components/search-input";
 import { StoreFilters } from "../_components/store-filters";
@@ -21,11 +22,12 @@ export default async function ShopPage({
     const brandSlugs = typeof brands === 'string' ? brands.split(',') : undefined;
     const collectionSlugs = typeof collections === 'string' ? collections.split(',') : undefined;
     
-    const [products, categoriesData, brandsData, collectionsData] = await Promise.all([
+    const [products, categoriesData, brandsData, collectionsData, shopConfig] = await Promise.all([
         getStoreProducts(undefined, query, categorySlug, brandSlugs, collectionSlugs),
         getStoreCategories(),
         getStoreBrands(),
-        getStoreCollections()
+        getStoreCollections(),
+        getShopConfig() // Added
     ]);
 
     return (
@@ -61,7 +63,12 @@ export default async function ShopPage({
                     {products.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                             {products.map((product) => (
-                                <ProductCard key={product.id} product={product} />
+                                <ProductCard 
+                                    key={product.id} 
+                                    product={product} 
+                                    showGrossPrices={shopConfig.showGrossPrices}
+                                    vatRate={shopConfig.vatRate}
+                                />
                             ))}
                         </div>
                     ) : (

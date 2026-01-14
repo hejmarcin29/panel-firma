@@ -10,7 +10,7 @@ import Image from 'next/image';
 import { formatCurrency } from '@/lib/utils';
 import Link from 'next/link';
 
-export function CartSheet() {
+export function CartSheet({ showGrossPrices = false }: { showGrossPrices?: boolean }) {
   const { 
     isOpen, 
     setOpen, 
@@ -142,7 +142,7 @@ export function CartSheet() {
                   <span>{formatCurrency(getTotalPrice())}</span>
                 </div>
                 <div className="flex justify-between text-base font-bold">
-                  <span>Do zapłaty (brutto)</span>
+                  <span>Do zapłaty ({showGrossPrices ? 'brutto' : 'netto'})</span>
                   <span className="text-xl text-emerald-700">{formatCurrency(getTotalPrice())}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">

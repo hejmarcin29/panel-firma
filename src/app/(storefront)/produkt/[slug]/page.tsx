@@ -45,10 +45,17 @@ export default async function ProductPage({ params }: PageProps) {
         ? reviews.reduce((acc, r) => acc + r.rating, 0) / totalReviews 
         : 0;
 
-
     // Determine price display
-    const price = product.salePrice ? parseFloat(product.salePrice) : (product.price ? parseFloat(product.price) : null);
-    const regularPrice = product.regularPrice ? parseFloat(product.regularPrice) : null;
+    let price = product.salePrice ? parseFloat(product.salePrice) : (product.price ? parseFloat(product.price) : null);
+    let regularPrice = product.regularPrice ? parseFloat(product.regularPrice) : null;
+
+    // Apply VAT logic
+    if (shopConfig.showGrossPrices) {
+        const multiplier = 1 + ((shopConfig.vatRate || 23) / 100);
+        if (price) price = price * multiplier;
+        if (regularPrice) regularPrice = regularPrice * multiplier;
+    }
+
     const isOnSale = regularPrice && price && price < regularPrice;
 
     // JSON-LD Schema
@@ -178,7 +185,10 @@ export default async function ProductPage({ params }: PageProps) {
                             {/* Price disclaimer */}
                             {product.unit === 'm2' && (
                                 <p className="mt-1 text-sm text-gray-500">
-                                    Cena zawiera 23% VAT. Sprzedaż tylko na pełne opakowania.
+                                    {shopConfig.showGrossPrices 
+                                        ? `Cena zawiera ${shopConfig.vatRate}% VAT. Sprzedaż tylko na pełne opakowania.`
+                                        : `Cena netto (+${shopConfig.vatRate}% VAT). Sprzedaż tylko na pełne opakowania.`
+                                    }
                                 </p>
                             )}
                         </div>

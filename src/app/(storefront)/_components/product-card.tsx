@@ -19,11 +19,21 @@ interface ProductCardProps {
     isPurchasable?: boolean | null;
     isSampleAvailable?: boolean | null;
   };
+  showGrossPrices?: boolean;
+  vatRate?: number;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
-  const price = product.price ? parseFloat(product.price) : null;
-  const salePrice = product.salePrice ? parseFloat(product.salePrice) : null;
+export function ProductCard({ product, showGrossPrices = false, vatRate = 23 }: ProductCardProps) {
+  let price = product.price ? parseFloat(product.price) : null;
+  let salePrice = product.salePrice ? parseFloat(product.salePrice) : null;
+
+  // Apply VAT logic if enabled
+  if (showGrossPrices) {
+      const multiplier = 1 + (vatRate / 100);
+      if (price) price = price * multiplier;
+      if (salePrice) salePrice = salePrice * multiplier;
+  }
+
   const currentPrice = salePrice || price;
   
   const isOnSale = salePrice && price && salePrice < price;
