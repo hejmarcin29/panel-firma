@@ -148,6 +148,24 @@ export async function updateProductUnit(id: string, unit: string, packageSizeM2?
     return { success: true };
 }
 
+export async function updateProductDimensions(id: string, length: number | null, width: number | null, height: number | null) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) throw new Error('Unauthorized');
+
+    await db.update(erpProducts)
+        .set({ 
+            length: length, 
+            width: width, 
+            height: height, 
+            updatedAt: new Date() 
+        })
+        .where(eq(erpProducts.id, id));
+
+    revalidatePath(`/dashboard/erp/products/${id}`);
+    revalidatePath('/dashboard/erp/products');
+    return { success: true };
+}
+
 export async function bulkDeleteProducts(ids: string[]) {
     const user = await requireUser();
     if (!user.roles.includes('admin')) throw new Error('Unauthorized');

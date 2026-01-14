@@ -83,16 +83,18 @@ export function UnitEditableField({ productId, initialUnit, initialPackageSizeM2
             </Select>
 
             {unit === 'm2' && (
-                <div className="relative">
-                    <Input 
-                        className="h-8 w-24 text-xs" 
-                        placeholder="m2 / paczka"
-                        value={packageSize}
-                        onChange={(e) => handleSizeChange(e.target.value)}
-                        type="number"
-                        step="0.0001"
-                    />
-                    <span className="absolute right-2 top-2 text-[10px] text-muted-foreground">m²</span>
+                <div className="flex flex-col gap-1">
+                    <div className="relative" title="Ilość metrów kwadratowych w paczce">
+                        <Input 
+                            className="h-8 w-24 text-xs pr-8" 
+                            placeholder="m2/op."
+                            value={packageSize}
+                            onChange={(e) => handleSizeChange(e.target.value)}
+                            type="number"
+                            step="0.0001"
+                        />
+                         <span className="absolute right-2 top-2 text-[10px] text-muted-foreground pointer-events-none">m²</span>
+                    </div>
                 </div>
             )}
 

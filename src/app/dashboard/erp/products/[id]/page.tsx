@@ -4,6 +4,7 @@ import { getProductDetails, getSuppliersList } from "../actions";
 import { ProductPrices } from "../_components/product-prices";
 import { ProductSyncToggle } from "../_components/product-sync-toggle";
 import { UnitEditableField } from "../_components/unit-editable-field";
+import { DimensionsEditableField } from "../_components/dimensions-editable-field";
 import { ProductGallery } from "../_components/product-gallery";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -131,9 +132,12 @@ export default async function ProductDetailsPage({ params }: PageProps) {
                                 </div>
                                 <div>
                                     <span className="text-muted-foreground">Wymiary (D x S x W):</span>
-                                    <div className="font-medium">
-                                        {product.length || '-'} x {product.width || '-'} x {product.height || '-'} cm
-                                    </div>
+                                    <DimensionsEditableField 
+                                        productId={product.id}
+                                        length={product.length}
+                                        width={product.width}
+                                        height={product.height}
+                                    />
                                 </div>
                                 <div>
                                     <span className="text-muted-foreground">Waga:</span>
