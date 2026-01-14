@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
-import { TimelineView } from "./_components/timeline-view";
+import { TimelineView } from "@/components/shop/timeline-view";
 
 interface PageProps {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>

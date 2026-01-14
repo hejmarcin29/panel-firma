@@ -17,18 +17,28 @@ import {
     CreditCard,
     Building2,
     FileText,
-    Archive
+    Archive,
+    Link as LinkIcon,
+    History
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { 
     generateShippingLabel,
     markAsForwardedToSupplier,
     markAsShippedBySupplier,
-    issueFinalInvoice
+    issueFinalInvoice,
+    generateOrderMagicLink
 } from '../actions';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TimelineView } from '@/components/shop/timeline-view';
+import { generateOrderMagicLink } from '../actions';
+import { Link as LinkIcon, History } from 'lucide-react';
+
+import { TimelineView } from '@/components/shop/timeline-view';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface OrderItemDetails {
     name: string;
@@ -61,6 +71,7 @@ interface OrderDetails {
 interface OrderDetailsClientProps {
     order: OrderDetails; 
     items: OrderItemDetails[];
+    timelineEvents: any[];
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -94,10 +105,21 @@ const PANEL_FLOW = [
     { id: 'order.closed', label: 'Faktura Końcowa' }
 ];
 
-export function OrderDetailsClient({ order, items }: OrderDetailsClientProps) {
+export function OrderDetailsClient({ order, items, timelineEvents }: OrderDetailsClientProps) {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
     const [status, setStatus] = useState(order.status);
+    
+    async function handleCopyMagicLink() {
+        try {
+            const link = await generateOrderMagicLink(order.id);
+            await navigator.clipboard.writeText(link);
+            toast.success('Link do statusu skopiowany do schowka!');
+            toast.info('Wyślij go klientowi na WhatsApp lub SMS.');
+        } catch (error) {
+            toast.error('Błąd generowania linku.');
+        }
+    }
 
     // Differentiate flows
     const isSampleOrder = order.paymentMethod === 'tpay';
@@ -285,10 +307,28 @@ export function OrderDetailsClient({ order, items }: OrderDetailsClientProps) {
                         </Badge>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    {renderActions()}
+                <div className="flex flex-col sm:flex-row gap-3 items-end sm:items-center">
+                     <Button 
+                        variant="outline" 
+                        onClick={handleCopyMagicLink} 
+                        className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                     >
+                        <LinkIcon className="mr-2 h-4 w-4" />
+                        Kopiuj Link
+                    </Button>
+                    <div className="flex items-center gap-2">
+                        {renderActions()}
+                    </div>
                 </div>
             </div>
+
+            <Tabs defaultValue="details" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
+                    <TabsTrigger value="details">Panel Operacyjny</TabsTrigger>
+                    <TabsTrigger value="history">Oś Czasu i Klient</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="details">
 
             {/* Visual Process Timeline (Stepper) */}
             <div className="w-full py-6">
@@ -495,6 +535,43 @@ export function OrderDetailsClient({ order, items }: OrderDetailsClientProps) {
                     </Card>
                 </div>
             </div>
+            
+            </TabsContent>
+
+            <TabsContent value="history" className="mt-8">
+                <div className="grid gap-8 md:grid-cols-3">
+                     <div className="md:col-span-2">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <History className="h-5 w-5 text-muted-foreground" />
+                                    Pełna Oś Czasu (System + Klient)
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <TimelineView events={timelineEvents} isAdmin={true} />
+                            </CardContent>
+                        </Card>
+                     </div>
+                     <div>
+                        <Card className="bg-blue-50/50 border-blue-100">
+                             <CardHeader>
+                                <CardTitle className="text-blue-700">Widok Klienta</CardTitle>
+                             </CardHeader>
+                             <CardContent className="space-y-4">
+                                <p className="text-sm text-slate-600">
+                                    Tak widzi to klient po kliknięciu w link.
+                                    Możesz skopiować link powyżej i wysłać go ręcznie.
+                                </p>
+                                <Button className="w-full" variant="outline" onClick={handleCopyMagicLink}>
+                                    <LinkIcon className="mr-2 h-4 w-4" /> Kopiuj Link
+                                </Button>
+                             </CardContent>
+                        </Card>
+                     </div>
+                </div>
+            </TabsContent>
+            </Tabs>
         </div>
     );
 }

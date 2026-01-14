@@ -4,6 +4,13 @@ import { db } from '@/lib/db';
 import { orders, type OrderStatus } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
+import { generateMagicLinkToken } from '@/lib/auth/magic-link';
+
+export async function generateOrderMagicLink(orderId: string) {
+    const token = generateMagicLinkToken(orderId);
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://b2b.primepodloga.pl'; 
+    return `${baseUrl}/order/status?token=${token}`;
+}
 
 export async function updateShopOrderStatus(orderId: string, newStatus: string) {
     await db.update(orders)

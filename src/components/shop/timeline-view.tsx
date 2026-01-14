@@ -22,15 +22,16 @@ interface TimelineEvent {
 
 interface TimelineViewProps {
     events: TimelineEvent[];
+    isAdmin?: boolean;
 }
 
-export function TimelineView({ events }: TimelineViewProps) {
+export function TimelineView({ events, isAdmin = false }: TimelineViewProps) {
     if (events.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
                 <Clock className="h-10 w-10 mb-3 opacity-20" />
                 <p>Jeszcze brak zdarzeń na osi czasu.</p>
-                <p className="text-sm">Twoje zamówienie zostało przyjęte i oczekuje na przetworzenie.</p>
+                <p className="text-sm">Zamówienie zostało przyjęte i oczekuje na przetworzenie.</p>
             </div>
         );
     }
@@ -39,7 +40,7 @@ export function TimelineView({ events }: TimelineViewProps) {
         <div className="relative border-l border-gray-200 dark:border-gray-800 ml-3 space-y-8 pb-4">
             {events.map((event, index) => {
                 const Icon = getIconForType(event.type);
-                const isLast = index === events.length - 1;
+                // const isLast = index === events.length - 1;
                 
                 return (
                     <div key={event.id} className="relative pl-8">
@@ -54,6 +55,11 @@ export function TimelineView({ events }: TimelineViewProps) {
                                 <span className="text-sm text-muted-foreground">
                                     {format(new Date(event.createdAt), "d MMM, HH:mm", { locale: pl })}
                                 </span>
+                                {isAdmin && (
+                                    <span className="text-xs px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500 font-mono">
+                                        {event.type}
+                                    </span>
+                                )}
                             </div>
                             <h3 className="font-semibold text-gray-900 dark:text-gray-100 leading-none">
                                 {event.title}
@@ -90,6 +96,7 @@ function renderMetadata(metadata: any) {
             {metadata.oldStatus && metadata.newStatus && (
                 <p className="text-xs">Zmiana statusu z <span className="font-mono">{metadata.oldStatus}</span> na <span className="font-mono">{metadata.newStatus}</span></p>
             )}
+            {/* If there are other interesting fields, we can add them here */}
         </div>
     );
 }
