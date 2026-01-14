@@ -82,12 +82,13 @@ export function MontageView({ montageId, initialData, portalEnabled, requireInst
         return <InstallerMontageView montage={montage} logs={logs} userRoles={userRoles} hasGoogleCalendar={hasGoogleCalendar} />;
     }
 
-    const LEAD_PHASE_STATUSES = ['new_lead', 'lead_contact', 'lead_samples_pending', 'lead_samples_sent', 'lead_pre_estimate'];
+    const LEAD_PHASE_STATUSES = ['new_lead', 'lead_contact', 'lead_payment_pending', 'lead_samples_pending', 'lead_samples_sent', 'lead_pre_estimate'];
 
     if (LEAD_PHASE_STATUSES.includes(montage.status)) {
         const TIMELINE_STEPS = [
             { id: 'new_lead', label: 'Nowe Zgłoszenie' },
             { id: 'lead_contact', label: 'W Kontakcie' },
+            { id: 'lead_payment_pending', label: 'Płatność' },
             { id: 'lead_samples_pending', label: 'Wysłano Link' },
             { id: 'lead_samples_sent', label: 'Próbki Wysłane' },
             { id: 'lead_pre_estimate', label: 'Decyzja' },

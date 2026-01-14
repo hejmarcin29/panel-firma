@@ -2753,7 +2753,7 @@ export async function assignMeasurerAndAdvance(montageId: string, measurerId: st
     const montage = await getMontageOrThrow(montageId);
 
     // Allow conversion from any Lead Phase status
-    const LEAD_PHASE_STATUSES = ['new_lead', 'lead_contact', 'lead_samples_pending', 'lead_samples_sent', 'lead_pre_estimate'];
+    const LEAD_PHASE_STATUSES = ['new_lead', 'lead_contact', 'lead_payment_pending', 'lead_samples_pending', 'lead_samples_sent', 'lead_pre_estimate'];
     if (!LEAD_PHASE_STATUSES.includes(montage.status)) {
         throw new Error('Tylko leady mogą być przekazywane do pomiaru.');
     }
