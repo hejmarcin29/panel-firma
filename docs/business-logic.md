@@ -19,9 +19,10 @@ Ten plik służy jako "Single Source of Truth" dla zasad działania systemu. Ka�
 
 ### Statusy Montażu
 1. **Lead** - Nowe zapytanie, jeszcze nie zweryfikowane.
-2. **Przed pomiarem** - Zlecenie zaakceptowane, oczekuje na wizytę pomiarowca.
-3. **Przed zaliczką** - Pomiar wykonany, oferta wysłana, czekamy na wpłatę.
-4. **Przed montażem** - Zaliczka zaksięgowana, materiał zamówiony/skompletowany, czekamy na termin montażu.
+2. **Oczekiwanie na Płatność (Nowy!)** - Handlowiec wymusił opłatę weryfikacyjną za pomiar. Zlecenie wstrzymane do czasu opłacenia przez klienta (Tpay).
+3. **Przed pomiarem (Do umówienia)** - Zlecenie zaakceptowane (lub opłacone), oczekuje na kontakt ze strony montażysty w celu umówienia terminu.
+4. **Przed zaliczką** - Pomiar wykonany, oferta wysłana, czekamy na wpłatę.
+5. **Przed montażem** - Zaliczka zaksięgowana, materiał zamówiony/skompletowany, czekamy na termin montażu.
 5. **Przed końcową fakturą** - Montaż zakończony, czekamy na rozliczenie końcowe.
 6. **Zakończony** - Wszystko opłacone i zamknięte.
 
@@ -59,8 +60,13 @@ Zdefiniowane automatyzacje widoczne na osi czasu procesu:
 ### Lejki i Umawianie
 - **Nowe Zgłoszenie:**
   - Powiadomienie Biura (Email/SMS) o nowym leadzie.
-  - Przypisanie Pomiarowca (zmiana statusu na "Do umówienia").
-  - Uzupełnienie Danych (zmiana statusu na "Pomiar Umówiony" - Self-service).
+- **Oczekiwanie na Płatność (Pomiar):**
+  - Trigger: Ręczne wymuszenie płatności przez Handlowca ("Zleć pomiar + Wymagaj płatności").
+  - Akcja: Generowanie technicznego zamówienia w module Sklepu (produkt "Usługa Pomiaru").
+  - Akcja Klienta: Opłacenie zamówienia przez Portal Klienta (Tpay).
+  - Automatyzacja: Po zaksięgowaniu wpłaty, system automatycznie zmienia status na "Do umówienia" i powiadamia montażystę.
+- **Do Umówienia:**
+  - Powiadomienie Montażysty (SMS: Nowy klient do umówienia).
 - **Pomiar Umówiony:**
   - Synchronizacja Kalendarza (Google Calendar).
   - Przypomnienie SMS dla klienta (24h przed).

@@ -1,7 +1,7 @@
 import { getShopConfig, updateShopConfig, getTpayConfig, updateTpayConfig, ShopConfig, TpayConfig } from './actions';
-import { db } from '@/lib/db'; // Added
-import { erpProducts } from '@/lib/db/schema'; // Added
-import { eq } from 'drizzle-orm'; // Added
+import { db } from '@/lib/db';
+import { erpProducts } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ShieldAlert, Globe, Search, BarChart3, CreditCard, LayoutTemplate } from 'lucide-react';
+import { ShieldAlert, Globe, Search, BarChart3, CreditCard, LayoutTemplate, SquareEqual } from 'lucide-react';
 
 export default async function ShopSettingsPage() {
     const config = await getShopConfig();
@@ -57,7 +57,19 @@ export default async function ShopSettingsPage() {
             
             // Control
             noIndex: formData.get('noIndex') === 'on',
-            welcomeEmailTemplate: config.welcomeEmailTemplate // Keep existing
+            welcomeEmailTemplate: config.welcomeEmailTemplate, // Keep existing
+
+            // Header
+            headerLogo: formData.get('headerLogo') as string,
+            headerShowSearch: formData.get('headerShowSearch') === 'on',
+            headerShowUser: formData.get('headerShowUser') === 'on',
+            
+            // Branding
+            primaryColor: formData.get('primaryColor') as string,
+
+            // Prices
+            showGrossPrices: formData.get('showGrossPrices') === 'on',
+            vatRate: parseInt(formData.get('vatRate') as string) || 23,
         };
 
         // Save Tpay Config
@@ -83,14 +95,15 @@ export default async function ShopSettingsPage() {
             
             <form action={saveAction}>
                 <Tabs defaultValue="general" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
-                        <TabsTrigger value="general">Ogólne i Wygląd</TabsTrigger>
+                    <TabsList className="grid w-full grid-cols-4">
+                        <TabsTrigger value="general">Ogólne</TabsTrigger>
+                        <TabsTrigger value="design">Design</TabsTrigger>
                         <TabsTrigger value="payments">Płatności</TabsTrigger>
                         <TabsTrigger value="seo">SEO i Analityka</TabsTrigger>
                     </TabsList>
 
                     {/* TAB: GENERAL */}
-                    <TabsContent value="general" forceMount={true} className="space-y-4 mt-4 data-[state=inactive]:hidden">
+                    <TabsContent value="general" className="space-y-4 mt-4">
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
@@ -117,47 +130,37 @@ export default async function ShopSettingsPage() {
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
-                                    <LayoutTemplate className="h-5 w-5" /> Wygląd (Hero Section)
+                                    <BarChart3 className="h-5 w-5" /> Parametry Handlowe
                                 </CardTitle>
-                                <CardDescription>Baner powitalny na stronie głównej sklepu.</CardDescription>
+                                <CardDescription>Ceny próbek, zasady VAT i pomiarów.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="heroHeadline">Nagłówek główny</Label>
-                                    <Input 
-                                        id="heroHeadline" 
-                                        name="heroHeadline" 
-                                        defaultValue={config.heroHeadline} 
-                                        placeholder="np. Twoja wymarzona podłoga"
-                                    />
+                                <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/40">
+                                    <div className="space-y-0.5">
+                                        <Label className="text-base">Włącz Ceny Brutto</Label>
+                                        <p className="text-sm text-muted-foreground">
+                                            Automatycznie doliczaj VAT do cen z kartoteki (Netto) w sklepie.
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex items-center gap-2">
+                                            <Label htmlFor="vatRate">Stawka VAT %</Label>
+                                            <Input 
+                                                id="vatRate"
+                                                type="number" 
+                                                name="vatRate" 
+                                                defaultValue={config.vatRate || 23} 
+                                                className="h-8 w-16"
+                                                placeholder="%"
+                                            />
+                                        </div>
+                                         <Switch 
+                                            name="showGrossPrices" 
+                                            defaultChecked={config.showGrossPrices !== false} 
+                                        />
+                                    </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="heroSubheadline">Podtytuł</Label>
-                                    <Input 
-                                        id="heroSubheadline" 
-                                        name="heroSubheadline" 
-                                        defaultValue={config.heroSubheadline} 
-                                        placeholder="np. Największy wybór podłóg z profesjonalnym montażem."
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="heroImage">Zdjęcie w tle (URL)</Label>
-                                    <Input 
-                                        id="heroImage" 
-                                        name="heroImage" 
-                                        defaultValue={config.heroImage} 
-                                        placeholder="https://..."
-                                    />
-                                </div>
-                            </CardContent>
-                        </Card>
 
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Parametry Handlowe</CardTitle>
-                                <CardDescription>Ceny próbek i zasady pomiarów.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
                                 <div className="grid gap-4 md:grid-cols-2">
                                     <div className="space-y-2">
                                         <Label htmlFor="samplePrice">Cena za próbkę (PLN brutto)</Label>
@@ -202,8 +205,127 @@ export default async function ShopSettingsPage() {
                         </Card>
                     </TabsContent>
 
+                    {/* TAB: DESIGN */}
+                    <TabsContent value="design" className="space-y-4 mt-4">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <LayoutTemplate className="h-5 w-5" /> Hero Section (Baner)
+                                </CardTitle>
+                                <CardDescription>Baner powitalny na stronie głównej sklepu.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="heroHeadline">Nagłówek główny</Label>
+                                    <Input 
+                                        id="heroHeadline" 
+                                        name="heroHeadline" 
+                                        defaultValue={config.heroHeadline} 
+                                        placeholder="np. Twoja wymarzona podłoga"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="heroSubheadline">Podtytuł</Label>
+                                    <Input 
+                                        id="heroSubheadline" 
+                                        name="heroSubheadline" 
+                                        defaultValue={config.heroSubheadline} 
+                                        placeholder="np. Największy wybór podłóg z profesjonalnym montażem."
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="heroImage">Zdjęcie w tle (URL)</Label>
+                                    <Input 
+                                        id="heroImage" 
+                                        name="heroImage" 
+                                        defaultValue={config.heroImage} 
+                                        placeholder="https://..."
+                                    />
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <LayoutTemplate className="h-5 w-5" /> Kolorystyka
+                                </CardTitle>
+                                <CardDescription>Dostosuj paletę barw sklepu.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="primaryColor">Kolor Główny (Primary)</Label>
+                                        <div className="flex items-center gap-2">
+                                            <Input 
+                                                id="primaryColor" 
+                                                name="primaryColor" 
+                                                type="color"
+                                                className="w-12 h-10 p-1 cursor-pointer"
+                                                defaultValue={config.primaryColor || "#b02417"} 
+                                            />
+                                            <Input 
+                                                type="text"
+                                                value={config.primaryColor || "#b02417"}
+                                                className="flex-1"
+                                                placeholder="#b02417"
+                                                readOnly
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <SquareEqual className="h-5 w-5" /> Konfiguracja Nagłówka
+                                </CardTitle>
+                                <CardDescription>Dostosuj wygląd i funkcje górnego paska nawigacji.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="headerLogo">Logo w nagłówku (URL)</Label>
+                                    <Input 
+                                        id="headerLogo" 
+                                        name="headerLogo" 
+                                        defaultValue={config.headerLogo} 
+                                        placeholder="https://... (np. plik PNG z przezroczystością)"
+                                    />
+                                    <p className="text-xs text-muted-foreground">Jeśli puste, wyświetli się nazwa tekstowa.</p>
+                                </div>
+                                <Separator />
+                                <div className="flex items-center justify-between rounded-lg border p-4">
+                                    <div className="space-y-0.5">
+                                        <Label className="text-base">Ikona Wyszukiwania</Label>
+                                        <p className="text-sm text-muted-foreground">
+                                            Pokaż lupkę pozwalającą na szukanie produktów.
+                                        </p>
+                                    </div>
+                                    <Switch 
+                                        name="headerShowSearch" 
+                                        defaultChecked={config.headerShowSearch !== false} 
+                                    />
+                                </div>
+                                <div className="flex items-center justify-between rounded-lg border p-4">
+                                    <div className="space-y-0.5">
+                                        <Label className="text-base">Ikona Konta Użytkownika</Label>
+                                        <p className="text-sm text-muted-foreground">
+                                            Link do logowania/rejestracji klienta.
+                                        </p>
+                                    </div>
+                                    <Switch 
+                                        name="headerShowUser" 
+                                        defaultChecked={config.headerShowUser !== false} 
+                                    />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
                     {/* TAB: PAYMENTS */}
-                    <TabsContent value="payments" forceMount={true} className="space-y-4 mt-4 data-[state=inactive]:hidden">
+                    <TabsContent value="payments" className="space-y-4 mt-4">
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
@@ -276,7 +398,7 @@ export default async function ShopSettingsPage() {
                     </TabsContent>
 
                     {/* TAB: SEO */}
-                    <TabsContent value="seo" forceMount={true} className="space-y-4 mt-4 data-[state=inactive]:hidden">
+                    <TabsContent value="seo" className="space-y-4 mt-4">
                         <Card className="border-amber-200 bg-amber-50/50">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-amber-900">

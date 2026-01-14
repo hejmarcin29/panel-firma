@@ -50,6 +50,18 @@ export const PROCESS_STEPS: ProcessStepDefinition[] = [
         checkpoints: [] 
     },
     { 
+        id: 'waiting_for_measurement_fee', 
+        label: 'Oczekiwanie na Płatność', 
+        description: 'Wymagana opłata za pomiar.', 
+        relatedStatuses: ['lead_payment_pending'], 
+        actor: 'client', 
+        automations: [
+            { id: 'auto_payment_link', label: 'Link do Płatności', description: 'Wygenerowanie zamówienia technicznego', trigger: 'Ręcznie (Handlowiec)' },
+            { id: 'auto_measurement_unlock', label: 'Odblokowanie Pomiaru', description: 'Zmiana statusu po opłaceniu (auto)', trigger: 'Zaksięgowanie wpłaty' }
+        ], 
+        checkpoints: [] 
+    },
+    { 
         id: 'measurement_to_schedule', 
         label: 'Do umówienia', 
         description: 'Zlecono pomiar, montażysta dzwoni.', 
