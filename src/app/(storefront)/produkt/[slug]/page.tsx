@@ -122,8 +122,12 @@ export default async function ProductPage({ params }: PageProps) {
                                         <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700">
                                             Dostępny od ręki
                                         </Badge>
-                                    ) : (
+                                    ) : product.isPurchasable ? (
                                         <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
+                                            Wysyłka 3-7 dni
+                                        </Badge>
+                                    ) : (
+                                        <Badge variant="outline" className="border-gray-200 bg-gray-50 text-gray-500">
                                             Na zamówienie
                                         </Badge>
                                     )}

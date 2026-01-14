@@ -55,7 +55,26 @@ import { MagicLinksManager } from './magic-links/_component';
 
 import ServicesSettingsPage from './services/page';
 import TeamSettingsPage from './team/page';
-import ShopSettingsPage from './shop/shop-settings-form';
+// import ShopSettingsPage from './shop/shop-settings-form'; // Removed to avoid duplication
+import { Button } from '@/components/ui/button'; // Ensure imported
+import Link from 'next/link'; // Added
+
+function ShopSettingsRedirect() {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Zaawansowana Konfiguracja Sklepu</CardTitle>
+                <CardDescription>Pełne ustawienia sklepu, płatności i SEO znajdują się w dedykowanym panelu.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Button asChild variant="outline">
+                    <Link href="/dashboard/settings/shop">Przejdź do Konfiguracji Sklepu</Link>
+                </Button>
+            </CardContent>
+        </Card>
+    );
+}
+
 
 type LogLevel = 'info' | 'warning' | 'error';
 
@@ -679,7 +698,7 @@ export default async function SettingsPage() {
 				<WpChangesSettings />
 			}
             teamSettings={<TeamSettingsPage />}
-            shopSettings={<ShopSettingsPage />}
+            shopSettings={<ShopSettingsRedirect />}
             servicesSettings={<ServicesSettingsPage />}
             trash={
                 <TrashView 
