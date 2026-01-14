@@ -142,6 +142,8 @@ export function ProductsTable({
 
     const [statusFilter, setStatusFilter] = useState("active");
     const [categoryFilter, setCategoryFilter] = useState("all");
+    const [mountingFilter, setMountingFilter] = useState("all");
+    const [patternFilter, setPatternFilter] = useState("all");
 
     const filteredData = useMemo(() => {
         return data.filter((product) => {
@@ -157,9 +159,26 @@ export function ProductsTable({
                     : product.category?.id === categoryFilter
             );
 
-            return matchesSearch && matchesStatus && matchesCategory;
+            // Access ID fields or dictionary object fields depending on how `data` is structured.
+            // Based on previous files, `product` likely has `mountingMethodId`/`floorPatternId` AND `mountingMethodDictionary` etc.
+            // Let's check safely.
+            const p = product as any; 
+            
+            const matchesMounting = mountingFilter === "all" || (
+                mountingFilter === "none"
+                    ? !p.mountingMethodId
+                    : p.mountingMethodId === mountingFilter
+            );
+
+            const matchesPattern = patternFilter === "all" || (
+                patternFilter === "none"
+                    ? !p.floorPatternId
+                    : p.floorPatternId === patternFilter
+            );
+
+            return matchesSearch && matchesStatus && matchesCategory && matchesMounting && matchesPattern;
         });
-    }, [data, searchQuery, statusFilter, categoryFilter]);
+    }, [data, searchQuery, statusFilter, categoryFilter, mountingFilter, patternFilter]);
 
     const handleSelectAll = (checked: boolean) => {
         if (checked) {
@@ -228,6 +247,38 @@ export function ProductsTable({
                             <SelectItem value="all">Wszystkie statusy</SelectItem>
                             <SelectItem value="active">Aktywne</SelectItem>
                             <SelectItem value="archived">Archiwum</SelectItem>
+                        </SelectContent>
+                    </Select>
+
+                    {/* MOUNTING METHOD FILTER */}
+                    <Select value={mountingFilter} onValueChange={setMountingFilter}>
+                        <SelectTrigger className="w-[160px]">
+                            <SelectValue placeholder="Montaż" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Wszystkie montaże</SelectItem>
+                            <SelectItem value="none">Brak (nieustawione)</SelectItem>
+                            {mountingMethods.map((m) => (
+                                <SelectItem key={m.id} value={m.id}>
+                                    {m.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+
+                    {/* FLOOR PATTERN FILTER */}
+                    <Select value={patternFilter} onValueChange={setPatternFilter}>
+                        <SelectTrigger className="w-[160px]">
+                            <SelectValue placeholder="Wzór" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Wszystkie wzory</SelectItem>
+                            <SelectItem value="none">Brak (nieustawione)</SelectItem>
+                            {floorPatterns.map((p) => (
+                                <SelectItem key={p.id} value={p.id}>
+                                    {p.name}
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
 

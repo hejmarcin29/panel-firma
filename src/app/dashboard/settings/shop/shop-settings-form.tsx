@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ShieldAlert, Globe, Search, BarChart3, CreditCard, LayoutTemplate, SquareEqual } from 'lucide-react';
+import { ShieldAlert, Globe, Search, BarChart3, CreditCard, LayoutTemplate, SquareEqual, Calculator } from 'lucide-react';
 import { SingleImageUpload } from '@/components/common/single-image-upload';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -72,6 +72,26 @@ export default function ShopSettingsForm({ initialConfig, initialTpayConfig, ava
                 // Prices
                 showGrossPrices: formData.get('showGrossPrices') === 'on',
                 vatRate: parseInt(formData.get('vatRate') as string) || 23,
+
+                // Calculator Rates
+                calculatorRates: {
+                    glue_herringbone: {
+                        labor: parseFloat(formData.get('calc_glue_herringbone_labor') as string) || 65,
+                        chemistry: parseFloat(formData.get('calc_glue_herringbone_chemistry') as string) || 25,
+                    },
+                    click_herringbone: {
+                        labor: parseFloat(formData.get('calc_click_herringbone_labor') as string) || 45,
+                        chemistry: parseFloat(formData.get('calc_click_herringbone_chemistry') as string) || 5,
+                    },
+                    glue_plank: {
+                        labor: parseFloat(formData.get('calc_glue_plank_labor') as string) || 55,
+                        chemistry: parseFloat(formData.get('calc_glue_plank_chemistry') as string) || 25,
+                    },
+                    click_plank: {
+                        labor: parseFloat(formData.get('calc_click_plank_labor') as string) || 35,
+                        chemistry: parseFloat(formData.get('calc_click_plank_chemistry') as string) || 5,
+                    },
+                }
             };
 
             await updateShopConfig(newShopConfig);
@@ -208,6 +228,123 @@ export default function ShopSettingsForm({ initialConfig, initialTpayConfig, ava
                                             </option>
                                         ))}
                                     </select>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Calculator className="h-5 w-5" /> Kalkulator Ofertowy (Marketing)
+                                </CardTitle>
+                                <CardDescription>
+                                    Stawki używane TYLKO do wyświetlania szacunkowych cen w sklepie (tzw. kalkulator błyskawiczny). 
+                                    Nie wpływają na rzeczywiste wyceny w CRM.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                {/* Jodełka Klejona */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end border-b pb-4">
+                                    <div className="md:col-span-1">
+                                        <h4 className="font-semibold text-sm">Jodełka - Klejona</h4>
+                                        <p className="text-xs text-muted-foreground">Najdroższa opcja (Parkiet)</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="calc_glue_herringbone_labor">Robocizna (zł/m²)</Label>
+                                        <Input 
+                                            id="calc_glue_herringbone_labor" 
+                                            name="calc_glue_herringbone_labor" 
+                                            type="number" 
+                                            defaultValue={config.calculatorRates?.glue_herringbone.labor} 
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="calc_glue_herringbone_chemistry">Chemia (zł/m²)</Label>
+                                        <Input 
+                                            id="calc_glue_herringbone_chemistry" 
+                                            name="calc_glue_herringbone_chemistry" 
+                                            type="number" 
+                                            defaultValue={config.calculatorRates?.glue_herringbone.chemistry} 
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Jodełka Klik */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end border-b pb-4">
+                                    <div className="md:col-span-1">
+                                        <h4 className="font-semibold text-sm">Jodełka - Pływająca</h4>
+                                        <p className="text-xs text-muted-foreground">Opcja pośrednia (Vinyl Click)</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="calc_click_herringbone_labor">Robocizna (zł/m²)</Label>
+                                        <Input 
+                                            id="calc_click_herringbone_labor" 
+                                            name="calc_click_herringbone_labor" 
+                                            type="number" 
+                                            defaultValue={config.calculatorRates?.click_herringbone.labor} 
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="calc_click_herringbone_chemistry">Chemia/Podkład (zł/m²)</Label>
+                                        <Input 
+                                            id="calc_click_herringbone_chemistry" 
+                                            name="calc_click_herringbone_chemistry" 
+                                            type="number" 
+                                            defaultValue={config.calculatorRates?.click_herringbone.chemistry} 
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Deska Klejona */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end border-b pb-4">
+                                    <div className="md:col-span-1">
+                                        <h4 className="font-semibold text-sm">Deska - Klejona</h4>
+                                        <p className="text-xs text-muted-foreground">Dla podłóg warstwowych</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="calc_glue_plank_labor">Robocizna (zł/m²)</Label>
+                                        <Input 
+                                            id="calc_glue_plank_labor" 
+                                            name="calc_glue_plank_labor" 
+                                            type="number" 
+                                            defaultValue={config.calculatorRates?.glue_plank.labor} 
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="calc_glue_plank_chemistry">Chemia (zł/m²)</Label>
+                                        <Input 
+                                            id="calc_glue_plank_chemistry" 
+                                            name="calc_glue_plank_chemistry" 
+                                            type="number" 
+                                            defaultValue={config.calculatorRates?.glue_plank.chemistry} 
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Deska Klik */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                                    <div className="md:col-span-1">
+                                        <h4 className="font-semibold text-sm">Deska - Pływająca</h4>
+                                        <p className="text-xs text-muted-foreground">Najtańsza opcja (Panele)</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="calc_click_plank_labor">Robocizna (zł/m²)</Label>
+                                        <Input 
+                                            id="calc_click_plank_labor" 
+                                            name="calc_click_plank_labor" 
+                                            type="number" 
+                                            defaultValue={config.calculatorRates?.click_plank.labor} 
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="calc_click_plank_chemistry">Podkład (zł/m²)</Label>
+                                        <Input 
+                                            id="calc_click_plank_chemistry" 
+                                            name="calc_click_plank_chemistry" 
+                                            type="number" 
+                                            defaultValue={config.calculatorRates?.click_plank.chemistry} 
+                                        />
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>

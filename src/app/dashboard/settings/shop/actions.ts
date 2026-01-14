@@ -3,7 +3,7 @@
 import { db } from '@/lib/db';
 import { globalSettings } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache';
 
 export type ShopConfig = {
     isShopEnabled: boolean;
@@ -42,6 +42,14 @@ export type ShopConfig = {
     // Wygląd i Kolorystyka
     primaryColor?: string; // Główny kolor (np. #b02417)
     // secondaryColor?: string; // Opcjonalnie w przyszłości
+
+    // Kalkulator Ofertowy (Marketing)
+    calculatorRates?: {
+        glue_herringbone: { labor: number; chemistry: number };
+        click_herringbone: { labor: number; chemistry: number };
+        glue_plank: { labor: number; chemistry: number };
+        click_plank: { labor: number; chemistry: number };
+    };
 };
 
 export type TpayConfig = {
@@ -50,31 +58,51 @@ export type TpayConfig = {
     isSandbox: boolean;
 };
 
-export async function getShopConfig(): Promise<ShopConfig> {
-    const setting = await db.query.globalSettings.findFirst({
-        where: eq(globalSettings.key, 'shop_config'),
-    });
+export const getShopConfig = unstable_cache(
+    async (): Promise<ShopConfig> => {
+        const setting = await db.query.globalSettings.findFirst({
+            where: eq(globalSettings.key, 'shop_config'),
+        });
 
-    if (!setting) {
-        return {
-            isShopEnabled: false,
-            samplePrice: 2000,
-            sampleShippingCost: 1500,
-            proformaBankName: '',
-            proformaBankAccount: '',
-            headerShowSearch: true,
-            headerShowUser: true,
-            headerLogo: '',
-            showGrossPrices: false,
-            vatRate: 23,
-            heroHeadline: 'Twoja wymarzona podłoga',
-            heroSubheadline: 'Największy wybór podłóg drewnianych i paneli winylowych z profesjonalnym montażem.',
-            noIndex: false,
-        };
-    }
+        if (!setting) {
+            return {
+                isShopEnabled: false,
+                samplePrice: 2000,
+                sampleShippingCost: 1500,
+                proformaBankName: '',
+                proformaBankAccount: '',
+                headerShowSearch: true,
+                headerShowUser: true,
+                headerLogo: '',
+                showGrossPrices: false,
+                vatRate: 23,
+                heroHeadline: 'Twoja wymarzona podłoga',
+                heroSubheadline: 'Największy wybór podłóg drewnianych i paneli winylowych z profesjonalnym montażem.',
+                noIndex: false,
+                calculatorRates: {
+                    glue_herringbone: { labor: 65, chemistry: 25 },
+                    click_herringbone: { labor: 45, chemistry: 5 },
+                    glue_plank: { labor: 55, chemistry: 25 },
+                    click_plank: { labor: 35, chemistry: 5 },
+                }
+            };
+        }
 
-    return setting.value as ShopConfig;
-}
+        const config = setting.value as ShopConfig;
+        if (!config.calculatorRates) {
+            config.calculatorRates = {
+                    glue_herringbone: { labor: 65, chemistry: 25 },
+                    click_herringbone: { labor: 45, chemistry: 5 },
+                    glue_plank: { labor: 55, chemistry: 25 },
+                    click_plank: { labor: 35, chemistry: 5 },
+            };
+        }
+
+        return config;
+    },
+    ['shop_config_global'],
+    { tags: ['shop_config'] }
+);
 
 import { processAndUploadImage } from '@/lib/r2/upload';
 
@@ -141,8 +169,9 @@ export async function updateShopConfig(
             },
         });
 
+    revalidateTag('shop_config');
+    revalidatePath('/', 'layout'); // Odśwież cały sklep (layout, home, produkty)
     revalidatePath('/dashboard/settings/shop');
-    revalidatePath('/sklep');
 }
 
 export async function getTpayConfig(): Promise<TpayConfig> {

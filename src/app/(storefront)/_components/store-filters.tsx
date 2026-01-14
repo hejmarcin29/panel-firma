@@ -32,13 +32,29 @@ interface Collection {
     brandId: string | null;
 }
 
+interface DictionaryItem {
+    id: string;
+    name: string;
+    slug: string | null;
+}
+
 interface StoreFiltersProps {
     categories: Category[];
     brands: Brand[];
     collections: Collection[];
+    mountingMethods: DictionaryItem[];
+    floorPatterns: DictionaryItem[];
+    wearClasses: DictionaryItem[];
 }
 
-export function StoreFilters({ categories, brands, collections }: StoreFiltersProps) {
+export function StoreFilters({ 
+    categories, 
+    brands, 
+    collections,
+    mountingMethods,
+    floorPatterns,
+    wearClasses
+}: StoreFiltersProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -46,7 +62,18 @@ export function StoreFilters({ categories, brands, collections }: StoreFiltersPr
     const currentCategory = searchParams.get('category');
     const currentBrands = searchParams.get('brands')?.split(',') || [];
     const currentCollections = searchParams.get('collections')?.split(',') || [];
-    const hasActiveFilters = currentCategory || currentBrands.length > 0 || currentCollections.length > 0;
+    
+    // New Params
+    const currentMounting = searchParams.get('mounting')?.split(',') || [];
+    const currentPattern = searchParams.get('pattern')?.split(',') || [];
+    const currentWear = searchParams.get('wear')?.split(',') || [];
+
+    const hasActiveFilters = currentCategory || 
+        currentBrands.length > 0 || 
+        currentCollections.length > 0 ||
+        currentMounting.length > 0 ||
+        currentPattern.length > 0 ||
+        currentWear.length > 0;
 
     const handleBrandChange = (slug: string, checked: boolean) => {
         const params = new URLSearchParams(searchParams.toString());
@@ -90,6 +117,27 @@ export function StoreFilters({ categories, brands, collections }: StoreFiltersPr
         router.push(`/sklep?${params.toString()}`, { scroll: false });
     };
 
+    const handleGenericFilterChange = (paramName: string, slug: string, checked: boolean) => {
+        const params = new URLSearchParams(searchParams.toString());
+        const currentVal = params.get(paramName)?.split(',') || [];
+        let newVal = [...currentVal];
+
+        if (checked) {
+            newVal.push(slug);
+        } else {
+            newVal = newVal.filter(v => v !== slug);
+        }
+
+        if (newVal.length > 0) {
+            params.set(paramName, newVal.join(','));
+        } else {
+            params.delete(paramName);
+        }
+         
+        params.delete('page');
+        router.push(`/sklep?${params.toString()}`, { scroll: false });
+    };
+
     const clearFilters = () => {
         router.push('/sklep');
     };
@@ -125,7 +173,82 @@ export function StoreFilters({ categories, brands, collections }: StoreFiltersPr
 
             <Separator />
 
-            <Accordion type="multiple" defaultValue={["brands", "collections"]} className="w-full">
+            <Accordion type="multiple" defaultValue={["mounting", "pattern", "brands", "collections"]} className="w-full">
+                {mountingMethods.length > 0 && (
+                    <AccordionItem value="mounting" className="border-none">
+                        <AccordionTrigger className="py-2 text-sm">Sposób montażu</AccordionTrigger>
+                        <AccordionContent>
+                            <div className="space-y-2 pt-2">
+                                {mountingMethods.map((item) => (
+                                    <div key={item.id} className="flex items-center space-x-2">
+                                        <Checkbox 
+                                            id={`mounting-${item.id}`} 
+                                            checked={item.slug ? currentMounting.includes(item.slug) : false}
+                                            onCheckedChange={(checked) => item.slug && handleGenericFilterChange('mounting', item.slug, checked as boolean)}
+                                        />
+                                        <Label 
+                                            htmlFor={`mounting-${item.id}`}
+                                            className="text-sm font-normal cursor-pointer leading-none"
+                                        >
+                                            {item.name}
+                                        </Label>
+                                    </div>
+                                ))}
+                            </div>
+                        </AccordionContent>
+                    </AccordionItem>
+                )}
+
+                {floorPatterns.length > 0 && (
+                    <AccordionItem value="pattern" className="border-none">
+                        <AccordionTrigger className="py-2 text-sm">Wzór</AccordionTrigger>
+                        <AccordionContent>
+                            <div className="space-y-2 pt-2">
+                                {floorPatterns.map((item) => (
+                                    <div key={item.id} className="flex items-center space-x-2">
+                                        <Checkbox 
+                                            id={`pattern-${item.id}`} 
+                                            checked={item.slug ? currentPattern.includes(item.slug) : false}
+                                            onCheckedChange={(checked) => item.slug && handleGenericFilterChange('pattern', item.slug, checked as boolean)}
+                                        />
+                                        <Label 
+                                            htmlFor={`pattern-${item.id}`}
+                                            className="text-sm font-normal cursor-pointer leading-none"
+                                        >
+                                            {item.name}
+                                        </Label>
+                                    </div>
+                                ))}
+                            </div>
+                        </AccordionContent>
+                    </AccordionItem>
+                )}
+
+                {wearClasses.length > 0 && (
+                    <AccordionItem value="wear" className="border-none">
+                        <AccordionTrigger className="py-2 text-sm">Klasa ścieralności</AccordionTrigger>
+                        <AccordionContent>
+                            <div className="space-y-2 pt-2">
+                                {wearClasses.map((item) => (
+                                    <div key={item.id} className="flex items-center space-x-2">
+                                        <Checkbox 
+                                            id={`wear-${item.id}`} 
+                                            checked={item.slug ? currentWear.includes(item.slug) : false}
+                                            onCheckedChange={(checked) => item.slug && handleGenericFilterChange('wear', item.slug, checked as boolean)}
+                                        />
+                                        <Label 
+                                            htmlFor={`wear-${item.id}`}
+                                            className="text-sm font-normal cursor-pointer leading-none"
+                                        >
+                                            {item.name}
+                                        </Label>
+                                    </div>
+                                ))}
+                            </div>
+                        </AccordionContent>
+                    </AccordionItem>
+                )}
+
                 <AccordionItem value="brands" className="border-none">
                     <AccordionTrigger className="py-2 text-sm">Producenci / Marki</AccordionTrigger>
                     <AccordionContent>

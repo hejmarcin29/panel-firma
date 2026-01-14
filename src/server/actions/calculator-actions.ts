@@ -2,8 +2,8 @@
 
 import { db } from "@/lib/db";
 import { montages } from "@/lib/db/schema";
-import { PRICING_RULES, FALLBACK_RATE, VAT_RATES } from "@/lib/config/pricing-config";
 import { revalidatePath } from "next/cache";
+import { getShopConfig } from "@/app/dashboard/settings/shop/actions";
 
 type EstimationResult = {
     laborPrice: number;
@@ -25,22 +25,33 @@ export async function calculateMontageEstimation(
     productPriceGross: number // Cena materiału brutto 23%
 ): Promise<EstimationResult> {
     
+    // 0. Pobierz konfigurację ze sklepu
+    const config = await getShopConfig();
+    const ratesConfig = config.calculatorRates || {
+        glue_herringbone: { labor: 65, chemistry: 25 },
+        click_herringbone: { labor: 45, chemistry: 5 },
+        glue_plank: { labor: 55, chemistry: 25 },
+        click_plank: { labor: 35, chemistry: 5 },
+    };
+
     // 1. Znajdź stawkę
     // Normalizujemy inputy (bo w bazie mogą być różne wielkości liter)
     const method = mountingMethod?.toLowerCase() || ''; // click, glue
     const pattern = floorPattern?.toLowerCase() || ''; // plank, herringbone
 
-    // Prosta logika dopasowania (w przyszłości SQL)
-    const rule = PRICING_RULES.find(r => {
-        let match = true;
-        if (r.conditions.mountingMethod && !method.includes(r.conditions.mountingMethod)) match = false;
-        // Jeśli pattern to 'herringbone', a mamy 'jodełka' w bazie - trzeba by zmapować. 
-        // Zakładamy, że migracja danych ujednoliciła to do angielskich nazw lub kodów.
-        // Dla uproszczenia (demo): sprawdzamy czy string zawiera klucz
-        return match;
-    });
+    let rates = { labor: 40, chemistry: 15 }; // Fallback
 
-    const rates = rule ? rule.rates : FALLBACK_RATE;
+    const isHerringbone = pattern.includes('herringbone') || pattern.includes('jod');
+    const isGlue = method.includes('glue') || method.includes('klej');
+
+    if (isHerringbone) {
+        if (isGlue) rates = ratesConfig.glue_herringbone;
+        else rates = ratesConfig.click_herringbone;
+    } else {
+        // Plank / Classic
+        if (isGlue) rates = ratesConfig.glue_plank;
+        else rates = ratesConfig.click_plank;
+    }
 
     const laborCostPerM2 = rates.labor;
     const chemistryCostPerM2 = rates.chemistry;

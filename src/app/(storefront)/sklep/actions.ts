@@ -1,8 +1,24 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { erpProducts, erpCategories, erpBrands, erpCollections } from '@/lib/db/schema';
+import { erpProducts, erpCategories, erpBrands, erpCollections, erpMountingMethods, erpFloorPatterns, erpWearClasses, erpStructures } from '@/lib/db/schema';
 import { eq, desc, and, ilike, inArray } from 'drizzle-orm';
+
+export async function getStoreMountingMethods() {
+    return db.select().from(erpMountingMethods).orderBy(erpMountingMethods.name);
+}
+
+export async function getStoreFloorPatterns() {
+    return db.select().from(erpFloorPatterns).orderBy(erpFloorPatterns.name);
+}
+
+export async function getStoreWearClasses() {
+    return db.select().from(erpWearClasses).orderBy(erpWearClasses.name);
+}
+
+export async function getStoreStructures() {
+    return db.select().from(erpStructures).orderBy(erpStructures.name);
+}
 
 export async function getStoreCategories() {
     return db.query.erpCategories.findMany({
@@ -47,7 +63,16 @@ export async function getStoreCollections() {
     });
 }
 
-export async function getStoreProducts(limit?: number, query?: string, categorySlug?: string, brandSlugs?: string[], collectionSlugs?: string[]) {
+export async function getStoreProducts(
+    limit?: number, 
+    query?: string, 
+    categorySlug?: string, 
+    brandSlugs?: string[], 
+    collectionSlugs?: string[],
+    mountingMethodSlugs?: string[], // NEW
+    floorPatternSlugs?: string[],   // NEW
+    wearClassSlugs?: string[],      // NEW
+) {
     const whereConditions = [eq(erpProducts.isShopVisible, true)];
     
     if (query) {
@@ -86,6 +111,38 @@ export async function getStoreProducts(limit?: number, query?: string, categoryS
         
         if (collections.length > 0) {
             whereConditions.push(inArray(erpProducts.collectionId, collections.map(c => c.id)));
+        }
+    }
+
+    // --- NEW Technical Filters ---
+
+    if (mountingMethodSlugs && mountingMethodSlugs.length > 0) {
+        const methods = await db.select({ id: erpMountingMethods.id })
+            .from(erpMountingMethods)
+            .where(inArray(erpMountingMethods.slug, mountingMethodSlugs));
+            
+        if (methods.length > 0) {
+            whereConditions.push(inArray(erpProducts.mountingMethodId, methods.map(m => m.id)));
+        }
+    }
+
+    if (floorPatternSlugs && floorPatternSlugs.length > 0) {
+        const patterns = await db.select({ id: erpFloorPatterns.id })
+            .from(erpFloorPatterns)
+            .where(inArray(erpFloorPatterns.slug, floorPatternSlugs));
+
+        if (patterns.length > 0) {
+            whereConditions.push(inArray(erpProducts.floorPatternId, patterns.map(p => p.id)));
+        }
+    }
+
+    if (wearClassSlugs && wearClassSlugs.length > 0) {
+        const classes = await db.select({ id: erpWearClasses.id })
+            .from(erpWearClasses)
+            .where(inArray(erpWearClasses.slug, wearClassSlugs));
+
+        if (classes.length > 0) {
+            whereConditions.push(inArray(erpProducts.wearClassId, classes.map(c => c.id)));
         }
     }
 

@@ -1,4 +1,13 @@
-import { getStoreProducts, getStoreCategories, getStoreBrands, getStoreCollections } from "./actions";
+import { 
+    getStoreProducts, 
+    getStoreCategories, 
+    getStoreBrands, 
+    getStoreCollections,
+    getStoreMountingMethods,
+    getStoreFloorPatterns,
+    getStoreWearClasses,
+    getStoreStructures
+} from "./actions";
 import { getShopConfig } from "@/app/dashboard/settings/shop/actions";
 import { ProductCard } from "../_components/product-card";
 import { ProductGridAnimated } from "../_components/product-grid-animated";
@@ -15,7 +24,7 @@ export default async function ShopPage({
 }: {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-    const { q, category, brands, collections } = await searchParams;
+    const { q, category, brands, collections, mounting, pattern, wear } = await searchParams;
     const query = typeof q === 'string' ? q : undefined;
     const categorySlug = typeof category === 'string' ? category : undefined;
     
@@ -23,12 +32,19 @@ export default async function ShopPage({
     const brandSlugs = typeof brands === 'string' ? brands.split(',') : undefined;
     const collectionSlugs = typeof collections === 'string' ? collections.split(',') : undefined;
     
-    const [products, categoriesData, brandsData, collectionsData, shopConfig] = await Promise.all([
-        getStoreProducts(undefined, query, categorySlug, brandSlugs, collectionSlugs),
+    const mountingSlugs = typeof mounting === 'string' ? mounting.split(',') : undefined;
+    const patternSlugs = typeof pattern === 'string' ? pattern.split(',') : undefined;
+    const wearSlugs = typeof wear === 'string' ? wear.split(',') : undefined;
+
+    const [products, categoriesData, brandsData, collectionsData, mountingData, patternData, wearData, shopConfig] = await Promise.all([
+        getStoreProducts(undefined, query, categorySlug, brandSlugs, collectionSlugs, mountingSlugs, patternSlugs, wearSlugs),
         getStoreCategories(),
         getStoreBrands(),
         getStoreCollections(),
-        getShopConfig() // Added
+        getStoreMountingMethods(),
+        getStoreFloorPatterns(),
+        getStoreWearClasses(),
+        getShopConfig()
     ]);
 
     return (
@@ -55,6 +71,9 @@ export default async function ShopPage({
                     categories={categoriesData} 
                     brands={brandsData} 
                     collections={collectionsData}
+                    mountingMethods={mountingData}
+                    floorPatterns={patternData}
+                    wearClasses={wearData}
                 />
 
                 {/* Product Grid */}
