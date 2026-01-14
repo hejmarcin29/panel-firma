@@ -1,15 +1,16 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { ProductCard } from "./product-card";
 
 interface ProductGridAnimatedProps {
-    products: any[]; // We can refine this type if needed, but for now passing through is fine
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    products: any[]; 
     showGrossPrices: boolean;
     vatRate: number;
 }
 
-const container = {
+const container: Variants = {
     hidden: { opacity: 0 },
     show: {
         opacity: 1,
@@ -19,7 +20,7 @@ const container = {
     }
 };
 
-const item = {
+const item: Variants = {
     hidden: { opacity: 0, y: 30 },
     show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 50, damping: 15 } }
 };

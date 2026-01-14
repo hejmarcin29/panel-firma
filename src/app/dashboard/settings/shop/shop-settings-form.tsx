@@ -19,7 +19,7 @@ export default function ShopSettingsForm({ initialConfig, initialTpayConfig, ava
     availableProducts: { id: string, name: string, price: string | null }[]
 }) {
     const [config, setConfig] = useState(initialConfig);
-    const [tpayConfig, setTpayConfig] = useState(initialTpayConfig);
+    const [tpayConfig] = useState(initialTpayConfig);
 
     const handleImageUpload = async (file: File) => {
         const formData = new FormData();

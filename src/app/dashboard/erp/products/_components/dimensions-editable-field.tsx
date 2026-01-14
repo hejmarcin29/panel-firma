@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { updateProductDimensions } from "../actions";
-import { Loader2, Save, Ruler } from "lucide-react";
+import { Loader2, Ruler } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";

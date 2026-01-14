@@ -3,9 +3,8 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { updateProductSalesPrice } from "../actions";
-import { Loader2, Check } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface PriceEditableFieldProps {

@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { erpProducts, erpCategories, erpMountingMethods, erpFloorPatterns, erpWearClasses, erpStructures } from "@/lib/db/schema";
+import { erpProducts, erpCategories } from "@/lib/db/schema";
 import { desc } from "drizzle-orm";
 import { ProductsTable } from "./_components/products-table";
 import { ProductSheet } from "./_components/product-sheet";

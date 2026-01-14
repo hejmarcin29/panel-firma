@@ -81,7 +81,7 @@ export function TechnicalAttributesEditable({
             toast.success("Dane techniczne zaktualizowane");
             setIsModified(false);
             setIsOpen(false);
-        } catch (error) {
+        } catch {
             toast.error("Błąd aktualizacji danych technicznych");
         } finally {
             setIsLoading(false);

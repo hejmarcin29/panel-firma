@@ -5,11 +5,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ShoppingCart, RefreshCcw, Info, Check, Calculator, ArrowRight } from "lucide-react";
+import { ShoppingCart, RefreshCcw, Check, Calculator } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/lib/store/cart-store";
 import { toast } from "sonner";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
     Sheet, 
     SheetContent, 
@@ -43,9 +42,7 @@ export function FloorCalculator({
     pricePerM2, 
     packageSizeM2, 
     unit,
-    isSampleAvailable = false,
     isPurchasable = false,
-    samplePrice = 20,
     mountingMethod,
     floorPattern
 }: FloorCalculatorProps) {

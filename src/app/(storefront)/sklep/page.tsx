@@ -6,10 +6,8 @@ import {
     getStoreMountingMethods,
     getStoreFloorPatterns,
     getStoreWearClasses,
-    getStoreStructures
 } from "./actions";
 import { getShopConfig } from "@/app/dashboard/settings/shop/actions";
-import { ProductCard } from "../_components/product-card";
 import { ProductGridAnimated } from "../_components/product-grid-animated";
 import { SearchInput } from "../_components/search-input";
 import { StoreFilters } from "../_components/store-filters";

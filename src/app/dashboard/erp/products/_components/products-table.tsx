@@ -162,6 +162,7 @@ export function ProductsTable({
             // Access ID fields or dictionary object fields depending on how `data` is structured.
             // Based on previous files, `product` likely has `mountingMethodId`/`floorPatternId` AND `mountingMethodDictionary` etc.
             // Let's check safely.
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const p = product as any; 
             
             const matchesMounting = mountingFilter === "all" || (
