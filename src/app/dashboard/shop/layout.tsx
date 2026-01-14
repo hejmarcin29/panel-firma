@@ -15,6 +15,9 @@ export default function ShopLayout({ children }: { children: React.ReactNode }) 
                     <Link href="/dashboard/shop/offer">
                         <Button variant="ghost">🎛️ Oferta</Button>
                     </Link>
+                    <Link href="/dashboard/shop/reviews">
+                        <Button variant="ghost">⭐ Opinie</Button>
+                    </Link>
                     <Link href="/dashboard/settings/shop">
                         <Button variant="ghost">⚙️ Konfiguracja</Button>
                     </Link>

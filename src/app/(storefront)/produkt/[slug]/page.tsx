@@ -30,10 +30,15 @@ export default async function ProductPage({ params }: PageProps) {
     }
 
     // Parallel fetch config and reviews using Product ID
-    const [shopConfig, reviews] = await Promise.all([
+    const [shopConfig, reviewsData] = await Promise.all([
         getShopConfig(),
         getProductReviews(product.id)
     ]);
+
+    const reviews = reviewsData.map(r => ({
+        ...r,
+        createdAt: r.createdAt.toISOString()
+    }));
 
     const totalReviews = reviews.length;
     const averageRating = totalReviews > 0 

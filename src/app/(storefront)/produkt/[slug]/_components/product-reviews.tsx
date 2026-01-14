@@ -11,9 +11,9 @@ import { Progress } from "@/components/ui/progress";
 interface Review {
     id: string;
     authorName: string | null;
-    rating: number;
+    rating: number; // 1-5
     content: string | null;
-    createdAt: Date;
+    createdAt: Date | string;
     isVerified: boolean;
 }
 
