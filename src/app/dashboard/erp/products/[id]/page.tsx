@@ -4,7 +4,11 @@ import { getProductDetails, getSuppliersList } from "../actions";
 import { ProductPrices } from "../_components/product-prices";
 import { ProductSyncToggle } from "../_components/product-sync-toggle";
 import { UnitEditableField } from "../_components/unit-editable-field";
+import { PriceEditableField } from "../_components/price-editable-field";
 import { DimensionsEditableField } from "../_components/dimensions-editable-field";
+import { TechnicalAttributesEditable } from "../_components/technical-attributes-editable";
+import { LeadTimeEditableField } from "../_components/lead-time-editable-field";
+import { WeightEditableField } from "../_components/weight-editable-field";
 import { ProductGallery } from "../_components/product-gallery";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -106,24 +110,27 @@ export default async function ProductDetailsPage({ params }: PageProps) {
                         <CardContent className="space-y-4">
                             <div className="grid grid-cols-2 gap-4 text-sm">
                                 <div>
-                                    <span className="text-muted-foreground">Cena sprzedaży:</span>
-                                    <div className="flex flex-col">
-                                         {product.salePrice ? (
-                                            <>
-                                                <div className="font-bold text-red-600 text-lg">{formatPrice(product.salePrice)}</div>
-                                                <div className="text-sm text-muted-foreground line-through">{formatPrice(product.regularPrice || product.price)}</div>
-                                            </>
-                                         ) : (
-                                            <div className="font-medium text-lg">{formatPrice(product.price)}</div>
-                                         )}
-                                    </div>
+                                    <span className="text-muted-foreground block mb-1.5">Cena sprzedaży (netto):</span>
+                                    <PriceEditableField 
+                                        productId={product.id}
+                                        initialPrice={product.price}
+                                        unit={product.unit}
+                                    />
+                                    {product.salePrice && (
+                                        <div className="mt-1 text-xs text-red-600 font-medium">
+                                            Promocja: {formatPrice(product.salePrice)}
+                                        </div>
+                                    )}
                                 </div>
                                 <div>
-                                    <span className="text-muted-foreground">Czas realizacji:</span>
-                                    <div className="font-medium text-blue-600">{product.leadTime || "Nie określono"}</div>
+                                    <span className="text-muted-foreground block mb-1.5">Czas realizacji:</span>
+                                    <LeadTimeEditableField 
+                                        productId={product.id}
+                                        initialLeadTime={product.leadTime}
+                                    />
                                 </div>
                                 <div>
-                                    <span className="text-muted-foreground">Jednostka:</span>
+                                    <span className="text-muted-foreground block mb-1.5">Jednostka:</span>
                                     <UnitEditableField 
                                         productId={product.id} 
                                         initialUnit={product.unit} 
@@ -131,7 +138,7 @@ export default async function ProductDetailsPage({ params }: PageProps) {
                                     />
                                 </div>
                                 <div>
-                                    <span className="text-muted-foreground">Wymiary (D x S x W):</span>
+                                    <span className="text-muted-foreground block mb-1.5">Wymiary (D x S x W):</span>
                                     <DimensionsEditableField 
                                         productId={product.id}
                                         length={product.length}
@@ -140,8 +147,22 @@ export default async function ProductDetailsPage({ params }: PageProps) {
                                     />
                                 </div>
                                 <div>
-                                    <span className="text-muted-foreground">Waga:</span>
-                                    <div className="font-medium">{product.weight ? `${product.weight} kg` : '-'}</div>
+                                    <span className="text-muted-foreground block mb-1.5">Parametry Techniczne:</span>
+                                    <TechnicalAttributesEditable
+                                        productId={product.id}
+                                        mountingMethod={product.mountingMethod}
+                                        floorPattern={product.floorPattern}
+                                        wearClass={product.wearClass}
+                                        wearLayerThickness={product.wearLayerThickness}
+                                        structure={product.structure}
+                                    />
+                                </div>
+                                <div>
+                                    <span className="text-muted-foreground block mb-1.5">Waga (jednostkowa):</span>
+                                    <WeightEditableField 
+                                        productId={product.id}
+                                        initialWeight={product.weight}
+                                    />
                                 </div>
                             </div>
                             

@@ -39,6 +39,10 @@ export const orderStatuses = [
 
 export const paymentMethods = ['tpay', 'proforma', 'transfer', 'cash'] as const;
 
+export const productPatterns = ['plank', 'herringbone', 'chevron', 'tile'] as const;
+export const productMountingMethods = ['click', 'glue', 'auto'] as const;
+
+
 export const documentTypes = ['proforma', 'advance_invoice', 'final_invoice'] as const;
 export const documentStatuses = ['draft', 'issued', 'cancelled', 'voided', 'corrected'] as const;
 
@@ -1710,6 +1714,15 @@ export const erpProducts = pgTable('erp_products', {
     isPurchasable: boolean('is_purchasable').default(false), // New switch for "Add to Cart"
     isSampleAvailable: boolean('is_sample_available').default(false),
     packageSizeM2: doublePrecision('package_size_m2'),
+
+    // Technical Attributes (Migrated)
+    mountingMethod: text('mounting_method'),
+    floorPattern: text('floor_pattern'),
+    wearClass: text('wear_class'),
+    wearLayerThickness: doublePrecision('wear_layer_thickness'),
+    
+    // Visual
+    structure: text('structure'), // wood, stone, etc.
 
     // Samples
     isSample: boolean('is_sample').default(false), // Flag if product is available as sample

@@ -1,0 +1,1 @@
+ALTER TABLE "erp_products" ADD COLUMN "wear_layer_thickness" double precision;

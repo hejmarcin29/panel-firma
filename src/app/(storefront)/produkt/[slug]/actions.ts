@@ -14,6 +14,10 @@ export interface ProductDetails {
     regularPrice: string | null;
     salePrice: string | null;
     unit: string | null;
+    mountingMethod: string | null; // NEW
+    floorPattern: string | null;   // NEW
+    wearClass: string | null;      // NEW
+    wearLayerThickness: number | null; // NEW
     packageSizeM2: number | null;
     stockQuantity: number | null;
     isSampleAvailable: boolean | null;
@@ -86,6 +90,10 @@ export async function getProductBySlug(slug: string): Promise<ProductDetails | n
         salePrice: product.salePrice,
         unit: product.unit,
         packageSizeM2: product.packageSizeM2,
+        mountingMethod: product.mountingMethod,
+        floorPattern: product.floorPattern,
+        wearClass: product.wearClass,
+        wearLayerThickness: product.wearLayerThickness,
         stockQuantity: product.stockQuantity,
         isSampleAvailable: product.isSampleAvailable,
         isPurchasable: product.isPurchasable,

@@ -148,6 +148,22 @@ export async function updateProductUnit(id: string, unit: string, packageSizeM2?
     return { success: true };
 }
 
+export async function updateProductSalesPrice(id: string, price: string | null) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) throw new Error('Unauthorized');
+
+    await db.update(erpProducts)
+        .set({ 
+            price: price, 
+            updatedAt: new Date() 
+        })
+        .where(eq(erpProducts.id, id));
+
+    revalidatePath(`/dashboard/erp/products/${id}`);
+    revalidatePath('/dashboard/erp/products');
+    return { success: true };
+}
+
 export async function updateProductDimensions(id: string, length: number | null, width: number | null, height: number | null) {
     const user = await requireUser();
     if (!user.roles.includes('admin')) throw new Error('Unauthorized');
@@ -157,6 +173,60 @@ export async function updateProductDimensions(id: string, length: number | null,
             length: length, 
             width: width, 
             height: height, 
+            updatedAt: new Date() 
+        })
+        .where(eq(erpProducts.id, id));
+
+    revalidatePath(`/dashboard/erp/products/${id}`);
+    revalidatePath('/dashboard/erp/products');
+    return { success: true };
+}
+
+export async function updateProductLeadTime(id: string, leadTime: string | null) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) throw new Error('Unauthorized');
+
+    await db.update(erpProducts)
+        .set({ 
+            leadTime: leadTime, 
+            updatedAt: new Date() 
+        })
+        .where(eq(erpProducts.id, id));
+
+    revalidatePath(`/dashboard/erp/products/${id}`);
+    revalidatePath('/dashboard/erp/products');
+    return { success: true };
+}
+
+export async function updateProductWeight(id: string, weight: number | null) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) throw new Error('Unauthorized');
+
+    await db.update(erpProducts)
+        .set({ 
+            weight: weight, 
+            updatedAt: new Date() 
+        })
+        .where(eq(erpProducts.id, id));
+
+    revalidatePath(`/dashboard/erp/products/${id}`);
+    revalidatePath('/dashboard/erp/products');
+    return { success: true };
+}
+
+export async function updateProductTechnicalAttributes(id: string, data: {
+    mountingMethod?: string | null;
+    floorPattern?: string | null;
+    wearClass?: string | null;
+    wearLayerThickness?: number | null;
+    structure?: string | null;
+}) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) throw new Error('Unauthorized');
+
+    await db.update(erpProducts)
+        .set({ 
+            ...data,
             updatedAt: new Date() 
         })
         .where(eq(erpProducts.id, id));

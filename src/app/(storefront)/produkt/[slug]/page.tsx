@@ -221,6 +221,8 @@ export default async function ProductPage({ params }: PageProps) {
                                 isSampleAvailable={product.isSampleAvailable || false}
                                 isPurchasable={product.isPurchasable || false}
                                 samplePrice={shopConfig.samplePrice / 100}
+                                mountingMethod={product.mountingMethod}
+                                floorPattern={product.floorPattern}
                             />
                         </div>
 

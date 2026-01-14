@@ -540,6 +540,20 @@
       "when": 1768382026763,
       "tag": "0076_dapper_thor",
       "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "7",
+      "when": 1768421783859,
+      "tag": "0077_daily_logan",
+      "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "7",
+      "when": 1768422305822,
+      "tag": "0078_colorful_piledriver",
+      "breakpoints": true
     }
   ]
 }
