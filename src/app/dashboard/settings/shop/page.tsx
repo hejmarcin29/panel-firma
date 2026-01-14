@@ -405,3 +405,7 @@ export default async function ShopSettingsPage() {
                         <Button type="submit" size="lg" className="w-full md:w-auto shadow-lg">Zapisz Ustawienia</Button>
                     </div>
                 </Tabs>
+            </form>
+        </div>
+    );
+}
