@@ -58,7 +58,7 @@ export default async function OrderStatusPage({ searchParams }: PageProps) {
     }
 
     // Fetch Timeline (Safe fetch in case table not ready)
-    let timelineEvents = [];
+    let timelineEvents: any[] = [];
     try {
         timelineEvents = await db.query.erpOrderTimeline.findMany({
             where: eq(erpOrderTimeline.orderId, orderId),

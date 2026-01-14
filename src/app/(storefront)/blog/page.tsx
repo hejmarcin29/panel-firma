@@ -55,7 +55,7 @@ export default async function BlogPage() {
                                         </h3>
                                     </Link>
                                 </CardHeader>
-                                <CardContent className="px-6 py-0 flex-grow">
+                                <CardContent className="px-6 py-0 grow">
                                     <p className="text-gray-600 text-sm line-clamp-3 leading-relaxed">
                                         {post.excerpt || (post.content ? stripHtml(post.content).slice(0, 150) + '...' : '')}
                                     </p>

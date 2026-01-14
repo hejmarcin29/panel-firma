@@ -61,7 +61,7 @@ export function CartSheet() {
                 {items.map((item) => (
                   <div key={item.productId} className="flex gap-4">
                     {/* Image */}
-                    <div className="relative aspect-square h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border bg-gray-50">
+                    <div className="relative aspect-square h-24 w-24 shrink-0 overflow-hidden rounded-md border bg-gray-50">
                       {item.image ? (
                         <Image
                           src={item.image}

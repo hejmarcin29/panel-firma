@@ -112,7 +112,7 @@ export default function AboutUsPage() {
           </div>
           
           {/* Decorative pattern */}
-          <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-emerald-900/20 to-transparent pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-linear-to-l from-emerald-900/20 to-transparent pointer-events-none" />
       </section>
 
       {/* Final CTA */}

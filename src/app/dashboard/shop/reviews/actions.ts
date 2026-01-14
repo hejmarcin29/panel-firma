@@ -41,7 +41,6 @@ export async function createManualReview(data: any) {
         rating: parseInt(data.rating),
         content: data.content,
         authorName: data.authorName || 'Anonim',
-        isVerified: false, // Manual reviews are technically not verified by system purchase flow logic usually, or maybe true if admin says so?
         // Let's set verified to true if admin adds it? Or false? 
         // User asked to "copy from SMS", so it IS a verified customer usually. 
         // Let's allow passing isVerified or default to true for manual admin entry?

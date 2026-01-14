@@ -307,7 +307,7 @@ export function CheckoutForm() {
                           onCheckedChange={field.onChange}
                         />
                       </FormControl>
-                      <FormLabel className="!mt-0">Chcę otrzymać fakturę na firmę (NIP)</FormLabel>
+                      <FormLabel className="mt-0!">Chcę otrzymać fakturę na firmę (NIP)</FormLabel>
                     </FormItem>
                   )}
                 />
@@ -356,7 +356,7 @@ export function CheckoutForm() {
                           onCheckedChange={field.onChange}
                         />
                       </FormControl>
-                      <FormLabel className="!mt-0">Inny adres na fakturze</FormLabel>
+                      <FormLabel className="mt-0!">Inny adres na fakturze</FormLabel>
                     </FormItem>
                   )}
                 />
@@ -487,7 +487,7 @@ export function CheckoutForm() {
                       onCheckedChange={field.onChange}
                     />
                   </FormControl>
-                  <FormLabel className="!mt-0 text-sm">
+                  <FormLabel className="mt-0! text-sm">
                     Oświadczam, że zapoznałem się i akceptuję Regulamin sklepu oraz Politykę Prywatności.
                   </FormLabel>
                   <FormMessage />
