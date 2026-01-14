@@ -215,7 +215,7 @@ export default async function ProductPage({ params }: PageProps) {
                         <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
                             <div className="flex items-center gap-2">
                                 <Truck className="h-5 w-5 text-emerald-600" />
-                                <span>Szybka wysyłka (24h)</span>
+                                <span>Bezpieczny transport</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <ShieldCheck className="h-5 w-5 text-emerald-600" />
@@ -223,7 +223,7 @@ export default async function ProductPage({ params }: PageProps) {
                             </div>
                             <div className="flex items-center gap-2">
                                 <Check className="h-5 w-5 text-emerald-600" />
-                                <span>30 dni na zwrot</span>
+                                <span>Dostawa na palecie</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <HelpCircle className="h-5 w-5 text-emerald-600" />

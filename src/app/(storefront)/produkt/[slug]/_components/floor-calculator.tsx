@@ -112,7 +112,7 @@ export function FloorCalculator({
           <div className="space-y-2">
             <label className="text-xs font-medium text-muted-foreground">Zapas na docinki (%)</label>
             <div className="flex gap-2">
-               {[5, 10].map((val) => (
+               {[5, 10, 15].map((val) => (
                  <button
                    key={val}
                    onClick={() => setWaste(val.toString())}
@@ -141,7 +141,7 @@ export function FloorCalculator({
           </div>
            <div className="flex justify-between text-sm text-muted-foreground border-t pt-2 mt-2">
              <span>Razem do zamówienia:</span>
-             <span>{totalArea.toFixed(3)} m²</span>
+             <span>{totalArea.toFixed(2)} m²</span>
           </div>
         </div>
 
@@ -174,10 +174,6 @@ export function FloorCalculator({
                     Zamów próbkę ({samplePrice.toFixed(2)} zł)
                 </Button>
             )}
-
-            <p className="text-center text-xs text-muted-foreground mt-3">
-                Darmowa dostawa od 4000 zł
-            </p>
         </div>
       </div>
     </div>
