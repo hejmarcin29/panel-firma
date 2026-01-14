@@ -522,6 +522,20 @@ export function MontageClientCard({
         )}
       </CardHeader>
       <CardContent className="space-y-6">
+        
+        {/* Requirements Section (Visible to Installer & Admin) */}
+        {montage.clientInfo && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm">
+                <h4 className="font-semibold text-amber-800 mb-1 flex items-center gap-2">
+                    <FileText className="w-4 h-4" />
+                    Wymagania / Notatki Handlowe
+                </h4>
+                <p className="text-amber-900 whitespace-pre-wrap leading-relaxed">
+                    {montage.clientInfo}
+                </p>
+            </div>
+        )}
+
         {/* Section 1: Header (Address, Contact) */}
         <div className="space-y-3">
             <div className="flex items-start gap-3">

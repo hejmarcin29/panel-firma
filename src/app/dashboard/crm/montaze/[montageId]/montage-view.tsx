@@ -88,9 +88,9 @@ export function MontageView({ montageId, initialData, portalEnabled, requireInst
         const TIMELINE_STEPS = [
             { id: 'new_lead', label: 'Nowe Zgłoszenie' },
             { id: 'lead_contact', label: 'W Kontakcie' },
-            { id: 'lead_payment_pending', label: 'Płatność' },
             { id: 'lead_samples_pending', label: 'Wysłano Link' },
             { id: 'lead_samples_sent', label: 'Próbki Wysłane' },
+            { id: 'lead_payment_pending', label: 'Płatność' },
             { id: 'lead_pre_estimate', label: 'Decyzja' },
         ];
         
@@ -214,6 +214,10 @@ export function MontageView({ montageId, initialData, portalEnabled, requireInst
                     <div className="grid gap-6 md:grid-cols-2">
                         <div className="space-y-6">
                             <MontageClientCard montage={montage} userRoles={userRoles} installers={installers} measurers={measurers} architects={architects} portalEnabled={portalEnabled} />
+                            <div className="bg-card rounded-xl border shadow-sm p-6">
+                                <h3 className="font-semibold mb-4">Notatki</h3>
+                                <MontageNotesTab montage={montage} userRoles={userRoles} />
+                            </div>
                             <MontageMaterialCard montage={montage} userRoles={userRoles} />
                         </div>
                         <div className="space-y-6">
@@ -226,10 +230,6 @@ export function MontageView({ montageId, initialData, portalEnabled, requireInst
                                 initialFloorPattern={montage.measurementFloorPattern}
                              />
                              <MontageSamplesCard montage={montage} userRoles={userRoles} />
-                             <div className="bg-card rounded-xl border shadow-sm p-6">
-                                <h3 className="font-semibold mb-4">Notatki</h3>
-                                <MontageNotesTab montage={montage} userRoles={userRoles} />
-                             </div>
                         </div>
                     </div>
                 </div>

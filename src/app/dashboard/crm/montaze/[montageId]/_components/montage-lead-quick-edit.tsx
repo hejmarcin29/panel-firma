@@ -233,12 +233,12 @@ export function MontageLeadQuickEdit({
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="clientInfo">Wymagania / Notatki</Label>
+                <Label htmlFor="clientInfo">Wymagania</Label>
                 <Textarea 
                     id="clientInfo"
                     value={clientInfo} 
                     onChange={handleClientInfoChange}
-                    placeholder="Wpisz wymagania klienta, notatki z rozmowy..."
+                    placeholder="Wpisz wymagania klienta..."
                     className="min-h-[150px] resize-y text-base"
                 />
             </div>
