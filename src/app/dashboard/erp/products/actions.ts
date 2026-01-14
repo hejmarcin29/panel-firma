@@ -1,13 +1,13 @@
 'use server';
 
 import { db } from "@/lib/db";
-import { erpProducts, erpPurchasePrices, erpProductAttributes, erpCategories, erpInventory } from "@/lib/db/schema";
+import { erpProducts, erpPurchasePrices, erpProductAttributes, erpCategories, erpInventory, erpProductImages } from "@/lib/db/schema";
 import { revalidatePath } from "next/cache";
 import { eq, and } from "drizzle-orm";
 import { requireUser } from "@/lib/auth/session";
 import { inArray } from "drizzle-orm";
 import { syncProducts } from "@/lib/sync/products";
-import { processAndUploadImage } from "@/lib/r2/upload";
+import { processAndUploadImage, deleteImageFromR2 } from "@/lib/r2/upload";
 
 export async function runGlobalSync() {
     const user = await requireUser();
@@ -433,6 +433,68 @@ export async function syncProductsAction() {
     throw new Error('This function is deprecated. Use ERP Sync instead.');
 }
 
+export async function uploadProductGallery(productId: string, formData: FormData) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) throw new Error('Unauthorized');
+
+    const files = formData.getAll('files') as File[];
+    if (!files || files.length === 0) return { success: true };
+
+    let uploadedCount = 0;
+
+    for (const file of files) {
+        if (file.size > 0) {
+            try {
+                // 1. Upload to R2 (products/{id}/{uuid}.webp)
+                const url = await processAndUploadImage({
+                    file: file,
+                    folderPath: `products/${productId}`,
+                });
+
+                // 2. Save to DB
+                await db.insert(erpProductImages).values({
+                    productId: productId,
+                    url: url,
+                    alt: file.name, // Default alt text
+                });
+                uploadedCount++;
+            } catch (error) {
+                console.error(`Failed to upload gallery image: ${file.name}`, error);
+                // Continue with other files
+            }
+        }
+    }
+
+    revalidatePath(`/dashboard/erp/products/${productId}`);
+    return { success: true, count: uploadedCount };
+}
+
+export async function deleteProductImage(imageId: string, productId: string) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) throw new Error('Unauthorized');
+
+    const image = await db.query.erpProductImages.findFirst({
+        where: eq(erpProductImages.id, imageId)
+    });
+
+    if (!image) return { success: false, error: "Image not found" };
+
+    try {
+        // 1. Delete from R2
+        await deleteImageFromR2(image.url);
+
+        // 2. Delete from DB
+        await db.delete(erpProductImages)
+            .where(eq(erpProductImages.id, imageId));
+
+        revalidatePath(`/dashboard/erp/products/${productId}`);
+        return { success: true };
+    } catch (error) {
+        console.error("Failed to delete gallery image:", error);
+        return { success: false, error: "Failed to delete" };
+    }
+}
+
 export async function getProductDetails(id: string) {
     const product = await db.query.erpProducts.findFirst({
         where: eq(erpProducts.id, id),
@@ -450,6 +512,9 @@ export async function getProductDetails(id: string) {
                     attribute: true,
                     option: true
                 }
+            },
+            images: {
+                orderBy: (images, { asc }) => [asc(images.createdAt)]
             }
         }
     });
