@@ -78,7 +78,7 @@ export function BrandsManager({ initialData }: { initialData: any[] }) {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-[80px]">Logo</TableHead>
+                                <TableHead className="w-20">Logo</TableHead>
                                 <TableHead>Nazwa</TableHead>
                                 <TableHead className="w-[100px] text-right">Akcje</TableHead>
                             </TableRow>

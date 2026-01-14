@@ -180,7 +180,7 @@ export default async function ShopIndexPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-gradient-to-br from-indigo-50 to-white border-indigo-100">
+                    <Card className="bg-linear-to-br from-indigo-50 to-white border-indigo-100">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-sm text-indigo-900">Potrzebujesz pomocy?</CardTitle>
                         </CardHeader>

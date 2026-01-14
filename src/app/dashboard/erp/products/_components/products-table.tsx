@@ -252,7 +252,7 @@ export function ProductsTable({
 
                     {/* MOUNTING METHOD FILTER */}
                     <Select value={mountingFilter} onValueChange={setMountingFilter}>
-                        <SelectTrigger className="w-[160px]">
+                        <SelectTrigger className="w-40">
                             <SelectValue placeholder="Montaż" />
                         </SelectTrigger>
                         <SelectContent>
@@ -268,7 +268,7 @@ export function ProductsTable({
 
                     {/* FLOOR PATTERN FILTER */}
                     <Select value={patternFilter} onValueChange={setPatternFilter}>
-                        <SelectTrigger className="w-[160px]">
+                        <SelectTrigger className="w-40">
                             <SelectValue placeholder="Wzór" />
                         </SelectTrigger>
                         <SelectContent>

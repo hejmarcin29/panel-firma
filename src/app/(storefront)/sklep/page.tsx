@@ -82,8 +82,8 @@ export default async function ShopPage({
                     
                     <ProductGridAnimated 
                         products={products}
-                        showGrossPrices={shopConfig.showGrossPrices}
-                        vatRate={shopConfig.vatRate}
+                        showGrossPrices={shopConfig?.showGrossPrices ?? false}
+                        vatRate={shopConfig?.vatRate ?? 0.23}
                     />
                 </div>
             </div>

@@ -68,7 +68,7 @@ export function ShopNav() {
                                 {isActive && (
                                     <motion.div
                                         layoutId="shop-nav-indicator"
-                                        className="absolute -bottom-[13px] left-0 right-0 h-[2px] bg-indigo-600"
+                                        className="absolute -bottom-[13px] left-0 right-0 h-0.5 bg-indigo-600"
                                         transition={{ type: "spring", stiffness: 500, damping: 30 }}
                                     />
                                 )}
