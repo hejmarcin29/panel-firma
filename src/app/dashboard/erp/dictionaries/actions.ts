@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { erpBrands, erpCollections, erpCategories } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { processAndUploadImage } from "@/lib/r2/upload";
 
 // --- CATEGORIES ---
 
@@ -39,6 +40,23 @@ export async function getBrands() {
 export async function createBrand(name: string) {
     await db.insert(erpBrands).values({ name });
     revalidatePath('/dashboard/erp/dictionaries');
+}
+
+export async function updateBrand(id: string, data: { name?: string, imageUrl?: string | null }) {
+    await db.update(erpBrands)
+        .set(data)
+        .where(eq(erpBrands.id, id));
+    revalidatePath('/dashboard/erp/dictionaries');
+}
+
+export async function uploadBrandLogo(formData: FormData) {
+    const file = formData.get('file') as File;
+    if (!file) throw new Error('No file uploaded');
+
+    return await processAndUploadImage({
+        file,
+        folderPath: 'brands/logos',
+    });
 }
 
 export async function deleteBrand(id: string) {

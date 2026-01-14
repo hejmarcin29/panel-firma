@@ -1,7 +1,6 @@
-import { getShopConfig, updateShopConfig, getTpayConfig, updateTpayConfig, ShopConfig, TpayConfig } from './actions';
-import { db } from '@/lib/db'; // Added
-import { erpProducts } from '@/lib/db/schema'; // Added
-import { eq } from 'drizzle-orm'; // Added
+'use client';
+
+import { updateShopConfig, updateTpayConfig, uploadShopImage, ShopConfig, TpayConfig } from './actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,88 +9,86 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ShieldAlert, Globe, Search, BarChart3, CreditCard, LayoutTemplate, SquareEqual } from 'lucide-react';
+import { SingleImageUpload } from '@/components/common/single-image-upload';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
-export default async function ShopSettingsPage() {
-    const config = await getShopConfig();
-    const tpayConfig = await getTpayConfig();
+export default function ShopSettingsForm({ initialConfig, initialTpayConfig, availableProducts }: { 
+    initialConfig: ShopConfig, 
+    initialTpayConfig: TpayConfig,
+    availableProducts: { id: string, name: string, price: string | null }[]
+}) {
+    const [config, setConfig] = useState(initialConfig);
+    const [tpayConfig, setTpayConfig] = useState(initialTpayConfig);
 
-    // Fetch products for dropdown
-    const availableProducts = await db.query.erpProducts.findMany({
-        where: eq(erpProducts.isShopVisible, true),
-        columns: {
-            id: true,
-            name: true,
-            price: true,
+    const handleImageUpload = async (file: File) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('folder', 'system/branding');
+        return await uploadShopImage(formData);
+    };
+
+    async function handleSave(formData: FormData) {
+        try {
+            // Save Shop Config
+            const newShopConfig: ShopConfig = {
+                // General
+                isShopEnabled: formData.get('isShopEnabled') === 'on',
+                samplePrice: Math.round(parseFloat(formData.get('samplePrice') as string) * 100),
+                sampleShippingCost: Math.round(parseFloat(formData.get('sampleShippingCost') as string) * 100),
+                heroHeadline: formData.get('heroHeadline') as string,
+                heroSubheadline: formData.get('heroSubheadline') as string,
+                heroImage: formData.get('heroImage') as string,
+                measurementProductId: formData.get('measurementProductId') as string,
+                
+                // Payment
+                proformaBankName: formData.get('proformaBankName') as string,
+                proformaBankAccount: formData.get('proformaBankAccount') as string,
+                
+                // SEO & Company
+                organizationLogo: formData.get('organizationLogo') as string,
+                contactPhone: formData.get('contactPhone') as string,
+                contactEmail: formData.get('contactEmail') as string,
+                socialFacebook: formData.get('socialFacebook') as string,
+                socialInstagram: formData.get('socialInstagram') as string,
+                
+                // Integrations
+                googleSearchConsoleId: formData.get('googleSearchConsoleId') as string,
+                googleAnalyticsId: formData.get('googleAnalyticsId') as string,
+                facebookPixelId: formData.get('facebookPixelId') as string,
+                
+                // Control
+                noIndex: formData.get('noIndex') === 'on',
+                welcomeEmailTemplate: config.welcomeEmailTemplate, // Keep existing if not in form
+
+                // Header
+                headerLogo: formData.get('headerLogo') as string,
+                headerShowSearch: formData.get('headerShowSearch') === 'on',
+                headerShowUser: formData.get('headerShowUser') === 'on',
+                
+                // Branding
+                primaryColor: formData.get('primaryColor') as string,
+
+                // Prices
+                showGrossPrices: formData.get('showGrossPrices') === 'on',
+                vatRate: parseInt(formData.get('vatRate') as string) || 23,
+            };
+
+            await updateShopConfig(newShopConfig);
+
+            // Save Tpay Config
+            const newTpayConfig: TpayConfig = {
+                clientId: formData.get('tpayClientId') as string,
+                clientSecret: formData.get('tpayClientSecret') as string,
+                isSandbox: formData.get('tpayIsSandbox') === 'on',
+            };
+
+            await updateTpayConfig(newTpayConfig);
+            toast.success("Ustawienia zapisane");
+        } catch (error) {
+            console.error(error);
+            toast.error("Błąd podczas zapisywania ustawień");
         }
-    });
-
-    async function saveAction(formData: FormData) {
-        'use server';
-        
-        // Save Shop Config
-        const newShopConfig: ShopConfig = {
-            // General
-            isShopEnabled: formData.get('isShopEnabled') === 'on',
-            samplePrice: Math.round(parseFloat(formData.get('samplePrice') as string) * 100),
-            sampleShippingCost: Math.round(parseFloat(formData.get('sampleShippingCost') as string) * 100),
-            heroHeadline: formData.get('heroHeadline') as string,
-            heroSubheadline: formData.get('heroSubheadline') as string,
-            heroImage: formData.get('heroImage') as string,
-            measurementProductId: formData.get('measurementProductId') as string,
-            
-            // Payment
-            proformaBankName: formData.get('proformaBankName') as string,
-            proformaBankAccount: formData.get('proformaBankAccount') as string,
-            
-            // SEO & Company
-            organizationLogo: formData.get('organizationLogo') as string,
-            contactPhone: formData.get('contactPhone') as string,
-            contactEmail: formData.get('contactEmail') as string,
-            socialFacebook: formData.get('socialFacebook') as string,
-            socialInstagram: formData.get('socialInstagram') as string,
-            
-            // Integrations
-            googleSearchConsoleId: formData.get('googleSearchConsoleId') as string,
-            googleAnalyticsId: formData.get('googleAnalyticsId') as string,
-            facebookPixelId: formData.get('facebookPixelId') as string,
-            
-            // Control
-            noIndex: formData.get('noIndex') === 'on',
-            welcomeEmailTemplate: config.welcomeEmailTemplate, // Keep existing
-
-            // Header
-            headerLogo: formData.get('headerLogo') as string,
-            headerShowSearch: formData.get('headerShowSearch') === 'on',
-            headerShowUser: formData.get('headerShowUser') === 'on',
-            
-            // Branding
-            primaryColor: formData.get('primaryColor') as string,
-
-            // Prices
-            showGrossPrices: formData.get('showGrossPrices') === 'on',
-            vatRate: parseInt(formData.get('vatRate') as string) || 23,
-        };
-
-        // Handle File Uploads for Branding
-        const logoFile = formData.get('organizationLogoFile') as File;
-        const headerLogoFile = formData.get('headerLogoFile') as File;
-        const heroImageFile = formData.get('heroImageFile') as File;
-
-        // Pass files to server action (it will handle processing)
-        await updateShopConfig(newShopConfig, {
-            logoFile: logoFile.size > 0 ? logoFile : undefined,
-            headerLogoFile: headerLogoFile.size > 0 ? headerLogoFile : undefined,
-            heroImageFile: heroImageFile.size > 0 ? heroImageFile : undefined,
-        });
-
-        // Save Tpay Config
-        const newTpayConfig: TpayConfig = {
-            clientId: formData.get('tpayClientId') as string,
-            clientSecret: formData.get('tpayClientSecret') as string,
-            isSandbox: formData.get('tpayIsSandbox') === 'on',
-        };
-
-        await updateTpayConfig(newTpayConfig);
     }
 
     return (
@@ -104,7 +101,7 @@ export default async function ShopSettingsPage() {
             </div>
             <Separator />
             
-            <form action={saveAction}>
+            <form action={handleSave}>
                 <Tabs defaultValue="general" className="w-full">
                     <TabsList className="grid w-full grid-cols-4">
                         <TabsTrigger value="general">Ogólne</TabsTrigger>
@@ -246,21 +243,14 @@ export default async function ShopSettingsPage() {
                                 </div>
                                 <div className="space-y-4 pt-4 border-t">
                                     <Label>Zdjęcie w tle (Hero Image)</Label>
-                                    <div className="flex gap-4 items-center">
-                                         {config.heroImage ? (
-                                             // eslint-disable-next-line @next/next/no-img-element
-                                             <img src={config.heroImage} alt="Current Hero" className="h-24 w-40 object-cover rounded-lg border shadow-sm" />
-                                         ) : (
-                                             <div className="h-24 w-40 bg-muted rounded-lg border flex items-center justify-center text-xs text-muted-foreground">Brak</div>
-                                         )}
-                                         <div className="flex-1 space-y-2">
-                                             <Input type="file" name="heroImageFile" accept="image/*" className="max-w-sm" />
-                                             <input type="hidden" name="heroImage" value={config.heroImage || ''} />
-                                             <p className="text-[10px] text-muted-foreground">
-                                                 Zalecany format: 2560x800px. System automatycznie zoptymalizuje plik do WebP (Quality 90).
-                                             </p>
-                                         </div>
-                                    </div>
+                                    <SingleImageUpload 
+                                        value={config.heroImage}
+                                        onChange={(url) => setConfig(prev => ({ ...prev, heroImage: url || undefined }))}
+                                        onUpload={handleImageUpload}
+                                        aspectRatio="video"
+                                        label="Zmień zdjęcie tła"
+                                    />
+                                    <input type="hidden" name="heroImage" value={config.heroImage || ''} />
                                 </div>
                             </CardContent>
                         </Card>
@@ -282,7 +272,8 @@ export default async function ShopSettingsPage() {
                                                 name="primaryColor" 
                                                 type="color"
                                                 className="w-12 h-10 p-1 cursor-pointer"
-                                                defaultValue={config.primaryColor || "#b02417"} 
+                                                value={config.primaryColor || "#b02417"} 
+                                                onChange={(e) => setConfig(prev => ({ ...prev, primaryColor: e.target.value }))}
                                             />
                                             <Input 
                                                 type="text"
@@ -307,18 +298,14 @@ export default async function ShopSettingsPage() {
                             <CardContent className="space-y-4">
                                 <div className="space-y-4 border-b pb-4">
                                      <Label>Logo w nagłówku</Label>
-                                     <div className="flex gap-4 items-center">
-                                         {config.headerLogo ? (
-                                             // eslint-disable-next-line @next/next/no-img-element
-                                             <img src={config.headerLogo} alt="Header Logo" className="h-12 object-contain border p-2 rounded bg-white/50" />
-                                         ) : (
-                                             <div className="h-12 w-32 bg-muted rounded border flex items-center justify-center text-xs">Brak logo</div>
-                                         )}
-                                         <div className="flex-1 space-y-2">
-                                              <Input type="file" name="headerLogoFile" accept="image/*" className="max-w-sm" />
-                                              <input type="hidden" name="headerLogo" value={config.headerLogo || ''} />
-                                         </div>
-                                     </div>
+                                     <SingleImageUpload 
+                                        value={config.headerLogo}
+                                        onChange={(url) => setConfig(prev => ({ ...prev, headerLogo: url || undefined }))}
+                                        onUpload={handleImageUpload}
+                                        aspectRatio="auto"
+                                        label="Zmień logo"
+                                    />
+                                    <input type="hidden" name="headerLogo" value={config.headerLogo || ''} />
                                 </div>
                                 
                                 <div className="flex items-center justify-between rounded-lg border p-4">
@@ -459,16 +446,14 @@ export default async function ShopSettingsPage() {
                             <CardContent className="space-y-4">
                                 <div className="space-y-4 border-b pb-4">
                                      <Label>Logo dla Google (Organization)</Label>
-                                     <div className="flex gap-4 items-center">
-                                         {config.organizationLogo && (
-                                             // eslint-disable-next-line @next/next/no-img-element
-                                             <img src={config.organizationLogo} alt="Org Logo" className="h-16 w-16 object-contain border p-1 rounded bg-white" />
-                                         )}
-                                         <div className="flex-1 space-y-2">
-                                              <Input type="file" name="organizationLogoFile" accept="image/*" className="max-w-sm" />
-                                              <input type="hidden" name="organizationLogo" value={config.organizationLogo || ''} />
-                                         </div>
-                                     </div>
+                                     <SingleImageUpload 
+                                        value={config.organizationLogo}
+                                        onChange={(url) => setConfig(prev => ({ ...prev, organizationLogo: url || undefined }))}
+                                        onUpload={handleImageUpload}
+                                        aspectRatio="square"
+                                        label="Zmień logo organizacji"
+                                    />
+                                    <input type="hidden" name="organizationLogo" value={config.organizationLogo || ''} />
                                 </div>
  
                                 <div className="grid gap-4 md:grid-cols-2">

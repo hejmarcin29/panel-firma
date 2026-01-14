@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import { getProductDetails, getSuppliersList } from "../actions";
 import { ProductPrices } from "../_components/product-prices";
 import { ProductSyncToggle } from "../_components/product-sync-toggle";
@@ -75,12 +76,22 @@ export default async function ProductDetailsPage({ params }: PageProps) {
                             source={product.source ?? 'local'} 
                         />
                     </div>
-                    <p className="text-muted-foreground mt-1">
-                        SKU: <span className="font-mono text-foreground">{product.sku}</span>
-                        {product.category && ` • Kategoria: ${product.category.name}`}
-                        {product.brand && ` • Marka: ${product.brand.name}`}
-                        {product.collection && ` • Kolekcja: ${product.collection.name}`}
-                    </p>
+                    <div className="text-muted-foreground mt-1 flex items-center flex-wrap gap-x-2 gap-y-1 text-sm">
+                        <span>SKU: <span className="font-mono text-foreground">{product.sku}</span></span>
+                        {product.category && <span>• Kategoria: {product.category.name}</span>}
+                        {product.brand && (
+                            <span className="inline-flex items-center gap-1">
+                                <span>• Marka:</span>
+                                {product.brand.imageUrl && (
+                                    <div className="relative h-4 w-8 border rounded bg-white">
+                                        <Image src={product.brand.imageUrl} alt={product.brand.name} fill className="object-contain p-0.5" />
+                                    </div>
+                                )}
+                                <span>{product.brand.name}</span>
+                            </span>
+                        )}
+                        {product.collection && <span>• Kolekcja: {product.collection.name}</span>}
+                    </div>
                 </div>
             </div>
 

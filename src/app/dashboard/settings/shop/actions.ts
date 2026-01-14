@@ -78,6 +78,19 @@ export async function getShopConfig(): Promise<ShopConfig> {
 
 import { processAndUploadImage } from '@/lib/r2/upload';
 
+
+export async function uploadShopImage(formData: FormData) {
+    const file = formData.get('file') as File;
+    const folder = formData.get('folder') as string || 'system/branding';
+    
+    if (!file) throw new Error('No file uploaded');
+
+    return await processAndUploadImage({
+        file,
+        folderPath: folder,
+    });
+}
+
 export async function updateShopConfig(
     data: ShopConfig, 
     files?: { 

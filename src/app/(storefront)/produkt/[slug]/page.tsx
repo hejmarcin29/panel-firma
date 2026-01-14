@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import Image from 'next/image';
 import { getProductBySlug } from './actions';
 import { getShopConfig } from '@/app/dashboard/settings/shop/actions';
 import { ProductGallery } from './_components/product-gallery';
@@ -145,9 +146,21 @@ export default async function ProductPage({ params }: PageProps) {
                                     )}
                                 </div>
                                 {product.brand && (
-                                    <div className="text-right">
-                                        <span className="text-xs text-muted-foreground block">Producent</span>
-                                        <span className="font-semibold text-gray-900">{product.brand.name}</span>
+                                    <div className="text-right flex flex-col items-end gap-1">
+                                        <span className="text-xs text-muted-foreground">Producent</span>
+                                        {product.brand.imageUrl ? (
+                                            <div className="relative h-10 w-24" title={product.brand.name}>
+                                                <Image 
+                                                    src={product.brand.imageUrl} 
+                                                    alt={product.brand.name} 
+                                                    fill 
+                                                    className="object-contain object-right"
+                                                    sizes="96px"
+                                                />
+                                            </div>
+                                        ) : (
+                                            <span className="font-semibold text-gray-900">{product.brand.name}</span>
+                                        )}
                                     </div>
                                 )}
                             </div>
