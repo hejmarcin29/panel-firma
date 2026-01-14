@@ -8,9 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Added
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from '@/components/ui/badge';
 import { ShieldAlert, Globe, Search, BarChart3, CreditCard, LayoutTemplate } from 'lucide-react';
 
 export default async function ShopSettingsPage() {

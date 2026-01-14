@@ -33,7 +33,7 @@ import { toast } from 'sonner';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TimelineView } from '@/components/shop/timeline-view';
+import { TimelineView, TimelineEvent } from '@/components/shop/timeline-view';
 
 
 interface OrderItemDetails {
@@ -67,7 +67,7 @@ interface OrderDetails {
 interface OrderDetailsClientProps {
     order: OrderDetails; 
     items: OrderItemDetails[];
-    timelineEvents: any[];
+    timelineEvents: TimelineEvent[];
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -112,7 +112,7 @@ export function OrderDetailsClient({ order, items, timelineEvents }: OrderDetail
             await navigator.clipboard.writeText(link);
             toast.success('Link do statusu skopiowany do schowka!');
             toast.info('Wyślij go klientowi na WhatsApp lub SMS.');
-        } catch (error) {
+        } catch {
             toast.error('Błąd generowania linku.');
         }
     }

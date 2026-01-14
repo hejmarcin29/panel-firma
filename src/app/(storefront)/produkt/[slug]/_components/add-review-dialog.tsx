@@ -39,7 +39,7 @@ export function AddReviewDialog({ productId, productName }: AddReviewDialogProps
             });
             toast.success("Dziękujemy! Opinia została wysłana do moderacji.");
             setOpen(false);
-        } catch (error) {
+        } catch {
             toast.error("Wystąpił błąd podczas wysyłania opinii.");
         } finally {
             setIsSubmitting(false);

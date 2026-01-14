@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     }
 }
 
-async function handlePaymentSuccess(transactionId: string, crc: string, amountPaid: number) {
+async function handlePaymentSuccess(transactionId: string, crc: string) {
     // 1. MONTAGE PAYMENT
     if (crc.startsWith('MONTAGE_')) {
         // Format: MONTAGE_{PaymentID} or MONTAGE_{MontageID}_{Timestamp}

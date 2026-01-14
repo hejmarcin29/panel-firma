@@ -162,7 +162,7 @@ export function CustomerPortal({ customer, token, bankAccount, companyInfo, pend
                                     setIsPaying(true);
                                     const { paymentUrl } = await initiatePayment(pendingOrder.id, token);
                                     window.location.href = paymentUrl;
-                                } catch (e) {
+                                } catch {
                                     toast.error('Wystąpił błąd podczas inicjalizacji płatności.');
                                     setIsPaying(false);
                                 }

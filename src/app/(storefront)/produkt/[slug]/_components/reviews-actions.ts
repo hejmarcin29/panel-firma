@@ -1,9 +1,8 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { erpProductReviews, reviewStatus } from '@/lib/db/reviews-schema';
+import { erpProductReviews } from '@/lib/db/reviews-schema';
 import { eq, desc, and } from 'drizzle-orm';
-import { revalidatePath } from 'next/cache';
 import { randomUUID } from 'crypto';
 
 export async function submitReview(data: {

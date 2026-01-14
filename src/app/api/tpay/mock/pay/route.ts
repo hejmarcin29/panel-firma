@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { orders, montages, userRoles } from '@/lib/db/schema';
+import { orders, montages } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { logSystemEvent } from '@/lib/logging';
 

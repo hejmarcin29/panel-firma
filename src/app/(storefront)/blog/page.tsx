@@ -33,6 +33,7 @@ export default async function BlogPage() {
                             <Card key={post.id} className="overflow-hidden flex flex-col hover:shadow-lg transition-shadow border-gray-200">
                                 <Link href={`/blog/${post.slug}`} className="block aspect-video overflow-hidden bg-gray-100 relative group">
                                     {post.featuredImage ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
                                         <img 
                                             src={post.featuredImage} 
                                             alt={post.title} 

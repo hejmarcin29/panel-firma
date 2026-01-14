@@ -24,7 +24,7 @@ export function ImportButton() {
             } else {
                 toast.error(`Błąd importu: ${result.message}`);
             }
-        } catch (error) {
+        } catch {
             toast.error('Wystąpił nieoczekiwany błąd.');
         } finally {
             setIsLoading(false);

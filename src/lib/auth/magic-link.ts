@@ -38,7 +38,7 @@ export function verifyMagicLinkToken(token: string): string | null {
         }
 
         return payload.oid;
-    } catch (e) {
+    } catch {
         return null;
     }
 }

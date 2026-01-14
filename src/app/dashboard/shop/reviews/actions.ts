@@ -1,8 +1,8 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { erpProductReviews, erpProducts } from '@/lib/db/schema';
-import { desc, eq, and } from 'drizzle-orm';
+import { erpProductReviews } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 
 export async function getReviews() {
@@ -28,7 +28,7 @@ export async function toggleReviewStatus(id: string, currentStatus: string) {
     revalidatePath('/dashboard/shop/reviews');
 }
 
-export async function createManualReview(data: any) {
+export async function createManualReview(data: { productId: string; rating: string; content: string; authorName?: string; createdAt?: string }) {
     if (!data.productId || !data.rating || !data.content) {
         throw new Error('Rating, Product and Content are required');
     }

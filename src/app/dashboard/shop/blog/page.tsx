@@ -1,7 +1,7 @@
-import { getPosts, deletePost } from './actions';
+import { getPosts } from './actions';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Plus, Edit, Trash2, Eye } from 'lucide-react';
+import { Plus, Edit, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { DeletePostButton } from './_components/delete-post-button';
 import { ImportButton } from './_components/import-button';
@@ -51,6 +51,7 @@ export default async function BlogListPage() {
                             <tr key={post.id} className="border-b hover:bg-muted/50 transition-colors">
                                 <td className="p-4 w-[100px]">
                                     {post.featuredImage ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
                                         <img src={post.featuredImage} alt="" className="h-12 w-20 object-cover rounded-md bg-muted" />
                                     ) : (
                                         <div className="h-12 w-20 bg-muted rounded-md flex items-center justify-center text-xs text-muted-foreground">

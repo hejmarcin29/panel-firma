@@ -1,7 +1,6 @@
 import 'server-only';
 import { getAppSetting, appSettingKeys } from '../settings';
-import { CreatePaymentParams, TpayConfig, TpayTransaction, TpayNotification } from './types';
-import crypto from 'crypto';
+import { CreatePaymentParams, TpayConfig, TpayTransaction } from './types';
 
 const TPAY_API_URL = 'https://api.tpay.com';
 const TPAY_SANDBOX_API_URL = 'https://api.tpay.sandbox.pl';
@@ -111,7 +110,8 @@ export async function createPayment(params: CreatePaymentParams): Promise<TpayTr
     };
 }
 
-export async function verifyNotificationSignature(notification: TpayNotification): Promise<boolean> {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function verifyNotificationSignature(_notification: TpayNotification): Promise<boolean> {
     // Tpay notification signature verification (MD5)
     // The simplified Basic API uses MD5 checksum.
     // The OpenAPI notification usually uses JWS or signature header, but often legacy MD5 is still sent or supported.

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Star } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { createManualReview } from '../actions';
 
@@ -38,7 +38,7 @@ export function ReviewForm({ products }: ReviewFormProps) {
             await createManualReview(data);
             toast.success('Opinia dodana pomyślnie');
             setOpen(false);
-        } catch (error) {
+        } catch {
             toast.error('Błąd podczas dodawania opinii');
         } finally {
             setLoading(false);

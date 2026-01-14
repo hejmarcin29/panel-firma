@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Trash2, CheckCircle, XCircle, Star, MessageSquare } from "lucide-react";
+import { Trash2, CheckCircle, XCircle, Star } from "lucide-react";
 import { toggleReviewStatus, deleteReview } from "../actions";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -40,7 +40,7 @@ export function ReviewsTable({ reviews }: ReviewsTableProps) {
         try {
             await toggleReviewStatus(id, status);
             toast.success('Status zmieniony');
-        } catch (e) {
+        } catch {
             toast.error('Błąd zmiany statusu');
         }
     }
@@ -50,7 +50,7 @@ export function ReviewsTable({ reviews }: ReviewsTableProps) {
         try {
             await deleteReview(id);
             toast.success('Opinia usunięta');
-        } catch (e) {
+        } catch {
             toast.error('Błąd usuwania');
         }
     }

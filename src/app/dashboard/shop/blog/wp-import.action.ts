@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { erpPosts, users } from '@/lib/db/schema'; // users might be needed
+import { erpPosts } from '@/lib/db/schema'; // users might be needed
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 

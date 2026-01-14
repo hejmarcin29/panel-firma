@@ -4,7 +4,6 @@ import { db } from '@/lib/db';
 import { erpPosts } from '@/lib/db/schema';
 import { desc, eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 
 export async function getPosts() {
     return await db.query.erpPosts.findMany({

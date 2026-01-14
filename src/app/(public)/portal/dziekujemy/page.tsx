@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button';
 import { CheckCircle2, CalendarCheck, ShieldCheck } from 'lucide-react';
 
 export const metadata = {

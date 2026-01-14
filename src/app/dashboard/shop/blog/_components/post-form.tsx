@@ -160,6 +160,7 @@ export function PostForm({ initialData }: PostFormProps) {
                         />
                         {featuredImage && (
                             <div className="mt-2 aspect-video w-40 rounded-md overflow-hidden bg-gray-100 border relative">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src={featuredImage} alt="Podgląd" className="w-full h-full object-cover" />
                             </div>
                         )}

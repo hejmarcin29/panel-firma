@@ -1,15 +1,17 @@
 import { db } from "@/lib/db";
 import { erpOrderTimeline } from "@/lib/db/schema";
 import { TimelineType } from "@/lib/db/reviews-schema";
+import { randomUUID } from "crypto";
 
 export async function logOrderEvent(
     orderId: string,
     type: TimelineType,
     title: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
 ) {
     try {
         await db.insert(erpOrderTimeline).values({
+            id: randomUUID(),
             orderId,
             type,
             title,

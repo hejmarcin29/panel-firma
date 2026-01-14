@@ -69,6 +69,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                 {post.featuredImage && (
                     <div className="absolute inset-0 z-0">
                          <div className="absolute inset-0 bg-black/60 z-10" />
+                         {/* eslint-disable-next-line @next/next/no-img-element */}
                          <img 
                             src={post.featuredImage} 
                             alt={post.title} 

@@ -1,4 +1,4 @@
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { db } from "@/lib/db";
 import { manualOrders, erpOrderTimeline } from "@/lib/db/schema";
 import { eq, asc } from "drizzle-orm";
@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
-import { TimelineView } from "@/components/shop/timeline-view";
+import { TimelineView, TimelineEvent } from "@/components/shop/timeline-view";
 
 interface PageProps {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -58,12 +58,14 @@ export default async function OrderStatusPage({ searchParams }: PageProps) {
     }
 
     // Fetch Timeline (Safe fetch in case table not ready)
-    let timelineEvents: any[] = [];
+    let timelineEvents: TimelineEvent[] = [];
     try {
-        timelineEvents = await db.query.erpOrderTimeline.findMany({
+        const rawEvents = await db.query.erpOrderTimeline.findMany({
             where: eq(erpOrderTimeline.orderId, orderId),
             orderBy: asc(erpOrderTimeline.createdAt)
         });
+        
+        timelineEvents = rawEvents as unknown as TimelineEvent[];
     } catch (e) {
         console.error("Timeline fetch failed (table might be missing):", e);
     }

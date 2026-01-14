@@ -12,11 +12,11 @@ import {
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 
-interface TimelineEvent {
+export interface TimelineEvent {
     id: string;
     type: string;
     title: string;
-    metadata: any;
+    metadata: Record<string, unknown> | null;
     createdAt: Date;
 }
 
@@ -24,6 +24,7 @@ interface TimelineViewProps {
     events: TimelineEvent[];
     isAdmin?: boolean;
 }
+
 
 export function TimelineView({ events, isAdmin = false }: TimelineViewProps) {
     if (events.length === 0) {
@@ -38,7 +39,7 @@ export function TimelineView({ events, isAdmin = false }: TimelineViewProps) {
 
     return (
         <div className="relative border-l border-gray-200 dark:border-gray-800 ml-3 space-y-8 pb-4">
-            {events.map((event, index) => {
+            {events.map((event) => {
                 const Icon = getIconForType(event.type);
                 // const isLast = index === events.length - 1;
                 
@@ -84,10 +85,10 @@ function getIconForType(type: string) {
     }
 }
 
-function renderMetadata(metadata: any) {
+function renderMetadata(metadata: Record<string, unknown> | null) {
     // Simple rendering of crucial metadata if needed
     // e.g. amount for payments, previous status for changes
-    if (typeof metadata !== 'object') return null;
+    if (!metadata || typeof metadata !== 'object') return null;
 
     return (
         <div className="mt-1 text-sm text-gray-500">
