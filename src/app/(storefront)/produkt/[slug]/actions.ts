@@ -57,6 +57,9 @@ export async function getProductBySlug(slug: string): Promise<ProductDetails | n
             brand: true,
             collection: true,
             category: true,
+            mountingMethodDictionary: true,
+            floorPatternDictionary: true,
+            wearClassDictionary: true,
             attributes: {
                 with: {
                     attribute: true,
@@ -90,9 +93,9 @@ export async function getProductBySlug(slug: string): Promise<ProductDetails | n
         salePrice: product.salePrice,
         unit: product.unit,
         packageSizeM2: product.packageSizeM2,
-        mountingMethod: product.mountingMethod,
-        floorPattern: product.floorPattern,
-        wearClass: product.wearClass,
+        mountingMethod: product.mountingMethodDictionary?.name ?? product.mountingMethod,
+        floorPattern: product.floorPatternDictionary?.name ?? product.floorPattern,
+        wearClass: product.wearClassDictionary?.name ?? product.wearClass,
         wearLayerThickness: product.wearLayerThickness,
         stockQuantity: product.stockQuantity,
         isSampleAvailable: product.isSampleAvailable,

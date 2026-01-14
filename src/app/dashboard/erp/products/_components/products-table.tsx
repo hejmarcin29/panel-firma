@@ -83,9 +83,14 @@ interface ProductsTableProps {
     brands: Brand[];
     collections: Collection[];
     attributes: Attribute[];
+    mountingMethods: { id: string; name: string }[];
+    floorPatterns: { id: string; name: string }[];
+    wearClasses: { id: string; name: string }[];
+    structures: { id: string; name: string }[];
 }
 
 const PriceDisplay = ({ price, salePrice, regularPrice }: { price: string | null, salePrice: string | null, regularPrice?: string | null }) => {
+
     // Determine effective price
     const effectivePriceStr = salePrice || price;
     if (!effectivePriceStr) return <span className="text-muted-foreground">-</span>;
@@ -126,10 +131,15 @@ export function ProductsTable({
     suppliers = [], 
     brands = [], 
     collections = [], 
-    attributes = [] 
+    attributes = [],
+    mountingMethods = [],
+    floorPatterns = [],
+    wearClasses = [],
+    structures = [],
 }: ProductsTableProps) {
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
+
     const [statusFilter, setStatusFilter] = useState("active");
     const [categoryFilter, setCategoryFilter] = useState("all");
 
@@ -249,6 +259,10 @@ export function ProductsTable({
                         collections={collections}
                         suppliers={suppliers}
                         attributes={attributes}
+                        mountingMethods={mountingMethods}
+                        floorPatterns={floorPatterns}
+                        wearClasses={wearClasses}
+                        structures={structures}
                         onSuccess={() => setSelectedIds([])}
                     />
 

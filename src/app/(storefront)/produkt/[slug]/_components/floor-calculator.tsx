@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -149,23 +150,37 @@ export function FloorCalculator({
             <button
                 onClick={() => setMode("material")}
                 className={cn(
-                    "py-2 px-3 text-sm font-medium rounded-md transition-all",
+                    "relative z-10 py-2 px-3 text-sm font-medium rounded-md transition-colors",
                     mode === "material" 
-                        ? "bg-background shadow text-foreground" 
+                        ? "text-foreground" 
                         : "text-muted-foreground hover:text-foreground"
                 )}
             >
+                {mode === "material" && (
+                    <motion.div
+                        layoutId="active-mode-tab"
+                        className="absolute inset-0 bg-background shadow-sm rounded-md -z-10"
+                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                )}
                 📦 Tylko Materiał
             </button>
             <button
                 onClick={() => setMode("montage")}
                 className={cn(
-                    "py-2 px-3 text-sm font-medium rounded-md transition-all flex items-center justify-center gap-2",
+                    "relative z-10 py-2 px-3 text-sm font-medium rounded-md transition-colors flex items-center justify-center gap-2",
                     mode === "montage" 
-                        ? "bg-background shadow text-primary font-bold" 
+                        ? "text-primary font-bold" 
                         : "text-muted-foreground hover:text-foreground"
                 )}
             >
+                {mode === "montage" && (
+                    <motion.div
+                        layoutId="active-mode-tab"
+                        className="absolute inset-0 bg-background shadow-sm rounded-md -z-10"
+                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                )}
                 🛠️ Z Montażem <span className="text-[10px] bg-green-100 text-green-700 px-1.5 rounded-full ml-1">-15%</span>
             </button>
          </div>
@@ -207,30 +222,54 @@ export function FloorCalculator({
       </div>
 
       {/* Results Section */}
-      <div className="rounded-lg bg-muted/30 p-4 space-y-3 border border-border/50">
-          
+      <div className="rounded-lg bg-muted/30 p-4 border border-border/50 overflow-hidden">
+        <AnimatePresence mode="wait">
           {mode === 'material' ? (
-             <>
+             <motion.div 
+                key="material-calc"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-3"
+             >
                 <div className="flex justify-between text-sm">
                     <span>Potrzebujesz:</span>
                     <span className="font-medium">{areaWithWaste.toFixed(2)} m²</span>
                 </div>
                 <div className="flex justify-between text-sm items-center">
                     <span>Ilość paczek:</span>
-                    <span className="font-bold text-lg">{packsNeeded} op.</span>
+                    <div className="flex flex-col items-end">
+                        <span className="font-bold text-lg">{packsNeeded} op.</span>
+                        {isFlooring && packageSizeM2 > 0 && (
+                            <span className="text-[10px] text-muted-foreground">
+                                (1 op. = {packageSizeM2} m²)
+                            </span>
+                        )}
+                    </div>
                 </div>
                 <div className="flex justify-between text-sm text-muted-foreground border-t pt-2 mt-2">
                     <span>Razem do zamówienia:</span>
                     <span>{totalArea.toFixed(2)} m²</span>
                 </div>
-             </>
+             </motion.div>
           ) : (
-             <div className="space-y-3">
+             <motion.div 
+                key="montage-est"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-3"
+             >
                  <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Szacowany koszt inwestycji:</span>
                  </div>
                  {estimation ? (
-                     <div>
+                     <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                     >
                         <div className="flex items-baseline gap-2">
                              <span className="text-2xl font-bold text-gray-900">
                                  {estimation.priceRange.min} - {estimation.priceRange.max} zł
@@ -243,17 +282,25 @@ export function FloorCalculator({
                         <p className="text-[10px] text-gray-400 mt-2 leading-tight">
                             W cenie: Materiał, montaż, chemia montażowa, listwy, pomiar, gwarancja.
                         </p>
-                     </div>
+                     </motion.div>
                  ) : (
                      <div className="h-12 w-full animate-pulse bg-gray-200 rounded"></div>
                  )}
-             </div>
+             </motion.div>
           )}
+        </AnimatePresence>
       </div>
 
       <div className="pt-2">
+       <AnimatePresence mode="wait">
         {mode === 'material' ? (
-            <>
+            <motion.div
+                key="material-actions"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.2 }}
+            >
                 <div className="flex items-end justify-between mb-4">
                     <span className="text-muted-foreground text-sm">Cena towaru:</span>
                     <span className="text-3xl font-bold tracking-tight text-primary">
@@ -262,103 +309,116 @@ export function FloorCalculator({
                 </div>
                 
                 {isPurchasable ? (
-                    <Button size="lg" className="w-full h-12 text-base font-semibold shadow-lg shadow-primary/20" onClick={handleAddToCart}>
-                        <ShoppingCart className="mr-2 h-5 w-5" />
-                        Dodaj do koszyka
-                    </Button>
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                        <Button size="lg" className="w-full h-12 text-base font-semibold shadow-lg shadow-primary/20" onClick={handleAddToCart}>
+                            <ShoppingCart className="mr-2 h-5 w-5" />
+                            Dodaj do koszyka
+                        </Button>
+                    </motion.div>
                 ) : (
                     <Button size="lg" disabled className="w-full h-12 text-base font-semibold opacity-75 cursor-not-allowed" variant="secondary">
                         Produkt niedostępny online
                     </Button>
                 )}
-            </>
+            </motion.div>
         ) : (
-             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-                <SheetTrigger asChild>
-                    <Button size="lg" className="w-full h-12 text-base font-semibold bg-gray-900 hover:bg-black text-white shadow-xl shadow-gray-900/10">
-                        <Calculator className="mr-2 h-5 w-5" />
-                        Umów darmowy pomiar
-                    </Button>
-                </SheetTrigger>
-                <SheetContent side="bottom" className="rounded-t-[20px] lg:rounded-none lg:max-w-md h-[85vh] lg:h-full flex flex-col">
-                    <SheetHeader className="text-left space-y-4 pb-6 border-b">
-                        <SheetTitle className="text-2xl font-playfair">Podsumowanie wstępne</SheetTitle>
-                        <SheetDescription>
-                            Potwierdź dane, aby zamówić pomiar weryfikacyjny.
-                        </SheetDescription>
-                    </SheetHeader>
-                    
-                    <div className="flex-1 overflow-y-auto py-6 space-y-8">
-                        {/* Summary Card */}
-                        <div className="bg-gray-50 rounded-xl p-4 space-y-3 border">
-                            <h4 className="font-semibold text-sm text-gray-900">Twój wybór:</h4>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-500">Produkt:</span>
-                                <span className="font-medium truncate max-w-[200px]">{product.name}</span>
+             <motion.div
+                key="montage-actions"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                transition={{ duration: 0.2 }}
+             >
+                 <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+                    <SheetTrigger asChild>
+                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                            <Button size="lg" className="w-full h-12 text-base font-semibold bg-gray-900 hover:bg-black text-white shadow-xl shadow-gray-900/10">
+                                <Calculator className="mr-2 h-5 w-5" />
+                                Umów darmowy pomiar
+                            </Button>
+                        </motion.div>
+                    </SheetTrigger>
+                    <SheetContent side="bottom" className="rounded-t-[20px] lg:rounded-none lg:max-w-md h-[85vh] lg:h-full flex flex-col">
+                        <SheetHeader className="text-left space-y-4 pb-6 border-b">
+                            <SheetTitle className="text-2xl font-playfair">Podsumowanie wstępne</SheetTitle>
+                            <SheetDescription>
+                                Potwierdź dane, aby zamówić pomiar weryfikacyjny.
+                            </SheetDescription>
+                        </SheetHeader>
+                        
+                        <div className="flex-1 overflow-y-auto py-6 space-y-8">
+                            {/* Summary Card */}
+                            <div className="bg-gray-50 rounded-xl p-4 space-y-3 border">
+                                <h4 className="font-semibold text-sm text-gray-900">Twój wybór:</h4>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-500">Produkt:</span>
+                                    <span className="font-medium truncate max-w-[200px]">{product.name}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-gray-500">Powierzchnia:</span>
+                                    <span className="font-medium">{area} m²</span>
+                                </div>
+                                <div className="border-t pt-3 flex justify-between items-center">
+                                    <span className="text-gray-500 text-sm">Szacowany budżet:</span>
+                                    <span className="font-bold text-lg text-primary">
+                                        {estimation ? `~${Math.round(estimation.totalGross8)} zł` : '...'}
+                                    </span>
+                                </div>
                             </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-gray-500">Powierzchnia:</span>
-                                <span className="font-medium">{area} m²</span>
-                            </div>
-                            <div className="border-t pt-3 flex justify-between items-center">
-                                <span className="text-gray-500 text-sm">Szacowany budżet:</span>
-                                <span className="font-bold text-lg text-primary">
-                                    {estimation ? `~${Math.round(estimation.totalGross8)} zł` : '...'}
-                                </span>
+
+                            {/* Form */}
+                            <div className="space-y-4">
+                                <h4 className="font-medium">Dane kontaktowe</h4>
+                                <div className="grid gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="name">Imię i Nazwisko</Label>
+                                        <Input 
+                                            id="name" 
+                                            placeholder="Jan Kowalski" 
+                                            value={leadForm.name}
+                                            onChange={e => setLeadForm({...leadForm, name: e.target.value})}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="phone">Numer telefonu</Label>
+                                        <Input 
+                                            id="phone" 
+                                            placeholder="123 456 789" 
+                                            type="tel"
+                                            value={leadForm.phone}
+                                            onChange={e => setLeadForm({...leadForm, phone: e.target.value})}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="zip">Kod pocztowy (Miejscowość inwestycji)</Label>
+                                        <Input 
+                                            id="zip" 
+                                            placeholder="00-000" 
+                                            value={leadForm.postalCode}
+                                            onChange={e => setLeadForm({...leadForm, postalCode: e.target.value})}
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        {/* Form */}
-                        <div className="space-y-4">
-                            <h4 className="font-medium">Dane kontaktowe</h4>
-                            <div className="grid gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="name">Imię i Nazwisko</Label>
-                                    <Input 
-                                        id="name" 
-                                        placeholder="Jan Kowalski" 
-                                        value={leadForm.name}
-                                        onChange={e => setLeadForm({...leadForm, name: e.target.value})}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="phone">Numer telefonu</Label>
-                                    <Input 
-                                        id="phone" 
-                                        placeholder="123 456 789" 
-                                        type="tel"
-                                        value={leadForm.phone}
-                                        onChange={e => setLeadForm({...leadForm, phone: e.target.value})}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="zip">Kod pocztowy (Miejscowość inwestycji)</Label>
-                                    <Input 
-                                        id="zip" 
-                                        placeholder="00-000" 
-                                        value={leadForm.postalCode}
-                                        onChange={e => setLeadForm({...leadForm, postalCode: e.target.value})}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <SheetFooter className="pt-4 border-t mt-auto">
-                        <Button 
-                            className="w-full h-12 text-base bg-primary text-primary-foreground hover:bg-primary/90"
-                            onClick={handleSubmitLead}
-                            disabled={isSubmitting || !leadForm.phone}
-                        >
-                            {isSubmitting ? 'Wysyłanie...' : 'Potwierdzam i zamawiam pomiar'}
-                        </Button>
-                        <p className="text-xs text-center text-gray-400 mt-4">
-                            Klikając, akceptujesz regulamin. Pomiar jest niezobowiązujący.
-                        </p>
-                    </SheetFooter>
-                </SheetContent>
-             </Sheet>
+                        <SheetFooter className="pt-4 border-t mt-auto">
+                            <Button 
+                                className="w-full h-12 text-base bg-primary text-primary-foreground hover:bg-primary/90"
+                                onClick={handleSubmitLead}
+                                disabled={isSubmitting || !leadForm.phone}
+                            >
+                                {isSubmitting ? 'Wysyłanie...' : 'Potwierdzam i zamawiam pomiar'}
+                            </Button>
+                            <p className="text-xs text-center text-gray-400 mt-4">
+                                Klikając, akceptujesz regulamin. Pomiar jest niezobowiązujący.
+                            </p>
+                        </SheetFooter>
+                    </SheetContent>
+                 </Sheet>
+             </motion.div>
         )}
+       </AnimatePresence>
       </div>
     </div>
   );

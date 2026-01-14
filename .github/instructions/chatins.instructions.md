@@ -10,7 +10,8 @@ Provide project context and coding guidelines that AI should follow when generat
 - **Animacje i "Look & Feel" (Top 2025):**
   - Panel ma być przyjemny dla oka i płynny.
   - Stosuj subtelne animacje wejścia (fade-in, slide-up, staggered children) dla list, kart i widgetów (np. przy użyciu `framer-motion` lub `tailwindcss-animate`).
-  - Elementy interaktywne powinny dawać natychmiastowy feedback wizualny.
+  - **Storefront (Sklep):** Priorytet na płynność (Liquid UX). Przejścia między stanami (np. filtrowanie, zmiana trybu kalkulatora) muszą być animowane (layout animations).
+  - Elementy interaktywne powinny dawać natychmiastowy feedback wizualny (mikro-interakcje na przyciskach).
   - Unikaj "sztywnych" przejść; interfejs ma "oddychać".
 - **Responsywność (Desktop & Mobile):**
   - Każdy widok **MUSI** działać poprawnie i wyglądać estetycznie zarówno na desktopie, jak i na urządzeniach mobilnych.

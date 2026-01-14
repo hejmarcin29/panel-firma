@@ -215,11 +215,11 @@ export async function updateProductWeight(id: string, weight: number | null) {
 }
 
 export async function updateProductTechnicalAttributes(id: string, data: {
-    mountingMethod?: string | null;
-    floorPattern?: string | null;
-    wearClass?: string | null;
+    mountingMethodId?: string | null;
+    floorPatternId?: string | null;
+    wearClassId?: string | null;
     wearLayerThickness?: number | null;
-    structure?: string | null;
+    structureId?: string | null;
 }) {
     const user = await requireUser();
     if (!user.roles.includes('admin')) throw new Error('Unauthorized');
@@ -627,6 +627,11 @@ export type BulkEditData = {
     status?: string;
     packageSizeM2?: number;
     price?: string;
+    mountingMethodId?: string | null;
+    floorPatternId?: string | null;
+    wearClassId?: string | null;
+    wearLayerThickness?: number | null;
+    structureId?: string | null;
     attributes?: { attributeId: string; value: string }[];
 };
 
@@ -646,6 +651,12 @@ export async function bulkEditProducts(ids: string[], data: BulkEditData) {
     if (data.status) productUpdates.status = data.status;
     if (data.packageSizeM2 !== undefined) productUpdates.packageSizeM2 = data.packageSizeM2;
     if (data.price) productUpdates.price = data.price;
+    if (data.mountingMethodId !== undefined) productUpdates.mountingMethodId = data.mountingMethodId === 'none' ? null : data.mountingMethodId;
+    if (data.floorPatternId !== undefined) productUpdates.floorPatternId = data.floorPatternId === 'none' ? null : data.floorPatternId;
+    if (data.wearClassId !== undefined) productUpdates.wearClassId = data.wearClassId === 'none' ? null : data.wearClassId;
+    if (data.wearLayerThickness !== undefined) productUpdates.wearLayerThickness = data.wearLayerThickness;
+    if (data.structureId !== undefined) productUpdates.structureId = data.structureId === 'none' ? null : data.structureId;
+
     
     // Obsługa zmiany wagi produktu (może być null, string 'none' lub string z liczbą)
     // Ale w BulkEditData nie zdefiniowaliśmy weight, więc dodam to do typu jeśli będzie potrzeba.

@@ -554,6 +554,20 @@
       "when": 1768422305822,
       "tag": "0078_colorful_piledriver",
       "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "7",
+      "when": 1768423706241,
+      "tag": "0079_spotty_longshot",
+      "breakpoints": true
+    },
+    {
+      "idx": 80,
+      "version": "7",
+      "when": 1768424776907,
+      "tag": "0080_short_red_ghost",
+      "breakpoints": true
     }
   ]
 }

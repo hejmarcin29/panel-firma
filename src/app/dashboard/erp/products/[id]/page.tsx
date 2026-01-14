@@ -16,6 +16,9 @@ import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { db } from "@/lib/db";
+import { erpMountingMethods, erpFloorPatterns, erpWearClasses, erpStructures } from "@/lib/db/schema";
+
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -39,9 +42,13 @@ const formatPrice = (price?: string | null) => {
 
 export default async function ProductDetailsPage({ params }: PageProps) {
     const { id } = await params;
-    const [product, suppliers] = await Promise.all([
+    const [product, suppliers, mountingMethods, floorPatterns, wearClasses, structures] = await Promise.all([
         getProductDetails(id),
-        getSuppliersList()
+        getSuppliersList(),
+        db.select().from(erpMountingMethods),
+        db.select().from(erpFloorPatterns),
+        db.select().from(erpWearClasses),
+        db.select().from(erpStructures),
     ]);
 
     if (!product) {
@@ -150,11 +157,15 @@ export default async function ProductDetailsPage({ params }: PageProps) {
                                     <span className="text-muted-foreground block mb-1.5">Parametry Techniczne:</span>
                                     <TechnicalAttributesEditable
                                         productId={product.id}
-                                        mountingMethod={product.mountingMethod}
-                                        floorPattern={product.floorPattern}
-                                        wearClass={product.wearClass}
+                                        mountingMethodId={product.mountingMethodId}
+                                        floorPatternId={product.floorPatternId}
+                                        wearClassId={product.wearClassId}
                                         wearLayerThickness={product.wearLayerThickness}
-                                        structure={product.structure}
+                                        structureId={product.structureId}
+                                        mountingMethods={mountingMethods}
+                                        floorPatterns={floorPatterns}
+                                        wearClasses={wearClasses}
+                                        structures={structures}
                                     />
                                 </div>
                                 <div>

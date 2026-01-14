@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Maximize2, X } from 'lucide-react';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+
 
 interface ProductGalleryProps {
     mainImage: string | null;
@@ -61,14 +63,25 @@ export function ProductGallery({ mainImage, galleryImages, productName }: Produc
         <div className="space-y-4">
             {/* Main Image View */}
             <div className="group relative aspect-square w-full overflow-hidden rounded-2xl border bg-white">
-                <Image
-                    src={currentImage.url}
-                    alt={currentImage.alt || productName}
-                    fill
-                    className="cursor-zoom-in object-contain p-4 transition-transform duration-300 hover:scale-105"
-                    priority
-                    onClick={() => setIsLightboxOpen(true)}
-                />
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={currentImage.id}
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="relative w-full h-full"
+                        onClick={() => setIsLightboxOpen(true)}
+                    >
+                        <Image
+                            src={currentImage.url}
+                            alt={currentImage.alt || productName}
+                            fill
+                            className="cursor-zoom-in object-contain p-4 transition-transform duration-500 hover:scale-105"
+                            priority
+                        />
+                    </motion.div>
+                </AnimatePresence>
                 
                 {/* Navigation Arrows (visible on hover) */}
                 {allImages.length > 1 && (

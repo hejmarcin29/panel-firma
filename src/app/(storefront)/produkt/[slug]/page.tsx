@@ -197,12 +197,19 @@ export default async function ProductPage({ params }: PageProps) {
                             
                             {/* Price disclaimer */}
                             {product.unit === 'm2' && (
-                                <p className="mt-1 text-sm text-gray-500">
-                                    {shopConfig.showGrossPrices 
-                                        ? `Cena zawiera ${shopConfig.vatRate}% VAT. Sprzedaż tylko na pełne opakowania.`
-                                        : `Cena netto (+${shopConfig.vatRate}% VAT). Sprzedaż tylko na pełne opakowania.`
-                                    }
-                                </p>
+                                <div className="mt-1 space-y-1">
+                                    <p className="text-sm text-gray-500">
+                                        {shopConfig.showGrossPrices 
+                                            ? `Cena zawiera ${shopConfig.vatRate}% VAT. Sprzedaż tylko na pełne opakowania.`
+                                            : `Cena netto (+${shopConfig.vatRate}% VAT). Sprzedaż tylko na pełne opakowania.`
+                                        }
+                                    </p>
+                                    {product.packageSizeM2 && product.packageSizeM2 > 0 && (
+                                        <p className="text-sm text-gray-500 font-medium">
+                                            (W opakowaniu: {product.packageSizeM2} m²)
+                                        </p>
+                                    )}
+                                </div>
                             )}
                         </div>
 

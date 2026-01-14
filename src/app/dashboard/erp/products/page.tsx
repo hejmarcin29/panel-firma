@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { erpProducts, erpCategories } from "@/lib/db/schema";
+import { erpProducts, erpCategories, erpMountingMethods, erpFloorPatterns, erpWearClasses, erpStructures } from "@/lib/db/schema";
 import { desc } from "drizzle-orm";
 import { ProductsTable } from "./_components/products-table";
 import { ProductSheet } from "./_components/product-sheet";
@@ -20,7 +20,7 @@ export default async function ProductsPage() {
         redirect('/dashboard');
     }
 
-    const [products, attributes, categories, suppliers, brands, collections] = await Promise.all([
+    const [products, attributes, categories, suppliers, brands, collections, mountingMethods, floorPatterns, wearClasses, structures] = await Promise.all([
         db.query.erpProducts.findMany({
             orderBy: [desc(erpProducts.createdAt)],
             with: {
@@ -42,6 +42,10 @@ export default async function ProductsPage() {
         }),
         getBrands(),
         getCollections(),
+        db.query.erpMountingMethods.findMany(),
+        db.query.erpFloorPatterns.findMany(),
+        db.query.erpWearClasses.findMany(),
+        db.query.erpStructures.findMany(),
     ]);
 
     return (
@@ -77,7 +81,11 @@ export default async function ProductsPage() {
                 suppliers={suppliers} 
                 brands={brands} 
                 collections={collections} 
-                attributes={attributes} 
+                attributes={attributes}
+                mountingMethods={mountingMethods}
+                floorPatterns={floorPatterns}
+                wearClasses={wearClasses}
+                structures={structures}
             />
         </div>
     );

@@ -1686,6 +1686,31 @@ export const erpCollections = pgTable('erp_collections', {
     createdAt: timestamp('created_at').defaultNow(),
 });
 
+// 2c. Technical Dictionaries (Słowniki Techniczne)
+export const erpMountingMethods = pgTable('erp_mounting_methods', {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    name: text('name').notNull(),
+    slug: text('slug').unique(),
+});
+
+export const erpFloorPatterns = pgTable('erp_floor_patterns', {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    name: text('name').notNull(),
+    slug: text('slug').unique(),
+});
+
+export const erpWearClasses = pgTable('erp_wear_classes', {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    name: text('name').notNull(), // "33", "23/33"
+    slug: text('slug').unique(),
+});
+
+export const erpStructures = pgTable('erp_structures', {
+    id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+    name: text('name').notNull(),
+    slug: text('slug').unique(),
+});
+
 // 3. Products (Kartoteka Towarowa)
 export const erpProducts = pgTable('erp_products', {
     id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
@@ -1721,6 +1746,12 @@ export const erpProducts = pgTable('erp_products', {
     wearClass: text('wear_class'),
     wearLayerThickness: doublePrecision('wear_layer_thickness'),
     
+    // Relations to Technical Dictionaries
+    mountingMethodId: text('mounting_method_id').references(() => erpMountingMethods.id),
+    floorPatternId: text('floor_pattern_id').references(() => erpFloorPatterns.id),
+    wearClassId: text('wear_class_id').references(() => erpWearClasses.id),
+    structureId: text('structure_id').references(() => erpStructures.id),
+
     // Visual
     structure: text('structure'), // wood, stone, etc.
 
@@ -1835,6 +1866,22 @@ export const erpProductsRelations = relations(erpProducts, ({ one, many }) => ({
     supplier: one(erpSuppliers, {
         fields: [erpProducts.supplierId],
         references: [erpSuppliers.id],
+    }),
+    mountingMethodDictionary: one(erpMountingMethods, {
+        fields: [erpProducts.mountingMethodId],
+        references: [erpMountingMethods.id],
+    }),
+    floorPatternDictionary: one(erpFloorPatterns, {
+        fields: [erpProducts.floorPatternId],
+        references: [erpFloorPatterns.id],
+    }),
+    wearClassDictionary: one(erpWearClasses, {
+        fields: [erpProducts.wearClassId],
+        references: [erpWearClasses.id],
+    }),
+    structureDictionary: one(erpStructures, {
+        fields: [erpProducts.structureId],
+        references: [erpStructures.id],
     }),
     purchasePrices: many(erpPurchasePrices),
     inventory: many(erpInventory),

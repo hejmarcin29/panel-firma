@@ -1,6 +1,7 @@
 import { getStoreProducts, getStoreCategories, getStoreBrands, getStoreCollections } from "./actions";
-import { getShopConfig } from "@/app/dashboard/settings/shop/actions"; // Added
+import { getShopConfig } from "@/app/dashboard/settings/shop/actions";
 import { ProductCard } from "../_components/product-card";
+import { ProductGridAnimated } from "../_components/product-grid-animated";
 import { SearchInput } from "../_components/search-input";
 import { StoreFilters } from "../_components/store-filters";
 
@@ -60,27 +61,11 @@ export default async function ShopPage({
                 <div className="flex-1 w-full">
                     {/* Active Filters Summary could go here */}
                     
-                    {products.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                            {products.map((product) => (
-                                <ProductCard 
-                                    key={product.id} 
-                                    product={product} 
-                                    showGrossPrices={shopConfig.showGrossPrices}
-                                    vatRate={shopConfig.vatRate}
-                                />
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="py-24 text-center border rounded-lg bg-muted/20">
-                            <p className="text-muted-foreground text-lg">
-                                Brak produktów spełniających kryteria wyszukiwania.
-                            </p>
-                            <p className="text-sm text-gray-400 mt-2">
-                                Spróbuj zmienić kategorię lub wyczyścić filtry.
-                            </p>
-                        </div>
-                    )}
+                    <ProductGridAnimated 
+                        products={products}
+                        showGrossPrices={shopConfig.showGrossPrices}
+                        vatRate={shopConfig.vatRate}
+                    />
                 </div>
             </div>
         </div>

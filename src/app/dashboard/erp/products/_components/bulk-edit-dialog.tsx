@@ -34,10 +34,26 @@ interface Props {
         name: string; 
         options: { id: string; value: string }[] 
     }[];
+    mountingMethods: { id: string; name: string }[];
+    floorPatterns: { id: string; name: string }[];
+    wearClasses: { id: string; name: string }[];
+    structures: { id: string; name: string }[];
     onSuccess: () => void;
 }
 
-export function BulkEditDialog({ selectedIds, categories, brands, collections, suppliers, attributes, onSuccess }: Props) {
+export function BulkEditDialog({ 
+    selectedIds, 
+    categories, 
+    brands, 
+    collections, 
+    suppliers, 
+    attributes, 
+    mountingMethods,
+    floorPatterns,
+    wearClasses,
+    structures,
+    onSuccess 
+}: Props) {
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -53,6 +69,11 @@ export function BulkEditDialog({ selectedIds, categories, brands, collections, s
         status?: string;
         packageSizeM2?: string;
         price?: string;
+        mountingMethodId?: string;
+        floorPatternId?: string;
+        wearClassId?: string;
+        wearLayerThickness?: string;
+        structureId?: string;
     }>({});
 
     // Attributes to update
@@ -82,6 +103,13 @@ export function BulkEditDialog({ selectedIds, categories, brands, collections, s
             if (enabledFields.packageSizeM2) payload.packageSizeM2 = parseFloat(formData.packageSizeM2 || '0');
             if (enabledFields.price) payload.price = formData.price;
             
+            // Tech attrs
+            if (enabledFields.mountingMethod) payload.mountingMethodId = formData.mountingMethodId;
+            if (enabledFields.floorPattern) payload.floorPatternId = formData.floorPatternId;
+            if (enabledFields.wearClass) payload.wearClassId = formData.wearClassId;
+            if (enabledFields.wearLayerThickness) payload.wearLayerThickness = formData.wearLayerThickness ? parseFloat(formData.wearLayerThickness) : null;
+            if (enabledFields.structure) payload.structureId = formData.structureId;
+
             if (selectedAttributes.length > 0) {
                 payload.attributes = selectedAttributes;
             }
@@ -253,6 +281,134 @@ export function BulkEditDialog({ selectedIds, categories, brands, collections, s
                                     <SelectItem value="archived">Zarchiwizowany</SelectItem>
                                 </SelectContent>
                             </Select>
+                        </div>
+                    </div>
+
+                    {/* Mounting Method */}
+                    <div className="grid grid-cols-[auto,1fr] gap-4 items-center">
+                        <Checkbox 
+                            id="field-mounting" 
+                            checked={enabledFields.mountingMethod} 
+                            onCheckedChange={(c) => handleFieldToggle('mountingMethod', !!c)} 
+                        />
+                        <div className="grid gap-2">
+                            <Label htmlFor="field-mounting" className={!enabledFields.mountingMethod ? "text-muted-foreground" : ""}>Sposób Montażu</Label>
+                            <Select 
+                                disabled={!enabledFields.mountingMethod} 
+                                value={formData.mountingMethodId || "none"} 
+                                onValueChange={(v) => setFormData({...formData, mountingMethodId: v})}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Wybierz..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">Brak / Wyszczyść</SelectItem>
+                                    {mountingMethods.map(m => (
+                                        <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    {/* Pattern */}
+                    <div className="grid grid-cols-[auto,1fr] gap-4 items-center">
+                        <Checkbox 
+                            id="field-pattern" 
+                            checked={enabledFields.floorPattern} 
+                            onCheckedChange={(c) => handleFieldToggle('floorPattern', !!c)} 
+                        />
+                        <div className="grid gap-2">
+                            <Label htmlFor="field-pattern" className={!enabledFields.floorPattern ? "text-muted-foreground" : ""}>Wzór</Label>
+                            <Select 
+                                disabled={!enabledFields.floorPattern} 
+                                value={formData.floorPatternId || "none"} 
+                                onValueChange={(v) => setFormData({...formData, floorPatternId: v})}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Wybierz..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                     <SelectItem value="none">Brak / Wyszczyść</SelectItem>
+                                    {floorPatterns.map(p => (
+                                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    {/* Structure */}
+                    <div className="grid grid-cols-[auto,1fr] gap-4 items-center">
+                        <Checkbox 
+                            id="field-structure" 
+                            checked={enabledFields.structure} 
+                            onCheckedChange={(c) => handleFieldToggle('structure', !!c)} 
+                        />
+                        <div className="grid gap-2">
+                            <Label htmlFor="field-structure" className={!enabledFields.structure ? "text-muted-foreground" : ""}>Struktura</Label>
+                            <Select 
+                                disabled={!enabledFields.structure} 
+                                value={formData.structureId || "none"} 
+                                onValueChange={(v) => setFormData({...formData, structureId: v})}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Wybierz..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                     <SelectItem value="none">Brak / Wyszczyść</SelectItem>
+                                    {structures.map(s => (
+                                        <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    {/* Wear Class */}
+                    <div className="grid grid-cols-[auto,1fr] gap-4 items-center">
+                        <Checkbox 
+                            id="field-wearClass" 
+                            checked={enabledFields.wearClass} 
+                            onCheckedChange={(c) => handleFieldToggle('wearClass', !!c)} 
+                        />
+                        <div className="grid gap-2">
+                            <Label htmlFor="field-wearClass" className={!enabledFields.wearClass ? "text-muted-foreground" : ""}>Klasa</Label>
+                            <Select 
+                                disabled={!enabledFields.wearClass} 
+                                value={formData.wearClassId || "none"} 
+                                onValueChange={(v) => setFormData({...formData, wearClassId: v})}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Wybierz..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">Brak / Wyszczyść</SelectItem>
+                                    {wearClasses.map(c => (
+                                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    {/* Wear Layer */}
+                    <div className="grid grid-cols-[auto,1fr] gap-4 items-center">
+                        <Checkbox 
+                            id="field-wearLayer" 
+                            checked={enabledFields.wearLayerThickness} 
+                            onCheckedChange={(c) => handleFieldToggle('wearLayerThickness', !!c)} 
+                        />
+                        <div className="grid gap-2">
+                            <Label htmlFor="field-wearLayer" className={!enabledFields.wearLayerThickness ? "text-muted-foreground" : ""}>Warstwa (mm)</Label>
+                            <Input 
+                                disabled={!enabledFields.wearLayerThickness} 
+                                value={formData.wearLayerThickness || ""} 
+                                onChange={(e) => setFormData({...formData, wearLayerThickness: e.target.value})}
+                                placeholder="0.55"
+                                type="number"
+                                step="0.05"
+                            />
                         </div>
                     </div>
 

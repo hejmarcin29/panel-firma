@@ -11,74 +11,60 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Card, CardContent } from "@/components/ui/card";
 
-// Import types from schema if possible, or define them here matching the DB enums/logic
-// From schema: 
-// productPatterns = ['plank', 'herringbone', 'chevron', 'tile']
-// productMountingMethods = ['click', 'glue', 'auto']
-
-const MOUNTING_METHODS = [
-    { value: 'click', label: 'Klik (Pływający)' },
-    { value: 'glue', label: 'Klejony' },
-    { value: 'auto', label: 'Automatyczny' }
-];
-
-const PATTERNS = [
-    { value: 'plank', label: 'Deska (Klaszyczny)' },
-    { value: 'herringbone', label: 'Jodełka' },
-    { value: 'chevron', label: 'Jodełka Francuska' },
-    { value: 'tile', label: 'Płytka' }
-];
-
-const STRUCTURES = [
-    { value: 'wood', label: 'Drewno' },
-    { value: 'stone', label: 'Kamień / Beton' }
-];
-
 interface TechnicalAttributesEditableProps {
     productId: string;
-    mountingMethod?: string | null;
-    floorPattern?: string | null;
-    wearClass?: string | null;
+    mountingMethodId?: string | null;
+    floorPatternId?: string | null;
+    wearClassId?: string | null;
     wearLayerThickness?: number | null;
-    structure?: string | null;
+    structureId?: string | null;
+    
+    mountingMethods: { id: string; name: string }[];
+    floorPatterns: { id: string; name: string }[];
+    wearClasses: { id: string; name: string }[];
+    structures: { id: string; name: string }[];
 }
 
 export function TechnicalAttributesEditable({
     productId,
-    mountingMethod: initMounting,
-    floorPattern: initPattern,
-    wearClass: initWearClass,
+    mountingMethodId: initMounting,
+    floorPatternId: initPattern,
+    wearClassId: initWearClass,
     wearLayerThickness: initWearLayer,
-    structure: initStructure
+    structureId: initStructure,
+    mountingMethods = [],
+    floorPatterns = [],
+    wearClasses = [],
+    structures = []
 }: TechnicalAttributesEditableProps) {
     const [isLoading, setIsLoading] = useState(false);
     
-    const [mounting, setMounting] = useState(initMounting || "");
-    const [pattern, setPattern] = useState(initPattern || "");
-    const [wearClass, setWearClass] = useState(initWearClass || "");
+    const [mounting, setMounting] = useState(initMounting || "none");
+    const [pattern, setPattern] = useState(initPattern || "none");
+    const [wearClass, setWearClass] = useState(initWearClass || "none");
     const [wearLayer, setWearLayer] = useState(initWearLayer?.toString() || "");
-    const [structure, setStructure] = useState(initStructure || "");
+    const [structure, setStructure] = useState(initStructure || "none");
 
     const [isModified, setIsModified] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
-        setMounting(initMounting || "");
-        setPattern(initPattern || "");
-        setWearClass(initWearClass || "");
+        setMounting(initMounting || "none");
+        setPattern(initPattern || "none");
+        setWearClass(initWearClass || "none");
         setWearLayer(initWearLayer?.toString() || "");
-        setStructure(initStructure || "");
+        setStructure(initStructure || "none");
         setIsModified(false);
     }, [initMounting, initPattern, initWearClass, initWearLayer, initStructure]);
 
     // Check modification
     useEffect(() => {
         const isChanaged = 
-            (mounting !== (initMounting || "")) ||
-            (pattern !== (initPattern || "")) ||
-            (wearClass !== (initWearClass || "")) ||
+            (mounting !== (initMounting || "none")) ||
+            (pattern !== (initPattern || "none")) ||
+            (wearClass !== (initWearClass || "none")) ||
             (wearLayer !== (initWearLayer?.toString() || "")) ||
-            (structure !== (initStructure || ""));
+            (structure !== (initStructure || "none"));
         
         setIsModified(isChanaged);
     }, [mounting, pattern, wearClass, wearLayer, structure, initMounting, initPattern, initWearClass, initWearLayer, initStructure]);
@@ -87,11 +73,11 @@ export function TechnicalAttributesEditable({
         setIsLoading(true);
         try {
             await updateProductTechnicalAttributes(productId, {
-                mountingMethod: mounting || null,
-                floorPattern: pattern || null,
-                wearClass: wearClass || null,
+                mountingMethodId: mounting === "none" ? null : mounting,
+                floorPatternId: pattern === "none" ? null : pattern,
+                wearClassId: wearClass === "none" ? null : wearClass,
                 wearLayerThickness: wearLayer ? parseFloat(wearLayer) : null,
-                structure: structure || null
+                structureId: structure === "none" ? null : structure
             });
             toast.success("Dane techniczne zaktualizowane");
             setIsModified(false);
@@ -99,6 +85,131 @@ export function TechnicalAttributesEditable({
         } catch (error) {
             toast.error("Błąd aktualizacji danych technicznych");
         } finally {
+            setIsLoading(false);
+        }
+    }
+
+    return (
+        <div className="flex items-center gap-2">
+            <div className="flex-1 text-sm">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                    {/* Read only view */}
+                    <span className="text-muted-foreground">Montaż:</span>
+                    <span>{mountingMethods.find(m => m.id === initMounting)?.name || "-"}</span>
+
+                    <span className="text-muted-foreground">Wzór:</span>
+                    <span>{floorPatterns.find(p => p.id === initPattern)?.name || "-"}</span>
+
+                    <span className="text-muted-foreground">Klasa:</span>
+                    <span>{wearClasses.find(c => c.id === initWearClass)?.name || "-"}</span>
+                    
+                    <span className="text-muted-foreground">Warstwa:</span>
+                    <span>{initWearLayer ? `${initWearLayer} mm` : "-"}</span>
+
+                    <span className="text-muted-foreground">Struktura:</span>
+                    <span>{structures.find(s => s.id === initStructure)?.name || "-"}</span>
+                </div>
+            </div>
+
+            <Popover open={isOpen} onOpenChange={setIsOpen}>
+                <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Settings2 className="h-4 w-4" />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80" align="end">
+                    <div className="grid gap-4">
+                        <div className="space-y-2">
+                            <h4 className="font-medium leading-none">Parametry techniczne</h4>
+                            <p className="text-sm text-muted-foreground">
+                                Zmień parametry techniczne produktu.
+                            </p>
+                        </div>
+                        <div className="grid gap-2">
+                            <div className="grid grid-cols-3 items-center gap-4">
+                                <Label htmlFor="mounting">Montaż</Label>
+                                <Select value={mounting} onValueChange={setMounting}>
+                                    <SelectTrigger className="col-span-2 h-8">
+                                        <SelectValue placeholder="Wybierz..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">Brak</SelectItem>
+                                        {mountingMethods.map(m => (
+                                            <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="grid grid-cols-3 items-center gap-4">
+                                <Label htmlFor="pattern">Wzór</Label>
+                                <Select value={pattern} onValueChange={setPattern}>
+                                    <SelectTrigger className="col-span-2 h-8">
+                                        <SelectValue placeholder="Wybierz..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">Brak</SelectItem>
+                                        {floorPatterns.map(p => (
+                                            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="grid grid-cols-3 items-center gap-4">
+                                <Label htmlFor="class">Klasa</Label>
+                                <Select value={wearClass} onValueChange={setWearClass}>
+                                    <SelectTrigger className="col-span-2 h-8">
+                                        <SelectValue placeholder="Wybierz..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">Brak</SelectItem>
+                                        {wearClasses.map(c => (
+                                            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="grid grid-cols-3 items-center gap-4">
+                                <Label htmlFor="wear">Warstwa</Label>
+                                <div className="col-span-2 flex items-center gap-2">
+                                    <Input
+                                        id="wear"
+                                        type="number"
+                                        step="0.05"
+                                        className="h-8"
+                                        value={wearLayer}
+                                        onChange={(e) => setWearLayer(e.target.value)}
+                                    />
+                                    <span className="text-xs text-muted-foreground">mm</span>
+                                </div>
+                            </div>
+                             <div className="grid grid-cols-3 items-center gap-4">
+                                <Label htmlFor="structure">Struktura</Label>
+                                <Select value={structure} onValueChange={setStructure}>
+                                    <SelectTrigger className="col-span-2 h-8">
+                                        <SelectValue placeholder="Wybierz..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">Brak</SelectItem>
+                                        {structures.map(s => (
+                                            <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        {isModified && (
+                            <Button size="sm" onClick={handleSave} disabled={isLoading} className="w-full">
+                                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Zapisz zmiany
+                            </Button>
+                        )}
+                    </div>
+                </PopoverContent>
+            </Popover>
+        </div>
+    );
+}        } finally {
             setIsLoading(false);
         }
     }
