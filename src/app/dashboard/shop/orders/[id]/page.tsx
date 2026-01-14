@@ -3,6 +3,7 @@ import { orders, erpOrderTimeline } from '@/lib/db/schema';
 import { eq, asc } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import { OrderDetailsClient } from './_components/OrderDetailsClient';
+import { TimelineEvent } from '@/components/shop/timeline-view';
 
 export default async function OrderDetailsPage(props: { params: Promise<{ id: string }> }) {
     const params = await props.params;
@@ -33,7 +34,7 @@ export default async function OrderDetailsPage(props: { params: Promise<{ id: st
             <OrderDetailsClient 
                 order={order} 
                 items={order.items} 
-                timelineEvents={timelineEvents}
+                timelineEvents={timelineEvents as unknown as TimelineEvent[]}
             />
         </div>
     );

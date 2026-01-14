@@ -28,11 +28,11 @@ export function ReviewForm({ products }: ReviewFormProps) {
         setLoading(true);
         try {
             const data = {
-                productId: formData.get('productId'),
-                rating: formData.get('rating'),
-                content: formData.get('content'),
-                authorName: formData.get('authorName'),
-                createdAt: formData.get('createdAt'),
+                productId: formData.get('productId') as string,
+                rating: formData.get('rating') as string,
+                content: formData.get('content') as string,
+                authorName: formData.get('authorName') as string,
+                createdAt: formData.get('createdAt') as string,
             };
 
             await createManualReview(data);

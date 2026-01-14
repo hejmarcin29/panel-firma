@@ -2,7 +2,15 @@ import { MetadataRoute } from 'next';
 import { getShopConfig } from '@/app/dashboard/settings/shop/actions';
 
 export default async function robots(): Promise<MetadataRoute.Robots> {
-  const config = await getShopConfig();
+  let config;
+  
+  try {
+    config = await getShopConfig();
+  } catch (error) {
+    console.warn('Could not fetch shop config for robots.txt, using defaults:', error);
+    // Fallback config
+    config = { noIndex: false };
+  }
   
   return {
     rules: {

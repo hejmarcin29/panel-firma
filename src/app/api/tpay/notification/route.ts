@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
             
             // Allow 'correct' or 'paid' status depending on API version
             if (details.status === 'correct' || details.status === 'paid') {
-                await handlePaymentSuccess(tr_id, tr_crc, parseFloat(tr_paid));
+                await handlePaymentSuccess(tr_id, tr_crc);
                 return new NextResponse('TRUE', { status: 200 });
             } else {
                 console.error(`Tpay verification check failed. API Status: ${details.status}`);

@@ -92,10 +92,10 @@ function renderMetadata(metadata: Record<string, unknown> | null) {
 
     return (
         <div className="mt-1 text-sm text-gray-500">
-            {metadata.description && <p>{metadata.description}</p>}
-            {metadata.amount && <p>Kwota: {metadata.amount} PLN</p>}
-            {metadata.oldStatus && metadata.newStatus && (
-                <p className="text-xs">Zmiana statusu z <span className="font-mono">{metadata.oldStatus}</span> na <span className="font-mono">{metadata.newStatus}</span></p>
+            {!!metadata.description && <p>{metadata.description as string}</p>}
+            {!!metadata.amount && <p>Kwota: {metadata.amount as string | number} PLN</p>}
+            {!!metadata.oldStatus && !!metadata.newStatus && (
+                <p className="text-xs">Zmiana statusu z <span className="font-mono">{metadata.oldStatus as string}</span> na <span className="font-mono">{metadata.newStatus as string}</span></p>
             )}
             {/* If there are other interesting fields, we can add them here */}
         </div>

@@ -1,6 +1,6 @@
 import 'server-only';
 import { getAppSetting, appSettingKeys } from '../settings';
-import { CreatePaymentParams, TpayConfig, TpayTransaction } from './types';
+import { CreatePaymentParams, TpayConfig, TpayTransaction, TpayNotification } from './types';
 
 const TPAY_API_URL = 'https://api.tpay.com';
 const TPAY_SANDBOX_API_URL = 'https://api.tpay.sandbox.pl';
