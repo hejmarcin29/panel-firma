@@ -2,7 +2,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useTransition } from "react";
+import { useTransition, useState, useEffect, useRef } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -21,11 +21,14 @@ import {
 } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, Package, Truck, MapPin, X } from "lucide-react";
 import { toast } from "sonner";
 import { processOrder } from "@/app/(storefront)/checkout/actions";
 import { useRouter } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import Script from "next/script";
 
 const phoneRegex = /^(?:\+48)?\s?\d{3}[-\s]?\d{3}[-\s]?\d{3}$/;
 
@@ -102,7 +105,14 @@ const checkoutSchema = z.object({
 
 export type CheckoutFormData = z.infer<typeof checkoutSchema>;
 
-export function CheckoutForm({ shippingCost, palletShippingCost }: { shippingCost?: number; palletShippingCost?: number }) {
+interface CheckoutFormProps {
+    shippingCost?: number; 
+    palletShippingCost?: number;
+    inpostGeowidgetToken?: string;
+    inpostGeowidgetConfig?: string;
+}
+
+export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidgetToken, inpostGeowidgetConfig }: CheckoutFormProps) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const cart = useCartStore();
@@ -111,10 +121,61 @@ export function CheckoutForm({ shippingCost, palletShippingCost }: { shippingCos
   // Logic: Is only samples?
   const isOnlySamples = cart.items.length > 0 && cart.items.every(item => item.productId.startsWith('sample_'));
   
+  // Delivery State
+  const [deliveryMethod, setDeliveryMethod] = useState<'courier' | 'locker'>('courier');
+  const [selectedPoint, setSelectedPoint] = useState<any | null>(null);
+  const [mapOpen, setMapOpen] = useState(false);
+
+  // InPost Script State
+  const [inpostLoaded, setInpostLoaded] = useState(false);
+
+  // Toggle Delivery Method
+  useEffect(() => {
+    // Reset to courier if not samples
+    if (!isOnlySamples) {
+        setDeliveryMethod('courier');
+    }
+  }, [isOnlySamples]);
+
+  // Handle Geowidget Events
+  useEffect(() => {
+    if (!mapOpen || !inpostLoaded) return;
+
+    const handlePointSelect = (event: any) => {
+        const point = event.detail;
+        console.log("Selected Point:", point);
+        setSelectedPoint({
+            name: point.name,
+            address: `${point.address_details.street} ${point.address_details.building_number}, ${point.address_details.city}`,
+            description: point.location_description
+        });
+        
+        // Auto-fill form fields to satisfy validator
+        form.setValue("street", `Paczkomat ${point.name}`);
+        form.setValue("postalCode", point.address_details.post_code);
+        form.setValue("city", point.address_details.city);
+        
+        setMapOpen(false);
+        toast.success(`Wybrano paczkomat: ${point.name}`);
+    };
+
+    const widget = document.querySelector('inpost-geowidget');
+    if (widget) {
+        widget.addEventListener('onpointselect', handlePointSelect);
+    }
+
+    return () => {
+        if (widget) {
+            widget.removeEventListener('onpointselect', handlePointSelect);
+        }
+    }
+  }, [mapOpen, inpostLoaded, form]); // Added form dependency
+
   // Calculate Shipping (shippingCost is in grosze)
-  // For Samples: use sampleShippingCost
-  // For Pallets/Others: use palletShippingCost
-  const activeShippingCostInt = isOnlySamples ? (shippingCost || 0) : (palletShippingCost || 0);
+  const activeShippingCostInt = isOnlySamples 
+      ? (deliveryMethod === 'locker' ? (shippingCost || 0) : (shippingCost || 0)) // Could have different cost for locker later
+      : (palletShippingCost || 0);
+  
   const shippingCostPLN = activeShippingCostInt / 100;
   
   const finalTotal = itemsTotal + shippingCostPLN;
@@ -138,6 +199,11 @@ export function CheckoutForm({ shippingCost, palletShippingCost }: { shippingCos
       return;
     }
 
+    if (deliveryMethod === 'locker' && !selectedPoint) {
+        toast.error("Proszę wybrać Paczkomat");
+        return;
+    }
+
     const orderItems = cart.items.map(item => ({
         productId: item.productId,
         name: item.name,
@@ -147,16 +213,14 @@ export function CheckoutForm({ shippingCost, palletShippingCost }: { shippingCos
         vatRate: item.vatRate,
         unit: item.unit
     }));
-
-    // Add shipping item if applicable
-    // We don't push shipping as an item anymore, the backend handles shippingCost field separately.
-    // Logic updated to rely on passed totals or backend calc.
     
     startTransition(async () => {
       const result = await processOrder({
         ...data,
         items: orderItems,
         totalAmount: finalTotal,
+        deliveryMethod,
+        deliveryPoint: selectedPoint || undefined
       });
 
       if (result.success) {
@@ -184,6 +248,18 @@ export function CheckoutForm({ shippingCost, palletShippingCost }: { shippingCos
 
   return (
     <div className="grid gap-8 lg:grid-cols-3">
+        {/* Load InPost Assets */}
+        {inpostGeowidgetToken && (
+             <>
+                <Script 
+                    src="https://geowidget.inpost.pl/inpost-geowidget.js" 
+                    strategy="lazyOnload" 
+                    onLoad={() => setInpostLoaded(true)}
+                />
+                <link rel="stylesheet" href="https://geowidget.inpost.pl/inpost-geowidget.css" />
+             </>
+        )}
+
       <div className="lg:col-span-2 space-y-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -248,53 +324,154 @@ export function CheckoutForm({ shippingCost, palletShippingCost }: { shippingCos
               </CardContent>
             </Card>
 
-            {/* 2. Adres Dostawy */}
+            {/* 2. Metoda Dostawy & Adres */}
             <Card>
               <CardHeader>
                 <CardTitle>Adres Dostawy</CardTitle>
               </CardHeader>
-              <CardContent className="grid gap-4 md:grid-cols-2">
-                <FormField
-                  control={form.control as any}
-                  name="street"
-                  render={({ field }) => (
-                    <FormItem className="col-span-2">
-                      <FormLabel>Ulica i numer</FormLabel>
-                      <FormControl>
-                        <Input placeholder="ul. Kwiatowa 12/3" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+              <CardContent className="space-y-6">
+                  {/* Delivery Switches */}
+                  {isOnlySamples ? (
+                      <Tabs value={deliveryMethod} onValueChange={(v) => setDeliveryMethod(v as any)} className="w-full">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="courier">
+                                <Truck className="mr-2 h-4 w-4" />
+                                Kurier
+                            </TabsTrigger>
+                            <TabsTrigger value="locker">
+                                <Package className="mr-2 h-4 w-4" />
+                                Paczkomat InPost
+                            </TabsTrigger>
+                        </TabsList>
+                      </Tabs>
+                  ) : (
+                      <Alert className="bg-blue-50 border-blue-200">
+                          <Truck className="h-4 w-4 text-blue-600" />
+                          <AlertTitle className="text-blue-800">Dostawa paletowa</AlertTitle>
+                          <AlertDescription className="text-blue-700">
+                              Dla paneli podłogowych dostępna jest tylko dostawa kurierem paletowym.
+                          </AlertDescription>
+                      </Alert>
                   )}
-                />
-                <FormField
-                  control={form.control as any}
-                  name="postalCode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Kod Pocztowy</FormLabel>
-                      <FormControl>
-                        <Input placeholder="00-000" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control as any}
-                  name="city"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Miejscowość</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Warszawa" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+
+                {/* Locker Logic */}
+                {deliveryMethod === 'locker' && isOnlySamples ? (
+                    <div className="space-y-4 rounded-lg bg-gray-50 p-4 border border-gray-100">
+                        <div className="flex flex-col items-center justify-center space-y-3">
+                            {selectedPoint ? (
+                                <div className="text-center space-y-2 w-full">
+                                    <div className="flex items-center justify-center p-3 bg-white rounded-full w-12 h-12 shadow-sm mx-auto">
+                                        <Package className="h-6 w-6 text-yellow-500" />
+                                    </div>
+                                    <div className="font-semibold text-lg">{selectedPoint.name}</div>
+                                    <div className="text-sm text-muted-foreground">{selectedPoint.address}</div>
+                                    <Button type="button" variant="outline" size="sm" onClick={() => setMapOpen(true)}>
+                                        Zmień paczkomat
+                                    </Button>
+                                </div>
+                            ) : (
+                                <>
+                                    <p className="text-sm text-muted-foreground text-center mb-2">
+                                        Wybierz punkt odbioru z mapy. Paczka będzie czekać w Paczkomacie.
+                                    </p>
+                                    <Button type="button" onClick={() => setMapOpen(true)} className="w-full sm:w-auto bg-yellow-400 hover:bg-yellow-500 text-black">
+                                        <MapPin className="mr-2 h-4 w-4" />
+                                        Wybierz Paczkomat
+                                    </Button>
+                                </>
+                            )}
+                        </div>
+                        
+                        {/* Hidden fields needed for Zod schema but hidden from user */}
+                        <div className="hidden">
+                             <Input {...form.register('street')} />
+                             <Input {...form.register('postalCode')} />
+                             <Input {...form.register('city')} />
+                        </div>
+                    </div>
+                ) : (
+                   /* Courier Form */
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <FormField
+                    control={form.control as any}
+                    name="street"
+                    render={({ field }) => (
+                        <FormItem className="col-span-2">
+                        <FormLabel>Ulica i numer</FormLabel>
+                        <FormControl>
+                            <Input placeholder="ul. Kwiatowa 12/3" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <FormField
+                    control={form.control as any}
+                    name="postalCode"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Kod Pocztowy</FormLabel>
+                        <FormControl>
+                            <Input placeholder="00-000" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <FormField
+                    control={form.control as any}
+                    name="city"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Miejscowość</FormLabel>
+                        <FormControl>
+                            <Input placeholder="Warszawa" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
+
+            {/* InPost Map Modal */}
+            <Dialog open={mapOpen} onOpenChange={setMapOpen}>
+                <DialogContent className="max-w-4xl h-[80vh] p-0 overflow-hidden flex flex-col">
+                    <div className="flex-1 w-full h-full relative bg-gray-100">
+                        {inpostLoaded ? (
+                             // @ts-ignore
+                            <inpost-geowidget
+                                token={inpostGeowidgetToken}
+                                language="pl"
+                                config={inpostGeowidgetConfig || "parcelCollect"}
+                                // @ts-ignore
+                                style={{
+                                    width: "100%", 
+                                    height: "100%",
+                                    position: "absolute",
+                                    top: 0,
+                                    left: 0
+                                }}
+                            ></inpost-geowidget>
+                        ) : (
+                            <div className="flex items-center justify-center h-full">
+                                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                                <span className="ml-2 text-gray-500">Ładowanie mapy...</span>
+                            </div>
+                        )}
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="absolute top-2 right-2 z-50 bg-white/80 hover:bg-white"
+                            onClick={() => setMapOpen(false)}
+                        >
+                            <X className="h-5 w-5" />
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             {/* 3. Dane do Faktury */}
             <Card>
@@ -538,7 +715,7 @@ export function CheckoutForm({ shippingCost, palletShippingCost }: { shippingCos
                          <span>{itemsTotal.toFixed(2)} zł</span>
                      </div>
                      <div className="flex justify-between text-sm text-muted-foreground">
-                         <span>Dostawa</span>
+                         <span>Dostawa ({deliveryMethod === 'locker' ? 'Paczkomat' : 'Kurier'})</span>
                          {shippingCostPLN > 0 ? (
                              <span>{shippingCostPLN.toFixed(2)} zł</span>
                          ) : (
@@ -559,4 +736,3 @@ export function CheckoutForm({ shippingCost, palletShippingCost }: { shippingCos
     </div>
   );
 }
-

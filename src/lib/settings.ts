@@ -19,6 +19,13 @@ export const appSettingKeys = {
     tpayClientId: 'tpay.client_id',
     tpayClientSecret: 'tpay.client_secret',
     tpayIsSandbox: 'tpay.is_sandbox',
+    
+    // InPost
+    inpostOrgId: 'inpost.org_id',
+    inpostToken: 'inpost.token',
+    inpostSandbox: 'inpost.sandbox',
+    inpostGeowidgetToken: 'inpost.geowidget_token',
+    inpostGeowidgetConfig: 'inpost.geowidget_config',
 	montageChecklist: 'montage.checklist',
 	montageAutomation: 'montage.automation', // Legacy: Array of rules
     montageAutomationSettings: 'montage.automation_settings', // New: Record<string, boolean>

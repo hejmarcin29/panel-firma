@@ -29,6 +29,12 @@ type OrderData = {
     billingCountry?: string;
 
     paymentMethod: "proforma" | "tpay";
+    deliveryMethod?: "courier" | "locker";
+    deliveryPoint?: {
+        name: string; // e.g. WAW01M
+        address: string;
+        description?: string;
+    };
     items: {
         productId: string;
         name: string;
@@ -65,15 +71,33 @@ export async function processOrder(data: OrderData) {
         taxId: data.isCompany ? data.nip : undefined,
     };
 
-    const shippingAddress = {
+    let shippingAddress: any = {
         name: `${data.firstName} ${data.lastName}`,
-        street: data.street,
-        city: data.city,
-        postalCode: data.postalCode,
-        country: data.country || 'PL',
         phone: data.phone,
         email: data.email,
+        country: 'PL',
     };
+
+    if (data.deliveryMethod === 'locker' && data.deliveryPoint) {
+        shippingAddress = {
+            ...shippingAddress,
+            // Map Point details to standard fields for compatibility
+            street: `Paczkomat ${data.deliveryPoint.name}`,
+            city: 'InPost', 
+            postalCode: '00-000',
+            // Extended fields
+            method: 'locker',
+            pointName: data.deliveryPoint.name,
+            pointAddress: data.deliveryPoint.address
+        };
+    } else {
+        shippingAddress = {
+            ...shippingAddress,
+            street: data.street,
+            city: data.city,
+            postalCode: data.postalCode,
+        };
+    }
 
     // 3. Totals
     const totalGross = Math.round(data.totalAmount * 100);

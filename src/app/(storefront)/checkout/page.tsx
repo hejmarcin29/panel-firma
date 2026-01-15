@@ -1,8 +1,15 @@
 import { CheckoutForm } from "./_components/checkout-form";
 import { getShopConfig } from "@/app/dashboard/settings/shop/actions";
+import { getAppSetting, appSettingKeys } from "@/lib/settings";
 
 export default async function CheckoutPage() {
   const shopConfig = await getShopConfig();
+
+  // Fetch InPost Config for Geowidget
+  const [geowidgetToken, geowidgetConfig] = await Promise.all([
+      getAppSetting(appSettingKeys.inpostGeowidgetToken),
+      getAppSetting(appSettingKeys.inpostGeowidgetConfig)
+  ]);
 
   return (
     <div className="container min-h-screen py-10 space-y-8">
@@ -16,6 +23,8 @@ export default async function CheckoutPage() {
        <CheckoutForm 
           shippingCost={shopConfig.sampleShippingCost}
           palletShippingCost={shopConfig.palletShippingCost}
+          inpostGeowidgetToken={geowidgetToken}
+          inpostGeowidgetConfig={geowidgetConfig}
        />
     </div>
   );
