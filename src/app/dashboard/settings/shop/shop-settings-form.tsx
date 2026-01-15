@@ -45,7 +45,6 @@ export default function ShopSettingsForm({ initialConfig, initialTpayConfig, ava
     useEffect(() => {
         if (debouncedSearch.length > 2) {
             searchProductsForConfig(debouncedSearch).then(res => {
-                // @ts-expect-error: res type from server action doesn't fully match state type
                 setFoundProducts(res);
             });
         }
