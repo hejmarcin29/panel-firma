@@ -5,7 +5,7 @@ import { useCartStore } from '@/lib/store/cart-store';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Minus, Plus, ShoppingBag } from 'lucide-react';
+import { Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import { formatCurrency } from '@/lib/utils';
 import Link from 'next/link';
@@ -59,7 +59,7 @@ export function CartSheet({ showGrossPrices = false }: { showGrossPrices?: boole
             <ScrollArea className="flex-1 pr-6 -mr-6">
               <div className="flex flex-col gap-6 py-6 pl-1 pr-6">
                 {items.map((item) => (
-                  <div key={item.productId} className="flex gap-4">
+                  <div key={item.productId} className="relative flex gap-4">
                     {/* Image */}
                     <div className="relative aspect-square h-24 w-24 shrink-0 overflow-hidden rounded-md border bg-gray-50">
                       {item.image ? (
@@ -79,9 +79,17 @@ export function CartSheet({ showGrossPrices = false }: { showGrossPrices?: boole
                     {/* Details */}
                     <div className="flex flex-1 flex-col justify-between">
                       <div className="space-y-1">
-                        <h4 className="font-semibold leading-tight line-clamp-2 text-sm md:text-base">
+                        <h4 className="font-semibold leading-tight line-clamp-2 text-sm md:text-base pr-6">
                           {item.name}
                         </h4>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute top-0 right-0 h-6 w-6 text-gray-400 hover:text-red-600"
+                            onClick={() => updateQuantity(item.productId, 0)}
+                        >
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
                         <p className="text-xs text-muted-foreground">
                           {item.unit === 'm2' && item.packageSize ? (
                             <>
@@ -101,7 +109,6 @@ export function CartSheet({ showGrossPrices = false }: { showGrossPrices?: boole
                             size="icon"
                             className="h-6 w-6"
                             onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                            disabled={item.quantity <= 1}
                           >
                             <Minus className="h-3 w-3" />
                           </Button>

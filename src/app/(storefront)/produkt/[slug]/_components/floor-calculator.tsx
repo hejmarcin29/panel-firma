@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,6 +73,27 @@ export function FloorCalculator({
     vatSavings: number;
     priceRange: { min: number; max: number };
   } | null>(null);
+
+  // Sticky Bar Logic
+  const actionsRef = useRef<HTMLDivElement>(null);
+  const [showSticky, setShowSticky] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // Show sticky when actions are NOT visible and we've scrolled past them (top < 0)
+        // Adjust threshold if needed.
+        setShowSticky(!entry.isIntersecting && entry.boundingClientRect.top < 0);
+      },
+      { threshold: 0 }
+    );
+
+    if (actionsRef.current) {
+      observer.observe(actionsRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
 
   const { addItem } = useCartStore();
 
@@ -316,7 +337,7 @@ export function FloorCalculator({
         </AnimatePresence>
       </div>
 
-      <div className="pt-2">
+      <div className="pt-2" ref={actionsRef}>
        <AnimatePresence mode="wait">
         {mode === 'material' ? (
             <motion.div
@@ -455,6 +476,45 @@ export function FloorCalculator({
         )}
        </AnimatePresence>
       </div>
+
+      {/* Mobile Sticky Add-to-Cart Bar */}
+      <AnimatePresence>
+        {showSticky && mode === 'material' && (
+            <motion.div
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)] z-50 md:hidden pb-[calc(1rem+env(safe-area-inset-bottom))]"
+            >
+                <div className="flex items-center justify-between gap-4">
+                    <div className="flex flex-col flex-1 min-w-0">
+                         <span className="text-xs text-gray-500 font-medium truncate">{product.name}</span>
+                         <div className="flex items-baseline gap-2">
+                             <span className="text-base font-bold text-gray-900">
+                                 {totalPrice.toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' })}
+                             </span>
+                             {isFlooring && (
+                                <span className="text-xs text-gray-400">
+                                    za {Math.round(totalArea * 100) / 100} m²
+                                </span>
+                             )}
+                         </div>
+                    </div>
+                    {isPurchasable ? (
+                        <Button size="default" className="shadow-md shrink-0" onClick={handleAddToCart}>
+                            <ShoppingCart className="mr-2 h-4 w-4" />
+                            Do koszyka
+                        </Button>
+                    ) : (
+                         <Button size="default" variant="secondary" disabled className="shrink-0">
+                            Niedostępny
+                        </Button>
+                    )}
+                </div>
+            </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

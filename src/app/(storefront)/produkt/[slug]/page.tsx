@@ -256,82 +256,115 @@ export default async function ProductPage({ params }: PageProps) {
                             </div>
                         </div>
 
-                        {/* Description & Technical Data */}
-                        <div className="pt-6">
-                             <Accordion type="single" collapsible defaultValue="desc" className="w-full">
-                                <AccordionItem value="desc">
-                                    <AccordionTrigger>Opis Produktu</AccordionTrigger>
-                                    <AccordionContent>
-                                        <div className="prose prose-sm text-gray-600 leading-relaxed max-w-none space-y-4">
-                                            {product.description ? (
-                                                <div>{product.description}</div>
-                                            ) : (
-                                                <p className="italic">Brak szczegółowego opisu produktu.</p>
-                                            )}
-                                            
-                                            {/* Auto-generated collection info */}
-                                            {product.collection && (
-                                                <div className="mt-6 rounded-lg bg-gray-50 p-4 border border-gray-100">
-                                                    <h4 className="font-semibold text-gray-900 mb-2">O kolekcji {product.collection.name}</h4>
-                                                    <p className="text-sm">
-                                                        Ten produkt należy do kolekcji {product.collection.name} od producenta {product.brand?.name}. 
-                                                        Charakteryzuje się ona spójnym wzornictwem i dopasowaną kolorystyką.
-                                                        {product.collection.slug && (
-                                                            <a href={`/sklep?collections=${product.collection.slug}`} className="block mt-2 font-medium text-emerald-600 hover:text-emerald-700">
-                                                                Zobacz całą kolekcję &rarr;
-                                                            </a>
-                                                        )}
-                                                    </p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </AccordionContent>
-                                </AccordionItem>
-                                
-                                <AccordionItem value="specs">
-                                    <AccordionTrigger>Dane Techniczne</AccordionTrigger>
-                                    <AccordionContent>
-                                        <div className="grid grid-cols-1 gap-y-2 sm:grid-cols-2 sm:gap-x-4">
-                                            {product.brand && (
-                                                <div className="flex justify-between border-b border-gray-100 py-2 text-sm">
-                                                    <span className="font-medium text-gray-700">Producent</span>
-                                                    <span className="text-gray-600">{product.brand.name}</span>
-                                                </div>
-                                            )}
-                                            {product.collection && (
-                                                <div className="flex justify-between border-b border-gray-100 py-2 text-sm">
-                                                    <span className="font-medium text-gray-700">Kolekcja</span>
-                                                    <span className="text-gray-600">{product.collection.name}</span>
-                                                </div>
-                                            )}
-                                            <div className="flex justify-between border-b border-gray-100 py-2 text-sm">
-                                                <span className="font-medium text-gray-700">Typ</span>
-                                                <span className="text-gray-600">
-                                                    {product.unit === 'm2' ? 'Podłoga / Wykończenie' : 'Akcesoria'}
-                                                </span>
-                                            </div>
-                                            
-                                            {/* Dynamic attributes */}
-                                            {product.attributes.map((attr) => (
-                                                <div key={attr.name} className="flex justify-between border-b border-gray-100 py-2 text-sm">
-                                                    <span className="font-medium text-gray-700">{attr.name}</span>
-                                                    <span className="text-gray-600">{attr.value}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </AccordionContent>
-                                </AccordionItem>
+                    </div>
+                </div>
 
-                                <AccordionItem value="shipping">
-                                    <AccordionTrigger>Dostawa i Płatność</AccordionTrigger>
-                                    <AccordionContent>
-                                        <p className="text-sm text-gray-600">
-                                            Oferujemy bezpieczną wysyłkę paletową ubezpieczoną na pełną wartość zamówienia.
-                                            Koszt dostawy wyliczany jest w koszyku. Możliwy odbiór osobisty w naszym magazynie.
-                                        </p>
-                                    </AccordionContent>
-                                </AccordionItem>
-                             </Accordion>
+                {/* Description & Technical Data */}
+                <div className="mt-16 pt-12 border-t border-gray-100">
+                    <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
+                        
+                        {/* LEFT COLUMN: Open Description (Storytelling) */}
+                        <div className="lg:col-span-7 space-y-8">
+                             <h2 className="text-3xl font-bold text-gray-900 font-playfair">Opis Produktu</h2>
+                             <div className="prose prose-lg text-gray-600 leading-relaxed max-w-none">
+                                {product.description ? (
+                                    <div dangerouslySetInnerHTML={{ __html: product.description }} />
+                                ) : (
+                                    <p className="italic text-gray-400">Ten produkt nie posiada jeszcze szczegółowego opisu.</p>
+                                )}
+                             </div>
+
+                             {product.collection && (
+                                <div className="mt-8 rounded-2xl bg-gray-50 p-8 border border-gray-100">
+                                    <h4 className="font-semibold text-gray-900 mb-2 text-lg">O kolekcji {product.collection.name}</h4>
+                                    <p className="text-gray-600 mb-6 leading-relaxed">
+                                        Ten produkt należy do kolekcji {product.collection.name} od producenta {product.brand?.name}. 
+                                        Charakteryzuje się ona spójnym wzornictwem i dopasowaną kolorystyką, co pozwala na stworzenie harmonijnego wnętrza.
+                                    </p>
+                                    {product.collection.slug && (
+                                        <a href={`/sklep?collections=${product.collection.slug}`} className="inline-flex items-center font-medium text-emerald-700 hover:text-emerald-800 transition-colors">
+                                            Zobacz pozostałe produkty z kolekcji <span className="ml-2">&rarr;</span>
+                                        </a>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* SPACER */}
+                        <div className="hidden lg:block lg:col-span-1"></div>
+
+                        {/* RIGHT COLUMN: Technical Specs (Sidebar) */}
+                        <div className="lg:col-span-4 space-y-6">
+                             <div className="sticky top-24 space-y-6">
+                                <Accordion type="multiple" defaultValue={['specs', 'shipping']} className="w-full">
+                                    <AccordionItem value="specs" className="border-b-0 mb-4 ">
+                                        <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                                            <AccordionTrigger className="px-6 py-4 hover:bg-gray-50 hover:no-underline transition-colors">
+                                                <span className="text-lg font-semibold text-gray-900">Dane Techniczne</span>
+                                            </AccordionTrigger>
+                                            <AccordionContent className="px-6 pb-6 pt-2">
+                                                <div className="grid grid-cols-1 gap-y-3">
+                                                    {product.brand && (
+                                                        <div className="flex justify-between items-center py-2 text-sm border-b border-gray-50 last:border-0">
+                                                            <span className="font-medium text-gray-500">Producent</span>
+                                                            <span className="font-semibold text-gray-900">{product.brand.name}</span>
+                                                        </div>
+                                                    )}
+                                                    {product.collection && (
+                                                        <div className="flex justify-between items-center py-2 text-sm border-b border-gray-50 last:border-0">
+                                                            <span className="font-medium text-gray-500">Kolekcja</span>
+                                                            <span className="font-semibold text-gray-900">{product.collection.name}</span>
+                                                        </div>
+                                                    )}
+                                                    <div className="flex justify-between items-center py-2 text-sm border-b border-gray-50 last:border-0">
+                                                        <span className="font-medium text-gray-500">Typ</span>
+                                                        <span className="font-semibold text-gray-900">
+                                                            {product.unit === 'm2' ? 'Podłoga / Wykończenie' : 'Akcesoria'}
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    {product.attributes.map((attr) => (
+                                                        <div key={attr.name} className="flex justify-between items-center py-2 text-sm border-b border-gray-50 last:border-0">
+                                                            <span className="font-medium text-gray-500">{attr.name}</span>
+                                                            <span className="font-semibold text-gray-900 text-right pl-4">{attr.value}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </AccordionContent>
+                                        </div>
+                                    </AccordionItem>
+
+                                    <AccordionItem value="shipping" className="border-b-0">
+                                        <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+                                            <AccordionTrigger className="px-6 py-4 hover:bg-gray-50 hover:no-underline transition-colors">
+                                                <span className="text-lg font-semibold text-gray-900">Dostawa i Płatność</span>
+                                            </AccordionTrigger>
+                                            <AccordionContent className="px-6 pb-6 pt-2">
+                                                <div className="space-y-4 text-sm text-gray-600">
+                                                    <div className="flex gap-4 items-start">
+                                                        <div className="bg-emerald-50 p-2.5 rounded-lg shrink-0">
+                                                            <Truck className="h-5 w-5 text-emerald-600" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-semibold text-gray-900 mb-0.5">Wysyłka Paletowa</p>
+                                                            <p className="text-xs text-gray-500">Towar wysyłamy na solidnie zabezpieczonej palecie. Kurier posiada windę i wózek paletowy.</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex gap-4 items-start">
+                                                        <div className="bg-emerald-50 p-2.5 rounded-lg shrink-0">
+                                                            <ShieldCheck className="h-5 w-5 text-emerald-600" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-semibold text-gray-900 mb-0.5">Ubezpieczenie 100%</p>
+                                                            <p className="text-xs text-gray-500">Każda przesyłka jest ubezpieczona na pełną wartość zamówienia.</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </AccordionContent>
+                                        </div>
+                                    </AccordionItem>
+                                </Accordion>
+                             </div>
                         </div>
                     </div>
                 </div>
