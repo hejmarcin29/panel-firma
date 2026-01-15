@@ -1,10 +1,14 @@
 'use client';
 
 import { Drawer } from 'vaul';
-import { Menu, Search, History, Sparkles, X, ChevronRight } from 'lucide-react';
+import { Menu, Search, History, Sparkles, X, ChevronRight, PackageSearch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
 import { useInteractionStore, VisitedProduct } from '@/store/interaction-store';
+import { resendOrderLink } from './actions';
+import { toast } from 'sonner';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +30,8 @@ export function VisualCommandCenter({ bestsellers }: VisualCommandCenterProps) {
     const { visitedProducts } = useInteractionStore();
     const [mounted, setMounted] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [statusEmail, setStatusEmail] = useState('');
+    const [isSendingLink, setIsSendingLink] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -37,6 +43,25 @@ export function VisualCommandCenter({ bestsellers }: VisualCommandCenterProps) {
         if (searchTerm.trim()) {
             setOpen(false);
             router.push(`/sklep?q=${encodeURIComponent(searchTerm)}`);
+        }
+    };
+
+    const handleStatusCheck = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!statusEmail.includes('@')) {
+            toast.error("Wpisz poprawny adres e-mail");
+            return;
+        }
+        
+        setIsSendingLink(true);
+        try {
+            const result = await resendOrderLink(statusEmail);
+            toast.success(result.message || "Sprawdź swoją skrzynkę mailową");
+            setStatusEmail('');
+        } catch (err) {
+            toast.error("Wystąpił błąd. Spróbuj ponownie.");
+        } finally {
+            setIsSendingLink(false);
         }
     };
 
@@ -191,6 +216,30 @@ export function VisualCommandCenter({ bestsellers }: VisualCommandCenterProps) {
 
                                 {/* Menu Links */}
                                 <div className="space-y-1 pt-4">
+                                     {/* Order Status Section */}
+                                     <div className="mb-6 rounded-xl border bg-slate-50 p-4">
+                                        <div className="mb-2 flex items-center gap-2 font-medium text-slate-800">
+                                            <PackageSearch className="h-4 w-4" />
+                                            Status zamówienia
+                                        </div>
+                                        <p className="mb-3 text-xs text-muted-foreground">
+                                            Nie masz linku do śledzenia? Wpisz e-mail, a wyślemy go ponownie.
+                                        </p>
+                                        <form onSubmit={handleStatusCheck} className="flex gap-2">
+                                            <Input 
+                                                type="email" 
+                                                placeholder="Twój e-mail" 
+                                                className="h-9 bg-white text-sm"
+                                                value={statusEmail}
+                                                onChange={(e) => setStatusEmail(e.target.value)}
+                                                required
+                                            />
+                                            <Button size="sm" type="submit" disabled={isSendingLink}>
+                                                {isSendingLink ? '...' : 'Wyślij'}
+                                            </Button>
+                                        </form>
+                                     </div>
+
                                      <Link href="/kontakt" onClick={() => setOpen(false)} className="flex items-center justify-between rounded-lg px-4 py-3 text-sm font-medium transition-colors hover:bg-muted/50">
                                         Kontakt
                                         <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
