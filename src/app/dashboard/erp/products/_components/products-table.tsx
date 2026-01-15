@@ -25,8 +25,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
     DropdownMenu,
+    DropdownMenuCheckboxItem,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { bulkUpdateSyncStatus, bulkDeleteProducts } from "../actions";
@@ -36,6 +39,7 @@ import { BulkEditDialog } from "./bulk-edit-dialog";
 interface Product {
     id: string;
     name: string;
+    decorName: string | null;
     sku: string;
     imageUrl: string | null;
     unit: string | null;
@@ -89,6 +93,22 @@ interface ProductsTableProps {
     structures: { id: string; name: string }[];
 }
 
+// Column Definition
+type ColumnId = 'image' | 'sku' | 'name' | 'decorName' | 'category' | 'type' | 'unit' | 'price' | 'status' | 'actions';
+
+const COLUMNS: { id: ColumnId; label: string; defaultVisible: boolean }[] = [
+    { id: 'image', label: 'Zdjęcie', defaultVisible: true },
+    { id: 'sku', label: 'SKU', defaultVisible: true },
+    { id: 'name', label: 'Nazwa', defaultVisible: true },
+    { id: 'decorName', label: 'Dekor', defaultVisible: false },
+    { id: 'category', label: 'Kategoria', defaultVisible: true },
+    { id: 'type', label: 'Typ', defaultVisible: true },
+    { id: 'unit', label: 'Jedn.', defaultVisible: true },
+    { id: 'price', label: 'Cena', defaultVisible: true },
+    { id: 'status', label: 'Status', defaultVisible: true },
+    { id: 'actions', label: 'Akcje', defaultVisible: true },
+];
+
 const PriceDisplay = ({ price, salePrice, regularPrice }: { price: string | null, salePrice: string | null, regularPrice?: string | null }) => {
 
     // Determine effective price
@@ -139,6 +159,16 @@ export function ProductsTable({
 }: ProductsTableProps) {
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
+    
+    // Column Visibility State
+    const [visibleColumns, setVisibleColumns] = useState<Record<ColumnId, boolean>>(() => {
+        // Initialize from defaults
+        const defaults: Record<string, boolean> = {};
+        COLUMNS.forEach(col => {
+            defaults[col.id] = col.defaultVisible;
+        });
+        return defaults as Record<ColumnId, boolean>;
+    });
 
     const [statusFilter, setStatusFilter] = useState("active");
     const [categoryFilter, setCategoryFilter] = useState("all");
@@ -297,6 +327,33 @@ export function ProductsTable({
                             ))}
                         </SelectContent>
                     </Select>
+
+                    {/* COLUMN TOGGLE */}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="gap-2">
+                                Widok
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-[150px]">
+                            <DropdownMenuLabel>Widoczne kolumny</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            {COLUMNS.map((col) => {
+                                // Don't allow toggling 'image' or 'actions' if critical, but let's allow all for flexibility
+                                if (col.id === 'actions') return null; 
+                                return (
+                                <DropdownMenuCheckboxItem
+                                    key={col.id}
+                                    checked={visibleColumns[col.id]}
+                                    onCheckedChange={(checked) => 
+                                        setVisibleColumns(prev => ({ ...prev, [col.id]: checked }))
+                                    }
+                                >
+                                    {col.label}
+                                </DropdownMenuCheckboxItem>
+                            )})}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
 
@@ -342,14 +399,16 @@ export function ProductsTable({
                                     onCheckedChange={(checked) => handleSelectAll(!!checked)}
                                 />
                             </TableHead>
-                            <TableHead className="w-[60px]">Img</TableHead>
-                            <TableHead>SKU</TableHead>
-                            <TableHead>Nazwa</TableHead>
-                            <TableHead>Kategoria</TableHead>
-                            <TableHead>Typ</TableHead>
-                            <TableHead>Jednostka</TableHead>
-                            <TableHead className="text-right">Cena</TableHead>
-                            <TableHead>Status</TableHead>
+                            {visibleColumns['image'] && <TableHead className="w-[60px]">Img</TableHead>}
+                            {visibleColumns['sku'] && <TableHead>SKU</TableHead>}
+                            {visibleColumns['name'] && <TableHead>Nazwa</TableHead>}
+                            {visibleColumns['decorName'] && <TableHead>Dekor</TableHead>}
+                            {visibleColumns['category'] && <TableHead>Kategoria</TableHead>}
+                            {visibleColumns['type'] && <TableHead>Typ</TableHead>}
+                            {visibleColumns['unit'] && <TableHead>Jednostka</TableHead>}
+                            {visibleColumns['price'] && <TableHead className="text-right">Cena</TableHead>}
+                            {visibleColumns['status'] && <TableHead>Status</TableHead>}
+                            <TableHead className="w-[50px]"></TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -371,6 +430,7 @@ export function ProductsTable({
                                             onCheckedChange={(checked) => handleSelectOne(product.id, !!checked)}
                                         />
                                     </TableCell>
+                                    {visibleColumns['image'] && (
                                     <TableCell>
                                         {product.imageUrl ? (
                                             <div className="h-10 w-10 relative overflow-hidden rounded-md border bg-muted">
@@ -387,6 +447,8 @@ export function ProductsTable({
                                             </div>
                                         )}
                                     </TableCell>
+                                    )}
+                                    {visibleColumns['sku'] && (
                                     <TableCell className="font-medium">
                                         <div className="flex items-center gap-2">
                                             {product.sku}
@@ -395,6 +457,8 @@ export function ProductsTable({
                                             )}
                                         </div>
                                     </TableCell>
+                                    )}
+                                    {visibleColumns['name'] && (
                                     <TableCell>
                                         <div className="flex flex-col">
                                             <Link 
@@ -410,13 +474,22 @@ export function ProductsTable({
                                             )}
                                         </div>
                                     </TableCell>
-                                    <TableCell>{product.category?.name || '-'}</TableCell>
+                                    )}
+                                    {visibleColumns['decorName'] && (
+                                        <TableCell className="text-sm text-muted-foreground">
+                                            {product.decorName || '-'}
+                                        </TableCell>
+                                    )}
+                                    {visibleColumns['category'] && <TableCell>{product.category?.name || '-'}</TableCell>}
+                                    {visibleColumns['type'] && (
                                     <TableCell>
                                         <Badge variant={product.type === 'service' ? 'secondary' : 'outline'}>
                                             {product.type === 'service' ? 'Usługa' : 'Towar'}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell>{product.unit}</TableCell>
+                                    )}
+                                    {visibleColumns['unit'] && <TableCell>{product.unit}</TableCell>}
+                                    {visibleColumns['price'] && (
                                     <TableCell className="text-right font-medium">
                                         <PriceDisplay 
                                             price={product.price} 
@@ -424,10 +497,22 @@ export function ProductsTable({
                                             regularPrice={product.regularPrice} 
                                         />
                                     </TableCell>
+                                    )}
+                                    {visibleColumns['status'] && (
                                     <TableCell>
                                         <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>
                                             {product.status === 'active' ? 'Aktywny' : 'Archiwum'}
                                         </Badge>
+                                    </TableCell>
+                                    )}
+                                    <TableCell>
+                                        <div className="flex justify-end gap-2">
+                                            <Button variant="ghost" size="icon" asChild>
+                                                <Link href={`/dashboard/erp/products/${product.id}`}>
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Link>
+                                            </Button>
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))
