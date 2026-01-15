@@ -172,12 +172,6 @@ export function CheckoutForm({ shippingCost, palletShippingCost }: { shippingCos
       }
     });
   };
-      } catch (error) {
-        toast.error("Nie udało się złożyć zamówienia");
-        console.error(error);
-      }
-    });
-  };
 
   if (cart.items.length === 0) {
       return (
