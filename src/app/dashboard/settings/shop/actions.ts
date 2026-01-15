@@ -50,6 +50,10 @@ export type ShopConfig = {
         glue_plank: { labor: number; chemistry: number };
         click_plank: { labor: number; chemistry: number };
     };
+
+    // Kalkulator - Sugerowane Zapasy (Odpad)
+    // Klucz = slug wzoru (np. 'herringbone', 'plank', 'jodelka-francuska')
+    wasteRates?: Record<string, { simple: number; complex: number }>;
 };
 
 export type TpayConfig = {
@@ -84,6 +88,9 @@ export const getShopConfig = unstable_cache(
                     click_herringbone: { labor: 45, chemistry: 5 },
                     glue_plank: { labor: 55, chemistry: 25 },
                     click_plank: { labor: 35, chemistry: 5 },
+                },
+                wasteRates: {
+                     default: { simple: 5, complex: 10 }
                 }
             };
         }
@@ -95,6 +102,12 @@ export const getShopConfig = unstable_cache(
                     click_herringbone: { labor: 45, chemistry: 5 },
                     glue_plank: { labor: 55, chemistry: 25 },
                     click_plank: { labor: 35, chemistry: 5 },
+            };
+        }
+        
+        if (!config.wasteRates) {
+            config.wasteRates = {
+                default: { simple: 5, complex: 10 }
             };
         }
 

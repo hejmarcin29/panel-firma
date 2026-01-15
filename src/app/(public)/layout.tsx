@@ -1,15 +1,20 @@
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
+import { getShopConfig } from '@/app/dashboard/settings/shop/actions';
 
 export default async function PublicLayout({
     children,
   }: {
     children: React.ReactNode;
   }) {
+    const shopConfig = await getShopConfig();
     let systemLogoUrl = await getAppSetting(appSettingKeys.systemLogoUrl);
-    if (systemLogoUrl && !systemLogoUrl.startsWith('http') && !systemLogoUrl.startsWith('/')) {
-        systemLogoUrl = `https://${systemLogoUrl}`;
+
+    let rawLogoUrl = shopConfig.headerLogo || shopConfig.organizationLogo || systemLogoUrl;
+
+    if (rawLogoUrl && !rawLogoUrl.startsWith('http') && !rawLogoUrl.startsWith('/')) {
+        rawLogoUrl = `https://${rawLogoUrl}`;
     }
-    const logoSrc = systemLogoUrl || "/window.svg";
+    const logoSrc = rawLogoUrl || "/window.svg";
 
     return (
       <div className="min-h-screen bg-neutral-50">

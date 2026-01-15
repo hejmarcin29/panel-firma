@@ -216,6 +216,7 @@ export default async function ProductPage({ params }: PageProps) {
                         {/* Calculator Component */}
                         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
                             <FloorCalculator 
+                                key={product.id}
                                 product={{
                                     id: product.id,
                                     name: product.name,
@@ -230,6 +231,8 @@ export default async function ProductPage({ params }: PageProps) {
                                 samplePrice={shopConfig.samplePrice / 100}
                                 mountingMethod={product.mountingMethod}
                                 floorPattern={product.floorPattern}
+                                floorPatternSlug={product.floorPatternSlug}
+                                wasteRates={shopConfig.wasteRates}
                             />
                         </div>
 

@@ -35,6 +35,8 @@ interface FloorCalculatorProps {
   samplePrice?: number;
   mountingMethod?: string | null;
   floorPattern?: string | null;
+  floorPatternSlug?: string | null;
+  wasteRates?: Record<string, { simple: number; complex: number }>;
 }
 
 export function FloorCalculator({ 
@@ -44,11 +46,19 @@ export function FloorCalculator({
     unit,
     isPurchasable = false,
     mountingMethod,
-    floorPattern
+    floorPattern,
+    floorPatternSlug,
+    wasteRates
 }: FloorCalculatorProps) {
+  // Determine waste rates based on pattern
+  const defaultRates = wasteRates?.['default'] || { simple: 5, complex: 10 };
+  const currentRates = (floorPatternSlug && wasteRates?.[floorPatternSlug]) 
+        ? wasteRates[floorPatternSlug] 
+        : defaultRates;
+
   const [mode, setMode] = useState<"material" | "montage">("material");
   const [area, setArea] = useState<string>("20");
-  const [waste, setWaste] = useState<string>("5"); // 5% waste
+  const [waste, setWaste] = useState<string>(currentRates.simple.toString()); 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   
   // Montage Lead Form State
@@ -200,7 +210,7 @@ export function FloorCalculator({
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">Zapas (%)</Label>
             <div className="flex bg-muted rounded-md p-1 h-10 w-full">
-               {[5, 10].map((val) => (
+               {[currentRates.simple, currentRates.complex].map((val) => (
                  <button
                    key={val}
                    onClick={() => setWaste(val.toString())}
@@ -211,7 +221,7 @@ export function FloorCalculator({
                        : "text-gray-500 hover:text-gray-900"
                    )}
                  >
-                   {val === 5 ? 'Proste' : 'Skosy'} ({val}%)
+                   {val === currentRates.simple ? 'Proste' : 'Skosy'} ({val}%)
                  </button>
                ))}
             </div>

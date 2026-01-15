@@ -1,6 +1,6 @@
 import { getShopConfig, getTpayConfig } from './actions';
 import { db } from '@/lib/db';
-import { erpProducts } from '@/lib/db/schema';
+import { erpProducts, erpFloorPatterns } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import ShopSettingsForm from './shop-settings-form';
 
@@ -20,11 +20,21 @@ export default async function ShopSettingsPage() {
         }
     });
 
+    // Fetch floor patterns for waste configuration
+    const floorPatterns = await db.query.erpFloorPatterns.findMany({
+        columns: {
+            id: true,
+            name: true,
+            slug: true,
+        }
+    });
+
     return (
         <ShopSettingsForm 
             initialConfig={config} 
             initialTpayConfig={tpayConfig} 
             availableProducts={availableProducts}
+            floorPatterns={floorPatterns}
         />
     );
 }

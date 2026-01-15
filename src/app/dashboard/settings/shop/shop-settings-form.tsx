@@ -13,10 +13,11 @@ import { SingleImageUpload } from '@/components/common/single-image-upload';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-export default function ShopSettingsForm({ initialConfig, initialTpayConfig, availableProducts }: { 
+export default function ShopSettingsForm({ initialConfig, initialTpayConfig, availableProducts, floorPatterns }: { 
     initialConfig: ShopConfig, 
     initialTpayConfig: TpayConfig,
-    availableProducts: { id: string, name: string, price: string | null }[]
+    availableProducts: { id: string, name: string, price: string | null }[],
+    floorPatterns: { id: string, name: string, slug: string | null }[]
 }) {
     const [config, setConfig] = useState(initialConfig);
     const [tpayConfig] = useState(initialTpayConfig);
@@ -30,6 +31,25 @@ export default function ShopSettingsForm({ initialConfig, initialTpayConfig, ava
 
     async function handleSave(formData: FormData) {
         try {
+            // Collect waste rates
+            const wasteRates: Record<string, { simple: number; complex: number }> = {};
+            
+            // Default waste rates
+            wasteRates['default'] = {
+                simple: parseFloat(formData.get('waste_default_simple') as string) || 5,
+                complex: parseFloat(formData.get('waste_default_complex') as string) || 10,
+            };
+
+            // Pattern-specific waste rates
+            floorPatterns.forEach(pattern => {
+                if (pattern.slug) {
+                    wasteRates[pattern.slug] = {
+                        simple: parseFloat(formData.get(`waste_${pattern.slug}_simple`) as string) || 5,
+                        complex: parseFloat(formData.get(`waste_${pattern.slug}_complex`) as string) || 10,
+                    };
+                }
+            });
+
             // Save Shop Config
             const newShopConfig: ShopConfig = {
                 // General
@@ -91,7 +111,10 @@ export default function ShopSettingsForm({ initialConfig, initialTpayConfig, ava
                         labor: parseFloat(formData.get('calc_click_plank_labor') as string) || 35,
                         chemistry: parseFloat(formData.get('calc_click_plank_chemistry') as string) || 5,
                     },
-                }
+                },
+                
+                // Waste Rates
+                wasteRates: wasteRates,
             };
 
             await updateShopConfig(newShopConfig);
@@ -348,6 +371,83 @@ export default function ShopSettingsForm({ initialConfig, initialTpayConfig, ava
                                 </div>
                             </CardContent>
                         </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Calculator className="h-5 w-5" /> Domyślne Zapasy (Odpad)
+                                </CardTitle>
+                                <CardDescription>
+                                    Ustaw sugerowane wartości zapasu dla kalkulatora w zależności od wzoru podłogi.
+                                    System automatycznie podpowie te wartości klientowi.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                {/* Default / Fallback */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end border-b pb-4">
+                                    <div className="md:col-span-1">
+                                        <h4 className="font-semibold text-sm">Domyślne (Inne)</h4>
+                                        <p className="text-xs text-muted-foreground">Używane, gdy produkt nie ma zdefiniowanego wzoru.</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="waste_default_simple">Proste (%)</Label>
+                                        <Input 
+                                            id="waste_default_simple" 
+                                            name="waste_default_simple" 
+                                            type="number" 
+                                            min="0"
+                                            max="100"
+                                            defaultValue={config.wasteRates?.default?.simple ?? 5} 
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="waste_default_complex">Skosy / Trudne (%)</Label>
+                                        <Input 
+                                            id="waste_default_complex" 
+                                            name="waste_default_complex" 
+                                            type="number" 
+                                            min="0"
+                                            max="100"
+                                            defaultValue={config.wasteRates?.default?.complex ?? 10} 
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Dynamic Patterns */}
+                                {floorPatterns.map((pattern) => (
+                                    pattern.slug && (
+                                        <div key={pattern.id} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end border-b pb-4 last:border-0">
+                                            <div className="md:col-span-1">
+                                                <h4 className="font-semibold text-sm">{pattern.name}</h4>
+                                                <p className="text-xs text-muted-foreground">Slug: {pattern.slug}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Label htmlFor={`waste_${pattern.slug}_simple`}>Proste (%)</Label>
+                                                <Input 
+                                                    id={`waste_${pattern.slug}_simple`} 
+                                                    name={`waste_${pattern.slug}_simple`} 
+                                                    type="number" 
+                                                    min="0"
+                                                    max="100"
+                                                    defaultValue={config.wasteRates?.[pattern.slug]?.simple ?? 5} 
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Label htmlFor={`waste_${pattern.slug}_complex`}>Skosy / Trudne (%)</Label>
+                                                <Input 
+                                                    id={`waste_${pattern.slug}_complex`} 
+                                                    name={`waste_${pattern.slug}_complex`} 
+                                                    type="number" 
+                                                    min="0"
+                                                    max="100"
+                                                    defaultValue={config.wasteRates?.[pattern.slug]?.complex ?? 10} 
+                                                />
+                                            </div>
+                                        </div>
+                                    )
+                                ))}
+                            </CardContent>
+                        </Card>
                     </TabsContent>
 
                     {/* TAB: DESIGN */}
@@ -384,7 +484,7 @@ export default function ShopSettingsForm({ initialConfig, initialTpayConfig, ava
                                         value={config.heroImage}
                                         onChange={(url) => setConfig(prev => ({ ...prev, heroImage: url || undefined }))}
                                         onUpload={handleImageUpload}
-                                        aspectRatio="video"
+                                        aspectRatio="auto"
                                         label="Zmień zdjęcie tła"
                                     />
                                     <input type="hidden" name="heroImage" value={config.heroImage || ''} />

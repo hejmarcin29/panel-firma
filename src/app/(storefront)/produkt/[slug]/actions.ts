@@ -16,6 +16,7 @@ export interface ProductDetails {
     unit: string | null;
     mountingMethod: string | null; // NEW
     floorPattern: string | null;   // NEW
+    floorPatternSlug: string | null;   // NEW: for calculator waste settings
     wearClass: string | null;      // NEW
     wearLayerThickness: number | null; // NEW
     packageSizeM2: number | null;
@@ -95,6 +96,7 @@ export async function getProductBySlug(slug: string): Promise<ProductDetails | n
         packageSizeM2: product.packageSizeM2,
         mountingMethod: product.mountingMethodDictionary?.name ?? product.mountingMethod,
         floorPattern: product.floorPatternDictionary?.name ?? product.floorPattern,
+        floorPatternSlug: product.floorPatternDictionary?.slug ?? null,
         wearClass: product.wearClassDictionary?.name ?? product.wearClass,
         wearLayerThickness: product.wearLayerThickness,
         stockQuantity: product.stockQuantity,
