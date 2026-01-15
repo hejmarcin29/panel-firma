@@ -102,14 +102,18 @@ const checkoutSchema = z.object({
 
 export type CheckoutFormData = z.infer<typeof checkoutSchema>;
 
-export function CheckoutForm() {
+export function CheckoutForm({ shippingCost }: { shippingCost?: number }) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const cart = useCartStore();
-  const totalAmount = cart.getTotalPrice();
+  const itemsTotal = cart.getTotalPrice();
 
   // Logic: Is only samples?
   const isOnlySamples = cart.items.length > 0 && cart.items.every(item => item.productId.startsWith('sample_'));
+  
+  // Calculate Shipping (shippingCost is in grosze)
+  const shippingCostPLN = (isOnlySamples && shippingCost) ? shippingCost / 100 : 0;
+  const finalTotal = itemsTotal + shippingCostPLN;
 
   const form = useForm<CheckoutFormData>({
     resolver: zodResolver(checkoutSchema) as any,
@@ -130,18 +134,33 @@ export function CheckoutForm() {
       return;
     }
 
+    const orderItems = cart.items.map(item => ({
+        productId: item.productId,
+        name: item.name,
+        sku: item.sku,
+        quantity: item.quantity,
+        price: item.pricePerUnit,
+        vatRate: item.vatRate,
+        unit: item.unit
+    }));
+
+    // Add shipping item if applicable
+    if (isOnlySamples && shippingCostPLN > 0) {
+        orderItems.push({
+            productId: 'shipping_sample',
+            name: 'Wysyłka Próbek',
+            sku: 'SHP-001',
+            quantity: 1,
+            price: shippingCostPLN,
+            vatRate: 0.23, // Assuming 23% VAT on shipping
+            unit: 'usł.'
+        });
+    }
+
     const orderData = {
         ...data,
-        items: cart.items.map(item => ({
-            productId: item.productId,
-            name: item.name,
-            sku: item.sku,
-            quantity: item.quantity,
-            price: item.pricePerUnit,
-            vatRate: item.vatRate,
-            unit: item.unit
-        })),
-        totalAmount
+        items: orderItems,
+        totalAmount: finalTotal
     }
 
     startTransition(async () => {
@@ -437,15 +456,17 @@ export function CheckoutForm() {
                           defaultValue={field.value}
                           className="flex flex-col space-y-1"
                         >
-                          {/* Proforma - Always Available */}
-                          <FormItem className="flex items-center space-x-3 space-y-0 p-4 border rounded-lg bg-white">
+                          {/* Proforma */}
+                          <FormItem className={`flex items-center space-x-3 space-y-0 p-4 border rounded-lg bg-white ${isOnlySamples ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}>
                             <FormControl>
-                              <RadioGroupItem value="proforma" />
+                              <RadioGroupItem value="proforma" disabled={isOnlySamples} />
                             </FormControl>
                             <FormLabel className="font-normal flex-1 cursor-pointer">
                                 <div className="font-semibold">Przelew tradycyjny (Proforma)</div>
                                 <div className="text-sm text-muted-foreground">
-                                    Otrzymasz fakturę proforma mailem. Towar wysyłamy po zaksięgowaniu wpłaty.
+                                    {isOnlySamples 
+                                        ? "Niedostępne dla zamówień próbek (wymagana szybka płatność)."
+                                        : "Otrzymasz fakturę proforma mailem. Towar wysyłamy po zaksięgowaniu wpłaty."}
                                 </div>
                             </FormLabel>
                           </FormItem>
@@ -497,7 +518,7 @@ export function CheckoutForm() {
 
             <Button type="submit" size="lg" className="w-full text-lg h-14" disabled={isPending}>
                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isPending ? "Przetwarzanie..." : `Zamawiam i płacę (${totalAmount.toFixed(2)} zł)`}
+                {isPending ? "Przetwarzanie..." : `Zamawiam i płacę (${finalTotal.toFixed(2)} zł)`}
             </Button>
           </form>
         </Form>
@@ -527,18 +548,22 @@ export function CheckoutForm() {
                      
                      <div className="flex justify-between font-medium">
                          <span>Suma produktów</span>
-                         <span>{totalAmount.toFixed(2)} zł</span>
+                         <span>{itemsTotal.toFixed(2)} zł</span>
                      </div>
                      <div className="flex justify-between text-sm text-muted-foreground">
                          <span>Dostawa</span>
-                         <span>Wyceniana indywidualnie / Gratis od 4000 zł</span>
+                         {isOnlySamples && shippingCostPLN > 0 ? (
+                             <span>{shippingCostPLN.toFixed(2)} zł</span>
+                         ) : (
+                             <span>Wyceniana indywidualnie / Gratis od 4000 zł</span>
+                         )}
                      </div>
                      
                      <Separator className="my-2" />
                      
                      <div className="flex justify-between font-bold text-lg">
                          <span>Do zapłaty</span>
-                         <span>{totalAmount.toFixed(2)} zł</span>
+                         <span>{finalTotal.toFixed(2)} zł</span>
                      </div>
                  </CardContent>
              </Card>

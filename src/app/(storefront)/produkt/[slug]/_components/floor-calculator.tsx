@@ -106,7 +106,7 @@ export function FloorCalculator({
   const handleAddToCart = () => {
     if (totalPrice <= 0) return;
 
-    addItem({
+    if (addItem({
       productId: product.id,
       name: product.name,
       sku: product.sku,
@@ -116,9 +116,25 @@ export function FloorCalculator({
       quantity: packsNeeded,
       unit: unit,
       packageSize: packageSizeM2
-    });
-    
-    toast.success("Dodano do koszyka");
+    })) {
+        toast.success("Dodano do koszyka");
+    }
+  };
+
+  const handleAddSampleToCart = () => {
+      if (addItem({
+          productId: `sample_${product.id}`,
+          name: `Próbka: ${product.name}`,
+          sku: `SAMPLE-${product.sku}`,
+          image: product.imageUrl,
+          pricePerUnit: samplePrice || 20,
+          vatRate: 0.23,
+          quantity: 1,
+          unit: 'szt.',
+          packageSize: 0
+      })) {
+        toast.success("Dodano próbkę do koszyka");
+      }
   };
 
   const handleSubmitLead = async () => {
@@ -325,6 +341,16 @@ export function FloorCalculator({
                 ) : (
                     <Button size="lg" disabled className="w-full h-12 text-base font-semibold opacity-75 cursor-not-allowed" variant="secondary">
                         Produkt niedostępny online
+                    </Button>
+                )}
+
+                {isSampleAvailable && (
+                    <Button 
+                        variant="outline" 
+                        className="w-full h-10 mt-3 text-sm border-gray-300 hover:bg-gray-50 text-gray-700"
+                        onClick={handleAddSampleToCart}
+                    >
+                        Zamów próbkę ({samplePrice?.toFixed(2)} zł)
                     </Button>
                 )}
             </motion.div>

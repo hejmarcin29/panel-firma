@@ -1,6 +1,9 @@
 import { CheckoutForm } from "./_components/checkout-form";
+import { getShopConfig } from "@/app/dashboard/settings/shop/actions";
 
-export default function CheckoutPage() {
+export default async function CheckoutPage() {
+  const shopConfig = await getShopConfig();
+
   return (
     <div className="container min-h-screen py-10 space-y-8">
        <div className="space-y-2">
@@ -10,7 +13,9 @@ export default function CheckoutPage() {
            </p>
        </div>
        
-       <CheckoutForm />
+       <CheckoutForm 
+          shippingCost={shopConfig.sampleShippingCost}
+       />
     </div>
   );
 }
