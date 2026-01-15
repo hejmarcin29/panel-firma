@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 import { format } from 'date-fns';
 import { createPayment } from '@/lib/tpay';
 import { ShopConfig } from '@/app/dashboard/settings/shop/actions';
+import { headers } from 'next/headers';
 
 type OrderData = {
     firstName: string;
@@ -235,7 +236,11 @@ export async function processOrder(data: OrderData) {
         let redirectUrl: string | null = null;
         if (data.paymentMethod === 'tpay') {
              try {
-                 const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://b2b.primepodloga.pl';
+                 const headersList = await headers();
+                 const host = headersList.get('host') || 'b2b.primepodloga.pl';
+                 const protocol = host.includes('localhost') ? 'http' : 'https';
+                 const appUrl = `${protocol}://${host}`;
+
                  const transaction = await createPayment({
                      amount: totalGross,
                      description: `Zamówienie ${reference}`,

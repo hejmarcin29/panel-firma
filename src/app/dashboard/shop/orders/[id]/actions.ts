@@ -5,13 +5,19 @@ import { orders, type OrderStatus } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { generateMagicLinkToken } from '@/lib/auth/magic-link';
+import { headers } from 'next/headers';
 
 import { createShipment } from '@/lib/inpost/client';
 
 export async function generateOrderMagicLink(orderId: string) {
     const token = generateMagicLinkToken(orderId);
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://b2b.primepodloga.pl'; 
-    return `${baseUrl}/order/status?token=${token}`;
+    
+    // Dynamicznie pobierz domenę z nagłówków żądania (działa na test, localhost i prod)
+    const headersList = await headers();
+    const host = headersList.get('host') || 'b2b.primepodloga.pl';
+    const protocol = host.includes('localhost') ? 'http' : 'https';
+    
+    return `${protocol}://${host}/order/status?token=${token}`;
 }
 
 export async function updateShopOrderStatus(orderId: string, newStatus: string) {

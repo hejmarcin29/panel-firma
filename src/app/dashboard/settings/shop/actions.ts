@@ -1,9 +1,55 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { globalSettings } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { globalSettings, erpProducts, erpCategories } from '@/lib/db/schema';
+import { eq, ilike } from 'drizzle-orm';
 import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache';
+
+export async function searchProductsForConfig(query: string) {
+    if (!query || query.length < 2) return [];
+    
+    // Simple search for product selector
+    return await db.select({
+        id: erpProducts.id,
+        name: erpProducts.name,
+        image: erpProducts.images
+    })
+    .from(erpProducts)
+    .where(ilike(erpProducts.name, `%${query}%`))
+    .limit(10);
+}
+
+export async function getBestsellers() {
+    const config = await getShopConfig();
+    if (!config.bestsellerIds || config.bestsellerIds.length === 0) {
+        // Fallback: Get 5 random or recent products
+        return await db.query.erpProducts.findMany({
+            where: eq(erpProducts.isOnline, true),
+            limit: 5,
+            orderBy: (erpProducts, { desc }) => [desc(erpProducts.createdAt)],
+            columns: {
+                id: true,
+                name: true,
+                images: true,
+                slug: true
+            }
+        });
+    }
+
+    // Get selected bestsellers
+    // Drizzle use `inArray`
+    const { inArray } = await import('drizzle-orm');
+    return await db.query.erpProducts.findMany({
+        where: inArray(erpProducts.id, config.bestsellerIds),
+        columns: {
+            id: true,
+            name: true,
+            images: true,
+            slug: true
+        }
+    });
+}
+
 
 export type ShopConfig = {
     isShopEnabled: boolean;
@@ -47,6 +93,9 @@ export type ShopConfig = {
     // Wygląd i Kolorystyka
     primaryColor?: string; // Główny kolor (np. #b02417)
     // secondaryColor?: string; // Opcjonalnie w przyszłości
+
+    // Bestsellery & Mobile Menu
+    bestsellerIds?: string[]; // IDs produktów promowanych w menu (Top UX 2026)
 
     // Kalkulator Ofertowy (Marketing)
     calculatorRates?: {

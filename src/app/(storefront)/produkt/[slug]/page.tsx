@@ -13,6 +13,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { getProductReviews } from './_components/reviews-actions';
 import { ProductReviews } from './_components/product-reviews';
 import { StarRating } from './_components/star-rating';
+import { ProductViewTracker } from './_components/product-view-tracker'; // Added
 
 interface PageProps {
     params: Promise<{
@@ -82,8 +83,20 @@ export default async function ProductPage({ params }: PageProps) {
         }
     };
 
+    const trackerPrice = price || 0;
+    const trackerImage = (Array.isArray(product.images) && product.images.length > 0) 
+        ? (product.images[0] as string) 
+        : (product.imageUrl as string || '');
+
     return (
         <div className="min-h-screen bg-gray-50 pb-20">
+            <ProductViewTracker product={{
+                id: String(product.id),
+                name: product.name,
+                price: trackerPrice,
+                slug: product.slug || '',
+                imageUrl: trackerImage
+            }} />
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

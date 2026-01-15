@@ -1,6 +1,6 @@
 'use client';
 
-import { updateShopConfig, updateTpayConfig, uploadShopImage, ShopConfig, TpayConfig } from './actions';
+import { updateShopConfig, updateTpayConfig, uploadShopImage, searchProductsForConfig, ShopConfig, TpayConfig } from './actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,10 +8,13 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ShieldAlert, Globe, Search, BarChart3, CreditCard, LayoutTemplate, SquareEqual, Calculator } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
+import { ShieldAlert, Globe, Search, BarChart3, CreditCard, LayoutTemplate, SquareEqual, Calculator, Smartphone, Plus, X } from 'lucide-react';
 import { SingleImageUpload } from '@/components/common/single-image-upload';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useDebounce } from 'use-debounce';
+import { useEffect } from 'react';
 
 export default function ShopSettingsForm({ initialConfig, initialTpayConfig, availableProducts, floorPatterns }: { 
     initialConfig: ShopConfig, 
@@ -21,6 +24,38 @@ export default function ShopSettingsForm({ initialConfig, initialTpayConfig, ava
 }) {
     const [config, setConfig] = useState(initialConfig);
     const [tpayConfig] = useState(initialTpayConfig);
+
+    // Bestseller Search Logic
+    const [bestsellerSearch, setBestsellerSearch] = useState('');
+    const [debouncedSearch] = useDebounce(bestsellerSearch, 500);
+    const [foundProducts, setFoundProducts] = useState<{id: string, name: string}[]>([]);
+    
+    // Loaded names for currently selected IDs (for display)
+    const [selectedProductNames, setSelectedProductNames] = useState<Record<string, string>>({});
+
+    useEffect(() => {
+        if (debouncedSearch.length > 2) {
+            searchProductsForConfig(debouncedSearch).then(res => {
+                // @ts-ignore
+                setFoundProducts(res);
+            });
+        }
+    }, [debouncedSearch]);
+
+    // Initial load of names for existing bestsellers if needed
+    // In a real app we would pass full objects in initialConfig or fetch them.
+    // For now, let's rely on availableProducts prop if it has them.
+    useEffect(() => {
+        const map: Record<string, string> = {};
+        if (initialConfig.bestsellerIds) {
+            initialConfig.bestsellerIds.forEach(id => {
+                const found = availableProducts.find(p => p.id === id);
+                if (found) map[id] = found.name;
+            });
+            setSelectedProductNames(prev => ({...prev, ...map}));
+        }
+    }, [initialConfig.bestsellerIds, availableProducts]);
+
 
     const handleImageUpload = async (file: File) => {
         const formData = new FormData();
@@ -66,6 +101,14 @@ export default function ShopSettingsForm({ initialConfig, initialTpayConfig, ava
                 heroImage: formData.get('heroImage') as string,
                 measurementProductId: formData.get('measurementProductId') as string,
                 
+                // Bestsellers
+                bestsellerIds: (() => {
+                    try {
+                        const raw = formData.get('bestsellerIds') as string;
+                        return raw ? JSON.parse(raw) : [];
+                    } catch { return []; }
+                })(),
+
                 // Payment
                 proformaBankName: formData.get('proformaBankName') as string,
                 proformaBankAccount: formData.get('proformaBankAccount') as string,
@@ -268,6 +311,85 @@ export default function ShopSettingsForm({ initialConfig, initialTpayConfig, ava
                                             </option>
                                         ))}
                                     </select>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Smartphone className="h-5 w-5" /> Mobile Menu (Bestsellery)
+                                </CardTitle>
+                                <CardDescription>
+                                    Wybierz produkty, które będą promowane jako "Bestsellery" w menu mobilnym, gdy użytkownik nie ma jeszcze historii przeglądania.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label>Wyszukaj i dodaj produkt</Label>
+                                    <div className="relative">
+                                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            type="search"
+                                            placeholder="Wpisz nazwę produktu..."
+                                            className="pl-9"
+                                            value={bestsellerSearch}
+                                            onChange={(e) => setBestsellerSearch(e.target.value)}
+                                        />
+                                    </div>
+                                    
+                                    {/* Search Results */}
+                                    {foundProducts.length > 0 && (
+                                        <div className="border rounded-md mt-2 max-h-40 overflow-y-auto bg-white shadow-sm z-10">
+                                            {foundProducts.map(fp => (
+                                                <div 
+                                                    key={fp.id} 
+                                                    className="p-2 hover:bg-slate-50 cursor-pointer text-sm flex justify-between items-center"
+                                                    onClick={() => {
+                                                        const current = config.bestsellerIds || [];
+                                                        if (!current.includes(fp.id)) {
+                                                            const newIds = [...current, fp.id];
+                                                            setConfig({...config, bestsellerIds: newIds});
+                                                            setSelectedProductNames({...selectedProductNames, [fp.id]: fp.name});
+                                                            setBestsellerSearch('');
+                                                            setFoundProducts([]);
+                                                        }
+                                                    }}
+                                                >
+                                                    <span>{fp.name}</span>
+                                                    <Plus className="h-4 w-4 text-blue-600" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Selected Chips */}
+                                    <div className="mt-4 flex flex-wrap gap-2">
+                                        {config.bestsellerIds && config.bestsellerIds.length > 0 ? (
+                                            config.bestsellerIds.map(id => (
+                                                <Badge key={id} variant="secondary" className="pl-2 pr-1 py-1 flex items-center gap-1">
+                                                    {selectedProductNames[id] || availableProducts.find(p=>p.id===id)?.name || id}
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="icon" 
+                                                        className="h-4 w-4 ml-1 rounded-full hover:bg-slate-200"
+                                                        onClick={(e) => {
+                                                            e.preventDefault(); // Prevent form submit
+                                                            const newIds = config.bestsellerIds!.filter(pid => pid !== id);
+                                                            setConfig({...config, bestsellerIds: newIds});
+                                                        }}
+                                                    >
+                                                        <X className="h-3 w-3" />
+                                                    </Button>
+                                                </Badge>
+                                            ))
+                                        ) : (
+                                            <div className="text-sm text-muted-foreground italic">
+                                                Brak wybranych produktów. System wyświetli 5 ostatnio dodanych.
+                                            </div>
+                                        )}
+                                    </div>
+                                    <input type="hidden" name="bestsellerIds" value={JSON.stringify(config.bestsellerIds || [])} />
                                 </div>
                             </CardContent>
                         </Card>

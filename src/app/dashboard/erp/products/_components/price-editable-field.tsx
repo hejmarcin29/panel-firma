@@ -70,27 +70,45 @@ export function PriceEditableField({ productId, initialPrice, unit }: PriceEdita
 
     const displayUnit = unitMap[unit || 'szt'] || unit || 'szt';
 
+    const parsedPrice = parseFloat(price.replace(',', '.')) || 0;
+    const fmt = new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' });
+
     return (
-        <div className="flex items-center gap-2">
-            <div className="relative w-40">
-                <Input 
-                    value={price} 
-                    onChange={handleChange}
-                    onBlur={handleSave}
-                    onKeyDown={handleKeyDown}
-                    disabled={isLoading}
-                    className={cn(
-                        "pr-16 text-right font-medium",
-                        isLoading && "opacity-50"
-                    )}
-                    placeholder="0.00"
-                />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
-                    zł / {displayUnit}
+        <div className="space-y-1">
+            <div className="flex items-center gap-2">
+                <div className="relative w-40">
+                    <Input 
+                        value={price} 
+                        onChange={handleChange}
+                        onBlur={handleSave}
+                        onKeyDown={handleKeyDown}
+                        disabled={isLoading}
+                        className={cn(
+                            "pr-16 text-right font-medium",
+                            isLoading && "opacity-50"
+                        )}
+                        placeholder="0.00"
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
+                        zł / {displayUnit}
+                    </div>
                 </div>
+                {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                {!isLoading && isModified && <div className="h-2 w-2 rounded-full bg-amber-500" title="Niezapisane zmiany" />}
             </div>
-            {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
-            {!isLoading && isModified && <div className="h-2 w-2 rounded-full bg-amber-500" title="Niezapisane zmiany" />}
+            
+            {parsedPrice > 0 && (
+                <div className="text-xs text-muted-foreground space-y-0.5">
+                    <div className="flex justify-between w-40 px-1">
+                        <span>23% VAT:</span>
+                        <span className="font-medium">{fmt.format(parsedPrice * 1.23)}</span>
+                    </div>
+                    <div className="flex justify-between w-40 px-1">
+                        <span>8% VAT:</span>
+                        <span className="font-medium">{fmt.format(parsedPrice * 1.08)}</span>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

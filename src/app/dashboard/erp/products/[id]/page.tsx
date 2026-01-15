@@ -170,7 +170,7 @@ export default async function ProductDetailsPage({ params }: PageProps) {
                                     />
                                 </div>
                                 <div>
-                                    <span className="text-muted-foreground block mb-1.5">Waga (jednostkowa):</span>
+                                    <span className="text-muted-foreground block mb-1.5">Waga opakowania:</span>
                                     <WeightEditableField 
                                         productId={product.id}
                                         initialWeight={product.weight}

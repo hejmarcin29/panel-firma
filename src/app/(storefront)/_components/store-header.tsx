@@ -3,10 +3,12 @@ import Image from "next/image"; // Added
 import { Search, Menu, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CartButton } from "./cart-button";
-import { getShopConfig } from "@/app/dashboard/settings/shop/actions"; // Added
+import { getShopConfig, getBestsellers } from "@/app/dashboard/settings/shop/actions"; // Added
+import { VisualCommandCenter } from "./visual-command-center";
 
 export async function StoreHeader() {
   const config = await getShopConfig();
+  const bestsellers = await getBestsellers();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
@@ -14,10 +16,11 @@ export async function StoreHeader() {
         
         {/* Mobile Menu Trigger & Logo */}
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" className="lg:hidden">
-            <Menu className="h-5 w-5" />
-            <span className="sr-only">Menu</span>
-          </Button>
+          <VisualCommandCenter bestsellers={bestsellers.map(p => ({
+            ...p,
+            id: String(p.id),
+            slug: p.slug || ''
+          }))} />
           <Link href="/" className="font-playfair text-xl font-bold tracking-tight">
              {config.headerLogo ? (
                 <div className="relative h-10 w-32 md:w-40">
