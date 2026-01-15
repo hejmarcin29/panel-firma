@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { MapPin, Calendar, CheckCircle2, SortAsc, SortDesc, LayoutList, ListTodo } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import {
   Accordion,
@@ -144,8 +144,16 @@ export function TasksList({ tasksMontages }: TasksListProps) {
                 initial="hidden"
                 animate="show"
             >
+                <AnimatePresence mode="popLayout">
                 {flatTasks.map((item) => (
-                    <motion.div key={item.id} variants={itemVariant}>
+                    <motion.div 
+                        key={item.id} 
+                        layout
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, height: 0, marginBottom: 0, scale: 0.95 }}
+                        transition={{ opacity: { duration: 0.2 } }}
+                    >
                         <SwipeableTaskItem 
                             onComplete={() => handleToggleTask(item.id, item.montage.id, item.completed)}
                             onEdit={() => router.push(`/dashboard/crm/montaze/${item.montage.id}?tab=tasks`)}
@@ -187,6 +195,7 @@ export function TasksList({ tasksMontages }: TasksListProps) {
                         </SwipeableTaskItem>
                     </motion.div>
                 ))}
+                </AnimatePresence>
             </motion.div>
         );
     };

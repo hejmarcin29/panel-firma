@@ -7,7 +7,8 @@ import Image from "next/image";
 import { Trash2, Minus, Plus, ShoppingBag } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { useEffect, useState } from "react";
-import { MotionContainer, MotionItem } from "@/components/motion-container";
+import { MotionContainer } from "@/components/motion-container";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function CartPage() {
     const { items, updateQuantity, getTotalPrice } = useCartStore();
@@ -52,8 +53,17 @@ export default function CartPage() {
             <div className="grid lg:grid-cols-3 gap-12">
                 {/* Cart Items List */}
                 <div className="lg:col-span-2 space-y-6">
-                    {items.map((item, index) => (
-                        <MotionItem key={item.productId} delay={index * 0.1} className="flex flex-col sm:flex-row gap-6 p-6 bg-white border rounded-xl shadow-sm">
+                    <AnimatePresence mode="popLayout">
+                    {items.map((item) => (
+                        <motion.div 
+                            key={item.productId} 
+                            layout
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9, height: 0, marginBottom: 0 }}
+                            transition={{ opacity: { duration: 0.2 } }}
+                            className="flex flex-col sm:flex-row gap-6 p-6 bg-white border rounded-xl shadow-sm overflow-hidden"
+                        >
                             {/* Image */}
                             <div className="relative aspect-square h-32 w-32 shrink-0 overflow-hidden rounded-lg bg-gray-50 border">
                                 {item.image ? (
@@ -127,8 +137,9 @@ export default function CartPage() {
                                     </div>
                                 )}
                             </div>
-                        </MotionItem>
+                        </motion.div>
                     ))}
+                    </AnimatePresence>
                 </div>
 
                 {/* Summary Sidebar */}

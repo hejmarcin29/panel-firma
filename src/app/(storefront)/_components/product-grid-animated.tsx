@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, Variants } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ProductCard } from "./product-card";
 
 interface ProductGridAnimatedProps {
@@ -10,27 +10,14 @@ interface ProductGridAnimatedProps {
     vatRate: number;
 }
 
-const container: Variants = {
-    hidden: { opacity: 0 },
-    show: {
-        opacity: 1,
-        transition: {
-            staggerChildren: 0.1
-        }
-    }
-};
-
-const item: Variants = {
-    hidden: { opacity: 0, y: 30 },
-    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 50, damping: 15 } }
-};
-
 export function ProductGridAnimated({ products, showGrossPrices, vatRate }: ProductGridAnimatedProps) {
-    if (products.length === 0) {
+    // Fallback for empty state
+    if (!products || products.length === 0) {
         return (
             <motion.div 
-                initial={{ opacity: 0 }} 
-                animate={{ opacity: 1 }} 
+                initial={{ opacity: 0, y: 20 }} 
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
                 className="py-24 text-center border rounded-lg bg-muted/20"
             >
                 <p className="text-muted-foreground text-lg">
@@ -46,19 +33,30 @@ export function ProductGridAnimated({ products, showGrossPrices, vatRate }: Prod
     return (
         <motion.div 
             className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6"
-            variants={container}
-            initial="hidden"
-            animate="show"
+            layout
         >
-            {products.map((product) => (
-                <motion.div key={product.id} variants={item}>
-                    <ProductCard 
-                        product={product} 
-                        showGrossPrices={showGrossPrices}
-                        vatRate={vatRate}
-                    />
-                </motion.div>
-            ))}
+            <AnimatePresence mode="popLayout">
+                {products.map((product) => (
+                    <motion.div 
+                        key={product.id} 
+                        layout
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ 
+                            opacity: { duration: 0.2 },
+                            layout: { duration: 0.3 }
+                        }}
+                    >
+                        <ProductCard 
+                            product={product} 
+                            showGrossPrices={showGrossPrices}
+                            vatRate={vatRate}
+                        />
+                    </motion.div>
+                ))}
+            </AnimatePresence>
         </motion.div>
     );
 }
+

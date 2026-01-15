@@ -1,42 +1,21 @@
 import { HeroSection } from "../_components/hero-section";
 import { FeaturesSection } from "../_components/features-section";
 import { CategoryGrid } from "../_components/category-grid";
-import { getStoreProducts } from "../sklep/actions";
-import { getShopConfig } from "@/app/dashboard/settings/shop/actions";
-import { ProductCard } from "../_components/product-card";
+import { getExplorerProducts } from "../sklep/actions";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { MotionContainer } from "@/components/motion-container";
+import { HeroProductExplorer } from "../_components/hero-product-explorer";
 
 export default async function StorefrontHomePage() {
-  const [latestProducts, shopConfig] = await Promise.all([
-    getStoreProducts(4),
-    getShopConfig()
-  ]);
+  const explorerProducts = await getExplorerProducts();
 
   return (
     <div className="flex flex-col min-h-screen">
       <HeroSection />
       
-      <MotionContainer className="py-16 container">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="font-playfair text-3xl font-bold">Nowości w ofercie</h2>
-          <Link href="/sklep">
-            <Button variant="outline">Zobacz wszystkie</Button>
-          </Link>
-        </div>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {latestProducts.map((product) => (
-            <ProductCard 
-              key={product.id} 
-              product={product} 
-              showGrossPrices={shopConfig.showGrossPrices}
-              vatRate={shopConfig.vatRate}
-            />
-          ))}
-        </div>
-      </MotionContainer>
+      {/* Hero Explorer - "Interactive Discovery" */}
+      <HeroProductExplorer products={explorerProducts} />
 
       <MotionContainer delay={0.2}>
         <FeaturesSection />

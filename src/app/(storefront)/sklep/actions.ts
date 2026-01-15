@@ -166,3 +166,35 @@ export async function getStoreProducts(
 
     return products;
 }
+
+export async function getExplorerProducts() {
+    return db.query.erpProducts.findMany({
+        where: eq(erpProducts.isShopVisible, true),
+        orderBy: [desc(erpProducts.isPurchasable), desc(erpProducts.imageUrl)],
+        limit: 100,
+        columns: {
+            id: true,
+            name: true,
+            slug: true,
+            imageUrl: true,
+            price: true,
+            salePrice: true,
+            unit: true,
+            isPurchasable: true,
+        },
+        with: {
+            collection: {
+                columns: { name: true }
+            },
+            mountingMethodDictionary: {
+                columns: { name: true, slug: true }
+            },
+            floorPatternDictionary: {
+                columns: { name: true, slug: true }
+            },
+            wearClassDictionary: {
+                columns: { name: true, slug: true }
+            }
+        }
+    });
+}
