@@ -12,15 +12,15 @@ import { Button } from "@/components/ui/button";
 type ExplorerProduct = {
     id: string;
     name: string;
-    slug: string;
+    slug: string | null;
     imageUrl: string | null;
-    price: number | null;
-    salePrice: number | null;
-    unit: string;
+    price: string | number | null;
+    salePrice: string | number | null;
+    unit: string | null;
     collection: { name: string } | null;
-    mountingMethodDictionary: { name: string; slug: string } | null;
-    floorPatternDictionary: { name: string; slug: string } | null;
-    wearClassDictionary: { name: string; slug: string } | null;
+    mountingMethodDictionary: { name: string; slug: string | null } | null;
+    floorPatternDictionary: { name: string; slug: string | null } | null;
+    wearClassDictionary: { name: string; slug: string | null } | null;
 };
 
 const TABS = [
@@ -123,7 +123,7 @@ export function HeroProductExplorer({ products }: { products: ExplorerProduct[] 
                                 transition={{ duration: 0.3 }}
                                 className="group relative block bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100"
                             >
-                                <Link href={`/produkt/${product.slug}`}>
+                                <Link href={`/produkt/${product.slug ?? '#'}`}>
                                     {/* Image */}
                                     <div className="relative aspect-4/3 overflow-hidden bg-gray-100">
                                         {product.imageUrl ? (
@@ -166,7 +166,7 @@ export function HeroProductExplorer({ products }: { products: ExplorerProduct[] 
                                             <div className="flex items-center justify-between border-t border-white/20 pt-3">
                                                 <div className="flex items-baseline gap-1.5">
                                                     <span className="font-bold text-lg">
-                                                        {formatCurrency(product.price)}
+                                                        {formatCurrency(product.price ? Number(product.price) : 0)}
                                                     </span>
                                                     <span className="text-[10px] opacity-80 font-medium">
                                                         / {product.unit}
