@@ -68,12 +68,6 @@ export const appSettingKeys = {
     companyLogoUrl: 'company.logo_url',
     cloudflareTurnstileSiteKey: 'cloudflare.turnstile_site_key',
     cloudflareTurnstileSecretKey: 'cloudflare.turnstile_secret_key',
-    // InPost
-    inpostOrgId: 'inpost.org_id',
-    inpostToken: 'inpost.token',
-    inpostGeowidgetToken: 'inpost.geowidget_token',
-	inpostGeowidgetConfig: 'inpost.geowidget_config',
-    inpostSandbox: 'inpost.sandbox',
 } as const;
 
 export type AppSettingKey = (typeof appSettingKeys)[keyof typeof appSettingKeys];

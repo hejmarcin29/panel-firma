@@ -129,6 +129,18 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
   // InPost Script State
   const [inpostLoaded, setInpostLoaded] = useState(false);
 
+  // --- MOVED START: form definition ---
+  const form = useForm<CheckoutFormData>({
+    resolver: zodResolver(checkoutSchema) as any,
+    defaultValues: {
+      isCompany: false,
+      differentBillingAddress: false,
+      paymentMethod: isOnlySamples ? "tpay" : "proforma",
+      acceptTerms: false,
+    },
+  });
+  // --- MOVED END ---
+
   // Toggle Delivery Method
   useEffect(() => {
     // Reset to courier if not samples
@@ -179,16 +191,6 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
   const shippingCostPLN = activeShippingCostInt / 100;
   
   const finalTotal = itemsTotal + shippingCostPLN;
-
-  const form = useForm<CheckoutFormData>({
-    resolver: zodResolver(checkoutSchema) as any,
-    defaultValues: {
-      isCompany: false,
-      differentBillingAddress: false,
-      paymentMethod: isOnlySamples ? "tpay" : "proforma",
-      acceptTerms: false,
-    },
-  });
 
   const isCompany = useWatch({ control: form.control, name: "isCompany" });
   const differentBillingAddress = useWatch({ control: form.control, name: "differentBillingAddress" });

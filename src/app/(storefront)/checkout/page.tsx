@@ -23,8 +23,8 @@ export default async function CheckoutPage() {
        <CheckoutForm 
           shippingCost={shopConfig.sampleShippingCost}
           palletShippingCost={shopConfig.palletShippingCost}
-          inpostGeowidgetToken={geowidgetToken}
-          inpostGeowidgetConfig={geowidgetConfig}
+          inpostGeowidgetToken={geowidgetToken || undefined}
+          inpostGeowidgetConfig={geowidgetConfig || undefined}
        />
     </div>
   );
