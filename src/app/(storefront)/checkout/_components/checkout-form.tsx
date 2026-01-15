@@ -23,7 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { processOrder } from "../actions";
+import { processOrder } from "@/app/(storefront)/checkout/actions";
 import { useRouter } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 

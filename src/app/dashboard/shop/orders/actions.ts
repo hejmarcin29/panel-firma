@@ -40,3 +40,26 @@ export async function uploadProforma(orderId: string, transferTitle: string, pdf
 
     revalidatePath('/dashboard/shop/orders');
 }
+
+export async function updateShippingInfo(orderId: string, carrier: string, trackingNumber: string) {
+    await db.update(orders)
+        .set({
+            shippingCarrier: carrier,
+            shippingTrackingNumber: trackingNumber,
+            status: 'order.fulfillment_confirmed' // Using this as 'Shipped' for samples
+        })
+        .where(eq(orders.id, orderId));
+    
+    revalidatePath('/dashboard/shop/orders');
+}
+
+export async function markAsPaid(orderId: string) {
+     await db.update(orders)
+        .set({
+             status: 'order.paid'
+        })
+        .where(eq(orders.id, orderId));
+    
+    revalidatePath('/dashboard/shop/orders');
+}
+
