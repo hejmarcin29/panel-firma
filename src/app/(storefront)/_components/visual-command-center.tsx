@@ -16,27 +16,91 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useRouter } from 'next/navigation';
 
 interface VisualCommandCenterProps {
+    turnstileSiteKey?: string;
     bestsellers: {
         id: string;
         name: string;
         slug: string;
-        images: unknown; // can be string[] or json
+        imageUrl?: string | null;
         price?: number; // Optional if we want to show price
     }[];
 }
 
-export function VisualCommandCenter({ bestsellers }: VisualCommandCenterProps) {
+declare global {
+    interface Window {
+        turnstile: any;
+        turnstileLoaded: () => void;
+    }
+}
+
+export function VisualCommandCenter({ bestsellers, turnstileSiteKey }: VisualCommandCenterProps) {
     const [open, setOpen] = useState(false);
     const { visitedProducts } = useInteractionStore();
     const [mounted, setMounted] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusEmail, setStatusEmail] = useState('');
     const [isSendingLink, setIsSendingLink] = useState(false);
+    
+    // Cloudflare Turnstile State
+    const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+    const [turnstileWidgetId, setTurnstileWidgetId] = useState<string | null>(null);
+
     const router = useRouter();
 
     useEffect(() => {
         setMounted(true);
     }, []);
+
+    // Load Turnstile Script if key present
+    useEffect(() => {
+        if (!turnstileSiteKey || !open) return;
+
+        const scriptId = 'cf-turnstile-script';
+        if (!document.getElementById(scriptId)) {
+            const script = document.createElement('script');
+            script.id = scriptId;
+            script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+            script.async = true;
+            script.defer = true;
+            document.body.appendChild(script);
+        }
+
+        const renderWidget = () => {
+             if (window.turnstile && !turnstileWidgetId) {
+                try {
+                    const id = window.turnstile.render('#turnstile-container', {
+                        sitekey: turnstileSiteKey,
+                        theme: 'light',
+                        callback: (token: string) => setTurnstileToken(token),
+                        'expired-callback': () => setTurnstileToken(null),
+                    });
+                    setTurnstileWidgetId(id);
+                } catch (e) {
+                    // Container might not be ready yet
+                }
+             }
+        };
+
+        // If script already loaded
+        if (window.turnstile) {
+            // Give a small delay for Drawer animation to finish rendering the container
+            setTimeout(renderWidget, 500); 
+        } else {
+             // Poll for script load
+             const interval = setInterval(() => {
+                if (window.turnstile) {
+                    clearInterval(interval);
+                    renderWidget();
+                }
+             }, 100);
+             return () => clearInterval(interval);
+        }
+
+        // Cleanup: remove widget or reset? 
+        // Turnstile doesn't have a clean unmount for React without libs, 
+        // but since we are in a Drawer, it might be fine.
+    }, [turnstileSiteKey, open, turnstileWidgetId]);
+
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -52,12 +116,26 @@ export function VisualCommandCenter({ bestsellers }: VisualCommandCenterProps) {
             toast.error("Wpisz poprawny adres e-mail");
             return;
         }
+
+        if (turnstileSiteKey && !turnstileToken) {
+            toast.error("Weryfikacja anty-spam nie powiodła się. Spróbuj odświeżyć.");
+            return;
+        }
         
         setIsSendingLink(true);
         try {
-            const result = await resendOrderLink(statusEmail);
-            toast.success(result.message || "Sprawdź swoją skrzynkę mailową");
-            setStatusEmail('');
+            const result = await resendOrderLink(statusEmail, turnstileToken || undefined);
+            if (result.success) {
+                toast.success(result.message || "Sprawdź swoją skrzynkę mailową");
+                setStatusEmail('');
+                // Reset turnstile if needed
+                if (window.turnstile && turnstileWidgetId) {
+                    window.turnstile.reset(turnstileWidgetId);
+                    setTurnstileToken(null);
+                }
+            } else {
+                toast.error(result.message || "Błąd wysyłania.");
+            }
         } catch (err) {
             toast.error("Wystąpił błąd. Spróbuj ponownie.");
         } finally {
@@ -65,19 +143,10 @@ export function VisualCommandCenter({ bestsellers }: VisualCommandCenterProps) {
         }
     };
 
+
     // Helpler to parse image
-    const getImageUrl = (images: unknown) => {
-        if (Array.isArray(images) && images.length > 0) return images[0];
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        if (typeof images === 'string') {
-             try {
-                const parsed = JSON.parse(images);
-                if (Array.isArray(parsed) && parsed.length > 0) return parsed[0];
-             } catch {}
-             return images; // fallback if it's a simple string url
-        }
-        return '/placeholder.png';
-    };
+    // Removed getImageUrl as we use imageUrl directly now
+
 
     return (
         <Drawer.Root open={open} onOpenChange={setOpen}>
@@ -150,7 +219,7 @@ export function VisualCommandCenter({ bestsellers }: VisualCommandCenterProps) {
                                                 >
                                                     <div className="relative aspect-square w-full overflow-hidden rounded-md bg-muted">
                                                         <Image
-                                                            src={getImageUrl(product.images)}
+                                                            src={product.imageUrl || '/placeholder.png'}
                                                             alt={product.name}
                                                             fill
                                                             className="object-cover transition-transform hover:scale-105"
@@ -225,18 +294,22 @@ export function VisualCommandCenter({ bestsellers }: VisualCommandCenterProps) {
                                         <p className="mb-3 text-xs text-muted-foreground">
                                             Nie masz linku do śledzenia? Wpisz e-mail, a wyślemy go ponownie.
                                         </p>
-                                        <form onSubmit={handleStatusCheck} className="flex gap-2">
-                                            <Input 
-                                                type="email" 
-                                                placeholder="Twój e-mail" 
-                                                className="h-9 bg-white text-sm"
-                                                value={statusEmail}
-                                                onChange={(e) => setStatusEmail(e.target.value)}
-                                                required
-                                            />
-                                            <Button size="sm" type="submit" disabled={isSendingLink}>
-                                                {isSendingLink ? '...' : 'Wyślij'}
-                                            </Button>
+                                        <form onSubmit={handleStatusCheck} className="flex flex-col gap-2">
+                                            <div className="flex gap-2">
+                                                <Input 
+                                                    type="email" 
+                                                    placeholder="Twój e-mail" 
+                                                    className="h-9 bg-white text-sm"
+                                                    value={statusEmail}
+                                                    onChange={(e) => setStatusEmail(e.target.value)}
+                                                    required
+                                                />
+                                                <Button size="sm" type="submit" disabled={isSendingLink || (!!turnstileSiteKey && !turnstileToken)}>
+                                                    {isSendingLink ? '...' : 'Wyślij'}
+                                                </Button>
+                                            </div>
+                                            {/* Turnstile Container */}
+                                            <div id="turnstile-container" className="mt-1 flex justify-center min-h-[65px]" />
                                         </form>
                                      </div>
 

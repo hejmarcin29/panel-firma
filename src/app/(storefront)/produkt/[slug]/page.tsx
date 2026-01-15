@@ -85,7 +85,7 @@ export default async function ProductPage({ params }: PageProps) {
 
     const trackerPrice = price || 0;
     const trackerImage = (Array.isArray(product.images) && product.images.length > 0) 
-        ? (product.images[0] as string) 
+        ? product.images[0].url
         : (product.imageUrl as string || '');
 
     return (

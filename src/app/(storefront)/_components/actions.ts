@@ -1,10 +1,13 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { orders, manualOrders, customers, mailAccounts } from '@/lib/db/schema';
+import { orders, manualOrders, customers, mailAccounts, globalSettings } from '@/lib/db/schema';
 import { eq, desc, or } from 'drizzle-orm';
 import { generateOrderMagicLink } from '@/app/dashboard/shop/orders/[id]/actions';
 import { createTransport } from 'nodemailer';
+import { type ShopConfig } from '@/app/dashboard/settings/shop/actions';
+import { headers } from 'next/headers';
+import { rateLimit } from '@/lib/rate-limit';
 
 function decodeSecret(secret: string | null | undefined): string | null {
     if (!secret) return null;
@@ -15,12 +18,55 @@ function decodeSecret(secret: string | null | undefined): string | null {
     }
 }
 
-export async function resendOrderLink(email: string) {
+export async function resendOrderLink(email: string, turnstileToken?: string) {
+    // 0. Rate Limiting (5 attempts per min, block for 3 mins)
+    const ip = (await headers()).get('x-forwarded-for') || 'unknown';
+    const limitStatus = rateLimit.check(ip, 5, 60 * 1000, 3 * 60 * 1000);
+    
+    if (!limitStatus.success) {
+        return { 
+            success: false, 
+            message: `Zbyt wiele prób. Spróbuj ponownie za ${Math.ceil((limitStatus.remainingTime || 0) / 60)} min.` 
+        };
+    }
+
+    // 1. Get Config & Verify Turnstile
+    const settingsRecord = await db.query.globalSettings.findFirst({
+        where: eq(globalSettings.key, 'shop_config'),
+    });
+    const config = settingsRecord?.value as ShopConfig | undefined;
+
+    if (config?.turnstileSecretKey) {
+        if (!turnstileToken) {
+             return { success: false, message: 'Weryfikacja anty-spam nie powiodła się (brak tokenu).' };
+        }
+
+        const formData = new FormData();
+        formData.append('secret', config.turnstileSecretKey);
+        formData.append('response', turnstileToken);
+
+        try {
+            const url = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
+            const result = await fetch(url, {
+                body: formData,
+                method: 'POST',
+            });
+            const outcome = await result.json();
+            if (!outcome.success) {
+                return { success: false, message: 'Weryfikacja anty-spam nie powiodła się.' };
+            }
+        } catch (e) {
+            console.error('Turnstile verification error:', e);
+            // Fail open or closed? Closed for security.
+            return { success: false, message: 'Błąd weryfikacji anty-spam.' };
+        }
+    }
+
     if (!email || !email.includes('@')) {
         return { success: false, message: 'Nieprawidłowy adres email.' };
     }
 
-    // 1. Find recent order for this email
+    // 2. Find recent order for this email
     // Check shop orders
     const shopOrder = await db.query.orders.findFirst({
         where: eq(orders.billingAddress, { email: email } as any), // JSON match approach might depend on adapter, safely handled later or via relation

@@ -110,13 +110,69 @@ interface CheckoutFormProps {
     palletShippingCost?: number;
     inpostGeowidgetToken?: string;
     inpostGeowidgetConfig?: string;
+    turnstileSiteKey?: string; // Cloudflare Turnstile
 }
 
-export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidgetToken, inpostGeowidgetConfig }: CheckoutFormProps) {
+declare global {
+  interface Window {
+      turnstile: any;
+      turnstileLoaded: () => void;
+  }
+}
+
+export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidgetToken, inpostGeowidgetConfig, turnstileSiteKey }: CheckoutFormProps) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const cart = useCartStore();
   const itemsTotal = cart.getTotalPrice();
+
+  // Turnstile State
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileWidgetId, setTurnstileWidgetId] = useState<string | null>(null);
+
+  // Load Turnstile Script if key present
+  useEffect(() => {
+      if (!turnstileSiteKey) return;
+
+      const scriptId = 'cf-turnstile-script';
+      if (!document.getElementById(scriptId)) {
+          const script = document.createElement('script');
+          script.id = scriptId;
+          script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+          script.async = true;
+          script.defer = true;
+          document.body.appendChild(script);
+      }
+
+      const renderWidget = () => {
+           if (window.turnstile && !turnstileWidgetId) {
+              try {
+                  const id = window.turnstile.render('#turnstile-checkout-container', {
+                      sitekey: turnstileSiteKey,
+                      theme: 'light',
+                      callback: (token: string) => setTurnstileToken(token),
+                      'expired-callback': () => setTurnstileToken(null),
+                  });
+                  setTurnstileWidgetId(id);
+              } catch (e) {
+                  // Container might not be ready yet
+              }
+           }
+      };
+
+      if (window.turnstile) {
+          // ensure container is mounted
+          setTimeout(renderWidget, 100); 
+      } else {
+           const interval = setInterval(() => {
+              if (window.turnstile) {
+                  clearInterval(interval);
+                  renderWidget();
+              }
+           }, 100);
+           return () => clearInterval(interval);
+      }
+  }, [turnstileSiteKey, turnstileWidgetId]);
 
   // Logic: Is only samples?
   const isOnlySamples = cart.items.length > 0 && cart.items.every(item => item.productId.startsWith('sample_'));
@@ -201,6 +257,11 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
         return;
     }
 
+    if (turnstileSiteKey && !turnstileToken) {
+       toast.error("Weryfikacja anty-spam nie powiodła się. Odśwież stronę.");
+       return;
+    }
+
     const orderItems = cart.items.map(item => ({
         productId: item.productId,
         name: item.name,
@@ -217,12 +278,16 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
         items: orderItems,
         totalAmount: finalTotal,
         deliveryMethod,
-        deliveryPoint: selectedPoint || undefined
+        deliveryPoint: selectedPoint || undefined,
+        turnstileToken: turnstileToken || undefined,
       });
 
       if (result.success) {
         toast.success("Zamówienie zostało złożone!");
         cart.clearCart();
+        if (window.turnstile && turnstileWidgetId) {
+           try { window.turnstile.remove(turnstileWidgetId); } catch {}
+        }
         if (result.redirectUrl) {
             window.location.href = result.redirectUrl;
         } else {
@@ -674,6 +739,9 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
                 </FormItem>
               )}
             />
+
+            {/* Turnstile Widget */}
+            <div id="turnstile-checkout-container" className="flex justify-start min-h-[65px]" />
 
             <Button type="submit" size="lg" className="w-full text-lg h-14" disabled={isPending}>
                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

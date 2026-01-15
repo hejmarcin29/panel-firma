@@ -43,7 +43,7 @@ export async function HeroSection() {
 
         {/* Right Column: Image */}
         <div className="flex-1 w-full max-w-xl lg:max-w-none">
-           <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-slate-200 shadow-xl relative">
+           <div className="aspect-4/3 w-full overflow-hidden rounded-2xl bg-slate-200 shadow-xl relative">
               <div 
                   className="absolute inset-0 h-full w-full bg-cover bg-center transition-transform duration-700 hover:scale-105"
                   style={{ backgroundImage: `url("${backgroundImage}")` }}

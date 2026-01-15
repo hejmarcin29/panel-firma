@@ -16,11 +16,14 @@ export async function StoreHeader() {
         
         {/* Mobile Menu Trigger & Logo */}
         <div className="flex items-center gap-4">
-          <VisualCommandCenter bestsellers={bestsellers.map(p => ({
-            ...p,
-            id: String(p.id),
-            slug: p.slug || ''
-          }))} />
+          <VisualCommandCenter 
+            turnstileSiteKey={config.turnstileSiteKey} 
+            bestsellers={bestsellers.map(p => ({
+              ...p,
+              id: String(p.id),
+              slug: p.slug || ''
+            }))} 
+          />
           <Link href="/" className="font-playfair text-xl font-bold tracking-tight">
              {config.headerLogo ? (
                 <div className="relative h-10 w-32 md:w-40">

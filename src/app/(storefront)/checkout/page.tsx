@@ -25,6 +25,7 @@ export default async function CheckoutPage() {
           palletShippingCost={shopConfig.palletShippingCost}
           inpostGeowidgetToken={geowidgetToken || undefined}
           inpostGeowidgetConfig={geowidgetConfig || undefined}
+          turnstileSiteKey={shopConfig.turnstileSiteKey}
        />
     </div>
   );

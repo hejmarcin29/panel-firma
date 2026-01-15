@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ShieldAlert, Globe, Search, BarChart3, CreditCard, LayoutTemplate, SquareEqual, Calculator, Smartphone, Plus, X } from 'lucide-react';
+import { ShieldAlert, Globe, Search, BarChart3, CreditCard, LayoutTemplate, SquareEqual, Calculator, Smartphone, Plus, X, ShieldCheck } from 'lucide-react';
 import { SingleImageUpload } from '@/components/common/single-image-upload';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -163,6 +163,10 @@ export default function ShopSettingsForm({ initialConfig, initialTpayConfig, ava
                 
                 // Waste Rates
                 wasteRates: wasteRates,
+
+                // Turnstile
+                turnstileSiteKey: formData.get('turnstileSiteKey') as string,
+                turnstileSecretKey: formData.get('turnstileSecretKey') as string,
             };
 
             await updateShopConfig(newShopConfig);
@@ -511,8 +515,39 @@ export default function ShopSettingsForm({ initialConfig, initialTpayConfig, ava
                             </CardContent>
                         </Card>
 
-                        <Card>
-                            <CardHeader>
+                        <Card>                             <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <ShieldCheck className="h-5 w-5" /> Cloudflare Turnstile (Anty-spam)
+                                </CardTitle>
+                                <CardDescription>Zabezpieczenie formularzy przed botami.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="turnstileSiteKey">Site Key</Label>
+                                        <Input 
+                                            id="turnstileSiteKey" 
+                                            name="turnstileSiteKey" 
+                                            defaultValue={config.turnstileSiteKey} 
+                                            placeholder="0x4AAAAAA..."
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="turnstileSecretKey">Secret Key</Label>
+                                        <Input 
+                                            id="turnstileSecretKey" 
+                                            name="turnstileSecretKey" 
+                                            defaultValue={config.turnstileSecretKey} 
+                                            type="password"
+                                            placeholder="0x4AAAAAA..."
+                                        />
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+
+                        <Card>                            <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <Calculator className="h-5 w-5" /> Domyślne Zapasy (Odpad)
                                 </CardTitle>

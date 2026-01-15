@@ -12,7 +12,7 @@ export async function searchProductsForConfig(query: string) {
     return await db.select({
         id: erpProducts.id,
         name: erpProducts.name,
-        image: erpProducts.images
+        image: erpProducts.imageUrl
     })
     .from(erpProducts)
     .where(ilike(erpProducts.name, `%${query}%`))
@@ -24,13 +24,13 @@ export async function getBestsellers() {
     if (!config.bestsellerIds || config.bestsellerIds.length === 0) {
         // Fallback: Get 5 random or recent products
         return await db.query.erpProducts.findMany({
-            where: eq(erpProducts.isOnline, true),
+            where: eq(erpProducts.isShopVisible, true),
             limit: 5,
             orderBy: (erpProducts, { desc }) => [desc(erpProducts.createdAt)],
             columns: {
                 id: true,
                 name: true,
-                images: true,
+                imageUrl: true,
                 slug: true
             }
         });
@@ -44,7 +44,7 @@ export async function getBestsellers() {
         columns: {
             id: true,
             name: true,
-            images: true,
+            imageUrl: true,
             slug: true
         }
     });
@@ -108,6 +108,10 @@ export type ShopConfig = {
     // Kalkulator - Sugerowane Zapasy (Odpad)
     // Klucz = slug wzoru (np. 'herringbone', 'plank', 'jodelka-francuska')
     wasteRates?: Record<string, { simple: number; complex: number }>;
+
+    // Cloudflare Turnstile
+    turnstileSiteKey?: string;
+    turnstileSecretKey?: string;
 };
 
 export type TpayConfig = {

@@ -46,6 +46,7 @@ type OrderData = {
         unit: string;
     }[];
     totalAmount: number;
+    turnstileToken?: string;
 };
 
 // Simple ID Generator: ORDER-YYYYMMDD-XXXX
@@ -57,6 +58,37 @@ function generateOrderReference() {
 }
 
 export async function processOrder(data: OrderData) {
+    // 0. Verify Turnstile
+    const settingsRecord = await db.query.globalSettings.findFirst({
+        where: eq(globalSettings.key, 'shop_config'),
+    });
+    const config = settingsRecord?.value as ShopConfig | undefined;
+
+    if (config?.turnstileSecretKey) {
+        if (!data.turnstileToken) {
+             return { success: false, message: 'Weryfikacja anty-spam nie powiodła się. Odśwież stronę.' };
+        }
+
+        const formData = new FormData();
+        formData.append('secret', config.turnstileSecretKey);
+        formData.append('response', data.turnstileToken);
+
+        try {
+            const url = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
+            const result = await fetch(url, {
+                body: formData,
+                method: 'POST',
+            });
+            const outcome = await result.json();
+            if (!outcome.success) {
+                return { success: false, message: 'Nieudana weryfikacja anty-spam.' };
+            }
+        } catch (e) {
+            console.error('Turnstile verification error:', e);
+            return { success: false, message: 'Błąd weryfikacji anty-spam.' };
+        }
+    }
+
     // 1. Generate Order Reference
     const reference = generateOrderReference(); // Could be used as sourceOrderId or just visible ID if needed
 
@@ -135,13 +167,8 @@ export async function processOrder(data: OrderData) {
     // However, for this quick implementation, we will log if it mismatches or override it.
     // Ideally, we fetch settings and apply.
     
-    const settingsRecord = await db.query.globalSettings.findFirst({
-        where: eq(globalSettings.key, 'shop_config')
-    });
-    
     let dbShippingCost = 0;
-    if (settingsRecord && settingsRecord.value) {
-        const config = settingsRecord.value as ShopConfig;
+    if (config) {
         if (orderType === 'sample') {
              dbShippingCost = config.sampleShippingCost || 0;
         } else {
