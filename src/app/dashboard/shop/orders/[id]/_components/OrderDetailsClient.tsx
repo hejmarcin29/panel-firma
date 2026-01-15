@@ -46,10 +46,15 @@ interface OrderItemDetails {
 interface OrderDetails {
     id: string;
     status: string;
+    type: string; // Added 'type'
     createdAt: Date;
     totalNet: number;
     totalGross: number;
     paymentMethod: string | null;
+    shippingCarrier: string | null; // Added
+    shippingTrackingNumber: string | null; // Added
+    billingAddress: unknown; // Added (JSON)
+    shippingAddress: unknown; // Added (JSON)
     customer: {
         name: string;
         email: string | null;

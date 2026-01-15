@@ -1,6 +1,26 @@
 import { Separator } from '@/components/ui/separator';
+import { getAppSetting, appSettingKeys } from '@/lib/settings';
+import { InPostSettingsForm } from './_components/inpost-settings-form';
 
-export default function IntegrationsPage() {
+export const dynamic = 'force-dynamic';
+
+export default async function IntegrationsPage() {
+    const [orgId, token, geowidgetToken, geowidgetConfig, sandbox] = await Promise.all([
+        getAppSetting(appSettingKeys.inpostOrgId),
+        getAppSetting(appSettingKeys.inpostToken),
+        getAppSetting(appSettingKeys.inpostGeowidgetToken),
+        getAppSetting(appSettingKeys.inpostGeowidgetConfig),
+        getAppSetting(appSettingKeys.inpostSandbox),
+    ]);
+
+    const initialSettings = {
+        orgId: orgId || '',
+        token: token || '',
+        geowidgetToken: geowidgetToken || '',
+        geowidgetConfig: geowidgetConfig || '',
+        sandbox: sandbox === 'true',
+    };
+
     return (
         <div className="space-y-6">
             <div>
@@ -11,16 +31,13 @@ export default function IntegrationsPage() {
             </div>
             <Separator />
             
-            <div className="flex h-[200px] flex-col items-center justify-center rounded-lg border border-dashed text-center">
+            <div className="grid gap-6">
+                <InPostSettingsForm initialSettings={initialSettings} />
+            </div>
+
+            <div className="flex h-[150px] flex-col items-center justify-center rounded-lg border border-dashed text-center mt-8">
                 <p className="text-sm text-muted-foreground">
-                    Konfiguracja Tpay została przeniesiona do zakładki 
-                    <a href="/dashboard/settings/shop" className="ml-1 font-medium text-foreground underline hover:no-underline">
-                        Sklep
-                    </a>
-                    .
-                </p>
-                <p className="mt-2 text-sm text-muted-foreground">
-                    Tu w przyszłości pojawią się inne integracje (np. Google Calendar, SMS API).
+                    Inne integracje (np. Google Calendar, SMS API) pojawią się tutaj w przyszłości.
                 </p>
             </div>
         </div>

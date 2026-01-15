@@ -6,6 +6,9 @@ import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { generateMagicLinkToken } from '@/lib/auth/magic-link';
 
+import { createShipment } from '@/lib/inpost/client';
+import { notFound } from 'next/navigation';
+
 export async function generateOrderMagicLink(orderId: string) {
     const token = generateMagicLinkToken(orderId);
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://b2b.primepodloga.pl'; 
@@ -23,21 +26,77 @@ export async function updateShopOrderStatus(orderId: string, newStatus: string) 
 }
 
 export async function generateShippingLabel(orderId: string) {
-    // In a real app, this would call InPost API
-    // For now, we simulate a delay and return success
-    
-    // Check if integration exists/configured...
-    
-    await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
+    // 1. Fetch Order Data
+    const order = await db.query.orders.findFirst({
+        where: eq(orders.id, orderId),
+    });
 
-    // Auto-update status to fulfillment_confirmed for samples
-    await updateShopOrderStatus(orderId, 'order.fulfillment_confirmed');
+    if (!order || !order.shippingAddress) {
+        throw new Error("Zamówienie lub adres dostawy nie istnieje.");
+    }
 
-    return { 
-        success: true, 
-        trackingNumber: '6482910392134',
-        labelUrl: '#' // In real world: PDF URL
+    const address = order.shippingAddress as {
+        name: string;
+        street: string;
+        city: string;
+        postalCode: string;
+        country: string;
+        phone: string;
+        email: string;
     };
+
+    // 2. Map to InPost Payload
+    // Note: This defaults to Courier Standard as we don't have Locker selection yet
+    try {
+        const shipment = await createShipment({
+            receiver: {
+                first_name: address.name.split(' ')[0] || '',
+                last_name: address.name.split(' ').slice(1).join(' ') || address.name,
+                email: address.email,
+                phone: address.phone.replace(/\s/g, ''), // Strip spaces
+                address: {
+                    street: address.street,
+                    // InPost splits street/building number. Simple heuristic or just passing full street to street field (some APIs accept it)
+                    // Better to clean this up, but for now passing as is.
+                    building_number: '', 
+                    city: address.city,
+                    post_code: address.postalCode.replace('-', ''),
+                    country_code: 'PL'
+                }
+            },
+            parcels: [
+                {
+                    template: 'small', // Template A/Small for samples
+                }
+            ],
+            service: 'inpost_courier_standard',
+            reference: order.sourceOrderId || order.id
+        });
+
+        // 3. Update Order
+        await db.update(orders).set({
+            shippingCarrier: 'inpost',
+            shippingTrackingNumber: shipment.tracking_number,
+            status: 'order.fulfillment_confirmed'
+        }).where(eq(orders.id, orderId));
+
+        revalidatePath(`/dashboard/shop/orders/${orderId}`);
+
+        return { 
+            success: true, 
+            trackingNumber: shipment.tracking_number,
+            // In a real scenario, we might return a link to a proxy endpoint that calls getShipmentLabel
+            // For now, returning the tracking number is the key success indicator
+            labelUrl: null 
+        };
+
+    } catch (error: any) {
+        console.error("InPost Error:", error);
+        return {
+            success: false,
+            message: error.message || 'Błąd integracji InPost'
+        };
+    }
 }
 
 export async function markAsForwardedToSupplier(orderId: string) {
