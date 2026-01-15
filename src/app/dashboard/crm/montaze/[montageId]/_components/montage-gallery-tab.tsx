@@ -118,7 +118,7 @@ export function MontageGalleryTab({ montage, userRoles = [] }: { montage: Montag
                         {documents.map((attachment) => {
                             if (!attachment) return null;
                             return (
-                                <Card key={attachment.id} className="overflow-hidden group relative aspect-[0.75]">
+                                <Card key={attachment.id} className="overflow-hidden group relative aspect-3/4">
                                     <div className="flex h-full w-full flex-col items-center justify-center bg-muted p-4 text-center hover:bg-muted/80 transition-colors">
                                         <Button
                                             variant="destructive"

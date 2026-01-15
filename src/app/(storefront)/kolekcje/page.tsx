@@ -36,17 +36,10 @@ export default async function CollectionsPage() {
                 className="group block space-y-4"
             >
                 {/* Image Card */}
-                <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-gray-100 border border-gray-100 isolate">
-                {collection.imageUrl ? (
-                    <div 
-                    className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                    style={{ backgroundImage: `url("${collection.imageUrl}")` }}
-                    />
-                ) : (
+                <div className="relative aspect-4/3 overflow-hidden rounded-2xl bg-gray-100 border border-gray-100 isolate">
                     <div className="flex h-full w-full items-center justify-center bg-gray-100 text-gray-400">
                         <span className="text-sm">Brak zdjęcia</span>
                     </div>
-                )}
                 
                 {/* Overlay */}
                 <div className="absolute inset-0 z-10 bg-black/0 transition-colors duration-300 group-hover:bg-black/10" />

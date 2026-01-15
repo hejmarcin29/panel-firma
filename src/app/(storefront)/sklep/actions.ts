@@ -59,6 +59,7 @@ export async function getStoreCollections() {
             name: true,
             slug: true,
             brandId: true,
+            description: true,
         }
     });
 }

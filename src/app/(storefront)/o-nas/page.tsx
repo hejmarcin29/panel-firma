@@ -43,7 +43,7 @@ export default function AboutUsPage() {
 
       {/* Story Text */}
       <section className="grid md:grid-cols-2 gap-12 items-center">
-        <MotionContainer delay={0.2} className="relative aspect-square md:aspect-[4/5] bg-gray-100 rounded-2xl overflow-hidden">
+        <MotionContainer delay={0.2} className="relative aspect-square md:aspect-4/5 bg-gray-100 rounded-2xl overflow-hidden">
              {/* Placeholder for Team/Showroom Image */}
              <div className="absolute inset-0 bg-gray-200 flex items-center justify-center text-gray-400">
                 <span className="font-medium text-center px-4">Tu będzie zdjęcie Waszego Zespołu / Showroomu</span>
