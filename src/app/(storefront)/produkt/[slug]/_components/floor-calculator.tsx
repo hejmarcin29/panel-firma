@@ -45,6 +45,7 @@ export function FloorCalculator({
     packageSizeM2, 
     unit,
     isPurchasable = false,
+    samplePrice,
     mountingMethod,
     floorPattern,
     floorPatternSlug,
