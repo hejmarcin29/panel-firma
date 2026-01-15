@@ -2,7 +2,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useTransition, useState, useEffect, useRef } from "react";
+import { useTransition, useState, useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -26,7 +26,7 @@ import { toast } from "sonner";
 import { processOrder } from "@/app/(storefront)/checkout/actions";
 import { useRouter } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import Script from "next/script";
 
@@ -122,7 +122,10 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
   const isOnlySamples = cart.items.length > 0 && cart.items.every(item => item.productId.startsWith('sample_'));
   
   // Delivery State
-  const [deliveryMethod, setDeliveryMethod] = useState<'courier' | 'locker'>('courier');
+  const [internalDeliveryMethod, setInternalDeliveryMethod] = useState<'courier' | 'locker'>('courier');
+  // Derived state: If not samples (pallets), force courier.
+  const deliveryMethod = isOnlySamples ? internalDeliveryMethod : 'courier';
+  
   const [selectedPoint, setSelectedPoint] = useState<any | null>(null);
   const [mapOpen, setMapOpen] = useState(false);
 
@@ -140,14 +143,6 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
     },
   });
   // --- MOVED END ---
-
-  // Toggle Delivery Method
-  useEffect(() => {
-    // Reset to courier if not samples
-    if (!isOnlySamples) {
-        setDeliveryMethod('courier');
-    }
-  }, [isOnlySamples]);
 
   // Handle Geowidget Events
   useEffect(() => {
@@ -334,7 +329,7 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
               <CardContent className="space-y-6">
                   {/* Delivery Switches */}
                   {isOnlySamples ? (
-                      <Tabs value={deliveryMethod} onValueChange={(v) => setDeliveryMethod(v as any)} className="w-full">
+                      <Tabs value={deliveryMethod} onValueChange={(v) => setInternalDeliveryMethod(v as any)} className="w-full">
                         <TabsList className="grid w-full grid-cols-2">
                             <TabsTrigger value="courier">
                                 <Truck className="mr-2 h-4 w-4" />
@@ -443,12 +438,12 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
                 <DialogContent className="max-w-4xl h-[80vh] p-0 overflow-hidden flex flex-col">
                     <div className="flex-1 w-full h-full relative bg-gray-100">
                         {inpostLoaded ? (
-                             // @ts-ignore
+                             // @ts-expect-error - Web Components are not typed
                             <inpost-geowidget
                                 token={inpostGeowidgetToken}
                                 language="pl"
                                 config={inpostGeowidgetConfig || "parcelCollect"}
-                                // @ts-ignore
+                                // @ts-expect-error - style prop on custom element
                                 style={{
                                     width: "100%", 
                                     height: "100%",

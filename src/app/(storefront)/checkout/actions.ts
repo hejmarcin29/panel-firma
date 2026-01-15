@@ -71,7 +71,8 @@ export async function processOrder(data: OrderData) {
         taxId: data.isCompany ? data.nip : undefined,
     };
 
-    let shippingAddress: any = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const shippingAddress: any = {
         name: `${data.firstName} ${data.lastName}`,
         phone: data.phone,
         email: data.email,
@@ -146,6 +147,8 @@ export async function processOrder(data: OrderData) {
              dbShippingCost = config.palletShippingCost || 0;
         }
     }
+    // Used to validate
+    console.log('Server calculated shipping cost:', dbShippingCost);
     
     // Check if client calculates shipping roughly correct (just for sanity, not blocking in this MVP)
     // Actually, let's use the DB shipping cost if we were building the total from scratch.

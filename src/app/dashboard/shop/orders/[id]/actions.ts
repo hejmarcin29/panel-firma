@@ -7,7 +7,6 @@ import { revalidatePath } from 'next/cache';
 import { generateMagicLinkToken } from '@/lib/auth/magic-link';
 
 import { createShipment } from '@/lib/inpost/client';
-import { notFound } from 'next/navigation';
 
 export async function generateOrderMagicLink(orderId: string) {
     const token = generateMagicLinkToken(orderId);
@@ -90,11 +89,11 @@ export async function generateShippingLabel(orderId: string) {
             labelUrl: null 
         };
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("InPost Error:", error);
         return {
             success: false,
-            message: error.message || 'Błąd integracji InPost'
+            message: (error instanceof Error ? error.message : String(error)) || 'Błąd integracji InPost'
         };
     }
 }

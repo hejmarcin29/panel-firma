@@ -2,15 +2,13 @@
 
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
-import { Package, FileText, Truck, CheckCircle, AlertCircle, Search } from 'lucide-react';
+import { Package, Truck, Search } from 'lucide-react';
 import Link from 'next/link';
 import { markAsPaid, updateShippingInfo } from '../actions';
 import { UploadProformaDialog } from './UploadProformaDialog';
@@ -85,7 +83,7 @@ export function ShopOrdersList({ orders }: { orders: ShopOrder[] }) {
     );
 }
 
-function OrdersTable({ orders, variant = 'default' }: { orders: ShopOrder[], variant?: 'default' | 'samples' | 'floors' }) {
+function OrdersTable({ orders }: { orders: ShopOrder[], variant?: 'default' | 'samples' | 'floors' }) {
     if (orders.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center p-8 text-center border rounded-md bg-muted/20">
@@ -114,7 +112,7 @@ function OrdersTable({ orders, variant = 'default' }: { orders: ShopOrder[], var
                     </thead>
                     <tbody className="[&_tr:last-child]:border-0">
                         {orders.map((order) => (
-                            <OrderRow key={order.id} order={order} variant={variant} />
+                            <OrderRow key={order.id} order={order} />
                         ))}
                     </tbody>
                 </table>
@@ -123,9 +121,8 @@ function OrdersTable({ orders, variant = 'default' }: { orders: ShopOrder[], var
     );
 }
 
-function OrderRow({ order, variant }: { order: ShopOrder, variant: string }) {
+function OrderRow({ order }: { order: ShopOrder }) {
     const isSample = order.type === 'sample';
-    const isPaid = order.status === 'order.paid' || order.status === 'order.fulfillment_confirmed';
 
     return (
         <tr className="border-b transition-colors hover:bg-muted/50">
@@ -238,7 +235,7 @@ function ShippingDialog({ orderId }: { orderId: string }) {
             await updateShippingInfo(orderId, carrier, tracking);
             toast.success('Zapisano dane wysyłki');
             setOpen(false);
-        } catch (e) {
+        } catch {
             toast.error('Błąd zapisu');
         } finally {
             setLoading(false);
