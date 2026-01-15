@@ -156,28 +156,22 @@ export function CheckoutForm({ shippingCost, palletShippingCost }: { shippingCos
       const result = await processOrder({
         ...data,
         items: orderItems,
-        totalAmount: finalTotal, // Includes shipping
+        totalAmount: finalTotal,
       });
-        items: orderItems,
-        totalAmount: finalTotal
-    }
 
-    startTransition(async () => {
-      try {
-        const result = await processOrder(orderData);
-        
-        if (result.success) {
-            cart.clearCart();
-            toast.success("Zamówienie zostało złożone!");
-            
-            if ((result as any).redirectUrl) {
-                window.location.href = (result as any).redirectUrl;
-            } else {
-                router.push(`/checkout/success?orderId=${result.orderId}`);
-            }
+      if (result.success) {
+        toast.success("Zamówienie zostało złożone!");
+        cart.clearCart();
+        if (result.redirectUrl) {
+            window.location.href = result.redirectUrl;
         } else {
-            toast.error(result.message || "Wystąpił błąd podczas składania zamówienia");
+            router.push(`/sklep/dziekujemy?orderId=${result.orderId}`);
         }
+      } else {
+        toast.error(result.message || "Wystąpił błąd");
+      }
+    });
+  };
       } catch (error) {
         toast.error("Nie udało się złożyć zamówienia");
         console.error(error);
