@@ -40,11 +40,14 @@ export async function StoreHeader() {
           <Link href="/sklep" className="transition-colors hover:text-foreground/80 text-foreground/60">
             Oferta
           </Link>
+          <Link href="/kolekcje" className="transition-colors hover:text-foreground/80 text-foreground/60">
+            Kolekcje
+          </Link>
           <Link href="/sklep?q=promocja" className="transition-colors hover:text-foreground/80 text-foreground/60">
             Promocje
           </Link>
-          <Link href="/realizacje" className="transition-colors hover:text-foreground/80 text-foreground/60">
-            Realizacje
+          <Link href="/o-nas" className="transition-colors hover:text-foreground/80 text-foreground/60">
+            O nas
           </Link>
           <Link href="/blog" className="transition-colors hover:text-foreground/80 text-foreground/60">
             Poradnik

@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export function StoreFooter() {
     return (
       <footer className="border-t bg-muted/30">
@@ -6,28 +8,28 @@ export function StoreFooter() {
             <div className="space-y-4">
               <h4 className="text-sm font-semibold">Oferta</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground">Podłogi Drewniane</a></li>
-                <li><a href="#" className="hover:text-foreground">Wybielane</a></li>
-                <li><a href="#" className="hover:text-foreground">Jodełka</a></li>
-                <li><a href="#" className="hover:text-foreground">Akcesoria</a></li>
+                <li><Link href="/sklep" className="hover:text-foreground">Wszystkie Podłogi</Link></li>
+                <li><Link href="/sklep?pattern=herringbone" className="hover:text-foreground">Jodełka</Link></li>
+                <li><Link href="/sklep?color=natural" className="hover:text-foreground">Dąb Naturalny</Link></li>
+                <li><Link href="/kolekcje" className="hover:text-foreground">Kolekcje</Link></li>
               </ul>
             </div>
             <div className="space-y-4">
               <h4 className="text-sm font-semibold">Pomoc</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground">Dostawa i płatność</a></li>
-                <li><a href="#" className="hover:text-foreground">Zwroty i reklamacje</a></li>
-                <li><a href="#" className="hover:text-foreground">Instrukcja montażu</a></li>
-                <li><a href="#" className="hover:text-foreground">FAQ</a></li>
+                <li><Link href="/regulamin" className="hover:text-foreground">Regulamin sklepu</Link></li>
+                <li><Link href="/polityka-prywatnosci" className="hover:text-foreground">Polityka prywatności</Link></li>
+                <li><Link href="/kontakt" className="hover:text-foreground">Dostawa i płatność</Link></li>
+                <li><Link href="/blog" className="hover:text-foreground">Poradnik</Link></li>
               </ul>
             </div>
             <div className="space-y-4">
               <h4 className="text-sm font-semibold">Firma</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground">O nas</a></li>
-                <li><a href="#" className="hover:text-foreground">Showroom</a></li>
-                <li><a href="#" className="hover:text-foreground">Współpraca B2B</a></li>
-                <li><a href="#" className="hover:text-foreground">Kontakt</a></li>
+                <li><Link href="/o-nas" className="hover:text-foreground">O nas</Link></li>
+                <li><Link href="/kontakt" className="hover:text-foreground">Kontakt</Link></li>
+                <li><Link href="/kontakt" className="hover:text-foreground">Showroom</Link></li>
+                <li><Link href="/kontakt" className="hover:text-foreground">Współpraca B2B</Link></li>
               </ul>
             </div>
             <div className="col-span-2 md:col-span-1 space-y-4">

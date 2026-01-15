@@ -9,6 +9,7 @@ import { Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import { formatCurrency } from '@/lib/utils';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function CartSheet({ showGrossPrices = false }: { showGrossPrices?: boolean }) {
   const { 
@@ -40,9 +41,13 @@ export function CartSheet({ showGrossPrices = false }: { showGrossPrices?: boole
         
         {items.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center space-y-4 px-6">
-            <div className="relative h-40 w-40 opacity-20">
+            <motion.div 
+               initial={{ scale: 0.8, opacity: 0 }}
+               animate={{ scale: 1, opacity: 1 }}
+               className="relative h-40 w-40 opacity-20"
+            >
               <ShoppingBag className="h-full w-full" />
-            </div>
+            </motion.div>
             <p className="text-xl font-medium text-muted-foreground">
               Twój koszyk jest pusty
             </p>
@@ -58,8 +63,17 @@ export function CartSheet({ showGrossPrices = false }: { showGrossPrices?: boole
           <>
             <ScrollArea className="flex-1 pr-6 -mr-6">
               <div className="flex flex-col gap-6 py-6 pl-1 pr-6">
+                <AnimatePresence mode='popLayout'>
                 {items.map((item) => (
-                  <div key={item.productId} className="relative flex gap-4">
+                  <motion.div 
+                    layout
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20, height: 0, marginBottom: 0 }}
+                    transition={{ duration: 0.3 }}
+                    key={item.productId} 
+                    className="relative flex gap-4 overflow-hidden"
+                  >
                     {/* Image */}
                     <div className="relative aspect-square h-24 w-24 shrink-0 overflow-hidden rounded-md border bg-gray-50">
                       {item.image ? (
@@ -75,6 +89,7 @@ export function CartSheet({ showGrossPrices = false }: { showGrossPrices?: boole
                         </div>
                       )}
                     </div>
+
 
                     {/* Details */}
                     <div className="flex flex-1 flex-col justify-between">
@@ -137,8 +152,9 @@ export function CartSheet({ showGrossPrices = false }: { showGrossPrices?: boole
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
+                </AnimatePresence>
               </div>
             </ScrollArea>
             

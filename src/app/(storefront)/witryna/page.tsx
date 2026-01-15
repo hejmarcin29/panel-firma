@@ -6,6 +6,7 @@ import { getShopConfig } from "@/app/dashboard/settings/shop/actions";
 import { ProductCard } from "../_components/product-card";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { MotionContainer } from "@/components/motion-container";
 
 export default async function StorefrontHomePage() {
   const [latestProducts, shopConfig] = await Promise.all([
@@ -17,7 +18,7 @@ export default async function StorefrontHomePage() {
     <div className="flex flex-col min-h-screen">
       <HeroSection />
       
-      <section className="py-16 container">
+      <MotionContainer className="py-16 container">
         <div className="flex items-center justify-between mb-8">
           <h2 className="font-playfair text-3xl font-bold">Nowości w ofercie</h2>
           <Link href="/sklep">
@@ -35,13 +36,17 @@ export default async function StorefrontHomePage() {
             />
           ))}
         </div>
-      </section>
+      </MotionContainer>
 
-      <FeaturesSection />
-      <CategoryGrid />
+      <MotionContainer delay={0.2}>
+        <FeaturesSection />
+      </MotionContainer>
+      <MotionContainer delay={0.3}>
+        <CategoryGrid />
+      </MotionContainer>
       
       {/* Newsletter / CTA Section placeholder */}
-      <section className="py-24 bg-emerald-900 text-white text-center">
+      <MotionContainer delay={0.4} className="py-24 bg-emerald-900 text-white text-center">
         <div className="container max-w-2xl space-y-6">
           <h2 className="font-playfair text-3xl md:text-4xl font-bold">
             Nie masz pewności co wybrać?
@@ -51,9 +56,12 @@ export default async function StorefrontHomePage() {
           </p>
           <div className="pt-4">
              {/* Placeholder for Newsletter component */}
+             <Button variant="secondary" size="lg" asChild>
+                <Link href="/kontakt">Zamów próbki</Link>
+             </Button>
           </div>
         </div>
-      </section>
+      </MotionContainer>
     </div>
   );
 }
