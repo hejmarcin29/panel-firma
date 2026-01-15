@@ -1,6 +1,6 @@
 import { getShopConfig, getTpayConfig } from './actions';
 import { db } from '@/lib/db';
-import { erpProducts, erpFloorPatterns } from '@/lib/db/schema';
+import { erpProducts } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import ShopSettingsForm from './shop-settings-form';
 

@@ -7,7 +7,7 @@ export default async function PublicLayout({
     children: React.ReactNode;
   }) {
     const shopConfig = await getShopConfig();
-    let systemLogoUrl = await getAppSetting(appSettingKeys.systemLogoUrl);
+    const systemLogoUrl = await getAppSetting(appSettingKeys.systemLogoUrl);
 
     let rawLogoUrl = shopConfig.headerLogo || shopConfig.organizationLogo || systemLogoUrl;
 
