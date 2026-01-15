@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CheckCircle, Truck, Ruler, Hammer, Phone, Building2, UserCheck, ShieldCheck } from "lucide-react";
+import { Ruler, Building2, UserCheck, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MotionContainer, MotionItem } from "@/components/motion-container";
 
@@ -53,10 +53,10 @@ export default function AboutUsPage() {
             <h3 className="text-3xl font-bold font-playfair">Dlaczego my?</h3>
             <div className="space-y-4 text-gray-600 leading-relaxed text-lg">
                 <p>
-                    Historia PrimePodloga.pl zaczęła się od prostej obserwacji: Klienci nie chcą kupować "paczek z panelami". Chcą mieć <strong>gotową, piękną podłogę</strong> w swoim salonie, bez użerania się z ekipami, brakującymi listwami czy reklamacjami.
+                    Historia PrimePodloga.pl zaczęła się od prostej obserwacji: Klienci nie chcą kupować &quot;paczek z panelami&quot;. Chcą mieć <strong>gotową, piękną podłogę</strong> w swoim salonie, bez użerania się z ekipami, brakującymi listwami czy reklamacjami.
                 </p>
                 <p>
-                    Dlatego stworzyliśmy model <strong>"Podłoga z Montażem"</strong>. Bierzemy na siebie pełną odpowiedzialność: od pomiaru wilgotności wylewki, przez bezpieczny transport (wniesienie!), aż po montaż z gwarancją.
+                    Dlatego stworzyliśmy model <strong>&quot;Podłoga z Montażem&quot;</strong>. Bierzemy na siebie pełną odpowiedzialność: od pomiaru wilgotności wylewki, przez bezpieczny transport (wniesienie!), aż po montaż z gwarancją.
                 </p>
                 <p>
                     Współpracujemy z najlepszymi producentami (Egibi, Podłogi z Natury), ale to nasza wiedza techniczna jest tym, co nas wyróżnia. Wiemy, który podkład wyciszy kroki, a który panel przetrwa psie pazury.
@@ -129,13 +129,4 @@ export default function AboutUsPage() {
       </MotionContainer>
     </div>
   );
-}
-
-function ListItem({ children }: { children: React.ReactNode }) {
-    return (
-        <div className="flex gap-3 items-start">
-            <CheckCircle className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
-            <span className="text-gray-700">{children}</span>
-        </div>
-    );
 }
