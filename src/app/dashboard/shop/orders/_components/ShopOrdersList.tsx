@@ -257,7 +257,7 @@ function ShippingDialog({ orderId }: { orderId: string }) {
                 <DialogHeader>
                     <DialogTitle>Wprowadź dane wysyłki</DialogTitle>
                     <DialogDescription>
-                        Uzupełnij numer listu przewozowego aby zmienić status na "Wysłane".
+                        Uzupełnij numer listu przewozowego aby zmienić status na &quot;Wysłane&quot;.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
