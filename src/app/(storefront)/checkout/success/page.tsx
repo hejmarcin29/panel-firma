@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, Home, Package } from "lucide-react";
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { manualOrders } from "@/lib/db/schema";
+import { manualOrders, orders } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 
@@ -25,15 +25,49 @@ export default async function CheckoutSuccessPage({ searchParams }: SuccessPageP
         );
     }
 
-    const order = await db.query.manualOrders.findFirst({
-        where: eq(manualOrders.id, orderId),
+    let order: { reference: string | null; billingEmail: string; type: string; paymentMethod: string | null } | undefined;
+
+    // 1. Check Shop Orders (Primary for this page)
+    const shopOrder = await db.query.orders.findFirst({
+        where: eq(orders.id, orderId),
         columns: {
-            reference: true,
-            billingEmail: true,
-            type: true, // sample vs production
+            sourceOrderId: true,
+            billingAddress: true,
+            type: true,
             paymentMethod: true,
         }
     });
+
+    if (shopOrder) {
+        order = {
+            reference: shopOrder.sourceOrderId,
+            // @ts-expect-error - billingAddress is loose json
+            billingEmail: shopOrder.billingAddress?.email || '',
+            type: shopOrder.type,
+            paymentMethod: shopOrder.paymentMethod,
+        };
+    } else {
+        // 2. Fallback to Manual Orders (rare for storefront success, but possible if redirected manually)
+        const manualOrder = await db.query.manualOrders.findFirst({
+            where: eq(manualOrders.id, orderId),
+            columns: {
+                reference: true,
+                billingEmail: true,
+                type: true, 
+                paymentMethod: true, // might be undefined in manualOrders based on schema?
+            }
+        });
+        
+        if (manualOrder) {
+            order = {
+                reference: manualOrder.reference,
+                billingEmail: manualOrder.billingEmail,
+                type: manualOrder.type || 'production',
+                // @ts-expect-error - paymentSchema is loose
+                paymentMethod: manualOrder.paymentMethod || 'manual',
+            };
+        }
+    }
 
     if (!order) {
         notFound();

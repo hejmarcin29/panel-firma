@@ -76,7 +76,7 @@ export function DecorNameEditableField({ productId, initialDecorName }: DecorNam
                 onKeyDown={(e) => {
                     if (e.key === 'Enter') handleSave();
                     if (e.key === 'Escape') {
-                        setValue(initialDisplayName || "");
+                        setValue(initialDecorName || "");
                         setIsEditing(false);
                     }
                 }}
@@ -95,7 +95,7 @@ export function DecorNameEditableField({ productId, initialDecorName }: DecorNam
                 variant="ghost" 
                 className="h-8 w-8 p-0"
                 onClick={() => {
-                    setValue(initialDisplayName || "");
+                    setValue(initialDecorName || "");
                     setIsEditing(false);
                 }}
                 disabled={isLoading}

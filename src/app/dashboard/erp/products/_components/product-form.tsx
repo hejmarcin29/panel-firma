@@ -202,7 +202,7 @@ export function ProductForm({
                                     <Input placeholder="np. Ottawa (używane do łączenia wariantów klej/klik)" {...field} />
                                 </FormControl>
                                 <p className="text-[11px] text-muted-foreground">
-                                    Wpisz wspólną nazwę dla całej rodziny produktów (np. "Ottawa"). 
+                                    Wpisz wspólną nazwę dla całej rodziny produktów (np. &quot;Ottawa&quot;). 
                                     Produkty o tej samej nazwie dekoru zostaną pogrupowane w sklepie.
                                 </p>
                                 <FormMessage />

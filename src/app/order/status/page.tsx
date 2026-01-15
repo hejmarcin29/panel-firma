@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { db } from "@/lib/db";
-import { manualOrders, erpOrderTimeline } from "@/lib/db/schema";
+import { manualOrders, erpOrderTimeline, orders } from "@/lib/db/schema";
 import { eq, asc } from "drizzle-orm";
 import { verifyMagicLinkToken } from "@/lib/auth/magic-link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { TimelineView, TimelineEvent } from "@/components/shop/timeline-view";
+import { Package, Truck, CheckCircle2, Clock } from "lucide-react";
 
 interface PageProps {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -45,93 +46,189 @@ export default async function OrderStatusPage({ searchParams }: PageProps) {
         );
     }
 
-    // Fetch Order
-    const order = await db.query.manualOrders.findFirst({
+    // 1. Try Manual Order (CRM)
+    const manualOrder = await db.query.manualOrders.findFirst({
         where: eq(manualOrders.id, orderId),
-        with: {
-            // items: true // If relations set up, fetching items would be good
-        }
     });
 
-    if (!order) {
+    // 2. Try Shop Order (Storefront) if not found
+    let shopOrder = null;
+    if (!manualOrder) {
+        shopOrder = await db.query.orders.findFirst({
+            where: eq(orders.id, orderId),
+        });
+    }
+
+    if (!manualOrder && !shopOrder) {
         return notFound();
     }
 
-    // Fetch Timeline (Safe fetch in case table not ready)
+    // Normalize Data for View
+    const order = manualOrder 
+        ? {
+            id: manualOrder.id,
+            reference: manualOrder.reference,
+            createdAt: manualOrder.createdAt,
+            status: manualOrder.status,
+            totalGross: manualOrder.totalGross,
+            currency: manualOrder.currency,
+            billingEmail: manualOrder.billingEmail,
+            billingName: manualOrder.billingName,
+            isShop: false
+        }
+        : {
+            id: shopOrder!.id,
+            reference: shopOrder!.sourceOrderId || shopOrder!.id,
+            createdAt: shopOrder!.createdAt,
+            status: shopOrder!.status,
+            totalGross: shopOrder!.totalGross,
+            currency: shopOrder!.currency,
+            // @ts-expect-error - json field handling
+            billingEmail: shopOrder!.billingAddress?.email || '',
+             // @ts-expect-error - json field handling
+            billingName: shopOrder!.billingAddress?.name || '',
+            isShop: true
+        };
+
+    // Fetch Timeline (Safe fetch)
     let timelineEvents: TimelineEvent[] = [];
-    try {
-        const rawEvents = await db.query.erpOrderTimeline.findMany({
-            where: eq(erpOrderTimeline.orderId, orderId),
-            orderBy: asc(erpOrderTimeline.createdAt)
+    
+    // Only fetch from erpOrderTimeline if it's a manual order (due to FK constraints)
+    // OR if we know shop orders also write there (unlikely given schema).
+    if (!order.isShop) {
+        try {
+            const rawEvents = await db.query.erpOrderTimeline.findMany({
+                where: eq(erpOrderTimeline.orderId, orderId),
+                orderBy: asc(erpOrderTimeline.createdAt)
+            });
+            timelineEvents = rawEvents as unknown as TimelineEvent[];
+        } catch (e) {
+            console.error("Timeline fetch failed:", e);
+        }
+    } else {
+        // Construct Synthetic Timeline for Shop Orders
+        timelineEvents.push({
+            id: 'created',
+            type: 'system',
+            title: 'Zamówienie złożone',
+            createdAt: order.createdAt,
+            metadata: null
         });
         
-        timelineEvents = rawEvents as unknown as TimelineEvent[];
-    } catch (e) {
-        console.error("Timeline fetch failed (table might be missing):", e);
+        // Basic map of known states
+        if (order.status === 'order.paid' || order.status === 'order.fulfillment_confirmed' || order.status === 'order.sent') {
+             timelineEvents.push({
+                id: 'paid',
+                type: 'payment',
+                title: 'Płatność potwierdzona',
+                createdAt: order.createdAt, // Approximation
+                metadata: null
+            });
+        }
+        
+        if (order.status === 'order.sent') {
+             timelineEvents.push({
+                id: 'sent',
+                type: 'status_change',
+                title: 'Zamówienie wysłane',
+                createdAt: order.createdAt, // Approximation
+                metadata: null
+            });
+        }
     }
 
+    // Helper for status badge
+    const getStatusLabel = (s: string) => {
+        const map: Record<string, string> = {
+            'draft': 'Szkic',
+            'pending': 'Oczekuje',
+            'order.received': 'Przyjęte',
+            'order.pending_proforma': 'Ocz. na Proformę',
+            'order.proforma_issued': 'Proforma Wysłana',
+            'order.awaiting_payment': 'Ocz. na Płatność',
+            'order.paid': 'Opłacone',
+            'order.fulfillment_confirmed': 'W Realizacji',
+            'order.sent': 'Wysłane',
+            'order.closed': 'Zakończone',
+            'order.cancelled': 'Anulowane'
+        };
+        return map[s] || s;
+    };
+
     return (
-        <div className="min-h-screen bg-gray-50/50 p-4 md:p-8">
-            <div className="max-w-4xl mx-auto space-y-8">
-                <div className="text-center md:text-left">
-                    <h1 className="text-3xl font-bold tracking-tight text-gray-900">Status Zamówienia</h1>
-                    <p className="text-muted-foreground mt-2">
-                        Realizacja zamówienia <span className="font-mono font-medium text-black">#{order.reference}</span>
-                    </p>
+        <div className="min-h-screen bg-gray-50/50 pb-20">
+            <div className="bg-white border-b sticky top-0 z-10">
+                <div className="container py-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                         <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold">
+                            {order.billingName.charAt(0)}
+                         </div>
+                         <div>
+                             <h1 className="font-semibold text-lg leading-none">Zamówienie {order.reference}</h1>
+                             <p className="text-xs text-muted-foreground mt-1">
+                                Utworzono {format(order.createdAt, "d MMMM yyyy, HH:mm", { locale: pl })}
+                             </p>
+                         </div>
+                    </div>
+                    <Badge variant={order.status.includes('paid') || order.status.includes('sent') ? "default" : "secondary"}>
+                        {getStatusLabel(order.status)}
+                    </Badge>
                 </div>
+            </div>
 
-                <div className="grid gap-6 md:grid-cols-3">
-                    {/* Main Content: Timeline */}
-                    <div className="md:col-span-2 space-y-6">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Historia realizacji</CardTitle>
-                                <CardDescription>Wszystkie zdarzenia dotyczące Twojego zamówienia</CardDescription>
-                            </CardHeader>
-                            <CardContent>
+            <div className="container py-8 max-w-3xl">
+                <div className="space-y-6">
+                    {/* Status Card */}
+                    <Card>
+                        <CardHeader className="pb-4">
+                            <CardTitle className="text-base flex items-center gap-2">
+                                <Clock className="h-4 w-4 text-muted-foreground" />
+                                Historia Realizacji
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {timelineEvents.length > 0 ? (
                                 <TimelineView events={timelineEvents} />
-                            </CardContent>
-                        </Card>
-                    </div>
+                            ) : (
+                                <div className="text-center py-8 text-muted-foreground text-sm">
+                                    Brak zdarzeń na osi czasu.
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
 
-                    {/* Sidebar: Details */}
-                    <div className="space-y-6">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Szczegóły</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
+                    {/* Order Details */}
+                    <Card>
+                        <CardHeader className="pb-4">
+                            <CardTitle className="text-base flex items-center gap-2">
+                                <Package className="h-4 w-4 text-muted-foreground" />
+                                Podsumowanie
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4 text-sm">
                                 <div>
-                                    <div className="text-sm text-muted-foreground">Aktualny status</div>
-                                    <Badge className="mt-1 text-base capitalize" variant="secondary">
-                                        {order.status}
-                                    </Badge>
-                                </div>
-                                <Separator />
-                                <div>
-                                    <div className="text-sm text-muted-foreground">Data złożenia</div>
-                                    <div className="font-medium">
-                                        {format(new Date(order.createdAt), 'dd MMMM yyyy, HH:mm', { locale: pl })}
-                                    </div>
-                                </div>
-                                <Separator />
-                                <div>
-                                    <div className="text-sm text-muted-foreground mr-2">Wartość zam.</div>
-                                    <div className="font-medium text-lg">
+                                    <span className="text-muted-foreground block text-xs mb-1">Kwota do zapłaty</span>
+                                    <span className="font-semibold text-lg">
                                         {(order.totalGross / 100).toFixed(2)} {order.currency}
-                                    </div>
+                                    </span>
                                 </div>
-                                <Separator />
                                 <div>
-                                    <div className="text-sm text-muted-foreground">Dostawa</div>
-                                    <div className="font-medium">{order.shippingMethod || 'Odbiór osobisty'}</div>
-                                    <div className="text-sm mt-1">
-                                        {order.shippingCity}, {order.shippingStreet}
-                                    </div>
+                                    <span className="text-muted-foreground block text-xs mb-1">Adres Email</span>
+                                    <span>{order.billingEmail}</span>
                                 </div>
-                            </CardContent>
-                        </Card>
-                    </div>
+                            </div>
+                            
+                            <Separator />
+                            
+                            <div className="text-sm bg-blue-50 text-blue-800 p-3 rounded-md flex gap-3">
+                                <Truck className="h-5 w-5 shrink-0" />
+                                <p>
+                                    Twoje zamówienie jest bezpieczne. Poinformujemy Cię mailowo o każdej zmianie statusu oraz nadaniu przesyłki.
+                                </p>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
         </div>
