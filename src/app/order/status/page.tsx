@@ -83,9 +83,7 @@ export default async function OrderStatusPage({ searchParams }: PageProps) {
             status: shopOrder!.status,
             totalGross: shopOrder!.totalGross,
             currency: shopOrder!.currency,
-            // @ts-expect-error - json field handling
             billingEmail: shopOrder!.billingAddress?.email || '',
-             // @ts-expect-error - json field handling
             billingName: shopOrder!.billingAddress?.name || '',
             isShop: true
         };

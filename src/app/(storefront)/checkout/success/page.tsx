@@ -41,7 +41,6 @@ export default async function CheckoutSuccessPage({ searchParams }: SuccessPageP
     if (shopOrder) {
         order = {
             reference: shopOrder.sourceOrderId,
-            // @ts-expect-error - billingAddress is loose json
             billingEmail: shopOrder.billingAddress?.email || '',
             type: shopOrder.type,
             paymentMethod: shopOrder.paymentMethod,
@@ -63,7 +62,6 @@ export default async function CheckoutSuccessPage({ searchParams }: SuccessPageP
                 reference: manualOrder.reference,
                 billingEmail: manualOrder.billingEmail,
                 type: manualOrder.type || 'production',
-                // @ts-expect-error - paymentSchema is loose
                 paymentMethod: manualOrder.paymentMethod || 'manual',
             };
         }
