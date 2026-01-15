@@ -3,6 +3,7 @@
 import { db } from '@/lib/db';
 import { erpProducts, erpCategories, erpBrands, erpCollections, erpMountingMethods, erpFloorPatterns, erpWearClasses, erpStructures } from '@/lib/db/schema';
 import { eq, desc, and, ilike, inArray } from 'drizzle-orm';
+import { getShopConfig } from '@/app/dashboard/settings/shop/actions';
 
 export async function getStoreMountingMethods() {
     return db.select().from(erpMountingMethods).orderBy(erpMountingMethods.name);
@@ -168,7 +169,8 @@ export async function getStoreProducts(
 }
 
 export async function getExplorerProducts() {
-    return db.query.erpProducts.findMany({
+    const config = await getShopConfig();
+    const products = await db.query.erpProducts.findMany({
         where: eq(erpProducts.isShopVisible, true),
         orderBy: [desc(erpProducts.isPurchasable), desc(erpProducts.imageUrl)],
         limit: 100,
@@ -197,4 +199,15 @@ export async function getExplorerProducts() {
             }
         }
     });
+
+    if (config.showGrossPrices && config.vatRate) {
+        const vatMultiplier = 1 + (config.vatRate / 100);
+        return products.map(p => ({
+            ...p,
+            price: p.price ? (Number(p.price) * vatMultiplier).toString() : null,
+            salePrice: p.salePrice ? (Number(p.salePrice) * vatMultiplier).toString() : null,
+        }));
+    }
+
+    return products;
 }
