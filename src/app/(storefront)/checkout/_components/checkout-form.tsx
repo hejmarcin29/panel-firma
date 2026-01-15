@@ -438,12 +438,10 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
                 <DialogContent className="max-w-4xl h-[80vh] p-0 overflow-hidden flex flex-col">
                     <div className="flex-1 w-full h-full relative bg-gray-100">
                         {inpostLoaded ? (
-                             // @ts-expect-error - Web Components are not typed
                             <inpost-geowidget
                                 token={inpostGeowidgetToken}
                                 language="pl"
                                 config={inpostGeowidgetConfig || "parcelCollect"}
-                                // @ts-expect-error - style prop on custom element
                                 style={{
                                     width: "100%", 
                                     height: "100%",

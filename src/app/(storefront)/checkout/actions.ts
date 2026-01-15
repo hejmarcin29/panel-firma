@@ -72,7 +72,7 @@ export async function processOrder(data: OrderData) {
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const shippingAddress: any = {
+    let shippingAddress: any = {
         name: `${data.firstName} ${data.lastName}`,
         phone: data.phone,
         email: data.email,
