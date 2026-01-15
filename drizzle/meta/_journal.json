@@ -575,6 +575,20 @@
       "when": 1768476890232,
       "tag": "0081_dry_preak",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1768509425520,
+      "tag": "0082_graceful_nightcrawler",
+      "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1768509766746,
+      "tag": "0083_wide_punisher",
+      "breakpoints": true
     }
   ]
 }

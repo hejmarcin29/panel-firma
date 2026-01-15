@@ -4,14 +4,22 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Plus, Loader2 } from "lucide-react";
+import { ArrowRight, Plus, Loader2, Info } from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 // Define types based on what we fetch
 type ExplorerProduct = {
     id: string;
     name: string;
+    decorName: string | null;
     slug: string | null;
     imageUrl: string | null;
     price: string | number | null;
@@ -33,6 +41,8 @@ const TABS = [
 export function HeroProductExplorer({ products }: { products: ExplorerProduct[] }) {
     const [activeTab, setActiveTab] = useState('all');
     const [visibleCount, setVisibleCount] = useState(16);
+    const [selectedGroup, setSelectedGroup] = useState<ExplorerProduct[] | null>(null);
+    const [isSheetOpen, setIsSheetOpen] = useState(false);
 
     // Filter logic
     const filteredProducts = products.filter(p => {
@@ -46,16 +56,84 @@ export function HeroProductExplorer({ products }: { products: ExplorerProduct[] 
         return true;
     });
 
-    const displayProducts = filteredProducts.slice(0, visibleCount); 
-    const hasMore = visibleCount < filteredProducts.length;
+    // Grouping Logic
+    const groupedItems = filteredProducts.reduce((acc, product) => {
+        const key = product.decorName || `single-${product.id}`;
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(product);
+        return acc;
+    }, {} as Record<string, ExplorerProduct[]>);
+
+    const allGroups = Object.values(groupedItems);
+    const displayGroups = allGroups.slice(0, visibleCount); 
+    const hasMore = visibleCount < allGroups.length;
 
     const handleTabChange = (tabId: string) => {
         setActiveTab(tabId);
         setVisibleCount(16); // Reset visible count on tab change
     };
 
+    const handleCardClick = (e: React.MouseEvent, group: ExplorerProduct[]) => {
+        if (group.length > 1) {
+            e.preventDefault();
+            setSelectedGroup(group);
+            setIsSheetOpen(true);
+        }
+    };
+    
+    // Helper to get representative product for a group
+    const getRepresentative = (group: ExplorerProduct[]) => group[0];
+
     return (
         <section className="py-12 border-b bg-white/50 backdrop-blur-sm relative z-10 -mt-8 mx-4 md:mx-0 rounded-3xl md:rounded-none md:mt-0 shadow-xl md:shadow-none border md:border-t-0 md:bg-white md:backdrop-blur-none">
+            
+            <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+                <SheetContent side="bottom" className="h-[80vh] sm:h-auto sm:max-h-[85vh] overflow-y-auto rounded-t-3xl">
+                    <SheetHeader className="mb-6">
+                        <SheetTitle className="text-2xl font-playfair font-bold">
+                            {selectedGroup && selectedGroup[0].decorName}
+                        </SheetTitle>
+                        <SheetDescription>
+                            Wybierz wariant produktu z tej kolekcji
+                        </SheetDescription>
+                    </SheetHeader>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pb-8">
+                        {selectedGroup?.map(product => (
+                            <Link 
+                                key={product.id} 
+                                href={`/produkt/${product.slug ?? '#'}`}
+                                onClick={() => setIsSheetOpen(false)}
+                                className="flex sm:block gap-4 p-3 rounded-xl border hover:border-emerald-500 hover:bg-emerald-50 transition-all group"
+                            >
+                                <div className="relative h-20 w-20 sm:h-40 sm:w-full bg-gray-100 rounded-lg overflow-hidden shrink-0">
+                                     {product.imageUrl && (
+                                        <Image
+                                            src={product.imageUrl}
+                                            alt={product.name}
+                                            fill
+                                            className="object-cover"
+                                        />
+                                     )}
+                                </div>
+                                <div className="flex-1 sm:mt-3">
+                                    <div className="text-xs text-emerald-600 font-medium mb-1">
+                                        {product.wearClassDictionary?.name}
+                                    </div>
+                                    <h4 className="font-semibold text-gray-900 mb-1 group-hover:text-emerald-700">
+                                        {product.name}
+                                    </h4>
+                                    <p className="text-sm text-gray-500 mb-2">{product.floorPatternDictionary?.name}</p>
+                                    <div className="font-bold text-lg">
+                                        {formatCurrency(product.price ? Number(product.price) : 0)}
+                                    </div>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                </SheetContent>
+            </Sheet>
+
             <div className="container space-y-8">
                 {/* Header & Tabs */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -100,7 +178,7 @@ export function HeroProductExplorer({ products }: { products: ExplorerProduct[] 
                 {/* Counter & Status */}
                 <div className="flex justify-between items-center text-sm text-muted-foreground border-b pb-4">
                     <p>
-                        Wyświetlam <strong className="text-foreground">{displayProducts.length}</strong> z <strong>{filteredProducts.length}</strong> propozycji
+                        Wyświetlam <strong className="text-foreground">{displayGroups.length}</strong> z <strong>{allGroups.length}</strong> propozycji
                     </p>
                     <Link href="/sklep" className="flex items-center hover:text-emerald-600 transition-colors group">
                         Przejdź do pełnej oferty <ArrowRight className="ml-1 h-3 w-3 transition-transform group-hover:translate-x-1" />
@@ -113,7 +191,11 @@ export function HeroProductExplorer({ products }: { products: ExplorerProduct[] 
                     className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
                 >
                     <AnimatePresence mode="popLayout">
-                        {displayProducts.map((product) => (
+                        {displayGroups.map((group) => {
+                            const product = getRepresentative(group);
+                            const isGroup = group.length > 1;
+                            
+                            return (
                             <motion.div
                                 key={product.id}
                                 layout
@@ -123,7 +205,10 @@ export function HeroProductExplorer({ products }: { products: ExplorerProduct[] 
                                 transition={{ duration: 0.3 }}
                                 className="group relative block bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100"
                             >
-                                <Link href={`/produkt/${product.slug ?? '#'}`}>
+                                <Link 
+                                    href={isGroup ? '#' : `/produkt/${product.slug ?? '#'}`}
+                                    onClick={(e) => handleCardClick(e, group)}
+                                >
                                     {/* Image */}
                                     <div className="relative aspect-4/3 overflow-hidden bg-gray-100">
                                         {product.imageUrl ? (
@@ -150,6 +235,12 @@ export function HeroProductExplorer({ products }: { products: ExplorerProduct[] 
                                                     {product.wearClassDictionary.name}
                                                 </div>
                                             )}
+                                            {isGroup && (
+                                                <div className="bg-emerald-500/90 backdrop-blur-md text-xs font-semibold px-2 py-1 rounded shadow-sm text-white border border-emerald-400 flex items-center gap-1">
+                                                    <Info className="h-3 w-3" />
+                                                    {group.length} warianty
+                                                </div>
+                                            )}
                                         </div>
 
                                         {/* Bottom Info */}
@@ -160,7 +251,7 @@ export function HeroProductExplorer({ products }: { products: ExplorerProduct[] 
                                                 </div>
                                             )}
                                             <h3 className="font-playfair text-xl font-bold leading-tight mb-3 truncate pr-4">
-                                                {product.name}
+                                                {product.decorName || product.name}
                                             </h3>
                                             
                                             <div className="flex items-center justify-between border-t border-white/20 pt-3">
@@ -180,7 +271,7 @@ export function HeroProductExplorer({ products }: { products: ExplorerProduct[] 
                                     </div>
                                 </Link>
                             </motion.div>
-                        ))}
+                        );})}
                     </AnimatePresence>
                 </motion.div>
                 
@@ -198,7 +289,7 @@ export function HeroProductExplorer({ products }: { products: ExplorerProduct[] 
                     </div>
                 )}
 
-                {displayProducts.length === 0 && (
+                {displayGroups.length === 0 && (
                      <div className="text-center py-12 text-muted-foreground bg-gray-50 rounded-xl">
                         Brak produktów spełniających kryteria w tej sekcji.
                         <Link href="/sklep" className="block mt-2 text-emerald-600 underline">

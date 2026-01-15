@@ -138,6 +138,11 @@ Przy każdej implementacji, modyfikacji lub naprawie błędu, **ZAWSZE** analizu
   - Nazwę produktu (`product_name`) można przechowywać dodatkowo jako "snapshot" w momencie zapisu (dla celów historycznych/czytelności), ale logika biznesowa (np. import do wyceny, stany magazynowe) musi korzystać z ID.
   - Przy pobieraniu danych (np. do edycji), zawsze odświeżaj informacje o produkcie (cena, atrybuty) na podstawie ID.
 
+## Zasady Prezentacji Cen (Pricing logic)
+- **Globalne Ustawienia:** Każdy widok i endpoint zwracający ceny produktów (witryna, sklep, koszyk, checkout) **MUSI** sprawdzać konfigurację globalną (`getShopConfig`).
+- **Netto/Brutto:** Jeśli w `ShopConfig` włączone jest `showGrossPrices`, system musi doliczyć VAT (`vatRate`) do ceny bazowej (`price`) PRZED wysłaniem danych na frontend.
+- **Frontend:** Komponenty UI nie powinny liczyć VATu same – powinny wyświetlać cenę otrzymaną z backendu, zakładając, że jest już poprawna (chyba że to admin panel).
+
 ## Offline-First & Field Operations (Priorytet dla Mobile)
 Aplikacja jest używana przez pracowników terenowych w miejscach o słabym zasięgu (piwnice, nowe budowy).
 1.  **Krytyczne Widoki:** Widoki Montażu (`/dashboard/crm/montaze/[id]`) oraz Zadań muszą być projektowane tak, aby działały przy przerywanym połączeniu.

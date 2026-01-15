@@ -1749,6 +1749,7 @@ export const erpProducts = pgTable('erp_products', {
     sku: text('sku').unique().notNull(), // Kod produktu
     ean: text('ean'), // Kod kreskowy
     name: text('name').notNull(),
+    decorName: text('decor_name'), // Nazwa dekoru (do grupowania wariantów)
     slug: text('slug').unique(),
     description: text('description'),
     categoryId: text('category_id').references(() => erpCategories.id),

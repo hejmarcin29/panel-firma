@@ -76,3 +76,8 @@ System wspiera proces manualnego wystawiania Proformy zewnętrznie.
     *   `is_shop_visible`: boolean (default false).
     *   `is_sample_available`: boolean (default false).
     *   `package_size_m2`: float (wymagane do kalkulatora paczek).
+
+## 6. Prezentacja Cen (Pricing Logic)
+- **Globalne Ustawienia:** Każdy widok i endpoint zwracający ceny produktów (witryna, sklep, koszyk, checkout) **MUSI** sprawdzać konfigurację globalną (`getShopConfig`).
+- **Netto/Brutto:** Jeśli w `ShopConfig` włączone jest `showGrossPrices`, system musi doliczyć VAT (`vatRate`) do ceny bazowej (`price`) PRZED wysłaniem danych na frontend.
+- **Frontend:** Komponenty UI nie powinny liczyć VATu same – powinny wyświetlać cenę otrzymaną z backendu, zakładając, że jest już poprawna (chyba że to admin panel).

@@ -52,6 +52,10 @@ export default function ShopSettingsForm({ initialConfig, initialTpayConfig, ava
 
             // Save Shop Config
             const newShopConfig: ShopConfig = {
+                // Announcement Bar
+                announcementMessage: formData.get('announcementMessage') as string,
+                isAnnouncementVisible: formData.get('isAnnouncementVisible') === 'on',
+                
                 // General
                 isShopEnabled: formData.get('isShopEnabled') === 'on',
                 samplePrice: Math.round(parseFloat(formData.get('samplePrice') as string) * 100),
@@ -465,6 +469,38 @@ export default function ShopSettingsForm({ initialConfig, initialTpayConfig, ava
 
                     {/* TAB: DESIGN */}
                     <TabsContent value="design" forceMount={true} className="space-y-4 mt-4 data-[state=inactive]:hidden">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <SquareEqual className="h-5 w-5" /> Pasek Ogłoszeń (Top Bar)
+                                </CardTitle>
+                                <CardDescription>Czerwony pasek na samej górze strony.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/40">
+                                    <div className="space-y-0.5">
+                                        <Label className="text-base">Pokaż pasek</Label>
+                                        <p className="text-sm text-muted-foreground">
+                                            Włącz lub wyłącz widoczność paska informacyjnego.
+                                        </p>
+                                    </div>
+                                    <Switch 
+                                        name="isAnnouncementVisible" 
+                                        defaultChecked={config.isAnnouncementVisible !== false} 
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="announcementMessage">Treść komunikatu</Label>
+                                    <Input 
+                                        id="announcementMessage" 
+                                        name="announcementMessage" 
+                                        defaultValue={config.announcementMessage} 
+                                        placeholder="np. Darmowa dostawa od 2000 zł"
+                                    />
+                                </div>
+                            </CardContent>
+                        </Card>
+
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">

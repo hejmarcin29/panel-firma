@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { MotionContainer } from "@/components/motion-container";
 import { HeroProductExplorer } from "../_components/hero-product-explorer";
+import { TrustBar } from "../_components/trust-bar";
 
 export default async function StorefrontHomePage() {
   const explorerProducts = await getExplorerProducts();
@@ -13,6 +14,7 @@ export default async function StorefrontHomePage() {
   return (
     <div className="flex flex-col min-h-screen">
       <HeroSection />
+      <TrustBar />
       
       {/* Hero Explorer - "Interactive Discovery" */}
       <HeroProductExplorer products={explorerProducts} />

@@ -9,6 +9,7 @@ import { DimensionsEditableField } from "../_components/dimensions-editable-fiel
 import { TechnicalAttributesEditable } from "../_components/technical-attributes-editable";
 import { LeadTimeEditableField } from "../_components/lead-time-editable-field";
 import { WeightEditableField } from "../_components/weight-editable-field";
+import { DecorNameEditableField } from "../_components/decor-name-editable-field";
 import { ProductGallery } from "../_components/product-gallery";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -79,14 +80,14 @@ export default async function ProductDetailsPage({ params }: PageProps) {
                         <Badge variant={product.type === 'service' ? 'secondary' : 'outline'}>
                             {product.type === 'service' ? 'Usługa' : 'Towar'}
                         </Badge>
-                        <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>
-                            {product.status === 'active' ? 'Aktywny' : 'Archiwum'}
-                        </Badge>
                         <ProductSyncToggle 
                             productId={product.id} 
                             initialIsSyncEnabled={product.isSyncEnabled ?? false} 
                             source={product.source ?? 'local'} 
                         />
+                    </div>
+                    <div className="mt-1 mb-2">
+                        <DecorNameEditableField productId={product.id} initialDecorName={product.decorName} />
                     </div>
                     <div className="text-muted-foreground mt-1 flex items-center flex-wrap gap-x-2 gap-y-1 text-sm">
                         <span>SKU: <span className="font-mono text-foreground">{product.sku}</span></span>

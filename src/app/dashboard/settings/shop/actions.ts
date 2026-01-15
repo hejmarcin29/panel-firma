@@ -40,6 +40,10 @@ export type ShopConfig = {
     showGrossPrices?: boolean; // Pokaż ceny brutto
     vatRate?: number; // Stawka VAT (np. 23)
 
+    // Announcement Bar
+    announcementMessage?: string;
+    isAnnouncementVisible?: boolean;
+
     // Wygląd i Kolorystyka
     primaryColor?: string; // Główny kolor (np. #b02417)
     // secondaryColor?: string; // Opcjonalnie w przyszłości
@@ -81,6 +85,8 @@ export const getShopConfig = unstable_cache(
                 headerLogo: '',
                 showGrossPrices: false,
                 vatRate: 23,
+                announcementMessage: 'Darmowa dostawa na terenie całej Polski!',
+                isAnnouncementVisible: true,
                 heroHeadline: 'Twoja wymarzona podłoga',
                 heroSubheadline: 'Największy wybór podłóg drewnianych i paneli winylowych z profesjonalnym montażem.',
                 noIndex: false,
@@ -97,6 +103,11 @@ export const getShopConfig = unstable_cache(
         }
 
         const config = setting.value as ShopConfig;
+        
+        // Merge with defaults for missing fields (migration)
+        if (config.isAnnouncementVisible === undefined) config.isAnnouncementVisible = true;
+        if (config.announcementMessage === undefined) config.announcementMessage = 'Darmowa dostawa na terenie całej Polski!';
+
         if (!config.calculatorRates) {
             config.calculatorRates = {
                     glue_herringbone: { labor: 65, chemistry: 25 },

@@ -14,7 +14,7 @@ export async function StoreHeader() {
         
         {/* Mobile Menu Trigger & Logo */}
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" className="md:hidden">
+          <Button variant="ghost" size="icon" className="lg:hidden">
             <Menu className="h-5 w-5" />
             <span className="sr-only">Menu</span>
           </Button>
@@ -36,38 +36,48 @@ export async function StoreHeader() {
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
+        <nav className="hidden lg:flex items-center gap-6 text-sm font-medium">
           <Link href="/sklep" className="transition-colors hover:text-foreground/80 text-foreground/60">
-            Oferta
+            Sklep
           </Link>
-          <Link href="/kolekcje" className="transition-colors hover:text-foreground/80 text-foreground/60">
-            Kolekcje
+          <Link href="/kontakt" className="transition-colors hover:text-foreground/80 text-foreground/60">
+            Kontakt
           </Link>
-          <Link href="/sklep?q=promocja" className="transition-colors hover:text-foreground/80 text-foreground/60">
-            Promocje
-          </Link>
-          <Link href="/o-nas" className="transition-colors hover:text-foreground/80 text-foreground/60">
-            O nas
+           <Link href="/dlaczego-my" className="transition-colors hover:text-foreground/80 text-foreground/60">
+            Dlaczego my?
           </Link>
           <Link href="/blog" className="transition-colors hover:text-foreground/80 text-foreground/60">
-            Poradnik
+            Blog
           </Link>
+           <Button variant="default" size="sm" className="bg-[#c0392b] hover:bg-[#a93226] text-white" asChild>
+              <Link href="/kontakt">Chcę montaż</Link>
+          </Button>
         </nav>
 
         {/* Actions */}
         <div className="flex items-center gap-2">
           {config.headerShowSearch && (
-            <Button variant="ghost" size="icon" className="hidden sm:inline-flex">
-              <Search className="h-5 w-5" />
-              <span className="sr-only">Szukaj</span>
-            </Button>
+            <div className="hidden md:flex relative w-64 mr-2">
+                 <Button variant="outline" className="w-full justify-start text-muted-foreground bg-muted/20 border-muted-foreground/20 hover:bg-muted/30">
+                    <Search className="mr-2 h-4 w-4" />
+                    <span className="text-xs">Szukaj produktów...</span>
+                 </Button>
+            </div>
           )}
-          {config.headerShowUser && (
-            <Button variant="ghost" size="icon" className="hidden sm:inline-flex">
-              <User className="h-5 w-5" />
-              <span className="sr-only">Konto</span>
-            </Button>
-          )}
+          
+          <div className="hidden sm:flex items-center gap-4 mr-2 border-r pr-4">
+             {config.headerShowUser && (
+                <Link href="/login" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+                  <User className="h-5 w-5" />
+                  <span className="text-[10px] font-medium">Moje konto</span>
+                </Link>
+              )}
+               <Link href="/pomoc" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+                  <span className="h-5 w-5 flex items-center justify-center font-serif italic font-bold">?</span>
+                  <span className="text-[10px] font-medium">Pomoc</span>
+                </Link>
+          </div>
+
           <CartButton />
         </div>
       </div>

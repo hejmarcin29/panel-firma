@@ -183,6 +183,7 @@ export async function getExplorerProducts() {
             salePrice: true,
             unit: true,
             isPurchasable: true,
+            decorName: true,
         },
         with: {
             collection: {

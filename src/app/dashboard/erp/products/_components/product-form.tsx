@@ -31,6 +31,7 @@ import { PRODUCT_UNITS } from "@/lib/constants";
 
 const formSchema = z.object({
     name: z.string().min(2, "Nazwa musi mieć min. 2 znaki"),
+    decorName: z.string().optional(),
     sku: z.string().min(2, "SKU musi mieć min. 2 znaki"),
     unit: z.string(),
     type: z.enum(["product", "service"]),
@@ -89,6 +90,7 @@ export function ProductForm({
         resolver: zodResolver(formSchema),
         defaultValues: {
             name: "",
+            decorName: "",
             sku: "",
             unit: "szt",
             type: "product",
@@ -185,6 +187,24 @@ export function ProductForm({
                                 <FormControl>
                                     <Input placeholder="np. Panel Dąb Naturalny" {...field} />
                                 </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    <FormField
+                        control={form.control}
+                        name="decorName"
+                        render={({ field }) => (
+                            <FormItem className="col-span-1 md:col-span-2">
+                                <FormLabel>Nazwa Dekoru (Grupowanie)</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="np. Ottawa (używane do łączenia wariantów klej/klik)" {...field} />
+                                </FormControl>
+                                <p className="text-[11px] text-muted-foreground">
+                                    Wpisz wspólną nazwę dla całej rodziny produktów (np. "Ottawa"). 
+                                    Produkty o tej samej nazwie dekoru zostaną pogrupowane w sklepie.
+                                </p>
                                 <FormMessage />
                             </FormItem>
                         )}

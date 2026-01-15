@@ -164,6 +164,22 @@ export async function updateProductSalesPrice(id: string, price: string | null) 
     return { success: true };
 }
 
+export async function updateProductDecorName(id: string, decorName: string | null) {
+    const user = await requireUser();
+    if (!user.roles.includes('admin')) throw new Error('Unauthorized');
+
+    await db.update(erpProducts)
+        .set({ 
+            decorName: decorName, 
+            updatedAt: new Date() 
+        })
+        .where(eq(erpProducts.id, id));
+
+    revalidatePath(`/dashboard/erp/products/${id}`);
+    revalidatePath('/dashboard/erp/products');
+    return { success: true };
+}
+
 export async function updateProductDimensions(id: string, length: number | null, width: number | null, height: number | null) {
     const user = await requireUser();
     if (!user.roles.includes('admin')) throw new Error('Unauthorized');
@@ -368,6 +384,7 @@ export async function createProduct(data: any, formData?: FormData) {
     const [product] = await db.insert(erpProducts).values({
         id: data.id, // Use generated ID if image was uploaded
         name: data.name,
+        decorName: data.decorName || null,
         sku: data.sku,
         imageUrl: finalImageUrl, // Save R2 URL
         unit: data.unit,

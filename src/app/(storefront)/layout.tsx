@@ -3,6 +3,7 @@ import { MobileNav } from "./_components/mobile-nav";
 import { StoreFooter } from "./_components/store-footer";
 import { CartSheet } from "./_components/cart-sheet";
 import { getShopConfig } from "../dashboard/settings/shop/actions";
+import { AnnouncementBar } from "./_components/announcement-bar";
 
 export default async function StorefrontLayout({
   children,
@@ -19,6 +20,7 @@ export default async function StorefrontLayout({
           --ring: ${config.primaryColor || '#b02417'};
         }
       `}</style>
+      <AnnouncementBar />
       <StoreHeader />
       <main className="flex-1">
         {children}
