@@ -1,5 +1,4 @@
 import { getShopConfig } from "@/app/dashboard/settings/shop/actions";
-import { X } from "lucide-react";
 import { AnnouncementBarClient } from "./announcement-bar-client";
 
 export async function AnnouncementBar() {

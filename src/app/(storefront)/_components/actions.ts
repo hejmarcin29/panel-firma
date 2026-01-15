@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db';
 import { orders, manualOrders, customers, mailAccounts, globalSettings } from '@/lib/db/schema';
-import { eq, desc, or } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import { generateOrderMagicLink } from '@/app/dashboard/shop/orders/[id]/actions';
 import { createTransport } from 'nodemailer';
 import { type ShopConfig } from '@/app/dashboard/settings/shop/actions';
@@ -68,7 +68,8 @@ export async function resendOrderLink(email: string, turnstileToken?: string) {
 
     // 2. Find recent order for this email
     // Check shop orders
-    const shopOrder = await db.query.orders.findFirst({
+    await db.query.orders.findFirst({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         where: eq(orders.billingAddress, { email: email } as any), // JSON match approach might depend on adapter, safely handled later or via relation
     });
     

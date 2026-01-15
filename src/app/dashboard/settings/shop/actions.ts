@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { globalSettings, erpProducts, erpCategories } from '@/lib/db/schema';
+import { globalSettings, erpProducts } from '@/lib/db/schema';
 import { eq, ilike } from 'drizzle-orm';
 import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache';
 

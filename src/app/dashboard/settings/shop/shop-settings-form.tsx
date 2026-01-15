@@ -31,30 +31,25 @@ export default function ShopSettingsForm({ initialConfig, initialTpayConfig, ava
     const [foundProducts, setFoundProducts] = useState<{id: string, name: string}[]>([]);
     
     // Loaded names for currently selected IDs (for display)
-    const [selectedProductNames, setSelectedProductNames] = useState<Record<string, string>>({});
-
-    useEffect(() => {
-        if (debouncedSearch.length > 2) {
-            searchProductsForConfig(debouncedSearch).then(res => {
-                // @ts-ignore
-                setFoundProducts(res);
-            });
-        }
-    }, [debouncedSearch]);
-
-    // Initial load of names for existing bestsellers if needed
-    // In a real app we would pass full objects in initialConfig or fetch them.
-    // For now, let's rely on availableProducts prop if it has them.
-    useEffect(() => {
+    const [selectedProductNames, setSelectedProductNames] = useState<Record<string, string>>(() => {
         const map: Record<string, string> = {};
         if (initialConfig.bestsellerIds) {
             initialConfig.bestsellerIds.forEach(id => {
                 const found = availableProducts.find(p => p.id === id);
                 if (found) map[id] = found.name;
             });
-            setSelectedProductNames(prev => ({...prev, ...map}));
         }
-    }, [initialConfig.bestsellerIds, availableProducts]);
+        return map;
+    });
+
+    useEffect(() => {
+        if (debouncedSearch.length > 2) {
+            searchProductsForConfig(debouncedSearch).then(res => {
+                // @ts-expect-error: res type from server action doesn't fully match state type
+                setFoundProducts(res);
+            });
+        }
+    }, [debouncedSearch]);
 
 
     const handleImageUpload = async (file: File) => {
@@ -325,7 +320,7 @@ export default function ShopSettingsForm({ initialConfig, initialTpayConfig, ava
                                     <Smartphone className="h-5 w-5" /> Mobile Menu (Bestsellery)
                                 </CardTitle>
                                 <CardDescription>
-                                    Wybierz produkty, które będą promowane jako "Bestsellery" w menu mobilnym, gdy użytkownik nie ma jeszcze historii przeglądania.
+                                    Wybierz produkty, które będą promowane jako &quot;Bestsellery&quot; w menu mobilnym, gdy użytkownik nie ma jeszcze historii przeglądania.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">

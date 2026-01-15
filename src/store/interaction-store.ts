@@ -18,7 +18,7 @@ interface InteractionState {
 
 export const useInteractionStore = create<InteractionState>()(
     persist(
-        (set, get) => ({
+        (set) => ({
             visitedProducts: [],
             addProductVisit: (product) => {
                 const now = Date.now();

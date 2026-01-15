@@ -5,7 +5,7 @@ import { performDatabaseBackup, performCodeBackup, performFullBackup, getEnvFile
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Loader2, Database, ShieldCheck, AlertTriangle, Key, FileCode, Package } from "lucide-react";
+import { Download, Loader2, Database, Key, FileCode, Package } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
@@ -31,7 +31,7 @@ export function BackupManager({ initialBackups }: { initialBackups: BackupFile[]
             } else {
                 toast.error("Błąd: " + result.message);
             }
-        } catch (e) {
+        } catch {
             toast.error("Wystąpił niespodziewany błąd.");
         } finally {
             setIsBackingUpDb(false);
@@ -48,7 +48,7 @@ export function BackupManager({ initialBackups }: { initialBackups: BackupFile[]
             } else {
                 toast.error("Błąd: " + result.message);
             }
-        } catch (e) {
+        } catch {
             toast.error("Wystąpił niespodziewany błąd.");
         } finally {
             setIsBackingUpCode(false);
@@ -65,7 +65,7 @@ export function BackupManager({ initialBackups }: { initialBackups: BackupFile[]
             } else {
                 toast.error("Błąd: " + result.message);
             }
-        } catch (e) {
+        } catch {
             toast.error("Wystąpił niespodziewany błąd.");
         } finally {
             setIsBackingUpFull(false);
@@ -85,7 +85,7 @@ export function BackupManager({ initialBackups }: { initialBackups: BackupFile[]
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
             toast.success("Pobrano plik konfiguracyjny .env");
-        } catch (error) {
+        } catch {
             toast.error("Nie udało się pobrać pliku .env");
         }
     }

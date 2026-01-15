@@ -1,7 +1,6 @@
 
 import { db } from '@/lib/db';
-import { erpProducts } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+
 
 async function listProducts() {
     const products = await db.query.erpProducts.findMany({

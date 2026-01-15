@@ -154,7 +154,7 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
                       'expired-callback': () => setTurnstileToken(null),
                   });
                   setTurnstileWidgetId(id);
-              } catch (e) {
+              } catch {
                   // Container might not be ready yet
               }
            }

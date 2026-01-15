@@ -1,17 +1,15 @@
 'use client';
 
 import { Drawer } from 'vaul';
-import { Menu, Search, History, Sparkles, X, ChevronRight, PackageSearch } from 'lucide-react';
+import { Menu, Search, History, Sparkles, ChevronRight, PackageSearch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
-import { useInteractionStore, VisitedProduct } from '@/store/interaction-store';
+import { useInteractionStore } from '@/store/interaction-store';
 import { resendOrderLink } from './actions';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useRouter } from 'next/navigation';
 
@@ -28,6 +26,7 @@ interface VisualCommandCenterProps {
 
 declare global {
     interface Window {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         turnstile: any;
         turnstileLoaded: () => void;
     }
@@ -75,7 +74,7 @@ export function VisualCommandCenter({ bestsellers, turnstileSiteKey }: VisualCom
                         'expired-callback': () => setTurnstileToken(null),
                     });
                     setTurnstileWidgetId(id);
-                } catch (e) {
+                } catch {
                     // Container might not be ready yet
                 }
              }
@@ -136,7 +135,7 @@ export function VisualCommandCenter({ bestsellers, turnstileSiteKey }: VisualCom
             } else {
                 toast.error(result.message || "Błąd wysyłania.");
             }
-        } catch (err) {
+        } catch {
             toast.error("Wystąpił błąd. Spróbuj ponownie.");
         } finally {
             setIsSendingLink(false);
@@ -292,7 +291,7 @@ export function VisualCommandCenter({ bestsellers, turnstileSiteKey }: VisualCom
                                             Status zamówienia
                                         </div>
                                         <p className="mb-3 text-xs text-muted-foreground">
-                                            Nie masz linku do śledzenia? Wpisz e-mail, a wyślemy go ponownie.
+                                            Link do statusu masz w mailu. Zgubiłeś go? Podaj adres, wyślemy nowy.
                                         </p>
                                         <form onSubmit={handleStatusCheck} className="flex flex-col gap-2">
                                             <div className="flex gap-2">

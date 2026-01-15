@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image"; // Added
-import { Search, Menu, User } from "lucide-react";
+import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CartButton } from "./cart-button";
 import { getShopConfig, getBestsellers } from "@/app/dashboard/settings/shop/actions"; // Added
@@ -72,12 +72,19 @@ export async function StoreHeader() {
           )}
           
           <div className="hidden sm:flex items-center gap-4 mr-2 border-r pr-4">
-             {config.headerShowUser && (
-                <Link href="/login" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-                  <User className="h-5 w-5" />
-                  <span className="text-[10px] font-medium">Moje konto</span>
-                </Link>
-              )}
+               {/* 
+                 For retail customers, we don't have accounts. 
+                 The "Order Status" check is available in the mobile menu (VisualCommandCenter).
+                 For Admin/Staff accessing from storefront, they should use direct /dashboard link or hidden shortcut.
+                 
+                 If we ever add Customer Accounts, uncomment this:
+                 {config.headerShowUser && (
+                    <Link href="/login" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+                      <User className="h-5 w-5" />
+                      <span className="text-[10px] font-medium">Moje konto</span>
+                    </Link>
+                  )}
+               */}
                <Link href="/pomoc" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
                   <span className="h-5 w-5 flex items-center justify-center font-serif italic font-bold">?</span>
                   <span className="text-[10px] font-medium">Pomoc</span>

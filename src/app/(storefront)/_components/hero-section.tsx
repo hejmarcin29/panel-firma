@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
 import { getShopConfig } from "@/app/dashboard/settings/shop/actions";
 
 export async function HeroSection() {

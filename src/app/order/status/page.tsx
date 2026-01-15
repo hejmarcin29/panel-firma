@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { TimelineView, TimelineEvent } from "@/components/shop/timeline-view";
-import { Package, Truck, CheckCircle2, Clock } from "lucide-react";
+import { Package, Truck, Clock } from "lucide-react";
 
 interface PageProps {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>

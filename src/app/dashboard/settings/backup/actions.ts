@@ -1,6 +1,7 @@
 "use server";
 
 import { readdir, stat } from "fs/promises";
+import fs from "fs";
 import path from "path";
 import { exec } from "child_process";
 import { promisify } from "util";
@@ -29,7 +30,7 @@ export async function getBackupsList() {
     );
     // Sort identifying new ones first
     return backups.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-  } catch (error) {
+  } catch {
     // Directory might not exist yet
     return [];
   }
@@ -37,7 +38,6 @@ export async function getBackupsList() {
 
 export async function performCodeBackup() {
   try {
-    const fs = require('fs');
     if (!fs.existsSync(BACKUP_DIR)) {
       fs.mkdirSync(BACKUP_DIR);
     }
@@ -72,7 +72,6 @@ export async function performDatabaseBackup() {
     const outputPath = path.join(BACKUP_DIR, filename);
 
     // Ensure dir exists
-    const fs = require('fs');
     if (!fs.existsSync(BACKUP_DIR)){
         fs.mkdirSync(BACKUP_DIR);
     }
@@ -93,7 +92,7 @@ export async function performDatabaseBackup() {
     const command = `pg_dump "${connectionString}" -F p -f "${outputPath}" --clean --if-exists --no-owner --no-privileges`;
 
     console.log("Starting backup...");
-    const { stdout, stderr } = await execAsync(command);
+    const { stderr } = await execAsync(command);
     
     if (stderr) {
        // pg_dump writes notices to stderr, it doesn't always mean error.
@@ -111,7 +110,6 @@ export async function performDatabaseBackup() {
 
 export async function getEnvFileContent() {
     try {
-        const fs = require('fs');
         const envPath = path.join(process.cwd(), '.env');
         
         if (!fs.existsSync(envPath)) {
@@ -124,15 +122,13 @@ export async function getEnvFileContent() {
         }
         
         return fs.readFileSync(envPath, 'utf-8');
-    } catch (error) {
-        console.error("Failed to read .env file:", error);
+    } catch {
         throw new Error("Błąd odczytu pliku konfiguracyjnego.");
     }
 }
 
 export async function performFullBackup() {
   try {
-    const fs = require('fs');
     if (!fs.existsSync(BACKUP_DIR)) {
       fs.mkdirSync(BACKUP_DIR);
     }
