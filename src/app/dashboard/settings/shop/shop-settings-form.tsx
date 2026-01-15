@@ -154,7 +154,7 @@ export default function ShopSettingsForm({ initialConfig, initialTpayConfig, ava
                     </TabsList>
 
                     {/* TAB: GENERAL */}
-                    <TabsContent value="general" className="space-y-4 mt-4">
+                    <TabsContent value="general" forceMount={true} className="space-y-4 mt-4 data-[state=inactive]:hidden">
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
@@ -451,7 +451,7 @@ export default function ShopSettingsForm({ initialConfig, initialTpayConfig, ava
                     </TabsContent>
 
                     {/* TAB: DESIGN */}
-                    <TabsContent value="design" className="space-y-4 mt-4">
+                    <TabsContent value="design" forceMount={true} className="space-y-4 mt-4 data-[state=inactive]:hidden">
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
@@ -574,7 +574,7 @@ export default function ShopSettingsForm({ initialConfig, initialTpayConfig, ava
                     </TabsContent>
 
                     {/* TAB: PAYMENTS */}
-                    <TabsContent value="payments" className="space-y-4 mt-4">
+                    <TabsContent value="payments" forceMount={true} className="space-y-4 mt-4 data-[state=inactive]:hidden">
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
@@ -647,7 +647,7 @@ export default function ShopSettingsForm({ initialConfig, initialTpayConfig, ava
                     </TabsContent>
 
                     {/* TAB: SEO */}
-                    <TabsContent value="seo" className="space-y-4 mt-4">
+                    <TabsContent value="seo" forceMount={true} className="space-y-4 mt-4 data-[state=inactive]:hidden">
                         <Card className="border-amber-200 bg-amber-50/50">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-amber-900">
