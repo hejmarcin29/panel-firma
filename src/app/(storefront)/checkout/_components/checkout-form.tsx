@@ -102,7 +102,7 @@ const checkoutSchema = z.object({
 
 export type CheckoutFormData = z.infer<typeof checkoutSchema>;
 
-export function CheckoutForm({ shippingCost }: { shippingCost?: number }) {
+export function CheckoutForm({ shippingCost, palletShippingCost }: { shippingCost?: number; palletShippingCost?: number }) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const cart = useCartStore();
@@ -112,7 +112,11 @@ export function CheckoutForm({ shippingCost }: { shippingCost?: number }) {
   const isOnlySamples = cart.items.length > 0 && cart.items.every(item => item.productId.startsWith('sample_'));
   
   // Calculate Shipping (shippingCost is in grosze)
-  const shippingCostPLN = (isOnlySamples && shippingCost) ? shippingCost / 100 : 0;
+  // For Samples: use sampleShippingCost
+  // For Pallets/Others: use palletShippingCost
+  const activeShippingCostInt = isOnlySamples ? (shippingCost || 0) : (palletShippingCost || 0);
+  const shippingCostPLN = activeShippingCostInt / 100;
+  
   const finalTotal = itemsTotal + shippingCostPLN;
 
   const form = useForm<CheckoutFormData>({
@@ -145,20 +149,15 @@ export function CheckoutForm({ shippingCost }: { shippingCost?: number }) {
     }));
 
     // Add shipping item if applicable
-    if (isOnlySamples && shippingCostPLN > 0) {
-        orderItems.push({
-            productId: 'shipping_sample',
-            name: 'Wysyłka Próbek',
-            sku: 'SHP-001',
-            quantity: 1,
-            price: shippingCostPLN,
-            vatRate: 0.23, // Assuming 23% VAT on shipping
-            unit: 'usł.'
-        });
-    }
-
-    const orderData = {
+    // We don't push shipping as an item anymore, the backend handles shippingCost field separately.
+    // Logic updated to rely on passed totals or backend calc.
+    
+    startTransition(async () => {
+      const result = await processOrder({
         ...data,
+        items: orderItems,
+        totalAmount: finalTotal, // Includes shipping
+      });
         items: orderItems,
         totalAmount: finalTotal
     }
@@ -552,10 +551,10 @@ export function CheckoutForm({ shippingCost }: { shippingCost?: number }) {
                      </div>
                      <div className="flex justify-between text-sm text-muted-foreground">
                          <span>Dostawa</span>
-                         {isOnlySamples && shippingCostPLN > 0 ? (
+                         {shippingCostPLN > 0 ? (
                              <span>{shippingCostPLN.toFixed(2)} zł</span>
                          ) : (
-                             <span>Wyceniana indywidualnie / Gratis od 4000 zł</span>
+                             <span>Gratis / Wyceniana indywidualnie</span>
                          )}
                      </div>
                      

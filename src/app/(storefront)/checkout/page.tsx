@@ -15,6 +15,7 @@ export default async function CheckoutPage() {
        
        <CheckoutForm 
           shippingCost={shopConfig.sampleShippingCost}
+          palletShippingCost={shopConfig.palletShippingCost}
        />
     </div>
   );

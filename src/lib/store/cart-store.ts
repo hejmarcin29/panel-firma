@@ -101,6 +101,13 @@ export const useCartStore = create<CartStore>()(
           0
         );
       },
+      
+      // New helper to get Cart Type
+      getCartType: () => {
+          const items = get().items;
+          if (items.length === 0) return 'empty';
+          return items.some(i => i.productId.startsWith('sample_')) ? 'sample' : 'production';
+      },
 
       getTotalItems: () => {
         return get().items.reduce((total, item) => total + item.quantity, 0);

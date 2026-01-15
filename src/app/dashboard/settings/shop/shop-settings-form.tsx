@@ -56,6 +56,7 @@ export default function ShopSettingsForm({ initialConfig, initialTpayConfig, ava
                 isShopEnabled: formData.get('isShopEnabled') === 'on',
                 samplePrice: Math.round(parseFloat(formData.get('samplePrice') as string) * 100),
                 sampleShippingCost: Math.round(parseFloat(formData.get('sampleShippingCost') as string) * 100),
+                palletShippingCost: Math.round(parseFloat(formData.get('palletShippingCost') as string) * 100), // Nowe pole
                 heroHeadline: formData.get('heroHeadline') as string,
                 heroSubheadline: formData.get('heroSubheadline') as string,
                 heroImage: formData.get('heroImage') as string,
@@ -234,6 +235,18 @@ export default function ShopSettingsForm({ initialConfig, initialTpayConfig, ava
                                             defaultValue={(config.sampleShippingCost / 100).toFixed(2)} 
                                             required
                                         />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="palletShippingCost">Koszt wysyłki paletowej (PLN brutto)</Label>
+                                        <Input 
+                                            id="palletShippingCost" 
+                                            name="palletShippingCost" 
+                                            type="number" 
+                                            step="0.01" 
+                                            defaultValue={config.palletShippingCost ? (config.palletShippingCost / 100).toFixed(2) : "0"} 
+                                            placeholder="np. 150.00"
+                                        />
+                                        <p className="text-xs text-muted-foreground w-full col-span-2">Doliczany do zamówień produkcyjnych.</p>
                                     </div>
                                 </div>
                                 <div className="pt-4 space-y-2">

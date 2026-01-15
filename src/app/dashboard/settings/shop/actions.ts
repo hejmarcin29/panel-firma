@@ -9,6 +9,7 @@ export type ShopConfig = {
     isShopEnabled: boolean;
     samplePrice: number;
     sampleShippingCost: number;
+    palletShippingCost?: number; // Koszt wysyłki palety (nowe)
     proformaBankName: string;
     proformaBankAccount: string;
     welcomeEmailTemplate?: string;
