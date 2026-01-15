@@ -333,9 +333,41 @@ export const orders = pgTable(
 		id: text('id').primaryKey(),
 		source: text('source').$type<OrderSource>().notNull(),
 		sourceOrderId: text('source_order_id'),
-		status: text('status').$type<OrderStatus>().notNull(),
+		status: text('status').$type<OrderStatus>().notNull(), // 'order.received', etc.
+        type: text('type').$type<OrderType>().notNull().default('production'),
         paymentMethod: text('payment_method').$type<PaymentMethod>(),
         transferTitle: text('transfer_title'),
+        
+        // Address Snapshots (JSON for flexibility & data integrity)
+        billingAddress: json('billing_address').$type<{
+            name: string;
+            street: string;
+            city: string;
+            postalCode: string;
+            country: string;
+            tpayTransactionId?: string;
+            phone?: string;
+            email?: string;
+            companyName?: string;
+            taxId?: string;
+        }>(),
+        shippingAddress: json('shipping_address').$type<{
+            name: string;
+            street: string;
+            city: string;
+            postalCode: string;
+            country: string;
+            phone?: string;
+            email?: string;
+        }>(),
+
+        // Logistics
+        shippingCost: integer('shipping_cost').notNull().default(0),
+        shippingCarrier: text('shipping_carrier'),
+        shippingTrackingNumber: text('shipping_tracking_number'),
+        
+        notes: text('notes'),
+
 		customerId: text('customer_id').references(() => customers.id, {
 			onDelete: 'set null',
 		}),

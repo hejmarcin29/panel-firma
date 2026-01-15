@@ -568,6 +568,13 @@
       "when": 1768424776907,
       "tag": "0080_short_red_ghost",
       "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "7",
+      "when": 1768476890232,
+      "tag": "0081_dry_preak",
+      "breakpoints": true
     }
   ]
 }
