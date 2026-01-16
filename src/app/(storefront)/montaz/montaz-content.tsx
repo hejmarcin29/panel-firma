@@ -6,9 +6,7 @@ import { MeasurementRequestForm } from "@/components/storefront/measurement-requ
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
-import { CheckCircle2, Hammer, Ruler, Truck, FileText, Phone, ArrowDownCircle, Info, Calculator, ShieldCheck } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AuditDrawer } from "@/components/storefront/audit-drawer";
 
 export function MontazContent() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -220,14 +218,14 @@ export function MontazContent() {
                          <AccordionItem value="faq-1">
                             <AccordionTrigger>Dlaczego audyt kosztuje 129 zł?</AccordionTrigger>
                             <AccordionContent>
-                                To nie jest "rzucenie okiem". To procedura techniczna z użyciem sprzętu pomiarowego (laser, higrometr CM). 
+                                To nie jest &quot;rzucenie okiem&quot;. To procedura techniczna z użyciem sprzętu pomiarowego (laser, higrometr CM). 
                                 129 zł to wynagrodzenie technika za jego czas, dojazd i sporządzenie wiążącego raportu z odpowiedzialnością.
                             </AccordionContent>
                         </AccordionItem>
                         <AccordionItem value="faq-2">
                             <AccordionTrigger>Czy montujecie w całej Polsce?</AccordionTrigger>
                             <AccordionContent>
-                                Działamy głównie w promieniu 100km od naszej siedziby. W przypadku większych inwestycji (>150 m²) możliwy dojazd w dalsze rejony.
+                                Działamy głównie w promieniu 100km od naszej siedziby. W przypadku większych inwestycji (&gt;150 m²) możliwy dojazd w dalsze rejony.
                             </AccordionContent>
                         </AccordionItem>
                     </Accordion>
@@ -257,43 +255,10 @@ export function MontazContent() {
       </AnimatePresence>
 
       {/* THE DRAWER (SHEET) */}
-      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent side="bottom" className="rounded-t-[20px] lg:rounded-none lg:max-w-md h-[85vh] lg:h-full flex flex-col p-0">
-             <div className="flex flex-col h-full bg-white">
-                <SheetHeader className="text-left space-y-2 p-6 pb-2 border-b bg-white">
-                    <SheetTitle className="text-xl font-bold flex items-center gap-2">
-                        <ShieldCheck className="h-5 w-5 text-primary" />
-                        Zamów Audyt Techniczny
-                    </SheetTitle>
-                    <SheetDescription className="text-xs">
-                        Wypełnij dane adresowe. Technik skontaktuje się w ciągu 24h, aby potwierdzić dogodny termin wizyty.
-                    </SheetDescription>
-                </SheetHeader>
-                
-                <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                    {/* Price Context */}
-                    <div className="bg-blue-50/50 rounded-xl p-4 border border-blue-100 flex justify-between items-center">
-                         <div>
-                            <div className="text-xs text-blue-600 font-semibold uppercase">Koszt usługi audytu</div>
-                            <div className="text-sm text-blue-800">Płatne przelewem / BLIK (Tpay)</div>
-                         </div>
-                         <div className="text-2xl font-bold text-blue-700">129 zł</div>
-                    </div>
-
-                    <div className="text-xs text-muted-foreground bg-slate-50 p-3 rounded-lg flex gap-2">
-                        <Info className="h-4 w-4 shrink-0" />
-                        Opłata obejmuje dojazd, pomiary laserowe, badanie wilgotności i kosztorys. Gwarantuje rezerwację terminu.
-                    </div>
-
-                    {/* Form */}
-                    <MeasurementRequestForm 
-                        onSuccess={() => setIsSheetOpen(false)}
-                        defaultMessage="Dzień dobry. Proszę o termin audytu technicznego (129 zł). Adres inwestycji..."
-                    />
-                </div>
-            </div>
-        </SheetContent>
-      </Sheet>
+      <AuditDrawer 
+        open={isSheetOpen} 
+        onOpenChange={setIsSheetOpen} 
+      />
     </div>
   );
 }

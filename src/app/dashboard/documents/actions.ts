@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db';
 import { documents, montageAttachments, quotes } from '@/lib/db/schema';
-import { desc, eq, not, or, and, inArray } from 'drizzle-orm';
+import { desc, eq, not, and, inArray } from 'drizzle-orm';
 
 export type UnifiedDocument = {
     id: string;
@@ -93,7 +93,7 @@ export async function getCompanyDocuments(): Promise<UnifiedDocument[]> {
 
     for (const att of attachments) {
         // Double check title just in case type is 'general' but title says 'Umowa' (historical data)
-        const isImportant = att.type !== 'general' || (att.title && (att.title.toLowerCase().includes('umowa') || att.title.toLowerCase().includes('protokół')));
+        // const isImportant = att.type !== 'general' || (att.title && (att.title.toLowerCase().includes('umowa') || att.title.toLowerCase().includes('protokół')));
         
         // Since we filtered in query, we mostly trust 'type', but let's be safe if query filter needs adjustment.
         // Actually the query filter above `not(inArray(..., ['general', 'photo']))` already does the heavy lifting.

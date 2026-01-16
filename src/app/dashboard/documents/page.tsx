@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { getCompanyDocuments } from './actions';
 import { DocumentsTable } from './_components/documents-table';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { FileText, FileCheck, Briefcase } from 'lucide-react';
 
 export default async function DocumentsPage() {

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { eq, and, sql, ne, inArray, type SQL } from 'drizzle-orm';
-import { createTransport } from 'nodemailer';
+// import { createTransport } from 'nodemailer';
 import { randomUUID } from 'crypto';
 
 import { sendNotification } from '@/lib/notifications/service';
@@ -27,7 +27,7 @@ import {
 	users,
     commissions,
     partnerCommissions,
-    mailAccounts,
+    // mailAccounts,
     // referralCommissions,
     type CustomerSource,
     orders,
@@ -2559,17 +2559,7 @@ export async function sendMeasurementRequestSms(montageId: string) {
     }
 }
 
-function decodeSecret(secret: string | null | undefined): string | null {
-	if (!secret) {
-		return null;
-	}
 
-	try {
-		return Buffer.from(secret, 'base64').toString('utf8');
-	} catch {
-		return null;
-	}
-}
 
 export async function sendDataRequest(montageId: string) {
     const user = await requireUser();

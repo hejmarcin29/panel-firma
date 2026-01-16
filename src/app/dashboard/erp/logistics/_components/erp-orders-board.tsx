@@ -14,12 +14,12 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { Package, Truck, CheckCircle2, AlertCircle, ArrowRight, Box } from "lucide-react";
+// import { Separator } from "@/components/ui/separator";
+import { Truck, CheckCircle2, AlertCircle, ArrowRight, Box } from "lucide-react";
 import { toast } from "sonner";
 import { createPurchaseOrder, receivePurchaseOrder, issueMaterialsToCrew, shipShopOrder, shipSamples } from '../actions';
 import { format } from 'date-fns';
-import { pl } from 'date-fns/locale';
+// import { pl } from 'date-fns/locale';
 
 interface ERPItemToOrder {
     id: string;
@@ -105,6 +105,7 @@ export function ERPOrdersBoard({ data }: ERPOrdersBoardProps) {
         });
     };
 
+    /*
     const handleReceiveOrder = (poId: string) => {
         startTransition(async () => {
             try {
@@ -115,6 +116,7 @@ export function ERPOrdersBoard({ data }: ERPOrdersBoardProps) {
             }
         });
     };
+    */
 
     const handleIssueMaterials = (montageId: string) => {
         startTransition(async () => {

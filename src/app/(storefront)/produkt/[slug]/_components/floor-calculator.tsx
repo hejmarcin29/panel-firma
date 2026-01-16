@@ -9,9 +9,9 @@ import { ShoppingCart, RefreshCcw, Check, Calculator } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/lib/store/cart-store";
 import { toast } from "sonner";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from "@/components/ui/sheet";
+import { Sheet, SheetTrigger } from "@/components/ui/sheet";
 import { calculateMontageEstimation, submitMontageLead } from "@/server/actions/calculator-actions";
-import { MeasurementRequestForm } from "@/components/storefront/measurement-request-form";
+import { AuditDrawer } from "@/components/storefront/audit-drawer";
 
 interface FloorCalculatorProps {
   product: {
@@ -149,10 +149,10 @@ export function FloorCalculator({
       }
   };
 
-  const handleSubmitLead = async () => {
-    setIsSubmitting(true);
-    const res = await submitMontageLead({
-        clientName: leadForm.name,
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-border/60 p-5 space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
           <RefreshCcw className="h-4 w-4 text-primary" />
           Kalkulator Błyskawiczny
         </h3>
@@ -353,95 +353,24 @@ export function FloorCalculator({
                 exit={{ opacity: 0, x: 10 }}
                 transition={{ duration: 0.2 }}
              >
-                 <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-                    <SheetTrigger asChild>
+                 <AuditDrawer 
+                    open={isSheetOpen} 
+                    onOpenChange={setIsSheetOpen}
+                    productContext={{
+                        productName: product.name,
+                        sku: product.sku,
+                        area: area,
+                        estimation: estimation
+                    }}
+                 >
                         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                             <Button size="lg" className="w-full h-12 text-base font-semibold bg-gray-900 hover:bg-black text-white shadow-xl shadow-gray-900/10">
                                 <Calculator className="mr-2 h-5 w-5" />
-                                Umów darmowy pomiar
+                                Umów Audyt (129 zł)
                             </Button>
                         </motion.div>
-                    </SheetTrigger>
-                    <SheetContent side="bottom" className="rounded-t-[20px] lg:rounded-none lg:max-w-md h-[85vh] lg:h-full flex flex-col">
-                        <SheetHeader className="text-left space-y-4 pb-6 border-b">
-                            <SheetTitle className="text-2xl font-playfair">Podsumowanie wstępne</SheetTitle>
-                            <SheetDescription>
-                                Potwierdź dane, aby zamówić pomiar weryfikacyjny.
-                            </SheetDescription>
-                        </SheetHeader>
-                        
-                        <div className="flex-1 overflow-y-auto py-6 space-y-8">
-                            {/* Summary Card */}
-                            <div className="bg-gray-50 rounded-xl p-4 space-y-3 border">
-                                <h4 className="font-semibold text-sm text-gray-900">Twój wybór:</h4>
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-gray-500">Produkt:</span>
-                                    <span className="font-medium truncate max-w-[200px]">{product.name}</span>
-                                </div>
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-gray-500">Powierzchnia:</span>
-                                    <span className="font-medium">{area} m²</span>
-                                </div>
-                                <div className="border-t pt-3 flex justify-between items-center">
-                                    <span className="text-gray-500 text-sm">Szacowany budżet:</span> p-0">
-                        <div className="flex flex-col h-full bg-white">
-                            <SheetHeader className="text-left space-y-2 p-6 pb-2 border-b bg-white">
-                                <SheetTitle className="text-xl font-bold">Darmowa Wycena Montażu</SheetTitle>
-                                <SheetDescription className="text-xs">
-                                    Wypełnij formularz. Otrzymasz wstępną ofertę z VAT 8% i umówimy pomiar.
-                                </SheetDescription>
-                            </SheetHeader>
-                            
-                            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                                {/* Summary Card */}
-                                <div className="bg-blue-50/50 rounded-xl p-4 space-y-2 border border-blue-100">
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-gray-500">Produkt:</span>
-                                        <span className="font-semibold text-gray-900 truncate max-w-[180px]">{product.name}</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-gray-500">Powierzchnia:</span>
-                                        <span className="font-medium">{area} m²</span>
-                                    </div>
-                                    {estimation && (
-                                    <div className="flex justify-between text-sm pt-2 border-t border-blue-100 mt-2">
-                                        <span className="text-gray-500">Szacowany koszt:</span>
-                                        <span className="font-bold text-blue-700">
-                                            ~{Math.round(estimation.totalGross8)} zł
-                                        </span>
-                                    </div>
-                                    )}
-                                </div>
-
-                                {/* Form */}
-                                <MeasurementRequestForm 
-                                    onSuccess={() => setIsSheetOpen(false)}
-                                    defaultMessage={`Zgłoszenie z karty produktu: ${product.name} (SKU: ${product.sku}).\nPowierzchnia: ok. ${area} m².\nSzacowany budżet: ${estimation ? `${Math.round(estimation.totalGross8)} zł` : 'nie wyliczono'}.`} 
-                                />
-                            </div>
-                        </divme="flex items-baseline gap-2">
-                             <span className="text-base font-bold text-gray-900">
-                                 {totalPrice.toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' })}
-                             </span>
-                             {isFlooring && (
-                                <span className="text-xs text-gray-400">
-                                    za {Math.round(totalArea * 100) / 100} m²
-                                </span>
-                             )}
-                         </div>
-                    </div>
-                    {isPurchasable ? (
-                        <Button size="default" className="shadow-md shrink-0" onClick={handleAddToCart}>
-                            <ShoppingCart className="mr-2 h-4 w-4" />
-                            Do koszyka
-                        </Button>
-                    ) : (
-                         <Button size="default" variant="secondary" disabled className="shrink-0">
-                            Niedostępny
-                        </Button>
-                    )}
-                </div>
-            </motion.div>
+                 </AuditDrawer>
+             </motion.div>
         )}
       </AnimatePresence>
     </div>

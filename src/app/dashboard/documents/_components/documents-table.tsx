@@ -17,9 +17,9 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
     Card, 
     CardContent, 
-    CardDescription, 
-    CardHeader, 
-    CardTitle 
+    // CardDescription, 
+    // CardHeader, 
+    // CardTitle 
 } from '@/components/ui/card';
 import { 
     DropdownMenu, 
@@ -35,10 +35,10 @@ import {
     Trash2, 
     Download, 
     Search, 
-    Filter,
+    // Filter,
     FileCheck,
     Briefcase,
-    FileImage,
+    // FileImage,
     ExternalLink
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -138,7 +138,7 @@ export function DocumentsTable({ initialDocuments }: DocumentsTableProps) {
                 toast.success('Dokument usunięty');
                 setDocuments(prev => prev.filter(d => d.id !== doc.id));
                 router.refresh();
-            } catch (error) {
+            } catch {
                 toast.error('Błąd usuwania dokumentu');
             }
         }
@@ -212,7 +212,7 @@ export function DocumentsTable({ initialDocuments }: DocumentsTableProps) {
                                             <CommandItem
                                                 key={ctx.id}
                                                 value={ctx.label}
-                                                onSelect={(currentValue) => {
+                                                onSelect={() => {
                                                     setContextFilter(ctx.id === contextFilter ? null : ctx.id);
                                                     setIsContextOpen(false);
                                                 }}

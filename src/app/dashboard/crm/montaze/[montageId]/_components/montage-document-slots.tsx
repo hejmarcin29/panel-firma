@@ -2,8 +2,8 @@
 
 import { FileIcon, CheckCircle, FileText, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { type InferSelectModel } from 'drizzle-orm';
-import { documents as documentsSchema } from '@/lib/db/schema';
+// import { type InferSelectModel } from 'drizzle-orm';
+// import { documents as documentsSchema } from '@/lib/db/schema';
 import type { Montage, MontageAttachment, MontageDocument } from "../../types";
 import { toast } from "sonner";
 import { deleteDocument } from "@/app/dashboard/crm/montaze/[montageId]/document-actions";

@@ -1,27 +1,17 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { quotes, type QuoteItem, type QuoteStatus, mailAccounts, montages, services } from '@/lib/db/schema';
+import { quotes, type QuoteItem, type QuoteStatus, montages, services } from '@/lib/db/schema';
 import { eq, desc, isNull } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { randomUUID } from 'crypto';
-import { createTransport } from 'nodemailer';
+// import { createTransport } from 'nodemailer';
 import { formatCurrency } from '@/lib/utils';
-import { getAppSetting, appSettingKeys } from '@/lib/settings';
+// import { getAppSetting, appSettingKeys } from '@/lib/settings';
 import { getCurrentSession } from '@/lib/auth/session';
 import { sendNotification } from '@/lib/notifications/service';
 
-function decodeSecret(secret: string | null | undefined): string | null {
-    if (!secret) {
-        return null;
-    }
 
-    try {
-        return Buffer.from(secret, 'base64').toString('utf8');
-    } catch {
-        return null;
-    }
-}
 
 export async function sendQuoteEmail(quoteId: string) {
     const session = await getCurrentSession();

@@ -2,7 +2,7 @@
 import { db } from '@/lib/db';
 import { notificationTemplates } from '@/lib/db/schema';
 import { NOTIFICATION_EVENTS, NotificationEventId } from '@/lib/notifications/events';
-import { eq } from 'drizzle-orm';
+// import { eq } from 'drizzle-orm';
 
 const EMAIL_TEMPLATES: Partial<Record<NotificationEventId, { subject: string, content: string }>> = {
     ORDER_CREATED: {
