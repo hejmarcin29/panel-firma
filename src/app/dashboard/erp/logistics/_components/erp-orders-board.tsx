@@ -306,58 +306,17 @@ export function ERPOrdersBoard({ data }: ERPOrdersBoardProps) {
                                             <p className="text-xs text-muted-foreground">{po.number}</p>
                                         </div>
                                     </div>
+                                    <div className="text-xs text-muted-foreground">
+                                        Data zamówienia: {new Date(po.orderDate).toLocaleDateString()}
+                                    </div>
+                                    <Button size="sm" variant="outline" className="w-full">
+                                        Oznacz jako dostarczone
+                                    </Button>
                                 </div>
                             ))}
                         </div>
-                                            <p className="text-xs text-muted-foreground">
-                                                {item.subtext || "Brak adresu"}
-                                            </p>
-                                        </div>
-                                        {item.type === 'shop_sample' ? (
-                                            <Package className="w-4 h-4 text-purple-500" />
-                                        ) : (
-                                            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                                        )}
-                                    </div>
-
-                                    {item.details?.installerName && (
-                                        <div className="text-xs bg-emerald-50 text-emerald-700 px-2 py-1 rounded flex items-center gap-1">
-                                            Ekipa: {item.details.installerName}
-                                        </div>
-                                    )}
-
-                                    {item.type === 'montage' && (
-                                        <Button 
-                                            className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white" 
-                                            size="sm"
-                                            onClick={() => handleIssueMaterials(item.id)}
-                                            disabled={isPending}
-                                        >
-                                            <ArrowRight className="w-3.5 h-3.5" />
-                                            Wydaj Ekipie
-                                        </Button>
-                                    )}
-
-                                    {item.type === 'shop_sample' && (
-                                        <Button 
-                                            className="w-full gap-2 bg-purple-600 hover:bg-purple-700 text-white" 
-                                            size="sm"
-                                            onClick={() => handleGenerateLabel(item.id)}
-                                            disabled={isPending}
-                                        >
-                                            <Package className="w-3.5 h-3.5" />
-                                            Generuj Etykietę (InPost)
-                                        </Button>
-                                    )}
-
-                                    {item.type === 'shop' && (
-                                         <Button 
-                                            className="w-full gap-2" 
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => handleManualShip(item.id)}
-                                            disabled={isPending}
-                                        >
+                    </ScrollArea>
+                </div>
                                             <Truck className="w-3.5 h-3.5" />
                                             Wyślij (Wpisz List)
                                         </Button>
