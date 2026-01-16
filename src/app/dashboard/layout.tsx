@@ -64,7 +64,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         );
     }
     
-    let urgentOrdersCount = 0;
+    const urgentOrdersCount = 0;
     // Legacy orders removed
     // try {
     //     urgentOrdersCount = await getUrgentOrdersCount();

@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils";
 import { 
     AlertCircle, 
     Briefcase, 
-    ShoppingCart, 
     ArrowUpRight,
     CreditCard,
     Info,
@@ -53,11 +52,9 @@ export function KPICards({
 
   useEffect(() => {
     const storedLeads = localStorage.getItem('kpi_last_seen_leads');
-    const storedOrders = localStorage.getItem('kpi_last_seen_orders');
     
     // eslint-disable-next-line 
     if (storedLeads) setLastSeenLeads(parseInt(storedLeads));
-    if (storedOrders) setLastSeenOrders(parseInt(storedOrders));
     setIsLoaded(true);
   }, []);
 
@@ -66,13 +63,8 @@ export function KPICards({
     setLastSeenLeads(newLeadsCount);
   };
 
-  const handleOrdersClick = () => {
-    localStorage.setItem('kpi_last_seen_orders', newOrdersCount.toString());
-    setLastSeenOrders(newOrdersCount);
-  };
-
   const hasNewLeads = leadsBreakdown ? leadsBreakdown.new > 0 : (isLoaded && newLeadsCount > lastSeenLeads);
-  const hasNewOrders = isLoaded && newOrdersCount > lastSeenOrders;
+
 
   const container = {
     hidden: { opacity: 0 },

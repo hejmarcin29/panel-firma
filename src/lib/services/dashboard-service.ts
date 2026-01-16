@@ -1,4 +1,4 @@
-import { desc, eq, asc, and, lt, or, isNull } from 'drizzle-orm';
+import { desc, eq, asc, and, isNull } from 'drizzle-orm';
 import { differenceInCalendarDays, addBusinessDays, startOfDay } from 'date-fns';
 import { db } from '@/lib/db';
 import {
@@ -91,8 +91,8 @@ export async function getDashboardStats(publicBaseUrl: string | null): Promise<D
     const kpiMontageThreatDays = await getAppSetting(appSettingKeys.kpiMontageThreatDays);
     const threatDays = Number(kpiMontageThreatDays ?? 7);
 
-    const kpiOrderUrgentDays = await getAppSetting(appSettingKeys.kpiOrderUrgentDays);
-    const orderUrgentDays = Number(kpiOrderUrgentDays ?? 3);
+    // const kpiOrderUrgentDays = await getAppSetting(appSettingKeys.kpiOrderUrgentDays);
+    // const orderUrgentDays = Number(kpiOrderUrgentDays ?? 3);
 
     const kpiAlertMissingMaterialStatusDays = await getAppSetting(appSettingKeys.kpiAlertMissingMaterialStatusDays);
     const missingMaterialStatusDays = Number(kpiAlertMissingMaterialStatusDays ?? 7);

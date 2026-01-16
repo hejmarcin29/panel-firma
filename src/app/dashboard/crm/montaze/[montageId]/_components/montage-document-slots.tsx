@@ -2,6 +2,8 @@
 
 import { FileIcon, CheckCircle, FileText, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { type InferSelectModel } from 'drizzle-orm';
+import { documents as documentsSchema } from '@/lib/db/schema';
 import type { Montage, MontageAttachment } from "../../types";
 import { toast } from "sonner";
 import { deleteDocument } from "@/app/dashboard/document-actions";
@@ -169,7 +171,10 @@ function DocumentSlot({ title, description, existingDocument, existingAttachment
     );
 }
 
-export function MontageDocumentSlots({ montage, userRoles }: { montage: Montage & { documents?: any[] }, userRoles?: string[] }) {
+
+type Document = InferSelectModel<typeof documentsSchema>;
+
+export function MontageDocumentSlots({ montage, userRoles }: { montage: Montage & { documents?: Document[] }, userRoles?: string[] }) {
     const roles = userRoles || [];
     const attachments = montage.attachments || [];
     const documents = montage.documents || [];

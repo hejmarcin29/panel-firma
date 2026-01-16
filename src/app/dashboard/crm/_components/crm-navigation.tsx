@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Users, Hammer, FileText, LayoutDashboard, Images, HardHat, Package } from 'lucide-react';
+import { Users, Hammer, FileText, LayoutDashboard, Images, HardHat } from 'lucide-react';
 
 export function CRMNavigation({ userRoles = [] }: { userRoles?: string[] }) {
     const pathname = usePathname();
