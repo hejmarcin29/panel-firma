@@ -158,11 +158,11 @@ export function VisualCommandCenter({ bestsellers, turnstileSiteKey }: VisualCom
             <Drawer.Portal>
                 <Drawer.Overlay className="fixed inset-0 z-50 bg-black/40" />
                 <Drawer.Content className="fixed bottom-0 left-0 right-0 z-50 mt-24 flex h-[92vh] flex-col rounded-t-[10px] bg-background outline-none">
-                    <div className="flex-1 rounded-t-[10px] bg-background p-4">
-                        <div className="mx-auto mb-8 h-1.5 w-12 rounded-full bg-muted-foreground/30" />
+                    <div className="flex h-full flex-col rounded-t-[10px] bg-background pt-4">
+                        <div className="mx-auto mb-6 h-1.5 w-12 shrink-0 rounded-full bg-muted-foreground/30" />
                         
                         {/* Search Section */}
-                        <div className="mb-6">
+                        <div className="mb-6 px-4">
                             <form onSubmit={handleSearch} className="relative">
                                 <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                                 <input
@@ -175,11 +175,11 @@ export function VisualCommandCenter({ bestsellers, turnstileSiteKey }: VisualCom
                             </form>
                         </div>
 
-                        <ScrollArea className="h-[calc(100vh-220px)] pr-4">
-                            <div className="space-y-8">
+                        <ScrollArea className="flex-1">
+                            <div className="space-y-8 pb-8">
                                 
                                 {/* Quick Navigation */}
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-2 gap-3 px-4">
                                     <Link 
                                         href="/sklep" 
                                         onClick={() => setOpen(false)}
@@ -201,14 +201,14 @@ export function VisualCommandCenter({ bestsellers, turnstileSiteKey }: VisualCom
                                 {/* Bestsellers */}
                                 {bestsellers.length > 0 && (
                                     <section>
-                                        <div className="mb-3 flex items-center justify-between">
+                                        <div className="mb-3 flex items-center justify-between px-4">
                                             <h3 className="flex items-center gap-2 font-semibold text-foreground">
                                                 <Sparkles className="h-4 w-4 text-amber-500" />
                                                 Polecane
                                             </h3>
                                         </div>
                                         <div 
-                                            className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none]"
+                                            className="flex gap-4 overflow-x-auto px-4 pb-4 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none]"
                                             data-vaul-no-drag
                                         >
                                             {bestsellers.map((product) => (
@@ -238,7 +238,7 @@ export function VisualCommandCenter({ bestsellers, turnstileSiteKey }: VisualCom
 
                                 {/* History */}
                                 {mounted && visitedProducts.length > 0 && (
-                                    <section>
+                                    <section className="px-4">
                                         <div className="mb-3 flex items-center justify-between">
                                             <h3 className="flex items-center gap-2 font-semibold text-foreground">
                                                 <History className="h-4 w-4 text-blue-500" />
@@ -285,7 +285,7 @@ export function VisualCommandCenter({ bestsellers, turnstileSiteKey }: VisualCom
                                 )}
 
                                 {/* Menu Links */}
-                                <div className="space-y-1 pt-4">
+                                <div className="space-y-1 px-4 pt-4">
                                      {/* Order Status Section */}
                                      <div className="mb-6 rounded-xl border bg-slate-50 p-4">
                                         <div className="mb-2 flex items-center gap-2 font-medium text-slate-800">
