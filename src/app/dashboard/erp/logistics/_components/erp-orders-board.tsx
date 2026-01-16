@@ -316,24 +316,6 @@ export function ERPOrdersBoard({ data }: ERPOrdersBoardProps) {
                             ))}
                         </div>
                     </ScrollArea>
-                </div>
-                                            <Truck className="w-3.5 h-3.5" />
-                                            Wyślij (Wpisz List)
-                                        </Button>
-                                    )}
-
-                                        <Package className="w-3.5 h-3.5" />
-                                        Przyjmij Dostawę
-                                    </Button>
-                                </div>
-                            ))}
-                             {data.inTransit.length === 0 && (
-                                <div className="text-center py-8 text-muted-foreground text-sm">
-                                    Pusto w transporcie 🚚
-                                </div>
-                            )}
-                        </div>
-                    </ScrollArea>
                 </CardContent>
             </Card>
 
