@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { orders, manualOrders, customers, mailAccounts, globalSettings } from '@/lib/db/schema';
+import { orders, customers, mailAccounts, globalSettings } from '@/lib/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { generateOrderMagicLink } from '@/app/dashboard/shop/orders/[id]/actions';
 import { createTransport } from 'nodemailer';
@@ -94,18 +94,6 @@ export async function resendOrderLink(email: string, turnstileToken?: string) {
             orderBy: [desc(orders.createdAt)]
         });
         if (lastShopOrder) orderId = lastShopOrder.id;
-    }
-
-    // If still no order, try manual orders (CRM)
-    if (!orderId) {
-        const lastManualOrder = await db.query.manualOrders.findFirst({
-            where: eq(manualOrders.billingEmail, email),
-            orderBy: [desc(manualOrders.createdAt)]
-        });
-        if (lastManualOrder) orderId = lastManualOrder.id;
-        
-        // If still no order, maybe it's in Shop Order but customer wasn't linked?
-        // Querying JSON columns is tricky, skipping for safety in this fast-fix.
     }
 
     if (!orderId) {

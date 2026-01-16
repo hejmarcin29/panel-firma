@@ -171,3 +171,21 @@ export async function uploadMontageCorrectionInvoice(montageId: string, formData
      revalidatePath(`/dashboard/crm/montaze/${montageId}`);
      return { success: true };
 }
+
+export async function deleteDocument(documentId: string, montageId?: string) {
+    await requireUser();
+    
+    // Fetch to know what to revalidate (or verify)
+    const doc = await db.query.documents.findFirst({
+        where: eq(documents.id, documentId),
+        columns: { montageId: true }
+    });
+
+    if (doc) {
+        await db.delete(documents).where(eq(documents.id, documentId));
+        const idToRevalidate = montageId || doc.montageId;
+        if (idToRevalidate) {
+             revalidatePath(`/dashboard/crm/montaze/${idToRevalidate}`);
+        }
+    }
+}

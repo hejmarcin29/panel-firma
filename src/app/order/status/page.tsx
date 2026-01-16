@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { db } from "@/lib/db";
-import { manualOrders, erpOrderTimeline, orders } from "@/lib/db/schema";
+import { erpOrderTimeline, orders } from "@/lib/db/schema";
 import { eq, asc } from "drizzle-orm";
 import { verifyMagicLinkToken } from "@/lib/auth/magic-link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -47,93 +47,58 @@ export default async function OrderStatusPage({ searchParams }: PageProps) {
         );
     }
 
-    // 1. Try Manual Order (CRM)
-    const manualOrder = await db.query.manualOrders.findFirst({
-        where: eq(manualOrders.id, orderId),
+    // Try Shop Order
+    const orderRaw = await db.query.orders.findFirst({
+        where: eq(orders.id, orderId),
         with: {
-            items: true // Fetch items
+            items: true,
+            documents: true
         }
     });
 
-    // 2. Try Shop Order (Storefront) if not found
-    let shopOrder = null;
-    if (!manualOrder) {
-        shopOrder = await db.query.orders.findFirst({
-            where: eq(orders.id, orderId),
-            with: {
-                items: true, // Fetch items
-                documents: true // Fetch documents
-            }
-        });
-    }
-
-    if (!manualOrder && !shopOrder) {
+    if (!orderRaw) {
         return notFound();
     }
 
     // Normalize Data for View
-    const orderItemsList = manualOrder 
-        ? manualOrder.items.map((item) => ({
-            id: item.id,
-            name: item.product,
-            quantity: item.quantity,
-            unit: 'szt.',
-            price: item.unitPrice
-        }))
-        : shopOrder!.items.map((item) => ({
-            id: item.id,
-            name: item.name,
-            quantity: item.quantity,
-            unit: 'szt.',
-            price: item.unitPrice
-        }));
+    const orderItemsList = orderRaw.items.map((item) => ({
+        id: item.id,
+        name: item.name,
+        quantity: item.quantity,
+        unit: 'szt.',
+        price: item.unitPrice
+    }));
 
-    const order = manualOrder 
-        ? {
-            id: manualOrder.id,
-            reference: manualOrder.reference,
-            createdAt: manualOrder.createdAt,
-            status: manualOrder.status,
-            totalGross: manualOrder.totalGross,
-            currency: manualOrder.currency,
-            billingEmail: manualOrder.billingEmail,
-            billingName: manualOrder.billingName,
-            isShop: false,
-            shippingCarrier: null,
-            shippingTrackingNumber: null,
-            documents: [] as { id: string; type: string; number: string | null; pdfUrl: string | null; createdAt: Date; }[] // Manual orders dont have documents relation in schema yet
-        }
-        : {
-            id: shopOrder!.id,
-            reference: shopOrder!.sourceOrderId || shopOrder!.id,
-            createdAt: shopOrder!.createdAt,
-            status: shopOrder!.status,
-            totalGross: shopOrder!.totalGross,
-            currency: shopOrder!.currency,
-            billingEmail: shopOrder!.billingAddress?.email || '',
-            billingName: shopOrder!.billingAddress?.name || '',
-            isShop: true,
-            shippingCarrier: shopOrder!.shippingCarrier,
-            shippingTrackingNumber: shopOrder!.shippingTrackingNumber,
-            documents: shopOrder!.documents || []
-        };
+    const order = {
+        id: orderRaw.id,
+        reference: orderRaw.sourceOrderId || orderRaw.displayNumber || orderRaw.id,
+        createdAt: orderRaw.createdAt,
+        status: orderRaw.status,
+        totalGross: orderRaw.totalGross,
+        currency: orderRaw.currency,
+        billingEmail: orderRaw.billingAddress?.email || '',
+        billingName: orderRaw.billingAddress?.name || '',
+        isShop: true,
+        shippingCarrier: orderRaw.shippingCarrier,
+        shippingTrackingNumber: orderRaw.shippingTrackingNumber,
+        documents: orderRaw.documents || []
+    };
 
-    // Fetch Timeline (Safe fetch)
+    // Fetch Timeline
     let timelineEvents: TimelineEvent[] = [];
     
-    // Only fetch from erpOrderTimeline if it's a manual order (due to FK constraints)
-    // OR if we know shop orders also write there (unlikely given schema).
-    if (!order.isShop) {
-        try {
-            const rawEvents = await db.query.erpOrderTimeline.findMany({
-                where: eq(erpOrderTimeline.orderId, orderId),
-                orderBy: asc(erpOrderTimeline.createdAt)
-            });
-            timelineEvents = rawEvents as unknown as TimelineEvent[];
-        } catch (e) {
-            console.error("Timeline fetch failed:", e);
-        }
-    } else {
+    try {
+        const rawEvents = await db.query.erpOrderTimeline.findMany({
+            where: eq(erpOrderTimeline.orderId, orderId),
+            orderBy: asc(erpOrderTimeline.createdAt)
+        });
+        timelineEvents = rawEvents as unknown as TimelineEvent[];
+    } catch (e) {
+        console.error("Timeline fetch failed:", e);
+    }
+
+    // If no timeline events (legacy or fresh shop order), add synthetic events
+    if (timelineEvents.length === 0) {
         // Construct Synthetic Timeline for Shop Orders
         timelineEvents.push({
             id: 'created',
@@ -144,7 +109,7 @@ export default async function OrderStatusPage({ searchParams }: PageProps) {
         });
         
         // Basic map of known states
-        if (order.status === 'order.paid' || order.status === 'order.fulfillment_confirmed' || order.status === 'order.sent') {
+        if (order.status === 'order.paid' || order.status === 'order.fulfillment_confirmed') {
              timelineEvents.push({
                 id: 'paid',
                 type: 'payment',
@@ -154,7 +119,7 @@ export default async function OrderStatusPage({ searchParams }: PageProps) {
             });
         }
         
-        if (order.status === 'order.sent') {
+        if (order.status === 'order.fulfillment_confirmed') {
              timelineEvents.push({
                 id: 'sent',
                 type: 'status_change',

@@ -16,7 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { db } from '@/lib/db';
-import { integrationLogs, mailAccounts, manualOrders, systemLogs, users } from '@/lib/db/schema';
+import { integrationLogs, mailAccounts, systemLogs, users } from '@/lib/db/schema';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
 import { getMontageChecklistTemplates } from '@/lib/montaze/checklist';
 import { getMontageAutomationRules } from '@/lib/montaze/automation';
@@ -294,12 +294,7 @@ export default async function SettingsPage() {
     const montageNotifications = montageNotificationsJson ? JSON.parse(montageNotificationsJson) : {};
     const montageAutomationSettings = montageAutomationSettingsJson ? JSON.parse(montageAutomationSettingsJson) : {};
 
-	const [pendingRow] = await db
-		.select({ count: sql<number>`count(*)` })
-		.from(manualOrders)
-		.where(eq(manualOrders.requiresReview, true));
-
-	const pendingReviewCount = Number(pendingRow?.count ?? 0);
+	const pendingReviewCount = 0; // Legacy manualOrders 'requiresReview' logic removed
 
 	const rawLogs = await db
 		.select({

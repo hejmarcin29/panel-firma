@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { customers, montages, manualOrders } from '@/lib/db/schema';
+import { customers, montages, orders } from '@/lib/db/schema';
 import { desc, eq, ilike, or, inArray, isNull, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { randomUUID } from 'crypto';
@@ -19,7 +19,7 @@ export type CustomerWithStats = typeof customers.$inferSelect & {
 };
 
 export type CustomerDetails = typeof customers.$inferSelect & {
-	orders: (typeof manualOrders.$inferSelect)[];
+	orders: (typeof orders.$inferSelect)[];
 	montages: (typeof montages.$inferSelect)[];
     architect?: {
         id: string;
@@ -139,36 +139,36 @@ export async function getCustomers(query?: string): Promise<CustomerWithStats[]>
         }
 	});
 
-    const emails = rows.map(c => c.email).filter(Boolean) as string[];
+    const customerIds = rows.map(c => c.id);
     
-    let customerOrders: Pick<typeof manualOrders.$inferSelect, 'billingEmail' | 'createdAt'>[] = [];
-    let customerMontages: Pick<typeof montages.$inferSelect, 'contactEmail' | 'createdAt'>[] = [];
+    let customerOrders: Pick<typeof orders.$inferSelect, 'customerId' | 'createdAt'>[] = [];
+    let customerMontages: Pick<typeof montages.$inferSelect, 'customerId' | 'createdAt'>[] = [];
 
-    if (emails.length > 0) {
-        customerOrders = await db.query.manualOrders.findMany({
-            where: inArray(manualOrders.billingEmail, emails),
+    if (customerIds.length > 0) {
+        customerOrders = await db.query.orders.findMany({
+            where: inArray(orders.customerId, customerIds),
             columns: {
-                billingEmail: true,
+                customerId: true,
                 createdAt: true,
             }
         });
 
         customerMontages = await db.query.montages.findMany({
-            where: inArray(montages.contactEmail, emails),
+            where: inArray(montages.customerId, customerIds),
             columns: {
-                contactEmail: true,
+                customerId: true,
                 createdAt: true,
             }
         });
     }
 
 	return rows.map((c) => {
-        const myOrders = customerOrders.filter(o => o.billingEmail === c.email);
+        const myOrders = customerOrders.filter(o => o.customerId === c.id);
         const lastOrderDate = myOrders.length > 0 
             ? myOrders.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0].createdAt 
             : null;
 
-        const myMontages = customerMontages.filter(m => m.contactEmail === c.email);
+        const myMontages = customerMontages.filter(m => m.customerId === c.id);
         const lastMontageDate = myMontages.length > 0
             ? myMontages.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0].createdAt
             : null;
@@ -232,22 +232,23 @@ export async function getCustomerDetails(customerId: string): Promise<CustomerDe
 		throw new Error('Customer not found');
 	}
 
-    let customerOrders: (typeof manualOrders.$inferSelect)[] = [];
+    let customerOrders: (typeof orders.$inferSelect)[] = [];
     let customerMontages: (typeof montages.$inferSelect)[] = [];
 
-    if (customer.email) {
-        customerOrders = await db.query.manualOrders.findMany({
-            where: eq(manualOrders.billingEmail, customer.email),
-            orderBy: [desc(manualOrders.createdAt)],
-            limit: 5,
-        });
+    customerOrders = await db.query.orders.findMany({
+        where: eq(orders.customerId, customerId),
+        orderBy: [desc(orders.createdAt)],
+        limit: 5,
+    });
 
-        customerMontages = await db.query.montages.findMany({
-            where: eq(montages.contactEmail, customer.email),
-            orderBy: [desc(montages.createdAt)],
-            limit: 5,
-        });
-    }
+    customerMontages = await db.query.montages.findMany({
+        where: and(
+            eq(montages.customerId, customerId),
+            isNull(montages.deletedAt)
+        ),
+        orderBy: [desc(montages.createdAt)],
+        limit: 5,
+    });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const architect = (customer as any).architect;

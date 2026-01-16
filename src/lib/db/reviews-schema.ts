@@ -1,6 +1,6 @@
 import { pgTable, text, integer, boolean, timestamp, json, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { erpProducts, manualOrders } from './schema';
+import { erpProducts, orders } from './schema';
 
 // --- OPINIE PRODUKTOWE ---
 
@@ -23,7 +23,7 @@ export const erpProductReviews = pgTable('erp_product_reviews', {
     status: text('status').$type<ReviewStatus>().default('pending').notNull(),
     
     // Opcjonalne powiązanie z zamówieniem (dla weryfikacji)
-    orderId: text('order_id').references(() => manualOrders.id),
+    orderId: text('order_id').references(() => orders.id),
 
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -37,9 +37,9 @@ export const erpProductReviewsRelations = relations(erpProductReviews, ({ one })
         fields: [erpProductReviews.productId],
         references: [erpProducts.id],
     }),
-    order: one(manualOrders, {
+    order: one(orders, {
         fields: [erpProductReviews.orderId],
-        references: [manualOrders.id],
+        references: [orders.id],
     }),
 }));
 
@@ -50,7 +50,7 @@ export type TimelineType = (typeof timelineType)[number];
 
 export const erpOrderTimeline = pgTable('erp_order_timeline', {
     id: text('id').primaryKey(),
-    orderId: text('order_id').notNull().references(() => manualOrders.id),
+    orderId: text('order_id').notNull().references(() => orders.id),
     
     type: text('type').notNull(), // Kategoria zdarzenia
     title: text('title').notNull(), // Np. "Płatność Tpay potwierdzona"
@@ -65,8 +65,8 @@ export const erpOrderTimeline = pgTable('erp_order_timeline', {
 }));
 
 export const erpOrderTimelineRelations = relations(erpOrderTimeline, ({ one }) => ({
-    order: one(manualOrders, {
+    order: one(orders, {
         fields: [erpOrderTimeline.orderId],
-        references: [manualOrders.id],
+        references: [orders.id],
     }),
 }));

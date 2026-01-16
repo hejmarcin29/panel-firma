@@ -4,9 +4,9 @@ import { FileIcon, CheckCircle, FileText, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type InferSelectModel } from 'drizzle-orm';
 import { documents as documentsSchema } from '@/lib/db/schema';
-import type { Montage, MontageAttachment } from "../../types";
+import type { Montage, MontageAttachment, MontageDocument } from "../../types";
 import { toast } from "sonner";
-import { deleteDocument } from "@/app/dashboard/document-actions";
+import { deleteDocument } from "@/app/dashboard/crm/montaze/[montageId]/document-actions";
 import { deleteMontageAttachment } from "../../actions";
 import { 
     UploadMontageProformaDialog, 
@@ -25,6 +25,8 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
   } from "@/components/ui/alert-dialog";
+
+type Document = MontageDocument;
 
 interface DocumentSlotProps {
     title: string;
@@ -171,8 +173,6 @@ function DocumentSlot({ title, description, existingDocument, existingAttachment
     );
 }
 
-
-type Document = InferSelectModel<typeof documentsSchema>;
 
 export function MontageDocumentSlots({ montage, userRoles }: { montage: Montage & { documents?: Document[] }, userRoles?: string[] }) {
     const roles = userRoles || [];

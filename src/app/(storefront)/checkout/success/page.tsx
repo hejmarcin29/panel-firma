@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, Home, Package } from "lucide-react";
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { manualOrders, orders } from "@/lib/db/schema";
+import { orders } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 
@@ -45,26 +45,6 @@ export default async function CheckoutSuccessPage({ searchParams }: SuccessPageP
             type: shopOrder.type,
             paymentMethod: shopOrder.paymentMethod,
         };
-    } else {
-        // 2. Fallback to Manual Orders (rare for storefront success, but possible if redirected manually)
-        const manualOrder = await db.query.manualOrders.findFirst({
-            where: eq(manualOrders.id, orderId),
-            columns: {
-                reference: true,
-                billingEmail: true,
-                type: true, 
-                paymentMethod: true, // might be undefined in manualOrders based on schema?
-            }
-        });
-        
-        if (manualOrder) {
-            order = {
-                reference: manualOrder.reference,
-                billingEmail: manualOrder.billingEmail,
-                type: manualOrder.type || 'production',
-                paymentMethod: manualOrder.paymentMethod || 'manual',
-            };
-        }
     }
 
     if (!order) {

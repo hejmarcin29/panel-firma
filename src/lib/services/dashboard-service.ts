@@ -1,4 +1,4 @@
-import { desc, eq, asc, and, isNull } from 'drizzle-orm';
+import { desc, eq, asc, and, isNull, count } from 'drizzle-orm';
 import { differenceInCalendarDays, addBusinessDays, startOfDay } from 'date-fns';
 import { db } from '@/lib/db';
 import {
@@ -7,6 +7,7 @@ import {
 	montageNotes,
 	montageTasks,
 	montages,
+    orders,
     type MontageStatus,
 } from '@/lib/db/schema';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
@@ -76,6 +77,7 @@ export interface DashboardStats {
         pendingContractsCount: number;
         urgentTasksCount: number;
         todoCount: number;
+        newOrdersCount: number;
     };
     upcomingMontagesStats: {
         montages7Days: MontageSimple[];
@@ -245,6 +247,12 @@ export async function getDashboardStats(publicBaseUrl: string | null): Promise<D
     // Let's make newLeadsCount just 'new_lead' + 'contact_attempt' + 'contact_established' to be safe,
     // although the card will use the breakdown.
     const newLeadsCount = newCount + attemptCount + establishedCount;
+
+    const newOrdersCount = await db
+        .select({ count: count() })
+        .from(orders)
+        .where(eq(orders.status, 'order.received'))
+        .then(res => res[0]?.count ?? 0);
 
     const pendingPaymentsCount = allMontages.filter(m => 
         m.status === 'waiting_for_deposit' || 
@@ -429,6 +437,7 @@ export async function getDashboardStats(publicBaseUrl: string | null): Promise<D
             pendingContractsCount,
             urgentTasksCount,
             todoCount: 0,
+            newOrdersCount,
         },
         upcomingMontagesStats: {
             montages7Days,
