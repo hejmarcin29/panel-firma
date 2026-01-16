@@ -11,6 +11,7 @@ const links = [
     { href: '/dashboard/zadania', label: 'Zadania' },
 	{ href: '/dashboard/calendar', label: 'Kalendarz' },
     { href: '/dashboard/crm', label: 'CRM', labelForInstaller: 'Moje Zlecenia' },
+    { href: '/dashboard/documents', label: 'Dokumenty' },
 	{ href: '/dashboard/erp/products', label: 'Produkty' },
     { href: '/dashboard/erp', label: 'ERP' },
     { href: '/dashboard/shop', label: 'Sklep' },
@@ -47,7 +48,7 @@ export function DashboardNav({ leadsCount = 0, userRoles = ['admin'] }: { leadsC
              return allowedLinks.includes(link.href);
         }
 
-        const restrictedLinks = ['/dashboard/products', '/dashboard/mail', '/dashboard/wallet', '/dashboard/erp'];
+        const restrictedLinks = ['/dashboard/products', '/dashboard/mail', '/dashboard/wallet', '/dashboard/erp', '/dashboard/documents'];
         return !restrictedLinks.includes(link.href);
     });
 

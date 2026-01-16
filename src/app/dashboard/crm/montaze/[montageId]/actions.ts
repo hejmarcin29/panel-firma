@@ -107,8 +107,8 @@ export async function getMontageDetails(montageId: string) {
             documents: {
                 orderBy: desc(documents.createdAt),
             },
-            settlement: true,
-            floorProducts: true,
+            // settlement: true,
+            // floorProducts: true,
         },
     });
 
