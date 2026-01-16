@@ -1,7 +1,7 @@
 import {
     boolean,
     index,
-    integer,
+    // integer,
     jsonb,
     pgTable,
     text,
@@ -10,7 +10,7 @@ import {
     varchar,
     pgEnum
 } from 'drizzle-orm/pg-core';
-import { relations } from 'drizzle-orm';
+// import { relations } from 'drizzle-orm';
 
 // Enums
 export const notificationChannelEnum = pgEnum('notification_channel', ['email', 'sms', 'system']);

@@ -3,7 +3,7 @@
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { MeasurementRequestForm } from "@/components/storefront/measurement-request-form";
 import { ShieldCheck, Info } from "lucide-react";
-import { ReactNode } from "react";
+// import { ReactNode } from "react";
 
 export interface AuditProductContext {
   productName: string;
@@ -23,10 +23,14 @@ interface AuditDrawerProps {
 
 export function AuditDrawer({ open, onOpenChange, productContext }: AuditDrawerProps) {
   
-  // Generujemy domyślną wiadomość w zależności od kontekstu
-  const defaultMessage = productContext 
-    ? `Zgłoszenie na audyt (129 zł).\nProdukt: ${productContext.productName} (SKU: ${productContext.sku}).\nPowierzchnia: ok. ${productContext.area} m².\nSzacowany budżet całości: ${productContext.estimation ? `${Math.round(productContext.estimation.totalGross8)} zł` : 'nie wyliczono'}.`
-    : "Dzień dobry. Proszę o termin audytu technicznego (129 zł). Adres inwestycji...";
+  // Generujemy wiadomość tylko jeśli mamy kontekst produktu (Kalkulator)
+  const productMessage = productContext 
+    ? `Produkt: ${productContext.productName} (~${productContext.area} m²)
+
+Adres inwestycji: ...
+Stan: Nowy dom / Remont
+Podłoże: ...`
+    : undefined;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -89,7 +93,7 @@ export function AuditDrawer({ open, onOpenChange, productContext }: AuditDrawerP
                 {/* Form */}
                 <MeasurementRequestForm 
                     onSuccess={() => onOpenChange(false)}
-                    defaultMessage={defaultMessage}
+                    defaultMessage={productMessage}
                 />
             </div>
         </div>

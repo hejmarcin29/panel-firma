@@ -9,7 +9,6 @@ import { ShoppingCart, RefreshCcw, Check, Calculator } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/lib/store/cart-store";
 import { toast } from "sonner";
-import { Sheet, SheetTrigger } from "@/components/ui/sheet";
 import { calculateMontageEstimation, submitMontageLead } from "@/server/actions/calculator-actions";
 import { AuditDrawer } from "@/components/storefront/audit-drawer";
 
@@ -351,8 +350,8 @@ export function FloorCalculator({
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.2 }}
              >
+                 <>
                  <AuditDrawer 
                     open={isSheetOpen} 
                     onOpenChange={setIsSheetOpen}
@@ -370,6 +369,7 @@ export function FloorCalculator({
                             </Button>
                         </motion.div>
                  </AuditDrawer>
+                 </>
              </motion.div>
         )}
       </AnimatePresence>

@@ -116,7 +116,7 @@ const SMS_TEMPLATES: Partial<Record<NotificationEventId, string>> = {
 async function seed() {
     console.log('🌱 Seeding notification templates...');
 
-    for (const [key, eventDef] of Object.entries(NOTIFICATION_EVENTS)) {
+    for (const key of Object.keys(NOTIFICATION_EVENTS)) {
         const eventId = key as NotificationEventId;
         
         // 1. Seed Email

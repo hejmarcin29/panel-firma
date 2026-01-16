@@ -172,7 +172,7 @@ export default async function OrderStatusPage({ searchParams }: PageProps) {
                                         />
 
                                         <div className="flex justify-between w-full">
-                                            {steps.map((step, idx) => (
+                                            {steps.map((step) => (
                                                 <div key={step.id} className="flex flex-col items-center gap-3">
                                                     <div className={`
                                                         w-9 h-9 rounded-full flex items-center justify-center border-2 transition-all duration-500 bg-white

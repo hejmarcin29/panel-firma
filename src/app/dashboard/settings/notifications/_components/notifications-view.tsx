@@ -6,14 +6,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Edit2, Mail, MessageSquare, Zap } from 'lucide-react';
+import { Edit2, Mail, MessageSquare } from 'lucide-react';
 import { NOTIFICATION_EVENTS } from '@/lib/notifications/events';
 import { TemplateEditor } from './template-editor';
 import { toggleChannel } from '../actions';
 import { toast } from 'sonner';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function NotificationsView({ templates }: { templates: any[] }) {
     const [activeTab, setActiveTab] = useState('shop');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [editingTemplate, setEditingTemplate] = useState<{ t: any, def: any } | null>(null);
 
     // Group events by category
@@ -32,7 +34,7 @@ export function NotificationsView({ templates }: { templates: any[] }) {
         try {
             await toggleChannel(eventId, channel, !currentState);
             toast.success('Zaktualizowano');
-        } catch (e) {
+        } catch {
             toast.error('Błąd aktualizacji');
         }
     };

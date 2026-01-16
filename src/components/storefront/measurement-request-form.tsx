@@ -16,7 +16,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Loader2, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { Loader2, ShieldCheck } from "lucide-react";
 import { submitLeadAction } from "@/app/(storefront)/_actions/submit-lead";
 import Script from "next/script";
 
@@ -46,17 +46,23 @@ export function MeasurementRequestForm({ defaultMessage, onSuccess }: Measuremen
       phone: "",
       email: "",
       city: "",
-      message: defaultMessage || "Dzień dobry, proszę o wycenę montażu podłogi...",
+      message: defaultMessage || `Adres inwestycji: ...
+Stan: Nowy dom / Remont
+Podłoże: ...
+
+Wiadomość: ...`,
       _gotcha: "",
     },
   });
 
   // Turnstile Init
   useEffect(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const w = window as any;
       // If turnstile script is loaded, render widget
-      if ((window as any).turnstile) {
+      if (w.turnstile) {
           try {
-             const id = (window as any).turnstile.render("#turnstile-container", {
+             const id = w.turnstile.render("#turnstile-container", {
                  sitekey: "0x4AAAAAACLPyp7wyrIDy3Lq",
                  theme: "light",
                  callback: (token: string) => setTurnstileToken(token),
@@ -68,8 +74,8 @@ export function MeasurementRequestForm({ defaultMessage, onSuccess }: Measuremen
       }
 
       return () => {
-          if (turnstileRef.current && (window as any).turnstile) {
-              try { (window as any).turnstile.remove(turnstileRef.current); } catch {}
+          if (turnstileRef.current && w.turnstile) {
+              try { w.turnstile.remove(turnstileRef.current); } catch {}
           }
       }
   }, []);
@@ -95,7 +101,7 @@ export function MeasurementRequestForm({ defaultMessage, onSuccess }: Measuremen
       } else {
         toast.error(result.message);
       }
-    } catch (error) {
+    } catch {
       toast.error("Wystąpił błąd. Spróbuj ponownie.");
     } finally {
       setIsSubmitting(false);
@@ -108,10 +114,12 @@ export function MeasurementRequestForm({ defaultMessage, onSuccess }: Measuremen
         src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback" 
         strategy="lazyOnload" 
         onLoad={() => {
+             // eslint-disable-next-line @typescript-eslint/no-explicit-any
+             const w = window as any;
              // Retry render on load
-             if ((window as any).turnstile && !turnstileRef.current) {
+             if (w.turnstile && !turnstileRef.current) {
                 try {
-                    const id = (window as any).turnstile.render("#turnstile-container", {
+                    const id = w.turnstile.render("#turnstile-container", {
                         sitekey: "0x4AAAAAACLPyp7wyrIDy3Lq",
                         theme: "light",
                         callback: (token: string) => setTurnstileToken(token),
@@ -197,8 +205,8 @@ export function MeasurementRequestForm({ defaultMessage, onSuccess }: Measuremen
                 <FormLabel>Wiadomość / Zakres prac</FormLabel>
                 <FormControl>
                   <Textarea 
-                    placeholder="Interesuje mnie montaż podłogi winylowej z klejeniem..." 
-                    className="min-h-[80px]"
+                    placeholder="Opisz zakres prac..." 
+                    className="min-h-[140px] text-base"
                     {...field} 
                   />
                 </FormControl>
@@ -220,7 +228,7 @@ export function MeasurementRequestForm({ defaultMessage, onSuccess }: Measuremen
                     Wysyłanie...
                 </>
             ) : (
-                "Wyślij Zgłoszenie (Pomiar GRATIS)"
+                "Wyślij Zgłoszenie"
             )}
           </Button>
           

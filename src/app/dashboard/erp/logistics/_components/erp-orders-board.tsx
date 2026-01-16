@@ -17,7 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 // import { Separator } from "@/components/ui/separator";
 import { Truck, CheckCircle2, AlertCircle, ArrowRight, Box } from "lucide-react";
 import { toast } from "sonner";
-import { createPurchaseOrder, receivePurchaseOrder, issueMaterialsToCrew, shipShopOrder, shipSamples } from '../actions';
+import { createPurchaseOrder, issueMaterialsToCrew } from '../actions';
 import { format } from 'date-fns';
 // import { pl } from 'date-fns/locale';
 
@@ -129,9 +129,10 @@ export function ERPOrdersBoard({ data }: ERPOrdersBoardProps) {
         });
     };
 
+    /*
     const handleGenerateLabel = (orderId: string) => {
         startTransition(async () => {
-            try {
+             try {
                 const res = await shipSamples(orderId);
                 if (res.success) {
                     toast.success("Etykieta wygenerowana! (Symulacja)");
@@ -143,7 +144,9 @@ export function ERPOrdersBoard({ data }: ERPOrdersBoardProps) {
             }
         });
     };
+    */
 
+    /*
     const handleManualShip = (orderId: string) => {
         const tracking = window.prompt("Podaj numer listu przewozowego:");
         if (!tracking) return;
@@ -157,6 +160,7 @@ export function ERPOrdersBoard({ data }: ERPOrdersBoardProps) {
             }
         });
     }
+    */
 
     const handleDropship = (orderId: string) => {
          const tracking = window.prompt("Podaj numer listu przewozowego (Dropshipping):");

@@ -45,8 +45,9 @@ export async function sendEmailChannel(to: string, subject: string, html: string
         });
         
         return { success: true, providerId: `smtp-${Date.now()}` };
-    } catch (e: any) {
+    } catch (e: unknown) {
         console.error('CoreNotification: Email send failed', e);
-        return { success: false, error: e.message || 'Unknown error' };
+        const errorMessage = e instanceof Error ? e.message : 'Unknown error';
+        return { success: false, error: errorMessage };
     }
 }

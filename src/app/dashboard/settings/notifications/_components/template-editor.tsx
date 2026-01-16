@@ -6,15 +6,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+// import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, Mail, MessageSquare, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { updateTemplate, sendTest } from '../actions';
 
 interface TemplateEditorProps {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     template: any; // Using any for simplicity in rapid dev, or define Type
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     eventDef: any;
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -44,7 +46,7 @@ export function TemplateEditor({ template, eventDef, open, onOpenChange }: Templ
             await updateTemplate(template.id, { subject, content });
             toast.success('Szablon zapisany');
             onOpenChange(false);
-        } catch (e) {
+        } catch {
             toast.error('Błąd zapisu');
         } finally {
             setIsSaving(false);
@@ -61,7 +63,7 @@ export function TemplateEditor({ template, eventDef, open, onOpenChange }: Templ
             } else {
                 toast.error('Błąd wysyłki testu: ' + res?.error);
             }
-        } catch (e) {
+        } catch {
             toast.error('Błąd');
         } finally {
             setIsTesting(false);
