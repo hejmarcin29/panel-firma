@@ -21,7 +21,8 @@ import {
     Link as LinkIcon,
     History,
     Download,
-    User
+    User, 
+    Trash2
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { 
@@ -44,6 +45,18 @@ import { UploadProformaDialog } from '../../_components/UploadProformaDialog';
 import { UploadFinalInvoiceDialog } from '../../_components/UploadFinalInvoiceDialog';
 import { UploadAdvanceInvoiceDialog } from '../../_components/UploadAdvanceInvoiceDialog';
 import { UploadCorrectionDialog } from '../../_components/UploadCorrectionDialog';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+  } from "@/components/ui/alert-dialog";
+import { deleteDocument } from "../../../../document-actions";
 
 
 interface OrderItemDetails {
@@ -91,6 +104,7 @@ interface OrderDetailsClientProps {
     order: OrderDetails; 
     items: OrderItemDetails[];
     timelineEvents: TimelineEvent[];
+    isAdmin: boolean;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -124,7 +138,7 @@ const PANEL_FLOW = [
     { id: 'order.closed', label: 'Faktura Końcowa' }
 ];
 
-export function OrderDetailsClient({ order, items, timelineEvents }: OrderDetailsClientProps) {
+export function OrderDetailsClient({ order, items, timelineEvents, isAdmin }: OrderDetailsClientProps) {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
     const [status, setStatus] = useState(order.status);
@@ -133,6 +147,17 @@ export function OrderDetailsClient({ order, items, timelineEvents }: OrderDetail
     const [carrier, setCarrier] = useState(order.shippingCarrier || 'other');
     const [trackingNumber, setTrackingNumber] = useState(order.shippingTrackingNumber || '');
     const [isTrackingSaving, setIsTrackingSaving] = useState(false);
+
+    const handleDeleteDocument = async (docId: string) => {
+        try {
+            await deleteDocument(docId, `/dashboard/shop/orders/${order.id}`);
+            toast.success('Dokument usunięty');
+        } catch (error) {
+             // eslint-disable-next-line @typescript-eslint/no-explicit-any
+           const msg = (error as any)?.message || 'Błąd usuwania';
+           toast.error(msg);
+        }
+    };
 
     async function handleUpdateTracking() {
         setIsTrackingSaving(true);
@@ -566,15 +591,42 @@ export function OrderDetailsClient({ order, items, timelineEvents }: OrderDetail
                                                     <p className="text-xs text-slate-500 capitalize">{doc.type.replace('_', ' ') || doc.type}</p>
                                                 </div>
                                             </div>
-                                            {doc.pdfUrl ? (
-                                                <Button size="icon" variant="ghost" asChild title="Pobierz PDF">
-                                                    <a href={doc.pdfUrl} target="_blank" rel="noopener noreferrer">
-                                                        <Download className="h-4 w-4 text-slate-600" />
-                                                    </a>
-                                                </Button>
-                                            ) : (
-                                                <Badge variant="outline">Przetwarzanie</Badge>
-                                            )}
+                                            <div className="flex items-center gap-1">
+                                                {doc.pdfUrl ? (
+                                                    <Button size="icon" variant="ghost" asChild title="Pobierz PDF">
+                                                        <a href={doc.pdfUrl} target="_blank" rel="noopener noreferrer">
+                                                            <Download className="h-4 w-4 text-slate-600" />
+                                                        </a>
+                                                    </Button>
+                                                ) : (
+                                                    <Badge variant="outline">Przetwarzanie</Badge>
+                                                )}
+
+                                                {isAdmin && (
+                                                    <AlertDialog>
+                                                        <AlertDialogTrigger asChild>
+                                                            <Button size="icon" variant="ghost" className="text-red-400 hover:text-red-600 hover:bg-red-50">
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </AlertDialogTrigger>
+                                                        <AlertDialogContent>
+                                                            <AlertDialogHeader>
+                                                                <AlertDialogTitle>Czy na pewno usunąć dokument?</AlertDialogTitle>
+                                                                <AlertDialogDescription>
+                                                                    Usuwasz dokument: <b>{doc.number}</b>.<br/>
+                                                                    Ta operacja jest nieodwracalna. Będzie wymagane ponowne wgranie dokumentu.
+                                                                </AlertDialogDescription>
+                                                            </AlertDialogHeader>
+                                                            <AlertDialogFooter>
+                                                                <AlertDialogCancel>Anuluj</AlertDialogCancel>
+                                                                <AlertDialogAction onClick={() => handleDeleteDocument(doc.id)} className="bg-red-600 hover:bg-red-700">
+                                                                    Usuń
+                                                                </AlertDialogAction>
+                                                            </AlertDialogFooter>
+                                                        </AlertDialogContent>
+                                                    </AlertDialog>
+                                                )}
+                                            </div>
                                         </div>
                                     ))}
                                 </div>

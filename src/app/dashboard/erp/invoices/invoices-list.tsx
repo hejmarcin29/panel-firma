@@ -12,7 +12,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { FileText, Calendar, CreditCard } from 'lucide-react';
+import { FileText, Calendar, CreditCard, Trash2 } from 'lucide-react';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+  } from "@/components/ui/alert-dialog";
+import { toast } from 'sonner';
+import { deleteDocument } from '../../document-actions';
 
 interface Invoice {
   id: string;
@@ -26,6 +39,7 @@ interface Invoice {
 
 interface InvoicesListProps {
   data: Invoice[];
+  isAdmin: boolean;
 }
 
 const container = {
@@ -43,7 +57,7 @@ const item = {
   show: { opacity: 1, y: 0 }
 };
 
-export function InvoicesList({ data }: InvoicesListProps) {
+export function InvoicesList({ data, isAdmin }: InvoicesListProps) {
   if (data.length === 0) {
     return (
       <Card>
@@ -53,6 +67,17 @@ export function InvoicesList({ data }: InvoicesListProps) {
       </Card>
     );
   }
+
+  const handleDeleteDocument = async (docId: string) => {
+    try {
+        await deleteDocument(docId, '/dashboard/erp/invoices');
+        toast.success('Dokument usunięty');
+    } catch (error) {
+         // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       const msg = (error as any)?.message || 'Błąd usuwania';
+       toast.error(msg);
+    }
+};
 
   return (
     <motion.div variants={container} initial="hidden" animate="show">
@@ -92,13 +117,40 @@ export function InvoicesList({ data }: InvoicesListProps) {
                     {invoice.grossAmount ? (invoice.grossAmount / 100).toFixed(2) + ' PLN' : '-'}
                   </TableCell>
                   <TableCell className="text-right">
-                    {invoice.pdfUrl && (
-                      <Button variant="ghost" size="sm" asChild>
-                        <a href={invoice.pdfUrl} target="_blank" rel="noopener noreferrer">
-                          <FileText className="h-4 w-4" />
-                        </a>
-                      </Button>
-                    )}
+                    <div className="flex justify-end gap-1">
+                        {invoice.pdfUrl && (
+                        <Button variant="ghost" size="sm" asChild>
+                            <a href={invoice.pdfUrl} target="_blank" rel="noopener noreferrer">
+                            <FileText className="h-4 w-4" />
+                            </a>
+                        </Button>
+                        )}
+
+                        {isAdmin && (
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button size="sm" variant="ghost" className="text-red-400 hover:text-red-600 hover:bg-red-50">
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Czy na pewno usunąć dokument?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            Usuwasz dokument: <b>{invoice.number}</b>.<br/>
+                                            Ta operacja jest nieodwracalna. Będzie wymagane ponowne wgranie dokumentu.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Anuluj</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handleDeleteDocument(invoice.id)} className="bg-red-600 hover:bg-red-700">
+                                            Usuń
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

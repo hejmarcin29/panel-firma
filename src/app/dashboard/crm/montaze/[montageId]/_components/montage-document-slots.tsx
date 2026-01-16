@@ -2,10 +2,9 @@
 
 import { FileIcon, CheckCircle, FileText, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import type { Montage, MontageAttachment } from "../../types";
 import { toast } from "sonner";
-import { deleteDocument } from "../document-actions";
+import { deleteDocument } from "@/app/dashboard/document-actions";
 import { deleteMontageAttachment } from "../../actions";
 import { 
     UploadMontageProformaDialog, 
@@ -51,8 +50,7 @@ function DocumentSlot({ title, description, existingDocument, existingAttachment
             }
             toast.success('Dokument usunięty');
         } catch (error) {
-           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-           const msg = (error as any)?.message || 'Błąd usuwania';
+           const msg = error instanceof Error ? error.message : 'Błąd usuwania';
            toast.error(msg);
         }
     };

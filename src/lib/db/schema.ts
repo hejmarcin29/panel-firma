@@ -21,7 +21,7 @@ export {
 } from './reviews-schema';
 
 export const userRoles = ['admin', 'installer', 'architect', 'partner'] as const;
-export const orderSources = ['woocommerce', 'manual', 'shop'] as const;
+export const orderSources = ['shop'] as const;
 export const orderTypes = ['production', 'sample'] as const;
 export const orderStatuses = [
 	'order.received',
@@ -937,6 +937,7 @@ export const montageChecklistItemsRelations = relations(montageChecklistItems, (
 	}),
 }));
 
+
 export const montageTasksRelations = relations(montageTasks, ({ one, many }) => ({
 	montage: one(montages, {
 		fields: [montageTasks.montageId],
@@ -945,90 +946,6 @@ export const montageTasksRelations = relations(montageTasks, ({ one, many }) => 
 	attachments: many(montageAttachments),
 }));
 
-export const manualOrders = pgTable(
-	'manual_orders',
-	{
-		id: text('id').primaryKey(),
-		reference: text('reference').notNull(),
-		status: text('status').notNull(),
-		channel: text('channel').notNull(),
-		notes: text('notes'),
-		timelineTaskOverrides: text('timeline_task_overrides'),
-		currency: text('currency').notNull().default('PLN'),
-		source: text('source').$type<OrderSource>().notNull().default('manual'),
-		type: text('type').$type<OrderType>().notNull().default('production'),
-		sourceOrderId: text('source_order_id'),
-		requiresReview: boolean('requires_review')
-			.notNull()
-			.default(false),
-		totalNet: integer('total_net').notNull(),
-		totalGross: integer('total_gross').notNull(),
-		billingName: text('billing_name').notNull(),
-		billingStreet: text('billing_street').notNull(),
-		billingPostalCode: text('billing_postal_code').notNull(),
-		billingCity: text('billing_city').notNull(),
-		billingPhone: text('billing_phone').notNull(),
-		billingEmail: text('billing_email').notNull(),
-		shippingSameAsBilling: boolean('shipping_same_as_billing')
-			.notNull()
-			.default(false),
-		shippingName: text('shipping_name'),
-		shippingStreet: text('shipping_street'),
-		shippingPostalCode: text('shipping_postal_code'),
-		shippingCity: text('shipping_city'),
-		shippingPhone: text('shipping_phone'),
-		shippingEmail: text('shipping_email'),
-		paymentMethod: text('payment_method'),
-		shippingMethod: text('shipping_method'),
-		createdAt: timestamp('created_at').notNull().defaultNow(),
-		updatedAt: timestamp('updated_at').notNull().defaultNow(),
-	},
-	(table) => ({
-		referenceIdx: uniqueIndex('manual_orders_reference_idx').on(table.reference),
-		createdAtIdx: index('manual_orders_created_at_idx').on(table.createdAt),
-		requiresReviewIdx: index('manual_orders_requires_review_idx').on(table.requiresReview),
-		typeIdx: index('manual_orders_type_idx').on(table.type),
-	})
-);
-
-export const orderAttachments = pgTable(
-	'order_attachments',
-	{
-		id: text('id').primaryKey(),
-		orderId: text('order_id')
-			.notNull()
-			.references(() => manualOrders.id, { onDelete: 'cascade' }),
-		title: text('title'),
-		url: text('url').notNull(),
-		uploadedBy: text('uploaded_by').references(() => users.id, { onDelete: 'set null' }),
-		createdAt: timestamp('created_at').notNull().defaultNow(),
-	},
-	(table) => ({
-		orderIdx: index('order_attachments_order_id_idx').on(table.orderId),
-		createdAtIdx: index('order_attachments_created_at_idx').on(table.createdAt),
-	})
-);
-
-export const manualOrderItems = pgTable(
-	'manual_order_items',
-	{
-		id: text('id').primaryKey(),
-		orderId: text('order_id')
-			.notNull()
-			.references(() => manualOrders.id, { onDelete: 'cascade' }),
-		product: text('product').notNull(),
-		quantity: integer('quantity').notNull(),
-		unitPrice: integer('unit_price').notNull(),
-		vatRate: integer('vat_rate').notNull(),
-		unitPricePerSquareMeter: integer('unit_price_per_square_meter'),
-		totalNet: integer('total_net').notNull(),
-		totalGross: integer('total_gross').notNull(),
-		createdAt: timestamp('created_at').notNull().defaultNow(),
-	},
-	(table) => ({
-		orderIdx: index('manual_order_items_order_id_idx').on(table.orderId),
-	})
-);
 
 export const mailAccounts = pgTable(
 	'mail_accounts',
@@ -1121,28 +1038,6 @@ export const mailMessages = pgTable(
 	})
 );
 
-export const manualOrdersRelations = relations(manualOrders, ({ many }) => ({
-	items: many(manualOrderItems),
-	attachments: many(orderAttachments),
-}));
-
-export const manualOrderItemsRelations = relations(manualOrderItems, ({ one }) => ({
-	order: one(manualOrders, {
-		fields: [manualOrderItems.orderId],
-		references: [manualOrders.id],
-	}),
-}));
-
-export const orderAttachmentsRelations = relations(orderAttachments, ({ one }) => ({
-	order: one(manualOrders, {
-		fields: [orderAttachments.orderId],
-		references: [manualOrders.id],
-	}),
-	uploader: one(users, {
-		fields: [orderAttachments.uploadedBy],
-		references: [users.id],
-	}),
-}));
 
 export const mailAccountsRelations = relations(mailAccounts, ({ many }) => ({
 	folders: many(mailFolders),

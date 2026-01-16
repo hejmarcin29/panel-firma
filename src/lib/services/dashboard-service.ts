@@ -1,6 +1,5 @@
 import { desc, eq, asc, and, lt, or, isNull } from 'drizzle-orm';
 import { differenceInCalendarDays, addBusinessDays, startOfDay } from 'date-fns';
-import { parseTaskOverrides } from '@/app/dashboard/crm/ordersWP/utils';
 import { db } from '@/lib/db';
 import {
 	montageAttachments,
@@ -8,7 +7,6 @@ import {
 	montageNotes,
 	montageTasks,
 	montages,
-    manualOrders,
     type MontageStatus,
 } from '@/lib/db/schema';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
@@ -77,11 +75,7 @@ export interface DashboardStats {
         pendingPaymentsCount: number;
         pendingContractsCount: number;
         urgentTasksCount: number;
-        newOrdersCount: number;
         todoCount: number;
-        urgentOrdersCount?: number;
-        stalledOrdersCount?: number;
-        orderUrgentDays?: number;
     };
     upcomingMontagesStats: {
         montages7Days: MontageSimple[];
@@ -276,26 +270,6 @@ export async function getDashboardStats(publicBaseUrl: string | null): Promise<D
         !m.scheduledInstallationAt
     ).length;
 
-    // Fetch New Orders Count
-    const newOrders = await db.query.manualOrders.findMany({
-        where: or(
-            eq(manualOrders.status, 'Zamówienie utworzone'),
-            eq(manualOrders.requiresReview, true)
-        ),
-    });
-    const newOrdersCount = newOrders.length;
-
-    const urgentOrdersLimitDate = new Date();
-    urgentOrdersLimitDate.setDate(urgentOrdersLimitDate.getDate() - orderUrgentDays);
-
-    const urgentOrders = await db.query.manualOrders.findMany({
-        where: and(
-            eq(manualOrders.status, 'Zamówienie utworzone'),
-            lt(manualOrders.createdAt, urgentOrdersLimitDate)
-        )
-    });
-    const urgentOrdersCount = urgentOrders.length;
-
     // Tasks Widget Data (Lite)
     const tasksMontagesRaw = allMontages.filter(m => m.tasks.some(t => !t.completed));
     const tasksCount = tasksMontagesRaw.length;
@@ -432,31 +406,6 @@ export async function getDashboardStats(publicBaseUrl: string | null): Promise<D
         return dateA - dateB;
     });
 
-    // Stalled Orders Logic
-    const allOrders = await db.query.manualOrders.findMany();
-    const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-    const daysLeft = daysInMonth - today.getDate();
-    const isMonthEnd = daysLeft <= 5; // Alert if 5 days or less left in month
-
-    const stalledOrdersCount = allOrders.filter(order => {
-        const overrides = parseTaskOverrides(order.timelineTaskOverrides);
-        const acceptedByWarehouse = overrides['Zamówienie przyjęte przez magazyn'];
-        const finalInvoiceIssued = overrides['Wystawiono fakturę końcową'];
-        
-        // Only care if accepted by warehouse AND invoice NOT issued
-        if (!acceptedByWarehouse) return false;
-        if (finalInvoiceIssued) return false;
-        
-        // Check time condition
-        const updatedAt = order.updatedAt ? new Date(order.updatedAt) : new Date(order.createdAt);
-        const daysSinceUpdate = differenceInCalendarDays(today, updatedAt);
-        
-        if (daysSinceUpdate > 7) return true;
-        if (isMonthEnd) return true;
-        
-        return false;
-    }).length;
-
     return {
         upcomingMontages,
         recentMontages,
@@ -479,11 +428,7 @@ export async function getDashboardStats(publicBaseUrl: string | null): Promise<D
             pendingPaymentsCount,
             pendingContractsCount,
             urgentTasksCount,
-            newOrdersCount,
             todoCount: 0,
-            urgentOrdersCount,
-            stalledOrdersCount,
-            orderUrgentDays,
         },
         upcomingMontagesStats: {
             montages7Days,

@@ -53,20 +53,6 @@ export async function uploadMontageProforma(montageId: string, formData: FormDat
     return { success: true };
 }
 
-export async function deleteDocument(documentId: string, montageId: string) {
-    const user = await requireUser();
-    
-    // RBAC Check: Only admin can delete documents
-    if (!user.roles.includes('admin')) {
-        throw new Error('Tylko administrator może usuwać dokumenty księgowe.');
-    }
-
-    // In a real scenario, we should also delete from R2, but soft-delete or keeping it is fine for now/safe.
-    // For now, let's just delete the DB record.
-    await db.delete(documents).where(eq(documents.id, documentId));
-    revalidatePath(`/dashboard/crm/montaze/${montageId}`);
-    return { success: true };
-}
 
 export async function uploadMontageFinalInvoice(montageId: string, formData: FormData) {
     await requireUser();

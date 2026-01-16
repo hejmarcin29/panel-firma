@@ -14,9 +14,7 @@ import {
 } from './document-dialogs';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
-
-// Types adapted from valid document types
-type DocumentType = 'proforma' | 'advance_invoice' | 'final_invoice' | 'correction_invoice';
+import { MontageDocument } from '../../types';
 
 const TYPE_LABELS: Record<string, string> = {
     'proforma': 'Proforma',
@@ -27,7 +25,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 interface MontageDocumentsTabProps {
     montageId: string;
-    documents: any[]; // We use loose typing or infer it in parent
+    documents: MontageDocument[]; 
 }
 
 export function MontageDocumentsTab({ montageId, documents = [] }: MontageDocumentsTabProps) {

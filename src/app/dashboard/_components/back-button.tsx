@@ -21,7 +21,6 @@ export function BackButton() {
         return pathname;
     }
 
-    if (pathname?.startsWith('/dashboard/crm/ordersWP/')) return '/dashboard/crm/ordersWP';
     if (pathname?.startsWith('/dashboard/crm/montaze/ekipy/')) return '/dashboard/crm/montaze/ekipy';
     if (pathname?.startsWith('/dashboard/crm/montaze/')) return '/dashboard/crm/montaze';
     if (pathname?.startsWith('/dashboard/crm/customers/')) return '/dashboard/crm/customers';

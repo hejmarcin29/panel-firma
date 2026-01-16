@@ -12,7 +12,6 @@ import { BackButton } from './_components/back-button';
 import { RefreshButton } from './_components/refresh-button';
 import { logoutAction } from './actions';
 import { getCurrentSession } from '@/lib/auth/session';
-import { getUrgentOrdersCount } from './crm/ordersWP/queries';
 import { db } from '@/lib/db';
 import { users, montages } from '@/lib/db/schema';
 import { eq, sql, and, isNull } from 'drizzle-orm';
@@ -66,11 +65,12 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     }
     
     let urgentOrdersCount = 0;
-    try {
-        urgentOrdersCount = await getUrgentOrdersCount();
-    } catch (error) {
-        console.error('Failed to fetch urgent orders count:', error);
-    }
+    // Legacy orders removed
+    // try {
+    //     urgentOrdersCount = await getUrgentOrdersCount();
+    // } catch (error) {
+    //     console.error('Failed to fetch urgent orders count:', error);
+    // }
 
     let newLeadsCount = 0;
     try {

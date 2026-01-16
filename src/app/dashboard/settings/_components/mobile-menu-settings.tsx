@@ -62,7 +62,6 @@ const DEFAULT_ITEMS: MobileMenuItem[] = [
     { id: "tasks", label: "Zad. Montaże", href: "/dashboard/zadania", iconName: "ClipboardList", visible: true },
     { id: "calendar", label: "Kalendarz", href: "/dashboard/calendar", iconName: "Calendar", visible: true },
     { id: "customers", label: "Klienci", href: "/dashboard/crm/customers", iconName: "Users", visible: true },
-    { id: "orders", label: "Zamówienia WP", href: "/dashboard/crm/ordersWP", iconName: "Package", visible: false },
     { id: "montages", label: "Montaże", href: "/dashboard/crm/montaze", iconName: "Hammer", visible: false },
     { id: "mail", label: "Poczta", href: "/dashboard/mail", iconName: "Mail", visible: false },
     { id: "gallery", label: "Galeria", href: "/dashboard/crm/montaze/galeria", iconName: "ImageIcon", visible: false },

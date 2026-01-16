@@ -4,10 +4,13 @@ import { eq, asc } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import { OrderDetailsClient } from './_components/OrderDetailsClient';
 import { TimelineEvent } from '@/components/shop/timeline-view';
+import { requireUser } from '@/lib/auth/session';
 
 export default async function OrderDetailsPage(props: { params: Promise<{ id: string }> }) {
     const params = await props.params;
     const orderId = params.id;
+    const user = await requireUser();
+    const isAdmin = user.roles.includes('admin');
 
     const [order, timelineEvents] = await Promise.all([
         db.query.orders.findFirst({
@@ -36,6 +39,7 @@ export default async function OrderDetailsPage(props: { params: Promise<{ id: st
                 order={order} 
                 items={order.items} 
                 timelineEvents={timelineEvents as unknown as TimelineEvent[]}
+                isAdmin={isAdmin}
             />
         </div>
     );

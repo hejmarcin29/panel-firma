@@ -316,7 +316,7 @@ export function CustomerDetailsSheet({ customer, isOpen, onClose, portalEnabled 
 									<Package className="h-4 w-4" /> Ostatnie zamówienia
 								</h3>
 								<Button variant="ghost" size="sm" className="h-8 text-xs" asChild>
-									<Link href={`/dashboard/crm/ordersWP?customer=${customer.id}`}>Zobacz wszystkie</Link>
+									<Link href={`/dashboard/shop/orders?customerId=${customer.id}`}>Zobacz wszystkie</Link>
 								</Button>
 							</div>
 							

@@ -24,7 +24,8 @@ import {
   Store,
   Factory,
   Wallet,
-  Handshake
+  Handshake,
+  ShoppingCart
 } from "lucide-react";
 
 import { cn } from '@/lib/utils';
@@ -59,7 +60,8 @@ const iconMap: Record<string, LucideIcon> = {
   Store,
   Factory,
   Wallet,
-  Handshake
+  Handshake,
+  ShoppingCart
 };
 
 const mainLinks = [
@@ -70,9 +72,9 @@ const mainLinks = [
 
 const menuLinks = [
   { href: "/dashboard/crm", label: "CRM", icon: Users },
-  { href: "/dashboard/crm/ordersWP", label: "Zamówienia WP", icon: Package },
-  { href: "/dashboard/products", label: "Produkty", icon: ShoppingBag },
+  { href: "/dashboard/erp/products", label: "Produkty", icon: ShoppingBag },
   { href: "/dashboard/erp", label: "ERP", icon: Factory },
+  { href: "/dashboard/shop", label: "Sklep", icon: ShoppingCart },
   { href: "/dashboard/showroom", label: "Showroom", icon: Store },
   { href: "/dashboard/wallet", label: "Portfel", icon: Wallet },
   { href: "/dashboard/partner", label: "Moje Polecenia", icon: Handshake },
@@ -136,7 +138,7 @@ export function MobileNav({ user, urgentOrdersCount = 0, leadsCount = 0, userRol
            return allowedLinks.includes(href);
       }
 
-      const restrictedLinks = ['/dashboard/crm/ordersWP', '/dashboard/products', '/dashboard/mail', '/dashboard/settings', '/dashboard/wallet', '/dashboard/erp'];
+      const restrictedLinks = ['/dashboard/erp/products', '/dashboard/shop', '/dashboard/mail', '/dashboard/settings', '/dashboard/wallet', '/dashboard/erp'];
       return !restrictedLinks.includes(href);
   };
 

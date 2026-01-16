@@ -30,10 +30,7 @@ interface KPICardsProps {
   pendingPaymentsCount: number;
   pendingContractsCount?: number;
   urgentTasksCount: number;
-  newOrdersCount: number;
-  urgentOrdersCount?: number;
-  stalledOrdersCount?: number;
-  orderUrgentDays?: number;
+
   montageThreatDays?: number;
   settings?: {
       visibleCards?: string[];
@@ -46,16 +43,12 @@ export function KPICards({
   pendingPaymentsCount,
   pendingContractsCount = 0,
   urgentTasksCount,
-  newOrdersCount,
-  urgentOrdersCount = 0,
-  stalledOrdersCount = 0,
   montageThreatDays = 7,
   settings
 }: KPICardsProps) {
   const visibleCards = settings?.visibleCards || ['leads', 'payments', 'contracts', 'urgent', 'orders', 'urgentOrders', 'stalledOrders'];
 
   const [lastSeenLeads, setLastSeenLeads] = useState<number>(0);
-  const [lastSeenOrders, setLastSeenOrders] = useState<number>(0);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -196,49 +189,7 @@ export function KPICards({
         </motion.div>
       )}
 
-      {visibleCards.includes('orders') && (
-        <motion.div variants={item} className="h-full">
-        <Card className={cn(
-            "bg-card border-border shadow-none relative overflow-hidden group h-full transition-all duration-300",
-            hasNewOrders && "border-emerald-500 ring-1 ring-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
-        )}>
-            <Link 
-                href="/dashboard/crm/ordersWP?filter=verification"  
-                className="absolute inset-0 z-10" 
-                onClick={handleOrdersClick}
-            />
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-                <div className="flex items-center gap-2">
-                    <CardTitle className="text-sm font-medium text-muted-foreground flex items-center">
-                        Zamówienia do Weryfikacji
-                        {hasNewOrders && (
-                            <span className="ml-2 inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800 animate-pulse">
-                                NOWE
-                            </span>
-                        )}
-                    </CardTitle>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <button type="button" className="cursor-help z-20 relative" onClick={(e) => e.preventDefault()}>
-                                <Info className="h-4 w-4 text-muted-foreground/50" />
-                            </button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>Nowe zamówienia ze sklepu lub wprowadzone ręcznie, które mają status &apos;Utworzone&apos; i wymagają potwierdzenia dostępności towaru lub zaksięgowania wpłaty.</p>
-                        </TooltipContent>
-                    </Tooltip>
-                </div>
-                <ShoppingCart className="h-4 w-4 text-emerald-500" />
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-                <div className="text-2xl font-bold text-foreground">{newOrdersCount}</div>
-                <p className="text-xs text-emerald-500/80 flex items-center mt-1">
-                    Do weryfikacji <ArrowUpRight className="h-3 w-3 ml-1" />
-                </p>
-            </CardContent>
-        </Card>
-        </motion.div>
-      )}
+
 
       {visibleCards.includes('contracts') && (
         <motion.div variants={item} className="h-full">
@@ -304,69 +255,9 @@ export function KPICards({
         </motion.div>
       )}
 
-      {visibleCards.includes('urgentOrders') && urgentOrdersCount > 0 && (
-        <motion.div variants={item} className="h-full">
-        <Card className="shadow-none relative overflow-hidden group border-red-500/20 bg-red-500/5 h-full">
-            <Link href="/dashboard/crm/ordersWP?filter=urgent" className="absolute inset-0 z-10" />
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-                <div className="flex items-center gap-2">
-                    <CardTitle className="text-sm font-medium text-red-600">
-                        Zatory w Realizacji Zamówień
-                    </CardTitle>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <button type="button" className="cursor-help z-20 relative" onClick={(e) => e.preventDefault()}>
-                                <Info className="h-4 w-4 text-red-600/50" />
-                            </button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>Zamówienia, które utknęły na wczesnym etapie (np. &apos;W realizacji&apos;) i nie były aktualizowane przez ponad 3 dni. Sprawdź, czy towar jest dostępny.</p>
-                        </TooltipContent>
-                    </Tooltip>
-                </div>
-                <AlertCircle className="h-4 w-4 text-red-600" />
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-                <div className="text-2xl font-bold text-red-700">{urgentOrdersCount}</div>
-                <p className="text-xs text-red-600/80 flex items-center mt-1">
-                    Wymagają reakcji <ArrowUpRight className="h-3 w-3 ml-1" />
-                </p>
-            </CardContent>
-        </Card>
-        </motion.div>
-      )}
 
-      {visibleCards.includes('stalledOrders') && stalledOrdersCount > 0 && (
-        <motion.div variants={item} className="h-full">
-        <Card className="shadow-none relative overflow-hidden group border-orange-500/20 bg-orange-500/5 h-full">
-            <Link href="/dashboard/crm/ordersWP?filter=invoice" className="absolute inset-0 z-10" />
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4">
-                <div className="flex items-center gap-2">
-                    <CardTitle className="text-sm font-medium text-orange-600">
-                        Do Wystawienia Faktury Końcowej
-                    </CardTitle>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <button type="button" className="cursor-help z-20 relative" onClick={(e) => e.preventDefault()}>
-                                <Info className="h-4 w-4 text-orange-600/50" />
-                            </button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>Zamówienia, które zostały już wydane z magazynu lub zrealizowane, ale w systemie brakuje oznaczenia o wystawieniu faktury końcowej.</p>
-                        </TooltipContent>
-                    </Tooltip>
-                </div>
-                <AlertCircle className="h-4 w-4 text-orange-600" />
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-                <div className="text-2xl font-bold text-orange-700">{stalledOrdersCount}</div>
-                <p className="text-xs text-orange-600/80 flex items-center mt-1">
-                    Wymagają wystawienia <ArrowUpRight className="h-3 w-3 ml-1" />
-                </p>
-            </CardContent>
-        </Card>
-        </motion.div>
-      )}
+
+
     </motion.div>
   );
 }

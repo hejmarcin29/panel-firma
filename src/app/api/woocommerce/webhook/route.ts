@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createHmac } from 'crypto';
 
-import { createOrder } from '@/app/dashboard/crm/ordersWP/actions';
+// import { createOrder } from '@/app/dashboard/crm/ordersWP/actions';
 import { db } from '@/lib/db';
 import { integrationLogs } from '@/lib/db/schema';
 import { getAppSetting, appSettingKeys } from '@/lib/settings';
-import { mapWooOrderToManualOrderPayload } from '@/lib/woocommerce/map-order';
+// import { mapWooOrderToManualOrderPayload } from '@/lib/woocommerce/map-order';
 import type { WooOrder } from '@/lib/woocommerce/types';
 import { isSystemAutomationEnabled } from '@/lib/montaze/automation';
 
@@ -63,9 +63,10 @@ export async function POST(request: NextRequest) {
 	}
 
 	try {
-		const manualPayload = mapWooOrderToManualOrderPayload(payload);
-		await createOrder(manualPayload, 'woocommerce-webhook');
-		await logIntegration('info', 'Imported WooCommerce order', {
+        // TODO: Migrated to shop/orders module. Logic from 'manualOrders' removed.
+		// const manualPayload = mapWooOrderToManualOrderPayload(payload);
+		// await createOrder(manualPayload, 'woocommerce-webhook');
+		await logIntegration('info', 'WooCommerce order received but skipped (migration pending)', {
 			orderId: payload.id,
 			orderNumber: payload.number,
 		});

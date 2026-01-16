@@ -1,8 +1,11 @@
 import { getInvoices, getInvoiceAttachments } from '../actions';
 import { InvoicesList } from './invoices-list';
 import { PendingInvoicesList } from './pending-invoices-list';
+import { requireUser } from '@/lib/auth/session';
 
 export default async function InvoicesPage() {
+  const user = await requireUser();
+  const isAdmin = user.roles.includes('admin');
   const [invoices, invoiceAttachments] = await Promise.all([
     getInvoices(),
     getInvoiceAttachments()
@@ -15,7 +18,7 @@ export default async function InvoicesPage() {
       </div>
 
       <PendingInvoicesList data={invoiceAttachments} />
-      <InvoicesList data={invoices} />
+      <InvoicesList data={invoices} isAdmin={isAdmin} />
     </div>
   );
 }
