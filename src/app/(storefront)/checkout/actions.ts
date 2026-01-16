@@ -221,11 +221,15 @@ export async function processOrder(data: OrderData) {
             }
 
             // B. Order Insert
+            const initialStatus = (orderType === 'production' && data.paymentMethod === 'proforma') 
+                ? 'order.pending_proforma' 
+                : 'order.received';
+
             await tx.insert(orders).values({
                 id: orderId,
                 source: 'shop',
                 sourceOrderId: reference, // Display ID
-                status: 'order.received',
+                status: initialStatus,
                 type: orderType,
                 customerId: customerId,
                 

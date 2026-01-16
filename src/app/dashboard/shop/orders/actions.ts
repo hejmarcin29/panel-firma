@@ -219,6 +219,17 @@ export async function uploadCorrectionInvoice(orderId: string, formData: FormDat
         note: `Correction uploaded manually. File: ${file.name}`,
     });
 
+    await db.insert(erpOrderTimeline).values({
+        id: randomUUID(),
+        orderId: orderId,
+        type: 'status_change',
+        title: 'Wystawiono Korektę Faktury',
+        metadata: { 
+            fileName: file.name,
+            invoiceNumber: invoiceNumber
+        }
+    });
+
      revalidatePath('/dashboard/shop/orders');
      revalidatePath(`/dashboard/shop/orders/${orderId}`);
     await db.insert(erpOrderTimeline).values({

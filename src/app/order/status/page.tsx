@@ -140,8 +140,10 @@ export default async function OrderStatusPage({ searchParams }: PageProps) {
             'order.proforma_issued': 'Proforma Wysłana',
             'order.awaiting_payment': 'Ocz. na Płatność',
             'order.paid': 'Opłacone',
-            'order.fulfillment_confirmed': 'W Realizacji',
-            'order.sent': 'Wysłane',
+            'order.advance_invoice': 'Faktura Zaliczkowa',
+            'order.forwarded_to_supplier': 'W Realizacji',
+            'order.fulfillment_confirmed': 'Wysłane',
+            'order.final_invoice': 'Faktura Końcowa',
             'order.closed': 'Zakończone',
             'order.cancelled': 'Anulowane'
         };

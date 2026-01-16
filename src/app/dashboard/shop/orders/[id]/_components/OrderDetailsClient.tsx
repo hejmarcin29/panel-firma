@@ -123,14 +123,14 @@ const STATUS_LABELS: Record<string, string> = {
 
 // Define flow steps for visualization
 const SAMPLE_FLOW = [
-    { id: 'order.received', label: 'Nowe' },
+    { id: 'order.received', label: 'Przyjęte' },
     { id: 'order.paid', label: 'Opłacone' },
     { id: 'order.fulfillment_confirmed', label: 'Wysłane' },
     { id: 'order.closed', label: 'Zakończone' }
 ];
 
 const PANEL_FLOW = [
-    { id: 'order.received', label: 'Weryfikacja' },
+    { id: 'order.pending_proforma', label: 'Weryfikacja' }, // Zmienione z received
     { id: 'order.awaiting_payment', label: 'Płatność' },
     { id: 'order.paid', label: 'Opłacone' },
     { id: 'order.advance_invoice', label: 'Zaliczka' },
@@ -185,7 +185,7 @@ export function OrderDetailsClient({ order, items, timelineEvents, isAdmin }: Or
     }
 
     // Differentiate flows
-    const isSampleOrder = order.paymentMethod === 'tpay';
+    const isSampleOrder = order.type === 'sample';
     const currentFlow = isSampleOrder ? SAMPLE_FLOW : PANEL_FLOW;
 
     // Correct logic for step completion highlighting
@@ -196,8 +196,9 @@ export function OrderDetailsClient({ order, items, timelineEvents, isAdmin }: Or
         if (status === 'order.closed') return 'completed';
         
         if (statusIndex === -1) {
-            // If current status is not in main flow diagram (e.g. pending_proforma is a detailed sub-state of received for Panels)
-             if (status === 'order.pending_proforma' && stepId === 'order.received') return 'current';
+            // Mapowanie statusów pobocznych na kroki główne
+             if (status === 'order.received' && stepId === 'order.pending_proforma') return 'current';
+             if (status === 'order.proforma_issued' && stepId === 'order.awaiting_payment') return 'current';
              return 'pending';
         }
 
