@@ -301,11 +301,11 @@ export function ERPOrdersBoard({ data }: ERPOrdersBoardProps) {
                                     <div className="flex justify-between items-start">
                                         <div>
                                             <h4 className="font-medium text-sm">{po.supplier?.name || "Nieznany dostawca"}</h4>
-                                            <p className="text-xs text-muted-foreground">{po.number}</p>
+                                            <p className="text-xs text-muted-foreground">PO #{po.id.slice(0, 8)}</p>
                                         </div>
                                     </div>
                                     <div className="text-xs text-muted-foreground">
-                                        Data zamówienia: {new Date(po.orderDate).toLocaleDateString()}
+                                        Data zamówienia: {po.orderDate ? new Date(po.orderDate).toLocaleDateString() : '-'}
                                     </div>
                                     <Button size="sm" variant="outline" className="w-full">
                                         Oznacz jako dostarczone
