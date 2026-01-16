@@ -340,15 +340,15 @@ export function ERPOrdersBoard({ data }: ERPOrdersBoardProps) {
                                         <div>
                                             <h4 className="font-medium text-sm">{montage.clientName}</h4>
                                             <p className="text-xs text-muted-foreground">
-                                                {montage.installationAddress || "Brak adresu"}
+                                                {montage.subtext || "Brak adresu"}
                                             </p>
                                         </div>
                                         <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                                     </div>
 
-                                    {montage.installer && (
+                                    {montage.details?.installerName && (
                                         <div className="text-xs bg-emerald-50 text-emerald-700 px-2 py-1 rounded flex items-center gap-1">
-                                            Ekipa: {montage.installer.name}
+                                            Ekipa: {montage.details.installerName}
                                         </div>
                                     )}
 
