@@ -240,8 +240,11 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
       : (palletShippingCost || 0);
   
   const shippingCostPLN = activeShippingCostInt / 100;
+  // Calculate VAT for shipping (assumed 23%)
+  const shippingVat = shippingCostPLN - (shippingCostPLN / 1.23);
   
   const finalTotal = itemsTotal + shippingCostPLN;
+  const totalVat = totals.totalVat + shippingVat;
 
   const isCompany = useWatch({ control: form.control, name: "isCompany" });
   const differentBillingAddress = useWatch({ control: form.control, name: "differentBillingAddress" });
@@ -788,18 +791,22 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
                              <span>{totals.totalGross.toFixed(2)} zł</span>
                          </div>
                          <div className="flex justify-between text-sm text-muted-foreground">
-                             <span>Dostawa ({deliveryMethod === 'locker' ? 'Paczkomat' : 'Kurier'})</span>
-                             {shippingCostPLN > 0 ? (
-                                 <span>{shippingCostPLN.toFixed(2)} zł</span>
-                             ) : (
-                                 <span>Gratis / Wyceniana indywidualnie</span>
-                             )}
-                         </div>
-                         {/* VAT Display */}
-                         <div className="flex justify-between text-xs text-muted-foreground/70 pt-1">
-                             <span>w tym VAT</span>
-                             <span>{totals.totalVat.toFixed(2)} zł</span>
-                         </div>
+                         <span>
+                             Dostawa ({deliveryMethod === 'locker' 
+                                ? 'Paczkomat' 
+                                : (!isOnlySamples ? 'Spedycja' : 'Kurier')
+                             })
+                         </span>
+                         {shippingCostPLN > 0 ? (
+                             <span>{shippingCostPLN.toFixed(2)} zł</span>
+                         ) : (
+                             <span>Gratis / Wyceniana indywidualnie</span>
+                         )}
+                     </div>
+                     {/* VAT Display */}
+                     <div className="flex justify-between text-xs text-muted-foreground/70 pt-1">
+                         <span>w tym VAT</span>
+                         <span>{totalVat.toFixed(2)} zł</span>
                      </div>
                      
                      <Separator className="my-4" />
