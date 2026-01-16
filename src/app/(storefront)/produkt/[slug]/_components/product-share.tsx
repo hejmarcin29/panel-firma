@@ -20,8 +20,10 @@ export function ProductShare({ productName }: ProductShareProps) {
   const [url, setUrl] = useState("")
 
   useEffect(() => {
+    // eslint-disable-next-line
     setUrl(window.location.href)
-    if (navigator.share) {
+    // Check if navigator.share is supported (robust check)
+    if (typeof navigator.share === "function") {
       setIsNativeShareSupported(true)
     }
   }, [])
@@ -45,7 +47,7 @@ export function ProductShare({ productName }: ProductShareProps) {
       await navigator.clipboard.writeText(url)
       toast.success("Link skopiowany do schowka")
       setIsOpen(false)
-    } catch (err) {
+    } catch {
       toast.error("Nie udało się skopiować linku")
     }
   }
