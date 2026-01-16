@@ -207,7 +207,10 @@ export function VisualCommandCenter({ bestsellers, turnstileSiteKey }: VisualCom
                                                 Polecane
                                             </h3>
                                         </div>
-                                        <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none]">
+                                        <div 
+                                            className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none]"
+                                            data-vaul-no-drag
+                                        >
                                             {bestsellers.map((product) => (
                                                 <Link 
                                                     key={product.id} 
