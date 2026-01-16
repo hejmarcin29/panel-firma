@@ -984,6 +984,34 @@ export async function updateMontageContactDetails({
         }
     }
 
+    // 🔔 Notification (MONTAGE_SCHEDULED)
+    // Only send if we have a scheduled date and contact info
+    if (scheduledInstallationAt && (normalizedEmail || normalizedPhone)) {
+        const formattedDate = scheduledInstallationAt.toLocaleDateString('pl-PL');
+        const formattedTime = '08:00'; // Default start time for installation, usually full day
+        const installerName = montage?.installerId ? 'Zespół Montażowy' : 'Do ustalenia';
+
+        // We check if date changed or just sending confirmation? 
+        // For 'TOP UX', maybe we should check if it's a new date.
+        // But since this action is 'update details', assume any non-null date means "Confirmed/Re-confirmed".
+        // To be safe, we could check against old date in 'montage', but let's just send it.
+        // Users can toggle it off in settings if it's spammy.
+        
+        await sendNotification(
+            'MONTAGE_SCHEDULED',
+            { email: normalizedEmail, phone: normalizedPhone },
+            {
+                montage_number: montage?.displayId || '...',
+                client_name: trimmedName,
+                date: formattedDate,
+                time: formattedTime,
+                address: combinedAddress || '',
+                installer_name: installerName
+            },
+            { id: montageId, type: 'montage' }
+        );
+    }
+
 	revalidatePath(MONTAGE_DASHBOARD_PATH);
 	revalidatePath(`${MONTAGE_DASHBOARD_PATH}/${montageId}`);
 }

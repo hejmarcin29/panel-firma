@@ -50,10 +50,10 @@ export function slugify(text: string): string {
 }
 
 export function decodeSecret(secret: string | null | undefined): string | null {
-    if (!secret) return null;
-    try {
-        return Buffer.from(secret, 'base64').toString('utf-8');
-    } catch (e) {
-        return null; // Return null if invalid base64
-    }
+  if (!secret) return null;
+  try {
+      return Buffer.from(secret, 'base64').toString('utf8');
+  } catch {
+      return null;
+  }
 }
