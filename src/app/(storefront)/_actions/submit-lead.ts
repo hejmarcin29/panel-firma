@@ -15,9 +15,16 @@ const leadSchema = z.object({
   turnstileToken: z.string().optional(),
 });
 
-export async function submitLeadAction(data: z.infer<typeof leadSchema>) {
+export async function submitLeadAction(data: any) {
   try {
-    const validated = leadSchema.parse(data);
+    const result = leadSchema.safeParse(data);
+    if (!result.success) {
+      // Cast to any to bypass version mismatch/type issues
+      const err = result.error as any;
+      const firstIssue = err.errors?.[0] || err.issues?.[0];
+      return { success: false, message: firstIssue?.message || "Błąd walidacji formularza." };
+    }
+    const validated = result.data;
 
     // 1. Honeypot check
     if (validated._gotcha) {
@@ -54,9 +61,6 @@ export async function submitLeadAction(data: z.infer<typeof leadSchema>) {
 
   } catch (error) {
     console.error("Lead Submission Error:", error);
-    if (error instanceof z.ZodError) {
-        return { success: false, message: error.errors[0].message };
-    }
     return { success: false, message: "Wystąpił błąd serwera. Spróbuj później." };
   }
 }

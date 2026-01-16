@@ -61,6 +61,7 @@ export function SettingsView({
   contractTemplatesManager,
   servicesSettings,
   magicLinks,
+  notifications,
 }: SettingsViewProps) {
   const searchParams = useSearchParams();
   const router = useRouter();

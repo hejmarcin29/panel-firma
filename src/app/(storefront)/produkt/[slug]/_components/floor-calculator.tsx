@@ -290,10 +290,12 @@ export function FloorCalculator({
     
     <AuditDrawer 
         open={isSheetOpen} 
-        onClose={() => setIsSheetOpen(false)}
-        defaultValues={{
-             area: areaNum,
-             productName: product.name
+        onOpenChange={setIsSheetOpen}
+        productContext={{
+             productName: product.name,
+             sku: product.sku,
+             area: area,
+             estimation: estimation
         }}
     />
     </div>
