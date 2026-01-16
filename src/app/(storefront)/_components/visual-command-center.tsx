@@ -171,7 +171,6 @@ export function VisualCommandCenter({ bestsellers, turnstileSiteKey }: VisualCom
                                     className="w-full rounded-xl border-0 bg-muted/50 py-3 pl-10 pr-4 text-base font-medium placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/20"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    autoFocus // Auto focus on open if desired, but might be annoying on mobile
                                 />
                             </form>
                         </div>

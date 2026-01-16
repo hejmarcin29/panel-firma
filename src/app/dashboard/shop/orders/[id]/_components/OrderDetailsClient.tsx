@@ -19,7 +19,9 @@ import {
     FileText,
     Archive,
     Link as LinkIcon,
-    History
+    History,
+    Download,
+    User
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { 
@@ -27,13 +29,21 @@ import {
     markAsForwardedToSupplier,
     markAsShippedBySupplier,
     issueFinalInvoice,
-    generateOrderMagicLink
+    generateOrderMagicLink,
+    updateOrderTracking
 } from '../actions';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { TimelineView, TimelineEvent } from '@/components/shop/timeline-view';
+import { UploadProformaDialog } from '../../_components/UploadProformaDialog';
+import { UploadFinalInvoiceDialog } from '../../_components/UploadFinalInvoiceDialog';
+import { UploadAdvanceInvoiceDialog } from '../../_components/UploadAdvanceInvoiceDialog';
+import { UploadCorrectionDialog } from '../../_components/UploadCorrectionDialog';
 
 
 interface OrderItemDetails {
@@ -45,6 +55,7 @@ interface OrderItemDetails {
 
 interface OrderDetails {
     id: string;
+    displayNumber?: string | null;
     status: string;
     type: string; // Added 'type'
     createdAt: Date;
@@ -67,6 +78,13 @@ interface OrderDetails {
         shippingPostalCode: string | null;
         shippingCity: string | null;
     } | null;
+    documents: {
+        id: string;
+        type: string;
+        number: string | null;
+        pdfUrl: string | null;
+        createdAt: Date;
+    }[]; // Added documents
 }
 
 interface OrderDetailsClientProps {
@@ -110,6 +128,24 @@ export function OrderDetailsClient({ order, items, timelineEvents }: OrderDetail
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
     const [status, setStatus] = useState(order.status);
+
+    // Tracking state
+    const [carrier, setCarrier] = useState(order.shippingCarrier || 'other');
+    const [trackingNumber, setTrackingNumber] = useState(order.shippingTrackingNumber || '');
+    const [isTrackingSaving, setIsTrackingSaving] = useState(false);
+
+    async function handleUpdateTracking() {
+        setIsTrackingSaving(true);
+        try {
+            await updateOrderTracking(order.id, carrier, trackingNumber);
+            toast.success('Dane przesyłki zostały zapisane.');
+            router.refresh();
+        } catch {
+            toast.error('Nie udało się zapisać danych przesyłki.');
+        } finally {
+            setIsTrackingSaving(false);
+        }
+    }
     
     async function handleCopyMagicLink() {
         try {
@@ -189,9 +225,12 @@ export function OrderDetailsClient({ order, items, timelineEvents }: OrderDetail
     const renderActions = () => {
         if (status === 'order.closed') {
              return (
-                <div className="bg-emerald-50 text-emerald-700 p-4 rounded-lg flex items-center gap-2 border border-emerald-100">
-                    <CheckCircle className="h-5 w-5" />
-                    <span className="font-medium">Zamówienie zakończone pomyślnie.</span>
+                <div className="flex items-center gap-2">
+                    <div className="bg-emerald-50 text-emerald-700 p-4 rounded-lg flex items-center gap-2 border border-emerald-100">
+                        <CheckCircle className="h-5 w-5" />
+                        <span className="font-medium">Zamówienie zakończone pomyślnie.</span>
+                    </div>
+                    <UploadCorrectionDialog orderId={order.id} />
                 </div>
              );
         }
@@ -224,12 +263,7 @@ export function OrderDetailsClient({ order, items, timelineEvents }: OrderDetail
         else {
             if (status === 'order.pending_proforma') {
                 return (
-                    // This button actually triggers the dialog in the parent list, but here we can just show info or link back
-                    // For now let's assume user uses the "Send Proforma" dialog or manual update
-                     <Button disabled variant="secondary" className="w-full md:w-auto opacity-50 cursor-not-allowed">
-                        <FileText className="mr-2 h-4 w-4" />
-                        Wymagane wystawienie proformy
-                    </Button>
+                    <UploadProformaDialog orderId={order.id} />
                 );
             }
              if (status === 'order.proforma_issued' || status === 'order.awaiting_payment') {
@@ -240,16 +274,21 @@ export function OrderDetailsClient({ order, items, timelineEvents }: OrderDetail
                     </div>
                 );
             }
-            if (status === 'order.paid') {
+            if (status === 'order.paid' || status === 'order.advance_invoice') {
                  return (
-                    <Button onClick={() => handleSupplierAction('forward')} disabled={isLoading} size="lg" className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 font-semibold shadow-md">
-                        {isLoading ? 'Przetwarzanie...' : (
-                            <>
-                                <Building2 className="mr-2 h-5 w-5" />
-                                Zleć zamówienie u dostawcy
-                            </>
-                        )}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                         {status === 'order.paid' && (
+                             <UploadAdvanceInvoiceDialog orderId={order.id} />
+                         )}
+                         <Button onClick={() => handleSupplierAction('forward')} disabled={isLoading} size="lg" className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 font-semibold shadow-md">
+                            {isLoading ? 'Przetwarzanie...' : (
+                                <>
+                                    <Building2 className="mr-2 h-5 w-5" />
+                                    Zleć zamówienie u dostawcy
+                                </>
+                            )}
+                        </Button>
+                    </div>
                 );
             }
             if (status === 'order.forwarded_to_supplier') {
@@ -266,19 +305,22 @@ export function OrderDetailsClient({ order, items, timelineEvents }: OrderDetail
             }
             if (status === 'order.fulfillment_confirmed') {
                  return (
-                    <Button onClick={() => handleSupplierAction('invoice')} disabled={isLoading} size="lg" className="w-full md:w-auto bg-green-600 hover:bg-green-700 font-semibold shadow-md">
-                        {isLoading ? 'Generowanie...' : (
-                            <>
-                                <FileText className="mr-2 h-5 w-5" />
-                                Wystaw Fakturę Końcową
-                            </>
-                        )}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                         <div className="flex gap-2">
+                             <UploadFinalInvoiceDialog orderId={order.id} />
+                             <Button onClick={() => handleSupplierAction('invoice')} disabled={isLoading} size="lg" className="w-full md:w-auto bg-green-600 hover:bg-green-700 font-semibold shadow-md">
+                                {isLoading ? 'Generowanie...' : (
+                                    <>
+                                        <FileText className="mr-2 h-5 w-5" />
+                                        Wystaw Fakturę Końcową
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+                    </div>
                 );
             }
         }
-        
-        return null;
     };
 
 
@@ -298,7 +340,7 @@ export function OrderDetailsClient({ order, items, timelineEvents }: OrderDetail
 
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-6">
                  <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">Zamówienie #{order.id.slice(0, 8)}</h1>
+                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">Zamówienie #{order.displayNumber || order.id.slice(0, 8)}</h1>
                     <div className="flex items-center gap-2 mt-2">
                         <Badge variant="secondary" className="text-sm px-3 py-1 font-medium bg-slate-100 text-slate-600">
                             {new Date(order.createdAt).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
@@ -310,7 +352,7 @@ export function OrderDetailsClient({ order, items, timelineEvents }: OrderDetail
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 items-end sm:items-center">
                      <Button 
-                        variant="outline" 
+                        variant="outline"
                         onClick={handleCopyMagicLink} 
                         className="text-blue-600 border-blue-200 hover:bg-blue-50"
                      >
@@ -468,12 +510,23 @@ export function OrderDetailsClient({ order, items, timelineEvents }: OrderDetail
                 {/* Right Column: Customer & Shipping */}
                 <div className="space-y-6">
                      <Card className="shadow-sm border-slate-200">
-                        <CardHeader>
-                            <CardTitle>Dane Klienta</CardTitle>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-base font-semibold">Dane Klienta</CardTitle>
+                            {order.customer?.taxId ? (
+                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 gap-1">
+                                    <Building2 className="h-3 w-3" /> Firma
+                                </Badge>
+                            ) : (
+                                <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 gap-1">
+                                    <User className="h-3 w-3" /> Osoba prywatna
+                                </Badge>
+                            )}
                         </CardHeader>
-                        <CardContent className="space-y-4">
+                        <CardContent className="space-y-4 pt-4">
                             <div className="flex items-start gap-3">
-                                <div className="mt-1 bg-slate-100 p-2 rounded-full"><Package className="h-4 w-4 text-slate-600" /></div>
+                                <div className="mt-1 bg-slate-100 p-2 rounded-full">
+                                    {order.customer?.taxId ? <Building2 className="h-4 w-4 text-slate-600" /> : <User className="h-4 w-4 text-slate-600" />}
+                                </div>
                                 <div>
                                     <p className="font-semibold text-slate-900">{order.customer?.name}</p>
                                     {order.customer?.taxId && <p className="text-xs font-mono bg-slate-100 px-2 py-0.5 rounded inline-block mt-1">NIP: {order.customer.taxId}</p>}
@@ -490,6 +543,42 @@ export function OrderDetailsClient({ order, items, timelineEvents }: OrderDetail
                                     <a href={`tel:${order.customer?.phone}`} className="text-slate-600 hover:text-slate-900">{order.customer?.phone || '-'}</a>
                                 </div>
                             </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="shadow-sm border-slate-200">
+                        <CardHeader>
+                            <CardTitle>Dokumenty</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {(!order.documents || order.documents.length === 0) ? (
+                                <div className="text-center text-sm text-muted-foreground py-4">Brak dokumentów</div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {order.documents.map((doc, idx) => (
+                                        <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-md border text-sm">
+                                            <div className="flex items-center gap-3">
+                                                <div className="bg-white p-2 border rounded text-slate-500">
+                                                    <FileText className="h-4 w-4" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-medium text-slate-900">{doc.number || 'Dokument'}</p>
+                                                    <p className="text-xs text-slate-500 capitalize">{doc.type.replace('_', ' ') || doc.type}</p>
+                                                </div>
+                                            </div>
+                                            {doc.pdfUrl ? (
+                                                <Button size="icon" variant="ghost" asChild title="Pobierz PDF">
+                                                    <a href={doc.pdfUrl} target="_blank" rel="noopener noreferrer">
+                                                        <Download className="h-4 w-4 text-slate-600" />
+                                                    </a>
+                                                </Button>
+                                            ) : (
+                                                <Badge variant="outline">Przetwarzanie</Badge>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 
@@ -514,6 +603,53 @@ export function OrderDetailsClient({ order, items, timelineEvents }: OrderDetail
                                 <Truck className="h-4 w-4" />
                                 <span>{isSampleOrder ? 'Kurier InPost / Paczkomat' : 'Spedycja Paletowa'}</span>
                             </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="shadow-sm border-slate-200">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Truck className="h-5 w-5 text-indigo-600" />
+                                Śledzenie Przesyłki
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label>Przewoźnik</Label>
+                                <Select value={carrier} onValueChange={setCarrier}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Wybierz przewoźnika" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="geodis">Geodis</SelectItem>
+                                        <SelectItem value="fedex">FedEx</SelectItem>
+                                        <SelectItem value="dhl">DHL</SelectItem>
+                                        <SelectItem value="inpost">InPost</SelectItem>
+                                        <SelectItem value="pekaes">Pekaes</SelectItem>
+                                        <SelectItem value="raben">Raben</SelectItem>
+                                        <SelectItem value="schenker">DB Schenker</SelectItem>
+                                        <SelectItem value="other">Inny</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Numer Listu Przewozowego</Label>
+                                <div className="flex gap-2">
+                                    <Input 
+                                        placeholder="Np. 123456789" 
+                                        value={trackingNumber} 
+                                        onChange={(e) => setTrackingNumber(e.target.value)} 
+                                    />
+                                </div>
+                            </div>
+                            <Button 
+                                className="w-full" 
+                                onClick={handleUpdateTracking} 
+                                disabled={isTrackingSaving}
+                                variant="outline"
+                            >
+                                {isTrackingSaving ? 'Zapisywanie...' : 'Zapisz Tracking'}
+                            </Button>
                         </CardContent>
                     </Card>
 

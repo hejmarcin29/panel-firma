@@ -21,17 +21,22 @@ export function UploadProformaDialog({ orderId }: { orderId: string }) {
     const [open, setOpen] = useState(false);
     const [title, setTitle] = useState('');
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        
+        // Manual validation for 'title' is not needed if we use FormData directly, 
+        // but 'uploadProforma' signature expects (id, title, formData) as per my update?
+        // Let's check actions.ts signature.
+        // export async function uploadProforma(orderId: string, transferTitle: string, formData: FormData)
+        
         try {
-            // Mock PDF upload - in real app, uploading to S3/Blob and getting URL
-            const mockUrl = `https://storage.example.com/proforma-${orderId}.pdf`;
-            
-            await uploadProforma(orderId, title, mockUrl);
+            await uploadProforma(orderId, title, formData);
             toast.success('Proforma wgrana i wysłana');
             setOpen(false);
-        } catch {
-            toast.error('Wystąpił błąd');
+        } catch (error) {
+            console.error(error);
+            toast.error('Wystąpił błąd podczas wysyłania');
         }
     };
 
@@ -63,12 +68,15 @@ export function UploadProformaDialog({ orderId }: { orderId: string }) {
                         />
                         <p className="text-xs text-muted-foreground">Numer, który klient ma wpisać w tytule przelewu.</p>
                     </div>
-                    {/* File input would go here */}
                     <div className="grid gap-2">
-                         <Label>Plik PDF</Label>
-                         <div className="border border-dashed rounded h-20 flex items-center justify-center text-muted-foreground text-sm cursor-pointer hover:bg-muted/50">
-                             Kliknij, aby wybrać plik (Symulacja)
-                         </div>
+                         <Label htmlFor="file">Plik PDF (Proforma)</Label>
+                         <Input 
+                            id="file" 
+                            name="file" 
+                            type="file" 
+                            accept="application/pdf"
+                            required
+                         />
                     </div>
                     <DialogFooter>
                         <Button type="submit">Zatwierdź i Wyślij</Button>

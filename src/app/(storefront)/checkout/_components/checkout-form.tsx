@@ -325,64 +325,111 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
       <div className="lg:col-span-2 space-y-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            {/* 1. Dane Kontaktowe */}
+            {/* 1. Dane Zamawiającego (Kontakt & Firma) */}
             <Card>
               <CardHeader>
-                <CardTitle>Dane Kontaktowe</CardTitle>
+                <CardTitle>Dane Zamawiającego</CardTitle>
               </CardHeader>
-              <CardContent className="grid gap-4 md:grid-cols-2">
-                <FormField
-                  control={form.control as any}
-                  name="firstName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Imię</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Jan" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control as any}
-                  name="lastName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nazwisko</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Kowalski" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control as any}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="jan@example.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control as any}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Telefon</FormLabel>
-                      <FormControl>
-                        <Input placeholder="123 456 789" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <CardContent className="space-y-6">
+                 {/* Typ Klienta Switch */}
+                 <Tabs
+                    defaultValue={isCompany ? "company" : "person"}
+                    onValueChange={(v) => form.setValue("isCompany", v === "company")}
+                    className="w-full"
+                >
+                    <TabsList className="grid w-full grid-cols-2 mb-6">
+                        <TabsTrigger value="person">Osoba Prywatna</TabsTrigger>
+                        <TabsTrigger value="company">Firma</TabsTrigger>
+                    </TabsList>
+                </Tabs>
+
+                {/* Pola Firmowe */}
+                {isCompany && (
+                   <div className="grid gap-4 md:grid-cols-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                     <FormField
+                        control={form.control}
+                        name="nip"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>NIP</FormLabel>
+                            <FormControl>
+                                <Input placeholder="1234567890" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                     <FormField
+                        control={form.control}
+                        name="companyName"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Nazwa Firmy</FormLabel>
+                            <FormControl>
+                                <Input placeholder="Firma Sp. z o.o." {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                   </div>
+                )}
+
+                {/* Dane Kontaktowe */}
+                <div className="grid gap-4 md:grid-cols-2">
+                    <FormField
+                    control={form.control}
+                    name="firstName"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Imię</FormLabel>
+                        <FormControl>
+                            <Input placeholder="Jan" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <FormField
+                    control={form.control}
+                    name="lastName"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Nazwisko</FormLabel>
+                        <FormControl>
+                            <Input placeholder="Kowalski" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                            <Input type="email" placeholder="jan@example.com" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Telefon</FormLabel>
+                        <FormControl>
+                            <Input placeholder="123 456 789" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                </div>
               </CardContent>
             </Card>
 
@@ -495,6 +542,78 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
                     />
                   </div>
                 )}
+
+                {/* Billing Address Toggle Logic */}
+                <div className="pt-6 border-t mt-6">
+                    <FormField
+                      control={form.control}
+                      name="differentBillingAddress"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel className="cursor-pointer font-medium">
+                              Chcę podać inny adres na fakturę
+                            </FormLabel>
+                            <p className="text-sm text-muted-foreground">
+                                Zaznacz, jeśli dane do faktury różnią się od adresu dostawy.
+                            </p>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                </div>
+
+                {/* Billing Address Fields */}
+                {differentBillingAddress && (
+                    <div className="grid gap-4 md:grid-cols-2 pt-4 animate-in fade-in slide-in-from-top-2 border-t mt-4 border-dashed">
+                       <h3 className="col-span-2 font-medium text-sm text-muted-foreground mb-2">Adres na Fakturze</h3>
+                       <FormField
+                        control={form.control}
+                        name="billingStreet"
+                        render={({ field }) => (
+                            <FormItem className="col-span-2">
+                            <FormLabel>Ulica i numer (Faktura)</FormLabel>
+                            <FormControl>
+                                <Input placeholder="ul. Biurowa 1" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name="billingPostalCode"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Kod Pocztowy (Faktura)</FormLabel>
+                            <FormControl>
+                                <Input placeholder="00-000" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name="billingCity"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Miejscowość (Faktura)</FormLabel>
+                            <FormControl>
+                                <Input placeholder="Warszawa" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                    </div>
+                )}
               </CardContent>
             </Card>
 
@@ -532,123 +651,6 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
                     </div>
                 </DialogContent>
             </Dialog>
-
-            {/* 3. Dane do Faktury */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Dane do Faktury</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <FormField
-                  control={form.control as any}
-                  name="isCompany"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center space-x-2">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <FormLabel className="mt-0!">Chcę otrzymać fakturę na firmę (NIP)</FormLabel>
-                    </FormItem>
-                  )}
-                />
-
-                {isCompany && (
-                   <div className="grid gap-4 md:grid-cols-2">
-                     <FormField
-                        control={form.control as any}
-                        name="companyName"
-                        render={({ field }) => (
-                            <FormItem className="col-span-2">
-                            <FormLabel>Nazwa Firmy</FormLabel>
-                            <FormControl>
-                                <Input placeholder="Firma Sp. z o.o." {...field} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                        <FormField
-                        control={form.control as any}
-                        name="nip"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>NIP</FormLabel>
-                            <FormControl>
-                                <Input placeholder="1234567890" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                   </div>
-                )}
-
-                <Separator className="my-4" />
-
-                <FormField
-                  control={form.control as any}
-                  name="differentBillingAddress"
-                  render={({ field }) => (
-                    <FormItem className="flex items-center space-x-2">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <FormLabel className="mt-0!">Inny adres na fakturze</FormLabel>
-                    </FormItem>
-                  )}
-                />
-
-                {differentBillingAddress && (
-                   <div className="grid gap-4 md:grid-cols-2 mt-4">
-                      <FormField
-                        control={form.control as any}
-                        name="billingStreet"
-                        render={({ field }) => (
-                            <FormItem className="col-span-2">
-                            <FormLabel>Ulica i numer</FormLabel>
-                            <FormControl>
-                                <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                         <FormField
-                        control={form.control as any}
-                        name="billingPostalCode"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Kod Pocztowy</FormLabel>
-                            <FormControl>
-                                <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                        <FormField
-                        control={form.control as any}
-                        name="billingCity"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Miejscowość</FormLabel>
-                            <FormControl>
-                                <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                   </div>
-                )}
-              </CardContent>
-            </Card>
 
             {/* 4. Metoda Płatności */}
             <Card>

@@ -1,44 +1,191 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { orders, documents, documentEvents } from '@/lib/db/schema';
+import { orders, documents, documentEvents, type OrderStatus } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { randomUUID } from 'crypto';
+import { uploadOrderDocument } from '@/lib/r2/storage';
+import { generateMagicLinkToken } from '@/lib/auth/magic-link';
+import { headers } from 'next/headers';
+import { createShipment } from '@/lib/inpost/client';
 
-export async function uploadProforma(orderId: string, transferTitle: string, pdfUrl: string) {
-    // 1. Update Order
+export async function uploadProforma(orderId: string, transferTitle: string, formData: FormData) {
+    const file = formData.get('file') as File;
+    
+    if (!file) {
+        throw new Error('No file provided');
+    }
+
+    const order = await db.query.orders.findFirst({
+        where: eq(orders.id, orderId),
+        columns: { displayNumber: true, id: true } 
+    });
+    
+    if (!order) throw new Error('Order not found');
+
+    const folderName = order.displayNumber || order.id;
+
+    const pdfUrl = await uploadOrderDocument({
+        orderId,
+        orderNumber: folderName,
+        file,
+        type: 'proforma'
+    });
+
     await db.update(orders)
         .set({ 
-            status: 'order.awaiting_payment', // payment_pending
+            status: 'order.awaiting_payment', 
             transferTitle: transferTitle
         })
         .where(eq(orders.id, orderId));
 
-    // 2. Create Document record
     const docId = randomUUID();
     await db.insert(documents).values({
         id: docId,
         orderId: orderId,
         type: 'proforma',
         status: 'issued',
-        number: transferTitle, // Use transfer title as number for simplicity or separate
+        number: transferTitle,
         pdfUrl: pdfUrl,
         issueDate: new Date(),
     });
 
-    // 3. Log Event
     await db.insert(documentEvents).values({
         id: randomUUID(),
         documentId: docId,
         status: 'issued',
-        note: 'Uploaded manually via Shop Order Manager',
+        note: `Uploaded manually. File: ${file.name}`,
     });
 
-    // 4. Send Email (Mock)
     console.log(`[Email] Sending Proforma to customer for Order ${orderId}. Title: ${transferTitle}`);
 
     revalidatePath('/dashboard/shop/orders');
+    revalidatePath(`/dashboard/shop/orders/${orderId}`);
+}
+
+export async function uploadFinalInvoice(orderId: string, formData: FormData) {
+    const file = formData.get('file') as File;
+    if (!file) throw new Error('No file provided');
+
+    const order = await db.query.orders.findFirst({
+        where: eq(orders.id, orderId),
+        columns: { displayNumber: true, id: true } 
+    });
+    
+    if (!order) throw new Error('Order not found');
+
+    const folderName = order.displayNumber || order.id;
+
+    const pdfUrl = await uploadOrderDocument({
+        orderId,
+        orderNumber: folderName,
+        file,
+        type: 'faktura'
+    });
+
+    const docId = randomUUID();
+    await db.insert(documents).values({
+        id: docId,
+        orderId: orderId,
+        type: 'final_invoice',
+        status: 'issued',
+        number: `FV/${order.displayNumber || orderId}`,
+        pdfUrl: pdfUrl,
+        issueDate: new Date(),
+    });
+
+    await db.update(orders)
+        .set({ status: 'order.closed' })
+        .where(eq(orders.id, orderId));
+
+     revalidatePath('/dashboard/shop/orders');
+     revalidatePath(`/dashboard/shop/orders/${orderId}`);
+     return { success: true };
+}
+
+export async function uploadAdvanceInvoice(orderId: string, formData: FormData) {
+    const file = formData.get('file') as File;
+    if (!file) throw new Error('No file provided');
+
+    const order = await db.query.orders.findFirst({
+        where: eq(orders.id, orderId),
+        columns: { displayNumber: true, id: true } 
+    });
+    if (!order) throw new Error('Order not found');
+
+    const folderName = order.displayNumber || order.id;
+
+    const pdfUrl = await uploadOrderDocument({
+        orderId,
+        orderNumber: folderName,
+        file,
+        type: 'zaliczka'
+    });
+
+    const docId = randomUUID();
+    await db.insert(documents).values({
+        id: docId,
+        orderId: orderId,
+        type: 'advance_invoice',
+        status: 'issued',
+        number: `FZ/${order.displayNumber || orderId}`,
+        pdfUrl: pdfUrl,
+        issueDate: new Date(),
+    });
+
+    // Optional: Update status to indicate advance invoice issued, if flow requires it.
+    // Usually status stays at 'paid' or specific 'advance_invoice' status
+    await db.update(orders)
+       .set({ status: 'order.advance_invoice' })
+       .where(eq(orders.id, orderId));
+
+     revalidatePath('/dashboard/shop/orders');
+     revalidatePath(`/dashboard/shop/orders/${orderId}`);
+     return { success: true };
+}
+
+export async function uploadCorrectionInvoice(orderId: string, formData: FormData) {
+    const file = formData.get('file') as File;
+    if (!file) throw new Error('No file provided');
+
+    const order = await db.query.orders.findFirst({
+        where: eq(orders.id, orderId),
+        columns: { displayNumber: true, id: true } 
+    });
+    if (!order) throw new Error('Order not found');
+
+    const folderName = order.displayNumber || order.id;
+
+    const pdfUrl = await uploadOrderDocument({
+        orderId,
+        orderNumber: folderName,
+        file,
+        type: 'korekta'
+    });
+
+    const docId = randomUUID();
+    await db.insert(documents).values({
+        id: docId,
+        orderId: orderId,
+        type: 'correction',
+        status: 'issued',
+        number: `KOR/${order.displayNumber || orderId}`,
+        pdfUrl: pdfUrl,
+        issueDate: new Date(),
+    });
+
+    // Logging event
+    await db.insert(documentEvents).values({
+        id: randomUUID(),
+        documentId: docId,
+        status: 'issued',
+        note: `Correction uploaded manually. File: ${file.name}`,
+    });
+
+     revalidatePath('/dashboard/shop/orders');
+     revalidatePath(`/dashboard/shop/orders/${orderId}`);
+     return { success: true };
 }
 
 export async function updateShippingInfo(orderId: string, carrier: string, trackingNumber: string) {

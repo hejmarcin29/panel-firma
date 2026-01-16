@@ -589,6 +589,13 @@
       "when": 1768509766746,
       "tag": "0083_wide_punisher",
       "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "7",
+      "when": 1768553179934,
+      "tag": "0084_handy_shatterstar",
+      "breakpoints": true
     }
   ]
 }

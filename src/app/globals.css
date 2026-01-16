@@ -1,11 +1,32 @@
 @import "tailwindcss";
 /* @import "tw-animate-css"; */
 
+@layer base {
+  html {
+    /* Mobile First: High Density (14px base) */
+    font-size: 14px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  @media (min-width: 768px) {
+    html {
+      /* Desktop: Standard (16px base) */
+      font-size: 16px;
+    }
+  }
+}
+
 @utility container {
   margin-inline: auto;
-  padding-inline: 1rem;
+  /* Mobile: tighter margins (12px) */
+  padding-inline: 0.75rem; 
   max-width: 1400px;
   width: 100%;
+
+  @media (min-width: 768px) {
+    /* Desktop: standard margins (16px+) */
+    padding-inline: 1rem;
+  }
 }
 
 @custom-variant dark (&:is(.dark *));

@@ -30,6 +30,18 @@ export async function updateShopOrderStatus(orderId: string, newStatus: string) 
     return { success: true };
 }
 
+export async function updateOrderTracking(orderId: string, carrier: string, trackingNumber: string) {
+    await db.update(orders)
+        .set({ 
+            shippingCarrier: carrier,
+            shippingTrackingNumber: trackingNumber 
+        })
+        .where(eq(orders.id, orderId));
+    
+    revalidatePath(`/dashboard/shop/orders/${orderId}`);
+    return { success: true };
+}
+
 export async function generateShippingLabel(orderId: string) {
     // 1. Fetch Order Data
     const order = await db.query.orders.findFirst({

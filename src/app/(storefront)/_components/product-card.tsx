@@ -75,27 +75,27 @@ export function ProductCard({ product, showGrossPrices = false, vatRate = 23 }: 
         </div>
 
         {/* Content */}
-        <div className="flex flex-1 flex-col p-4">
-          <h3 className="line-clamp-2 text-lg font-medium tracking-tight text-foreground transition-colors group-hover:text-primary">
+        <div className="flex flex-1 flex-col p-3 md:p-4">
+          <h3 className="line-clamp-2 text-sm md:text-lg font-medium tracking-tight text-foreground transition-colors group-hover:text-primary">
             {product.name}
           </h3>
           
-          <div className="mt-auto pt-4">
+          <div className="mt-auto pt-2 md:pt-4">
              <div className="flex items-end justify-between">
                 <div>
                     {currentPrice ? (
                         <div className="flex flex-col">
                             {isOnSale && price && (
-                                <span className="text-xs text-muted-foreground line-through">
+                                <span className="text-[10px] md:text-xs text-muted-foreground line-through">
                                     {formatCurrency(price)}
                                 </span>
                             )}
                             <div className="flex items-baseline gap-1">
-                                <span className="text-xl font-bold text-primary">
+                                <span className="text-base md:text-xl font-bold text-primary">
                                     {formatCurrency(currentPrice)}
                                 </span>
                                 {product.unit && (
-                                    <span className="text-sm text-muted-foreground">
+                                    <span className="text-xs md:text-sm text-muted-foreground">
                                         / {product.unit}
                                     </span>
                                 )}

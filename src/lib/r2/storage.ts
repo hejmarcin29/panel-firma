@@ -408,3 +408,37 @@ export async function uploadShipmentLabel({
     return key;
 }
 
+export async function uploadOrderDocument({
+    orderId,
+    orderNumber,
+    file,
+    type
+}: {
+    orderId: string;
+    orderNumber: string; 
+    file: File;
+    type: 'proforma' | 'faktura' | 'logistyka' | 'zaliczka' | 'korekta' | 'inne';
+}): Promise<string> {
+    const config = await getR2Config();
+    const client = createR2Client(config);
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const filename = sanitizeFilename(file.name);
+    
+    const year = new Date().getFullYear().toString();
+    const safeOrderFolder = orderNumber.replace(/\//g, '-');
+    
+    const key = `zamowienia/${year}/${safeOrderFolder}/${type}/${Date.now()}_${filename}`;
+
+    const command = new PutObjectCommand({
+        Bucket: config.bucketName,
+        Key: key,
+        Body: buffer,
+        ContentType: file.type,
+        ContentDisposition: 'inline',
+    });
+
+    await client.send(command);
+
+    return `${config.publicBaseUrl}/${key}`;
+}

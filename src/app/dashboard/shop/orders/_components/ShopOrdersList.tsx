@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 // Define strict type based on what we fetch
 type ShopOrder = {
     id: string;
+    displayNumber: string | null;
     sourceOrderId: string | null;
     createdAt: Date;
     status: string;
@@ -38,9 +39,9 @@ export function ShopOrdersList({ orders }: { orders: ShopOrder[] }) {
     const filteredOrders = orders.filter(order => {
         const search = searchTerm.toLowerCase();
         return (
+            order.displayNumber?.toLowerCase().includes(search) || // Added display number search
             order.sourceOrderId?.toLowerCase().includes(search) ||
             order.customer?.name.toLowerCase().includes(search) ||
-            order.customer?.email?.toLowerCase().includes(search) ||
             order.id.toLowerCase().includes(search)
         );
     });
@@ -128,8 +129,10 @@ function OrderRow({ order }: { order: ShopOrder }) {
         <tr className="border-b transition-colors hover:bg-muted/50">
             <td className="p-4 align-middle font-medium">
                 <div className="flex flex-col">
-                    <span className="text-base">{order.sourceOrderId || order.id.slice(0, 8)}</span>
+                    <span className="text-base font-bold">{order.displayNumber || order.sourceOrderId || order.id.slice(0, 8)}</span>
                     <span className="text-xs text-muted-foreground uppercase">{order.paymentMethod}</span>
+                    {/* Optional: Show internal ID on hover or as small text if enabled */}
+                    {/* <span className="text-[10px] text-gray-400 font-mono">{order.id.slice(0,8)}</span> */}
                 </div>
             </td>
             <td className="p-4 align-middle">

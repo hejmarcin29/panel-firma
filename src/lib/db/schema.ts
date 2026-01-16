@@ -43,7 +43,7 @@ export const productPatterns = ['plank', 'herringbone', 'chevron', 'tile'] as co
 export const productMountingMethods = ['click', 'glue', 'auto'] as const;
 
 
-export const documentTypes = ['proforma', 'advance_invoice', 'final_invoice'] as const;
+export const documentTypes = ['proforma', 'advance_invoice', 'final_invoice', 'correction'] as const;
 export const documentStatuses = ['draft', 'issued', 'cancelled', 'voided', 'corrected'] as const;
 
 export const paymentStatuses = ['pending', 'matched', 'mismatch', 'refunded'] as const;
@@ -331,6 +331,7 @@ export const orders = pgTable(
 	'orders',
 	{
 		id: text('id').primaryKey(),
+        displayNumber: text('display_number'), // Human friendly ID e.g. ZS/2026/01/001
 		source: text('source').$type<OrderSource>().notNull(),
 		sourceOrderId: text('source_order_id'),
 		status: text('status').$type<OrderStatus>().notNull(), // 'order.received', etc.

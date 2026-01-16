@@ -14,7 +14,8 @@ export default async function OrderDetailsPage(props: { params: Promise<{ id: st
             where: eq(orders.id, orderId),
             with: {
                 items: true,
-                customer: true
+                customer: true,
+                documents: true, // Fetch documents
             }
         }),
         db.select()

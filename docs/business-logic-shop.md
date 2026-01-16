@@ -77,7 +77,24 @@ System wspiera proces manualnego wystawiania Proformy zewnętrznie.
     *   `is_sample_available`: boolean (default false).
     *   `package_size_m2`: float (wymagane do kalkulatora paczek).
 
-## 6. Prezentacja Cen (Pricing Logic)
-- **Globalne Ustawienia:** Każdy widok i endpoint zwracający ceny produktów (witryna, sklep, koszyk, checkout) **MUSI** sprawdzać konfigurację globalną (`getShopConfig`).
-- **Netto/Brutto:** Jeśli w `ShopConfig` włączone jest `showGrossPrices`, system musi doliczyć VAT (`vatRate`) do ceny bazowej (`price`) PRZED wysłaniem danych na frontend.
-- **Frontend:** Komponenty UI nie powinny liczyć VATu same – powinny wyświetlać cenę otrzymaną z backendu, zakładając, że jest już poprawna (chyba że to admin panel).
+## 7. Numeracja Zamówień i Archiwizacja Dokumentów
+
+### A. Identyfikacja Zamówień (Friendly ID)
+System wykorzystuje dwuwarstwową identyfikację zamówień:
+1.  **ID Techniczne (UUID):** Używane w bazie danych, w adresach URL (`/orders/3cbad...`) oraz relacjach. Gwarantuje unikalność i bezpieczeństwo.
+2.  **Numer Zamówienia (Display ID):** Format czytelny dla klienta, używany w komunikacji, na fakturach i listach.
+    *   **Format:** `ZS/{ROK}/{MIESIĄC}/{NR}` (np. `ZS/2026/01/015`).
+    *   **Generowanie:** Nadawany automatycznie w momencie utworzenia zamówienia (lub zatwierdzenia koszyka).
+    *   **Prezentacja:** Panel Admina i Panel Klienta wyświetlają wyłącznie Display ID.
+
+### B. Przechowywanie Dokumentów (R2)
+Pliki (proformy, faktury, etykiety) są przechowywane w chmurze (Cloudflare R2) w ustrukturyzowanych katalogach.
+*   **Wzorzec Ścieżki:** `zamowienia/{ROK}/{DISPLAY_NUMBER}/{TYP}/{TIMESTAMP}_{NAZWA_PLIKU}`
+*   **Zmienne:**
+    *   `{ROK}`: Rok złożenia zamówienia (np. 2026).
+    *   `{DISPLAY_NUMBER}`: Numer czytelny (np. ZS-2026-01-015). Jeśli brak, fallback do UUID.
+    *   `{TYP}`: Kategoria dokumentu (`proformy`, `faktury`, `logistyka`).
+*   **Obsługiwane typy:**
+    *   **Proforma:** Wgrywana ręcznie przez administratora.
+    *   **Faktura Końcowa:** Wgrywana ręcznie po wysyłce towaru.
+    *   **Etykiety:** Generowane automatycznie (InPost) lub wgrywane ręcznie.
