@@ -5,7 +5,7 @@ import { getShopConfig } from '@/app/dashboard/settings/shop/actions';
 import { ProductGallery } from './_components/product-gallery';
 import { FloorCalculator } from './_components/floor-calculator';
 
-import { Check, Truck, ShieldCheck, HelpCircle } from 'lucide-react';
+import { Check, Truck, ShieldCheck, HelpCircle, ThermometerSun, Fingerprint, Droplets, Leaf } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -270,6 +270,54 @@ export default async function ProductPage({ params }: PageProps) {
                         </div>
 
                     </div>
+                </div>
+
+                {/* Key Features / Trust Badges - Estetyka 2026 */}
+                <div className="mt-16 mb-12">
+                   <h3 className="text-xl font-bold font-playfair mb-6 px-2">Najważniejsze cechy</h3>
+                   <div className="overflow-x-auto pb-6 -mx-4 px-4 scrollbar-hide snap-x">
+                        <div className="flex lg:grid lg:grid-cols-5 gap-4 min-w-max lg:min-w-0">
+                            {[
+                                {
+                                    icon: ThermometerSun,
+                                    title: "Ciepła i miękka podłoga",
+                                    desc: "Przeciwieństwo zimnych płytek"
+                                },
+                                {
+                                    icon: Fingerprint,
+                                    title: "Głęboka, synchroniczna struktura",
+                                    desc: "Wyraźny rysunek słojów (EIR)"
+                                },
+                                {
+                                    icon: Droplets,
+                                    title: "100% wodoodporne",
+                                    desc: "Aquashield - idealne do kuchni"
+                                },
+                                {
+                                    icon: ShieldCheck,
+                                    title: "Warstwa Next-Gen",
+                                    desc: "Warstwa użytkowa nakładana IR"
+                                },
+                                {
+                                    icon: Leaf,
+                                    title: "Bez szkodliwych substancji",
+                                    desc: "Indoor Air Comfort Gold"
+                                }
+                            ].map((feature, i) => (
+                                <div key={i} className="group relative flex flex-col p-5 rounded-2xl border border-gray-100 bg-white shadow-sm hover:shadow-md hover:border-emerald-100 transition-all duration-300 w-[240px] lg:w-auto snap-center flex-shrink-0">
+                                    <div className="mb-4 h-12 w-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:scale-110 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300">
+                                        <feature.icon className="h-6 w-6" />
+                                    </div>
+                                    <h4 className="font-bold text-gray-900 mb-2 text-sm lg:text-base leading-tight">
+                                        {feature.title}
+                                    </h4>
+                                    <div className="mt-auto pt-2 border-t border-dashed border-gray-100">
+                                        <p className="text-xs text-gray-500 font-medium">{feature.desc}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                   </div>
                 </div>
 
                 {/* Description & Technical Data */}

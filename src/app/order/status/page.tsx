@@ -1,16 +1,15 @@
 import { notFound } from 'next/navigation';
 import { db } from "@/lib/db";
-import { erpOrderTimeline, orders } from "@/lib/db/schema";
-import { eq, asc } from "drizzle-orm";
+import { orders, erpProducts } from "@/lib/db/schema";
+import { eq, inArray } from "drizzle-orm";
 import { verifyMagicLinkToken } from "@/lib/auth/magic-link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { format } from "date-fns";
-import { pl } from "date-fns/locale";
-import { TimelineView, TimelineEvent } from "@/components/shop/timeline-view";
-import { Package, Truck, Clock, ShoppingCart, Phone, Mail, FileText, Download } from "lucide-react";
+import { Package, Truck, ShoppingCart, Phone, Mail, FileText, Download, CheckCircle2, MapPin, HeartHandshake } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { StoreHeader } from "@/app/(storefront)/_components/store-header";
+import { StoreFooter } from "@/app/(storefront)/_components/store-footer";
+import Image from "next/image";
 
 interface PageProps {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -60,13 +59,34 @@ export default async function OrderStatusPage({ searchParams }: PageProps) {
         return notFound();
     }
 
+    // Fetch Product Images
+    const skus = orderRaw.items.map(item => item.sku).filter((sku): sku is string => !!sku);
+    const productImagesMap: Record<string, string> = {};
+    
+    if (skus.length > 0) {
+        const products = await db.query.erpProducts.findMany({
+            where: inArray(erpProducts.sku, skus),
+            with: {
+                images: true
+            }
+        });
+        
+        products.forEach(p => {
+            if (p.images && p.images.length > 0) {
+                productImagesMap[p.sku] = p.images[0].url;
+            }
+        });
+    }
+
     // Normalize Data for View
     const orderItemsList = orderRaw.items.map((item) => ({
         id: item.id,
         name: item.name,
         quantity: item.quantity,
         unit: 'szt.',
-        price: item.unitPrice
+        price: item.unitPrice,
+        sku: item.sku,
+        imageUrl: item.sku ? productImagesMap[item.sku] : null
     }));
 
     const order = {
@@ -78,77 +98,25 @@ export default async function OrderStatusPage({ searchParams }: PageProps) {
         currency: orderRaw.currency,
         billingEmail: orderRaw.billingAddress?.email || '',
         billingName: orderRaw.billingAddress?.name || '',
+        billingStreet: orderRaw.billingAddress?.street || '',
+        billingCity: orderRaw.billingAddress?.city || '',
+        billingPostcode: orderRaw.billingAddress?.postalCode || '',
         isShop: true,
         shippingCarrier: orderRaw.shippingCarrier,
         shippingTrackingNumber: orderRaw.shippingTrackingNumber,
         documents: orderRaw.documents || []
     };
 
-    // Fetch Timeline
-    let timelineEvents: TimelineEvent[] = [];
-    
-    try {
-        const rawEvents = await db.query.erpOrderTimeline.findMany({
-            where: eq(erpOrderTimeline.orderId, orderId),
-            orderBy: asc(erpOrderTimeline.createdAt)
-        });
-        timelineEvents = rawEvents as unknown as TimelineEvent[];
-    } catch (e) {
-        console.error("Timeline fetch failed:", e);
-    }
+    // Determine Stepper State
+    const steps = [
+        { id: 1, label: 'Przyjęte', active: true, completed: true }, // Always placed
+        { id: 2, label: 'Opłacone', active: ['order.paid', 'order.advance_invoice', 'order.forwarded_to_supplier', 'order.fulfillment_confirmed', 'order.final_invoice', 'order.closed'].includes(order.status), completed: ['order.paid', 'order.advance_invoice', 'order.forwarded_to_supplier', 'order.fulfillment_confirmed', 'order.final_invoice', 'order.closed'].includes(order.status) },
+        { id: 3, label: 'W Realizacji', active: ['order.forwarded_to_supplier', 'order.fulfillment_confirmed', 'order.final_invoice', 'order.closed'].includes(order.status), completed: ['order.fulfillment_confirmed', 'order.final_invoice', 'order.closed'].includes(order.status) },
+        { id: 4, label: 'Wysłane', active: ['order.fulfillment_confirmed', 'order.final_invoice', 'order.closed'].includes(order.status), completed: ['order.closed'].includes(order.status) },
+        { id: 5, label: 'Dostarczone', active: order.status === 'order.closed', completed: order.status === 'order.closed' }
+    ];
 
-    // If no timeline events (legacy or fresh shop order), add synthetic events
-    if (timelineEvents.length === 0) {
-        // Construct Synthetic Timeline for Shop Orders
-        timelineEvents.push({
-            id: 'created',
-            type: 'system',
-            title: 'Zamówienie złożone',
-            createdAt: order.createdAt,
-            metadata: null
-        });
-        
-        // Basic map of known states
-        if (order.status === 'order.paid' || order.status === 'order.fulfillment_confirmed') {
-             timelineEvents.push({
-                id: 'paid',
-                type: 'payment',
-                title: 'Płatność potwierdzona',
-                createdAt: order.createdAt, // Approximation
-                metadata: null
-            });
-        }
-        
-        if (order.status === 'order.fulfillment_confirmed') {
-             timelineEvents.push({
-                id: 'sent',
-                type: 'status_change',
-                title: 'Zamówienie wysłane',
-                createdAt: order.createdAt, // Approximation
-                metadata: null
-            });
-        }
-    }
-
-    // Helper for status badge
-    const getStatusLabel = (s: string) => {
-        const map: Record<string, string> = {
-            'draft': 'Szkic',
-            'pending': 'Oczekuje',
-            'order.received': 'Przyjęte',
-            'order.pending_proforma': 'Ocz. na Proformę',
-            'order.proforma_issued': 'Proforma Wysłana',
-            'order.awaiting_payment': 'Ocz. na Płatność',
-            'order.paid': 'Opłacone',
-            'order.advance_invoice': 'Faktura Zaliczkowa',
-            'order.forwarded_to_supplier': 'W Realizacji',
-            'order.fulfillment_confirmed': 'Wysłane',
-            'order.final_invoice': 'Faktura Końcowa',
-            'order.closed': 'Zakończone',
-            'order.cancelled': 'Anulowane'
-        };
-        return map[s] || s;
-    };
+    const currentStepIndex = steps.filter(s => s.active).length - 1;
 
     const getTrackingUrl = (carrier: string | null, number: string | null) => {
         if (!number) return '#';
@@ -165,210 +133,253 @@ export default async function OrderStatusPage({ searchParams }: PageProps) {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50/50 pb-20">
-            <div className="bg-white border-b sticky top-0 z-10">
-                <div className="container py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                         <div className="h-10 w-10 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold">
-                            {order.billingName.charAt(0)}
-                         </div>
-                         <div>
-                             <h1 className="font-semibold text-lg leading-none">Zamówienie {order.reference}</h1>
-                             <p className="text-xs text-muted-foreground mt-1">
-                                Utworzono {format(order.createdAt, "d MMMM yyyy, HH:mm", { locale: pl })}
-                             </p>
-                         </div>
+        <div className="flex min-h-screen flex-col bg-gray-50/30">
+            <StoreHeader />
+            
+            <main className="flex-1 py-12">
+                <div className="container px-4 md:px-6">
+                    
+                    {/* Hero Header */}
+                    <div className="mb-10 text-center md:text-left">
+                        <div className="inline-flex items-center justify-center p-3 bg-green-100 text-green-700 rounded-full mb-4">
+                             <CheckCircle2 className="w-8 h-8" />
+                        </div>
+                        <h1 className="text-3xl font-bold tracking-tight mb-2">Dziękujemy za zamówienie, {order.billingName.split(' ')[0]}!</h1>
+                        <p className="text-muted-foreground text-lg">
+                            Przyjęliśmy Twoje zamówienie do realizacji. Numer zamówienia: <span className="font-mono font-medium text-foreground">#{order.reference}</span>
+                        </p>
                     </div>
-                    <Badge variant={order.status.includes('paid') || order.status.includes('sent') ? "default" : "secondary"}>
-                        {getStatusLabel(order.status)}
-                    </Badge>
-                </div>
-            </div>
 
-            <div className="container py-8 max-w-3xl">
-                <div className="space-y-6">
-                    {/* Shipment Tracking Card */}
-                    {(order.isShop && order.shippingTrackingNumber) && (
-                        <Card className="bg-indigo-50 border-indigo-100">
-                             <CardHeader className="pb-3">
-                                <CardTitle className="text-base flex items-center gap-2 text-indigo-900">
-                                    <Truck className="h-4 w-4" />
-                                    Twoja Przesyłka
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-                                    <div>
-                                        <p className="text-sm text-indigo-700 font-medium capitalize">
-                                            Przewoźnik: {order.shippingCarrier}
-                                        </p>
-                                        <p className="text-xs text-indigo-600">
-                                            Nr przesyłki: <span className="font-mono bg-white/50 px-1 rounded">{order.shippingTrackingNumber}</span>
-                                        </p>
+                    <div className="grid gap-10 lg:grid-cols-3">
+                        {/* LEFT COLUMN (2/3) */}
+                        <div className="lg:col-span-2 space-y-8">
+                            
+                            {/* Visual Stepper */}
+                            <Card className="border-none shadow-md overflow-hidden">
+                                <CardContent className="p-8">
+                                    <h3 className="font-semibold mb-8 flex items-center gap-2">
+                                        <Truck className="w-5 h-5 text-primary" />
+                                        Status Przesyłki
+                                    </h3>
+                                    <div className="relative">
+                                        {/* Progress Bar Background */}
+                                        <div className="absolute top-4 left-0 w-full h-1 bg-gray-100 rounded-full -z-10" />
+                                        
+                                        {/* Active Progress */}
+                                        <div 
+                                            className="absolute top-4 left-0 h-1 bg-primary rounded-full -z-10 transition-all duration-1000" 
+                                            style={{ width: `${(currentStepIndex / (steps.length - 1)) * 100}%` }}
+                                        />
+
+                                        <div className="flex justify-between w-full">
+                                            {steps.map((step, idx) => (
+                                                <div key={step.id} className="flex flex-col items-center gap-3">
+                                                    <div className={`
+                                                        w-9 h-9 rounded-full flex items-center justify-center border-2 transition-all duration-500 bg-white
+                                                        ${step.completed ? 'border-primary bg-primary text-white' : 
+                                                          step.active ? 'border-primary text-primary' : 'border-gray-200 text-gray-300'}
+                                                    `}>
+                                                        {step.completed ? <CheckCircle2 className="w-5 h-5" /> : <div className="w-2.5 h-2.5 bg-current rounded-full" />}
+                                                    </div>
+                                                    <span className={`text-xs font-medium text-center ${step.active ? 'text-foreground' : 'text-muted-foreground'}`}>
+                                                        {step.label}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
-                                    <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white w-full sm:w-auto" asChild>
-                                        <a href={getTrackingUrl(order.shippingCarrier, order.shippingTrackingNumber)} target="_blank" rel="noopener noreferrer">
-                                            Śledź przesyłkę
-                                        </a>
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
 
-                    {/* Status Card */}
-                    <Card>
-                        <CardHeader className="pb-4">
-                            <CardTitle className="text-base flex items-center gap-2">
-                                <Clock className="h-4 w-4 text-muted-foreground" />
-                                Historia Realizacji
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            {timelineEvents.length > 0 ? (
-                                <TimelineView events={timelineEvents} />
-                            ) : (
-                                <div className="text-center py-8 text-muted-foreground text-sm">
-                                    Brak zdarzeń na osi czasu.
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    {/* Documents Card */}
-                    {order.documents && order.documents.length > 0 && (
-                        <Card>
-                            <CardHeader className="pb-4">
-                                <CardTitle className="text-base flex items-center gap-2">
-                                    <FileText className="h-4 w-4 text-muted-foreground" />
-                                    Dokumenty
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-3">
-                                    {order.documents.map((doc, idx) => (
-                                        <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-md border text-sm">
+                                    {/* Tracking Info Alert */}
+                                    {order.shippingTrackingNumber && (
+                                        <div className="mt-8 bg-blue-50/50 border border-blue-100 rounded-lg p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="bg-white p-2 border rounded text-slate-500">
-                                                    <FileText className="h-4 w-4" />
+                                                <div className="bg-white p-2 rounded-full shadow-sm">
+                                                    <Package className="w-5 h-5 text-blue-600" />
                                                 </div>
                                                 <div>
-                                                    <p className="font-medium text-slate-900">{doc.number || 'Dokument bez numeru'}</p>
-                                                    <p className="text-xs text-slate-500 capitalize">{doc.type.replace('_', ' ')} • {new Date(doc.createdAt).toLocaleDateString()}</p>
+                                                    <p className="text-sm font-medium text-blue-900">Paczka jest w drodze!</p>
+                                                    <p className="text-xs text-blue-700">Nr przesyłki: <span className="font-mono">{order.shippingTrackingNumber}</span> ({order.shippingCarrier})</p>
                                                 </div>
                                             </div>
-                                            {doc.pdfUrl ? (
-                                                <Button size="sm" variant="outline" asChild>
-                                                    <a href={doc.pdfUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
-                                                        <Download className="h-4 w-4" />
-                                                        Pobierz
-                                                    </a>
-                                                </Button>
-                                            ) : (
-                                               <Badge variant="outline">Przetwarzanie</Badge>
-                                            )}
+                                            <Button className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white shadow-none" asChild>
+                                                <a href={getTrackingUrl(order.shippingCarrier, order.shippingTrackingNumber)} target="_blank" rel="noopener noreferrer">
+                                                    Śledź przesyłkę
+                                                </a>
+                                            </Button>
                                         </div>
-                                    ))}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
+                                    )}
+                                </CardContent>
+                            </Card>
 
-                    {/* Order Details & Items */}
-                    <Card>
-                        <CardHeader className="pb-4">
-                            <CardTitle className="text-base flex items-center gap-2">
-                                <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-                                Lista Produktów
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-4">
-                                {orderItemsList.map((item) => (
-                                    <div key={item.id} className="flex justify-between items-start text-sm border-b pb-3 last:border-0 last:pb-0">
-                                        <div className="flex-1 pr-4">
-                                            <span className="font-medium block">{item.name}</span>
+                            {/* Product List */}
+                            <Card className="border-none shadow-md">
+                                <CardHeader>
+                                    <CardTitle className="text-lg flex items-center gap-2">
+                                        <ShoppingCart className="w-5 h-5 text-gray-500" />
+                                        Zamówione Produkty
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="space-y-6">
+                                        {orderItemsList.map((item) => (
+                                            <div key={item.id} className="flex gap-4 items-start pb-6 border-b last:border-0 last:pb-0 border-gray-100">
+                                                <div className="h-20 w-20 shrink-0 bg-gray-100 rounded-md overflow-hidden relative border">
+                                                    {item.imageUrl ? (
+                                                        <Image src={item.imageUrl} alt={item.name} fill className="object-cover" />
+                                                    ) : (
+                                                        <div className="h-full w-full flex items-center justify-center text-gray-300">
+                                                            <Package className="w-8 h-8" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <h4 className="font-semibold text-gray-900 line-clamp-2">{item.name}</h4>
+                                                    <p className="text-sm text-muted-foreground mt-1">Ilość: {item.quantity} {item.unit}</p>
+                                                    {item.sku && <p className="text-xs text-gray-400 mt-1">SKU: {item.sku}</p>}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* Documents (If any) */}
+                            {order.documents && order.documents.length > 0 && (
+                                <Card className="border-none shadow-md">
+                                    <CardHeader>
+                                        <CardTitle className="text-lg flex items-center gap-2">
+                                            <FileText className="w-5 h-5 text-gray-500" />
+                                            Dokumenty
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="grid gap-3 sm:grid-cols-2">
+                                            {order.documents.map((doc, idx) => (
+                                                <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors">
+                                                    <div className="flex gap-3 items-center overflow-hidden">
+                                                        <FileText className="w-8 h-8 text-gray-400 shrink-0" />
+                                                        <div className="min-w-0">
+                                                            <p className="font-medium text-sm truncate">{doc.number || 'Dokument'}</p>
+                                                            <p className="text-xs text-muted-foreground capitalize">{doc.type.replace('_', ' ')}</p>
+                                                        </div>
+                                                    </div>
+                                                    {doc.pdfUrl && (
+                                                        <Button size="icon" variant="ghost" className="shrink-0" asChild>
+                                                            <a href={doc.pdfUrl} target="_blank" rel="noopener noreferrer">
+                                                                <Download className="w-4 h-4" />
+                                                            </a>
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            ))}
                                         </div>
-                                        <div className="text-right whitespace-nowrap">
-                                            <span className="font-semibold">{item.quantity} {item.unit}</span>
+                                    </CardContent>
+                                </Card>
+                            )}
+
+                        </div>
+
+                        {/* RIGHT COLUMN (1/3) */}
+                        <div className="space-y-6">
+                            
+                            {/* What's Next? (Placeholders) */}
+                            <Card className="border-none shadow-md bg-white">
+                                <CardHeader>
+                                    <CardTitle className="text-lg">Co dalej?</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-3">
+                                    <Button variant="outline" className="w-full justify-start h-auto py-3 px-4 border-gray-200 hover:bg-gray-50 hover:text-primary" asChild>
+                                        <a href="#">
+                                            <div className="bg-primary/10 p-2 rounded-full mr-3 text-primary">
+                                                <FileText className="w-4 h-4" />
+                                            </div>
+                                            <div className="text-left">
+                                                <span className="block font-semibold text-sm text-foreground">Instrukcja Montażu</span>
+                                                <span className="block text-xs text-muted-foreground font-normal">Pobierz PDF przed dostawą</span>
+                                            </div>
+                                        </a>
+                                    </Button>
+
+                                    <Button variant="outline" className="w-full justify-start h-auto py-3 px-4 border-gray-200 hover:bg-gray-50 hover:text-primary" asChild>
+                                        <a href="#">
+                                            <div className="bg-primary/10 p-2 rounded-full mr-3 text-primary">
+                                                <HeartHandshake className="w-4 h-4" />
+                                            </div>
+                                            <div className="text-left">
+                                                <span className="block font-semibold text-sm text-foreground">Pielęgnacja Podłogi</span>
+                                                <span className="block text-xs text-muted-foreground font-normal">Sprawdź jak dbać o produkt</span>
+                                            </div>
+                                        </a>
+                                    </Button>
+                                </CardContent>
+                            </Card>
+
+                            {/* Summary Card */}
+                            <Card className="border-none shadow-md">
+                                <CardHeader>
+                                    <CardTitle className="text-lg">Podsumowanie</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-6">
+                                    {/* Cost */}
+                                    <div className="space-y-1">
+                                        <p className="text-sm text-muted-foreground">Wartość zamówienia</p>
+                                        <p className="text-3xl font-bold tracking-tight">
+                                            {(order.totalGross / 100).toFixed(2)} <span className="text-sm font-normal text-gray-500">{order.currency}</span>
+                                        </p>
+                                    </div>
+
+                                    <Separator />
+
+                                    {/* Address */}
+                                    <div className="flex gap-3">
+                                        <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
+                                        <div className="text-sm text-muted-foreground">
+                                            <p className="font-medium text-gray-900 mb-1">Dane do faktury</p>
+                                            <p>{order.billingName}</p>
+                                            <p>{order.billingStreet}</p>
+                                            <p>{order.billingPostcode} {order.billingCity}</p>
+                                            <p className="mt-2">{order.billingEmail}</p>
                                         </div>
                                     </div>
-                                ))}
-                            </div>
-                        </CardContent>
-                    </Card>
+                                </CardContent>
+                            </Card>
 
-                    {/* Order Summary */}
-                    <Card>
-                        <CardHeader className="pb-4">
-                            <CardTitle className="text-base flex items-center gap-2">
-                                <Package className="h-4 w-4 text-muted-foreground" />
-                                Dane Zamówienia
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4 text-sm">
-                                <div>
-                                    <span className="text-muted-foreground block text-xs mb-1">Kwota do zapłaty</span>
-                                    <span className="font-semibold text-lg">
-                                        {(order.totalGross / 100).toFixed(2)} {order.currency}
-                                    </span>
+                            {/* Support Card */}
+                            <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl p-6 border border-primary/10">
+                                <div className="flex items-center gap-4 mb-4">
+                                     <div className="h-12 w-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-lg shadow-lg shadow-primary/20">
+                                        MP
+                                     </div>
+                                     <div>
+                                        <h4 className="font-bold text-gray-900">Marcin Przybyła</h4>
+                                        <p className="text-xs text-primary font-medium uppercase tracking-wider">Twój opiekun</p>
+                                     </div>
                                 </div>
-                                <div>
-                                    <span className="text-muted-foreground block text-xs mb-1">Adres Email</span>
-                                    <span>{order.billingEmail}</span>
-                                </div>
-                            </div>
-                            
-                            <Separator />
-                            
-                            <div className="text-sm bg-blue-50 text-blue-800 p-3 rounded-md flex gap-3">
-                                <Truck className="h-5 w-5 shrink-0" />
-                                <p>
-                                    Twoje zamówienie jest bezpieczne. Poinformujemy Cię mailowo o każdej zmianie statusu oraz nadaniu przesyłki.
+                                <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+                                    Masz pytania dotyczące zamówienia lub montażu? Jestem do Twojej dyspozycji.
                                 </p>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* Dedicated Support Contact */}
-                    <Card className="bg-gradient-to-br from-white to-slate-50 border-slate-200">
-                        <CardHeader className="pb-2">
-                             <CardTitle className="text-base">Potrzebujesz pomocy?</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                             <div className="flex flex-col sm:flex-row items-center gap-4">
-                                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg shrink-0">
-                                    MP
-                                    {/* <img src="/marcin.jpg" className="h-full w-full rounded-full object-cover" /> */}
-                                </div>
-                                <div className="flex-1 text-center sm:text-left">
-                                    <div className="font-semibold text-foreground">Marcin Przybyła</div>
-                                    <div className="text-xs text-muted-foreground">Twój opiekun zamówienia</div>
-                                </div>
-                                <div className="flex gap-2 w-full sm:w-auto">
-                                     <Button variant="outline" size="sm" className="flex-1 gap-2 border-primary/20 hover:bg-primary/5 text-primary" asChild>
+                                <div className="grid grid-cols-2 gap-3">
+                                     <Button className="w-full bg-white hover:bg-white/90 text-primary border border-primary/20 shadow-sm" asChild>
                                         <a href="tel:+48792303192">
-                                            <Phone className="h-3.5 w-3.5" />
+                                            <Phone className="w-4 h-4 mr-2" />
                                             Zadzwoń
                                         </a>
                                      </Button>
-                                     <Button variant="outline" size="sm" className="flex-1 gap-2" asChild>
-                                        <a href={`mailto:biuro@primepodloga.pl?subject=Pytanie do zamówienia ${order.reference}`}>
-                                            <Mail className="h-3.5 w-3.5" />
+                                     <Button className="w-full bg-primary hover:bg-primary/90 text-white shadow-md shadow-primary/20" asChild>
+                                        <a href={`mailto:biuro@primepodloga.pl?subject=Zamówienie ${order.reference}`}>
+                                            <Mail className="w-4 h-4 mr-2" />
                                             Napisz
                                         </a>
                                      </Button>
                                 </div>
-                             </div>
-                        </CardContent>
-                    </Card>
+                            </div>
 
-                    <p className="text-center text-xs text-muted-foreground pt-4">
-                        &copy; 2026 Prime Podłoga. Wszystkie prawa zastrzeżone.
-                    </p>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            </main>
+
+            <StoreFooter />
         </div>
     );
 }
