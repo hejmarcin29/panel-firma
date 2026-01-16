@@ -187,20 +187,16 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
 
   // InPost Script State
   const [isMapScriptLoaded, setIsMapScriptLoaded] = useState(false);
-  const [hasMapError, setHasMapError] = useState(false);
+  const [hasMapError] = useState(false);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const onPointEventName = useMemo(() => "onpointselect", []);
 
-  const initMap = useCallback(() => {
-     setIsMapScriptLoaded(true);
-  }, []);
-
   // Check if script is already loaded
   useEffect(() => {
-      if (typeof window !== "undefined" && window.customElements?.get("inpost-geowidget")) {
-          initMap();
+      if (!isMapScriptLoaded && typeof window !== "undefined" && window.customElements?.get("inpost-geowidget")) {
+          setIsMapScriptLoaded(true);
       }
-  }, [initMap]);
+  }, [isMapScriptLoaded]);
 
   // --- MOVED START: form definition ---
   const form = useForm<CheckoutFormData>({
