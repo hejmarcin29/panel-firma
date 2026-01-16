@@ -2,7 +2,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useTransition, useState, useEffect } from "react";
+import { useTransition, useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -186,7 +186,21 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
   const [mapOpen, setMapOpen] = useState(false);
 
   // InPost Script State
-  const [inpostLoaded, setInpostLoaded] = useState(false);
+  const [isMapScriptLoaded, setIsMapScriptLoaded] = useState(false);
+  const [hasMapError, setHasMapError] = useState(false);
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const onPointEventName = useMemo(() => "onpointselect", []);
+
+  const initMap = useCallback(() => {
+     setIsMapScriptLoaded(true);
+  }, []);
+
+  // Check if script is already loaded
+  useEffect(() => {
+      if (typeof window !== "undefined" && window.customElements?.get("inpost-geowidget")) {
+          initMap();
+      }
+  }, [initMap]);
 
   // --- MOVED START: form definition ---
   const form = useForm<CheckoutFormData>({
@@ -200,39 +214,60 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
   });
   // --- MOVED END ---
 
-  // Handle Geowidget Events
+  // Handle Geowidget Rendering and Events
   useEffect(() => {
-    if (!mapOpen || !inpostLoaded) return;
+      if (!mapOpen || !isMapScriptLoaded || hasMapError || !mapContainerRef.current) return;
+      
+      const container = mapContainerRef.current;
+      container.replaceChildren();
 
-    const handlePointSelect = (event: any) => {
-        const point = event.detail;
-        console.log("Selected Point:", point);
-        setSelectedPoint({
-            name: point.name,
-            address: `${point.address_details.street} ${point.address_details.building_number}, ${point.address_details.city}`,
-            description: point.location_description
-        });
-        
-        // Auto-fill form fields to satisfy validator
-        form.setValue("street", `Paczkomat ${point.name}`);
-        form.setValue("postalCode", point.address_details.post_code);
-        form.setValue("city", point.address_details.city);
-        
-        setMapOpen(false);
-        toast.success(`Wybrano paczkomat: ${point.name}`);
-    };
+      const widget = document.createElement("inpost-geowidget");
+      widget.setAttribute("token", (inpostGeowidgetToken || "").trim());
+      widget.setAttribute("config", (inpostGeowidgetConfig || "parcelCollect").trim());
+      widget.setAttribute("language", "pl");
+      widget.setAttribute("onpoint", onPointEventName);
+      widget.className = "block h-full w-full";
+      container.appendChild(widget);
 
-    const widget = document.querySelector('inpost-geowidget');
-    if (widget) {
-        widget.addEventListener('onpointselect', handlePointSelect);
-    }
+      setTimeout(() => {
+            if (widget.shadowRoot) {
+                const style = document.createElement('style');
+                style.textContent = `
+                    input:focus, button:focus, .geo-input:focus {
+                        outline: none !important;
+                        box-shadow: none !important;
+                        border-color: #cbd5e1 !important; /* slate-300 */
+                    }
+                `;
+                widget.shadowRoot.appendChild(style);
+            }
+      }, 100);
 
-    return () => {
-        if (widget) {
-            widget.removeEventListener('onpointselect', handlePointSelect);
-        }
-    }
-  }, [mapOpen, inpostLoaded, form]); // Added form dependency
+      const handler = (event: Event) => {
+            const customEvent = event as CustomEvent;
+            const point = customEvent?.detail;
+            console.log("Selected Point:", point);
+            
+            setSelectedPoint({
+                name: point.name,
+                address: `${point.address_details.street} ${point.address_details.building_number}, ${point.address_details.city}`,
+                description: point.location_description
+            });
+            
+            form.setValue("street", `Paczkomat ${point.name}`);
+            form.setValue("postalCode", point.address_details.post_code);
+            form.setValue("city", point.address_details.city);
+            
+            setMapOpen(false);
+            toast.success(`Wybrano paczkomat: ${point.name}`);
+      };
+
+      document.addEventListener(onPointEventName, handler);
+      return () => {
+          document.removeEventListener(onPointEventName, handler);
+          container.replaceChildren();
+      };
+  }, [mapOpen, isMapScriptLoaded, hasMapError, onPointEventName, inpostGeowidgetToken, inpostGeowidgetConfig, form]);
 
   // Calculate Shipping (shippingCost is in grosze)
   const activeShippingCostInt = isOnlySamples 
@@ -283,8 +318,13 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
         deliveryMethod,
         deliveryPoint: selectedPoint || undefined,
         turnstileToken: turnstileToken || undefined,
-      });
-
+      });afterInteractive" 
+                    onReady={initMap}
+                    onError={() => {
+                        setIsMapScriptLoaded(false);
+                        setHasMapError(true);
+                        toast.error("Nie udało się załadować mapy InPost. Sprawdź połączenie.");
+                    }
       if (result.success) {
         toast.success("Zamówienie zostało złożone!");
         useCartStore.getState().clearCart();
@@ -584,19 +624,6 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
                             <FormLabel>Ulica i numer (Faktura)</FormLabel>
                             <FormControl>
                                 <Input placeholder="ul. Biurowa 1" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                        <FormField
-                        control={form.control}
-                        name="billingPostalCode"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Kod Pocztowy (Faktura)</FormLabel>
-                            <FormControl>
-                                <Input placeholder="00-000" {...field} />
                             </FormControl>
                             <FormMessage />
                             </FormItem>

@@ -209,21 +209,6 @@ export function ERPOrdersBoard({ data }: ERPOrdersBoardProps) {
                             disabled={selectedMontages.length === 0 || !selectedSupplier || isPending}
                             onClick={handleCreateOrder}
                         >    
-                                            {/* DROPSHIPPING BUTTON */}
-                                            {item.type === 'shop' && (
-                                                <Button 
-                                                    size="sm" 
-                                                    variant="ghost" 
-                                                    className="w-full text-xs h-6 mt-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation(); // Don't toggle checkbox
-                                                        handleDropship(item.id);
-                                                    }}
-                                                >
-                                                    🚀 Dropshipping (Szybka Ścieżka)
-                                                </Button>
-                                            )}
-                                        
                             {isPending ? "Przetwarzanie..." : `Zamów zaznaczone (${selectedMontages.length})`}
                         </Button>
                     </div>
@@ -262,10 +247,23 @@ export function ERPOrdersBoard({ data }: ERPOrdersBoardProps) {
                                             <p className="text-xs text-muted-foreground line-clamp-2">
                                                 {item.details}
                                             </p>
-                                            <div className="pt-1 flex gap-2">
+                                            <div className="pt-1 flex gap-2 flex-wrap items-center">
                                                 <Badge variant="outline" className="text-[10px] h-5">
                                                     {item.subDetails}
                                                 </Badge>
+                                                {item.type === 'shop' && (
+                                                    <Button 
+                                                        size="sm" 
+                                                        variant="ghost" 
+                                                        className="h-5 text-[10px] px-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleDropship(item.id);
+                                                        }}
+                                                    >
+                                                        🚀 Dropshipping
+                                                    </Button>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -365,7 +363,7 @@ export function ERPOrdersBoard({ data }: ERPOrdersBoardProps) {
                                     </Button>
                                 </div>
                             ))}
-                             {data.ready.length === 0 && (
+                            {data.ready.length === 0 && (
                                 <div className="text-center py-8 text-muted-foreground text-sm">
                                     Magazyn pusty (wszystko wydane) ✅
                                 </div>
@@ -374,7 +372,6 @@ export function ERPOrdersBoard({ data }: ERPOrdersBoardProps) {
                     </ScrollArea>
                 </CardContent>
             </Card>
-
         </div>
     );
 }
