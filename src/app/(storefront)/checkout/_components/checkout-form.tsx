@@ -280,6 +280,15 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
   const isCompany = useWatch({ control: form.control, name: "isCompany" });
   const differentBillingAddress = useWatch({ control: form.control, name: "differentBillingAddress" });
 
+  // Enforce correct payment method based on cart contents
+  useEffect(() => {
+     if (isOnlySamples) {
+         form.setValue("paymentMethod", "tpay");
+     } else {
+         form.setValue("paymentMethod", "proforma");
+     }
+  }, [isOnlySamples, form]);
+
   const onSubmit = (data: CheckoutFormData) => {
     if (items.length === 0) {
       toast.error("Twój koszyk jest pusty");
