@@ -2,12 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Grid, ShoppingBag, Instagram, Phone } from "lucide-react";
+import { Home, Grid, ShoppingBag, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/lib/store/cart-store";
 import { useEffect, useState } from "react";
 import { ContactDrawer } from "@/components/storefront/contact-drawer";
-import { usePathname } from "next/navigation"; // Do active state logic if needed
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function CartIconWrapper({ item }: { item: any }) {

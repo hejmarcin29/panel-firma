@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { getProductBySlug } from './actions';
 import { getShopConfig } from '@/app/dashboard/settings/shop/actions';
 import { ProductGallery } from './_components/product-gallery';
+import { ProductShare } from './_components/product-share';
 import { FloorCalculator } from './_components/floor-calculator';
 
 import { Check, Truck, ShieldCheck, HelpCircle, ThermometerSun, Fingerprint, Droplets, Leaf } from 'lucide-react';
@@ -178,9 +179,12 @@ export default async function ProductPage({ params }: PageProps) {
                                 )}
                             </div>
 
-                            <h1 className="font-playfair text-3xl font-bold text-gray-900 md:text-4xl leading-tight">
-                                {product.name}
-                            </h1>
+                            <div className="flex items-start justify-between gap-4">
+                                <h1 className="font-playfair text-3xl font-bold text-gray-900 md:text-4xl leading-tight">
+                                    {product.name}
+                                </h1>
+                                <ProductShare productName={product.name} />
+                            </div>
                             
                             <div className="mt-3 flex items-center gap-4">
                                 <div className="text-sm text-gray-500 font-medium">SKU: {product.sku}</div>

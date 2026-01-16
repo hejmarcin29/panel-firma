@@ -9,7 +9,7 @@ import { ShoppingCart, RefreshCcw, Check, Calculator } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/lib/store/cart-store";
 import { toast } from "sonner";
-import { calculateMontageEstimation, submitMontageLead } from "@/server/actions/calculator-actions";
+import { calculateMontageEstimation } from "@/server/actions/calculator-actions";
 import { AuditDrawer } from "@/components/storefront/audit-drawer";
 
 interface FloorCalculatorProps {
@@ -36,9 +36,7 @@ export function FloorCalculator({
     pricePerM2, 
     packageSizeM2, 
     unit,
-    isPurchasable = false,
-    samplePrice,
-    isSampleAvailable,
+    // samplePrice, // Removed unused
     mountingMethod,
     floorPattern,
     floorPatternSlug,
@@ -56,6 +54,7 @@ export function FloorCalculator({
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   
   // Estimation State
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [estimation, setEstimation] = useState<{
     totalGross8: number;
     vatSavings: number;
@@ -64,6 +63,7 @@ export function FloorCalculator({
 
   // Sticky Bar Logic
   const actionsRef = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [showSticky, setShowSticky] = useState(false);
 
   useEffect(() => {
@@ -132,21 +132,7 @@ export function FloorCalculator({
     }
   };
 
-  const handleAddSampleToCart = () => {
-      if (addItem({
-          productId: `sample_${product.id}`,
-          name: `Próbka: ${product.name}`,
-          sku: `SAMPLE-${product.sku}`,
-          image: product.imageUrl,
-          pricePerUnit: samplePrice || 20,
-          vatRate: 0.23,
-          quantity: 1,
-          unit: 'szt.',
-          packageSize: 0
-      })) {
-        toast.success("Dodano próbkę do koszyka");
-      }
-  };
+
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-border/60 p-5 space-y-6">
@@ -157,98 +143,159 @@ export function FloorCalculator({
         </h3>
       </div>
 
-      {/* Mode Switcher */}
       {isFlooring && (
          <div className="bg-muted p-1 rounded-lg grid grid-cols-2 gap-1 mb-4">
             <button
                 onClick={() => setMode("material")}
                 className={cn(
-                    "relative z-10 py-2 px-3 text-sm font-medium rounded-md transition-colors",
+                    "text-sm font-medium py-1.5 px-3 rounded-md transition-all",
                     mode === "material" 
-                        ? "text-foreground" 
-                        : "text-muted-foreground hover:text-foreground"
+                        ? "bg-white text-primary shadow-sm ring-1 ring-border" 
+                        : "text-muted-foreground hover:text-foreground hover:bg-white/50"
                 )}
             >
-                {mode === "material" && (
-                    <motion.div
-                        layoutId="active-mode-tab"
-                        className="absolute inset-0 bg-background shadow-sm rounded-md -z-10"
-                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                    />
-                )}
-                📦 Tylko Materiał
+                Tylko Materiał
             </button>
             <button
                 onClick={() => setMode("montage")}
                 className={cn(
-                    "relative z-10 py-2 px-3 text-sm font-medium rounded-md transition-colors flex items-center justify-center gap-2",
+                    "text-sm font-medium py-1.5 px-3 rounded-md transition-all",
                     mode === "montage" 
-                        ? "text-primary font-bold" 
-                        : "text-muted-foreground hover:text-foreground"
+                        ? "bg-white text-primary shadow-sm ring-1 ring-border" 
+                        : "text-muted-foreground hover:text-foreground hover:bg-white/50"
                 )}
             >
-                {mode === "montage" && (
-                    <motion.div
-                        layoutId="active-mode-tab"
-                        className="absolute inset-0 bg-background shadow-sm rounded-md -z-10"
-                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                    />
-                )}
-                🛠️ Z Montażem <span className="text-[10px] bg-green-100 text-green-700 px-1.5 rounded-full ml-1">-15%</span>
+                Z Montażem (VAT 8%)
             </button>
          </div>
       )}
         
       <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Powierzchnia (m²)</Label>
+        <div className="space-y-1.5">
+            <Label htmlFor="area">Powierzchnia (m²)</Label>
             <div className="relative">
-                <Input 
-                type="number" 
-                value={area} 
+            <Input
+                id="area"
+                type="number"
+                min="0"
+                step="0.01"
+                value={area}
                 onChange={(e) => setArea(e.target.value)}
-                min="1"
-                className="text-lg pr-8 font-bold"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">m²</span>
+                className="pl-3 pr-10"
+            />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">m²</span>
             </div>
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Zapas (%)</Label>
-            <div className="flex bg-muted rounded-md p-1 h-10 w-full">
-               {[currentRates.simple, currentRates.complex].map((val) => (
-                 <button
-                   key={val}
-                   onClick={() => setWaste(val.toString())}
-                   className={cn(
-                     "flex-1 rounded-sm text-xs font-medium transition-all",
-                     waste === val.toString() 
-                       ? "bg-white shadow text-black" 
-                       : "text-gray-500 hover:text-gray-900"
-                   )}
-                 >
-                   {val === currentRates.simple ? 'Proste' : 'Skosy'} ({val}%)
-                 </button>
-               ))}
+        </div>
+        
+        <div className="space-y-1.5">
+            <Label htmlFor="waste">Zapas (%)</Label>
+            <div className="relative">
+            <Input
+                id="waste"
+                type="number"
+                min="0"
+                max="100"
+                value={waste}
+                onChange={(e) => setWaste(e.target.value)}
+                className="pl-3 pr-10"
+            />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">%</span>
             </div>
-          </div>
+        </div>
       </div>
 
-      {/* Results Section */}
       <div className="rounded-lg bg-muted/30 p-4 border border-border/50 overflow-hidden">
-        <div>Top Results Placeholder</div>
+        <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Potrzebne opakowania:</span>
+                <span className="font-medium text-foreground">{packsNeeded} szt.</span>
+            </div>
+            <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Łączna powierzchnia:</span>
+                <span className="font-medium text-foreground">{totalArea.toFixed(2)} {unit}</span>
+            </div>
+            {isFlooring && (
+                <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Tolerancja odpadu:</span>
+                    <span className="font-medium text-green-600">+{wasteNum}%</span>
+                </div>
+            )}
+        </div>
+        
+        <div className="mt-4 pt-4 border-t border-border/50">
+            <div className="flex items-end justify-between">
+                <span className="text-base font-semibold text-foreground">Razem (brutto):</span>
+                <div className="text-right">
+                    <span className="text-2xl font-bold text-primary block leading-none">
+                        {totalPrice.toLocaleString("pl-PL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł
+                    </span>
+                    <span className="text-xs text-muted-foreground mt-1 block">
+                        Cena za {unit}: {pricePerM2} zł
+                    </span>
+                </div>
+            </div>
+        </div>
       </div>
 
       <div className="pt-2" ref={actionsRef}>
-       {/* AnimatePresence removed due to parsing error */}
-        {mode === 'material' && (
-            <div className="bg-green-100">Material Mode</div>
+       <AnimatePresence mode="wait">
+        {mode === 'material' ? (
+            <motion.div
+                key="material"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="space-y-3"
+            >
+                <Button 
+                    size="lg" 
+                    className="w-full text-base font-semibold shadow-md active:scale-95 transition-all"
+                    onClick={handleAddToCart}
+                >
+                    <ShoppingCart className="mr-2 h-5 w-5" />
+                    Dodaj do koszyka
+                </Button>
+            </motion.div>
+        ) : (
+             <motion.div
+                key="montage"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="space-y-3"
+            >
+                <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg text-sm text-blue-800">
+                    <p className="font-medium mb-1 flex items-center gap-2">
+                        <Check className="h-4 w-4" />
+                        Oszczędzasz VAT (8% zamiast 23%)
+                    </p>
+                    <p className="opacity-90 leading-relaxed">
+                        Skontaktuj się z nami aby otrzymać kompleksową wycenę z montażem.
+                    </p>
+                </div>
+                
+                <Button 
+                    size="lg" 
+                    variant="default"
+                    className="w-full text-base font-semibold shadow-md bg-blue-600 hover:bg-blue-700 active:scale-95 transition-all"
+                    onClick={() => setIsSheetOpen(true)}
+                >
+                    <Calculator className="mr-2 h-5 w-5" />
+                    Zamów bezpłatną wycenę
+                </Button>
+            </motion.div>
         )}
-
-        {mode === 'montage' && (
-            <div className="p-4 bg-blue-100">Montage Mode Active</div>
-        )}
-       {/* </AnimatePresence> */}
+       </AnimatePresence>
+    </div>
+    
+    <AuditDrawer 
+        open={isSheetOpen} 
+        onClose={() => setIsSheetOpen(false)}
+        defaultValues={{
+             area: areaNum,
+             productName: product.name
+        }}
+    />
     </div>
   );
 }
