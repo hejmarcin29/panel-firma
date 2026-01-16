@@ -130,12 +130,13 @@ const SAMPLE_FLOW = [
 ];
 
 const PANEL_FLOW = [
-    { id: 'order.received', label: 'Nowe' },
-    { id: 'order.proforma_issued', label: 'Proforma' },
+    { id: 'order.received', label: 'Weryfikacja' },
+    { id: 'order.awaiting_payment', label: 'Płatność' },
     { id: 'order.paid', label: 'Opłacone' },
-    { id: 'order.forwarded_to_supplier', label: 'Zlecono' },
+    { id: 'order.advance_invoice', label: 'Zaliczka' },
+    { id: 'order.forwarded_to_supplier', label: 'W Realizacji' },
     { id: 'order.fulfillment_confirmed', label: 'Wysłane' },
-    { id: 'order.closed', label: 'Faktura Końcowa' }
+    { id: 'order.closed', label: 'Odebrane' }
 ];
 
 export function OrderDetailsClient({ order, items, timelineEvents, isAdmin }: OrderDetailsClientProps) {

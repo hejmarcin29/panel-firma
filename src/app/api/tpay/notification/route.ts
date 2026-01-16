@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTransactionDetails } from '@/lib/tpay';
 import { db } from '@/lib/db';
-import { montagePayments, orders, systemLogs } from '@/lib/db/schema';
+import { montagePayments, orders, systemLogs, erpOrderTimeline } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 export async function POST(req: NextRequest) {
@@ -76,5 +76,13 @@ async function handlePaymentSuccess(transactionId: string, crc: string) {
                 // We might want to store transactionId in orders table too, but for now we update status
             })
             .where(eq(orders.id, orderId));
+
+        await db.insert(erpOrderTimeline).values({
+            id: crypto.randomUUID(),
+            orderId: orderId,
+            type: 'payment',
+            title: 'Płatność potwierdzona (Tpay)',
+            metadata: { transactionId: transactionId }
+        });
     }
 }

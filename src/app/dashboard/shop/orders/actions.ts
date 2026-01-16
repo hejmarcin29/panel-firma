@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { orders, documents, documentEvents } from '@/lib/db/schema';
+import { orders, documents, documentEvents, erpOrderTimeline } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { randomUUID } from 'crypto';
@@ -55,6 +55,17 @@ export async function uploadProforma(orderId: string, transferTitle: string, for
         note: `Uploaded manually. File: ${file.name}`,
     });
 
+    await db.insert(erpOrderTimeline).values({
+        id: randomUUID(),
+        orderId: orderId,
+        type: 'status_change',
+        title: 'Wysłano proformę',
+        metadata: { 
+            fileName: file.name,
+            transferTitle: transferTitle
+        }
+    });
+
     console.log(`[Email] Sending Proforma to customer for Order ${orderId}. Title: ${transferTitle}`);
 
     revalidatePath('/dashboard/shop/orders');
@@ -94,6 +105,17 @@ export async function uploadFinalInvoice(orderId: string, formData: FormData) {
         issueDate: new Date(),
     });
 
+    await db.insert(erpOrderTimeline).values({
+        id: randomUUID(),
+        orderId: orderId,
+        type: 'status_change', // or 'document'
+        title: 'Wystawiono Fakturę Końcową',
+        metadata: { 
+            fileName: file.name,
+            invoiceNumber: invoiceNumber
+        }
+    });
+
     await db.update(orders)
         .set({ status: 'order.closed' })
         .where(eq(orders.id, orderId));
@@ -122,6 +144,17 @@ export async function uploadAdvanceInvoice(orderId: string, formData: FormData) 
         orderNumber: folderName,
         file,
         type: 'zaliczka'
+    });
+
+    await db.insert(erpOrderTimeline).values({
+        id: randomUUID(),
+        orderId: orderId,
+        type: 'status_change',
+        title: 'Wystawiono Fakturę Zaliczkową',
+        metadata: { 
+            fileName: file.name,
+            invoiceNumber: invoiceNumber
+        }
     });
 
     const docId = randomUUID();
@@ -188,6 +221,14 @@ export async function uploadCorrectionInvoice(orderId: string, formData: FormDat
 
      revalidatePath('/dashboard/shop/orders');
      revalidatePath(`/dashboard/shop/orders/${orderId}`);
+    await db.insert(erpOrderTimeline).values({
+        id: randomUUID(),
+        orderId: orderId,
+        type: 'payment',
+        title: 'Płatność potwierdzona ręcznie',
+        metadata: { method: 'manual' }
+    });
+
      return { success: true };
 }
 

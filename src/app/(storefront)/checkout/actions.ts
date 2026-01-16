@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { orders, orderItems, customers, globalSettings } from '@/lib/db/schema';
+import { orders, orderItems, customers, globalSettings, erpOrderTimeline } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { format } from 'date-fns';
 import { createPayment } from '@/lib/tpay';
@@ -257,6 +257,18 @@ export async function processOrder(data: OrderData) {
                     }))
                 );
             }
+
+            // D. Timeline Init
+            await tx.insert(erpOrderTimeline).values({
+                id: crypto.randomUUID(),
+                orderId: orderId,
+                type: 'system',
+                title: 'Zamówienie złożone',
+                metadata: { 
+                    source: 'checkout', 
+                    reference: reference 
+                }
+            });
         });
 
         // 5. Tpay

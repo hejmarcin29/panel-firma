@@ -1,9 +1,10 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { orders, type OrderStatus } from '@/lib/db/schema';
+import { orders, type OrderStatus, erpOrderTimeline } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
+import { randomUUID } from 'crypto';
 import { generateMagicLinkToken } from '@/lib/auth/magic-link';
 import { headers } from 'next/headers';
 
@@ -38,6 +39,14 @@ export async function updateOrderTracking(orderId: string, carrier: string, trac
         })
         .where(eq(orders.id, orderId));
     
+    await db.insert(erpOrderTimeline).values({
+        id: randomUUID(),
+        orderId: orderId,
+        type: 'status_change',
+        title: 'Zaktualizowano dane wysyłkowe',
+        metadata: { carrier, trackingNumber }
+    });
+
     revalidatePath(`/dashboard/shop/orders/${orderId}`);
     return { success: true };
 }
@@ -97,6 +106,14 @@ export async function generateShippingLabel(orderId: string) {
             status: 'order.fulfillment_confirmed'
         }).where(eq(orders.id, orderId));
 
+        await db.insert(erpOrderTimeline).values({
+            id: randomUUID(),
+            orderId: orderId,
+            type: 'system',
+            title: 'Wygenerowano etykietę InPost',
+            metadata: { trackingNumber: shipment.tracking_number }
+        });
+
         revalidatePath(`/dashboard/shop/orders/${orderId}`);
 
         return { 
@@ -109,20 +126,35 @@ export async function generateShippingLabel(orderId: string) {
 
     } catch (error: unknown) {
         console.error("InPost Error:", error);
-        return {
-            success: false,
-            message: (error instanceof Error ? error.message : String(error)) || 'Błąd integracji InPost'
-        };
+        return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
     }
 }
 
+
+
 export async function markAsForwardedToSupplier(orderId: string) {
     await updateShopOrderStatus(orderId, 'order.forwarded_to_supplier');
+
+    await db.insert(erpOrderTimeline).values({
+        id: randomUUID(),
+        orderId: orderId,
+        type: 'status_change',
+        title: 'Przekazano zamówienie do dostawcy',
+    });
+
     return { success: true };
 }
 
 export async function markAsShippedBySupplier(orderId: string) {
     await updateShopOrderStatus(orderId, 'order.fulfillment_confirmed');
+
+    await db.insert(erpOrderTimeline).values({
+        id: randomUUID(),
+        orderId: orderId,
+        type: 'status_change',
+        title: 'Wysłano towar',
+    });
+
     return { success: true };
 }
 
@@ -131,5 +163,13 @@ export async function issueFinalInvoice(orderId: string) {
     await new Promise(resolve => setTimeout(resolve, 1000));
     // In real app: generate PDF, save to documents table
     await updateShopOrderStatus(orderId, 'order.closed');
+
+    await db.insert(erpOrderTimeline).values({
+        id: randomUUID(),
+        orderId: orderId,
+        type: 'status_change',
+        title: 'Zamknięto zamówienie (Faktura Końcowa)',
+    });
+    
     return { success: true };
 }
