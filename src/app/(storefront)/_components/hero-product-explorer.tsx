@@ -31,11 +31,21 @@ type ExplorerProduct = {
     wearClassDictionary: { name: string; slug: string | null } | null;
 };
 
-const TABS = [
-    { id: 'all', label: 'Wszystkie', icon: 'https://images.unsplash.com/photo-1516455590571-18256e5bb9ff?q=80&w=2684&auto=format&fit=crop' },
-    { id: 'classic', label: 'Klasyczne', icon: 'https://images.unsplash.com/photo-1595428774223-ef52624120d2?q=80&w=2574&auto=format&fit=crop' },
-    { id: 'herringbone', label: 'Jodełka', icon: 'https://images.unsplash.com/photo-1588854337442-df463ae37d97?q=80&w=2670&auto=format&fit=crop' },
-    { id: 'tile', label: 'Płytka / Kamień', icon: 'https://images.unsplash.com/photo-1620626012053-1c167f22384a?q=80&w=2623&auto=format&fit=crop' },
+// Initial tabs configuration (images will be replaced dynamically)
+const INITIAL_TABS = [
+    { id: 'all', label: 'Wszystkie', filterFn: () => true },
+    { id: 'classic', label: 'Klasyczne', filterFn: (p: ExplorerProduct) => {
+        const pattern = p.floorPatternDictionary?.slug?.toLowerCase() || '';
+        return !pattern.includes('herring') && !pattern.includes('jod') && !pattern.includes('chevron') && !pattern.includes('tile') && !pattern.includes('stone') && !pattern.includes('beton') && !pattern.includes('plytka');
+    }},
+    { id: 'herringbone', label: 'Jodełka', filterFn: (p: ExplorerProduct) => {
+        const pattern = p.floorPatternDictionary?.slug?.toLowerCase() || '';
+        return pattern.includes('herring') || pattern.includes('jod') || pattern.includes('chevron');
+    }},
+    { id: 'tile', label: 'Płytka / Kamień', filterFn: (p: ExplorerProduct) => {
+        const pattern = p.floorPatternDictionary?.slug?.toLowerCase() || '';
+        return pattern.includes('tile') || pattern.includes('stone') || pattern.includes('beton') || pattern.includes('plytka');
+    }},
 ];
 
 export function HeroProductExplorer({ products }: { products: ExplorerProduct[] }) {
@@ -44,16 +54,21 @@ export function HeroProductExplorer({ products }: { products: ExplorerProduct[] 
     const [selectedGroup, setSelectedGroup] = useState<ExplorerProduct[] | null>(null);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
 
+    // Compute dynamic tabs with images from products
+    const tabs = INITIAL_TABS.map(tab => {
+        // Find a representative product for this tab to use as image
+        const representativeProduct = products.find(p => tab.filterFn(p) && p.imageUrl);
+        return {
+            ...tab,
+            // Fallback image if no product matches (e.g. empty category)
+            icon: representativeProduct?.imageUrl || 'https://images.unsplash.com/photo-1516455590571-18256e5bb9ff?q=80&w=2684&auto=format&fit=crop'
+        };
+    });
+
     // Filter logic
     const filteredProducts = products.filter(p => {
-        if (activeTab === 'all') return true;
-        const pattern = p.floorPatternDictionary?.slug?.toLowerCase() || '';
-        
-        if (activeTab === 'herringbone') return pattern.includes('herring') || pattern.includes('jod') || pattern.includes('chevron');
-        if (activeTab === 'tile') return pattern.includes('tile') || pattern.includes('stone') || pattern.includes('beton') || pattern.includes('plytka');
-        if (activeTab === 'classic') return !pattern.includes('herring') && !pattern.includes('jod') && !pattern.includes('chevron') && !pattern.includes('tile') && !pattern.includes('stone') && !pattern.includes('beton') && !pattern.includes('plytka');
-        
-        return true;
+        const currentTab = INITIAL_TABS.find(t => t.id === activeTab);
+        return currentTab ? currentTab.filterFn(p) : true;
     });
 
     // Grouping Logic
@@ -151,33 +166,36 @@ export function HeroProductExplorer({ products }: { products: ExplorerProduct[] 
                     </div>
 
                     {/* NEW: Horizontal Story-like Tabs (Squircle) */}
-                    <div className="flex overflow-x-auto pb-4 gap-4 no-scrollbar -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap">
-                        {TABS.map((tab) => {
+                    <div 
+                        className="flex overflow-x-auto pb-4 gap-3 no-scrollbar -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap"
+                        data-vaul-no-drag
+                    >
+                        {tabs.map((tab) => {
                             const isActive = activeTab === tab.id;
                             return (
                                 <button
                                     key={tab.id}
                                     onClick={() => handleTabChange(tab.id)}
-                                    className="flex flex-col items-center gap-2 min-w-[72px] group"
+                                    className="flex flex-col items-center gap-2 min-w-[60px] group"
                                 >
                                     <div className={cn(
-                                        "relative h-[72px] w-[72px] rounded-[24px] overflow-hidden transition-all duration-300",
+                                        "relative h-[60px] w-[60px] rounded-[20px] overflow-hidden transition-all duration-300 shadow-sm",
                                         isActive 
-                                            ? "ring-2 ring-emerald-600 ring-offset-2" 
-                                            : "ring-1 ring-gray-200 opacity-90 group-hover:scale-105 group-hover:opacity-100"
+                                            ? "ring-2 ring-emerald-600 ring-offset-2 scale-105" 
+                                            : "ring-1 ring-gray-100 opacity-90 group-hover:scale-105 group-hover:opacity-100"
                                     )}>
                                         <Image
                                             src={tab.icon}
                                             alt={tab.label}
                                             fill
                                             className="object-cover"
-                                            sizes="72px"
+                                            sizes="60px"
                                         />
                                         {isActive && <div className="absolute inset-0 bg-emerald-900/10" />}
                                     </div>
                                     <span className={cn(
-                                        "text-xs font-medium text-center leading-tight transition-colors whitespace-nowrap",
-                                        isActive ? "text-emerald-700 font-semibold" : "text-gray-600"
+                                        "text-[10px] font-medium text-center leading-tight transition-colors whitespace-nowrap",
+                                        isActive ? "text-emerald-700 font-semibold" : "text-gray-500"
                                     )}>
                                         {tab.label}
                                     </span>
