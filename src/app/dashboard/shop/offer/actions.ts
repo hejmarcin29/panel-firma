@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db';
 import { erpProducts } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { slugify } from '@/lib/utils';
 
@@ -62,3 +62,34 @@ export async function togglePurchasable(productId: string, isPurchasable: boolea
     revalidatePath('/dashboard/shop/offer');
     revalidatePath('/sklep');
 }
+
+export async function bulkToggleShopVisibility(ids: string[], isVisible: boolean) {
+    if (!ids.length) return;
+
+    await db.update(erpProducts)
+        .set({ isShopVisible: isVisible })
+        .where(inArray(erpProducts.id, ids));
+
+    revalidatePath('/dashboard/shop/offer');
+}
+
+export async function bulkTogglePurchasable(ids: string[], isPurchasable: boolean) {
+    if (!ids.length) return;
+
+    await db.update(erpProducts)
+        .set({ isPurchasable: isPurchasable })
+        .where(inArray(erpProducts.id, ids));
+
+    revalidatePath('/dashboard/shop/offer');
+}
+
+export async function bulkToggleSamplesAvailability(ids: string[], isAvailable: boolean) {
+    if (!ids.length) return;
+
+    await db.update(erpProducts)
+        .set({ isSampleAvailable: isAvailable })
+        .where(inArray(erpProducts.id, ids));
+
+    revalidatePath('/dashboard/shop/offer');
+}
+

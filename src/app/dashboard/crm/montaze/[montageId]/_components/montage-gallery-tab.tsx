@@ -71,7 +71,7 @@ export function MontageGalleryTab({ montage, userRoles = [] }: { montage: Montag
 
   return (
     <div className="space-y-8">
-        {!isInstaller && <MontageDocumentSlots montage={montage} />}
+        {!isInstaller && <MontageDocumentSlots montage={montage} userRoles={userRoles} />}
 
         <div className="flex items-center justify-between flex-wrap gap-4">
             <h3 className="text-lg font-semibold">Pozostałe Załączniki</h3>

@@ -440,3 +440,36 @@ export async function uploadOrderDocument({
 
     return `${config.publicBaseUrl}/${key}`;
 }
+
+export async function uploadMontageDocument({
+    montageNumber,
+    file,
+    type
+}: {
+    montageNumber: string; 
+    file: File;
+    type: 'proforma' | 'faktura' | 'zaliczka' | 'korekta' | 'inne';
+}) {
+    const config = await getR2Config();
+    const client = createR2Client(config);
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const filename = sanitizeFilename(file.name);
+    
+    const year = new Date().getFullYear().toString();
+    const safeMontageFolder = montageNumber.replace(/\//g, '-');
+    
+    const key = `montaze/${year}/${safeMontageFolder}/dokumenty/${type}/${Date.now()}_${filename}`;
+
+    const command = new PutObjectCommand({
+        Bucket: config.bucketName,
+        Key: key,
+        Body: buffer,
+        ContentType: file.type,
+        ContentDisposition: 'inline',
+    });
+
+    await client.send(command);
+
+    return `${config.publicBaseUrl}/${key}`;
+}

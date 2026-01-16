@@ -596,6 +596,13 @@
       "when": 1768553179934,
       "tag": "0084_handy_shatterstar",
       "breakpoints": true
+    },
+    {
+      "idx": 85,
+      "version": "7",
+      "when": 1768556193427,
+      "tag": "0085_natural_longshot",
+      "breakpoints": true
     }
   ]
 }

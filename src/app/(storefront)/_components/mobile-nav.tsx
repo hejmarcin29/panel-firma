@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Grid, ShoppingBag, Heart, User } from "lucide-react";
+import { Home, Grid, ShoppingBag, Instagram, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/lib/store/cart-store";
 import { useEffect, useState } from "react";
@@ -58,14 +58,14 @@ export function MobileNav() {
       icon: ShoppingBag,
     },
     {
-      href: "/realizacje",
-      label: "Realizacje",
-      icon: Heart,
+      href: "https://www.instagram.com/primepodloga/",
+      label: "Instagram",
+      icon: Instagram,
     },
     {
-      href: "#contact",
+      href: "/kontakt",
       label: "Kontakt",
-      icon: User,
+      icon: Phone,
     }
   ];
 

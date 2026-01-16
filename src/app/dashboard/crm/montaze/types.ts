@@ -99,6 +99,16 @@ export interface AlertSettings {
     materialInstockDays: number;
 }
 
+export type MontageDocument = {
+    id: string;
+    type: string;
+    status: string;
+    number: string | null;
+    issueDate: TimestampValue;
+    pdfUrl: string | null;
+    createdAt: TimestampValue;
+};
+
 export type Montage = {
 	id: string;
 	clientName: string;
@@ -225,6 +235,7 @@ export type Montage = {
 	tasks: MontageTask[];
 	checklistItems: MontageChecklistItem[];
     quotes: MontageQuote[];
+    documents: MontageDocument[];
     settlement?: MontageSettlement | null;
 };
 

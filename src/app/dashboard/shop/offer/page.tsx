@@ -1,9 +1,20 @@
+
 import { db } from '@/lib/db';
-import { ProductRow } from './_components/ProductRow';
+import { erpProducts, erpCategories, erpCollections, erpFloorPatterns, erpMountingMethods } from '@/lib/db/schema';
+import { asc } from 'drizzle-orm';
+import { ShopOfferTable } from './_components/data-table';
+import { columns } from './_components/columns';
 
 export default async function ShopOfferPage() {
+    // 1. Fetch Products with Relations
     const products = await db.query.erpProducts.findMany({
-        orderBy: (products, { asc }) => [asc(products.name)],
+        orderBy: [asc(erpProducts.name)],
+        with: {
+            category: true,
+            collection: true,
+            floorPatternDictionary: true,
+            mountingMethodDictionary: true,
+        },
         columns: {
             id: true,
             name: true,
@@ -11,8 +22,27 @@ export default async function ShopOfferPage() {
             isShopVisible: true,
             isPurchasable: true,
             isSampleAvailable: true,
+            // we need relation IDs for filtering logic if client side filtering (TanStack Table defaults)
+            categoryId: true,
+            collectionId: true,
+            floorPatternId: true,
+            mountingMethodId: true,
         },
     });
+
+    // 2. Fetch Dictionaries for Filters
+    const [categories, collections, patterns, mountingMethods] = await Promise.all([
+        db.query.erpCategories.findMany({ orderBy: [asc(erpCategories.name)] }),
+        db.query.erpCollections.findMany({ orderBy: [asc(erpCollections.name)] }),
+        db.query.erpFloorPatterns.findMany({ orderBy: [asc(erpFloorPatterns.name)] }),
+        db.query.erpMountingMethods.findMany({ orderBy: [asc(erpMountingMethods.name)] })
+    ]);
+
+    // 3. Transform Dictionaries to { label, value } for DataTable
+    const categoryOptions = categories.map(c => ({ label: c.name, value: c.name })); // Use Name for TanStack filtering by default accessor
+    const collectionOptions = collections.map(c => ({ label: c.name, value: c.name }));
+    const patternOptions = patterns.map(p => ({ label: p.name, value: p.name }));
+    const mountingOptions = mountingMethods.map(m => ({ label: m.name, value: m.name }));
 
     return (
         <div className="space-y-6">
@@ -23,26 +53,15 @@ export default async function ShopOfferPage() {
                 </p>
             </div>
 
-            <div className="rounded-md border">
-                <div className="relative w-full overflow-auto">
-                    <table className="w-full caption-bottom text-sm">
-                        <thead className="[&_tr]:border-b">
-                            <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Nazwa Produktu</th>
-                                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">SKU</th>
-                                <th className="h-12 px-4 text-center align-middle font-medium text-muted-foreground">Widoczność</th>
-                                <th className="h-12 px-4 text-center align-middle font-medium text-muted-foreground">Sprzedaż</th>
-                                <th className="h-12 px-4 text-center align-middle font-medium text-muted-foreground">Próbki</th>
-                            </tr>
-                        </thead>
-                        <tbody className="[&_tr:last-child]:border-0">
-                            {products.map((product) => (
-                                <ProductRow key={product.id} product={product} />
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <ShopOfferTable 
+                columns={columns} 
+                data={products}
+                categories={categoryOptions}
+                collections={collectionOptions}
+                patterns={patternOptions}
+                mountingMethods={mountingOptions}
+            />
         </div>
     );
 }
+

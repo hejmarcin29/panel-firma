@@ -19,6 +19,7 @@ import {
 	type MontageStatus,
 	users,
     customers,
+    documents,
 } from '@/lib/db/schema';
 import type { AlertSettings } from './types';
 
@@ -121,6 +122,7 @@ export type MontageRow = typeof montages.$inferSelect & {
 	>;
     quotes: Array<typeof quotes.$inferSelect>;
     payments: Array<typeof montagePayments.$inferSelect>;
+    documents?: Array<typeof documents.$inferSelect>;
     installer?: typeof users.$inferSelect | null;
     measurer?: typeof users.$inferSelect | null;
     architect?: typeof users.$inferSelect | null;
@@ -297,6 +299,15 @@ export function mapMontageRow(row: MontageRow, publicBaseUrl: string | null): Mo
 		attachments: row.attachments.map((attachment) => mapAttachment(attachment, publicBaseUrl)),
 		tasks: row.tasks.map(mapTask),
 		checklistItems: row.checklistItems.map((item) => mapChecklistItem(item, publicBaseUrl)),
+        documents: (row.documents || []).map(doc => ({
+            id: doc.id,
+            type: doc.type,
+            status: doc.status,
+            number: doc.number,
+            issueDate: doc.issueDate,
+            pdfUrl: doc.pdfUrl || null,
+            createdAt: doc.createdAt
+        })),
 	};
 }
 

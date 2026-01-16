@@ -558,7 +558,7 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
                           </FormControl>
                           <div className="space-y-1 leading-none">
                             <FormLabel className="cursor-pointer font-medium">
-                              Chcę podać inny adres na fakturę
+                              Chcę podać inny adres na fakturze
                             </FormLabel>
                             <p className="text-sm text-muted-foreground">
                                 Zaznacz, jeśli dane do faktury różnią się od adresu dostawy.

@@ -1,4 +1,6 @@
+/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
+import { Instagram, Banknote } from "lucide-react";
 
 export function StoreFooter() {
     return (
@@ -33,11 +35,55 @@ export function StoreFooter() {
               </ul>
             </div>
             <div className="col-span-2 md:col-span-1 space-y-4">
-                <h4 className="text-sm font-semibold">Prime Podłoga</h4>
-                <p className="text-sm text-muted-foreground">
-                  Tworzymy podłogi z pasją od 2010 roku. Jakość, która przetrwa pokolenia.
-                </p>
-                <div className="text-xs text-muted-foreground">
+                <h4 className="text-sm font-semibold">Dane Firmy</h4>
+                <div className="text-sm text-muted-foreground space-y-1">
+                  <p className="font-medium text-foreground">Primepodloga.pl</p>
+                  <p>ul. Koszalińska 38A</p>
+                  <p>47-400 Racibórz</p>
+                  <p>NIP: 6392026404</p>
+                </div>
+                
+                <h4 className="text-sm font-semibold mt-6">Bezpieczne Płatności</h4>
+                <div className="flex flex-wrap items-center gap-2 text-muted-foreground grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                     {/* Przelew Tradycyjny */}
+                     <div className="bg-white p-1 rounded border h-8 px-2 flex items-center justify-center gap-2 text-slate-800" title="Przelew Tradycyjny">
+                        <Banknote className="h-4 w-4" />
+                        <span className="text-[10px] font-bold leading-none">PRZELEW</span>
+                    </div>
+                    {/* Tpay */}
+                    <div className="bg-white p-1 rounded border h-8 w-12 flex items-center justify-center" title="Tpay">
+                       <img src="https://tpay.com/img/logo/tpay-logo-blue.svg" alt="Tpay" className="h-full w-full object-contain" />
+                    </div>
+                    {/* BLIK */}
+                    <div className="bg-white p-1 rounded border h-8 w-12 flex items-center justify-center" title="BLIK">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/7/76/Blik_logo.svg" alt="BLIK" className="h-full w-full object-contain" />
+                    </div>
+                    {/* Visa */}
+                    <div className="bg-white p-1 rounded border h-8 w-12 flex items-center justify-center" title="Visa">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" className="h-full w-full object-contain" />
+                    </div>
+                    {/* Mastercard */}
+                    <div className="bg-white p-1 rounded border h-8 w-12 flex items-center justify-center" title="Mastercard">
+                         <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="h-full w-full object-contain" />
+                    </div>
+                    {/* GPay */}
+                    <div className="bg-white p-1 rounded border h-8 w-12 flex items-center justify-center" title="Google Pay">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/f/f2/Google_Pay_Logo.svg" alt="Google Pay" className="h-full w-full object-contain" />
+                    </div>
+                     {/* Apple Pay */}
+                     <div className="bg-white p-1 rounded border h-8 w-12 flex items-center justify-center" title="Apple Pay">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b0/Apple_Pay_logo.svg" alt="Apple Pay" className="h-full w-full object-contain" />
+                    </div>
+                </div>
+
+                <div className="flex gap-4 mt-6">
+                    <a href="https://www.instagram.com/primepodloga/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+                        <Instagram className="h-5 w-5" />
+                        <span className="sr-only">Instagram</span>
+                    </a>
+                </div>
+
+                <div className="text-xs text-muted-foreground pt-4">
                     &copy; {new Date().getFullYear()} Prime Podłoga. Wszelkie prawa zastrzeżone.
                 </div>
             </div>

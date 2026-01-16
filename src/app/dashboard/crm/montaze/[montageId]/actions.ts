@@ -12,6 +12,7 @@ import {
     montageNotes,
     montageTasks,
     montagePayments,
+    documents,
     systemLogs,
     quotes,
     customers,
@@ -102,6 +103,9 @@ export async function getMontageDetails(montageId: string) {
             },
             payments: {
                 orderBy: desc(montagePayments.createdAt),
+            },
+            documents: {
+                orderBy: desc(documents.createdAt),
             },
             settlement: true,
             floorProducts: true,
@@ -218,20 +222,26 @@ export async function updateMontageStatus(montageId: string, newStatus: MontageS
     // Check requirements
     const stepDef = PROCESS_STEPS.find(s => s.relatedStatuses.includes(newStatus));
     if (stepDef?.requiredDocuments && stepDef.requiredDocuments.length > 0) {
-        const attachments = await db.query.montageAttachments.findMany({
-            where: (table, { eq }) => eq(table.montageId, montageId),
-        });
-
         const docLabels: Record<string, string> = {
             'proforma': 'Faktura Proforma',
             'invoice_advance': 'Faktura Zaliczkowa',
             'invoice_final': 'Faktura Końcowa'
         };
 
+        const docs = await db.query.documents.findMany({
+            where: (table, { and, eq }) => and(eq(table.montageId, montageId))
+        });
+
         for (const reqDoc of stepDef.requiredDocuments) {
-            const hasDoc = attachments.some(a => a.type === reqDoc);
+            // Check new registry
+            const hasDoc = docs.some(d => {
+                if (reqDoc === 'invoice_advance' && d.type === 'advance_invoice') return true;
+                if (reqDoc === 'invoice_final' && d.type === 'final_invoice') return true;
+                return d.type === reqDoc;
+            });
+
             if (!hasDoc) {
-                throw new Error(`Wymagany dokument: ${docLabels[reqDoc] || reqDoc} nie został wgrany.`);
+                throw new Error(`Wymagany dokument: ${docLabels[reqDoc] || reqDoc} nie został wgrany (Wymagany wpis w rejestrze dokumentów z numerem wFirma).`);
             }
         }
     }

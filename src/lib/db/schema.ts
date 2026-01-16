@@ -413,8 +413,9 @@ export const documents = pgTable(
 	{
 		id: text('id').primaryKey(),
 		orderId: text('order_id')
-			.notNull()
 			.references(() => orders.id, { onDelete: 'cascade' }),
+        montageId: text('montage_id')
+            .references(() => montages.id, { onDelete: 'cascade' }),
 		type: text('type').$type<DocumentType>().notNull(),
 		status: text('status').$type<DocumentStatus>().notNull(),
 		number: text('number'),
@@ -879,6 +880,7 @@ export const montagesRelations = relations(montages, ({ one, many }) => ({
     }),
     quotes: many(quotes),
     payments: many(montagePayments),
+    documents: many(documents),
     serviceItems: many(montageServiceItems),
     settlement: one(settlements, {
         fields: [montages.id],
@@ -1318,6 +1320,10 @@ export const documentsRelations = relations(documents, ({ one }) => ({
 		fields: [documents.orderId],
 		references: [orders.id],
 	}),
+    montage: one(montages, {
+        fields: [documents.montageId],
+        references: [montages.id],
+    }),
 }));
 
 export const commissionStatuses = ['pending', 'approved', 'paid'] as const;
