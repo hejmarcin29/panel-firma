@@ -17,7 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Package, Truck, CheckCircle2, AlertCircle, ArrowRight, Box } from "lucide-react";
 import { toast } from "sonner";
-import { createPurchaseOrder, receivePurchaseOrder, issueMaterialsToCrew } from '../actions';
+import { createPurchaseOrder, receivePurchaseOrder, issueMaterialsToCrew, shipShopOrder, shipSamples } from '../actions';
 import { format } from 'date-fns';
 import { pl } from 'date-fns/locale';
 
@@ -46,11 +46,12 @@ interface OrderInTransit {
 
 interface MontageReady {
     id: string;
+    type: 'montage' | 'shop' | 'shop_sample';
     clientName: string;
-    installationAddress: string | null;
-    installer: {
-        name: string | null;
-    } | null;
+    subtext: string | null;
+    details?: {
+        installerName?: string | null;
+    };
 }
 
 interface Supplier {
@@ -126,6 +127,50 @@ export function ERPOrdersBoard({ data }: ERPOrdersBoardProps) {
         });
     };
 
+    const handleGenerateLabel = (orderId: string) => {
+        startTransition(async () => {
+            try {
+                const res = await shipSamples(orderId);
+                if (res.success) {
+                    toast.success("Etykieta wygenerowana! (Symulacja)");
+                } else {
+                    toast.error(res.message || "Błąd generowania etykiety");
+                }
+            } catch {
+                toast.error("Wystąpił błąd");
+            }
+        });
+    };
+
+    const handleManualShip = (orderId: string) => {
+        const tracking = window.prompt("Podaj numer listu przewozowego:");
+        if (!tracking) return;
+        
+        startTransition(async () => {
+             try {
+                await shipShopOrder(orderId, tracking);
+                toast.success("Zamówienie oznaczone jako wysłane!");
+            } catch {
+                toast.error("Wystąpił błąd");
+            }
+        });
+    }
+
+    const handleDropship = (orderId: string) => {
+         const tracking = window.prompt("Podaj numer listu przewozowego (Dropshipping):");
+        if (!tracking) return;
+        
+        startTransition(async () => {
+             try {
+                // Returns status 'order.fulfillment_confirmed' directly
+                await shipShopOrder(orderId, tracking); 
+                toast.success("Dropshipping potwierdzony!");
+            } catch {
+                toast.error("Wystąpił błąd");
+            }
+        });
+    }
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[calc(100vh-12rem)]">
             
@@ -163,7 +208,22 @@ export function ERPOrdersBoard({ data }: ERPOrdersBoardProps) {
                             size="sm" 
                             disabled={selectedMontages.length === 0 || !selectedSupplier || isPending}
                             onClick={handleCreateOrder}
-                        >
+                        >    
+                                            {/* DROPSHIPPING BUTTON */}
+                                            {item.type === 'shop' && (
+                                                <Button 
+                                                    size="sm" 
+                                                    variant="ghost" 
+                                                    className="w-full text-xs h-6 mt-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation(); // Don't toggle checkbox
+                                                        handleDropship(item.id);
+                                                    }}
+                                                >
+                                                    🚀 Dropshipping (Szybka Ścieżka)
+                                                </Button>
+                                            )}
+                                        
                             {isPending ? "Przetwarzanie..." : `Zamów zaznaczone (${selectedMontages.length})`}
                         </Button>
                     </div>
@@ -244,33 +304,69 @@ export function ERPOrdersBoard({ data }: ERPOrdersBoardProps) {
                                         <div>
                                             <h4 className="font-medium text-sm">{po.supplier?.name || "Nieznany dostawca"}</h4>
                                             <p className="text-xs text-muted-foreground">
-                                                Zamówiono: {po.orderDate ? format(new Date(po.orderDate), 'dd.MM.yyyy', { locale: pl }) : '-'}
+                                             item) => (
+                                <div key={item.id} className="bg-white p-3 rounded-md border shadow-sm hover:shadow-md transition-shadow space-y-3">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <h4 className="font-medium text-sm">{item.clientName}</h4>
+                                                {item.type === 'shop_sample' && <Badge className="text-[10px] h-4 px-1 bg-purple-100 text-purple-700 hover:bg-purple-200">Próbki</Badge>}
+                                                {item.type === 'shop' && <Badge className="text-[10px] h-4 px-1 bg-blue-100 text-blue-700 hover:bg-blue-200">Sklep</Badge>}
+                                            </div>
+                                            <p className="text-xs text-muted-foreground">
+                                                {item.subtext || "Brak adresu"}
                                             </p>
                                         </div>
-                                        <Badge variant="secondary" className="text-[10px]">PO #{po.id.slice(0,4)}</Badge>
-                                    </div>
-                                    
-                                    <Separator />
-                                    
-                                    <div className="space-y-1">
-                                        <p className="text-xs font-medium text-muted-foreground">Zawiera materiały dla:</p>
-                                        <ul className="text-xs space-y-1">
-                                            {[...new Set(po.items.map((i) => i.montage?.clientName).filter(Boolean))].map((name, idx) => (
-                                                <li key={idx} className="flex items-center gap-1">
-                                                    <span className="w-1 h-1 rounded-full bg-blue-400" />
-                                                    {name}
-                                                </li>
-                                            ))}
-                                        </ul>
+                                        {item.type === 'shop_sample' ? (
+                                            <Package className="w-4 h-4 text-purple-500" />
+                                        ) : (
+                                            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                        )}
                                     </div>
 
-                                    <Button 
-                                        className="w-full gap-2" 
-                                        size="sm" 
-                                        variant="outline"
-                                        onClick={() => handleReceiveOrder(po.id)}
-                                        disabled={isPending}
-                                    >
+                                    {item.details?.installerName && (
+                                        <div className="text-xs bg-emerald-50 text-emerald-700 px-2 py-1 rounded flex items-center gap-1">
+                                            Ekipa: {item.details.installerName}
+                                        </div>
+                                    )}
+
+                                    {item.type === 'montage' && (
+                                        <Button 
+                                            className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white" 
+                                            size="sm"
+                                            onClick={() => handleIssueMaterials(item.id)}
+                                            disabled={isPending}
+                                        >
+                                            <ArrowRight className="w-3.5 h-3.5" />
+                                            Wydaj Ekipie
+                                        </Button>
+                                    )}
+
+                                    {item.type === 'shop_sample' && (
+                                        <Button 
+                                            className="w-full gap-2 bg-purple-600 hover:bg-purple-700 text-white" 
+                                            size="sm"
+                                            onClick={() => handleGenerateLabel(item.id)}
+                                            disabled={isPending}
+                                        >
+                                            <Package className="w-3.5 h-3.5" />
+                                            Generuj Etykietę (InPost)
+                                        </Button>
+                                    )}
+
+                                    {item.type === 'shop' && (
+                                         <Button 
+                                            className="w-full gap-2" 
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => handleManualShip(item.id)}
+                                            disabled={isPending}
+                                        >
+                                            <Truck className="w-3.5 h-3.5" />
+                                            Wyślij (Wpisz List)
+                                        </Button>
+                                    )}
+
                                         <Package className="w-3.5 h-3.5" />
                                         Przyjmij Dostawę
                                     </Button>

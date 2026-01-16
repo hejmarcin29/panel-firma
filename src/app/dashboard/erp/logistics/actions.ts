@@ -34,7 +34,22 @@ export async function getERPOrdersData() {
     });
 
     const shopOrdersToOrder = await db.query.orders.findMany({
-        where: eq(orders.status, 'order.paid'),
+        where: and(
+            eq(orders.status, 'order.paid'),
+            eq(orders.type, 'production')
+        ),
+        with: {
+            customer: true,
+            items: true
+        },
+        orderBy: desc(orders.createdAt)
+    });
+
+    const shopSamplesReady = await db.query.orders.findMany({
+        where: and(
+            eq(orders.status, 'order.paid'),
+            eq(orders.type, 'sample')
+        ),
         with: {
             customer: true,
             items: true
@@ -96,12 +111,64 @@ export async function getERPOrdersData() {
         }))
     ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
+    const readyItems = [
+        ...montagesReady.map(m => ({
+            id: m.id,
+            type: 'montage' as const,
+            clientName: m.clientName,
+            subtext: m.installationAddress || 'Brak adresu',
+            details: {
+                installerName: m.installer?.name
+            }
+        })),
+        ...shopSamplesReady.map(o => ({
+            id: o.id,
+            type: 'shop_sample' as const,
+            clientName: o.customer?.name || 'Klient (Próbki)',
+            subtext: o.shippingAddress?.city || 'Wysyłka',
+            details: {
+                installerName: null
+            }
+        }))
+    ]; // Sort?
+
     return {
         toOrder,
         inTransit: ordersInTransit,
-        ready: montagesReady,
+        ready: readyItems,
         suppliers
     };
+}
+
+export async function shipSamples(orderId: string) {
+    await requireUser();
+    
+    // Logic: InPost Label Generation (Mock)
+    await db.update(orders)
+        .set({ status: 'order.fulfillment_confirmed' })
+        .where(eq(orders.id, orderId));
+
+    // Optional: Log to timeline
+    // await db.insert(erpOrderTimeline).values({...})
+    
+    revalidatePath('/dashboard/erp/logistics');
+    return { success: true, message: 'Etykieta wygenerowana' };
+}
+
+export async function shipShopOrder(orderId: string, trackingNumber?: string) {
+    await requireUser();
+    
+    await db.update(orders)
+        .set({ status: 'order.fulfillment_confirmed' })
+        .where(eq(orders.id, orderId));
+        
+    // Save tracking info logic here (if we had a place for it)
+    if (trackingNumber) {
+        // console.log(`Tracking number for ${orderId}: ${trackingNumber}`);
+    }
+    
+    revalidatePath('/dashboard/erp/logistics');
+    return { success: true };
 }
 
 export async function createPurchaseOrder(ids: string[], supplierId: string) {
