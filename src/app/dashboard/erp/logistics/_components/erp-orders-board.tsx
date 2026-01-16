@@ -303,16 +303,12 @@ export function ERPOrdersBoard({ data }: ERPOrdersBoardProps) {
                                     <div className="flex justify-between items-start">
                                         <div>
                                             <h4 className="font-medium text-sm">{po.supplier?.name || "Nieznany dostawca"}</h4>
-                                            <p className="text-xs text-muted-foreground">
-                                             item) => (
-                                <div key={item.id} className="bg-white p-3 rounded-md border shadow-sm hover:shadow-md transition-shadow space-y-3">
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <h4 className="font-medium text-sm">{item.clientName}</h4>
-                                                {item.type === 'shop_sample' && <Badge className="text-[10px] h-4 px-1 bg-purple-100 text-purple-700 hover:bg-purple-200">Próbki</Badge>}
-                                                {item.type === 'shop' && <Badge className="text-[10px] h-4 px-1 bg-blue-100 text-blue-700 hover:bg-blue-200">Sklep</Badge>}
-                                            </div>
+                                            <p className="text-xs text-muted-foreground">{po.number}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                                             <p className="text-xs text-muted-foreground">
                                                 {item.subtext || "Brak adresu"}
                                             </p>
