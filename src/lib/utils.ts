@@ -48,3 +48,12 @@ export function slugify(text: string): string {
     .replace(/^-+/, '')       // Usuń myślniki z początku
     .replace(/-+$/, '');      // Usuń myślniki z końca
 }
+
+export function decodeSecret(secret: string | null | undefined): string | null {
+    if (!secret) return null;
+    try {
+        return Buffer.from(secret, 'base64').toString('utf-8');
+    } catch (e) {
+        return null; // Return null if invalid base64
+    }
+}

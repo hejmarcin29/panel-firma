@@ -19,6 +19,7 @@ import {
   Users,
   Sparkles,
   ShoppingBag,
+  Bell,
 } from "lucide-react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -40,6 +41,7 @@ interface SettingsViewProps {
   contractTemplatesManager: React.ReactNode;
   servicesSettings: React.ReactNode;
   magicLinks: React.ReactNode;
+  notifications: React.ReactNode;
 }
 
 export function SettingsView({
@@ -430,6 +432,13 @@ export function SettingsView({
               Automatyzacje
             </TabsTrigger>
             <TabsTrigger 
+              value="notifications" 
+              className="w-full justify-start gap-2 px-3 py-2 h-9 data-[state=active]:bg-violet-100 data-[state=active]:text-violet-900 data-[state=active]:shadow-none ring-offset-background transition-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <Bell className="h-4 w-4" />
+              Powiadomienia
+            </TabsTrigger>
+            <TabsTrigger 
               value="logs" 
               className="w-full justify-start gap-2 px-3 py-2 h-9 data-[state=active]:bg-muted data-[state=active]:shadow-none ring-offset-background transition-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
@@ -516,6 +525,10 @@ export function SettingsView({
 
           <TabsContent value="automations" className="m-0 space-y-4">
             {montageSettings}
+          </TabsContent>
+
+          <TabsContent value="notifications" className="m-0 space-y-4">
+            {notifications}
           </TabsContent>
 
           <TabsContent value="logs" className="m-0 space-y-4">

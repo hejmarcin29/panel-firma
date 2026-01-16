@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ShieldAlert, Globe, Search, BarChart3, CreditCard, LayoutTemplate, SquareEqual, Calculator, Smartphone, Plus, X, ShieldCheck } from 'lucide-react';
+import { ShieldAlert, Globe, Search, BarChart3, CreditCard, LayoutTemplate, SquareEqual, Calculator, Smartphone, Plus, X, ShieldCheck, Bell } from 'lucide-react';
 import { SingleImageUpload } from '@/components/common/single-image-upload';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -220,6 +220,27 @@ export default function ShopSettingsForm({ initialConfig, initialTpayConfig, ava
                                         name="isShopEnabled" 
                                         defaultChecked={config.isShopEnabled} 
                                     />
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="border-l-4 border-l-violet-500">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Bell className="h-5 w-5 text-violet-500" /> Komunikacja z Klientem
+                                </CardTitle>
+                                <CardDescription>
+                                    Skonfiguruj automatyczne powiadomienia email (potwierdzenia, wysyłka, statusy).
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex items-center justify-between gap-4">
+                                    <p className="text-sm text-muted-foreground">
+                                        Szablony wiadomości (Email/SMS) dla sklepu i montaży są zarządzane w centralnym module powiadomień.
+                                    </p>
+                                    <Button variant="outline" asChild className="border-violet-200 hover:bg-violet-50 hover:text-violet-700 whitespace-nowrap">
+                                        <a href="/dashboard/settings?tab=notifications">Zarządzaj Powiadomieniami ↗</a>
+                                    </Button>
                                 </div>
                             </CardContent>
                         </Card>

@@ -19,6 +19,9 @@ export {
     erpProductReviews, erpProductReviewsRelations, reviewStatus, reviewSource,
     erpOrderTimeline, erpOrderTimelineRelations, timelineType 
 } from './reviews-schema';
+export { 
+    notificationTemplates, notificationLogs, notificationChannelEnum, notificationStatusEnum 
+} from './notifications-schema';
 
 export const userRoles = ['admin', 'installer', 'architect', 'partner'] as const;
 export const orderSources = ['shop'] as const;

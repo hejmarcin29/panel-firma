@@ -9,16 +9,9 @@ import { ShoppingCart, RefreshCcw, Check, Calculator } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/lib/store/cart-store";
 import { toast } from "sonner";
-import { 
-    Sheet, 
-    SheetContent, 
-    SheetDescription, 
-    SheetHeader, 
-    SheetTitle, 
-    SheetTrigger,
-    SheetFooter
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from "@/components/ui/sheet";
 import { calculateMontageEstimation, submitMontageLead } from "@/server/actions/calculator-actions";
+import { MeasurementRequestForm } from "@/components/storefront/measurement-request-form";
 
 interface FloorCalculatorProps {
   product: {
@@ -63,10 +56,6 @@ export function FloorCalculator({
   const [waste, setWaste] = useState<string>(currentRates.simple.toString()); 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   
-  // Montage Lead Form State
-  const [leadForm, setLeadForm] = useState({ name: '', phone: '', postalCode: '' });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   // Estimation State
   const [estimation, setEstimation] = useState<{
     totalGross8: number;
@@ -164,27 +153,6 @@ export function FloorCalculator({
     setIsSubmitting(true);
     const res = await submitMontageLead({
         clientName: leadForm.name,
-        clientPhone: leadForm.phone,
-        postalCode: leadForm.postalCode,
-        floorArea: areaNum,
-        productName: product.name,
-        estimatedPrice: estimation?.totalGross8 || 0
-    });
-    
-    setIsSubmitting(false);
-    
-    if (res.success) {
-        toast.success("Zgłoszenie przyjęte! Oddzwonimy.");
-        setIsSheetOpen(false);
-    } else {
-        toast.error(res.message);
-    }
-  };
-
-  return (
-    <div className="rounded-xl border bg-card p-6 shadow-sm space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="font-semibold flex items-center gap-2">
           <RefreshCcw className="h-4 w-4 text-primary" />
           Kalkulator Błyskawiczny
         </h3>
@@ -415,82 +383,43 @@ export function FloorCalculator({
                                     <span className="font-medium">{area} m²</span>
                                 </div>
                                 <div className="border-t pt-3 flex justify-between items-center">
-                                    <span className="text-gray-500 text-sm">Szacowany budżet:</span>
-                                    <span className="font-bold text-lg text-primary">
-                                        {estimation ? `~${Math.round(estimation.totalGross8)} zł` : '...'}
-                                    </span>
+                                    <span className="text-gray-500 text-sm">Szacowany budżet:</span> p-0">
+                        <div className="flex flex-col h-full bg-white">
+                            <SheetHeader className="text-left space-y-2 p-6 pb-2 border-b bg-white">
+                                <SheetTitle className="text-xl font-bold">Darmowa Wycena Montażu</SheetTitle>
+                                <SheetDescription className="text-xs">
+                                    Wypełnij formularz. Otrzymasz wstępną ofertę z VAT 8% i umówimy pomiar.
+                                </SheetDescription>
+                            </SheetHeader>
+                            
+                            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                                {/* Summary Card */}
+                                <div className="bg-blue-50/50 rounded-xl p-4 space-y-2 border border-blue-100">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-500">Produkt:</span>
+                                        <span className="font-semibold text-gray-900 truncate max-w-[180px]">{product.name}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-500">Powierzchnia:</span>
+                                        <span className="font-medium">{area} m²</span>
+                                    </div>
+                                    {estimation && (
+                                    <div className="flex justify-between text-sm pt-2 border-t border-blue-100 mt-2">
+                                        <span className="text-gray-500">Szacowany koszt:</span>
+                                        <span className="font-bold text-blue-700">
+                                            ~{Math.round(estimation.totalGross8)} zł
+                                        </span>
+                                    </div>
+                                    )}
                                 </div>
+
+                                {/* Form */}
+                                <MeasurementRequestForm 
+                                    onSuccess={() => setIsSheetOpen(false)}
+                                    defaultMessage={`Zgłoszenie z karty produktu: ${product.name} (SKU: ${product.sku}).\nPowierzchnia: ok. ${area} m².\nSzacowany budżet: ${estimation ? `${Math.round(estimation.totalGross8)} zł` : 'nie wyliczono'}.`} 
+                                />
                             </div>
-
-                            {/* Form */}
-                            <div className="space-y-4">
-                                <h4 className="font-medium">Dane kontaktowe</h4>
-                                <div className="grid gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="name">Imię i Nazwisko</Label>
-                                        <Input 
-                                            id="name" 
-                                            placeholder="Jan Kowalski" 
-                                            value={leadForm.name}
-                                            onChange={e => setLeadForm({...leadForm, name: e.target.value})}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="phone">Numer telefonu</Label>
-                                        <Input 
-                                            id="phone" 
-                                            placeholder="123 456 789" 
-                                            type="tel"
-                                            value={leadForm.phone}
-                                            onChange={e => setLeadForm({...leadForm, phone: e.target.value})}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="zip">Kod pocztowy (Miejscowość inwestycji)</Label>
-                                        <Input 
-                                            id="zip" 
-                                            placeholder="00-000" 
-                                            value={leadForm.postalCode}
-                                            onChange={e => setLeadForm({...leadForm, postalCode: e.target.value})}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <SheetFooter className="pt-4 border-t mt-auto">
-                            <Button 
-                                className="w-full h-12 text-base bg-primary text-primary-foreground hover:bg-primary/90"
-                                onClick={handleSubmitLead}
-                                disabled={isSubmitting || !leadForm.phone}
-                            >
-                                {isSubmitting ? 'Wysyłanie...' : 'Potwierdzam i zamawiam pomiar'}
-                            </Button>
-                            <p className="text-xs text-center text-gray-400 mt-4">
-                                Klikając, akceptujesz regulamin. Pomiar jest niezobowiązujący.
-                            </p>
-                        </SheetFooter>
-                    </SheetContent>
-                 </Sheet>
-             </motion.div>
-        )}
-       </AnimatePresence>
-      </div>
-
-      {/* Mobile Sticky Add-to-Cart Bar */}
-      <AnimatePresence>
-        {showSticky && mode === 'material' && (
-            <motion.div
-                initial={{ y: "100%" }}
-                animate={{ y: 0 }}
-                exit={{ y: "100%" }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)] z-50 md:hidden pb-[calc(1rem+env(safe-area-inset-bottom))]"
-            >
-                <div className="flex items-center justify-between gap-4">
-                    <div className="flex flex-col flex-1 min-w-0">
-                         <span className="text-xs text-gray-500 font-medium truncate">{product.name}</span>
-                         <div className="flex items-baseline gap-2">
+                        </divme="flex items-baseline gap-2">
                              <span className="text-base font-bold text-gray-900">
                                  {totalPrice.toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' })}
                              </span>

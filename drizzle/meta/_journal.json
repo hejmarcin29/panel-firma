@@ -610,6 +610,13 @@
       "when": 1768564260032,
       "tag": "0086_violet_silver_fox",
       "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1768595021000,
+      "tag": "0087_friendly_rachel_grey",
+      "breakpoints": true
     }
   ]
 }

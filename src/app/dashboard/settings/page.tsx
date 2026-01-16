@@ -52,6 +52,8 @@ import { getContractTemplates } from './contracts/actions';
 import { InstallerSettingsView } from './_components/installer-settings-view';
 import { getMagicLinks } from './magic-links/actions';
 import { MagicLinksManager } from './magic-links/_component';
+import { getTemplates } from './notifications/actions';
+import { NotificationsView } from './notifications/_components/notifications-view';
 
 import ServicesSettingsPage from './services/page';
 import TeamSettingsPage from './team/page';
@@ -223,6 +225,7 @@ export default async function SettingsPage() {
         sampleOrderConfirmationSubject,
         sampleOrderConfirmationTemplate,
         magicLinks,
+        notificationTemplates,
 	] = await Promise.all([
 		getAppSetting(appSettingKeys.wooWebhookSecret),
 		getAppSetting(appSettingKeys.wooConsumerKey),
@@ -283,6 +286,7 @@ export default async function SettingsPage() {
         getAppSetting(appSettingKeys.sampleOrderConfirmationSubject),
         getAppSetting(appSettingKeys.sampleOrderConfirmationTemplate),
         getMagicLinks(),
+        getTemplates(),
 	]);
 
     const statusOptions = montageStatusDefinitions.map(def => ({
@@ -716,6 +720,9 @@ export default async function SettingsPage() {
             }
             magicLinks={
                 <MagicLinksManager links={magicLinks} />
+            }
+            notifications={
+                <NotificationsView templates={notificationTemplates} />
             }
 		>
             <div className="space-y-6">
