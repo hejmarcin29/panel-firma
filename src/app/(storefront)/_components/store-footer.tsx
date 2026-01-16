@@ -52,27 +52,27 @@ export function StoreFooter() {
                     </div>
                     {/* Tpay */}
                     <div className="bg-white p-1 rounded border h-8 w-12 flex items-center justify-center" title="Tpay">
-                       <img src="https://tpay.com/img/logo/tpay-logo-blue.svg" alt="Tpay" className="h-full w-full object-contain" />
+                       <img src="/payments/tpay.svg" alt="Tpay" className="h-full w-full object-contain" />
                     </div>
                     {/* BLIK */}
                     <div className="bg-white p-1 rounded border h-8 w-12 flex items-center justify-center" title="BLIK">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/7/76/Blik_logo.svg" alt="BLIK" className="h-full w-full object-contain" />
+                        <img src="/payments/blik.svg" alt="BLIK" className="h-full w-full object-contain" />
                     </div>
                     {/* Visa */}
                     <div className="bg-white p-1 rounded border h-8 w-12 flex items-center justify-center" title="Visa">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" className="h-full w-full object-contain" />
+                        <img src="/payments/visa.svg" alt="Visa" className="h-full w-full object-contain" />
                     </div>
                     {/* Mastercard */}
                     <div className="bg-white p-1 rounded border h-8 w-12 flex items-center justify-center" title="Mastercard">
-                         <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="h-full w-full object-contain" />
+                         <img src="/payments/mastercard.svg" alt="Mastercard" className="h-full w-full object-contain" />
                     </div>
                     {/* GPay */}
                     <div className="bg-white p-1 rounded border h-8 w-12 flex items-center justify-center" title="Google Pay">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/f/f2/Google_Pay_Logo.svg" alt="Google Pay" className="h-full w-full object-contain" />
+                        <img src="/payments/googlepay.svg" alt="Google Pay" className="h-full w-full object-contain" />
                     </div>
                      {/* Apple Pay */}
                      <div className="bg-white p-1 rounded border h-8 w-12 flex items-center justify-center" title="Apple Pay">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b0/Apple_Pay_logo.svg" alt="Apple Pay" className="h-full w-full object-contain" />
+                        <img src="/payments/applepay.svg" alt="Apple Pay" className="h-full w-full object-contain" />
                     </div>
                 </div>
 
