@@ -350,7 +350,7 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
                 <Script 
                     src="https://geowidget.inpost.pl/inpost-geowidget.js" 
                     strategy="lazyOnload" 
-                    onLoad={() => setInpostLoaded(true)}
+                    onLoad={() => setIsMapScriptLoaded(true)}
                 />
                 <link rel="stylesheet" href="https://geowidget.inpost.pl/inpost-geowidget.css" />
              </>
