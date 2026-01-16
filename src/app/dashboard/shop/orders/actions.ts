@@ -1,18 +1,16 @@
 'use server';
 
 import { db } from '@/lib/db';
-import { orders, documents, documentEvents, type OrderStatus } from '@/lib/db/schema';
+import { orders, documents, documentEvents } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { randomUUID } from 'crypto';
 import { uploadOrderDocument } from '@/lib/r2/storage';
-import { generateMagicLinkToken } from '@/lib/auth/magic-link';
-import { headers } from 'next/headers';
-import { createShipment } from '@/lib/inpost/client';
 
 export async function uploadProforma(orderId: string, transferTitle: string, formData: FormData) {
     const file = formData.get('file') as File;
-    
+    const proformaNumber = formData.get('proformaNumber') as string || transferTitle;
+
     if (!file) {
         throw new Error('No file provided');
     }
@@ -27,7 +25,6 @@ export async function uploadProforma(orderId: string, transferTitle: string, for
     const folderName = order.displayNumber || order.id;
 
     const pdfUrl = await uploadOrderDocument({
-        orderId,
         orderNumber: folderName,
         file,
         type: 'proforma'
@@ -46,7 +43,7 @@ export async function uploadProforma(orderId: string, transferTitle: string, for
         orderId: orderId,
         type: 'proforma',
         status: 'issued',
-        number: transferTitle,
+        number: proformaNumber,
         pdfUrl: pdfUrl,
         issueDate: new Date(),
     });
@@ -66,7 +63,10 @@ export async function uploadProforma(orderId: string, transferTitle: string, for
 
 export async function uploadFinalInvoice(orderId: string, formData: FormData) {
     const file = formData.get('file') as File;
+    const invoiceNumber = formData.get('invoiceNumber') as string;
+
     if (!file) throw new Error('No file provided');
+    if (!invoiceNumber) throw new Error('No invoice number provided');
 
     const order = await db.query.orders.findFirst({
         where: eq(orders.id, orderId),
@@ -78,7 +78,6 @@ export async function uploadFinalInvoice(orderId: string, formData: FormData) {
     const folderName = order.displayNumber || order.id;
 
     const pdfUrl = await uploadOrderDocument({
-        orderId,
         orderNumber: folderName,
         file,
         type: 'faktura'
@@ -90,7 +89,7 @@ export async function uploadFinalInvoice(orderId: string, formData: FormData) {
         orderId: orderId,
         type: 'final_invoice',
         status: 'issued',
-        number: `FV/${order.displayNumber || orderId}`,
+        number: invoiceNumber,
         pdfUrl: pdfUrl,
         issueDate: new Date(),
     });
@@ -106,7 +105,10 @@ export async function uploadFinalInvoice(orderId: string, formData: FormData) {
 
 export async function uploadAdvanceInvoice(orderId: string, formData: FormData) {
     const file = formData.get('file') as File;
+    const invoiceNumber = formData.get('invoiceNumber') as string;
+
     if (!file) throw new Error('No file provided');
+    if (!invoiceNumber) throw new Error('No invoice number provided');
 
     const order = await db.query.orders.findFirst({
         where: eq(orders.id, orderId),
@@ -117,7 +119,6 @@ export async function uploadAdvanceInvoice(orderId: string, formData: FormData) 
     const folderName = order.displayNumber || order.id;
 
     const pdfUrl = await uploadOrderDocument({
-        orderId,
         orderNumber: folderName,
         file,
         type: 'zaliczka'
@@ -129,7 +130,7 @@ export async function uploadAdvanceInvoice(orderId: string, formData: FormData) 
         orderId: orderId,
         type: 'advance_invoice',
         status: 'issued',
-        number: `FZ/${order.displayNumber || orderId}`,
+        number: invoiceNumber,
         pdfUrl: pdfUrl,
         issueDate: new Date(),
     });
@@ -147,7 +148,10 @@ export async function uploadAdvanceInvoice(orderId: string, formData: FormData) 
 
 export async function uploadCorrectionInvoice(orderId: string, formData: FormData) {
     const file = formData.get('file') as File;
+    const invoiceNumber = formData.get('invoiceNumber') as string;
+
     if (!file) throw new Error('No file provided');
+    if (!invoiceNumber) throw new Error('No invoice number provided');
 
     const order = await db.query.orders.findFirst({
         where: eq(orders.id, orderId),
@@ -158,7 +162,6 @@ export async function uploadCorrectionInvoice(orderId: string, formData: FormDat
     const folderName = order.displayNumber || order.id;
 
     const pdfUrl = await uploadOrderDocument({
-        orderId,
         orderNumber: folderName,
         file,
         type: 'korekta'
@@ -170,7 +173,7 @@ export async function uploadCorrectionInvoice(orderId: string, formData: FormDat
         orderId: orderId,
         type: 'correction',
         status: 'issued',
-        number: `KOR/${order.displayNumber || orderId}`,
+        number: invoiceNumber,
         pdfUrl: pdfUrl,
         issueDate: new Date(),
     });

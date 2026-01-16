@@ -55,6 +55,16 @@ export function UploadAdvanceInvoiceDialog({ orderId }: { orderId: string }) {
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="grid gap-4 py-4">
                     <div className="grid gap-2">
+                        <Label htmlFor="invoiceNumber">Numer Faktury Zaliczkowej</Label>
+                        <Input
+                            id="invoiceNumber"
+                            name="invoiceNumber"
+                            placeholder="np. FZ 10/2026"
+                            required
+                        />
+                         <p className="text-xs text-muted-foreground">Numer wygenerowany w wFirma.</p>
+                    </div>
+                    <div className="grid gap-2">
                          <Label htmlFor="file">Plik PDF</Label>
                          <Input 
                             id="file" 

@@ -51,10 +51,20 @@ export function UploadFinalInvoiceDialog({ orderId }: { orderId: string }) {
                     <DialogTitle>Wgraj Fakturę Końcową</DialogTitle>
                     <DialogDescription>
                         To ostateczny krok realizacji. Załącz plik PDF faktury (lub paragonu).
-                        Status zamówienia zostanie zmieniony na "Zakończone".
+                        Status zamówienia zostanie zmieniony na &quot;Zakończone&quot;.
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                        <Label htmlFor="invoiceNumber">Numer Faktury</Label>
+                        <Input
+                            id="invoiceNumber"
+                            name="invoiceNumber"
+                            placeholder="np. FV 150/2026"
+                            required
+                        />
+                         <p className="text-xs text-muted-foreground">Numer wygenerowany w wFirma.</p>
+                    </div>
                     <div className="grid gap-2">
                          <Label htmlFor="file">Plik PDF (Faktura)</Label>
                          <Input 

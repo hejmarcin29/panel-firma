@@ -58,7 +58,7 @@ export function UploadProformaDialog({ orderId }: { orderId: string }) {
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="grid gap-4 py-4">
                     <div className="grid gap-2">
-                        <Label htmlFor="title">Tytułem przelewu</Label>
+                        <Label htmlFor="title">Numer Proformy (Tytułem przelewu)</Label>
                         <Input
                             id="title"
                             placeholder="np. PRO/2026/01/55"
@@ -66,7 +66,7 @@ export function UploadProformaDialog({ orderId }: { orderId: string }) {
                             onChange={(e) => setTitle(e.target.value)}
                             required
                         />
-                        <p className="text-xs text-muted-foreground">Numer, który klient ma wpisać w tytule przelewu.</p>
+                        <p className="text-xs text-muted-foreground">Numer proformy wygenerowany w wFirma.</p>
                     </div>
                     <div className="grid gap-2">
                          <Label htmlFor="file">Plik PDF (Proforma)</Label>

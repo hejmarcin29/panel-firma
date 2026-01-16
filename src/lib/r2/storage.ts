@@ -409,16 +409,14 @@ export async function uploadShipmentLabel({
 }
 
 export async function uploadOrderDocument({
-    orderId,
     orderNumber,
     file,
     type
 }: {
-    orderId: string;
     orderNumber: string; 
     file: File;
     type: 'proforma' | 'faktura' | 'logistyka' | 'zaliczka' | 'korekta' | 'inne';
-}): Promise<string> {
+}) {
     const config = await getR2Config();
     const client = createR2Client(config);
 

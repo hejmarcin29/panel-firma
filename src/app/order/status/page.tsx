@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { db } from "@/lib/db";
-import { manualOrders, erpOrderTimeline, orders, manualOrderItems, orderItems } from "@/lib/db/schema";
+import { manualOrders, erpOrderTimeline, orders } from "@/lib/db/schema";
 import { eq, asc } from "drizzle-orm";
 import { verifyMagicLinkToken } from "@/lib/auth/magic-link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -73,19 +73,19 @@ export default async function OrderStatusPage({ searchParams }: PageProps) {
 
     // Normalize Data for View
     const orderItemsList = manualOrder 
-        ? manualOrder.items.map((item: any) => ({
+        ? manualOrder.items.map((item) => ({
             id: item.id,
-            name: item.name,
+            name: item.product,
             quantity: item.quantity,
-            unit: item.unit || 'szt.',
-            price: item.price
+            unit: 'szt.',
+            price: item.unitPrice
         }))
-        : shopOrder!.items.map((item: any) => ({
+        : shopOrder!.items.map((item) => ({
             id: item.id,
             name: item.name,
             quantity: item.quantity,
-            unit: item.unit || 'szt.', // Shop items usually have 'unit'
-            price: item.price
+            unit: 'szt.',
+            price: item.unitPrice
         }));
 
     const order = manualOrder 
@@ -101,7 +101,7 @@ export default async function OrderStatusPage({ searchParams }: PageProps) {
             isShop: false,
             shippingCarrier: null,
             shippingTrackingNumber: null,
-            documents: [] as any[] // Manual orders dont have documents relation in schema yet
+            documents: [] as { id: string; type: string; number: string | null; pdfUrl: string | null; createdAt: Date; }[] // Manual orders dont have documents relation in schema yet
         }
         : {
             id: shopOrder!.id,

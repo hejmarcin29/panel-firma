@@ -55,6 +55,16 @@ export function UploadCorrectionDialog({ orderId }: { orderId: string }) {
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="grid gap-4 py-4">
                     <div className="grid gap-2">
+                        <Label htmlFor="invoiceNumber">Numer Korekty</Label>
+                        <Input
+                            id="invoiceNumber"
+                            name="invoiceNumber"
+                            placeholder="np. KOR 2/2026"
+                            required
+                        />
+                         <p className="text-xs text-muted-foreground">Numer wygenerowany w wFirma.</p>
+                    </div>
+                    <div className="grid gap-2">
                          <Label htmlFor="file">Plik PDF (Korekta)</Label>
                          <Input 
                             id="file" 
