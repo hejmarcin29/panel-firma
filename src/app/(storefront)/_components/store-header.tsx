@@ -56,7 +56,7 @@ export async function StoreHeader() {
             Blog
           </Link>
            <Button variant="default" size="sm" className="bg-[#c0392b] hover:bg-[#a93226] text-white" asChild>
-              <Link href="/kontakt">Chcę montaż</Link>
+              <Link href="/montaz">Chcę montaż</Link>
           </Button>
         </nav>
 

@@ -7,6 +7,8 @@ import { format } from 'date-fns';
 import { createPayment } from '@/lib/tpay';
 import { ShopConfig } from '@/app/dashboard/settings/shop/actions';
 import { headers } from 'next/headers';
+import { sendNotification } from '@/lib/notifications/service';
+import { formatCurrency } from '@/lib/utils';
 
 type OrderData = {
     firstName: string;
@@ -274,6 +276,23 @@ export async function processOrder(data: OrderData) {
                 }
             });
         });
+
+        // 🔔 Notification (ORDER_CREATED)
+        try {
+            await sendNotification(
+                'ORDER_CREATED',
+                data.email, 
+                {
+                    order_id: reference,
+                    client_name: `${data.firstName} ${data.lastName}`,
+                    total_amount: formatCurrency(totalGross),
+                    order_link: `${process.env.NEXT_PUBLIC_APP_URL || 'https://b2b.primepodloga.pl'}/sklep`
+                },
+                { id: orderId, type: 'order' }
+            );
+        } catch (e) {
+            console.error('Notification error:', e);
+        }
 
         // 5. Tpay
         let redirectUrl: string | null = null;

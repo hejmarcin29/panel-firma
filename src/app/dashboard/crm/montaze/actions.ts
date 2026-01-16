@@ -5,7 +5,7 @@ import { eq, and, sql, ne, inArray, type SQL } from 'drizzle-orm';
 import { createTransport } from 'nodemailer';
 import { randomUUID } from 'crypto';
 
-import { notifyService } from '@/lib/notifications/service';
+import { sendNotification } from '@/lib/notifications/service';
 import { requireUser } from '@/lib/auth/session';
 import { db } from '@/lib/db';
 import {
@@ -1457,66 +1457,19 @@ export async function updateMontageMeasurementDate(montageId: string, date: Date
                 const formattedTime = date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
                 const address = montage.installationAddress || montage.address || 'Brak adresu';
                 
-                // SMS
-                const smsEnabled = await isSystemAutomationEnabled('measurement_scheduled');
-                if (smsEnabled && montage.contactPhone) {
-                    const smsMessage = `Dzień dobry, potwierdzamy termin pomiaru: ${formattedDate} godz. ${formattedTime}. Adres: ${address}. Do zobaczenia!`;
-                    await sendSms(montage.contactPhone, smsMessage);
-                }
-
-                // Email
-                const emailEnabled = await isSystemAutomationEnabled('measurement_scheduled_email');
-                if (emailEnabled && montage.contactEmail) {
-                    const accounts = await db.select().from(mailAccounts).where(ne(mailAccounts.status, 'disabled')).limit(1);
-                    const mailAccount = accounts[0];
-
-                    if (mailAccount && mailAccount.smtpHost && mailAccount.smtpPort && mailAccount.passwordSecret) {
-                        const password = decodeSecret(mailAccount.passwordSecret);
-                        if (password) {
-                            const transporter = createTransport({
-                                host: mailAccount.smtpHost,
-                                port: mailAccount.smtpPort,
-                                secure: Boolean(mailAccount.smtpSecure),
-                                auth: {
-                                    user: mailAccount.username,
-                                    pass: password,
-                                },
-                            });
-
-                            const emailHtml = `
-                                <div style="font-family: sans-serif; color: #333;">
-                                    <h2>Potwierdzenie terminu pomiaru</h2>
-                                    <p>Dzień dobry,</p>
-                                    <p>Potwierdzamy termin pomiaru dla zlecenia <strong>${montage.displayId}</strong>.</p>
-                                    <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                                        <p style="margin: 5px 0;">📅 <strong>Data:</strong> ${formattedDate}</p>
-                                        <p style="margin: 5px 0;">🕒 <strong>Godzina:</strong> ${formattedTime}</p>
-                                        <p style="margin: 5px 0;">📍 <strong>Adres:</strong> ${address}</p>
-                                    </div>
-                                    <h3>Jak przygotować się do pomiaru?</h3>
-                                    <ul>
-                                        <li>Prosimy o zapewnienie dostępu do wszystkich pomieszczeń, które mają być mierzone.</li>
-                                        <li>Jeśli to możliwe, prosimy o uprzątnięcie podłogi z drobnych przedmiotów.</li>
-                                        <li>Prosimy o zapewnienie dostępu do prądu (dla urządzeń pomiarowych).</li>
-                                    </ul>
-                                    <p>W razie pytań prosimy o kontakt.</p>
-                                    <p>Pozdrawiamy,<br>Zespół Prime Podłoga</p>
-                                </div>
-                            `;
-
-                            try {
-                                await transporter.sendMail({
-                                    from: `"${mailAccount.displayName}" <${mailAccount.email}>`,
-                                    to: montage.contactEmail,
-                                    subject: `Potwierdzenie terminu pomiaru - ${montage.displayId}`,
-                                    html: emailHtml,
-                                });
-                            } catch (error) {
-                                console.error('Failed to send email:', error);
-                            }
-                        }
-                    }
-                }
+                // 🔔 Notifications (Centralized)
+                await sendNotification(
+                    'MEASUREMENT_SCHEDULED',
+                    { email: montage.contactEmail, phone: montage.contactPhone },
+                    {
+                        montage_number: montage.displayId,
+                        client_name: montage.clientName || 'Klient',
+                        date: formattedDate,
+                        time: formattedTime,
+                        address: address
+                    },
+                    { id: montage.id, type: 'montage' }
+                );
             }
         }
     } catch (e) {
@@ -2658,47 +2611,19 @@ export async function sendDataRequest(montageId: string) {
         }
     }
 
-    // Send Email if email exists
-    if (montage.contactEmail) {
-        const emailEnabled = await isSystemAutomationEnabled('data_request_email');
-        if (emailEnabled) {
-            try {
-                // Find active mail account
-            const accounts = await db.select().from(mailAccounts).where(ne(mailAccounts.status, 'disabled')).limit(1);
-            const mailAccount = accounts[0];
-
-            if (mailAccount && mailAccount.smtpHost && mailAccount.smtpPort && mailAccount.passwordSecret) {
-                 const password = decodeSecret(mailAccount.passwordSecret);
-                 if (password) {
-                    const transporter = createTransport({
-                        host: mailAccount.smtpHost,
-                        port: mailAccount.smtpPort,
-                        secure: Boolean(mailAccount.smtpSecure),
-                        auth: {
-                            user: mailAccount.username,
-                            pass: password,
-                        },
-                    });
-
-                    // Use configured signature or fallback
-                    const signatureHtml = mailAccount.signature 
-                        ? `<br><br>${mailAccount.signature}` 
-                        : `<br><p>Pozdrawiamy,<br>Zespół Prime Podłoga</p>`;
-
-                    await transporter.sendMail({
-                        from: `${mailAccount.displayName} <${mailAccount.email}>`,
-                        to: montage.contactEmail,
-                        subject: 'Witamy w Panelu Klienta - Prime Podłoga',
-                        text: message, // Note: This is plain text, signature is not appended here to keep it simple or we should strip tags
-                        html: `<p>Dzień dobry!</p><p>Rozpoczynamy współpracę. Utworzyliśmy dla Ciebie Panel Klienta, gdzie będziesz widzieć postępy prac.</p><p><a href="${portalLink}">Kliknij tutaj, aby przejść do panelu</a></p><p>Prosimy o uzupełnienie adresu, abyśmy mogli zlecić pomiar.</p>${signatureHtml}`
-                    });
-                    sentChannels.push('Email');
-                 }
-            }
-        } catch (error) {
-            console.error('Failed to send Email:', error);
-        }
-        }
+    // 🔔 Notifications (Centralized)
+    // We send notification regardless of old 'data_request_email' check because the new system has its own 'isActive' check in DB.
+    if (montage.contactEmail || montage.contactPhone) {
+        await sendNotification(
+            'CLIENT_DATA_REQUEST',
+            { email: montage.contactEmail, phone: montage.contactPhone },
+            {
+                client_name: montage.clientName || 'Klient',
+                portal_link: portalLink
+            },
+            { id: montage.id, type: 'montage' }
+        );
+        sentChannels.push('Notification');
     }
 
     const channelsText = sentChannels.length > 0 ? sentChannels.join(', ') : 'brak wysyłki';

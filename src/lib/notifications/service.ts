@@ -10,19 +10,19 @@ type NotifiableEntity = {
     type: 'order' | 'montage' | 'quote' | 'customer' | 'partner' | 'invoice';
 };
 
+export type NotificationRecipient = string | { email?: string | null; phone?: string | null };
+
 export async function sendNotification(
     eventId: NotificationEventId, 
-    recipient: string, 
+    recipient: NotificationRecipient, 
     data: NotificationData,
     relatedEntity?: NotifiableEntity
 ) {
-    console.log(`[NotificationService] Processing ${eventId} for ${recipient}`);
+    console.log(`[NotificationService] Processing ${eventId}`);
 
-    // VALIDATION: Ensure recipient is valid
-    if (!recipient || recipient.trim() === '') {
-        console.warn(`[NotificationService] Empty recipient for ${eventId}. Skipping.`);
-        return;
-    }
+    // Resolve targets
+    const emailTarget = typeof recipient === 'string' ? recipient : recipient.email;
+    const phoneTarget = typeof recipient === 'string' ? recipient : recipient.phone;
 
     // 1. Fetch active templates for this event
     const templates = await db.query.notificationTemplates.findMany({
@@ -46,10 +46,8 @@ export async function sendNotification(
         let content = template.content || '';
         
         // Replace variables {{var}}
-        // Simple regex replace for now. Could use Handlebars/Mustache if needed.
         Object.entries(data).forEach(([key, value]) => {
             const valStr = value === null || value === undefined ? '' : String(value);
-            // Case insensitive replace {{KEY}} or {{key}}
             const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'gi');
             content = content.replace(regex, valStr);
             subject = subject.replace(regex, valStr);
@@ -57,14 +55,30 @@ export async function sendNotification(
 
         // B. Send
         let result: { success: boolean; error?: string; providerId?: string | undefined; } = { success: false, error: 'Unknown' };
-        
+        let actualRecipient = '';
+
         if (template.channel === 'email') {
-            result = await sendEmailChannel(recipient, subject, content);
+            if (emailTarget) {
+                actualRecipient = emailTarget;
+                result = await sendEmailChannel(emailTarget, subject, content);
+            } else {
+                result = { success: false, error: 'No email address provided' };
+            }
         } else if (template.channel === 'sms') {
-            result = await sendSmsChannel(recipient, content); 
+            if (phoneTarget) {
+                actualRecipient = phoneTarget;
+                result = await sendSmsChannel(phoneTarget, content); 
+            } else {
+                result = { success: false, error: 'No phone number provided' };
+            }
         } else if (template.channel === 'system') {
-            // TODO: In-app notification integration
             result = { success: true, providerId: 'system-mock' };
+        }
+
+        if (result.error === 'No email address provided' || result.error === 'No phone number provided') {
+           // Skip logging or log as skipped?
+           // Probably skip to avoid noise.
+           continue; 
         }
 
         // C. Log
@@ -72,7 +86,7 @@ export async function sendNotification(
             await db.insert(notificationLogs).values({
                 eventId,
                 channel: template.channel,
-                recipient,
+                recipient: actualRecipient,
                 subject: template.channel === 'email' ? subject : null,
                 content: content.slice(0, 5000), // Safety clip
                 status: result.success ? 'sent' : 'failed',
