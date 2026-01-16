@@ -54,7 +54,6 @@ export function FloorCalculator({
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   
   // Estimation State
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [estimation, setEstimation] = useState<{
     totalGross8: number;
     vatSavings: number;

@@ -15,13 +15,11 @@ const leadSchema = z.object({
   turnstileToken: z.string().optional(),
 });
 
-export async function submitLeadAction(data: any) {
+export async function submitLeadAction(data: unknown) {
   try {
     const result = leadSchema.safeParse(data);
     if (!result.success) {
-      // Cast to any to bypass version mismatch/type issues
-      const err = result.error as any;
-      const firstIssue = err.errors?.[0] || err.issues?.[0];
+      const firstIssue = result.error.issues[0];
       return { success: false, message: firstIssue?.message || "Błąd walidacji formularza." };
     }
     const validated = result.data;
