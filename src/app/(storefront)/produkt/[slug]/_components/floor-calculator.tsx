@@ -236,143 +236,19 @@ export function FloorCalculator({
 
       {/* Results Section */}
       <div className="rounded-lg bg-muted/30 p-4 border border-border/50 overflow-hidden">
-        <AnimatePresence mode="wait">
-          {mode === 'material' ? (
-             <motion.div 
-                key="material-calc"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className="space-y-3"
-             >
-                <div className="flex justify-between text-sm">
-                    <span>Potrzebujesz:</span>
-                    <span className="font-medium">{areaWithWaste.toFixed(2)} m²</span>
-                </div>
-                <div className="flex justify-between text-sm items-center">
-                    <span>Ilość paczek:</span>
-                    <div className="flex flex-col items-end">
-                        <span className="font-bold text-lg">{packsNeeded} op.</span>
-                        {isFlooring && packageSizeM2 > 0 && (
-                            <span className="text-[10px] text-muted-foreground">
-                                (1 op. = {packageSizeM2} m²)
-                            </span>
-                        )}
-                    </div>
-                </div>
-                <div className="flex justify-between text-sm text-muted-foreground border-t pt-2 mt-2">
-                    <span>Razem do zamówienia:</span>
-                    <span>{totalArea.toFixed(2)} m²</span>
-                </div>
-             </motion.div>
-          ) : (
-             <motion.div 
-                key="montage-est"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className="space-y-3"
-             >
-                 <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Szacowany koszt inwestycji:</span>
-                 </div>
-                 {estimation ? (
-                     <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                     >
-                        <div className="flex items-baseline gap-2">
-                             <span className="text-2xl font-bold text-gray-900">
-                                 {estimation.priceRange.min} - {estimation.priceRange.max} zł
-                             </span>
-                        </div>
-                        <p className="text-xs text-green-600 font-medium mt-1 flex items-center gap-1">
-                            <Check className="h-3 w-3" />
-                            Oszczędzasz ok. {Math.round(estimation.vatSavings)} zł na VAT 8%
-                        </p>
-                        <p className="text-[10px] text-gray-400 mt-2 leading-tight">
-                            W cenie: Materiał, montaż, chemia montażowa, listwy, pomiar, gwarancja.
-                        </p>
-                     </motion.div>
-                 ) : (
-                     <div className="h-12 w-full animate-pulse bg-gray-200 rounded"></div>
-                 )}
-             </motion.div>
-          )}
-        </AnimatePresence>
+        <div>Top Results Placeholder</div>
       </div>
 
       <div className="pt-2" ref={actionsRef}>
-       <AnimatePresence mode="wait">
-        {mode === 'material' ? (
-            <motion.div
-                key="material-actions"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-                transition={{ duration: 0.2 }}
-            >
-                <div className="flex items-end justify-between mb-4">
-                    <span className="text-muted-foreground text-sm">Cena towaru:</span>
-                    <span className="text-3xl font-bold tracking-tight text-primary">
-                        {totalPrice.toLocaleString('pl-PL', { style: 'currency', currency: 'PLN' })}
-                    </span>
-                </div>
-                
-                {isPurchasable ? (
-                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                        <Button size="lg" className="w-full h-12 text-base font-semibold shadow-lg shadow-primary/20" onClick={handleAddToCart}>
-                            <ShoppingCart className="mr-2 h-5 w-5" />
-                            Dodaj do koszyka
-                        </Button>
-                    </motion.div>
-                ) : (
-                    <Button size="lg" disabled className="w-full h-12 text-base font-semibold opacity-75 cursor-not-allowed" variant="secondary">
-                        Produkt niedostępny online
-                    </Button>
-                )}
-
-                {isSampleAvailable && (
-                    <Button 
-                        variant="outline" 
-                        className="w-full h-10 mt-3 text-sm border-gray-300 hover:bg-gray-50 text-gray-700"
-                        onClick={handleAddSampleToCart}
-                    >
-                        Zamów próbkę ({samplePrice?.toFixed(2)} zł)
-                    </Button>
-                )}
-            </motion.div>
-        ) : (
-             <motion.div
-                key="montage-actions"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
-             >
-                 <>
-                 <AuditDrawer 
-                    open={isSheetOpen} 
-                    onOpenChange={setIsSheetOpen}
-                    productContext={{
-                        productName: product.name,
-                        sku: product.sku,
-                        area: area,
-                        estimation: estimation
-                    }}
-                 >
-                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                            <Button size="lg" className="w-full h-12 text-base font-semibold bg-gray-900 hover:bg-black text-white shadow-xl shadow-gray-900/10">
-                                <Calculator className="mr-2 h-5 w-5" />
-                                Umów Audyt (129 zł)
-                            </Button>
-                        </motion.div>
-                 </AuditDrawer>
-                 </>
-             </motion.div>
+       {/* AnimatePresence removed due to parsing error */}
+        {mode === 'material' && (
+            <div className="bg-green-100">Material Mode</div>
         )}
-      </AnimatePresence>
+
+        {mode === 'montage' && (
+            <div className="p-4 bg-blue-100">Montage Mode Active</div>
+        )}
+       {/* </AnimatePresence> */}
     </div>
   );
 }
