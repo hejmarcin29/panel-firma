@@ -318,13 +318,8 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
         deliveryMethod,
         deliveryPoint: selectedPoint || undefined,
         turnstileToken: turnstileToken || undefined,
-      });afterInteractive" 
-                    onReady={initMap}
-                    onError={() => {
-                        setIsMapScriptLoaded(false);
-                        setHasMapError(true);
-                        toast.error("Nie udało się załadować mapy InPost. Sprawdź połączenie.");
-                    }
+      });
+
       if (result.success) {
         toast.success("Zamówienie zostało złożone!");
         useCartStore.getState().clearCart();
@@ -651,23 +646,18 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
             <Dialog open={mapOpen} onOpenChange={setMapOpen}>
                 <DialogContent className="max-w-4xl h-[80vh] p-0 overflow-hidden flex flex-col">
                     <div className="flex-1 w-full h-full relative bg-gray-100">
-                        {inpostLoaded ? (
-                            <inpost-geowidget
-                                token={inpostGeowidgetToken}
-                                language="pl"
-                                config={inpostGeowidgetConfig || "parcelCollect"}
-                                style={{
-                                    width: "100%", 
-                                    height: "100%",
-                                    position: "absolute",
-                                    top: 0,
-                                    left: 0
-                                }}
-                            ></inpost-geowidget>
+                        {isMapScriptLoaded && !hasMapError ? (
+                             <div ref={mapContainerRef} className="w-full h-full" />
                         ) : (
                             <div className="flex items-center justify-center h-full">
-                                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-                                <span className="ml-2 text-gray-500">Ładowanie mapy...</span>
+                                {hasMapError ? (
+                                    <span className="text-red-500">Błąd ładowania mapy.</span>
+                                ) : (
+                                    <>
+                                        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                                        <span className="ml-2 text-gray-500">Ładowanie mapy...</span>
+                                    </>
+                                )}
                             </div>
                         )}
                         <Button 
