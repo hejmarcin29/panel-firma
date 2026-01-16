@@ -2,7 +2,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { useTransition, useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useTransition, useState, useEffect, useRef, useMemo } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -194,7 +194,7 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
   // Check if script is already loaded
   useEffect(() => {
       if (!isMapScriptLoaded && typeof window !== "undefined" && window.customElements?.get("inpost-geowidget")) {
-          setIsMapScriptLoaded(true);
+          setTimeout(() => setIsMapScriptLoaded(true), 0);
       }
   }, [isMapScriptLoaded]);
 
