@@ -30,6 +30,8 @@ interface CartStore {
   // Computed
   getTotalPrice: () => number;
   getTotalItems: () => number;
+  getDetailedTotals: () => { totalNet: number; totalGross: number; totalVat: number };
+  getCartType: () => 'empty' | 'sample' | 'production';
 }
 
 export const useCartStore = create<CartStore>()(
@@ -110,7 +112,24 @@ export const useCartStore = create<CartStore>()(
       },
 
       getTotalItems: () => {
-        return get().items.reduce((total, item) => total + item.quantity, 0);
+        return get().items.length;
+      },
+
+      getDetailedTotals: () => {
+        const items = get().items;
+        return items.reduce((acc, item) => {
+             const lineTotalGross = item.pricePerUnit * item.quantity;
+             const vatRate = item.vatRate || 0.23;
+             // Calculate Net from Gross: Gross / (1 + VAT)
+             const lineTotalNet = lineTotalGross / (1 + vatRate);
+             const lineVat = lineTotalGross - lineTotalNet;
+
+             return {
+                 totalGross: acc.totalGross + lineTotalGross,
+                 totalNet: acc.totalNet + lineTotalNet,
+                 totalVat: acc.totalVat + lineVat,
+             };
+        }, { totalGross: 0, totalNet: 0, totalVat: 0 });
       },
     }),
     {

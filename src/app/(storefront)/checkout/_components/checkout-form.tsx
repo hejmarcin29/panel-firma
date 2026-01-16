@@ -123,8 +123,9 @@ declare global {
 export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidgetToken, inpostGeowidgetConfig, turnstileSiteKey }: CheckoutFormProps) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
-  const cart = useCartStore();
-  const itemsTotal = cart.getTotalPrice();
+  const { items, getTotalPrice, getDetailedTotals } = useCartStore();
+  const itemsTotal = getTotalPrice();
+  const totals = getDetailedTotals();
 
   // Turnstile State
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
@@ -174,8 +175,7 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
       }
   }, [turnstileSiteKey, turnstileWidgetId]);
 
-  // Logic: Is only samples?
-  const isOnlySamples = cart.items.length > 0 && cart.items.every(item => item.productId.startsWith('sample_'));
+  const isOnlySamples = items.length > 0 && items.every(item => item.productId.startsWith('sample_'));
   
   // Delivery State
   const [internalDeliveryMethod, setInternalDeliveryMethod] = useState<'courier' | 'locker'>('courier');
@@ -247,7 +247,7 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
   const differentBillingAddress = useWatch({ control: form.control, name: "differentBillingAddress" });
 
   const onSubmit = (data: CheckoutFormData) => {
-    if (cart.items.length === 0) {
+    if (items.length === 0) {
       toast.error("Twój koszyk jest pusty");
       return;
     }
@@ -262,7 +262,7 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
        return;
     }
 
-    const orderItems = cart.items.map(item => ({
+    const orderItems = items.map(item => ({
         productId: item.productId,
         name: item.name,
         sku: item.sku,
@@ -284,7 +284,7 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
 
       if (result.success) {
         toast.success("Zamówienie zostało złożone!");
-        cart.clearCart();
+        useCartStore.getState().clearCart();
         if (window.turnstile && turnstileWidgetId) {
            try { window.turnstile.remove(turnstileWidgetId); } catch {}
         }
@@ -299,7 +299,7 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
     });
   };
 
-  if (cart.items.length === 0) {
+  if (items.length === 0) {
       return (
           <div className="text-center py-12">
               <h2 className="text-2xl font-semibold mb-4">Twój koszyk jest pusty</h2>
@@ -761,36 +761,50 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
                      <CardTitle>Podsumowanie</CardTitle>
                  </CardHeader>
                  <CardContent className="space-y-4">
-                     {cart.items.map((item) => (
-                         <div key={item.productId} className="flex justify-between text-sm">
+                     {items.map((item) => (
+                         <div key={item.productId} className="flex justify-between text-sm py-2 border-b last:border-0 border-dashed">
                              <div className="space-y-1">
                                  <span className="font-medium">{item.name}</span>
-                                 <div className="text-muted-foreground text-xs">
-                                     {item.quantity} x {item.unit}
+                                 <div className="text-muted-foreground text-xs space-y-0.5">
+                                     {item.unit === 'm2' && item.packageSize ? (
+                                         <>
+                                             <div>Ilość: <span className="font-medium text-foreground">{(item.quantity * item.packageSize).toFixed(3)} m²</span></div>
+                                             <div>Opakowania: {item.quantity} op. ({item.packageSize} m²/op)</div>
+                                         </>
+                                     ) : (
+                                         <div>Ilość: <span className="font-medium text-foreground">{item.quantity} szt.</span></div>
+                                     )}
                                  </div>
                              </div>
-                             <span>{(item.pricePerUnit * item.quantity).toFixed(2)} zł</span>
+                             <span className="font-medium whitespace-nowrap">{(item.pricePerUnit * item.quantity).toFixed(2)} zł</span>
                          </div>
                      ))}
                      
-                     <Separator />
+                     <Separator className="my-4" />
                      
-                     <div className="flex justify-between font-medium">
-                         <span>Suma produktów</span>
-                         <span>{itemsTotal.toFixed(2)} zł</span>
+                     <div className="space-y-2">
+                         <div className="flex justify-between font-medium">
+                             <span>Suma produktów</span>
+                             <span>{totals.totalGross.toFixed(2)} zł</span>
+                         </div>
+                         <div className="flex justify-between text-sm text-muted-foreground">
+                             <span>Dostawa ({deliveryMethod === 'locker' ? 'Paczkomat' : 'Kurier'})</span>
+                             {shippingCostPLN > 0 ? (
+                                 <span>{shippingCostPLN.toFixed(2)} zł</span>
+                             ) : (
+                                 <span>Gratis / Wyceniana indywidualnie</span>
+                             )}
+                         </div>
+                         {/* VAT Display */}
+                         <div className="flex justify-between text-xs text-muted-foreground/70 pt-1">
+                             <span>w tym VAT</span>
+                             <span>{totals.totalVat.toFixed(2)} zł</span>
+                         </div>
                      </div>
-                     <div className="flex justify-between text-sm text-muted-foreground">
-                         <span>Dostawa ({deliveryMethod === 'locker' ? 'Paczkomat' : 'Kurier'})</span>
-                         {shippingCostPLN > 0 ? (
-                             <span>{shippingCostPLN.toFixed(2)} zł</span>
-                         ) : (
-                             <span>Gratis / Wyceniana indywidualnie</span>
-                         )}
-                     </div>
                      
-                     <Separator className="my-2" />
+                     <Separator className="my-4" />
                      
-                     <div className="flex justify-between font-bold text-lg">
+                     <div className="flex justify-between font-bold text-xl">
                          <span>Do zapłaty</span>
                          <span>{finalTotal.toFixed(2)} zł</span>
                      </div>
