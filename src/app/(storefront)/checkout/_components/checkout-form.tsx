@@ -808,6 +808,7 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
                          <span>w tym VAT</span>
                          <span>{totalVat.toFixed(2)} zł</span>
                      </div>
+                 </div>
                      
                      <Separator className="my-4" />
                      
