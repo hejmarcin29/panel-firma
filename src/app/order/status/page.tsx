@@ -5,11 +5,14 @@ import { eq, inArray } from "drizzle-orm";
 import { verifyMagicLinkToken } from "@/lib/auth/magic-link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Package, Truck, ShoppingCart, Phone, Mail, FileText, Download, CheckCircle2, MapPin, HeartHandshake } from "lucide-react";
+import { Package, Truck, ShoppingCart, Phone, Mail, FileText, Download, CheckCircle2, MapPin, HeartHandshake, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StoreHeader } from "@/app/(storefront)/_components/store-header";
 import { StoreFooter } from "@/app/(storefront)/_components/store-footer";
 import Image from "next/image";
+import { getShopConfig } from "@/app/dashboard/settings/shop/actions";
+import { PaymentDetailsCard } from "./_components/payment-details-card";
+import { PaymentSuccessCard } from "./_components/payment-success-card";
 
 interface PageProps {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -17,6 +20,7 @@ interface PageProps {
 
 export default async function OrderStatusPage({ searchParams }: PageProps) {
     const { token } = await searchParams;
+    const shopConfig = await getShopConfig();
     
     if (!token || typeof token !== 'string') {
         return (
@@ -118,6 +122,15 @@ export default async function OrderStatusPage({ searchParams }: PageProps) {
 
     const currentStepIndex = steps.filter(s => s.active).length - 1;
 
+    // Categorize Documents
+    const proformaDoc = order.documents.find(d => d.type === 'proforma');
+    const advanceDoc = order.documents.find(d => d.type === 'advance_invoice');
+    const finalDoc = order.documents.find(d => d.type === 'final_invoice');
+
+    const proformaUrl = proformaDoc?.pdfUrl;
+    const advanceUrl = advanceDoc?.pdfUrl;
+    const finalUrl = finalDoc?.pdfUrl;
+
     const getTrackingUrl = (carrier: string | null, number: string | null) => {
         if (!number) return '#';
         const c = (carrier || '').toLowerCase();
@@ -131,6 +144,9 @@ export default async function OrderStatusPage({ searchParams }: PageProps) {
         if (c.includes('schenker')) return `https://eschenker.dbschenker.com/app/tracking-public/`;
         return '#';
     };
+
+    const whatsappMessage = encodeURIComponent(`Dzień dobry, piszę w sprawie zamówienia #${order.reference} (${order.billingName}). Mam pytanie o...`);
+    const whatsappUrl = `https://wa.me/48792303192?text=${whatsappMessage}`;
 
     return (
         <div className="flex min-h-screen flex-col bg-gray-50/30">
@@ -154,6 +170,26 @@ export default async function OrderStatusPage({ searchParams }: PageProps) {
                         {/* LEFT COLUMN (2/3) */}
                         <div className="lg:col-span-2 space-y-8">
                             
+                            {/* PAYMENT AWAITING CARD */}
+                            {order.status === 'order.awaiting_payment' && (
+                                <PaymentDetailsCard 
+                                    shopConfig={shopConfig} 
+                                    orderReference={order.reference} 
+                                    totalGross={order.totalGross} 
+                                    currency={order.currency}
+                                    proformaUrl={proformaUrl}
+                                />
+                            )}
+
+                            {/* PAYMENT SUCCESS CARD */}
+                            {order.status !== 'order.awaiting_payment' && order.status !== 'order.received' && order.status !== 'order.cancelled' && (
+                                <PaymentSuccessCard 
+                                    advanceDocUrl={advanceUrl}
+                                    finalDocUrl={finalUrl}
+                                    statusLabel={steps[currentStepIndex]?.label || 'W trakcie'}
+                                />
+                            )}
+
                             {/* Visual Stepper */}
                             <Card className="border-none shadow-md overflow-hidden">
                                 <CardContent className="p-8">
@@ -328,6 +364,40 @@ export default async function OrderStatusPage({ searchParams }: PageProps) {
                                         </p>
                                     </div>
 
+                                    {/* Document Repository (Wallet) */}
+                                    {(proformaUrl || advanceUrl || finalUrl) && (
+                                        <div className="space-y-2 pt-2">
+                                            <p className="text-xs font-semibold uppercase text-muted-foreground tracking-wider mb-2">Dokumenty Finansowe</p>
+                                            
+                                            {proformaUrl && (
+                                                <Button variant="outline" size="sm" className="w-full justify-start h-9 text-xs" asChild>
+                                                    <a href={proformaUrl} target="_blank" rel="noopener noreferrer">
+                                                        <FileText className="w-3.5 h-3.5 mr-2 text-amber-500" />
+                                                        Proforma
+                                                    </a>
+                                                </Button>
+                                            )}
+                                            
+                                            {advanceUrl && (
+                                                <Button variant="outline" size="sm" className="w-full justify-start h-9 text-xs" asChild>
+                                                    <a href={advanceUrl} target="_blank" rel="noopener noreferrer">
+                                                        <FileCheck className="w-3.5 h-3.5 mr-2 text-green-600" />
+                                                        Faktura Zaliczkowa
+                                                    </a>
+                                                </Button>
+                                            )}
+
+                                            {finalUrl && (
+                                                <Button variant="outline" size="sm" className="w-full justify-start h-9 text-xs" asChild>
+                                                    <a href={finalUrl} target="_blank" rel="noopener noreferrer">
+                                                        <CheckCircle2 className="w-3.5 h-3.5 mr-2 text-blue-600" />
+                                                        Faktura Końcowa
+                                                    </a>
+                                                </Button>
+                                            )}
+                                        </div>
+                                    )}
+
                                     <Separator />
 
                                     {/* Address */}
@@ -356,21 +426,26 @@ export default async function OrderStatusPage({ searchParams }: PageProps) {
                                      </div>
                                 </div>
                                 <p className="text-sm text-gray-600 mb-6 leading-relaxed">
-                                    Masz pytania dotyczące zamówienia lub montażu? Jestem do Twojej dyspozycji.
+                                    Masz pytania dotyczące zamówienia lub montażu? Jestem do Twojej dyspozycji na WhatsApp.
                                 </p>
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-2 gap-3 mb-4">
                                      <Button className="w-full bg-white hover:bg-white/90 text-primary border border-primary/20 shadow-sm" asChild>
                                         <a href="tel:+48792303192">
                                             <Phone className="w-4 h-4 mr-2" />
                                             Zadzwoń
                                         </a>
                                      </Button>
-                                     <Button className="w-full bg-primary hover:bg-primary/90 text-white shadow-md shadow-primary/20" asChild>
-                                        <a href={`mailto:biuro@primepodloga.pl?subject=Zamówienie ${order.reference}`}>
-                                            <Mail className="w-4 h-4 mr-2" />
-                                            Napisz
+                                     <Button className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white shadow-md shadow-green-900/10 border-none" asChild>
+                                        <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+                                            <MessageCircle className="w-4 h-4 mr-2" />
+                                            WhatsApp
                                         </a>
                                      </Button>
+                                </div>
+                                <div className="text-center">
+                                    <a href={`mailto:biuro@primepodloga.pl?subject=Zamówienie ${order.reference}`} className="text-xs text-muted-foreground hover:text-primary transition-colors underline decoration-dotted">
+                                        lub napisz wiadomość e-mail
+                                    </a>
                                 </div>
                             </div>
 

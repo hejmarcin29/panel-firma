@@ -104,6 +104,7 @@ export default function ShopSettingsForm({ initialConfig, initialTpayConfig, ava
                 })(),
 
                 // Payment
+                proformaBankRecipient: formData.get('proformaBankRecipient') as string,
                 proformaBankName: formData.get('proformaBankName') as string,
                 proformaBankAccount: formData.get('proformaBankAccount') as string,
                 
@@ -840,9 +841,18 @@ export default function ShopSettingsForm({ initialConfig, initialTpayConfig, ava
                         <Card>
                             <CardHeader>
                                 <CardTitle>Dane do Przelewu Tradycyjnego</CardTitle>
-                                <CardDescription>Pojawiają się na proformach i w podsumowaniu.</CardDescription>
+                                <CardDescription>Pojawiają się na proformach, w Magic Link i podsumowaniu.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="proformaBankRecipient">Nazwa Odbiorcy (Firma)</Label>
+                                    <Input 
+                                        id="proformaBankRecipient" 
+                                        name="proformaBankRecipient" 
+                                        placeholder="np. Moja Firma Sp. z o.o." 
+                                        defaultValue={config.proformaBankRecipient} 
+                                    />
+                                </div>
                                 <div className="grid gap-4 md:grid-cols-2">
                                     <div className="space-y-2">
                                         <Label htmlFor="proformaBankName">Nazwa Banku</Label>

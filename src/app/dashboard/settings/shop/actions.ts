@@ -56,6 +56,7 @@ export type ShopConfig = {
     samplePrice: number;
     sampleShippingCost: number;
     palletShippingCost?: number; // Koszt wysyłki palety (nowe)
+    proformaBankRecipient?: string;
     proformaBankName: string;
     proformaBankAccount: string;
     welcomeEmailTemplate?: string;
@@ -131,6 +132,7 @@ export const getShopConfig = unstable_cache(
                 isShopEnabled: false,
                 samplePrice: 2000,
                 sampleShippingCost: 1500,
+                proformaBankRecipient: '',
                 proformaBankName: '',
                 proformaBankAccount: '',
                 headerShowSearch: true,
