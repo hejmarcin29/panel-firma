@@ -20,7 +20,7 @@ export function InvestorEssentialsCard() {
                     <div>
                         <h4 className="font-semibold text-gray-900 text-sm">Aklimatyzacja (48h)</h4>
                         <p className="text-xs text-gray-600 leading-snug mt-1">
-                            Wnieś paczki do pomieszczenia min. 2 dni przed montażem. Niech "odpoczną" w temperaturze pokojowej.
+                            Wnieś paczki do pomieszczenia min. 2 dni przed montażem. Niech &quot;odpoczną&quot; w temperaturze pokojowej.
                         </p>
                     </div>
                 </div>

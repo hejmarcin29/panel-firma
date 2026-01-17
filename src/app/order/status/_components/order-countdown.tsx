@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Timer, CalendarDays, History } from "lucide-react";
+import { CalendarDays, History } from "lucide-react";
 import { differenceInDays, format } from "date-fns";
 import { pl } from "date-fns/locale";
 

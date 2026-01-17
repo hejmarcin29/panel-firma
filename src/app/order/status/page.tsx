@@ -5,7 +5,7 @@ import { eq, inArray } from "drizzle-orm";
 import { verifyMagicLinkToken } from "@/lib/auth/magic-link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Package, Truck, ShoppingCart, Phone, Mail, FileText, Download, CheckCircle2, MapPin, HeartHandshake, MessageCircle } from "lucide-react";
+import { Package, Truck, ShoppingCart, Phone, FileText, Download, CheckCircle2, MapPin, MessageCircle, FileCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StoreHeader } from "@/app/(storefront)/_components/store-header";
 import { StoreFooter } from "@/app/(storefront)/_components/store-footer";

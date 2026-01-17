@@ -35,26 +35,6 @@ export function PaymentDetailsCard({
         return new Intl.NumberFormat('pl-PL', { style: 'currency', currency: currency }).format(amount / 100);
     };
 
-    // Helper for rendering copyable row
-    const CopyableRow = ({ label, value, fieldId }: { label: string, value: string, fieldId: string }) => (
-        <div 
-            className="group flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg border border-transparent hover:border-amber-200 hover:bg-amber-50/50 transition-all cursor-pointer"
-            onClick={() => handleCopy(value, fieldId)}
-        >
-            <span className="text-sm text-gray-500 font-medium mb-1 sm:mb-0">{label}</span>
-            <div className="flex items-center gap-3">
-                <span className="font-mono font-semibold text-gray-900 text-lg break-all sm:break-normal">{value}</span>
-                <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className={`h-8 w-8 shrink-0 transition-colors ${copiedField === fieldId ? 'text-green-600 bg-green-50' : 'text-gray-400 group-hover:text-amber-600'}`}
-                >
-                    {copiedField === fieldId ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                </Button>
-            </div>
-        </div>
-    );
-
     return (
         <div className="bg-linear-to-br from-amber-50 to-orange-50 rounded-xl border border-amber-100 shadow-sm overflow-hidden mb-8">
             <div className="p-6 md:p-8">
@@ -92,22 +72,30 @@ export function PaymentDetailsCard({
                         <CopyableRow 
                             label="Odbiorca" 
                             value={shopConfig.proformaBankRecipient || shopConfig.proformaBankName} 
-                            fieldId="odbiorca" 
+                            fieldId="odbiorca"
+                            onCopy={handleCopy}
+                            isCopied={copiedField === "odbiorca"}
                         />
                          <CopyableRow 
                             label="Numer Konta" 
                             value={shopConfig.proformaBankAccount} 
-                            fieldId="konto" 
+                            fieldId="konto"
+                            onCopy={handleCopy}
+                            isCopied={copiedField === "konto"}
                         />
                         <CopyableRow 
                             label="Tytuł przelewu" 
                             value={orderReference} 
-                            fieldId="tytuł" 
+                            fieldId="tytuł"
+                            onCopy={handleCopy}
+                            isCopied={copiedField === "tytuł"}
                         />
                         <CopyableRow 
                             label="Kwota do zapłaty" 
                             value={formatCurrency(totalGross, currency)} 
-                            fieldId="kwota" 
+                            fieldId="kwota"
+                            onCopy={handleCopy}
+                            isCopied={copiedField === "kwota"}
                         />
                     </CardContent>
                 </Card>
@@ -121,3 +109,30 @@ export function PaymentDetailsCard({
         </div>
     );
 }
+
+interface CopyableRowProps {
+    label: string;
+    value: string;
+    fieldId: string;
+    onCopy: (value: string, fieldId: string) => void;
+    isCopied: boolean;
+}
+
+const CopyableRow = ({ label, value, fieldId, onCopy, isCopied }: CopyableRowProps) => (
+    <div 
+        className="group flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg border border-transparent hover:border-amber-200 hover:bg-amber-50/50 transition-all cursor-pointer"
+        onClick={() => onCopy(value, fieldId)}
+    >
+        <span className="text-sm text-gray-500 font-medium mb-1 sm:mb-0">{label}</span>
+        <div className="flex items-center gap-3">
+            <span className="font-mono font-semibold text-gray-900 text-lg break-all sm:break-normal">{value}</span>
+            <Button 
+                variant="ghost" 
+                size="icon" 
+                className={`h-8 w-8 shrink-0 transition-colors ${isCopied ? 'text-green-600 bg-green-50' : 'text-gray-400 group-hover:text-amber-600'}`}
+            >
+                {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            </Button>
+        </div>
+    </div>
+);

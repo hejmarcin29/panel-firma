@@ -2,7 +2,7 @@
 
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { MeasurementRequestForm } from "@/components/storefront/measurement-request-form";
-import { ShieldCheck, Info } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 // import { ReactNode } from "react";
 
 export interface AuditProductContext {

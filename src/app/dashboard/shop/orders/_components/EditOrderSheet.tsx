@@ -48,7 +48,7 @@ export function EditOrderSheet({ orderId, initialBilling, initialShipping }: Edi
             toast.success('Dane zamówienia zostały zaktualizowane.');
             setOpen(false);
             router.refresh();
-        } catch (error) {
+        } catch {
             toast.error('Wystąpił błąd podczas zapisywania danych.');
         } finally {
             setIsLoading(false);

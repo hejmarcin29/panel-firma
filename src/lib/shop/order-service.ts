@@ -1,6 +1,5 @@
 // src/lib/shop/order-service.ts
 import { db } from '@/lib/db';
-import { orders } from '@/lib/db/schema';
 
 export async function generateNextOrderDisplayNumber(): Promise<string> {
     const now = new Date();
