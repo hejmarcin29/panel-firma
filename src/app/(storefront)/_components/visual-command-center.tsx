@@ -43,6 +43,7 @@ export function VisualCommandCenter({ bestsellers, turnstileSiteKey }: VisualCom
     // Cloudflare Turnstile State
     const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
     const [turnstileWidgetId, setTurnstileWidgetId] = useState<string | null>(null);
+    const [turnstileLoadRequested, setTurnstileLoadRequested] = useState(false);
 
     const router = useRouter();
 
@@ -52,7 +53,7 @@ export function VisualCommandCenter({ bestsellers, turnstileSiteKey }: VisualCom
 
     // Load Turnstile Script if key present
     useEffect(() => {
-        if (!turnstileSiteKey || !open) return;
+        if (!turnstileSiteKey || !open || !turnstileLoadRequested) return;
 
         const scriptId = 'cf-turnstile-script';
         if (!document.getElementById(scriptId)) {
@@ -98,7 +99,7 @@ export function VisualCommandCenter({ bestsellers, turnstileSiteKey }: VisualCom
         // Cleanup: remove widget or reset? 
         // Turnstile doesn't have a clean unmount for React without libs, 
         // but since we are in a Drawer, it might be fine.
-    }, [turnstileSiteKey, open, turnstileWidgetId]);
+    }, [turnstileSiteKey, open, turnstileLoadRequested, turnstileWidgetId]);
 
 
     const handleSearch = (e: React.FormEvent) => {
@@ -287,7 +288,7 @@ export function VisualCommandCenter({ bestsellers, turnstileSiteKey }: VisualCom
                                 {/* Menu Links */}
                                 <div className="space-y-1 px-4 pt-4">
                                      {/* Order Status Section */}
-                                     <div className="mb-6 rounded-xl border bg-slate-50 p-4">
+                                     <div className="mb-6 rounded-xl border bg-slate-50 p-3 sm:p-4">
                                         <div className="mb-2 flex items-center gap-2 font-medium text-slate-800">
                                             <PackageSearch className="h-4 w-4" />
                                             Status zamówienia
@@ -296,21 +297,22 @@ export function VisualCommandCenter({ bestsellers, turnstileSiteKey }: VisualCom
                                             Link do statusu masz w mailu. Zgubiłeś go? Podaj adres, wyślemy nowy.
                                         </p>
                                         <form onSubmit={handleStatusCheck} className="flex flex-col gap-2">
-                                            <div className="flex gap-2">
+                                            <div className="flex gap-2 w-full">
                                                 <Input 
                                                     type="email" 
                                                     placeholder="Twój e-mail" 
-                                                    className="h-9 bg-white text-sm"
+                                                    className="h-9 bg-white text-sm flex-1 min-w-0"
                                                     value={statusEmail}
                                                     onChange={(e) => setStatusEmail(e.target.value)}
+                                                    onFocus={() => setTurnstileLoadRequested(true)}
                                                     required
                                                 />
-                                                <Button size="sm" type="submit" disabled={isSendingLink || (!!turnstileSiteKey && !turnstileToken)}>
+                                                <Button size="sm" type="submit" className="shrink-0" disabled={isSendingLink || (!!turnstileSiteKey && !turnstileToken)}>
                                                     {isSendingLink ? '...' : 'Wyślij'}
                                                 </Button>
                                             </div>
                                             {/* Turnstile Container */}
-                                            <div id="turnstile-container" className="mt-1 flex justify-center min-h-[65px]" />
+                                            <div id="turnstile-container" className="mt-1 flex justify-center min-h-[65px] w-full overflow-hidden" />
                                         </form>
                                      </div>
 
@@ -322,7 +324,7 @@ export function VisualCommandCenter({ bestsellers, turnstileSiteKey }: VisualCom
                                         Blog & Porady
                                         <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
                                      </Link>
-                                     <Link href="/dlaczego-my" onClick={() => setOpen(false)} className="flex items-center justify-between rounded-lg px-4 py-3 text-sm font-medium transition-colors hover:bg-muted/50">
+                                     <Link href="/o-nas" onClick={() => setOpen(false)} className="flex items-center justify-between rounded-lg px-4 py-3 text-sm font-medium transition-colors hover:bg-muted/50">
                                         Dlaczego My?
                                         <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
                                      </Link>

@@ -91,7 +91,7 @@ export default async function OrderStatusPage({ searchParams }: PageProps) {
 
     const order = {
         id: orderRaw.id,
-        reference: orderRaw.sourceOrderId || orderRaw.displayNumber || orderRaw.id,
+        reference: orderRaw.displayNumber || orderRaw.sourceOrderId || orderRaw.id,
         createdAt: orderRaw.createdAt,
         status: orderRaw.status,
         totalGross: orderRaw.totalGross,

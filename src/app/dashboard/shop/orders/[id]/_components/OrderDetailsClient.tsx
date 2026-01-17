@@ -57,6 +57,7 @@ import {
     AlertDialogTrigger,
   } from "@/components/ui/alert-dialog";
 import { deleteDocument } from "../../../../document-actions";
+import { EditOrderSheet } from '../../_components/EditOrderSheet';
 
 
 interface OrderItemDetails {
@@ -183,6 +184,31 @@ export function OrderDetailsClient({ order, items, timelineEvents, isAdmin }: Or
             toast.error('Błąd generowania linku.');
         }
     }
+
+    // Safe Accessors for JSON fields
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const billing = (order.billingAddress as any) || {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const shipping = (order.shippingAddress as any) || {};
+
+    const billingData = {
+        name: billing.name || order.customer?.name || '',
+        street: billing.street || order.customer?.billingStreet || '',
+        postalCode: billing.postalCode || order.customer?.billingPostalCode || '',
+        city: billing.city || order.customer?.billingCity || '',
+        email: billing.email || order.customer?.email || '',
+        phone: billing.phone || order.customer?.phone || '',
+        taxId: billing.taxId || order.customer?.taxId || '',
+    };
+
+    const shippingData = {
+        name: shipping.name || order.customer?.name || '',
+        street: shipping.street || order.customer?.shippingStreet || '',
+        postalCode: shipping.postalCode || order.customer?.shippingPostalCode || '',
+        city: shipping.city || order.customer?.shippingCity || '',
+        email: shipping.email || order.customer?.email || '',
+        phone: shipping.phone || order.customer?.phone || '',
+    };
 
     // Differentiate flows
     const isSampleOrder = order.type === 'sample';
@@ -538,7 +564,14 @@ export function OrderDetailsClient({ order, items, timelineEvents, isAdmin }: Or
                 <div className="space-y-6">
                      <Card className="shadow-sm border-slate-200">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-base font-semibold">Dane Klienta</CardTitle>
+                            <div className="flex items-center gap-2">
+                                <CardTitle className="text-base font-semibold">Dane Klienta</CardTitle>
+                                <EditOrderSheet 
+                                    orderId={order.id} 
+                                    initialBilling={billingData}
+                                    initialShipping={shippingData}
+                                />
+                            </div>
                             {order.customer?.taxId ? (
                                 <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 gap-1">
                                     <Building2 className="h-3 w-3" /> Firma

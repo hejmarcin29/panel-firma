@@ -46,11 +46,7 @@ export function MeasurementRequestForm({ defaultMessage, onSuccess }: Measuremen
       phone: "",
       email: "",
       city: "",
-      message: defaultMessage || `Adres inwestycji: ...
-Stan: Nowy dom / Remont
-Podłoże: ...
-
-Wiadomość: ...`,
+      message: "",
       _gotcha: "",
     },
   });
@@ -91,6 +87,7 @@ Wiadomość: ...`,
     try {
       const result = await submitLeadAction({
           ...values,
+          message: defaultMessage ? `[Kontekst: ${defaultMessage}]\n\n${values.message}` : values.message,
           turnstileToken: turnstileToken || undefined
       });
 
@@ -202,10 +199,24 @@ Wiadomość: ...`,
             name="message"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Wiadomość / Zakres prac</FormLabel>
+                <div className="flex justify-between items-baseline">
+                    <FormLabel>Szczegóły (opcjonalnie)</FormLabel>
+                    {defaultMessage && (
+                        <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+                            Dotyczy produktu
+                        </span>
+                    )}
+                </div>
+                
+                {defaultMessage && (
+                    <div className="text-xs text-blue-700 bg-blue-50 px-2 py-1.5 rounded border border-blue-100 mb-1.5 font-medium">
+                        {defaultMessage}
+                    </div>
+                )}
+
                 <FormControl>
                   <Textarea 
-                    placeholder="Opisz zakres prac..." 
+                    placeholder={`Stan: Nowy dom / Remont\nPodłoże: ... \nCo musimy wiedzieć?`}
                     className="min-h-[140px] text-base"
                     {...field} 
                   />
@@ -228,7 +239,7 @@ Wiadomość: ...`,
                     Wysyłanie...
                 </>
             ) : (
-                "Wyślij Zgłoszenie"
+                "Zamawiam kontakt i próbki"
             )}
           </Button>
           

@@ -16,31 +16,31 @@ export function MontazContent() {
   const steps = [
     {
       id: 1,
-      title: "Audyt Techniczny",
-      desc: "Wypełniasz formularz i opłacasz wizytę technika (129 zł). To gwarancja rezerwacji terminu i profesjonalnej oceny.",
+      title: "Zgłoszenie i Próbki",
+      desc: "Wypełniasz formularz. My dzwonimy i wysyłamy Ci link do wyboru darmowych próbek, które wyślemy Kurierem.",
       icon: <Phone className="h-6 w-6 text-white" />,
     },
     {
       id: 2,
-      title: "Wizyta i Raport",
-      desc: "Ekspert wykonuje pomiary laserowe, bada wilgotność metodą CM i sprawdza równość wylewki. Otrzymujesz raport.",
+      title: "Wizyta Technika",
+      desc: "Ekspert wykonuje pomiary laserowe w Twoim domu, bada wilgotność i ocenia podłoże.",
       icon: <Ruler className="h-6 w-6 text-white" />,
     },
     {
       id: 3,
       title: "Wycena",
-      desc: "Otrzymujesz kompletną ofertę (materiał + usługa). Po akceptacji podpisujemy umowę.",
+      desc: "Otrzymujesz kompletną ofertę (materiał + usługa + logistyka). Po akceptacji podpisujemy umowę.",
       icon: <FileText className="h-6 w-6 text-white" />,
     },
     {
       id: 4,
-      title: "Dostawa",
-      desc: "Przywozimy materiał kilka dni wcześniej, aby przeszedł aklimatyzację (min. 24-48h).",
+      title: "Dostawa Materiału",
+      desc: "Dostarczamy zamówioną podłogę. Musisz ją odebrać i wnieść, aby przeszła aklimatyzację (min. 48h).",
       icon: <Truck className="h-6 w-6 text-white" />,
     },
     {
       id: 5,
-      title: "Montaż",
+      title: "Profesjonalny Montaż",
       desc: "Czysty i sprawny montaż podłogi oraz listew. Sprzątamy po sobie. Odbiór prac.",
       icon: <Hammer className="h-6 w-6 text-white" />,
     },
@@ -70,11 +70,11 @@ export function MontazContent() {
                     className="h-14 px-8 text-lg font-semibold bg-white text-slate-900 hover:bg-slate-100 transition-transform active:scale-95 border-b-4 border-slate-300 rounded-xl"
                 >
                     <Calculator className="mr-2 h-5 w-5" />
-                    Umów Audyt (129 zł)
+                    Zamów Pakiet Weryfikacyjny
                 </Button>
                 <div className="flex items-center gap-2 text-sm text-slate-400">
                     <ShieldCheck className="h-4 w-4" />
-                    Gwarancja terminu i jakości
+                    Próbki w cenie + Gwarancja
                 </div>
             </div>
           </div>
@@ -87,7 +87,7 @@ export function MontazContent() {
         <section>
           <h2 className="text-2xl font-bold mb-10 flex items-center justify-center gap-2 text-center">
             <ArrowDownCircle className="h-6 w-6 text-primary" />
-            Jak to działa — 5 kroków do idealnej podłogi
+            Jak to działa — proces z gwarancją spokoju
           </h2>
           <div className="grid gap-8 md:grid-cols-5">
             {steps.map((step) => (
@@ -126,15 +126,18 @@ export function MontazContent() {
                 </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-lg shadow-slate-200/50">
-                <CardHeader className="pb-3">
-                    <CardTitle className="text-lg">Listwy przypodłogowe</CardTitle>
-                    <CardDescription>MDF / Duropolimer</CardDescription>
+            <Card className="border-0 shadow-lg shadow-slate-200/50 relative overflow-hidden">
+                {/* Opcjonalny dekoracyjny badge w tle */}
+                <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-4 -mt-4 z-0 pointer-events-none opacity-50" />
+                
+                <CardHeader className="pb-3 relative z-10">
+                    <CardTitle className="text-lg">Wykończenie i Detale</CardTitle>
+                    <CardDescription>Listwy, progi, estetyka</CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <div className="text-4xl font-bold text-primary mb-2">od 16 zł <span className="text-base text-muted-foreground font-normal">/ mb</span></div>
-                    <p className="text-sm text-muted-foreground mt-4">
-                        W cenie: docięcia, narożniki, akrylowanie góry. Profesjonalny montaż na klej.
+                <CardContent className="relative z-10">
+                    <div className="text-2xl font-bold text-slate-700 mb-2">Ustalane z Instalatorem</div>
+                    <p className="text-sm text-muted-foreground mt-4 leading-relaxed">
+                        To detale tworzą efekt. Dobór listew, obróbka progów i łączenia z płytkami to kwestie indywidualne. Zakres i stawkę ustalisz bezpośrednio z ekspertem na miejscu.
                     </p>
                 </CardContent>
             </Card>
@@ -183,7 +186,7 @@ export function MontazContent() {
                         </div>
                     </div>
                      <p className="mt-4 text-xs text-blue-200 text-center font-medium">
-                        Różnicę w cenie przeznacz na lepsze listwy lub... wakacje. 🌴
+                        Więcej niż koszt pakietu weryfikacyjnego (129 zł).
                     </p>
                 </div>
             </div>

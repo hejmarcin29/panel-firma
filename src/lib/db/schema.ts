@@ -334,7 +334,7 @@ export const orders = pgTable(
 	'orders',
 	{
 		id: text('id').primaryKey(),
-        displayNumber: text('display_number'), // Human friendly ID e.g. ZS/2026/01/001
+        displayNumber: text('display_number'), // Human friendly ID e.g. ZM/2026/015
 		source: text('source').$type<OrderSource>().notNull(),
 		sourceOrderId: text('source_order_id'),
 		status: text('status').$type<OrderStatus>().notNull(), // 'order.received', etc.

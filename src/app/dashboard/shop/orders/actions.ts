@@ -6,6 +6,86 @@ import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { randomUUID } from 'crypto';
 import { uploadOrderDocument } from '@/lib/r2/storage';
+import { customers } from '@/lib/db/schema'; // Added customers import
+
+export async function updateOrderData(orderId: string, data: {
+    billing: {
+        name: string;
+        taxId: string;
+        street: string;
+        postalCode: string;
+        city: string;
+        email: string;
+        phone: string;
+    },
+    shipping: {
+        name: string;
+        street: string;
+        postalCode: string;
+        city: string;
+        phone: string;
+        email: string;
+    }
+}) {
+    // 1. Update Order Snapshots
+    await db.update(orders)
+        .set({
+            billingAddress: {
+                name: data.billing.name,
+                taxId: data.billing.taxId,
+                street: data.billing.street,
+                postalCode: data.billing.postalCode,
+                city: data.billing.city,
+                email: data.billing.email,
+                phone: data.billing.phone,
+                // Preserve other fields if needed, but for now we overwrite based on form
+                // Ideally we should fetch and merge, but simplification for now
+                country: 'PL' 
+            },
+            shippingAddress: {
+                name: data.shipping.name,
+                street: data.shipping.street,
+                postalCode: data.shipping.postalCode,
+                city: data.shipping.city,
+                phone: data.shipping.phone,
+                email: data.shipping.email,
+                country: 'PL'
+            }
+        })
+        .where(eq(orders.id, orderId));
+
+    // 2. Timeline Event
+    await db.insert(erpOrderTimeline).values({
+        id: randomUUID(),
+        orderId: orderId,
+        type: 'system',
+        title: 'Zaktualizowano dane zamówienia',
+        metadata: {
+            details: 'Edycja adresu/danych klienta'
+        }
+    });
+
+    // 3. Update Customer Profile (Optional - Best Effort)
+    const order = await db.query.orders.findFirst({
+        where: eq(orders.id, orderId),
+        columns: { customerId: true }
+    });
+
+    if (order?.customerId) {
+        // We only update contact info, not addresses to avoid messing up history? 
+        // Or we update everything? Let's update basic info.
+        await db.update(customers)
+            .set({
+                name: data.billing.name,
+                taxId: data.billing.taxId,
+                email: data.billing.email,
+                phone: data.billing.phone
+            })
+            .where(eq(customers.id, order.customerId));
+    }
+
+    revalidatePath(`/dashboard/shop/orders/${orderId}`);
+}
 
 export async function uploadProforma(orderId: string, transferTitle: string, formData: FormData) {
     const file = formData.get('file') as File;

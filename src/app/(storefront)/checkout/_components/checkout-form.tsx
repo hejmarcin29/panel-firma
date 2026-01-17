@@ -130,10 +130,11 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
   // Turnstile State
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileWidgetId, setTurnstileWidgetId] = useState<string | null>(null);
+  const [turnstileLoadRequested, setTurnstileLoadRequested] = useState(false);
 
   // Load Turnstile Script if key present
   useEffect(() => {
-      if (!turnstileSiteKey) return;
+      if (!turnstileSiteKey || !turnstileLoadRequested) return;
 
       const scriptId = 'cf-turnstile-script';
       if (!document.getElementById(scriptId)) {
@@ -173,7 +174,7 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
            }, 100);
            return () => clearInterval(interval);
       }
-  }, [turnstileSiteKey, turnstileWidgetId]);
+  }, [turnstileSiteKey, turnstileWidgetId, turnstileLoadRequested]);
 
   const isOnlySamples = items.length > 0 && items.every(item => item.productId.startsWith('sample_'));
   
@@ -367,7 +368,12 @@ export function CheckoutForm({ shippingCost, palletShippingCost, inpostGeowidget
 
       <div className="lg:col-span-2 space-y-6">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <form 
+            onSubmit={form.handleSubmit(onSubmit)} 
+            className="space-y-8"
+            onFocus={() => setTurnstileLoadRequested(true)}
+            onClick={() => setTurnstileLoadRequested(true)}
+          >
             {/* 1. Dane Zamawiającego (Kontakt & Firma) */}
             <Card>
               <CardHeader>

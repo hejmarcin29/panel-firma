@@ -83,7 +83,7 @@ System wspiera proces manualnego wystawiania Proformy zewnętrznie.
 System wykorzystuje dwuwarstwową identyfikację zamówień:
 1.  **ID Techniczne (UUID):** Używane w bazie danych, w adresach URL (`/orders/3cbad...`) oraz relacjach. Gwarantuje unikalność i bezpieczeństwo.
 2.  **Numer Zamówienia (Display ID):** Format czytelny dla klienta, używany w komunikacji, na fakturach i listach.
-    *   **Format:** `ZS/{ROK}/{MIESIĄC}/{NR}` (np. `ZS/2026/01/015`).
+    *   **Format:** `ZM/{ROK}/{NR}` (np. `ZM/2026/015`).
     *   **Generowanie:** Nadawany automatycznie w momencie utworzenia zamówienia (lub zatwierdzenia koszyka).
     *   **Prezentacja:** Panel Admina i Panel Klienta wyświetlają wyłącznie Display ID.
 
@@ -92,7 +92,7 @@ Pliki (proformy, faktury, etykiety) są przechowywane w chmurze (Cloudflare R2) 
 *   **Wzorzec Ścieżki:** `zamowienia/{ROK}/{DISPLAY_NUMBER}/{TYP}/{TIMESTAMP}_{NAZWA_PLIKU}`
 *   **Zmienne:**
     *   `{ROK}`: Rok złożenia zamówienia (np. 2026).
-    *   `{DISPLAY_NUMBER}`: Numer czytelny (np. ZS-2026-01-015). Jeśli brak, fallback do UUID.
+    *   `{DISPLAY_NUMBER}`: Numer czytelny (np. ZM-2026-015). Jeśli brak, fallback do UUID.
     *   `{TYP}`: Kategoria dokumentu (`proformy`, `faktury`, `logistyka`).
 *   **Obsługiwane typy:**
     *   **Proforma:** Wgrywana ręcznie przez administratora.

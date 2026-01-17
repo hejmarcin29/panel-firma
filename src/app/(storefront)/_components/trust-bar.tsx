@@ -15,12 +15,6 @@ export function TrustBar() {
                 <div className="text-xl font-extrabold tracking-tight text-slate-800">
                    EGIBI<span className="text-[#c0392b]">FLOORS</span>
                 </div>
-                <div className="text-xl font-semibold tracking-tighter text-slate-600">
-                   SWISS KRONO
-                </div>
-                 <div className="text-xl font-bold tracking-widest text-slate-700">
-                   ARBITON
-                </div>
             </div>
 
             {/* Features/Trust Signals */}
