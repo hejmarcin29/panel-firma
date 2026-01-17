@@ -13,6 +13,8 @@ import Image from "next/image";
 import { getShopConfig } from "@/app/dashboard/settings/shop/actions";
 import { PaymentDetailsCard } from "./_components/payment-details-card";
 import { PaymentSuccessCard } from "./_components/payment-success-card";
+import { OrderCountdown } from "./_components/order-countdown";
+import { InvestorEssentialsCard } from "./_components/investor-essentials-card";
 
 interface PageProps {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -108,7 +110,8 @@ export default async function OrderStatusPage({ searchParams }: PageProps) {
         isShop: true,
         shippingCarrier: orderRaw.shippingCarrier,
         shippingTrackingNumber: orderRaw.shippingTrackingNumber,
-        documents: orderRaw.documents || []
+        documents: orderRaw.documents || [],
+        expectedShipDate: orderRaw.expectedShipDate
     };
 
     // Determine Stepper State
@@ -318,37 +321,11 @@ export default async function OrderStatusPage({ searchParams }: PageProps) {
                         {/* RIGHT COLUMN (1/3) */}
                         <div className="space-y-6">
                             
-                            {/* What's Next? (Placeholders) */}
-                            <Card className="border-none shadow-md bg-white">
-                                <CardHeader>
-                                    <CardTitle className="text-lg">Co dalej?</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-3">
-                                    <Button variant="outline" className="w-full justify-start h-auto py-3 px-4 border-gray-200 hover:bg-gray-50 hover:text-primary" asChild>
-                                        <a href="#">
-                                            <div className="bg-primary/10 p-2 rounded-full mr-3 text-primary">
-                                                <FileText className="w-4 h-4" />
-                                            </div>
-                                            <div className="text-left">
-                                                <span className="block font-semibold text-sm text-foreground">Instrukcja Montażu</span>
-                                                <span className="block text-xs text-muted-foreground font-normal">Pobierz PDF przed dostawą</span>
-                                            </div>
-                                        </a>
-                                    </Button>
+                            {/* COUNTDOWN WIDGET */}
+                            <OrderCountdown expectedDate={order.expectedShipDate} />
 
-                                    <Button variant="outline" className="w-full justify-start h-auto py-3 px-4 border-gray-200 hover:bg-gray-50 hover:text-primary" asChild>
-                                        <a href="#">
-                                            <div className="bg-primary/10 p-2 rounded-full mr-3 text-primary">
-                                                <HeartHandshake className="w-4 h-4" />
-                                            </div>
-                                            <div className="text-left">
-                                                <span className="block font-semibold text-sm text-foreground">Pielęgnacja Podłogi</span>
-                                                <span className="block text-xs text-muted-foreground font-normal">Sprawdź jak dbać o produkt</span>
-                                            </div>
-                                        </a>
-                                    </Button>
-                                </CardContent>
-                            </Card>
+                            {/* INVESTOR ESSENTIALS */}
+                            <InvestorEssentialsCard />
 
                             {/* Summary Card */}
                             <Card className="border-none shadow-md">

@@ -180,6 +180,16 @@ export function OrderDetailsClient({ order, items, timelineEvents, isAdmin }: Or
             setIsTrackingSaving(false);
         }
     }
+
+    async function handleDateSelect(date: Date | undefined) {
+        try {
+            await updateOrderExpectedDate(order.id, date || null);
+            toast.success("Zaktualizowano planowaną datę wysyłki");
+            router.refresh();
+        } catch {
+            toast.error("Błąd aktualizacji daty");
+        }
+    }
     
     async function handleCopyMagicLink() {
         try {
@@ -561,6 +571,38 @@ export function OrderDetailsClient({ order, items, timelineEvents, isAdmin }: Or
                                         <li>Rodzaj transportu: <strong>Paleta / Spedycja</strong></li>
                                         <li>Status logistyczny: <strong>{STATUS_LABELS[status] || status}</strong></li>
                                     </ul>
+
+                                    <div className="mt-4 pt-4 border-t border-indigo-100">
+                                        <Label className="text-xs font-semibold text-indigo-900 mb-1.5 block">
+                                            Przewidywana Data Wysyłki (widoczne dla klienta)
+                                        </Label>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant={"outline"}
+                                                    className={cn(
+                                                        "w-full justify-start text-left font-normal bg-white border-indigo-200 hover:bg-indigo-50",
+                                                        !order.expectedShipDate && "text-muted-foreground"
+                                                    )}
+                                                >
+                                                    <CalendarIcon className="mr-2 h-4 w-4 text-indigo-500" />
+                                                    {order.expectedShipDate ? format(new Date(order.expectedShipDate), "PPP", { locale: pl }) : <span>Wybierz datę...</span>}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={order.expectedShipDate ? new Date(order.expectedShipDate) : undefined}
+                                                    onSelect={handleDateSelect}
+                                                    initialFocus
+                                                    locale={pl}
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                        <p className="text-[10px] text-indigo-400 mt-1">
+                                            Ustawienie daty włączy licznik na statusie zamówienia.
+                                        </p>
+                                    </div>
                                 </div>
                              </CardContent>
                         </Card>
@@ -696,6 +738,45 @@ export function OrderDetailsClient({ order, items, timelineEvents, isAdmin }: Or
                             )}>
                                 <Truck className="h-4 w-4" />
                                 <span>{isSampleOrder ? 'Kurier InPost / Paczkomat' : 'Spedycja Paletowa'}</span>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="shadow-sm border-slate-200">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <CalendarIcon className="h-5 w-5 text-indigo-600" />
+                                Planowana Wysyłka
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label>Data realizacji (Planowana)</Label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant={"outline"}
+                                            className={cn(
+                                                "w-full justify-start text-left font-normal",
+                                                !order.expectedShipDate && "text-muted-foreground"
+                                            )}
+                                        >
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {order.expectedShipDate ? format(new Date(order.expectedShipDate), "PPP", { locale: pl }) : <span>Wybierz datę</span>}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                        <Calendar
+                                            mode="single"
+                                            selected={order.expectedShipDate ? new Date(order.expectedShipDate) : undefined}
+                                            onSelect={handleDateSelect}
+                                            initialFocus
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                                <p className="text-xs text-muted-foreground mt-2">
+                                    Widoczne dla klienta w Magic Link (licznik dni).
+                                </p>
                             </div>
                         </CardContent>
                     </Card>
