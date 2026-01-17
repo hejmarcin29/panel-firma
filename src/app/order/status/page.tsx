@@ -111,7 +111,8 @@ export default async function OrderStatusPage({ searchParams }: PageProps) {
         shippingCarrier: orderRaw.shippingCarrier,
         shippingTrackingNumber: orderRaw.shippingTrackingNumber,
         documents: orderRaw.documents || [],
-        expectedShipDate: orderRaw.expectedShipDate
+        expectedShipDate: orderRaw.expectedShipDate,
+        type: orderRaw.type
     };
 
     // Determine Stepper State
@@ -322,7 +323,10 @@ export default async function OrderStatusPage({ searchParams }: PageProps) {
                         <div className="space-y-6">
                             
                             {/* COUNTDOWN WIDGET */}
-                            <OrderCountdown expectedDate={order.expectedShipDate} />
+                            <OrderCountdown 
+                                expectedDate={order.expectedShipDate} 
+                                isSample={order.type === 'sample'}
+                            />
 
                             {/* INVESTOR ESSENTIALS */}
                             <InvestorEssentialsCard />

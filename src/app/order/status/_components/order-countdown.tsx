@@ -1,15 +1,37 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, History } from "lucide-react";
+import { Timer, CalendarDays, History, PackageCheck } from "lucide-react";
 import { differenceInDays, format } from "date-fns";
 import { pl } from "date-fns/locale";
 
 interface OrderCountdownProps {
     expectedDate: Date | null;
+    isSample: boolean;
 }
 
-export function OrderCountdown({ expectedDate }: OrderCountdownProps) {
+export function OrderCountdown({ expectedDate, isSample }: OrderCountdownProps) {
+    // 1. SCENARIUSZ: PRÓBKA (Szybka wysyłka)
+    if (isSample) {
+        return (
+            <Card className="border-none shadow-md bg-white mb-6">
+                <CardHeader className="pb-2">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                        <PackageCheck className="w-5 h-5 text-emerald-600" />
+                        Ekspresowa Wysyłka
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-2xl font-bold text-emerald-700">Wysyłka do 48h</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                        Twoje próbki zostaną nadane błyskawicznie. Zazwyczaj docierają do klienta w ciągu 1-2 dni roboczych.
+                    </p>
+                </CardContent>
+            </Card>
+        );
+    }
+
+    // 2. SCENARIUSZ: BRAK DATY (Standardowe zamówienie)
     if (!expectedDate) {
         return (
             <Card className="border-none shadow-md bg-white mb-6">
@@ -20,7 +42,7 @@ export function OrderCountdown({ expectedDate }: OrderCountdownProps) {
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-2xl font-bold text-gray-800">3-5 tygodni</p>
+                    <p className="text-2xl font-bold text-gray-800">5-7 dni roboczych</p>
                     <p className="text-sm text-gray-500 mt-1">
                         To standardowy czas oczekiwania na ten produkt. Skontaktujemy się z Tobą telefonicznie, aby ustalić dokładny dzień dostawy.
                     </p>
