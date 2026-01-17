@@ -73,7 +73,7 @@ export function MobileNav() {
 
   return (
     <>
-    <div className="fixed bottom-0 left-0 right-0 z-[49] border-t bg-white/95 backdrop-blur-xl supports-[backdrop-filter]:bg-white/80 pb-[env(safe-area-inset-bottom)] shadow-[0_-5px_20px_-5px_rgba(0,0,0,0.05)] md:hidden rounded-t-[20px]">
+    <div className="fixed bottom-0 left-0 right-0 z-49 border-t bg-white/95 backdrop-blur-xl supports-backdrop-filter:bg-white/80 pb-[env(safe-area-inset-bottom)] shadow-[0_-5px_20px_-5px_rgba(0,0,0,0.05)] md:hidden rounded-t-[20px]">
       <div className="grid h-[70px] grid-cols-5 items-center justify-items-center px-2">
         {config.map((item) => {
           const Icon = item.icon;

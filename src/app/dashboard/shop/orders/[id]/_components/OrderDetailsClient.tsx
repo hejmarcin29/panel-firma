@@ -31,7 +31,8 @@ import {
     markAsShippedBySupplier,
     issueFinalInvoice,
     generateOrderMagicLink,
-    updateOrderTracking
+    updateOrderTracking,
+    updateOrderExpectedDate
 } from '../actions';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -40,6 +41,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { pl } from "date-fns/locale";
+import { CalendarIcon } from "lucide-react";
 import { TimelineView, TimelineEvent } from '@/components/shop/timeline-view';
 import { UploadProformaDialog } from '../../_components/UploadProformaDialog';
 import { UploadFinalInvoiceDialog } from '../../_components/UploadFinalInvoiceDialog';
@@ -78,6 +84,7 @@ interface OrderDetails {
     paymentMethod: string | null;
     shippingCarrier: string | null; // Added
     shippingTrackingNumber: string | null; // Added
+    expectedShipDate: Date | null; // Added
     billingAddress: unknown; // Added (JSON)
     shippingAddress: unknown; // Added (JSON)
     customer: {

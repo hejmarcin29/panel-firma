@@ -51,6 +51,23 @@ export async function updateOrderTracking(orderId: string, carrier: string, trac
     return { success: true };
 }
 
+export async function updateOrderExpectedDate(orderId: string, date: Date | null) {
+    await db.update(orders)
+        .set({ expectedShipDate: date })
+        .where(eq(orders.id, orderId));
+    
+    await db.insert(erpOrderTimeline).values({
+        id: randomUUID(),
+        orderId: orderId,
+        type: 'status_change',
+        title: 'Zaktualizowano planowaną datę wysyłki',
+        metadata: { date: date ? date.toISOString() : null }
+    });
+
+    revalidatePath(`/dashboard/shop/orders/${orderId}`);
+    return { success: true };
+}
+
 export async function generateShippingLabel(orderId: string) {
     // 1. Fetch Order Data
     const order = await db.query.orders.findFirst({

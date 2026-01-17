@@ -17,7 +17,7 @@ export function PaymentSuccessCard({
 }: PaymentSuccessCardProps) {
 
     return (
-        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-100 shadow-sm overflow-hidden mb-8">
+        <div className="bg-linear-to-br from-green-50 to-emerald-50 rounded-xl border border-green-100 shadow-sm overflow-hidden mb-8">
             <div className="p-6 md:p-8">
                 <div className="flex flex-col md:flex-row gap-6 md:items-start md:justify-between">
                     <div className="flex items-start gap-4">

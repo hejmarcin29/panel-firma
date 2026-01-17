@@ -415,7 +415,7 @@ export default async function OrderStatusPage({ searchParams }: PageProps) {
                             </Card>
 
                             {/* Support Card */}
-                            <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl p-6 border border-primary/10">
+                            <div className="bg-linear-to-br from-primary/5 to-primary/10 rounded-xl p-6 border border-primary/10">
                                 <div className="flex items-center gap-4 mb-4">
                                      <div className="h-12 w-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-lg shadow-lg shadow-primary/20">
                                         MP
